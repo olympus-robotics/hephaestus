@@ -1,0 +1,23 @@
+{
+ "version": 7,
+ "configurePresets": [
+  {
+   "name": "preferred",
+   "description": "Configuration setting for all modules with preferred toolchain",
+   "generator": "Ninja",
+   "binaryDir": "${sourceDir}/build",
+   "installDir": "/install",
+   "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
+   "cacheVariables": {
+    "BUILD_MODULES": "all"
+   }
+  }
+ ],
+ "buildPresets": [
+  {
+   "name": "preferred",
+   "description": "Preferred build settings",
+   "configurePreset": "preferred"
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+#=================================================================================================
+# Copyright (C) 2023-2024 EOLO Contributors
+#=================================================================================================
+
+# @CMAKE_PROJECT_NAME@ top level cmake config file
+
+@PACKAGE_INIT@
+
+foreach(component ${@CMAKE_PROJECT_NAME@_FIND_COMPONENTS})
+  # For requested component, execute its "config" script
+  include(${CMAKE_CURRENT_LIST_DIR}/../@CMAKE_PROJECT_NAME@_${component}/@CMAKE_PROJECT_NAME@_${component}-config.cmake)
+endforeach()
