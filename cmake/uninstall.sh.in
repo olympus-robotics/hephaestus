@@ -1,0 +1,43 @@
+#!/bin/bash
+#=================================================================================================
+# Copyright (C) 2018-2023 EOLO Contributors
+#=================================================================================================
+
+INSTALL_MANIFEST=@CMAKE_INSTALL_FULL_DATAROOTDIR@/@CMAKE_PROJECT_NAME@/manifest.txt
+
+echo "***** Uninstalling @CMAKE_PROJECT_NAME@ files *****"
+if [ -f $INSTALL_MANIFEST ]; then
+
+  # Remove services
+  # - Get the list of service unit files we installed by filtering manifest for items in lib/systemd/system
+  # - For each file, call sudo systemctl disable
+  echo "Disabling services.."
+  SYSTEMD_UNITS=( $(cat $INSTALL_MANIFEST | grep "lib/systemd/system") )
+  for path in "${SYSTEMD_UNITS[@]}"
+  do
+    service_name=$(basename "$path")
+    sudo systemctl disable $service_name # sudo used to avoid prompt for every element in array
+  done
+  echo "OK"
+
+  # Remove files
+  echo "Removing files.."
+  cat $INSTALL_MANIFEST | xargs rm
+  echo "OK"
+
+  # Remove directories we created (these should be empty now)
+  # Note: This is safe. rmdir leaves non-empty directories alone
+  echo "Removing directories.."
+  cat $INSTALL_MANIFEST | xargs -L1 dirname | xargs rmdir -p --ignore-fail-on-non-empty 2>/dev/null
+  echo "OK"
+
+  # remove the install manifest and its directory too
+  echo "Removing manifest.."
+  rm $INSTALL_MANIFEST
+  dirpath=$(dirname "$INSTALL_MANIFEST")
+  rmdir "$dirpath"
+  echo "OK"
+else
+  echo "Cannot find install manifest: $INSTALL_MANIFEST"
+fi
+echo "***** Uninstall completed *****"

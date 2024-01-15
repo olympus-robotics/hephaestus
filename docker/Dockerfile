@@ -33,5 +33,7 @@ RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VE
     --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-$CLANG_VERSION \
     --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-$CLANG_VERSION
 
+RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
+
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust_installer.sh && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
