@@ -39,4 +39,4 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust_installer.s
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 
 RUN curl https://raw.githubusercontent.com/ninja-build/ninja/master/misc/bash-completion > $HOME/.ninja-autocomplete && echo "source $HOME/.ninja-autocomplete" >> $HOME/.bashrc
-RUN sed -i "s/#force_color_prompt=yes/force_color_prompt=yes/g" $HOME/.bashrc && \
+RUN sed -i "s/#force_color_prompt=yes/force_color_prompt=yes/g" $HOME/.bashrc
