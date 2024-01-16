@@ -82,3 +82,25 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
       CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
   endif()
 endif()
+
+#--------------------------------------------------------------------------------------------------
+# protobuf
+if (Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(PROTOBUF_VERSION_REQUIRED 25.2)
+    find_package(Protobuf ${PROTOBUF_VERSION_REQUIRED} QUIET)
+    if(Protobuf_FOUND)
+        message(STATUS "Protobuf: Using version ${Protobuf_VERSION} (${Protobuf_LIBRARIES}, ${Protobuf_PROTOC_LIBRARIES})")
+        add_dummy_target(Protobuf)
+    else()
+        message(STATUS "Protobuf: Building ${PROTOBUF_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+            Protobuf
+            GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
+            GIT_TAG "v${PROTOBUF_VERSION_REQUIRED}"
+            GIT_SHALLOW true
+            GIT_SUBMODULES_RECURSE true
+            SOURCE_SUBDIR "cmake"
+            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF
+        )
+    endif()
+endif()

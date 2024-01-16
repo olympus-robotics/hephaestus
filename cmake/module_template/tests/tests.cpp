@@ -2,16 +2,14 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
 
 namespace eolo::@module@::tests {
 
-  // NOLINTBEGIN(cert-err58-cpp)
-
-  TEST_CASE("[example test]", "[@module@]") {
-    CHECK(false);
-  }
-
-  // NOLINTEND(cert-err58-cpp)
-
+TEST(Example, Example) {
+  EXPECT_TRUE(false);
+}
 }  // namespace eolo::@

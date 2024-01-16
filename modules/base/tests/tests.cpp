@@ -9,7 +9,6 @@
 using namespace ::testing;
 
 namespace eolo::base::tests {
-
 TEST(Exception, Throw) {
   auto throwing_func = []() { throwException<eolo::TypeMismatchException>("type mismatch"); };
   EXPECT_THROW(throwing_func(), eolo::TypeMismatchException);
@@ -17,7 +16,7 @@ TEST(Exception, Throw) {
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_STREQ(e.what(), "[modules/base/tests/tests.cpp:14] type mismatch");
+    EXPECT_STREQ(e.what(), "[modules/base/tests/tests.cpp:13] type mismatch");
   }
 }
 
