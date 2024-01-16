@@ -9,7 +9,7 @@ RUN apt update && \
     apt install -y --no-install-recommends x11-apps g++ mesa-utils make cmake-curses-gui ninja-build git gdb vim htop \
         curl zlib1g-dev libffi-dev libssl-dev libbz2-dev libsqlite3-dev iproute2 tk-dev texlive-latex-extra texlive-fonts-recommended dvipng cm-super libnotify-bin \
         pkg-config gpg wget ca-certificates git-lfs curl ccache ninja-build doxygen graphviz linux-generic python3-dev iproute2 python-is-python3 \
-        net-tools iftop htop lsb-release software-properties-common gnupg && \
+        net-tools iftop htop lsb-release software-properties-common gnupg bash-completion && \
         rm -rf /var/lib/apt/lists/*
 
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
@@ -37,3 +37,6 @@ RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust_installer.sh && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
+
+RUN curl https://raw.githubusercontent.com/ninja-build/ninja/master/misc/bash-completion > $HOME/.ninja-autocomplete && echo "source $HOME/.ninja-autocomplete" >> $HOME/.bashrc
+RUN sed -i "s/#force_color_prompt=yes/force_color_prompt=yes/g" $HOME/.bashrc && \

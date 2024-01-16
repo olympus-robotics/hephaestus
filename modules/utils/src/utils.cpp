@@ -2,13 +2,6 @@
 // Copyright (C) 2018-2023 EOLO Contributors
 //=================================================================================================
 
-#pragma once
+#include "eolo/utils/utils.h"
 
-namespace eolo::base{
-  /// \addtogroup base base module
-  /// @{
-
-  /// TODO Implement module interface here
-
-  ///@}
-}
+namespace eolo::utils {}  // namespace eolo::utils

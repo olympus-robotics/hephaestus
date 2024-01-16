@@ -425,16 +425,37 @@ endmacro()
 # ==================================================================================================
 # Setup tests target
 
+# FetchContent_Declare(
+#   Catch2
+#   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#   GIT_TAG v3.5.1)
+# FetchContent_MakeAvailable(Catch2)
+# set_target_properties(Catch2 PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+# set_target_properties(Catch2 PROPERTIES CXX_CLANG_TIDY "")
+# set_target_properties(Catch2WithMain PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+# set_target_properties(Catch2WithMain PROPERTIES CXX_CLANG_TIDY "")
+
 FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.5.1)
-FetchContent_MakeAvailable(Catch2)
-set_target_properties(Catch2 PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-set_target_properties(Catch2 PROPERTIES CXX_CLANG_TIDY "")
-set_target_properties(Catch2WithMain PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-set_target_properties(Catch2WithMain PROPERTIES CXX_CLANG_TIDY "")
-# list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+FetchContent_GetProperties(googletest)
+if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+# use leaner set of compiler warnings for sources we have no control over
+set_target_properties(gtest PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gtest_main PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gmock PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
+
 
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
@@ -468,6 +489,7 @@ add_dependencies(check tests) # `check` depends on `tests` target
 #   [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
 #   [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
 #
+include(GoogleTest)
 macro(define_module_test)
   set(flags "")
   set(single_opts NAME COMMAND WORKING_DIRECTORY)
@@ -506,7 +528,10 @@ macro(define_module_test)
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS} Catch2::Catch2WithMain)
+            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main)
+
+    gtest_discover_tests(${TARGET_NAME} WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY} PROPERTIES TIMEOUT ${TEST_TIMEOUT_SECONDS})
+
 
 endmacro()
 

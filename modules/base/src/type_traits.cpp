@@ -4,4 +4,4 @@
 
 #include "eolo/base/type_traits.h"
 
-namespace eolo::base {}
+namespace eolo {}
