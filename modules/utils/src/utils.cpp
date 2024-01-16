@@ -2,11 +2,6 @@
 // Copyright (C) 2018-2023 EOLO Contributors
 //=================================================================================================
 
-#include <cstdlib>
+#include "eolo/utils/utils.h"
 
-//=================================================================================================
-auto main(int argc, const char* argv[]) -> int {
-  (void)argc;
-  (void)argv;
-  return EXIT_SUCCESS;
-}
+namespace eolo::utils {}  // namespace eolo::utils

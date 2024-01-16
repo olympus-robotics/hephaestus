@@ -1,18 +1,24 @@
 //=================================================================================================
 // Copyright (C) 2018-2023 EOLO Contributors
 //=================================================================================================
+#include <gtest/gtest.h>
 
-#include <catch2/catch_test_macros.hpp>
+#include "eolo/base/exception.h"
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
 
 namespace eolo::base::tests {
 
-// NOLINTBEGIN(cert-err58-cpp)
+TEST(Exception, Throw) {
+  auto throwing_func = []() { throwException<eolo::TypeMismatchException>("type mismatch"); };
+  EXPECT_THROW(throwing_func(), eolo::TypeMismatchException);
 
-TEST_CASE("[example test]", "[type_traits]") {
-  CHECK(true);
-  CHECK(2 * 2 == 4);
+  try {
+    throwing_func();
+  } catch (std::exception& e) {
+    EXPECT_STREQ(e.what(), "[modules/base/tests/tests.cpp:14] type mismatch");
+  }
 }
-
-// NOLINTEND(cert-err58-cpp)
 
 }  // namespace eolo::base::tests

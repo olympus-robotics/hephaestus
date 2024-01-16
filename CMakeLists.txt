@@ -10,5 +10,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Required for shared libraries
 
-# Integrate the Grape Build System to setup the project
+# Integrate the Eolo Build System to setup the project
 include(${CMAKE_SOURCE_DIR}/cmake/build.cmake)

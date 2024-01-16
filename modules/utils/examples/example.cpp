@@ -2,13 +2,11 @@
 // Copyright (C) 2018-2023 EOLO Contributors
 //=================================================================================================
 
-#pragma once
+#include <cstdlib>
 
-namespace eolo::base{
-  /// \addtogroup base base module
-  /// @{
-
-  /// TODO Implement module interface here
-
-  ///@}
+//=================================================================================================
+auto main(int argc, const char* argv[]) -> int {
+  (void)argc;
+  (void)argv;
+  return EXIT_SUCCESS;
 }

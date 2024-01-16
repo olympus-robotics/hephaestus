@@ -2,7 +2,7 @@
 # Copyright (C) 2018-2023 EOLO Contributors
 #=================================================================================================
 
-# Top level CMake file for the Grape Build System. See README.md
+# Top level CMake file for the Eolo Build System. See README.md
 
 set(CMAKE_TEMPLATES_DIR ${CMAKE_CURRENT_LIST_DIR})
 
