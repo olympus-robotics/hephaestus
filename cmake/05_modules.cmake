@@ -425,16 +425,6 @@ endmacro()
 # ==================================================================================================
 # Setup tests target
 
-# FetchContent_Declare(
-#   Catch2
-#   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#   GIT_TAG v3.5.1)
-# FetchContent_MakeAvailable(Catch2)
-# set_target_properties(Catch2 PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-# set_target_properties(Catch2 PROPERTIES CXX_CLANG_TIDY "")
-# set_target_properties(Catch2WithMain PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-# set_target_properties(Catch2WithMain PROPERTIES CXX_CLANG_TIDY "")
-
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
