@@ -1,6 +1,6 @@
 #!/bin/bash
 #=================================================================================================
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
 INSTALL_MANIFEST=@CMAKE_INSTALL_FULL_DATAROOTDIR@/@CMAKE_PROJECT_NAME@/manifest.txt

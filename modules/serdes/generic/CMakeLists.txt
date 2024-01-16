@@ -2,18 +2,22 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME @module@ DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS "")
+declare_module(NAME serdes_generic DEPENDS_ON_MODULES base DEPENDS_ON_EXTERNAL_PROJECTS "")
 
 # library sources
 set(SOURCES
-        src/@module@.cpp
+        src/concepts.cpp
+        src/deserializer.cpp
+        src/serializer.cpp
         README.md
-        include/eolo/@module@/@module@.h)
+        include/eolo/serdes/generic/concepts.h
+        include/eolo/serdes/generic/deserializer.h
+        include/eolo/serdes/generic/serializer.h)
 
 # library target
 define_module_library(
-        NAME @module@
-        PUBLIC_LINK_LIBS ""
+        NAME serdes_generic
+        PUBLIC_LINK_LIBS eolo::base
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}
         PUBLIC_INCLUDE_PATHS

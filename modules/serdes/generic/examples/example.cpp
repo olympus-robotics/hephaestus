@@ -4,6 +4,8 @@
 
 #include <cstdlib>
 
+#include "eolo/serdes/serdes.h"
+
 //=================================================================================================
 auto main(int argc, const char* argv[]) -> int {
   (void)argc;

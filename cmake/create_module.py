@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 #
 
 import os

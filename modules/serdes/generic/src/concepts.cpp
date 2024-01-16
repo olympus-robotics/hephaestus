@@ -2,6 +2,4 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/utils/utils.h"
-
-namespace eolo::utils {}  // namespace eolo::utils
+#include "eolo/serdes/generic/concepts.h"

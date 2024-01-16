@@ -1,5 +1,5 @@
 #=================================================================================================
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
 declare_module(NAME base DEPENDS_ON_MODULES utils DEPENDS_ON_EXTERNAL_PROJECTS "")
@@ -7,10 +7,8 @@ declare_module(NAME base DEPENDS_ON_MODULES utils DEPENDS_ON_EXTERNAL_PROJECTS "
 # library sources
 set(SOURCES
         src/exception.cpp
-        src/type_traits.cpp
         README.md
-        include/eolo/base/exception.h
-        include/eolo/base/type_traits.h)
+        include/eolo/base/exception.h)
 
 # library target
 define_module_library(
