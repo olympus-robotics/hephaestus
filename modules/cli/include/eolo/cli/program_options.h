@@ -70,7 +70,7 @@ class ProgramDescription {
 public:
   /// @brief Creates object
   /// @param brief A brief text describing the program
-  constexpr explicit ProgramDescription(const std::string& brief);
+  constexpr explicit ProgramDescription(std::string brief);
 
   /// @brief Defines a required option (--key=value) on the command line
   /// @tparam T Value type
@@ -113,6 +113,23 @@ public:
                               const std::string& description,
                               const T& default_value) -> ProgramDescription&;
 
+  /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
+  /// passed the value of the option is true, false otherwise.
+  /// @param key Key of the key-value pair
+  /// @param short_key Single char (can be used as alias for --key)
+  /// @param description A brief text describing the option
+  /// @return Reference to the object. Enables daisy-chained calls
+  constexpr auto defineFlag(const std::string& key, char short_key,
+                            const std::string& description) -> ProgramDescription&;
+
+  /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
+  /// passed the value of the option is true, false otherwise.
+  /// @param key Key of the key-value pair
+  /// @param description A brief text describing the option
+  /// @return Reference to the object. Enables daisy-chained calls
+  constexpr auto defineFlag(const std::string& key,
+                            const std::string& description) -> ProgramDescription&;
+
   /// @brief Builds the container to parse command line options.
   /// @note: The resources in this object is moved into the returned object, making this object
   /// unvalid.
@@ -138,13 +155,13 @@ private:
 private:
   static constexpr auto HELP_KEY = "help";
   static constexpr char HELP_SHORT_KEY = 'h';
-
+  std::string brief_;
   std::vector<ProgramOptions::Option> options_;
 };
 
-constexpr ProgramDescription::ProgramDescription(const std::string& brief) {
-  options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), brief,
-                        false, false);
+constexpr ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {
+  options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), "", false,
+                        false);
 }
 
 void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k) const {
@@ -198,6 +215,20 @@ ProgramDescription::defineOption(const std::string& key, char short_key,
   return *this;
 }
 
+constexpr auto ProgramDescription::defineFlag(
+    const std::string& key, char short_key, const std::string& description) -> ProgramDescription& {
+  checkOptionAlreadyExists(key, short_key);
+
+  options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false,
+                        false);
+  return *this;
+}
+
+constexpr auto ProgramDescription::defineFlag(
+    const std::string& key, const std::string& description) -> ProgramDescription& {
+  return defineFlag(key, '\0', description);
+}
+
 template <StringStreamable T>
 inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   const auto it = std::find_if(options_.begin(), options_.end(),
@@ -220,8 +251,9 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   T value;
   std::istringstream stream(it->value);
   throwExceptionIf<TypeMismatchException>(
-      not(stream >> value), std::format("Unable to parse value '{}' as type {} for option '{}'",
-                                        it->value, my_type, option));
+      not(stream >> std::boolalpha >> value),
+      std::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type,
+                  option));
 
   return value;
 }
