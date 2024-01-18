@@ -1,5 +1,5 @@
 # ==================================================================================================
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 # ==================================================================================================
 
 include(CMakePackageConfigHelpers)
@@ -421,6 +421,117 @@ macro(define_module_executable)
             ${TARGET_ARG_PRIVATE_LINK_LIBS})
 
 endmacro()
+
+#--------------------------------------------------------------------------------------------------
+# A macro to generate eolo library target from .proto files
+# NOTE A proto library name must end with _proto suffix.
+#
+# Usage example:
+#   declare_module(NAME my_proto_module
+#       DEPENDS_ON_EXTERNAL_PROJECTS
+#           Protobuf # MUST be present
+#   )
+#
+#   # No need to add the `find_package(Protobuf)` as it's done implicitly by `define_module_proto_library`.
+#
+#   define_module_proto_library(
+#     NAME example_proto
+#     SOURCES
+#       messages_one.proto
+#       messages_two.proto
+#     PUBLIC_LINK_LIBS
+#       eolo_example_dependencies_proto  # Module containing proto files used by this module.
+#   )
+#--------------------------------------------------------------------------------------------------
+macro(define_module_proto_library)
+    set(flags "")
+    set(single_opts NAME)
+    set(multi_opts SOURCES PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
+
+    include(CMakeParseArguments)
+    cmake_parse_arguments(TARGET_ARG
+            "${flags}"
+            "${single_opts}"
+            "${multi_opts}"
+            ${ARGN})
+
+    if(TARGET_ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(NOT TARGET_ARG_NAME)
+        message(FATAL_ERROR "Library name not specified")
+    endif()
+
+    if(NOT ${TARGET_ARG_NAME} MATCHES "_proto$")
+        message(FATAL_ERROR "Protobuf library should end with '_proto' suffix")
+    endif()
+
+    # Check that linter config file is present.
+    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/buf.yaml)
+        message(FATAL_ERROR "Protobuf library directory must contain buf.yaml file")
+    endif()
+
+    find_package(Protobuf REQUIRED)
+
+    set(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
+
+    # Collect paths containing .proto dependencies.
+    set(PROTOBUF_DEP_PATHS "")
+    foreach(DEP_LIB ${TARGET_ARG_PUBLIC_LINK_LIBS})
+        get_target_property(DEP_PATH ${DEP_LIB} PROTOBUF_IMPORT_PATH)
+        list(APPEND PROTOBUF_DEP_PATHS ${DEP_PATH})
+    endforeach()
+
+    list(REMOVE_DUPLICATES PROTOBUF_DEP_PATHS)
+
+    # This var should contain paths to all .proto files in use, even imported.
+    set(PROTOBUF_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${PROTOBUF_DEP_PATHS})
+
+    protobuf_generate_cpp(PROTOBUF_SOURCES PROTOBUF_HEADERS ${TARGET_ARG_SOURCES})
+
+    set(PROTOBUF_LIBRARY eolo_${TARGET_ARG_NAME})
+
+    message(STATUS "Create protobuf library: ${PROTOBUF_LIBRARY}")
+
+    add_library(${PROTOBUF_LIBRARY} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+    set(LIBRARY_NAME_ALIAS ${CMAKE_PROJECT_NAME}::${TARGET_ARG_NAME})
+    add_library(${LIBRARY_NAME_ALIAS} ALIAS ${PROTOBUF_LIBRARY})
+
+
+    # NOTE A proto-library should provide a path to its root dir, so dependent libs could find its .proto files.
+    # Also, the paths to the dependencies of dependencies should be present.
+    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES PROTOBUF_IMPORT_PATH "${PROTOBUF_IMPORT_DIRS}")
+
+    target_link_libraries(${PROTOBUF_LIBRARY}
+            PUBLIC
+                ${TARGET_ARG_PUBLIC_LINK_LIBS}
+                protobuf::libprotobuf
+            PRIVATE
+                ${TARGET_ARG_PRIVATE_LINK_LIBS})
+
+    target_include_directories(${PROTOBUF_LIBRARY}
+            SYSTEM  # for clang-tidy to ignore header files from this directory
+            BEFORE
+            PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+            $<INSTALL_INTERFACE:include>)
+
+    # Register protobuf library as a dependency for the module.
+    set(MODULE_${MODULE_NAME}_LIB_TARGETS
+            ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${PROTOBUF_LIBRARY}
+            CACHE INTERNAL
+            "Targets in module ${MODULE_NAME}")
+
+    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES
+            VERSION ${VERSION}
+            SOVERSION ${VERSION_MAJOR}
+            EXPORT_NAME ${PROTOBUF_LIBRARY})
+
+    # Disable clang-tidy for the generated source and header files.
+    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES CXX_CLANG_TIDY "")
+endmacro()
+
 
 # ==================================================================================================
 # Setup tests target

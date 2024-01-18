@@ -1,5 +1,5 @@
 #=================================================================================================
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
 declare_module(NAME utils
@@ -12,9 +12,11 @@ configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ON
 
 # library sources
 set(SOURCES
+        src/type_traits.cpp
         src/version.cpp
         src/utils.cpp
         README.md
+        include/eolo/utils/type_traits.h
         include/eolo/utils/utils.h
         include/eolo/utils/version.h)
 

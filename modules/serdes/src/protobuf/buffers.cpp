@@ -1,7 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2018-2023 EOLO Contributors
+// Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/base/type_traits.h"
-
-namespace eolo {}
+#include "eolo/serdes/protobuf/buffers.h"

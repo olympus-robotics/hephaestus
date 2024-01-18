@@ -40,3 +40,4 @@ RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 
 RUN curl https://raw.githubusercontent.com/ninja-build/ninja/master/misc/bash-completion > $HOME/.ninja-autocomplete && echo "source $HOME/.ninja-autocomplete" >> $HOME/.bashrc
 RUN sed -i "s/#force_color_prompt=yes/force_color_prompt=yes/g" $HOME/.bashrc
+RUN curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o $HOME/.git-completion.bash && echo "source ~/.git-completion.bash" >> $HOME/.bashrc

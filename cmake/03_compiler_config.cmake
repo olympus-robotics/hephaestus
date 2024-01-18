@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2018-2023 EOLO Contributors
+# Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # required by source analysis tools
