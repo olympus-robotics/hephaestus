@@ -2,4 +2,14 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/serdes/generic/concepts.h"
+#include <gtest/gtest.h>
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
+
+namespace eolo::types::tests {
+
+TEST(Example, Example) {
+  // EXPECT_TRUE(false);
+}
+}  // namespace eolo::types::tests

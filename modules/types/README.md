@@ -1,8 +1,8 @@
-# README: serdes
+# README: types
 
 ## Brief
 
-serdes provides .. <one line description>
+types provides .. <one line description>
 
 ## Detailed description
 

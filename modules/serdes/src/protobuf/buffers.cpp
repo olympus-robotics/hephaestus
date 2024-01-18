@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/serdes/generic/deserializer.h"
+#include "eolo/serdes/protobuf/buffers.h"
