@@ -11,7 +11,7 @@ template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
 
 template <class T>
-auto deserialize(std::span<std::byte> buffer, T& data) -> void;
+auto deserialize(std::span<const std::byte> buffer, T& data) -> void;
 
 template <class T>
 auto serialize(const T& data) -> std::vector<std::byte> {
@@ -21,7 +21,7 @@ auto serialize(const T& data) -> std::vector<std::byte> {
 }
 
 template <class T>
-auto deserialize(std::span<std::byte> buffer, T& data) -> void {
+auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   DeserializerBuffer des_buffer{ buffer };
   fromProtobuf(des_buffer, data);
 }

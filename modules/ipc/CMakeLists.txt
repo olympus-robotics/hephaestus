@@ -2,8 +2,9 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME ipc DEPENDS_ON_MODULES base types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS zenohcxx)
+declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS zenohcxx)
 
+find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
 
 # library sources
@@ -17,8 +18,9 @@ define_module_library(
         NAME ipc
         PUBLIC_LINK_LIBS
             eolo::base
+            eolo::cli
             eolo::types_protobuf
-            # zenohcxx
+            zenohc::lib
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}
         PUBLIC_INCLUDE_PATHS
