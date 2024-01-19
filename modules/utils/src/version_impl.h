@@ -17,8 +17,8 @@ static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
 static constexpr std::uint16_t VERSION_PATCH = 0;
 
-static constexpr std::string_view REPO_BRANCH = "serialization";
+static constexpr std::string_view REPO_BRANCH = "cli";
 static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
-static constexpr std::string_view REPO_HASH = "cebf775";
+static constexpr std::string_view REPO_HASH = "893f27b";
 
 } // namespace eolo::utils

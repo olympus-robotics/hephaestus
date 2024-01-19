@@ -2,28 +2,18 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME utils
-  ALWAYS_BUILD
-  DEPENDS_ON_MODULES "" # **Note**: This module should not depend on any other module
-  DEPENDS_ON_EXTERNAL_PROJECTS "")
-
-# generate version header
-configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ONLY)
+declare_module(NAME cli DEPENDS_ON_MODULES base DEPENDS_ON_EXTERNAL_PROJECTS "")
 
 # library sources
 set(SOURCES
-        src/concepts.cpp
-        src/version.cpp
-        src/utils.cpp
+        src/program_options.cpp
         README.md
-        include/eolo/utils/concepts.h
-        include/eolo/utils/utils.h
-        include/eolo/utils/version.h)
+        include/eolo/cli/program_options.h)
 
 # library target
 define_module_library(
-        NAME utils
-        PUBLIC_LINK_LIBS ""
+        NAME cli
+        PUBLIC_LINK_LIBS eolo::base
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}
         PUBLIC_INCLUDE_PATHS
@@ -35,4 +25,3 @@ define_module_library(
 # Subprojects
 add_subdirectory(tests)
 add_subdirectory(examples)
-add_subdirectory(apps)
