@@ -78,8 +78,7 @@ public:
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key,
-                              const std::string& description) -> ProgramDescription&;
+  constexpr auto defineOption(const std::string& key, const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a required option (--key=value) on the command line
   /// @tparam T Value type
@@ -109,8 +108,7 @@ public:
   /// @param default_value Default value to use if the option is not specified on the command line
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key, char short_key,
-                              const std::string& description,
+  constexpr auto defineOption(const std::string& key, char short_key, const std::string& description,
                               const T& default_value) -> ProgramDescription&;
 
   /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
@@ -127,8 +125,7 @@ public:
   /// @param key Key of the key-value pair
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
-  constexpr auto defineFlag(const std::string& key,
-                            const std::string& description) -> ProgramDescription&;
+  constexpr auto defineFlag(const std::string& key, const std::string& description) -> ProgramDescription&;
 
   /// @brief Builds the container to parse command line options.
   /// @note: The resources in this object is moved into the returned object, making this object
@@ -160,36 +157,35 @@ private:
 };
 
 constexpr ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {
-  options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), "", false,
-                        false);
+  options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), "", false, false);
 }
 
 void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k) const {
-  const auto it = std::find_if(options_.begin(), options_.end(),
-                               [&key](const auto& opt) { return key == opt.key; });
-  throwExceptionIf<InvalidOperationException>(
-      it != options_.end(), std::format("Attempted redefinition of option '{}'", key));
+  const auto it =
+      std::find_if(options_.begin(), options_.end(), [&key](const auto& opt) { return key == opt.key; });
+  throwExceptionIf<InvalidOperationException>(it != options_.end(),
+                                              std::format("Attempted redefinition of option '{}'", key));
 
   if (k == '\0') {
     return;
   }
 
-  const auto short_it = std::find_if(options_.begin(), options_.end(),
-                                     [k](const auto& opt) { return k == opt.short_key; });
+  const auto short_it =
+      std::find_if(options_.begin(), options_.end(), [k](const auto& opt) { return k == opt.short_key; });
   throwExceptionIf<InvalidOperationException>(
       short_it != options_.end(),
       std::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(
-    const std::string& key, const std::string& description) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineOption(const std::string& key,
+                                                const std::string& description) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description);
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(
-    const std::string& key, char short_key, const std::string& description) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
+                                                const std::string& description) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(), "", true, false);
@@ -197,17 +193,15 @@ constexpr auto ProgramDescription::defineOption(
 }
 
 template <StringStreamable T>
-inline constexpr auto
-ProgramDescription::defineOption(const std::string& key, const std::string& description,
-                                 const T& default_value) -> ProgramDescription& {
+inline constexpr auto ProgramDescription::defineOption(const std::string& key, const std::string& description,
+                                                       const T& default_value) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description, default_value);
 }
 
 template <StringStreamable T>
-inline constexpr auto
-ProgramDescription::defineOption(const std::string& key, char short_key,
-                                 const std::string& description,
-                                 const T& default_value) -> ProgramDescription& {
+inline constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
+                                                       const std::string& description,
+                                                       const T& default_value) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(),
@@ -215,17 +209,16 @@ ProgramDescription::defineOption(const std::string& key, char short_key,
   return *this;
 }
 
-constexpr auto ProgramDescription::defineFlag(
-    const std::string& key, char short_key, const std::string& description) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineFlag(const std::string& key, char short_key,
+                                              const std::string& description) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
-  options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false,
-                        false);
+  options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false, false);
   return *this;
 }
 
-constexpr auto ProgramDescription::defineFlag(
-    const std::string& key, const std::string& description) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineFlag(const std::string& key,
+                                              const std::string& description) -> ProgramDescription& {
   return defineFlag(key, '\0', description);
 }
 
@@ -239,8 +232,8 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   const auto my_type = utils::getTypeName<T>();
   throwExceptionIf<TypeMismatchException>(
       it->value_type != my_type,
-      std::format("Tried to parse option '{}' as type {} but it's specified as type {}", option,
-                  my_type, it->value_type));
+      std::format("Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
+                  it->value_type));
 
   if constexpr (std::is_same_v<T, std::string>) {
     // note: since std::istringstream extracts only up to whitespace, this special case is
@@ -252,8 +245,7 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   std::istringstream stream(it->value);
   throwExceptionIf<TypeMismatchException>(
       not(stream >> std::boolalpha >> value),
-      std::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type,
-                  option));
+      std::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option));
 
   return value;
 }

@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
+#include <charconv>
 #include <chrono>
 #include <cstdlib>
 #include <print>
@@ -11,7 +12,7 @@
 #include <zenoh.h>
 
 #include "eolo/cli/program_options.h"
-#include "eolo/ipc/zenoh.h"
+#include "eolo/ipc/zenoh/utils.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -29,18 +30,24 @@ auto main(int argc, const char* argv[]) -> int {
     zenohc::Config config;
 
     std::println("Opening session...");
-    auto session = eolo::ipc::expect(open(std::move(config)));
+    auto session = eolo::ipc::zenoh::expect(open(std::move(config)));
 
     std::println("Declaring Subscriber on '{}'", key);
     const auto cb = [&key](const zenohc::Sample& sample) {
+      int counter = 0;
+      if (sample.get_attachment().check()) {
+        auto counter_str = std::string{ sample.get_attachment().get("msg_counter").as_string_view() };
+        counter = std::stoi(counter_str);
+      }
       eolo::types::Pose pose;
-      // auto buffer = std::span<std::byte>()
-      auto buffer = eolo::ipc::toByteSpan(sample.get_payload());
+      auto buffer = eolo::ipc::zenoh::toByteSpan(sample.get_payload());
       eolo::serdes::deserialize(buffer, pose);
-      std::println(">> Topic {}. Received {}", key, pose.position.transpose());
+      std::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
+                   eolo::ipc::zenoh::toChrono(sample.get_timestamp()), key,
+                   sample.get_keyexpr().as_string_view(), counter, pose.position.transpose());
     };
 
-    auto subs = eolo::ipc::expect(session.declare_subscriber(key, cb));
+    auto subs = eolo::ipc::zenoh::expect(session.declare_subscriber(key, cb));
     std::println("Subscriber on '{}' declared", subs.get_keyexpr().as_string_view());
 
     while (true) {

@@ -9,8 +9,9 @@
 
 #include <zenoh.h>
 
+#include "eolo/base/exception.h"
 #include "eolo/cli/program_options.h"
-#include "eolo/ipc/zenoh.h"
+#include "eolo/ipc/zenoh/zenoh.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -25,16 +26,9 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
     const auto key = args.getOption<std::string>("key");
 
-    zenohc::Config config;
-    std::println("Opening session...");
-    // auto session = eolo::ipc::expect<zenohc::Session>(open(std::move(config)));
-    auto session = eolo::ipc::expect(open(std::move(config)));
-
     std::println("Declaring Publisher on '{}'", key);
-    auto pub = eolo::ipc::expect(session.declare_publisher(key));
-
-    zenohc::PublisherPutOptions options;
-    options.set_encoding(Z_ENCODING_PREFIX_APP_CUSTOM);
+    eolo::ipc::zenoh::PublisherConfig config{ .topic = key };
+    eolo::ipc::zenoh::Publisher pub{ std::move(config) };
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     while (true) {
@@ -43,7 +37,8 @@ auto main(int argc, const char* argv[]) -> int {
 
       std::println("Publishing Data ('{} : {})", key, pose.position.transpose());
       auto buffer = eolo::serdes::serialize(pose);
-      pub.put(buffer, options);
+      auto res = pub.publish(buffer);
+      eolo::throwExceptionIf<eolo::InvalidOperationException>(!res, "failed to publish message");
 
       std::this_thread::sleep_for(LOOP_WAIT);
     }
