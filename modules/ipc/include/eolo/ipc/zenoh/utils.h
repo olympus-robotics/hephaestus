@@ -24,16 +24,19 @@ inline auto toString(const zenohc::Id& id) -> std::string {
   return ss.str();
 }
 
-inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::system_clock::time_point {
-  std::println("Converting timestamp: {}, is valid: {}", ts.get_time(), ts.check());
-  const auto ntp64 = ts.get_time();
-  const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(ntp64 >> 32U) };
-  const auto fraction = std::chrono::nanoseconds{ static_cast<std::uint32_t>(ntp64 & 0xFFFFFFFF) };
+inline auto toChrono(uint64_t ts) -> std::chrono::system_clock::time_point {
+  const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(ts >> 32U) };
+  const auto fraction = std::chrono::nanoseconds{ static_cast<std::uint32_t>(ts & 0xFFFFFFFF) };
   const std::chrono::system_clock::duration duration =
       std::chrono::duration_cast<std::chrono::system_clock::duration>(seconds) +
       std::chrono::duration_cast<std::chrono::system_clock::duration>(fraction);
 
   return std::chrono::system_clock::time_point{ duration };
+}
+
+inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::system_clock::time_point {
+  std::println("Converting timestamp: {}, is valid: {}", ts.get_time(), ts.check());
+  return toChrono(ts.get_time());
 }
 
 template <typename T>

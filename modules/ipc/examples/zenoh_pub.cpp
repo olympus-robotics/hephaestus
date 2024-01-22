@@ -27,7 +27,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto key = args.getOption<std::string>("key");
 
     std::println("Declaring Publisher on '{}'", key);
-    eolo::ipc::zenoh::PublisherConfig config{ .topic = key };
+    eolo::ipc::zenoh::PublisherConfig config{ .topic = key, .cache_size = 100 };
     eolo::ipc::zenoh::Publisher pub{ std::move(config) };
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
@@ -44,8 +44,8 @@ auto main(int argc, const char* argv[]) -> int {
     }
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
-    std::ignore = std::fputs(
-        std::format("main terminated with an exception: {}\n", ex.what()).c_str(), stderr);
+    std::ignore =
+        std::fputs(std::format("main terminated with an exception: {}\n", ex.what()).c_str(), stderr);
     return EXIT_FAILURE;
   }
 }
