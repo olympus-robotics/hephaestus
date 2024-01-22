@@ -28,6 +28,9 @@ struct PublisherConfig {
   std::size_t cache_size = 0;
 };
 
+// TODO: Zenoh supports getting list of subscriber https://github.com/eclipse-zenoh/zenoh/pull/565, but it
+// appears to not be supported by the C interface
+
 class Publisher {
 public:
   explicit Publisher(PublisherConfig config);
