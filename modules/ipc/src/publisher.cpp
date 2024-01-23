@@ -2,6 +2,4 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/zenoh.h"
-
-namespace eolo::ipc {}
+#include "eolo/ipc/zenoh/publisher.h"

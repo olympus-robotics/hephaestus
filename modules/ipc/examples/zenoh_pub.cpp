@@ -11,7 +11,7 @@
 
 #include "eolo/base/exception.h"
 #include "eolo/cli/program_options.h"
-#include "eolo/ipc/zenoh/zenoh.h"
+#include "eolo/ipc/zenoh/publisher.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -27,7 +27,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto key = args.getOption<std::string>("key");
 
     std::println("Declaring Publisher on '{}'", key);
-    eolo::ipc::zenoh::PublisherConfig config{ .topic = key, .cache_size = 100 };
+    eolo::ipc::zenoh::Config config{ .topic = key, .cache_size = 100 };
     eolo::ipc::zenoh::Publisher pub{ std::move(config) };
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);

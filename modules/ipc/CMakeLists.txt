@@ -9,11 +9,15 @@ find_package(zenohcxx REQUIRED)
 
 # library sources
 set(SOURCES
+        src/config.cpp
         src/utils.cpp
-        src/zenoh.cpp
+        src/publisher.cpp
+        src/subscriber.cpp
         README.md
+        include/eolo/ipc/zenoh/config.h
         include/eolo/ipc/zenoh/utils.h
-        include/eolo/ipc/zenoh/zenoh.h)
+        include/eolo/ipc/zenoh/publisher.h
+        include/eolo/ipc/zenoh/subscriber.h)
 
 # library target
 define_module_library(

@@ -12,6 +12,7 @@
 #include <zenoh.h>
 
 #include "eolo/cli/program_options.h"
+#include "eolo/ipc/zenoh/subscriber.h"
 #include "eolo/ipc/zenoh/utils.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
@@ -27,28 +28,21 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
     const auto key = args.getOption<std::string>("key");
 
-    zenohc::Config config;
+    eolo::ipc::zenoh::Config config{ .topic = key, .cache_size = 100 };
 
     std::println("Opening session...");
-    auto session = eolo::ipc::zenoh::expect(open(std::move(config)));
-
     std::println("Declaring Subscriber on '{}'", key);
-    const auto cb = [&key](const zenohc::Sample& sample) {
-      int counter = 0;
-      if (sample.get_attachment().check()) {
-        auto counter_str = std::string{ sample.get_attachment().get("msg_counter").as_string_view() };
-        counter = std::stoi(counter_str);
-      }
+    const auto cb = [&key](const eolo::ipc::zenoh::MessageMetadata& metadata,
+                           std::span<const std::byte> data) {
       eolo::types::Pose pose;
-      auto buffer = eolo::ipc::zenoh::toByteSpan(sample.get_payload());
-      eolo::serdes::deserialize(buffer, pose);
+      eolo::serdes::deserialize(data, pose);
       std::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
-                   eolo::ipc::zenoh::toChrono(sample.get_timestamp()), key,
-                   sample.get_keyexpr().as_string_view(), counter, pose.position.transpose());
+                   std::chrono::system_clock::time_point{
+                       std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
+                   key, metadata.sender_id, metadata.sequence_id, pose.position.transpose());
     };
 
-    auto subs = eolo::ipc::zenoh::expect(session.declare_subscriber(key, cb));
-    std::println("Subscriber on '{}' declared", subs.get_keyexpr().as_string_view());
+    eolo::ipc::zenoh::Subscriber sub{ std::move(config), std::move(cb) };
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::seconds{ 1 });

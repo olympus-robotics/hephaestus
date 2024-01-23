@@ -10,30 +10,17 @@
 #include <zenoh.h>
 
 #include "eolo/base/exception.h"
+#include "eolo/ipc/zenoh/config.h"
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-
-struct PublisherConfig {
-  enum Mode { PEER, CLIENT };
-  std::string topic;
-  bool enable_shared_memory = false;  //! NOTE: With shared-memory enabled, the publisher still uses the
-                                      //! network transport layer to notify subscribers of the shared-memory
-                                      //! segment to read. Therefore, for very small messages, shared -
-                                      //! memory transport could be less efficient than using the default
-                                      //! network transport to directly carry the payload.
-  Mode mode = PEER;
-  // NOLINTNEXTLINE(readability-redundant-string-init) otherwise we need to specify in constructor
-  std::string router = "";  //! If specified connect to the given router endpoint.
-  std::size_t cache_size = 0;
-};
 
 // TODO: Zenoh supports getting list of subscriber https://github.com/eclipse-zenoh/zenoh/pull/565, but it
 // appears to not be supported by the C interface
 
 class Publisher {
 public:
-  explicit Publisher(PublisherConfig config);
+  explicit Publisher(Config config);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -43,27 +30,23 @@ public:
   [[nodiscard]] auto publish(std::span<std::byte> data) -> bool;
 
 private:
-  [[nodiscard]] auto createZenohConfig() -> zenohc::Config;
-
-private:
-  PublisherConfig config_;
+  Config config_;
 
   std::unique_ptr<zenohc::Session> session_;
   std::unique_ptr<zenohc::Publisher> publisher_;
-  std::size_t pub_msg_count_ = 0;
 
   zc_owned_liveliness_token_t liveliness_token_{};
   ze_owned_publication_cache_t pub_cache_{};
 
   zenohc::PublisherPutOptions put_options_;
-
+  std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;
 };
 
-Publisher::Publisher(PublisherConfig config) : config_(std::move(config)) {
-  auto zconfig = createZenohConfig();
+Publisher::Publisher(Config config) : config_(std::move(config)) {
+  auto zconfig = createZenohConfig(config_);
 
-  // Create the publisher
+  // Create the publisher.
   session_ = expectAsPtr(open(std::move(zconfig)));
 
   // Enable publishing of a liveliness token.
@@ -86,6 +69,7 @@ Publisher::Publisher(PublisherConfig config) : config_(std::move(config)) {
 
   put_options_.set_encoding(Z_ENCODING_PREFIX_APP_CUSTOM);
   attachment_[messageCounterKey()] = "0";
+  attachment_[sessionIdKey()] = toString(session_->info_zid());
   put_options_.set_attachment(attachment_);
 }
 
@@ -98,35 +82,6 @@ auto Publisher::publish(std::span<std::byte> data) -> bool {
   attachment_[messageCounterKey()] = std::to_string(pub_msg_count_++);
 
   return publisher_->put({ data.data(), data.size() }, put_options_);
-}
-
-auto Publisher::createZenohConfig() -> zenohc::Config {
-  zenohc::Config zconfig;
-  // A timestamp is add to every published message.
-  zconfig.insert_json(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
-
-  // Enable shared memory support.
-  if (config_.enable_shared_memory) {
-    zconfig.insert_json("transport/shared_memory/enabled", "true");
-  }
-
-  // Set node in client mode.
-  if (config_.mode == PublisherConfig::CLIENT) {
-    static constexpr std::string_view DEFAULT_ROUTER = "localhost:7447";
-    if (config_.router.empty()) {
-      config_.router = DEFAULT_ROUTER;
-    }
-
-    zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
-  }
-
-  // Add router endpoint.
-  if (!config_.router.empty()) {
-    const auto router_endpoint = std::format(R"(["tcp/{}"])", config_.router);
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
-  }
-
-  return zconfig;
 }
 
 }  // namespace eolo::ipc::zenoh

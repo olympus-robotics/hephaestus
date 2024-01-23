@@ -18,23 +18,24 @@ namespace eolo::ipc::zenoh {
   return "msg_counter";
 }
 
+[[nodiscard]] inline static constexpr auto sessionIdKey() -> const char* {
+  return "session_id";
+}
+
 inline auto toString(const zenohc::Id& id) -> std::string {
   std::stringstream ss;
   ss << id;
   return ss.str();
 }
 
-inline auto toChrono(uint64_t ts) -> std::chrono::system_clock::time_point {
+inline auto toChrono(uint64_t ts) -> std::chrono::nanoseconds {
   const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(ts >> 32U) };
   const auto fraction = std::chrono::nanoseconds{ static_cast<std::uint32_t>(ts & 0xFFFFFFFF) };
-  const std::chrono::system_clock::duration duration =
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(seconds) +
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(fraction);
 
-  return std::chrono::system_clock::time_point{ duration };
+  return seconds + fraction;
 }
 
-inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::system_clock::time_point {
+inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::nanoseconds {
   std::println("Converting timestamp: {}, is valid: {}", ts.get_time(), ts.check());
   return toChrono(ts.get_time());
 }
