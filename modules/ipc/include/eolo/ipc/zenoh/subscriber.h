@@ -19,8 +19,8 @@ namespace eolo::ipc::zenoh {
 struct MessageMetadata {
   // TODO: convert this to a uuid
   std::string sender_id;
-  std::chrono::nanoseconds timestamp;
-  std::size_t sequence_id;
+  std::chrono::nanoseconds timestamp{};
+  std::size_t sequence_id{};
 };
 
 class Subscriber {
@@ -48,7 +48,7 @@ Subscriber::Subscriber(Config config, DataCallback&& callback)
   // Create the subscriber.
   session_ = expectAsPtr(open(std::move(zconfig)));
 
-  if (config_.cache_size > 0) {
+  if (config_.cache_size == 0) {
     auto cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
     subscriber_ = expectAsPtr(session_->declare_subscriber(config_.topic, std::move(cb)));
   } else {

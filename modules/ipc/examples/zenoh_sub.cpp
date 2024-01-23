@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include <charconv>
 #include <chrono>
 #include <cstdlib>
 #include <print>
@@ -13,7 +12,6 @@
 
 #include "eolo/cli/program_options.h"
 #include "eolo/ipc/zenoh/subscriber.h"
-#include "eolo/ipc/zenoh/utils.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -24,11 +22,13 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto desc = eolo::cli::ProgramDescription("Subscriber listening for data on specified key");
     desc.defineOption<std::string>("key", "Key expression", DEFAULT_KEY);
+    desc.defineOption<std::size_t>("cache", 'c', "Cache size", 0);
 
     const auto args = std::move(desc).parse(argc, argv);
     const auto key = args.getOption<std::string>("key");
+    const auto cache_size = args.getOption<std::size_t>("cache");
 
-    eolo::ipc::zenoh::Config config{ .topic = key, .cache_size = 100 };
+    eolo::ipc::zenoh::Config config{ .topic = key, .cache_size = cache_size };
 
     std::println("Opening session...");
     std::println("Declaring Subscriber on '{}'", key);
