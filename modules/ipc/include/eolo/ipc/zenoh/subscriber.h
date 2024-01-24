@@ -28,6 +28,11 @@ public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
   Subscriber(Config config, DataCallback&& callback);
+  ~Subscriber();
+  Subscriber(const Subscriber&) = delete;
+  Subscriber(Subscriber&&) = default;
+  auto operator=(const Subscriber&) -> Subscriber& = delete;
+  auto operator=(Subscriber&&) -> Subscriber& = default;
 
 private:
   void callback(const zenohc::Sample& sample);
@@ -48,19 +53,21 @@ Subscriber::Subscriber(Config config, DataCallback&& callback)
   // Create the subscriber.
   session_ = expectAsPtr(open(std::move(zconfig)));
 
+  zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
   if (config_.cache_size == 0) {
-    auto cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
     subscriber_ = expectAsPtr(session_->declare_subscriber(config_.topic, std::move(cb)));
   } else {
     const auto sub_opts = ze_querying_subscriber_options_default();
-    zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
-
     auto c = cb.take();
     cache_subscriber_ = ze_declare_querying_subscriber(session_->loan(), z_keyexpr(config_.topic.c_str()),
                                                        z_move(c), &sub_opts);
     eolo::throwExceptionIf<eolo::FailedZenohOperation>(!z_check(cache_subscriber_),
                                                        "failed to create zenoh sub");
   }
+}
+
+Subscriber::~Subscriber() {
+  z_drop(z_move(cache_subscriber_));
 }
 
 void Subscriber::callback(const zenohc::Sample& sample) {

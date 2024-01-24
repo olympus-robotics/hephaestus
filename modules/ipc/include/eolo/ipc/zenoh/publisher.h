@@ -46,7 +46,7 @@ private:
 Publisher::Publisher(Config config) : config_(std::move(config)) {
   auto zconfig = createZenohConfig(config_);
 
-  // Create the publisher.
+  // Create the publisher
   session_ = expectAsPtr(open(std::move(zconfig)));
 
   // Enable publishing of a liveliness token.
