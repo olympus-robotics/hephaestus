@@ -28,8 +28,8 @@ TEST(ProgramOptions, Option) {
       .defineOption<int>("foo", 'f', "desc", 1)
       .defineFlag("flag", 'b', "desc");
   {
-    auto options = ProgramDescription{ desc }.parse(
-        { "--option", "value", "-o", "other_value", "--bar", "1.2" });
+    auto options =
+        ProgramDescription{ desc }.parse({ "--option", "value", "-o", "other_value", "--bar", "1.2" });
     EXPECT_TRUE(options.hasOption("option"));
     EXPECT_EQ(options.getOption<std::string>("option"), "value");
     EXPECT_TRUE(options.hasOption("other_option"));
@@ -65,8 +65,7 @@ TEST(ProgramOptions, Errors) {
                  InvalidParameterException);
     EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }),
                  InvalidParameterException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value" }),
-                 InvalidConfigurationException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value" }), InvalidConfigurationException);
   }
 
   {

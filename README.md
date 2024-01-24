@@ -7,4 +7,4 @@ The best way to build eolo is to do it inside the docker container provided in t
 
 ### Compilation
 
-Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from `eolo`.
+Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from [grape](https://github.com/cvilas/grape).

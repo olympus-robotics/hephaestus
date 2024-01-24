@@ -12,4 +12,4 @@ namespace eolo::ipc::tests {
 TEST(Example, Example) {
   EXPECT_TRUE(false);
 }
-}  // namespace eolo::@
+}  // namespace eolo::ipc::tests

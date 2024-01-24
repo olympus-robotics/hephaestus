@@ -10,9 +10,9 @@ find_package(zenohcxx REQUIRED)
 # library sources
 set(SOURCES
         src/common.cpp
-        src/utils.cpp
-        src/publisher.cpp
-        src/subscriber.cpp
+        src/zenoh/utils.cpp
+        src/zenoh/publisher.cpp
+        src/zenoh/subscriber.cpp
         README.md
         include/eolo/ipc/common.h
         include/eolo/ipc/zenoh/utils.h
