@@ -63,8 +63,7 @@ public:
 /// Exception raised due to invalid/incomplete/undefined configuration
 class InvalidConfigurationException : public eolo::Exception {
 public:
-  InvalidConfigurationException(const std::string& msg, std::source_location loc)
-    : Exception(msg, loc) {
+  InvalidConfigurationException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
   }
 };
 
@@ -72,8 +71,7 @@ public:
 /// Exception raised due to invalid parameters
 class InvalidParameterException : public eolo::Exception {
 public:
-  InvalidParameterException(const std::string& msg, std::source_location loc)
-    : Exception(msg, loc) {
+  InvalidParameterException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
   }
 };
 
@@ -81,8 +79,15 @@ public:
 /// Exception raised due to invalid or unsupported operation
 class InvalidOperationException : public eolo::Exception {
 public:
-  InvalidOperationException(const std::string& msg, std::source_location loc)
-    : Exception(msg, loc) {
+  InvalidOperationException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
+  }
+};
+
+//=================================================================================================
+/// Exception raised due failed Zenoh operation
+class FailedZenohOperation : public eolo::Exception {
+public:
+  FailedZenohOperation(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
   }
 };
 

@@ -82,6 +82,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "zenohcxx: Building ${zenohcxx_VERION_REQUIRED} from source")
     ExternalProject_Add(
       zenohcxx
+      DEPENDS zenohc
       GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
       GIT_TAG main # v${zenohcxx_VERION_REQUIRED}
       GIT_SHALLOW true
