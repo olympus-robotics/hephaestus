@@ -8,3 +8,20 @@ The best way to build eolo is to do it inside the docker container provided in t
 ### Compilation
 
 Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from [grape](https://github.com/cvilas/grape).
+
+## TODO
+
+### IPC
+`zenoh`
+- [] Add liveliness client (i.e. topic list)
+- [] Add scout client (i.e. node list)
+- [] Add publisher subscriber listenr, waiting for https://github.com/eclipse-zenoh/zenoh-c/pull/236
+- [] Add router client
+- [] Add option for high performant publisher (disable cache, liveliness, metadata and set high priority)
+
+`cli`
+- [] Add support to `enum` options
+- [] Add support to `vector` options
+
+### Serialization
+Add new bag module
