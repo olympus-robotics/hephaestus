@@ -11,17 +11,10 @@
 #include <zenoh.h>
 
 #include "eolo/base/exception.h"
-#include "eolo/ipc/zenoh/config.h"
+#include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-
-struct MessageMetadata {
-  // TODO: convert this to a uuid
-  std::string sender_id;
-  std::chrono::nanoseconds timestamp{};
-  std::size_t sequence_id{};
-};
 
 class Subscriber {
 public:

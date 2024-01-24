@@ -10,6 +10,7 @@
 #include <zenoh.h>
 
 #include "eolo/base/exception.h"
+#include "eolo/ipc/publisher.h"
 #include "eolo/ipc/zenoh/publisher.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
@@ -24,7 +25,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto config = parseArgs(args);
 
     std::println("Declaring Publisher on '{}'", config.topic);
-    eolo::ipc::zenoh::Publisher pub{ std::move(config) };
+    eolo::ipc::zenoh::Publisher publisher{ std::move(config) };
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     while (true) {
@@ -32,8 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
       pose.position = Eigen::Vector3d{ 1, 2, 3 };
 
       std::println("Publishing Data ('{} : {})", config.topic, pose.position.transpose());
-      auto buffer = eolo::serdes::serialize(pose);
-      auto res = pub.publish(buffer);
+      auto res = eolo::ipc::publish(publisher, pose);
       eolo::throwExceptionIf<eolo::InvalidOperationException>(!res, "failed to publish message");
 
       std::this_thread::sleep_for(LOOP_WAIT);

@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/config.h"
+#include "eolo/ipc/common.h"

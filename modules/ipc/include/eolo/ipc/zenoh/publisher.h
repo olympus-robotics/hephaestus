@@ -10,7 +10,7 @@
 #include <zenoh.h>
 
 #include "eolo/base/exception.h"
-#include "eolo/ipc/zenoh/config.h"
+#include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {

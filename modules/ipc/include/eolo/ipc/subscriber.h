@@ -1,0 +1,32 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 EOLO Contributors
+//=================================================================================================
+
+#pragma once
+
+#include <span>
+#include <zenohc.hxx>
+
+#include <zenoh.h>
+
+#include "eolo/ipc/common.h"
+#include "eolo/serdes/serdes.h"
+
+namespace eolo::ipc {
+
+template <class DataType>
+using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<DataType>&)>;
+
+template <class Subscriber, class DataType>
+[[nodiscard]] auto subscribe(Config config, DataCallback<DataType>&& callback) -> Subscriber {
+  auto cb = [callback = std::move(callback)](const MessageMetadata& metadata,
+                                             std::span<const std::byte> buffer) mutable {
+    auto data = std::make_shared<DataType>();
+    eolo::serdes::deserialize(buffer, *data);
+    callback(metadata, std::move(data));
+  };
+
+  return Subscriber{ std::move(config), std::move(cb) };
+}
+
+}  // namespace eolo::ipc
