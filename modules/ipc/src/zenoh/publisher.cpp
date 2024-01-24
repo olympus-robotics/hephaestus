@@ -8,12 +8,8 @@
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-Publisher::Publisher(Config config) : config_(std::move(config)) {
-  auto zconfig = createZenohConfig(config_);
-
-  // Create the publisher
-  session_ = expectAsPtr(open(std::move(zconfig)));
-
+Publisher::Publisher(SessionPtr session, Config config)
+  : config_(std::move(config)), session_(std::move(session)) {
   // Enable publishing of a liveliness token.
   liveliness_token_ =
       zc_liveliness_declare_token(session_->loan(), z_keyexpr(config_.topic.c_str()), nullptr);
@@ -30,7 +26,7 @@ Publisher::Publisher(Config config) : config_(std::move(config)) {
 
   zenohc::PublisherOptions pub_options;
   // TODO: add support to priorty
-  publisher_ = expectAsPtr(session_->declare_publisher(config_.topic, pub_options));
+  publisher_ = expectAsUniquePtr(session_->declare_publisher(config_.topic, pub_options));
 
   put_options_.set_encoding(Z_ENCODING_PREFIX_APP_CUSTOM);
   attachment_[messageCounterKey()] = "0";

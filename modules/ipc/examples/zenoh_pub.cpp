@@ -12,6 +12,7 @@
 #include "eolo/base/exception.h"
 #include "eolo/ipc/publisher.h"
 #include "eolo/ipc/zenoh/publisher.h"
+#include "eolo/ipc/zenoh/session.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -23,9 +24,10 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
 
     auto config = parseArgs(args);
+    auto session = eolo::ipc::zenoh::createSession(config);
+    eolo::ipc::zenoh::Publisher publisher{ session, std::move(config) };
 
-    std::println("Declaring Publisher on '{}'", config.topic);
-    eolo::ipc::zenoh::Publisher publisher{ std::move(config) };
+    std::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     while (true) {

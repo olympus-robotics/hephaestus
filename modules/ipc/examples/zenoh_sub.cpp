@@ -11,6 +11,7 @@
 #include <zenoh.h>
 
 #include "eolo/ipc/subscriber.h"
+#include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/subscriber.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
@@ -26,6 +27,8 @@ auto main(int argc, const char* argv[]) -> int {
     std::println("Opening session...");
     std::println("Declaring Subscriber on '{}'", config.topic);
 
+    auto session = eolo::ipc::zenoh::createSession(config);
+
     auto cb = [topic = config.topic](const eolo::ipc::MessageMetadata& metadata,
                                      const std::shared_ptr<eolo::types::Pose>& pose) {
       std::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
@@ -33,8 +36,8 @@ auto main(int argc, const char* argv[]) -> int {
                        std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
                    topic, metadata.sender_id, metadata.sequence_id, pose->position.transpose());
     };
-    auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::types::Pose>(std::move(config),
-                                                                                            std::move(cb));
+    auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::types::Pose>(
+        session, std::move(config), std::move(cb));
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::seconds{ 1 });

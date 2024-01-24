@@ -5,7 +5,8 @@
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-auto createZenohConfig(Config& config) -> zenohc::Config {
+
+auto createZenohConfig(const Config& config) -> zenohc::Config {
   zenohc::Config zconfig;
   // A timestamp is add to every published message.
   zconfig.insert_json(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
@@ -16,12 +17,7 @@ auto createZenohConfig(Config& config) -> zenohc::Config {
   }
 
   // Set node in client mode.
-  if (config.mode == Config::CLIENT) {
-    static constexpr std::string_view DEFAULT_ROUTER = "localhost:7447";
-    if (config.router.empty()) {
-      config.router = DEFAULT_ROUTER;
-    }
-
+  if (config.mode == Mode::CLIENT) {
     zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
   }
 

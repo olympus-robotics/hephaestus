@@ -10,6 +10,7 @@
 #include <zenoh.h>
 
 #include "eolo/ipc/common.h"
+#include "eolo/ipc/zenoh/session.h"
 #include "eolo/serdes/serdes.h"
 
 namespace eolo::ipc {
@@ -18,7 +19,8 @@ template <class DataType>
 using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<DataType>&)>;
 
 template <class Subscriber, class DataType>
-[[nodiscard]] auto subscribe(Config config, DataCallback<DataType>&& callback) -> Subscriber {
+[[nodiscard]] auto subscribe(zenoh::SessionPtr session, Config config,
+                             DataCallback<DataType>&& callback) -> Subscriber {
   auto cb = [callback = std::move(callback)](const MessageMetadata& metadata,
                                              std::span<const std::byte> buffer) mutable {
     auto data = std::make_shared<DataType>();
@@ -26,7 +28,7 @@ template <class Subscriber, class DataType>
     callback(metadata, std::move(data));
   };
 
-  return Subscriber{ std::move(config), std::move(cb) };
+  return Subscriber{ std::move(session), std::move(config), std::move(cb) };
 }
 
 }  // namespace eolo::ipc

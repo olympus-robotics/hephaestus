@@ -6,8 +6,10 @@ declare_module(NAME cli DEPENDS_ON_MODULES base DEPENDS_ON_EXTERNAL_PROJECTS "")
 
 # library sources
 set(SOURCES
+        src/keyboard.cpp
         src/program_options.cpp
         README.md
+        include/eolo/cli/keyboard.h
         include/eolo/cli/program_options.h)
 
 # library target

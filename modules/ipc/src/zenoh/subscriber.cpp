@@ -7,16 +7,13 @@
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-Subscriber::Subscriber(Config config, DataCallback&& callback)
-  : config_(std::move(config)), callback_(std::move(callback)) {
+Subscriber::Subscriber(SessionPtr session, Config config, DataCallback&& callback)
+  : config_(std::move(config)), session_(std::move(session)), callback_(std::move(callback)) {
   auto zconfig = createZenohConfig(config_);
-
-  // Create the subscriber.
-  session_ = expectAsPtr(open(std::move(zconfig)));
 
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
   if (config_.cache_size == 0) {
-    subscriber_ = expectAsPtr(session_->declare_subscriber(config_.topic, std::move(cb)));
+    subscriber_ = expectAsUniquePtr(session_->declare_subscriber(config_.topic, std::move(cb)));
   } else {
     const auto sub_opts = ze_querying_subscriber_options_default();
     auto c = cb.take();

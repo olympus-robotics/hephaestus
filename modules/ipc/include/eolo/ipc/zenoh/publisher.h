@@ -10,13 +10,15 @@
 #include <zenoh.h>
 
 #include "eolo/ipc/common.h"
+#include "eolo/ipc/zenoh/session.h"
+#include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
 
 // TODO: Add support to get notified for subscribers: https://github.com/eclipse-zenoh/zenoh-c/pull/236
 class Publisher {
 public:
-  explicit Publisher(Config config);
+  Publisher(SessionPtr session, Config config);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -25,10 +27,14 @@ public:
 
   [[nodiscard]] auto publish(std::span<std::byte> data) -> bool;
 
+  [[nodiscard]] auto id() const -> std::string {
+    return toString(session_->info_zid());
+  }
+
 private:
   Config config_;
 
-  std::unique_ptr<zenohc::Session> session_;
+  SessionPtr session_;
   std::unique_ptr<zenohc::Publisher> publisher_;
 
   zc_owned_liveliness_token_t liveliness_token_{};

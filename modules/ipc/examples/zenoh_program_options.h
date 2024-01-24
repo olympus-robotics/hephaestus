@@ -26,11 +26,19 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
   config.cache_size = args.getOption<std::size_t>("cache");
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
-    config.mode = eolo::ipc::Config::PEER;
+    config.mode = eolo::ipc::Mode::PEER;
   } else if (mode == "client") {
-    config.mode = eolo::ipc::Config::CLIENT;
+    config.mode = eolo::ipc::Mode::CLIENT;
   } else {
     eolo::throwException<eolo::InvalidParameterException>(std::format("invalid mode value: {}", mode));
+  }
+
+  // If mode set as CLIENT set a default router endpoint.
+  if (config.mode == eolo::ipc::Mode::CLIENT) {
+    static constexpr std::string_view DEFAULT_ROUTER = "localhost:7447";
+    if (config.router.empty()) {
+      config.router = DEFAULT_ROUTER;
+    }
   }
 
   config.enable_shared_memory = args.getOption<bool>("shared_memory");
