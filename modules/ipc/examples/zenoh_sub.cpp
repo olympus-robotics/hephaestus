@@ -10,36 +10,29 @@
 
 #include <zenoh.h>
 
-#include "eolo/cli/program_options.h"
 #include "eolo/ipc/zenoh/subscriber.h"
 #include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
+#include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    static constexpr auto DEFAULT_KEY = "eolo/ipc/example/zenoh/put";
-
-    auto desc = eolo::cli::ProgramDescription("Subscriber listening for data on specified key");
-    desc.defineOption<std::string>("key", "Key expression", DEFAULT_KEY);
-    desc.defineOption<std::size_t>("cache", 'c', "Cache size", 0);
-
+    auto desc = getProgramDescription("Periodic publisher example");
     const auto args = std::move(desc).parse(argc, argv);
-    const auto key = args.getOption<std::string>("key");
-    const auto cache_size = args.getOption<std::size_t>("cache");
 
-    eolo::ipc::zenoh::Config config{ .topic = key, .cache_size = cache_size };
+    auto config = parseArgs(args);
 
     std::println("Opening session...");
-    std::println("Declaring Subscriber on '{}'", key);
-    const auto cb = [&key](const eolo::ipc::zenoh::MessageMetadata& metadata,
-                           std::span<const std::byte> data) {
+    std::println("Declaring Subscriber on '{}'", config.topic);
+    const auto cb = [topic = config.topic](const eolo::ipc::zenoh::MessageMetadata& metadata,
+                                           std::span<const std::byte> data) {
       eolo::types::Pose pose;
       eolo::serdes::deserialize(data, pose);
       std::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
                    std::chrono::system_clock::time_point{
                        std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
-                   key, metadata.sender_id, metadata.sequence_id, pose.position.transpose());
+                   topic, metadata.sender_id, metadata.sequence_id, pose.position.transpose());
     };
 
     eolo::ipc::zenoh::Subscriber sub{ std::move(config), std::move(cb) };
