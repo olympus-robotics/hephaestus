@@ -13,7 +13,6 @@
 #include "eolo/ipc/publisher.h"
 #include "eolo/ipc/zenoh/publisher.h"
 #include "eolo/ipc/zenoh/session.h"
-#include "eolo/serdes/serdes.h"
 #include "eolo/types/pose.h"
 #include "eolo/types_protobuf/pose.h"
 #include "zenoh_program_options.h"
@@ -25,7 +24,13 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto config = parseArgs(args);
     auto session = eolo::ipc::zenoh::createSession(config);
-    eolo::ipc::zenoh::Publisher publisher{ session, std::move(config) };
+    eolo::ipc::zenoh::Publisher publisher{ session, std::move(config), [](const auto& status) {
+                                            if (status.matching) {
+                                              std::println("Subscriber match");
+                                            } else {
+                                              std::println("NO subscriber matching");
+                                            }
+                                          } };
 
     std::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
 

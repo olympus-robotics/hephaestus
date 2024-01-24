@@ -67,7 +67,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     ExternalProject_Add(
       zenohc
       GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-      GIT_TAG master # v${zenohc_VERION_REQUIRED}
+      GIT_TAG 725fa8e38f7f113d6d1ce025bcd1460476e199fa # v${zenohc_VERION_REQUIRED}
       GIT_SHALLOW true
       CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON)
   endif()

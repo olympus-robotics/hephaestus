@@ -15,10 +15,16 @@
 
 namespace eolo::ipc::zenoh {
 
+struct MatchingStatus {
+  bool matching{};  //! If true publisher is connect to at least one subscriber.
+};
+
 // TODO: Add support to get notified for subscribers: https://github.com/eclipse-zenoh/zenoh-c/pull/236
 class Publisher {
 public:
-  Publisher(SessionPtr session, Config config);
+  using MatchCallback = std::function<void(MatchingStatus)>;
+
+  Publisher(SessionPtr session, Config config, MatchCallback&& match_cb = nullptr);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -43,6 +49,9 @@ private:
   zenohc::PublisherPutOptions put_options_;
   std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;
+
+  MatchCallback match_cb_{ nullptr };
+  zcu_owned_matching_listener_t subscriers_listener_{};
 };
 
 }  // namespace eolo::ipc::zenoh
