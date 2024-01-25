@@ -8,6 +8,7 @@
 
 namespace eolo::ipc::zenoh {
 
+// Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> zenohc::Config {
   zenohc::Config zconfig;
   // A timestamp is add to every published message.
@@ -23,6 +24,9 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
     bool res = zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to set node mode as client");
   }
+
+  // Set the transport to UDP, but I am not sure it is the right way.
+  // zconfig.insert_json(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
 
   // Add router endpoint.
   if (!config.router.empty()) {
