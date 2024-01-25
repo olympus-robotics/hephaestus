@@ -51,12 +51,11 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
 
     ++arg_it;
     throwExceptionIf<InvalidParameterException>(
-        arg_it == args.end(),
-        std::format("After option --{} there is supposed to be a value", option.key));
+        arg_it == args.end(), std::format("After option --{} there is supposed to be a value", option.key));
     throwExceptionIf<InvalidParameterException>(
         arg_it->starts_with('-'),
-        std::format("Option --{} is supposed to be followed by a value, not another option {}",
-                    option.key, *arg_it));
+        std::format("Option --{} is supposed to be followed by a value, not another option {}", option.key,
+                    *arg_it));
 
     option.value = *arg_it;
     option.is_specified = true;
@@ -75,8 +74,8 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
 auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOptions::Option& {
   if (arg.starts_with("--")) {
     const auto key = arg.substr(2);
-    const auto it = std::find_if(options_.begin(), options_.end(),
-                                 [&key](const auto& opt) { return key == opt.key; });
+    const auto it =
+        std::find_if(options_.begin(), options_.end(), [&key](const auto& opt) { return key == opt.key; });
 
     throwExceptionIf<InvalidParameterException>(it == options_.end(),
                                                 std::format("Undefined option '{}'", key));
@@ -84,12 +83,11 @@ auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOpti
   }
 
   if (arg.starts_with("-")) {
-    throwExceptionIf<InvalidParameterException>(
-        arg.size() != 2, std::format("Undefined option '{}'", arg.substr(1)));
+    throwExceptionIf<InvalidParameterException>(arg.size() != 2,
+                                                std::format("Undefined option '{}'", arg.substr(1)));
     const auto short_key = arg[1];
-    const auto it = std::find_if(options_.begin(), options_.end(), [short_key](const auto& opt) {
-      return short_key == opt.short_key;
-    });
+    const auto it = std::find_if(options_.begin(), options_.end(),
+                                 [short_key](const auto& opt) { return short_key == opt.short_key; });
     return *it;
   }
 

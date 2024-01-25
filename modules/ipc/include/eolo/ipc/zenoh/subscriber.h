@@ -10,6 +10,7 @@
 #include <zenoh.h>
 
 #include "eolo/ipc/common.h"
+#include "eolo/ipc/zenoh/session.h"
 
 namespace eolo::ipc::zenoh {
 
@@ -17,7 +18,7 @@ class Subscriber {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
-  Subscriber(Config config, DataCallback&& callback);
+  Subscriber(SessionPtr session, Config config, DataCallback&& callback);
   ~Subscriber();
   Subscriber(const Subscriber&) = delete;
   Subscriber(Subscriber&&) = default;
@@ -29,9 +30,10 @@ private:
 
 private:
   Config config_;
+  SessionPtr session_;
+
   DataCallback callback_;
 
-  std::unique_ptr<zenohc::Session> session_;
   std::unique_ptr<zenohc::Subscriber> subscriber_;
   ze_owned_querying_subscriber_t cache_subscriber_{};
 };
