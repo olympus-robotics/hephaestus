@@ -13,9 +13,9 @@ Eolo uses CMake to build, the build infrastructure is heavily inspired (see copi
 
 ### IPC
 `zenoh`
-- [] Add liveliness client (i.e. topic list)
-- [] Add scout client (i.e. node list)
-- [] Add publisher subscriber listenr, waiting for https://github.com/eclipse-zenoh/zenoh-c/pull/236
+- [x] Add liveliness client (i.e. topic list)
+- [x] Add scout client (i.e. node list)
+- [x] Add publisher subscriber listenr, waiting for https://github.com/eclipse-zenoh/zenoh-c/pull/236
 - [] Add router client
 - [] Add option for high performant publisher (disable cache, liveliness, metadata and set high priority)
 
@@ -24,4 +24,4 @@ Eolo uses CMake to build, the build infrastructure is heavily inspired (see copi
 - [] Add support to `vector` options
 
 ### Serialization
-Add new bag module
+- [] Add new bag module
