@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <expected>
+#include <numeric>
 #include <span>
 #include <sstream>
 #include <zenohc.hxx>
@@ -23,9 +24,11 @@ namespace eolo::ipc::zenoh {
 }
 
 inline auto toString(const zenohc::Id& id) -> std::string {
-  std::stringstream ss;
-  ss << id;
-  return ss.str();
+  // std::stringstream ss;
+  // ss << id;
+  // return ss.str();
+  return std::accumulate(std::begin(id.id), std::end(id.id), std::string(),
+                         [](const std::string& s, uint8_t v) { return std::format("{:02x}", v) + s; });
 }
 
 inline constexpr auto toString(const zenohc::WhatAmI& me) -> std::string_view {

@@ -40,5 +40,4 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
-add_subdirectory(apps)
 add_subdirectory(examples)
