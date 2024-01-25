@@ -4,6 +4,8 @@
 
 #include "eolo/ipc/zenoh/utils.h"
 
+#include "eolo/base/exception.h"
+
 namespace eolo::ipc::zenoh {
 
 auto createZenohConfig(const Config& config) -> zenohc::Config {
@@ -18,13 +20,15 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
 
   // Set node in client mode.
   if (config.mode == Mode::CLIENT) {
-    zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
+    bool res = zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
+    throwExceptionIf<FailedZenohOperation>(!res, "failed to set node mode as client");
   }
 
   // Add router endpoint.
   if (!config.router.empty()) {
     const auto router_endpoint = std::format(R"(["tcp/{}"])", config.router);
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
+    auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
+    throwExceptionIf<FailedZenohOperation>(!res, "failed to add router endpoint");
   }
 
   return zconfig;

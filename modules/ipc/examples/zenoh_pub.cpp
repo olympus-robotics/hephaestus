@@ -24,7 +24,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto config = parseArgs(args);
     auto session = eolo::ipc::zenoh::createSession(config);
-    eolo::ipc::zenoh::Publisher publisher{ session, std::move(config), [](const auto& status) {
+
+    eolo::ipc::zenoh::Publisher publisher{ session, config, [](const auto& status) {
                                             if (status.matching) {
                                               std::println("Subscriber match");
                                             } else {

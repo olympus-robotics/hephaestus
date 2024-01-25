@@ -91,7 +91,6 @@ inline auto toChrono(uint64_t ts) -> std::chrono::nanoseconds {
 }
 
 inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::nanoseconds {
-  std::println("Converting timestamp: {}, is valid: {}", ts.get_time(), ts.check());
   return toChrono(ts.get_time());
 }
 
