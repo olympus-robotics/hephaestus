@@ -10,8 +10,9 @@
 auto main(int argc, const char* argv[]) -> int {
   try {
     auto desc = getProgramDescription("Query");
+    desc.defineOption<std::string>("value", 'v', "the value to pass the query", "");
     const auto args = std::move(desc).parse(argc, argv);
-
+    const auto value = args.getOption<std::string>("value");
     auto config = parseArgs(args);
 
     auto session = eolo::ipc::zenoh::createSession(config);
@@ -36,7 +37,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     // prepare and dispatch request
     auto opts = zenohc::GetOptions();
-    opts.set_value("");
+    opts.set_value(zenohc::Value(value));
     opts.set_target(Z_QUERY_TARGET_ALL);  // query all matching queryables
     session->get(config.topic, "", { reply_cb, on_done }, opts);
 
