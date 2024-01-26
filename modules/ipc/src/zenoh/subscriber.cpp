@@ -29,8 +29,6 @@ Subscriber::~Subscriber() {
 }
 
 void Subscriber::callback(const zenohc::Sample& sample) {
-  std::println("Received data: {}", sample.get_keyexpr().as_string_view());
-
   MessageMetadata metadata;
   if (sample.get_attachment().check()) {
     auto sequence_id = std::string{ sample.get_attachment().get(messageCounterKey()).as_string_view() };

@@ -2,8 +2,9 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS zenohcxx)
+declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS nlohmann_json zenohcxx)
 
+find_package(nlohmann_json REQUIRED)
 find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
 
@@ -12,6 +13,7 @@ set(SOURCES
         src/common.cpp
         src/zenoh/liveliness.cpp
         src/zenoh/publisher.cpp
+        src/zenoh/query.cpp
         src/zenoh/scout.cpp
         src/zenoh/subscriber.cpp
         src/zenoh/utils.cpp
@@ -19,6 +21,7 @@ set(SOURCES
         include/eolo/ipc/common.h
         include/eolo/ipc/zenoh/utils.h
         include/eolo/ipc/zenoh/publisher.h
+        include/eolo/ipc/zenoh/query.h
         include/eolo/ipc/zenoh/scout.h
         include/eolo/ipc/zenoh/subscriber.h)
 
@@ -29,6 +32,7 @@ define_module_library(
             eolo::base
             eolo::cli
             eolo::types_protobuf
+            nlohmann_json::nlohmann_json
             zenohc::lib
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}

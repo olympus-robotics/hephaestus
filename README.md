@@ -16,7 +16,7 @@ Eolo uses CMake to build, the build infrastructure is heavily inspired (see copi
 - [x] Add liveliness client (i.e. topic list)
 - [x] Add scout client (i.e. node list)
 - [x] Add publisher subscriber listenr, waiting for https://github.com/eclipse-zenoh/zenoh-c/pull/236
-- [] Add router client
+- [x] Add router client
 - [] Add option for high performant publisher (disable cache, liveliness, metadata and set high priority)
 
 `cli`

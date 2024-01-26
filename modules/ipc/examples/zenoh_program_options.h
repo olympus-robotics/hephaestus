@@ -33,16 +33,8 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
     eolo::throwException<eolo::InvalidParameterException>(std::format("invalid mode value: {}", mode));
   }
 
-  // If mode set as CLIENT set a default router endpoint.
-  if (config.mode == eolo::ipc::Mode::CLIENT) {
-    static constexpr std::string_view DEFAULT_ROUTER = "localhost:7447";
-    if (config.router.empty()) {
-      config.router = DEFAULT_ROUTER;
-    }
-  }
-
-  config.enable_shared_memory = args.getOption<bool>("shared_memory");
   config.router = args.getOption<std::string>("router");
+  config.enable_shared_memory = args.getOption<bool>("shared_memory");
 
   return config;
 }

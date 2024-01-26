@@ -56,6 +56,17 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenohcxx
 if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
+  ExternalProject_Add(
+    zenohd
+    GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
+    GIT_TAG  0.10.1-rc # v${zenohc_VERION_REQUIRED}
+    GIT_SHALLOW true
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
+    BUILD_IN_SOURCE true
+    INSTALL_COMMAND cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp target/release/libzenoh_plugin_rest.so ${CMAKE_INSTALL_PREFIX}/bin/
+    LOG_BUILD ON)
+
   # install zenoh-c first
   # set(zenohc_VERION_REQUIRED 0.11.0.0)
   find_package(zenohc QUIET) # ${zenohc_VERION_REQUIRED} QUIET)
@@ -66,6 +77,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "zenohc: Building ${zenohc_VERION_REQUIRED} from source")
     ExternalProject_Add(
       zenohc
+      DEPENDS zenohd
       GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
       GIT_TAG 408a6eb2f305c965101f19f6925acc0e0a93f764 # v${zenohc_VERION_REQUIRED}
       GIT_SHALLOW true
@@ -88,7 +100,6 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
       GIT_SHALLOW true
       SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
                             # building zenoh-c again
-      DEPENDS zenohc
       CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
   endif()
 endif()
@@ -155,5 +166,24 @@ if(Eigen3 IN_LIST EXTERNAL_PROJECTS_LIST)
                 GIT_TAG ${EIGEN3_VERSION_REQUIRED}
                 GIT_SHALLOW true
                 CMAKE_ARGS -DCMAKE_POLICY_DEFAULT_CMP0090:STRING=NEW ${EP_CMAKE_EXTRA_ARGS})
+    endif()
+endif()
+
+#--------------------------------------------------------------------------------------------------
+# nlohmann json
+if(nlohmann_json IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(NLOHMANN_JSON_VERSION_REQUIRED 3.11.3)
+    find_package(nlohmann_json ${NLOHMANN_JSON_VERSION_REQUIRED} QUIET)
+    if(nlohmann_json_FOUND)
+        message(STATUS "NLohmann JSON: Using version ${nlohmann_json_VERSION} from ${nlohmann_json_DIR}")
+        add_dummy_target(nlohmann_json)
+    else()
+        message(STATUS "NLohmann JSON: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+                nlohmann_json
+                GIT_REPOSITORY "https://github.com/nlohmann/json"
+                GIT_TAG v${NLOHMANN_JSON_VERSION_REQUIRED}
+                GIT_SHALLOW true
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DJSON_BuildTests=OFF)
     endif()
 endif()
