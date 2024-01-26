@@ -8,7 +8,6 @@
 #include <expected>
 #include <numeric>
 #include <span>
-#include <sstream>
 #include <zenohc.hxx>
 
 #include "eolo/base/exception.h"

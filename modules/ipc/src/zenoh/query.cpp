@@ -18,7 +18,7 @@ auto query(zenohc::Session& session, const std::string& topic,
   std::vector<QueryResponse> results;
   std::mutex mutex;
   const auto reply_cb = [&results, &mutex](zenohc::Reply&& reply) {
-    const auto r = reply.get();
+    const auto r = std::move(reply).get();
     if (std::holds_alternative<zenohc::ErrorMessage>(r)) {
       return;
     }

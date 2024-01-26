@@ -5,7 +5,6 @@
 #include "eolo/ipc/zenoh/scout.h"
 
 #include <algorithm>
-#include <barrier>
 #include <expected>
 #include <mutex>
 #include <ranges>
