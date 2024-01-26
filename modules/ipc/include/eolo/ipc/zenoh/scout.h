@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "eolo/ipc/common.h"
-#include "eolo/ipc/zenoh/liveliness.h"
 
 namespace eolo::ipc::zenoh {
 
