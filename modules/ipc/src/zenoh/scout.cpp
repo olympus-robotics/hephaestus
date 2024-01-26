@@ -44,38 +44,6 @@ private:
   mutable std::mutex mutex_;
 };
 
-// [[nodiscard]] auto query(zenohc::Session& session, const std::string& topic,
-//                          const std::string& value) -> std::expected<std::string, std::string> {
-//   std::barrier sync_point(2);
-//   std::string result;
-//   std::string error;
-//   const auto reply_cb = [&result, &error](zenohc::Reply&& reply) {
-//     const auto r = reply.get();
-//     if (std::holds_alternative<zenohc::ErrorMessage>(r)) {
-//       const auto msg = std::get<zenohc::ErrorMessage>(r).as_string_view();
-//       error = std::format("query failed: {}", msg);
-//       return;
-//     }
-
-//     result = std::get<zenohc::Sample>(r).get_payload().as_string_view();
-//   };
-
-//   auto on_done = [&sync_point] { sync_point.arrive_and_drop(); };
-
-//   auto opts = zenohc::GetOptions();
-//   opts.set_value(zenohc::Value{ value });
-//   opts.set_target(Z_QUERY_TARGET_ALL);  // query all matching queryables
-//   session.get(topic, "", { reply_cb, on_done }, opts);
-
-//   sync_point.arrive_and_wait();  // wait until reply callback is triggered
-
-//   if (!error.empty()) {
-//     return std::unexpected<std::string>{ std::move(error) };
-//   }
-
-//   return result;
-// }
-
 [[nodiscard]] auto getRouterInfoJson(const std::string& router_id) -> std::string {
   zenohc::Config zconfig;
   auto session = ::eolo::ipc::zenoh::expect(open(std::move(zconfig)));
