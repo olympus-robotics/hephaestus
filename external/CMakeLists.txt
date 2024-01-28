@@ -107,14 +107,13 @@ endif()
 #--------------------------------------------------------------------------------------------------
 # Abseil C++
 if (absl IN_LIST EXTERNAL_PROJECTS_LIST)
-    set(ABSEIL_VERSION_REQUIRED 20240116)
-    set(ABSEIL_PATCH_REQUIRED rc1)
+    set(ABSEIL_VERSION_REQUIRED 20230802.1)
     find_package(absl ${ABSEIL_VERSION_REQUIRED} QUIET)
     if (absl_FOUND)
         message(STATUS "Abseil: Using version ${absl_VERSION} from ${absl_DIR}")
         add_dummy_target(absl)
     else()
-        message(STATUS "Abseil: Building ${ABSEIL_VERSION_REQUIRED}.${ABSEIL_PATCH_REQUIRED} from source")
+        message(STATUS "Abseil: Building ${ABSEIL_VERSION_REQUIRED} from source")
         set(ABSEIL_CMAKE_ARGS
             -DABSL_BUILD_TESTING=OFF
             -DABSL_ENABLE_INSTALL=ON
@@ -122,8 +121,8 @@ if (absl IN_LIST EXTERNAL_PROJECTS_LIST)
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
         ExternalProject_Add(
             absl
-            URL https://github.com/abseil/abseil-cpp/archive/refs/tags/${ABSEIL_VERSION_REQUIRED}.${ABSEIL_PATCH_REQUIRED}.tar.gz
-            URL_HASH MD5=4b774041b0f66bfbb95bfe3931d56296
+            GIT_REPOSITORY https://github.com/abseil/abseil-cpp
+            GIT_TAG ${ABSEIL_VERSION_REQUIRED}
             CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${ABSEIL_CMAKE_ARGS})
     endif()
 endif()
@@ -145,7 +144,7 @@ if (Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
             GIT_TAG "v${PROTOBUF_VERSION_REQUIRED}"
             GIT_SHALLOW true
             GIT_SUBMODULES_RECURSE false
-            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF
+            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package -Dprotobuf_BUILD_CONFORMANCE=OFF
         )
     endif()
 endif()
