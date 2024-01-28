@@ -137,6 +137,11 @@ if (Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
         add_dummy_target(Protobuf)
     else()
         message(STATUS "Protobuf: Building ${PROTOBUF_VERSION_REQUIRED} from source")
+        set(PROTOBUF_CMAKE_ARGS
+            -Dprotobuf_BUILD_EXAMPLES=OFF
+            -Dprotobuf_BUILD_TESTS=OFF
+            -Dprotobuf_ABSL_PROVIDER=package
+            -Dprotobuf_BUILD_CONFORMANCE=OFF)
         ExternalProject_Add(
             Protobuf
             DEPENDS ${PROTOBUF_DEPENDS}
@@ -144,7 +149,7 @@ if (Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
             GIT_TAG "v${PROTOBUF_VERSION_REQUIRED}"
             GIT_SHALLOW true
             GIT_SUBMODULES_RECURSE false
-            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package -Dprotobuf_BUILD_CONFORMANCE=OFF
+            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${PROTOBUF_CMAKE_ARGS}
         )
     endif()
 endif()
@@ -184,5 +189,43 @@ if(nlohmann_json IN_LIST EXTERNAL_PROJECTS_LIST)
                 GIT_TAG v${NLOHMANN_JSON_VERSION_REQUIRED}
                 GIT_SHALLOW true
                 CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DJSON_BuildTests=OFF)
+    endif()
+endif()
+
+#--------------------------------------------------------------------------------------------------
+# magic_enum
+if(magic_enum IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(MAGIC_ENUM_VERSION_REQUIRED 0.9.5)
+    find_package(magic_enum ${MAGIC_ENUM_VERSION_REQUIRED} QUIET)
+    if(magic_enum_FOUND)
+        message(STATUS "Magic Enum: Using version ${magic_enum_VERSION} from ${magic_enum_DIR}")
+        add_dummy_target(magic_enum)
+    else()
+        message(STATUS "Magic Enum: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+            magic_enum
+                GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
+                GIT_TAG v${MAGIC_ENUM_VERSION_REQUIRED}
+                GIT_SHALLOW true
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DMAGIC_ENUM_OPT_BUILD_EXAMPLES=OFF -DMAGIC_ENUM_OPT_BUILD_TESTS=OFF -DMAGIC_ENUM_OPT_INSTALL=ON)
+    endif()
+endif()
+
+#--------------------------------------------------------------------------------------------------
+# tabulate
+if(tabulate IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(TABULATE_VERSION_REQUIRED 1.5)
+    find_package(tabulate ${TABULATE_VERSION_REQUIRED} QUIET)
+    if(tabulate_FOUND)
+        message(STATUS "Tabulate: Using version ${tabulate_VERSION} from ${tabulate_DIR}")
+        add_dummy_target(tabulate)
+    else()
+        message(STATUS "Tabulate: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+            tabulate
+                GIT_REPOSITORY "https://github.com/p-ranav/tabulate.git"
+                GIT_TAG v${TABULATE_VERSION_REQUIRED}
+                GIT_SHALLOW true
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DSAMPLES=OFF)
     endif()
 endif()
