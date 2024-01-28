@@ -17,14 +17,8 @@ static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
 static constexpr std::uint16_t VERSION_PATCH = 0;
 
-<<<<<<< Updated upstream
 static constexpr std::string_view REPO_BRANCH = "clang-tidy-fix-0";
 static constexpr std::string_view BUILD_PROFILE = "Release";
 static constexpr std::string_view REPO_HASH = "c300d60";
-=======
-static constexpr std::string_view REPO_BRANCH = "bag";
-static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
-static constexpr std::string_view REPO_HASH = "12d8cad";
->>>>>>> Stashed changes
 
 } // namespace eolo::utils

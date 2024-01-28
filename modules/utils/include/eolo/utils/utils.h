@@ -30,13 +30,9 @@ constexpr auto truncate(std::string_view str, std::string_view start_token,
                                                  str.substr(0, end_pos);
 }
 
-<<<<<<< Updated upstream
 /// Return user-readable name for specified type
 template <typename T>
 constexpr auto getTypeName() -> std::string {
-=======
-[[nodiscard]] inline auto demangle(std::string_view mangled_name) -> std::string {
->>>>>>> Stashed changes
   // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
   const auto* const mangled_name = typeid(T).name();
   int status{ 0 };
