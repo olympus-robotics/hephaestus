@@ -2,7 +2,7 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS fmt nlohmann_json range_v3 zenohcxx)
+declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS fmt nlohmann_json range-v3 zenohcxx)
 
 find_package(fmt REQUIRED)
 find_package(range-v3 REQUIRED)

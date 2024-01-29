@@ -2,9 +2,10 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME types DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS Eigen3)
+declare_module(NAME types DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS Eigen3 fmt)
 
 find_package(Eigen3 REQUIRED)
+find_package(fmt REQUIRED)
 
 # library sources
 set(SOURCES
@@ -17,6 +18,7 @@ define_module_library(
         NAME types
         PUBLIC_LINK_LIBS
             Eigen3::Eigen
+            fmt::fmt
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}
         PUBLIC_INCLUDE_PATHS
