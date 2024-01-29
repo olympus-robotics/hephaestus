@@ -17,7 +17,10 @@ When switching again back to C++23 it will be possible to remove `fmt` and `rang
 
 ## TODO
 
-### IPC
+`devenv`
+- [] Add a new docker image on top of the existing one that build the dependencies
+  - Understand how we can automatically re-build if something changes
+
 `zenoh`
 - [x] Add liveliness client (i.e. topic list)
 - [x] Add scout client (i.e. node list)

@@ -33,6 +33,7 @@ set(EP_CMAKE_EXTRA_ARGS
     -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
     -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
 
+
 # helper macro useful for dependency handling
 macro(add_dummy_target)
   if(NOT TARGET ${ARGV0})
@@ -104,7 +105,9 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
         GIT_SHALLOW true
         SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
                                 # building zenoh-c again
+        LOG_BUILD true
         CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
+
   endif()
 endif()
 
@@ -127,6 +130,7 @@ if (absl IN_LIST EXTERNAL_PROJECTS_LIST)
             absl
                 GIT_REPOSITORY https://github.com/abseil/abseil-cpp
                 GIT_TAG ${ABSEIL_VERSION_REQUIRED}
+                LOG_BUILD true
                 CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${ABSEIL_CMAKE_ARGS})
     endif()
 endif()
