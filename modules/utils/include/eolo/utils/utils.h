@@ -32,13 +32,12 @@ constexpr auto truncate(std::string_view str, std::string_view start_token,
 
 /// Return user-readable name for specified type
 template <typename T>
-constexpr auto getTypeName() -> std::string {
+inline auto getTypeName() -> std::string {
   // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
   const auto* const mangled_name = typeid(T).name();
   int status{ 0 };
-  std::unique_ptr<char, void (*)(void*)> res{
-    abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status), std::free
-  };
+  std::unique_ptr<char, void (*)(void*)> res{ abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status),
+                                              std::free };
   return (status == 0) ? res.get() : mangled_name;
 }
 

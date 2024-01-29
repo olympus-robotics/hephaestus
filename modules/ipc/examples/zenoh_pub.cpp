@@ -5,9 +5,10 @@
 #include <cstdlib>
 #include <print>
 #include <thread>
-#include <zenohc.hxx>
 
+#include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/base/exception.h"
 #include "eolo/ipc/publisher.h"
@@ -27,20 +28,20 @@ auto main(int argc, const char* argv[]) -> int {
 
     eolo::ipc::zenoh::Publisher publisher{ session, config, [](const auto& status) {
                                             if (status.matching) {
-                                              std::println("Subscriber match");
+                                              fmt::println("Subscriber match");
                                             } else {
-                                              std::println("NO subscriber matching");
+                                              fmt::println("NO subscriber matching");
                                             }
                                           } };
 
-    std::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
+    fmt::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     while (true) {
       eolo::types::Pose pose;
       pose.position = Eigen::Vector3d{ 1, 2, 3 };
 
-      std::println("Publishing Data ('{} : {})", config.topic, pose.position.transpose());
+      fmt::println("Publishing Data ('{} : {})", config.topic, pose);
       auto res = eolo::ipc::publish(publisher, pose);
       eolo::throwExceptionIf<eolo::InvalidOperationException>(!res, "failed to publish message");
 

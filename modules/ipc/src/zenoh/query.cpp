@@ -8,6 +8,7 @@
 #include <mutex>
 #include <zenohc.hxx>
 
+#include <fmt/core.h>
 #include <zenoh.h>
 
 namespace eolo::ipc::zenoh {
@@ -26,7 +27,7 @@ auto query(zenohc::Session& session, const std::string& topic,
     const auto sample = std::get<zenohc::Sample>(r);
     auto topic = std::string{ sample.get_keyexpr().as_string_view() };
     auto result = std::string{ sample.get_payload().as_string_view() };
-    std::println("Timestamp: {}", sample.get_timestamp().get_time());
+    fmt::println("Timestamp: {}", sample.get_timestamp().get_time());
 
     std::unique_lock<std::mutex> lock(mutex);
     results.emplace_back(std::move(topic), std::move(result));

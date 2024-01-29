@@ -47,7 +47,7 @@ SpaceAfterCStyleCast: false
 SortIncludes: true
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<.*(\.h|\.hpp)>$'
+  - Regex:           '^<.*(\.h|\.hpp|\.hxx)>$'
     Priority:        1
     SortPriority:    3
     CaseSensitive:   false

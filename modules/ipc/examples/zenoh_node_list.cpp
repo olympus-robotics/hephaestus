@@ -2,9 +2,9 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include <print>
 #include <zenohc.hxx>
 
+#include <fmt/core.h>
 #include <zenoh.h>
 
 #include "eolo/ipc/zenoh/scout.h"
@@ -15,11 +15,11 @@ auto main(int argc, const char* argv[]) -> int {
   (void)argv;
 
   try {
-    std::println("Scouting..");
+    fmt::println("Scouting..");
 
     auto nodes_info = eolo::ipc::zenoh::getListOfNodes();
     std::ranges::for_each(nodes_info,
-                          [](const auto& info) { std::println("{}", eolo::ipc::zenoh::toString(info)); });
+                          [](const auto& info) { fmt::println("{}", eolo::ipc::zenoh::toString(info)); });
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

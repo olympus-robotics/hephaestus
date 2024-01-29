@@ -4,6 +4,8 @@
 
 #include <cstdlib>
 
+#include <fmt/core.h>
+
 #include "eolo/cli/program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -21,12 +23,12 @@ auto main(int argc, const char* argv[]) -> int {
     const auto broadcast = args.getOption<bool>("broadcast");
 
     // help is always available. Specify '--help' on command line or get it directly as here.
-    std::println("Help text:\n{}\n", args.getOption<std::string>("help"));
+    fmt::println("Help text:\n{}\n", args.getOption<std::string>("help"));
 
     // print the arguments passed
-    std::println("You specified port = {}", port);
-    std::println("The IP address in use is {}", address);
-    std::println("Broadcasting is enabled {}", broadcast);
+    fmt::println("You specified port = {}", port);
+    fmt::println("The IP address in use is {}", address);
+    fmt::println("Broadcasting is enabled {}", broadcast);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

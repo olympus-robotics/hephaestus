@@ -201,7 +201,7 @@ if(magic_enum IN_LIST EXTERNAL_PROJECTS_LIST)
         message(STATUS "Magic Enum: Using version ${magic_enum_VERSION} from ${magic_enum_DIR}")
         add_dummy_target(magic_enum)
     else()
-        message(STATUS "Magic Enum: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
+        message(STATUS "Magic Enum: Building ${MAGIC_ENUM_VERSION_REQUIRED} from source")
         ExternalProject_Add(
             magic_enum
                 GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
@@ -220,12 +220,53 @@ if(tabulate IN_LIST EXTERNAL_PROJECTS_LIST)
         message(STATUS "Tabulate: Using version ${tabulate_VERSION} from ${tabulate_DIR}")
         add_dummy_target(tabulate)
     else()
-        message(STATUS "Tabulate: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
+        message(STATUS "Tabulate: Building ${TABULATE_VERSION_REQUIRED} from source")
         ExternalProject_Add(
             tabulate
                 GIT_REPOSITORY "https://github.com/p-ranav/tabulate.git"
                 GIT_TAG v${TABULATE_VERSION_REQUIRED}
                 GIT_SHALLOW true
                 CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DSAMPLES=OFF)
+    endif()
+endif()
+
+#--------------------------------------------------------------------------------------------------
+# fmt
+if(fmt IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(FMT_VERSION_REQUIRED 10.2.1)
+    find_package(fmt ${FMT_VERSION_REQUIRED} QUIET)
+    if(fmt_FOUND)
+        message(STATUS "fmt: Using version ${fmt_VERSION} from ${fmt_DIR}")
+        add_dummy_target(fmt)
+    else()
+        message(STATUS "fmt: Building ${FMT_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+            fmt
+                GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
+                GIT_TAG ${FMT_VERSION_REQUIRED}
+                GIT_SHALLOW true
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DFMT_MASTER_PROJECT=OFF)
+    endif()
+endif()
+
+#--------------------------------------------------------------------------------------------------
+# range-v3
+if(range-v3 IN_LIST EXTERNAL_PROJECTS_LIST)
+    set(RANGE_V3_VERSION_REQUIRED 0.12.0)
+    find_package(range-v3 ${RANGE_V3_VERSION_REQUIRED} QUIET)
+    if(RANGE_V3_FOUND)
+        message(STATUS "range-v3: Using ${range-v3_DIR}")
+    else()
+        message(STATUS "range-v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
+        ExternalProject_Add(
+                range-v3
+                GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
+		GIT_TAG ${RANGE_V3_VERSION_REQUIRED}
+                GIT_SHALLOW true
+                 CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS}
+                -DRANGE_V3_TESTS=OFF
+                -DRANGE_V3_EXAMPLES=OFF
+                -DRANGE_V3_DOCS=OFF
+        )
     endif()
 endif()

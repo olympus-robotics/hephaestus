@@ -2,7 +2,9 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME cli DEPENDS_ON_MODULES base DEPENDS_ON_EXTERNAL_PROJECTS "")
+declare_module(NAME cli DEPENDS_ON_MODULES base DEPENDS_ON_EXTERNAL_PROJECTS fmt)
+
+find_package(fmt REQUIRED)
 
 # library sources
 set(SOURCES
@@ -15,7 +17,9 @@ set(SOURCES
 # library target
 define_module_library(
         NAME cli
-        PUBLIC_LINK_LIBS eolo::base
+        PUBLIC_LINK_LIBS
+            eolo::base
+            fmt::fmt
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES}
         PUBLIC_INCLUDE_PATHS
