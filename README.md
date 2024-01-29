@@ -9,6 +9,12 @@ The best way to build eolo is to do it inside the docker container provided in t
 
 Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from [grape](https://github.com/cvilas/grape).
 
+## Notes
+
+Initially this repo was supporting C++23, but to maximise compatibilty I reverted back to C++20.
+
+When switching again back to C++23 it will be possible to remove `fmt` and `ranges-v3`. The transition will be easy, just rename `fmt::` -> `std::` and remove `fmt::formatter`.
+
 ## TODO
 
 ### IPC

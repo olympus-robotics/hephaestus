@@ -8,7 +8,6 @@
 #include <mutex>
 
 #include <absl/base/thread_annotations.h>
-#include <fmt/core.h>
 #include <nlohmann/json.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <zenoh.h>
