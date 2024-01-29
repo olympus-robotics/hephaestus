@@ -2,10 +2,9 @@
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
 
-#include <zenohc.hxx>
-
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/zenoh/scout.h"
 #include "zenoh_program_options.h"

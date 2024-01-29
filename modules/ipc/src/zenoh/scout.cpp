@@ -5,7 +5,6 @@
 #include "eolo/ipc/zenoh/scout.h"
 
 #include <algorithm>
-#include <expected>
 #include <mutex>
 
 #include <absl/base/thread_annotations.h>

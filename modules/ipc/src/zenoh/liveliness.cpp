@@ -4,10 +4,9 @@
 
 #include "eolo/ipc/zenoh/liveliness.h"
 
-#include <zenohc.hxx>
-
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/session.h"

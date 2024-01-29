@@ -4,12 +4,11 @@
 #include "eolo/ipc/zenoh/query.h"
 
 #include <barrier>
-#include <expected>
 #include <mutex>
-#include <zenohc.hxx>
 
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 namespace eolo::ipc::zenoh {
 
