@@ -56,16 +56,20 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenohcxx
 if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
-  ExternalProject_Add(
-    zenohd
-    GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
-    GIT_TAG  0.10.1-rc # v${zenohc_VERION_REQUIRED}
-    GIT_SHALLOW true
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
-    BUILD_IN_SOURCE true
-    INSTALL_COMMAND cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp target/release/libzenoh_plugin_rest.so ${CMAKE_INSTALL_PREFIX}/bin/
-    LOG_BUILD ON)
+    set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.so")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.dylib")
+    endif()
+    ExternalProject_Add(
+        zenohd
+            GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
+            GIT_TAG  0.10.1-rc # v${zenohc_VERION_REQUIRED}
+            GIT_SHALLOW true
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
+            BUILD_IN_SOURCE true
+            INSTALL_COMMAND cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB} ${CMAKE_INSTALL_PREFIX}/bin/
+            LOG_BUILD ON)
 
   # install zenoh-c first
   # set(zenohc_VERION_REQUIRED 0.11.0.0)
@@ -78,10 +82,10 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     ExternalProject_Add(
       zenohc
       DEPENDS zenohd
-      GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-      GIT_TAG 408a6eb2f305c965101f19f6925acc0e0a93f764 # v${zenohc_VERION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON)
+        GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
+        GIT_TAG 408a6eb2f305c965101f19f6925acc0e0a93f764 # v${zenohc_VERION_REQUIRED}
+        GIT_SHALLOW true
+        CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON)
   endif()
 
   # set(zenohcxx_VERION_REQUIRED 0.11.0.0)
@@ -94,13 +98,13 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "zenohcxx: Building ${zenohcxx_VERION_REQUIRED} from source")
     ExternalProject_Add(
       zenohcxx
-      DEPENDS zenohc
-      GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
-      GIT_TAG main # v${zenohcxx_VERION_REQUIRED}
-      GIT_SHALLOW true
-      SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
-                            # building zenoh-c again
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
+        DEPENDS zenohc
+        GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
+        GIT_TAG main # v${zenohcxx_VERION_REQUIRED}
+        GIT_SHALLOW true
+        SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
+                                # building zenoh-c again
+        CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
   endif()
 endif()
 
@@ -121,9 +125,9 @@ if (absl IN_LIST EXTERNAL_PROJECTS_LIST)
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
         ExternalProject_Add(
             absl
-            GIT_REPOSITORY https://github.com/abseil/abseil-cpp
-            GIT_TAG ${ABSEIL_VERSION_REQUIRED}
-            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${ABSEIL_CMAKE_ARGS})
+                GIT_REPOSITORY https://github.com/abseil/abseil-cpp
+                GIT_TAG ${ABSEIL_VERSION_REQUIRED}
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${ABSEIL_CMAKE_ARGS})
     endif()
 endif()
 
@@ -144,12 +148,12 @@ if (Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
             -Dprotobuf_BUILD_CONFORMANCE=OFF)
         ExternalProject_Add(
             Protobuf
-            DEPENDS ${PROTOBUF_DEPENDS}
-            GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
-            GIT_TAG "v${PROTOBUF_VERSION_REQUIRED}"
-            GIT_SHALLOW true
-            GIT_SUBMODULES_RECURSE false
-            CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${PROTOBUF_CMAKE_ARGS}
+                DEPENDS ${PROTOBUF_DEPENDS}
+                GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
+                GIT_TAG "v${PROTOBUF_VERSION_REQUIRED}"
+                GIT_SHALLOW true
+                GIT_SUBMODULES_RECURSE false
+                CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${PROTOBUF_CMAKE_ARGS}
         )
     endif()
 endif()
@@ -165,7 +169,7 @@ if(Eigen3 IN_LIST EXTERNAL_PROJECTS_LIST)
     else()
         message(STATUS "Eigen3: Building ${EIGEN3_VERSION_REQUIRED} from source")
         ExternalProject_Add(
-                Eigen3
+            Eigen3
                 GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git"
                 GIT_TAG ${EIGEN3_VERSION_REQUIRED}
                 GIT_SHALLOW true
@@ -184,7 +188,7 @@ if(nlohmann_json IN_LIST EXTERNAL_PROJECTS_LIST)
     else()
         message(STATUS "NLohmann JSON: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
         ExternalProject_Add(
-                nlohmann_json
+            nlohmann_json
                 GIT_REPOSITORY "https://github.com/nlohmann/json"
                 GIT_TAG v${NLOHMANN_JSON_VERSION_REQUIRED}
                 GIT_SHALLOW true
@@ -250,18 +254,18 @@ if(fmt IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 #--------------------------------------------------------------------------------------------------
-# range-v3
+# range_v3
 if(range-v3 IN_LIST EXTERNAL_PROJECTS_LIST)
     set(RANGE_V3_VERSION_REQUIRED 0.12.0)
     find_package(range-v3 ${RANGE_V3_VERSION_REQUIRED} QUIET)
     if(RANGE_V3_FOUND)
-        message(STATUS "range-v3: Using ${range-v3_DIR}")
+        message(STATUS "range_v3: Using ${RANGE_V3_DIR}")
     else()
-        message(STATUS "range-v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
+        message(STATUS "range_v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
         ExternalProject_Add(
-                range-v3
+            range_v3
                 GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
-		GIT_TAG ${RANGE_V3_VERSION_REQUIRED}
+		        GIT_TAG ${RANGE_V3_VERSION_REQUIRED}
                 GIT_SHALLOW true
                  CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS}
                 -DRANGE_V3_TESTS=OFF

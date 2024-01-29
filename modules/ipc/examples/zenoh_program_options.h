@@ -15,7 +15,10 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
       .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
       .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", 'r', "Router endpoint", "")
-      .defineFlag("shared_memory", 's', "Enable shared memory");
+      .defineOption<std::string>("protocol", 'p', "Protocol to use, options: udp, tcp, any", "any")
+      .defineFlag("shared_memory", 's', "Enable shared memory")
+      .defineFlag("qos", 'q', "Enable QoS")
+      .defineFlag("realtime", "Enable real-time communication");
 
   return desc;
 }
@@ -24,6 +27,7 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
   eolo::ipc::Config config;
   config.topic = args.getOption<std::string>("topic");
   config.cache_size = args.getOption<std::size_t>("cache");
+
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
     config.mode = eolo::ipc::Mode::PEER;
@@ -33,8 +37,22 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
     eolo::throwException<eolo::InvalidParameterException>(std::format("invalid mode value: {}", mode));
   }
 
+  auto protocol = args.getOption<std::string>("protocol");
+  if (protocol == "any") {
+    config.protocol = eolo::ipc::Protocol::ANY;
+  } else if (protocol == "udp") {
+    config.protocol = eolo::ipc::Protocol::UDP;
+  } else if (protocol == "tcp") {
+    config.protocol = eolo::ipc::Protocol::TCP;
+  } else {
+    eolo::throwException<eolo::InvalidParameterException>(
+        std::format("invalid value {} for option 'protocol'", protocol));
+  }
+
   config.router = args.getOption<std::string>("router");
   config.enable_shared_memory = args.getOption<bool>("shared_memory");
+  config.qos = args.getOption<bool>("qos");
+  config.real_time = args.getOption<bool>("realtime");
 
   return config;
 }

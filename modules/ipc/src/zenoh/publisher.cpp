@@ -5,6 +5,7 @@
 #include "eolo/ipc/zenoh/publisher.h"
 
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/base/exception.h"
 #include "eolo/ipc/zenoh/utils.h"
@@ -28,7 +29,10 @@ Publisher::Publisher(SessionPtr session, Config config, MatchCallback&& match_cb
   }
 
   zenohc::PublisherOptions pub_options;
-  // TODO: add support to priorty
+  if (config_.real_time) {
+    pub_options.set_priority(zenohc::Priority::Z_PRIORITY_REAL_TIME);
+  }
+
   publisher_ = expectAsUniquePtr(session_->declare_publisher(config_.topic, pub_options));
 
   put_options_.set_encoding(Z_ENCODING_PREFIX_APP_CUSTOM);
