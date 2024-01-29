@@ -259,9 +259,9 @@ if(range-v3 IN_LIST EXTERNAL_PROJECTS_LIST)
     set(RANGE_V3_VERSION_REQUIRED 0.12.0)
     find_package(range-v3 ${RANGE_V3_VERSION_REQUIRED} QUIET)
     if(RANGE_V3_FOUND)
-        message(STATUS "range_v3: Using ${RANGE_V3_DIR}")
+        message(STATUS "range-v3: Using ${RANGE_V3_DIR}")
     else()
-        message(STATUS "range_v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
+        message(STATUS "range-v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
         ExternalProject_Add(
             range_v3
                 GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
