@@ -32,7 +32,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build all examples
+      run: cmake --build ${{github.workspace}}/build -- all examples
 
     - name: Test
       working-directory: ${{github.workspace}}/build
