@@ -4,9 +4,10 @@
 
 #include <algorithm>
 #include <print>
-#include <zenohc.hxx>
 
+#include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/zenoh/liveliness.h"
 #include "zenoh_program_options.h"
@@ -18,7 +19,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto config = parseArgs(args);
 
-    std::println("Opening session...");
+    fmt::println("Opening session...");
     const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(std::move(config));
     std::ranges::for_each(publishers_info,
                           [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); });

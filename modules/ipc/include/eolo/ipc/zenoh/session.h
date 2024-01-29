@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include <zenohc.hxx>
-
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/utils.h"

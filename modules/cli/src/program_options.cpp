@@ -1,8 +1,9 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 EOLO Contributors
 //=================================================================================================
-
 #include "eolo/cli/program_options.h"
+
+#include <fmt/core.h>
 
 #include "eolo/base/exception.h"
 #include "eolo/utils/utils.h"
@@ -39,7 +40,7 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
   for (auto arg_it = args.begin(); arg_it != args.end(); ++arg_it) {
     auto& option = getOptionFromArg(*arg_it);
     if (option.key == HELP_KEY) {
-      std::println(stderr, "{}", help_option.value);
+      fmt::println(stderr, "{}", help_option.value);
       exit(0);
     }
 

@@ -4,11 +4,13 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <print>
+#include <format>
 #include <thread>
-#include <zenohc.hxx>
 
+#include <fmt/chrono.h>
+#include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/subscriber.h"
 #include "eolo/ipc/zenoh/session.h"
@@ -24,17 +26,17 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto config = parseArgs(args);
 
-    std::println("Opening session...");
-    std::println("Declaring Subscriber on '{}'", config.topic);
+    fmt::println("Opening session...");
+    fmt::println("Declaring Subscriber on '{}'", config.topic);
 
     auto session = eolo::ipc::zenoh::createSession(config);
 
     auto cb = [topic = config.topic](const eolo::ipc::MessageMetadata& metadata,
                                      const std::shared_ptr<eolo::types::Pose>& pose) {
-      std::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
+      fmt::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
                    std::chrono::system_clock::time_point{
                        std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
-                   topic, metadata.sender_id, metadata.sequence_id, pose->position.transpose());
+                   topic, metadata.sender_id, metadata.sequence_id, *pose);
     };
     auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::types::Pose>(
         session, std::move(config), std::move(cb));

@@ -18,24 +18,22 @@ inline void toProto(ProtoMatrixT& proto_matrix, const Eigen::Matrix<TypeT, ROWS,
 
   auto* proto_data = proto_matrix.mutable_data();
   proto_data->Resize(static_cast<int>(matrix.size()), TypeT{});
-  Eigen::Map<Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_data->mutable_data(), matrix.rows(),
-                                                   matrix.cols());
+  Eigen::Map<Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_data->mutable_data(), matrix.rows(), matrix.cols());
   map = matrix;
 }
 
 template <class TypeT, int ROWS, int COLS, class ProtoMatrixT>
 inline void fromProto(const ProtoMatrixT& proto_matrix, Eigen::Matrix<TypeT, ROWS, COLS>& matrix) {
-  throwExceptionIf<InvalidDataException>(
-      (ROWS != -1 && static_cast<int>(proto_matrix.rows()) != ROWS) ||
-          (COLS != -1 && static_cast<int>(proto_matrix.cols()) != COLS),
-      "Cannot convert Protobuf struct to Eigen::Map: invalid dimensions");
+  throwExceptionIf<InvalidDataException>((ROWS != -1 && static_cast<int>(proto_matrix.rows()) != ROWS) ||
+                                             (COLS != -1 && static_cast<int>(proto_matrix.cols()) != COLS),
+                                         "Cannot convert Protobuf struct to Eigen::Map: invalid dimensions");
 
   throwExceptionIf<InvalidDataException>(proto_matrix.rows() * proto_matrix.cols() !=
                                              static_cast<uint32_t>(proto_matrix.data_size()),
                                          "Rows and cols count don't match with data size");
 
-  Eigen::Map<const Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_matrix.data().data(),
-                                                         proto_matrix.rows(), proto_matrix.cols());
+  Eigen::Map<const Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_matrix.data().data(), proto_matrix.rows(),
+                                                         proto_matrix.cols());
   matrix = map;
 }
 

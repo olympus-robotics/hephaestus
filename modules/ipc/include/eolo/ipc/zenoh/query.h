@@ -5,6 +5,7 @@
 #pragma once
 
 #include <zenohc.hxx>
+
 namespace eolo::ipc::zenoh {
 
 struct QueryResponse {

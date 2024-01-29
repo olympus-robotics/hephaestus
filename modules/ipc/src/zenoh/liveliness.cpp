@@ -4,9 +4,9 @@
 
 #include "eolo/ipc/zenoh/liveliness.h"
 
-#include <zenohc.hxx>
-
+#include <fmt/core.h>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/session.h"
@@ -30,7 +30,7 @@ auto getListOfPublishers(const Config& config) -> std::vector<PublisherInfo> {
       auto sample = static_cast<zenohc::Sample>(z_reply_ok(&reply));
       infos.emplace_back(std::string{ sample.get_keyexpr().as_string_view() });
     } else {
-      std::println("Received an error");
+      fmt::println("Received an error");
     }
   }
 
@@ -41,6 +41,6 @@ auto getListOfPublishers(const Config& config) -> std::vector<PublisherInfo> {
 }
 
 void printPublisherInfo(const PublisherInfo& info) {
-  std::println("[Publisher] Topic: {}", info.topic);
+  fmt::println("[Publisher] Topic: {}", info.topic);
 }
 }  // namespace eolo::ipc::zenoh

@@ -5,9 +5,9 @@
 #pragma once
 
 #include <span>
-#include <zenohc.hxx>
 
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/session.h"

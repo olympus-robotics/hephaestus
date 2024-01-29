@@ -5,14 +5,13 @@
 #include "eolo/ipc/zenoh/scout.h"
 
 #include <algorithm>
-#include <expected>
 #include <mutex>
-#include <ranges>
-#include <zenohc.hxx>
 
 #include <absl/base/thread_annotations.h>
 #include <nlohmann/json.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <zenoh.h>
+#include <zenohc.hxx>
 
 #include "eolo/base/exception.h"
 #include "eolo/ipc/zenoh/query.h"
@@ -34,7 +33,7 @@ public:
 
   [[nodiscard]] auto getNodesInfo() const -> std::vector<NodeInfo> {
     std::unique_lock<std::mutex> lock{ mutex_ };
-    auto values = nodes_info_ | std::views::values | std::ranges::to<std::vector<NodeInfo>>();
+    auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
     return values;
   }
 
@@ -90,7 +89,7 @@ auto getListOfNodes() -> std::vector<NodeInfo> {
   auto router = std::ranges::find_if(nodes, [](const auto& node) { return node.mode == Mode::ROUTER; });
   if (router != nodes.end()) {
     auto clients = getListOfClientsFromRouter(router->id);
-    nodes.insert_range(nodes.end(), clients);
+    nodes.insert(nodes.end(), clients.begin(), clients.end());
   }
 
   return nodes;

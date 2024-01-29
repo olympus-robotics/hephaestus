@@ -5,7 +5,9 @@
 declare_module(NAME utils
   ALWAYS_BUILD
   DEPENDS_ON_MODULES "" # **Note**: This module should not depend on any other module
-  DEPENDS_ON_EXTERNAL_PROJECTS "")
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt)
+
+find_package(fmt REQUIRED)
 
 # generate version header
 configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ONLY)
