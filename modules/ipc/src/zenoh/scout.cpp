@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include <absl/base/thread_annotations.h>
+#include <fmt/core.h>
 #include <nlohmann/json.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <zenoh.h>
@@ -48,7 +49,7 @@ private:
 
   static constexpr auto ROUTER_TOPIC = "@/router/{}";
   const auto query_topic = std::format(ROUTER_TOPIC, router_id);
-
+  fmt::println("QUERY TOPIC: {}", query_topic);
   auto query_res = query(session, query_topic, "");
   throwExceptionIf<FailedZenohOperation>(query_res.empty(), "failed to query for router info: no response");
 

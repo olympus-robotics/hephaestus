@@ -1,6 +1,6 @@
 # eolo
 
-## Build
+## Build
 
 ### Env
 The best way to build eolo is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
@@ -27,10 +27,12 @@ When switching again back to C++23 it will be possible to remove `fmt` and `rang
 - [x] Add publisher subscriber listenr, waiting for https://github.com/eclipse-zenoh/zenoh-c/pull/236
 - [x] Add router client
 - [] Add option for high performant publisher (disable cache, liveliness, metadata and set high priority)
+- [] Bug: ID to string conversion doesn't work for custom specified ID
+- [] Add option to specify custom ID for session
 
 `cli`
 - [] Add support to `enum` options
 - [] Add support to `vector` options
 
 ### Serialization
-- [] Add new bag module
+- [] Introduce MCAP

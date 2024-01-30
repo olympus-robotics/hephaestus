@@ -4,7 +4,7 @@
 
 #include "eolo/types_protobuf/pose.h"
 
-#include "eolo/base/exception.h"
+#include "eolo/serdes/protobuf/protobuf.h"
 #include "eolo/types_protobuf/geometry.h"
 
 namespace eolo::types {
@@ -19,16 +19,10 @@ void fromProto(const proto::Pose& proto_pose, Pose& pose) {
 }
 
 void toProtobuf(serdes::protobuf::SerializerBuffer& buffer, const Pose& pose) {
-  proto::Pose proto_pose;
-  toProto(proto_pose, pose);
-  buffer.serialize(proto_pose);
+  serdes::protobuf::toProtobuf<proto::Pose>(buffer, pose);
 }
 
 void fromProtobuf(serdes::protobuf::DeserializerBuffer& buffer, Pose& pose) {
-  proto::Pose proto_pose;
-  auto res = buffer.deserialize(proto_pose);
-  throwExceptionIf<InvalidDataException>(!res, "Failed to parse proto::pose from incoming buffer");
-
-  fromProto(proto_pose, pose);
+  serdes::protobuf::fromProtobuf<proto::Pose>(buffer, pose);
 }
 }  // namespace eolo::types
