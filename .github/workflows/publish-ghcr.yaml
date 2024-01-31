@@ -1,0 +1,20 @@
+name: Docker Image CI for GHCR
+
+on:
+  push:
+    paths:
+      - docker/**
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and push the image
+        run: |
+          docker login --username filippobrizzi --password ${{ secres.GH_PAT }} ghcr.io
+          cd ${{github.workspace}}/docker
+          ./build.sh
+          source ./version.sh
+          docker image tag ${IMAGE}:latest ghcr.io/filippobrizzi/${IMAGE}:latest
+          docker push ghcr.io/filippobrizzi/${IMAGE}:latest
