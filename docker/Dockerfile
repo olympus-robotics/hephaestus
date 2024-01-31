@@ -1,6 +1,5 @@
 ARG BASE_IMAGE
 
-# FROM arm64v8/ubuntu:22.04
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
