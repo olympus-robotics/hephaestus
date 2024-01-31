@@ -48,10 +48,10 @@ jobs:
       - name: Build and push the image
         if: steps.filter.outputs.external == 'true'
         uses: docker/login-action@v3
-          with:
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ${{github.workspace}}/docker
           ./build_dev.sh
