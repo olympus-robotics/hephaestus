@@ -20,9 +20,9 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
-        filters: |
-          docker:
-            - 'docker/**'
+          filters: |
+            docker:
+              - 'docker/**'
       - name: Build and push the image
         if: steps.filter.outputs.docker == 'true'
         run: |
