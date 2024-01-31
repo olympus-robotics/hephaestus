@@ -24,7 +24,7 @@ if docker_tag_exists; then
 else
     echo "Building image: ${IMAGE_NAME}:${VERSION}"
     pushd ../
-    docker build . -t ${IMAGE_NAME}:${VERSION} -f docker/Dockerfile_deps --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} --tag ${IMAGE_NAME}_${SUFFIX}:latest
+    docker build . -t ${IMAGE_NAME}:${VERSION} -f docker/Dockerfile_deps --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} --tag ${IMAGE_NAME}:latest
     popd
 
     docker push ${IMAGE_NAME}:${VERSION}
