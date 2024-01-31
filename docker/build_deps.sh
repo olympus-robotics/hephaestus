@@ -12,7 +12,7 @@ BASE_IMAGE=ghcr.io/filippobrizzi/${ARCH}/${IMAGE}:${VERSION}
 docker pull ${BASE_IMAGE}
 
 SUFFIX=deps
-IMAGE_NAME="ghcr.io/filippobrizzi/${ARC}/${IMAGE}_${SUFFIX}"
+IMAGE_NAME="ghcr.io/filippobrizzi/${ARCH}/${IMAGE}_${SUFFIX}"
 
 function docker_tag_exists() {
     docker manifest inspect ${IMAGE_NAME}:${VERSION} > /dev/null
