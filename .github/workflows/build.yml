@@ -34,7 +34,6 @@ jobs:
         run: |
           cd ${{github.workspace}}/docker
           ./build.sh
-          ./publish.sh
   docker_deps_build_and_publish:
     needs: docker_build_and_publish
     runs-on: ubuntu-latest
@@ -56,8 +55,7 @@ jobs:
         if: steps.filter.outputs.external == 'true'
         run: |
           cd ${{github.workspace}}/docker
-          ./build_dev.sh
-          ./publish_dev.sh
+          ./build_deps.sh
   build:
     needs: docker_deps_build_and_publish
     # TODO: use the docker image published at the step over
