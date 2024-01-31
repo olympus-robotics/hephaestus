@@ -57,21 +57,25 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenohcxx
 if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
-    set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.so")
-    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.dylib")
+    if (EXISTS ${CMAKE_INSTALL_PREFIX}/bin/zenohd)
+        message(STATUS "zenohd: Using version from ${CMAKE_INSTALL_PREFIX}")
+        add_dummy_target(zenohd)
+    else()
+        set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.so")
+        if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+            set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.dylib")
+        endif()
+        ExternalProject_Add(
+            zenohd
+                GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
+                GIT_TAG  0.10.1-rc # v${zenohc_VERION_REQUIRED}
+                GIT_SHALLOW true
+                CONFIGURE_COMMAND ""
+                BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
+                BUILD_IN_SOURCE true
+                INSTALL_COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/bin/ && cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB} ${CMAKE_INSTALL_PREFIX}/bin/
+                LOG_BUILD ON)
     endif()
-    ExternalProject_Add(
-        zenohd
-            GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
-            GIT_TAG  0.10.1-rc # v${zenohc_VERION_REQUIRED}
-            GIT_SHALLOW true
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
-            BUILD_IN_SOURCE true
-            INSTALL_COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/bin/ && cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB} ${CMAKE_INSTALL_PREFIX}/bin/
-            LOG_BUILD ON)
-
   # install zenoh-c first
   # set(zenohc_VERION_REQUIRED 0.11.0.0)
   find_package(zenohc QUIET) # ${zenohc_VERION_REQUIRED} QUIET)
