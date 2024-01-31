@@ -1,4 +1,25 @@
-# eolo
+# Eolo
+
+Eolo is a C++ framework designed to facilitate robotics development by providing commonly needed functionality and abstractions.
+
+The goal of Eolo is to support the deployment of robotic code in production. This means:
+* Simple, stable, performant functionalities.
+* No focus on simplifying experimentation and no-nonsense functionality.
+    * New features will be added if they make production code better (faster/stable/simpler), not for making running experiments faster (I am looking at you ROS).
+* Abstract from the developer as much of the complexity of writing C++ code as possible:
+    * Memory managment.
+    * Parallelism and multi/threading.
+    * Containers and basic algorithm.
+
+Eolo provides functionalities that cover the following domains:
+* Inter Process Comunication (IPC).
+* Data serialization for IPC and storage.
+* Multi-threading, e.g. thread pools and parallelism primitive.
+* Containers, e.g. thread save container for sharing data across threads.
+* Memory pool
+* Functionalities to run real-time code.
+
+> NOTE: most of the above functionalities are still work in progress.
 
 ## Build
 
@@ -9,9 +30,25 @@ The best way to build eolo is to do it inside the docker container provided in t
 
 Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from [grape](https://github.com/cvilas/grape).
 
+To build it:
+```bash
+cd eolo
+mkdir build && cd build
+cmake --preset preferred
+ninja all examples
+```
+
+To compile and run the unit test
+```bash
+ninja checks
+```
+
+> TODO: add section on the different flags and options.
+
+
 ## Notes
 
-Initially this repo was supporting C++23, but to maximise compatibilty I reverted back to C++20.
+Initially this repo was supporting C++23, but to maximise compatibilty we reverted back to C++20.
 
 When switching again back to C++23 it will be possible to remove `fmt` and `ranges-v3`. The transition will be easy, just rename `fmt::` -> `std::` and remove `fmt::formatter`.
 
