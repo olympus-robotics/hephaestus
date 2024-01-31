@@ -16,7 +16,7 @@ jobs:
   docker_build_and_publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.1
       - uses: dorny/paths-filter@v3.0.0
         id: filter
         with:
@@ -25,8 +25,12 @@ jobs:
               - 'docker/**'
       - name: Build and push the image
         if: steps.filter.outputs.docker == 'true'
+        uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
           cd ${{github.workspace}}/docker
           ./build.sh
           ./publish.sh
@@ -34,7 +38,7 @@ jobs:
     needs: docker_build_and_publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.1
       - uses: dorny/paths-filter@v3.0.0
         id: filter
         with:
@@ -43,8 +47,12 @@ jobs:
               - 'external/**'
       - name: Build and push the image
         if: steps.filter.outputs.external == 'true'
+        uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
           cd ${{github.workspace}}/docker
           ./build_dev.sh
           ./publish_dev.sh
