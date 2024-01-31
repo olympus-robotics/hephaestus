@@ -1,13 +1,15 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
+SHELL ["/bin/bash", "-c"]
+
 COPY . /tmp/eolo/
 RUN ls /tmp/eolo/
 
-RUN mkdir /tmp/build
-WORKDIR /tmp/build
-RUN cmake ../eolo/ --preset docker
+RUN mkdir /tmp/eolo/build
+WORKDIR /tmp/eolo/build
+RUN  . "$HOME/.cargo/env" && cmake ../ --preset docker
 RUN ninja all && \
     ninja install
 
-RUN cd ../ && rm -rf eolo && rm -rf build
+RUN cd / && rm -rf /tmp/eolo

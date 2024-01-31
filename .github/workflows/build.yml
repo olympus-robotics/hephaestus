@@ -29,18 +29,37 @@ jobs:
           docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
           cd ${{github.workspace}}/docker
           ./build.sh
-          source ./version.sh
-          docker image tag ${IMAGE}:latest ghcr.io/filippobrizzi/${IMAGE}:latest
-          docker push ghcr.io/filippobrizzi/${IMAGE}:latest
-  build:
+          ./publish.sh
+  docker_deps_build_and_publish:
     needs: docker_build_and_publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            external:
+              - 'external/**'
+      - name: Build and push the image
+        if: steps.filter.outputs.external == 'true'
+        run: |
+          docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
+          cd ${{github.workspace}}/docker
+          ./build_dev.sh
+          ./publish_dev.sh
+  build:
+    needs: docker_deps_build_and_publish
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/filippobrizzi/eolo-dev_deps:latest
+      credentials:
+        username: ${{ github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: sudo apt update && sudo apt install -y ninja-build
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

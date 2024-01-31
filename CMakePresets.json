@@ -21,7 +21,7 @@
     "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
     "cacheVariables": {
      "BUILD_MODULES": "all",
-     "DENABLE_LINTER": "OFF",
+     "ENABLE_LINTER": "OFF",
      "CMAKE_BUILD_TYPE": "Release"
     }
    }

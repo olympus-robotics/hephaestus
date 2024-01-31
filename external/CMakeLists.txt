@@ -82,9 +82,9 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "zenohc: Building ${zenohc_VERION_REQUIRED} from source")
     ExternalProject_Add(
       zenohc
-      DEPENDS zenohd
+        DEPENDS zenohd
         GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-        GIT_TAG 408a6eb2f305c965101f19f6925acc0e0a93f764 # v${zenohc_VERION_REQUIRED}
+        GIT_TAG d1ec83dee421054bed034e0e60abc98a526bae0a # v${zenohc_VERION_REQUIRED}
         GIT_SHALLOW true
         CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON)
   endif()
