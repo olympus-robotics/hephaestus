@@ -19,6 +19,6 @@ static constexpr std::uint16_t VERSION_PATCH = 0;
 
 static constexpr std::string_view REPO_BRANCH = "github_actions";
 static constexpr std::string_view BUILD_PROFILE = "Release";
-static constexpr std::string_view REPO_HASH = "34a7e06";
+static constexpr std::string_view REPO_HASH = "0f0336a";
 
 } // namespace eolo::utils

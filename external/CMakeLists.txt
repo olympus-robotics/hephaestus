@@ -69,7 +69,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
             CONFIGURE_COMMAND ""
             BUILD_COMMAND COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
             BUILD_IN_SOURCE true
-            INSTALL_COMMAND cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB} ${CMAKE_INSTALL_PREFIX}/bin/
+            INSTALL_COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/bin/ && cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB} ${CMAKE_INSTALL_PREFIX}/bin/
             LOG_BUILD ON)
 
   # install zenoh-c first
