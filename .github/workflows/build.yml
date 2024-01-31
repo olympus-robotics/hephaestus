@@ -62,7 +62,7 @@ jobs:
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/filippobrizzi/eolo-dev_deps:latest
+      image: ghcr.io/filippobrizzi/x86_64/eolo-dev_deps:latest
       credentials:
         username: ${{ github.actor}}
         password: ${{secrets.GITHUB_TOKEN}}
