@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
+name: Build and deploy pipeline
 
 on:
   push:
@@ -15,29 +15,27 @@ env:
 jobs:
   docker_build_and_publish:
     runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-        - uses: dorny/paths-filter@v2
-          id: filter
-          with:
-          filters: |
-            docker:
-              - 'docker/**'
-        - name: Build and push the image
-          if: steps.filter.outputs.docker == 'true'
-          run: |
-            docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
-            cd ${{github.workspace}}/docker
-            ./build.sh
-            source ./version.sh
-            docker image tag ${IMAGE}:latest ghcr.io/filippobrizzi/${IMAGE}:latest
-            docker push ghcr.io/filippobrizzi/${IMAGE}:latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+        filters: |
+          docker:
+            - 'docker/**'
+      - name: Build and push the image
+        if: steps.filter.outputs.docker == 'true'
+        run: |
+          docker login --username filippobrizzi --password ${{ secrets.GH_PAT }} ghcr.io
+          cd ${{github.workspace}}/docker
+          ./build.sh
+          source ./version.sh
+          docker image tag ${IMAGE}:latest ghcr.io/filippobrizzi/${IMAGE}:latest
+          docker push ghcr.io/filippobrizzi/${IMAGE}:latest
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    needs: docker_build_and_publish
+    # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
 
