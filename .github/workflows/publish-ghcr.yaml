@@ -2,6 +2,11 @@ name: Docker Image CI for GHCR
 
 on:
   push:
+    branches: [ "main" ]
+    paths:
+      - docker/**
+  pull_request:
+    branches: [ "main" ]
     paths:
       - docker/**
 
