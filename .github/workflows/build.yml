@@ -54,6 +54,7 @@ jobs:
       - name: Build and push the image
         if: steps.filter.outputs.external == 'true'
         run: |
+          # TODO: this should happen when something in external changes, but should also increa the version number maybe?
           cd ${{github.workspace}}/docker
           ./build_deps.sh
   build:

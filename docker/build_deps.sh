@@ -19,8 +19,8 @@ function docker_tag_exists() {
 }
 
 if docker_tag_exists; then
-    echo "Image already exists, pulling it: ${IMAGE_NAME}:${VERSION}"
-    docker pull ${IMAGE_NAME}:${VERSION}
+    echo "Image already exists, you can pull it with:"
+    echo "$ docker pull ${IMAGE_NAME}:${VERSION}"
 else
     echo "Building image: ${IMAGE_NAME}:${VERSION}"
     pushd ../
