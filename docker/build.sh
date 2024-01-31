@@ -14,4 +14,4 @@ fi
 
 ncores=$(cat /proc/cpuinfo | grep processor | wc -l)
 
-docker build -t ${IMAGE}:${VERSION} -f Dockerfile --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} .
+docker build -t ${IMAGE}:${VERSION} -f Dockerfile --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} . --tag ${IMAGE}:latest
