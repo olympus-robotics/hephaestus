@@ -23,13 +23,14 @@ jobs:
           filters: |
             docker:
               - 'docker/**'
+      - name: Docker login
+        uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push the image
         if: steps.filter.outputs.docker == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ${{github.workspace}}/docker
           ./build.sh
@@ -45,13 +46,14 @@ jobs:
           filters: |
             external:
               - 'external/**'
+      - name: Docker login
+        uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push the image
         if: steps.filter.outputs.external == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ${{github.workspace}}/docker
           ./build_dev.sh
