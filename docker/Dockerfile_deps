@@ -1,0 +1,13 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+COPY . /tmp/eolo/
+RUN ls /tmp/eolo/
+
+RUN mkdir /tmp/build
+WORKDIR /tmp/build
+RUN cmake ../eolo/ --preset docker
+RUN ninja all && \
+    ninja install
+
+RUN cd ../ && rm -rf eolo && rm -rf build
