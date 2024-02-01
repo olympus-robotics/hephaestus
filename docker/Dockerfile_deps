@@ -13,3 +13,5 @@ RUN ninja all && \
     ninja install
 
 RUN cd / && rm -rf /tmp/eolo
+
+WORKDIR /

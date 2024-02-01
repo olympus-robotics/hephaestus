@@ -20,13 +20,13 @@ function docker_tag_exists() {
 
 if docker_tag_exists; then
     echo "Image already exists, you can pull it with:"
-    echo "$ docker pull ${IMAGE_NAME}:${VERSION}"
+    echo "$ docker pull ${IMAGE_NAME}:${DEPS_VERSION}"
 else
-    echo "Building image: ${IMAGE_NAME}:${VERSION}"
+    echo "Building image: ${IMAGE_NAME}:${DEPS_VERSION}"
     pushd ../
-    docker build . -t ${IMAGE_NAME}:${VERSION} -f docker/Dockerfile_deps --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} --tag ${IMAGE_NAME}:latest
+    docker build . -t ${IMAGE_NAME}:${DEPS_VERSION} -f docker/Dockerfile_deps --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} --tag ${IMAGE_NAME}:latest
     popd
 
-    docker push ${IMAGE_NAME}:${VERSION}
+    docker push ${IMAGE_NAME}:${DEPS_VERSION}
     docker push ${IMAGE_NAME}:latest
 fi

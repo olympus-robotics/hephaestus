@@ -54,7 +54,6 @@ jobs:
       - name: Build and push the image
         if: steps.filter.outputs.external == 'true'
         run: |
-          # TODO: this should happen when something in external changes, but should also increa the version number maybe?
           cd ${{github.workspace}}/docker
           ./build_deps.sh
   build:
@@ -72,7 +71,7 @@ jobs:
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build --preset CI
-
+    # TODO: add a step to run the formatter
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build -- all examples
