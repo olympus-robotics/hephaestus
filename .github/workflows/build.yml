@@ -10,7 +10,7 @@ on:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  PRESET: preferred
+  PRESET: CI
 
 jobs:
   docker_build_and_publish:
@@ -80,4 +80,4 @@ jobs:
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ninja check
+      run: cd ${{github.workspace}}/build && ninja check
