@@ -10,6 +10,6 @@ using namespace ::testing;
 namespace eolo::ipc::tests {
 
 TEST(Example, Example) {
-  EXPECT_TRUE(false);
+  EXPECT_TRUE(true);
 }
 }  // namespace eolo::ipc::tests

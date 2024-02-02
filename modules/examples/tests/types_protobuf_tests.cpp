@@ -6,12 +6,12 @@
 
 #include <gtest/gtest.h>
 
+#include "eolo/examples/types/pose.h"
+#include "eolo/examples/types/proto/geometry.pb.h"
+#include "eolo/examples/types_protobuf/geometry.h"
+#include "eolo/examples/types_protobuf/pose.h"
 #include "eolo/serdes/protobuf/buffers.h"
 #include "eolo/serdes/serdes.h"
-#include "eolo/types/pose.h"
-#include "eolo/types/proto/geometry.pb.h"
-#include "eolo/types_protobuf/geometry.h"
-#include "eolo/types_protobuf/pose.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
