@@ -95,7 +95,7 @@ inline auto toChrono(const zenohc::Timestamp& ts) -> std::chrono::nanoseconds {
 }
 
 template <typename T>
-inline constexpr auto expect(std::variant<T, zenohc::ErrorMessage>&& v) -> T {
+constexpr auto expect(std::variant<T, zenohc::ErrorMessage>&& v) -> T {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
     throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));
@@ -105,7 +105,7 @@ inline constexpr auto expect(std::variant<T, zenohc::ErrorMessage>&& v) -> T {
 }
 
 template <typename T>
-inline constexpr auto expectAsSharedPtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::shared_ptr<T> {
+constexpr auto expectAsSharedPtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::shared_ptr<T> {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
     throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));
@@ -115,7 +115,7 @@ inline constexpr auto expectAsSharedPtr(std::variant<T, zenohc::ErrorMessage>&& 
 }
 
 template <typename T>
-inline constexpr auto expectAsUniquePtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::unique_ptr<T> {
+constexpr auto expectAsUniquePtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::unique_ptr<T> {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
     throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));

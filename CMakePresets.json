@@ -2,7 +2,7 @@
  "version": 7,
  "configurePresets": [
   {
-   "name": "preferred",
+   "name": "default",
    "description": "Configuration setting for all modules with preferred toolchain",
    "generator": "Ninja",
    "binaryDir": "${sourceDir}/build",
@@ -12,6 +12,19 @@
     "BUILD_MODULES": "all"
    }
   },
+  {
+    "name": "fast",
+    "description": "Configuration setting for all modules with preferred toolchain",
+    "generator": "Ninja",
+    "binaryDir": "${sourceDir}/build",
+    "installDir": "/install",
+    "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
+    "cacheVariables": {
+     "BUILD_MODULES": "all",
+     "ENABLE_LINTER": "OFF",
+     "CMAKE_BUILD_TYPE": "Release"
+    }
+   },
   {
     "name": "deps-docker",
     "description": "Configuration setting for all modules with preferred toolchain",
@@ -42,9 +55,9 @@
  ],
  "buildPresets": [
   {
-   "name": "preferred",
+   "name": "default",
    "description": "Preferred build settings",
-   "configurePreset": "preferred"
+   "configurePreset": "default"
   }
  ]
 }

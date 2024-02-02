@@ -12,6 +12,7 @@ RUN  . "$HOME/.cargo/env" && cmake ../ --preset deps-docker
 RUN ninja all && \
     ninja install
 
-RUN cd / && rm -rf /tmp/eolo
+# Remove all eolo install
+RUN cd / && rm -rf /tmp/eolo && rm -rf /install/include/eolo && rm -rf /install/lib/libeolo* && rm -rf /install/lib/cmake/eolo* && rm -rf /install/share/eolo*
 
 WORKDIR /

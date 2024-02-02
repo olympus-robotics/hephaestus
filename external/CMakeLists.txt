@@ -93,8 +93,10 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     ExternalProject_Add(
       zenohc
         DEPENDS zenohd
-        GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-        GIT_TAG d1ec83dee421054bed034e0e60abc98a526bae0a # v${zenohc_VERION_REQUIRED}
+        GIT_REPOSITORY https://github.com/filippobrizzi/zenoh-c.git
+        GIT_TAG e5f9f3128f8eb187234ef68eaf98ee6bd487b0c9
+        # GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
+        # GIT_TAG d1ec83dee421054bed034e0e60abc98a526bae0a # v${zenohc_VERION_REQUIRED}
         GIT_SHALLOW true
         CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON)
   endif()
@@ -110,8 +112,10 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     ExternalProject_Add(
       zenohcxx
         DEPENDS zenohc
-        GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
-        GIT_TAG 10ced293dd72ed5ec55c36b57672e0cc21932761 # v${zenohcxx_VERION_REQUIRED}
+        GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-cpp.git"
+        GIT_TAG 457775eecc2b4fab15349464c373e59127896c28
+        # GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
+        # GIT_TAG 10ced293dd72ed5ec55c36b57672e0cc21932761 # v${zenohcxx_VERION_REQUIRED}
         GIT_SHALLOW true
         SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
                                 # building zenoh-c again
