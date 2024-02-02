@@ -20,7 +20,7 @@ fi
 
 ncores=$(cat /proc/cpuinfo | grep processor | wc -l)
 
-IMAGE_NAME="ghcr.io/filippobrizzi/${ARCH}/${IMAGE}"
+IMAGE_NAME="${HOST}/${ARCH}/${IMAGE}"
 
 function docker_tag_exists() {
     docker manifest inspect ${IMAGE_NAME}:${VERSION} > /dev/null

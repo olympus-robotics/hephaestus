@@ -190,15 +190,15 @@ constexpr auto ProgramDescription::defineOption(const std::string& key, char sho
 }
 
 template <StringStreamable T>
-inline constexpr auto ProgramDescription::defineOption(const std::string& key, const std::string& description,
-                                                       const T& default_value) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineOption(const std::string& key, const std::string& description,
+                                                const T& default_value) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description, default_value);
 }
 
 template <StringStreamable T>
-inline constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
-                                                       const std::string& description,
-                                                       const T& default_value) -> ProgramDescription& {
+constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
+                                                const std::string& description,
+                                                const T& default_value) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(),
