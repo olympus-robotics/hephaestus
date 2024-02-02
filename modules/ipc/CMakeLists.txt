@@ -2,7 +2,7 @@
 # Copyright (C) 2023-2024 EOLO Contributors
 #=================================================================================================
 
-declare_module(NAME ipc DEPENDS_ON_MODULES base cli types_protobuf DEPENDS_ON_EXTERNAL_PROJECTS fmt nlohmann_json range-v3 zenohcxx)
+declare_module(NAME ipc DEPENDS_ON_MODULES base cli DEPENDS_ON_EXTERNAL_PROJECTS fmt nlohmann_json range-v3 zenohcxx)
 
 find_package(fmt REQUIRED)
 find_package(range-v3 REQUIRED)
@@ -33,7 +33,6 @@ define_module_library(
         PUBLIC_LINK_LIBS
             eolo::base
             eolo::cli
-            eolo::types_protobuf
             fmt::fmt
             nlohmann_json::nlohmann_json
             range-v3::range-v3
@@ -48,4 +47,4 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
-add_subdirectory(examples)
+add_subdirectory(apps)
