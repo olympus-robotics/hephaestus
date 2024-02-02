@@ -34,7 +34,7 @@
     "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
     "cacheVariables": {
      "BUILD_MODULES": "all",
-     "ENABLE_LINTER": "OFF",
+     "ENABLE_LINTER": "ON",
      "CMAKE_BUILD_TYPE": "Release",
      "CMAKE_PREFIX_PATH": "/install"
     }

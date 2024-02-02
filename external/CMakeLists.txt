@@ -34,7 +34,6 @@ set(EP_CMAKE_EXTRA_ARGS
     -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})
 
 
-message(STATUS "PREFIX: ${CMAKE_INSTALL_PREFIX}")
 make_directory(${CMAKE_INSTALL_PREFIX}/bin)
 make_directory(${CMAKE_INSTALL_PREFIX}/lib)
 make_directory(${CMAKE_INSTALL_PREFIX}/include)
