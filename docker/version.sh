@@ -1,4 +1,4 @@
-
+HOST=ghcr.io/filippobrizzi
 VERSION=1.0.2
 IMAGE=eolo-dev
 

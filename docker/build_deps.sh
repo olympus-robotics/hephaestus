@@ -8,14 +8,14 @@ if [ "${ARCH}" == "aarch64" ]; then
     ARCH = "arm64"
 fi
 
-BASE_IMAGE=ghcr.io/filippobrizzi/${ARCH}/${IMAGE}:${VERSION}
+BASE_IMAGE=${HOST}/${ARCH}/${IMAGE}:${VERSION}
 docker pull ${BASE_IMAGE}
 
 SUFFIX=deps
-IMAGE_NAME="ghcr.io/filippobrizzi/${ARCH}/${IMAGE}_${SUFFIX}"
+IMAGE_NAME="${HOST}/${ARCH}/${IMAGE}_${SUFFIX}"
 
 function docker_tag_exists() {
-    docker manifest inspect ${IMAGE_NAME}:${VERSION} > /dev/null
+    docker manifest inspect ${IMAGE_NAME}:${DEPS_VERSION} > /dev/null
 }
 
 if docker_tag_exists; then

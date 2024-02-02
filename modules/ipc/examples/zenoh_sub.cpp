@@ -40,6 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
     };
     auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::types::Pose>(
         session, std::move(config), std::move(cb));
+    (void)subscriber;
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::seconds{ 1 });
