@@ -1,0 +1,17 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+SHELL ["/bin/bash", "-c"]
+
+COPY . /tmp/eolo/
+RUN ls /tmp/eolo/
+
+RUN mkdir /tmp/eolo/build
+WORKDIR /tmp/eolo/build
+RUN  . "$HOME/.cargo/env" && cmake ../ --preset deps-docker
+RUN ninja all && \
+    ninja install
+
+RUN cd / && rm -rf /tmp/eolo
+
+WORKDIR /
