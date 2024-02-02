@@ -94,7 +94,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
       zenohc
         DEPENDS zenohd
         GIT_REPOSITORY https://github.com/filippobrizzi/zenoh-c.git
-        GIT_TAG e5f9f3128f8eb187234ef68eaf98ee6bd487b0c9
+        GIT_TAG df4682bd397723a62853dae62cdf65305c08958d
         # GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
         # GIT_TAG d1ec83dee421054bed034e0e60abc98a526bae0a # v${zenohc_VERION_REQUIRED}
         GIT_SHALLOW true
