@@ -23,7 +23,7 @@ public:
   /// @brief  Holds program options and their details
   struct Option {
     std::string key;
-    char short_key;
+    char short_key{};
     std::string description;
     std::string value_type;
     std::string value;

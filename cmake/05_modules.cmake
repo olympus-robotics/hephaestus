@@ -144,7 +144,7 @@ endmacro()
 #  DEPENDS_ON_EXTERNAL_PROJECTS (list): List of tags to external projects that this module depends on
 #
 macro(declare_module)
-  set(flags ALWAYS_BUILD)
+  set(flags ALWAYS_BUILD EXCLUDE_FROM_ALL)
   set(single_opts NAME)
   set(multi_opts DEPENDS_ON_MODULES DEPENDS_ON_EXTERNAL_PROJECTS)
 
@@ -161,7 +161,7 @@ macro(declare_module)
 
   # Either have it always build, or allow user to choose at configuration-time
   if(("${MODULE_ARG_NAME}" IN_LIST BUILD_MODULES)
-     OR ("all" IN_LIST BUILD_MODULES)
+     OR (("all" IN_LIST BUILD_MODULES) AND NOT MODULE_ARG_EXCLUDE_FROM_ALL)
      OR MODULE_ARG_ALWAYS_BUILD)
     # Explicitly disable modules
     if((NOT MODULE_ARG_ALWAYS_BUILD)

@@ -9,7 +9,7 @@
    "installDir": "/install",
    "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
    "cacheVariables": {
-    "BUILD_MODULES": "all"
+    "BUILD_MODULES": "all;examples"
    }
   },
   {
