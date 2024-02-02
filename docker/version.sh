@@ -3,4 +3,4 @@ VERSION=1.0.2
 IMAGE=eolo-dev
 
 # This is the version of the dep image. Increase this number everytime you change `external/CMakeLists.txt`
-DEPS_VERSION=1.0.2
+DEPS_VERSION=1.0.3
