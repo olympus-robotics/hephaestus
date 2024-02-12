@@ -514,8 +514,9 @@ macro(define_module_proto_library)
             SYSTEM  # for clang-tidy to ignore header files from this directory
             BEFORE
             PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-            $<INSTALL_INTERFACE:include>)
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+                $<INSTALL_INTERFACE:install>
+            )
 
     # Register protobuf library as a dependency for the module.
     set(MODULE_${MODULE_NAME}_LIB_TARGETS

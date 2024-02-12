@@ -15,10 +15,10 @@ namespace eolo::utils
 
 static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
-static constexpr std::uint16_t VERSION_PATCH = 0;
+static constexpr std::uint16_t VERSION_PATCH = 1;
 
-static constexpr std::string_view REPO_BRANCH = "examples_module";
+static constexpr std::string_view REPO_BRANCH = "fix_cmake_install";
 static constexpr std::string_view BUILD_PROFILE = "Release";
-static constexpr std::string_view REPO_HASH = "a1ef6c5";
+static constexpr std::string_view REPO_HASH = "443061b";
 
 } // namespace eolo::utils
