@@ -10,7 +10,6 @@
 cmake_minimum_required(VERSION 3.27.3)
 project(eolo-external LANGUAGES C CXX)
 
-message("CMAKE_TEMPLATE_DIR ${CMAKE_TEMPLATE_DIR}")
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
 # --------------------------------------------------------------------------------------------------
