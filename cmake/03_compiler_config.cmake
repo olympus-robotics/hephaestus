@@ -88,9 +88,9 @@ if(${ENABLE_MSAN})
   endif()
   if("address" IN_LIST SANITIZERS
      OR "thread" IN_LIST SANITIZERS
-     OR "leak" IN_LIST SANITIZERS)
-    message(
-      FATAL_ERROR "Memory sanitizer does not work with Address, Thread or Leak sanitizer enabled")
+     OR "leak" IN_LIST SANITIZERS
+  )
+    message(FATAL_ERROR "Memory sanitizer does not work with Address, Thread or Leak sanitizer enabled")
   else()
     list(APPEND SANITIZERS "memory")
   endif()
@@ -148,13 +148,11 @@ option(ENABLE_LINTER "Enable static analysis" ON)
 if(ENABLE_LINTER)
   find_program(LINTER_BIN NAMES clang-tidy QUIET)
   if(LINTER_BIN)
-    # NOTE: To speed up linting, clang-tidy is invoked via clang-tidy-cache.
-    # (https://github.com/matus-chochlik/ctcache)
+    # NOTE: To speed up linting, clang-tidy is invoked via clang-tidy-cache. (https://github.com/matus-chochlik/ctcache)
     # Cache location is set by environment variable CTCACHE_DIR
-    set(LINTER_INVOKE_COMMAND
-        ${CMAKE_TEMPLATES_DIR}/clang-tidy-cache.py ${LINTER_BIN}
-        -p ${CMAKE_BINARY_DIR}
-        -extra-arg=-Wno-ignored-optimization-argument -extra-arg=-Wno-unknown-warning-option)
+    set(LINTER_INVOKE_COMMAND ${CMAKE_TEMPLATES_DIR}/clang-tidy-cache.py ${LINTER_BIN} -p ${CMAKE_BINARY_DIR}
+                              -extra-arg=-Wno-ignored-optimization-argument -extra-arg=-Wno-unknown-warning-option
+    )
     set(CMAKE_C_CLANG_TIDY ${LINTER_INVOKE_COMMAND})
     set(CMAKE_CXX_CLANG_TIDY ${LINTER_INVOKE_COMMAND})
   else()

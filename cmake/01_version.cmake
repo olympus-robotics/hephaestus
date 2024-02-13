@@ -8,7 +8,8 @@ execute_process(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_BRANCH
   ERROR_VARIABLE error_branch_check
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 if(error_branch_check)
   set(REPO_BRANCH "unknown-branch")
   message(WARNING "Repo branch check failed. Will use \"${REPO_BRANCH}\"")
@@ -20,7 +21,8 @@ execute_process(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_HASH
   ERROR_VARIABLE error_hash_check
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 if(error_hash_check)
   set(REPO_HASH "ffffffff")
   message(WARNING "Repo commit hash check failed. Will use \"${REPO_HASH}\"")
@@ -32,7 +34,8 @@ execute_process(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_TAG
   ERROR_VARIABLE error_version_check
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 if(error_version_check)
   set(REPO_TAG "v0.0.0")
   message(WARNING "Repo version check failed. Will use \"${REPO_TAG}\"")
