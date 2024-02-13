@@ -1,7 +1,6 @@
-#=================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
-# MIT License
-#=================================================================================================
+# =================================================================================================
+# Copyright (C) 2023-2024 EOLO Contributors MIT License
+# =================================================================================================
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
@@ -10,8 +9,7 @@ set(CMAKE_CROSSCOMPILING TRUE)
 set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
 set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
 
-# Uncomment to debug find_package
-#set(CMAKE_FIND_DEBUG_MODE 1)
+# Uncomment to debug find_package set(CMAKE_FIND_DEBUG_MODE 1)
 
 # Enable static analysis for host build only
 set(ENABLE_LINTER OFF)

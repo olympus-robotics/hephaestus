@@ -17,8 +17,8 @@ static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
 static constexpr std::uint16_t VERSION_PATCH = 1;
 
-static constexpr std::string_view REPO_BRANCH = "fix_cmake_install";
+static constexpr std::string_view REPO_BRANCH = "cmake_format";
 static constexpr std::string_view BUILD_PROFILE = "Release";
-static constexpr std::string_view REPO_HASH = "443061b";
+static constexpr std::string_view REPO_HASH = "58aee73";
 
 } // namespace eolo::utils

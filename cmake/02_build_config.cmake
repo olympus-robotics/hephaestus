@@ -13,18 +13,17 @@ set(FETCHCONTENT_QUIET OFF) # some downloads take long. Be verbose so we know st
 get_filename_component(srcdir "${CMAKE_SOURCE_DIR}" REALPATH)
 get_filename_component(bindir "${CMAKE_BINARY_DIR}" REALPATH)
 if("${srcdir}" STREQUAL "${bindir}")
-  message(
-    FATAL_ERROR "In-source build is not supported. Create a separate build directory and try again")
+  message(FATAL_ERROR "In-source build is not supported. Create a separate build directory and try again")
 endif()
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
       RelWithDebInfo
-      CACHE STRING "Choose build type." FORCE)
+      CACHE STRING "Choose build type." FORCE
+  )
   # Set the possible values of build type for cmake-gui, ccmake
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
-                                               "RelWithDebInfo")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
   message(STATUS "Build type not specified. Using '${CMAKE_BUILD_TYPE}'")
 endif()
 
@@ -45,18 +44,19 @@ configure_package_config_file(
   ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}-config.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}
   PATH_VARS CMAKE_INSTALL_FULL_INCLUDEDIR CMAKE_INSTALL_FULL_LIBDIR
-  NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+  NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
 
 write_basic_package_version_file(
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}-config-version.cmake
-    VERSION ${VERSION}
-    COMPATIBILITY AnyNewerVersion)
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}-config-version.cmake
+  VERSION ${VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
 
-install(
-  FILES
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}-config.cmake
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
+install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}-config.cmake
+              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${CMAKE_PROJECT_NAME}-config-version.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}
+)
 
 # print summary
 message(STATUS "Build configuration:")

@@ -14,7 +14,8 @@ define_property(
   PROPERTY DECLARED_MODULES
   INHERITED
   BRIEF_DOCS "All the declared modules in the system"
-  FULL_DOCS "All the declared modules in the system")
+  FULL_DOCS "All the declared modules in the system"
+)
 set_property(GLOBAL PROPERTY DECLARED_MODULES "")
 
 # Global list of all modules marked for build
@@ -23,7 +24,8 @@ define_property(
   PROPERTY ENABLED_MODULES
   INHERITED
   BRIEF_DOCS "Modules marked for build either directly or to satisfy dependencies"
-  FULL_DOCS "Modules marked for build either directly or to satisfy dependencies")
+  FULL_DOCS "Modules marked for build either directly or to satisfy dependencies"
+)
 set_property(GLOBAL PROPERTY ENABLED_MODULES "")
 
 # Global list of external projects to build
@@ -32,17 +34,16 @@ define_property(
   PROPERTY EXTERNAL_PROJECTS
   INHERITED
   BRIEF_DOCS "External projects marked for build either directly or to satisfy dependencies"
-  FULL_DOCS "External projects marked for build either directly or to satisfy dependencies")
+  FULL_DOCS "External projects marked for build either directly or to satisfy dependencies"
+)
 set_property(GLOBAL PROPERTY EXTERNAL_PROJECTS "")
 
 # ==================================================================================================
 # Function: enumerate_modules
 #
-# Description:
-#  Recurses through the source tree and enumerate modules to build.
+# Description: Recurses through the source tree and enumerate modules to build.
 #
-# Parameters:
-#  ROOT_PATH: Top level path to begin enumeration from
+# Parameters: ROOT_PATH: Top level path to begin enumeration from
 #
 function(enumerate_modules)
   set(flags "")
@@ -65,7 +66,8 @@ function(enumerate_modules)
   find_module_declarations(_module_paths ROOT_PATH ${_ARG_ROOT_PATH})
   set(_MODULES_ENUMERATE_FLAG
       ON
-      CACHE INTERNAL "Enumeration of modules in progress")
+      CACHE INTERNAL "Enumeration of modules in progress"
+  )
   message(STATUS "Enumerating ${PROJID} modules")
   foreach(_module IN LISTS _module_paths)
     if(NOT ${_module} STREQUAL ${CMAKE_CURRENT_LIST_FILE}) # avoid recursion
@@ -75,7 +77,8 @@ function(enumerate_modules)
   endforeach()
   set(_MODULES_ENUMERATE_FLAG
       OFF
-      CACHE INTERNAL "")
+      CACHE INTERNAL ""
+  )
 
   # Go through list of enabled modules and mark it and its dependencies to be built
   mark_modules_to_build()
@@ -102,8 +105,7 @@ endfunction()
 # ==================================================================================================
 # macro: configure_modules
 #
-# Description:
-#  Configures modules that have been marked to be built during enumeration. See enumerate_modules()
+# Description: Configures modules that have been marked to be built during enumeration. See enumerate_modules()
 #
 macro(configure_modules)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
@@ -117,8 +119,9 @@ macro(configure_modules)
   # Generate input paths for source code documentation DOC_INPUT_PATHS DOC_EXAMPLE_PATHS
   set(DOC_INPUT_PATHS ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/docs ${CMAKE_SOURCE_DIR}/README.md)
   foreach(_module IN LISTS _enabled_modules_list)
-    set(DOC_INPUT_PATHS ${DOC_INPUT_PATHS} ${MODULE_${_module}_PATH}/include
-                        ${MODULE_${_module}_PATH}/docs ${MODULE_${_module}_PATH}/README.md)
+    set(DOC_INPUT_PATHS ${DOC_INPUT_PATHS} ${MODULE_${_module}_PATH}/include ${MODULE_${_module}_PATH}/docs
+                        ${MODULE_${_module}_PATH}/README.md
+    )
     set(DOC_EXAMPLE_PATHS ${DOC_EXAMPLE_PATHS} ${MODULE_${_module}_PATH}/examples)
   endforeach()
   string(REPLACE ";" " " DOC_INPUT_PATHS "${DOC_INPUT_PATHS}")
@@ -134,14 +137,11 @@ endmacro()
 # ==================================================================================================
 # macro: declare_module
 #
-# Description:
-#  Declares a module.
+# Description: Declares a module.
 #
-# Parameters:
-#  NAME (required): A unique name for the module
-#  ALWAYS_BUILD (optional): If true, the module is always built, disregarding BUILD_MODULES setting
-#  DEPENDS_ON_MODULES (list): List of other modules that this module depends on
-#  DEPENDS_ON_EXTERNAL_PROJECTS (list): List of tags to external projects that this module depends on
+# Parameters: NAME (required): A unique name for the module ALWAYS_BUILD (optional): If true, the module is always
+# built, disregarding BUILD_MODULES setting DEPENDS_ON_MODULES (list): List of other modules that this module depends on
+# DEPENDS_ON_EXTERNAL_PROJECTS (list): List of tags to external projects that this module depends on
 #
 macro(declare_module)
   set(flags ALWAYS_BUILD EXCLUDE_FROM_ALL)
@@ -162,49 +162,50 @@ macro(declare_module)
   # Either have it always build, or allow user to choose at configuration-time
   if(("${MODULE_ARG_NAME}" IN_LIST BUILD_MODULES)
      OR (("all" IN_LIST BUILD_MODULES) AND NOT MODULE_ARG_EXCLUDE_FROM_ALL)
-     OR MODULE_ARG_ALWAYS_BUILD)
+     OR MODULE_ARG_ALWAYS_BUILD
+  )
     # Explicitly disable modules
     if((NOT MODULE_ARG_ALWAYS_BUILD)
        AND DISABLE_MODULES
-       AND "${MODULE_ARG_NAME}" IN_LIST DISABLE_MODULES)
+       AND "${MODULE_ARG_NAME}" IN_LIST DISABLE_MODULES
+    )
       message("${MODULE_ARG_NAME} explicitly disabled")
     else()
       set(BUILD_MODULE_${MODULE_ARG_NAME} TRUE)
     endif()
   endif()
 
-  # if we are just enumerating modules, then set module meta information and exit. create global
-  # variables: DECLARED_MODULES MODULE_<module>_PATH MODULE_<module>_DEPENDS_ON
+  # if we are just enumerating modules, then set module meta information and exit. create global variables:
+  # DECLARED_MODULES MODULE_<module>_PATH MODULE_<module>_DEPENDS_ON
   if(_MODULES_ENUMERATE_FLAG)
     get_property(_declared_modules_list GLOBAL PROPERTY DECLARED_MODULES)
     if(${MODULE_ARG_NAME} IN_LIST _declared_modules_list)
-      message(
-        FATAL_ERROR
-          "Another module named \"${MODULE_ARG_NAME}\" exists in ${MODULE_${MODULE_ARG_NAME}_PATH}")
+      message(FATAL_ERROR "Another module named \"${MODULE_ARG_NAME}\" exists in ${MODULE_${MODULE_ARG_NAME}_PATH}")
     endif()
     set_property(GLOBAL APPEND PROPERTY DECLARED_MODULES ${MODULE_ARG_NAME})
     set(MODULE_${MODULE_ARG_NAME}_PATH
         "${CMAKE_CURRENT_LIST_DIR}"
-        CACHE INTERNAL "location of ${MODULE_ARG_NAME}")
+        CACHE INTERNAL "location of ${MODULE_ARG_NAME}"
+    )
     set(MODULE_${MODULE_ARG_NAME}_DEPENDS_ON
         ${MODULE_ARG_DEPENDS_ON_MODULES}
-        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}")
+        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}"
+    )
     set(MODULE_${MODULE_ARG_NAME}_EXTERNAL_PROJECT_DEPS
         ${MODULE_ARG_DEPENDS_ON_EXTERNAL_PROJECTS}
-        CACHE INTERNAL "External project dependencies of ${MODULE_ARG_NAME}")
+        CACHE INTERNAL "External project dependencies of ${MODULE_ARG_NAME}"
+    )
 
     # NOTE: Don't process the rest of the file in which this macro was called
     return()
   endif()
 
   # ----------------------------------------------------
-  # NOTE: Now we are in the context of the current module (for instance, due to call to
-  # add_subdirectory(this))
+  # NOTE: Now we are in the context of the current module (for instance, due to call to add_subdirectory(this))
   # ----------------------------------------------------
 
-  # Create a few variables available in the context of the currently executing module - MODULE_NAME
-  # : Equivalent to PROJECT_NAME but for modules - MODULE_SOURCE_DIR   : Equivalent to
-  # PROJECT_SOURCE_DIR but for modules
+  # Create a few variables available in the context of the currently executing module - MODULE_NAME : Equivalent to
+  # PROJECT_NAME but for modules - MODULE_SOURCE_DIR   : Equivalent to PROJECT_SOURCE_DIR but for modules
   set(MODULE_NAME ${MODULE_ARG_NAME})
   set(MODULE_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
   message(VERBOSE "Configuring module \"${MODULE_NAME}\" in ${MODULE_SOURCE_DIR}")
@@ -212,33 +213,33 @@ macro(declare_module)
   # The following are populated by define_module_library
   set(MODULE_${MODULE_NAME}_LIB_TARGETS
       ""
-      CACHE INTERNAL "Library targets in module ${MODULE_NAME}")
+      CACHE INTERNAL "Library targets in module ${MODULE_NAME}"
+  )
   set(MODULE_${MODULE_NAME}_EXE_TARGETS
       ""
-      CACHE INTERNAL "Executable targets in module ${MODULE_NAME}")
+      CACHE INTERNAL "Executable targets in module ${MODULE_NAME}"
+  )
 endmacro()
 
-#==================================================================================================
+# ==================================================================================================
 # Macro: define_module_library
 #
-# Description:
-#   Macro wraps CMake add_library and related functions/macros to generate libraries in a
-#   standardised manner. Specifically:
-#   - Creates library <project_name>_<library_name>
-#   - Creates alias name <project_name>::<library_name>
-#   - Note: A library target belongs to the enclosing module
-#   - Note: A module can have multiple libraries
+# Description: Macro wraps CMake add_library and related functions/macros to generate libraries in a standardised
+# manner. Specifically: - Creates library <project_name>_<library_name> - Creates alias name
+# <project_name>::<library_name> - Note: A library target belongs to the enclosing module - Note: A module can have
+# multiple libraries
 #
-# Parameters:
-#   NAME        : (string) Base name of the library. Eg: 'mylib' creates 'lib<project_name>_mylib.so/.a`
-#   SOURCES     : (list) Source files to compile into the library above
-#   NOINSTALL   : (optional) Flag to tell the build system not to install the library on call to `make install`. Useful for libraries only usable in the build tree (Eg: helper libs for tests and examples)
-#   [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories`
-#   [PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
-#   [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
-#   [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
+# Parameters: NAME        : (string) Base name of the library. Eg: 'mylib' creates 'lib<project_name>_mylib.so/.a`
+# SOURCES     : (list) Source files to compile into the library above NOINSTALL   : (optional) Flag to tell the build
+# system not to install the library on call to `make install`. Useful for libraries only usable in the build tree (Eg:
+# helper libs for tests and examples) [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories. See cmake
+# documentation for 'PUBLIC' keyword in `target_include_directories` [PRIVATE_INCLUDE_PATHS] : (list, optional)
+# Privately included directories. See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
+# [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms. See 'SYSTEM'
+# keyword in `target_include_directories` [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system
+# directories on some platforms. See 'SYSTEM' keyword in `target_include_directories` [PUBLIC_LINK_LIBS] : (list,
+# optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries` [PRIVATE_LINK_LIBS]: (list,
+# optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
 #
 macro(define_module_library)
   set(flags NOINSTALL)
@@ -250,7 +251,8 @@ macro(define_module_library)
       SYSTEM_PUBLIC_INCLUDE_PATHS
       SYSTEM_PRIVATE_INCLUDE_PATHS
       PUBLIC_LINK_LIBS
-      PRIVATE_LINK_LIBS)
+      PRIVATE_LINK_LIBS
+  )
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -274,29 +276,34 @@ macro(define_module_library)
   if(NOT NOINSTALL)
     set(MODULE_${MODULE_NAME}_LIB_TARGETS
         ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${LIBRARY_NAME}
-        CACHE INTERNAL "Library targets in module ${MODULE_NAME}")
+        CACHE INTERNAL "Library targets in module ${MODULE_NAME}"
+    )
   endif()
 
   target_include_directories(
     ${LIBRARY_NAME} BEFORE
     PUBLIC ${TARGET_ARG_PUBLIC_INCLUDE_PATHS}
-    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS})
+    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS}
+  )
 
   target_include_directories(
     ${LIBRARY_NAME} SYSTEM BEFORE
     PUBLIC ${TARGET_ARG_SYSTEM_PUBLIC_INCLUDE_PATHS}
-    PRIVATE ${TARGET_ARG_SYSTEM_PRIVATE_INCLUDE_PATHS})
+    PRIVATE ${TARGET_ARG_SYSTEM_PRIVATE_INCLUDE_PATHS}
+  )
 
   target_link_libraries(
     ${LIBRARY_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
-    PRIVATE ${TARGET_ARG_PRIVATE_LINK_LIBS})
+    PRIVATE ${TARGET_ARG_PRIVATE_LINK_LIBS}
+  )
 
   set_target_properties(
     ${LIBRARY_NAME}
     PROPERTIES VERSION ${VERSION}
                SOVERSION ${VERSION_MAJOR}
-               EXPORT_NAME ${LIBRARY_EXPORT_NAME})
+               EXPORT_NAME ${LIBRARY_EXPORT_NAME}
+  )
 
   # sometimes libraries have no cpp files. So this is needed
   set_target_properties(${LIBRARY_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -304,35 +311,29 @@ macro(define_module_library)
 endmacro()
 
 # ==================================================================================================
-# Adds a custom target to group all example programs built on call to `make examples`. See
-# `define_module_example`
+# Adds a custom target to group all example programs built on call to `make examples`. See `define_module_example`
 add_custom_target(examples COMMENT "Building examples")
 
-#==================================================================================================
+# ==================================================================================================
 # macro: define_module_example
 #
-# Description:
-#  Macro to define an example program that is built on call to `make examples`.
-# Note:
-#  - This is essentially a convenient wrapper over CMake `add_executable`.
-#  - Examples are not installed on call to `make install`
-#  - Examples automatically link to libraries in the enclosing module
-#  - A module can have multiple examples
+# Description: Macro to define an example program that is built on call to `make examples`. Note: - This is essentially
+# a convenient wrapper over CMake `add_executable`. - Examples are not installed on call to `make install` - Examples
+# automatically link to libraries in the enclosing module - A module can have multiple examples
 #
-# Parameters:
-#   SOURCES     : (list) Source files to compile
-#   [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories`
-#   [PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
-#   [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
-#   [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
+# Parameters: SOURCES     : (list) Source files to compile [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included
+# directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories` [PRIVATE_INCLUDE_PATHS] :
+# (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in
+# `target_include_directories` [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on
+# some platforms. See 'SYSTEM' keyword in `target_include_directories` [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional)
+# Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
+# [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
+# [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
 #
 macro(define_module_example)
   set(flags "")
   set(single_opts NAME)
-  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS
-                 PRIVATE_LINK_LIBS)
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -354,40 +355,37 @@ macro(define_module_example)
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PUBLIC ${TARGET_ARG_PUBLIC_INCLUDE_PATHS}
-    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS})
+    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS}
+  )
 
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS})
+            ${TARGET_ARG_PRIVATE_LINK_LIBS}
+  )
 
 endmacro()
 
-#==================================================================================================
+# ==================================================================================================
 # macro: define_module_executable
 #
-# Description:
-#   Macro to define exectuable targets
-# Note:
-#   - An executable target belongs to the enclosing module
-#   - A module can have multiple executables
-#   - Executables are installed on call to `make install`
+# Description: Macro to define exectuable targets Note: - An executable target belongs to the enclosing module - A
+# module can have multiple executables - Executables are installed on call to `make install`
 #
-# Parameters:
-#   SOURCES     : (list) Source files to compile
-#   [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories`
-#   [PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
-#   [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
-#   [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
+# Parameters: SOURCES     : (list) Source files to compile [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included
+# directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories` [PRIVATE_INCLUDE_PATHS] :
+# (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in
+# `target_include_directories` [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on
+# some platforms. See 'SYSTEM' keyword in `target_include_directories` [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional)
+# Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
+# [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
+# [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
 #
 macro(define_module_executable)
   set(flags "")
   set(single_opts NAME)
-  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS
-                 PRIVATE_LINK_LIBS)
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -407,147 +405,133 @@ macro(define_module_executable)
 
   set(MODULE_${MODULE_NAME}_EXE_TARGETS
       ${MODULE_${MODULE_NAME}_EXE_TARGETS} ${TARGET_NAME}
-      CACHE INTERNAL "Targets in module ${MODULE_NAME}")
+      CACHE INTERNAL "Targets in module ${MODULE_NAME}"
+  )
 
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PUBLIC ${TARGET_ARG_PUBLIC_INCLUDE_PATHS}
-    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS})
+    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS}
+  )
 
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS})
+            ${TARGET_ARG_PRIVATE_LINK_LIBS}
+  )
 
 endmacro()
 
-#--------------------------------------------------------------------------------------------------
-# A macro to generate eolo library target from .proto files
-# NOTE A proto library name must end with _proto suffix.
+# --------------------------------------------------------------------------------------------------
+# A macro to generate eolo library target from .proto files NOTE A proto library name must end with _proto suffix.
 #
-# Usage example:
-#   declare_module(NAME my_proto_module
-#       DEPENDS_ON_EXTERNAL_PROJECTS
-#           Protobuf # MUST be present
-#   )
+# Usage example: declare_module(NAME my_proto_module DEPENDS_ON_EXTERNAL_PROJECTS Protobuf # MUST be present )
 #
-#   # No need to add the `find_package(Protobuf)` as it's done implicitly by `define_module_proto_library`.
+# # No need to add the `find_package(Protobuf)` as it's done implicitly by `define_module_proto_library`.
 #
-#   define_module_proto_library(
-#     NAME example_proto
-#     SOURCES
-#       messages_one.proto
-#       messages_two.proto
-#     PUBLIC_LINK_LIBS
-#       eolo_example_dependencies_proto  # Module containing proto files used by this module.
-#   )
-#--------------------------------------------------------------------------------------------------
+# define_module_proto_library( NAME example_proto SOURCES messages_one.proto messages_two.proto PUBLIC_LINK_LIBS
+# eolo_example_dependencies_proto  # Module containing proto files used by this module. )
+# --------------------------------------------------------------------------------------------------
 macro(define_module_proto_library)
-    set(flags "")
-    set(single_opts NAME)
-    set(multi_opts SOURCES PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
+  set(flags "")
+  set(single_opts NAME)
+  set(multi_opts SOURCES PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
-    include(CMakeParseArguments)
-    cmake_parse_arguments(TARGET_ARG
-            "${flags}"
-            "${single_opts}"
-            "${multi_opts}"
-            ${ARGN})
+  include(CMakeParseArguments)
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
-    if(TARGET_ARG_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
-    endif()
+  if(TARGET_ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
+  endif()
 
-    if(NOT TARGET_ARG_NAME)
-        message(FATAL_ERROR "Library name not specified")
-    endif()
+  if(NOT TARGET_ARG_NAME)
+    message(FATAL_ERROR "Library name not specified")
+  endif()
 
-    if(NOT ${TARGET_ARG_NAME} MATCHES "_proto$")
-        message(FATAL_ERROR "Protobuf library should end with '_proto' suffix")
-    endif()
+  if(NOT ${TARGET_ARG_NAME} MATCHES "_proto$")
+    message(FATAL_ERROR "Protobuf library should end with '_proto' suffix")
+  endif()
 
-    # Check that linter config file is present.
-    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/buf.yaml)
-        message(FATAL_ERROR "Protobuf library directory must contain buf.yaml file")
-    endif()
+  # Check that linter config file is present.
+  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/buf.yaml)
+    message(FATAL_ERROR "Protobuf library directory must contain buf.yaml file")
+  endif()
 
-    find_package(Protobuf REQUIRED)
+  find_package(Protobuf REQUIRED)
 
-    set(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
+  set(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
 
-    # Collect paths containing .proto dependencies.
-    set(PROTOBUF_DEP_PATHS "")
-    foreach(DEP_LIB ${TARGET_ARG_PUBLIC_LINK_LIBS})
-        get_target_property(DEP_PATH ${DEP_LIB} PROTOBUF_IMPORT_PATH)
-        list(APPEND PROTOBUF_DEP_PATHS ${DEP_PATH})
-    endforeach()
+  # Collect paths containing .proto dependencies.
+  set(PROTOBUF_DEP_PATHS "")
+  foreach(DEP_LIB ${TARGET_ARG_PUBLIC_LINK_LIBS})
+    get_target_property(DEP_PATH ${DEP_LIB} PROTOBUF_IMPORT_PATH)
+    list(APPEND PROTOBUF_DEP_PATHS ${DEP_PATH})
+  endforeach()
 
-    list(REMOVE_DUPLICATES PROTOBUF_DEP_PATHS)
+  list(REMOVE_DUPLICATES PROTOBUF_DEP_PATHS)
 
-    # This var should contain paths to all .proto files in use, even imported.
-    set(PROTOBUF_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${PROTOBUF_DEP_PATHS})
+  # This var should contain paths to all .proto files in use, even imported.
+  set(PROTOBUF_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${PROTOBUF_DEP_PATHS})
 
-    protobuf_generate_cpp(PROTOBUF_SOURCES PROTOBUF_HEADERS ${TARGET_ARG_SOURCES})
+  protobuf_generate_cpp(PROTOBUF_SOURCES PROTOBUF_HEADERS ${TARGET_ARG_SOURCES})
 
-    set(PROTOBUF_LIBRARY eolo_${TARGET_ARG_NAME})
+  set(PROTOBUF_LIBRARY eolo_${TARGET_ARG_NAME})
 
-    message(STATUS "Create protobuf library: ${PROTOBUF_LIBRARY}")
+  message(STATUS "Create protobuf library: ${PROTOBUF_LIBRARY}")
 
-    add_library(${PROTOBUF_LIBRARY} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-    set(LIBRARY_NAME_ALIAS ${CMAKE_PROJECT_NAME}::${TARGET_ARG_NAME})
-    add_library(${LIBRARY_NAME_ALIAS} ALIAS ${PROTOBUF_LIBRARY})
+  add_library(${PROTOBUF_LIBRARY} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
+  set(LIBRARY_NAME_ALIAS ${CMAKE_PROJECT_NAME}::${TARGET_ARG_NAME})
+  add_library(${LIBRARY_NAME_ALIAS} ALIAS ${PROTOBUF_LIBRARY})
 
+  # NOTE A proto-library should provide a path to its root dir, so dependent libs could find its .proto files. Also, the
+  # paths to the dependencies of dependencies should be present.
+  set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES PROTOBUF_IMPORT_PATH "${PROTOBUF_IMPORT_DIRS}")
 
-    # NOTE A proto-library should provide a path to its root dir, so dependent libs could find its .proto files.
-    # Also, the paths to the dependencies of dependencies should be present.
-    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES PROTOBUF_IMPORT_PATH "${PROTOBUF_IMPORT_DIRS}")
+  target_link_libraries(
+    ${PROTOBUF_LIBRARY}
+    PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS} protobuf::libprotobuf
+    PRIVATE ${TARGET_ARG_PRIVATE_LINK_LIBS}
+  )
 
-    target_link_libraries(${PROTOBUF_LIBRARY}
-            PUBLIC
-                ${TARGET_ARG_PUBLIC_LINK_LIBS}
-                protobuf::libprotobuf
-            PRIVATE
-                ${TARGET_ARG_PRIVATE_LINK_LIBS})
+  target_include_directories(
+    ${PROTOBUF_LIBRARY} SYSTEM # for clang-tidy to ignore header files from this directory
+    BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:install>
+  )
 
-    target_include_directories(${PROTOBUF_LIBRARY}
-            SYSTEM  # for clang-tidy to ignore header files from this directory
-            BEFORE
-            PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-                $<INSTALL_INTERFACE:install>
-            )
+  # Register protobuf library as a dependency for the module.
+  set(MODULE_${MODULE_NAME}_LIB_TARGETS
+      ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${PROTOBUF_LIBRARY}
+      CACHE INTERNAL "Targets in module ${MODULE_NAME}"
+  )
 
-    # Register protobuf library as a dependency for the module.
-    set(MODULE_${MODULE_NAME}_LIB_TARGETS
-            ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${PROTOBUF_LIBRARY}
-            CACHE INTERNAL
-            "Targets in module ${MODULE_NAME}")
+  set_target_properties(
+    ${PROTOBUF_LIBRARY}
+    PROPERTIES VERSION ${VERSION}
+               SOVERSION ${VERSION_MAJOR}
+               EXPORT_NAME ${PROTOBUF_LIBRARY}
+  )
 
-    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES
-            VERSION ${VERSION}
-            SOVERSION ${VERSION_MAJOR}
-            EXPORT_NAME ${PROTOBUF_LIBRARY})
-
-    # Disable clang-tidy for the generated source and header files.
-    set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES CXX_CLANG_TIDY "")
+  # Disable clang-tidy for the generated source and header files.
+  set_target_properties(${PROTOBUF_LIBRARY} PROPERTIES CXX_CLANG_TIDY "")
 endmacro()
-
 
 # ==================================================================================================
 # Setup tests target
 
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  googletest URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(gtest_force_shared_crt
+    ON
+    CACHE BOOL "" FORCE
+)
 FetchContent_MakeAvailable(googletest)
 FetchContent_GetProperties(googletest)
 if(NOT googletest_POPULATED)
-    FetchContent_Populate(googletest)
-    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+  FetchContent_Populate(googletest)
+  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # use leaner set of compiler warnings for sources we have no control over
@@ -557,7 +541,6 @@ set_target_properties(gtest_main PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(gmock PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
 set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
-
 
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
@@ -569,34 +552,30 @@ add_custom_target(
   check
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --output-log tests_log.txt --verbose
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  COMMENT "Building and running tests")
+  COMMENT "Building and running tests"
+)
 add_dependencies(check tests) # `check` depends on `tests` target
 
-#==================================================================================================
+# ==================================================================================================
 # macro: define_module_test
 #
-# Description:
-#   Macro to define a 'test' program
-# Note:
-#   - A test program belongs to the enclosing module
-#   - A module can have multiple tests
-#   - Executables are not installed on call to `make install`
+# Description: Macro to define a 'test' program Note: - A test program belongs to the enclosing module - A module can
+# have multiple tests - Executables are not installed on call to `make install`
 #
-# Parameters:
-#   SOURCES     : (list) Source files to compile
-#   [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories`
-#   [PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
-#   [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-#   [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
-#   [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
+# Parameters: SOURCES     : (list) Source files to compile [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included
+# directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories` [PRIVATE_INCLUDE_PATHS] :
+# (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in
+# `target_include_directories` [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on
+# some platforms. See 'SYSTEM' keyword in `target_include_directories` [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional)
+# Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
+# [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
+# [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
 #
 include(GoogleTest)
 macro(define_module_test)
   set(flags "")
   set(single_opts NAME COMMAND WORKING_DIRECTORY)
-  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS
-                 PRIVATE_LINK_LIBS)
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -618,34 +597,37 @@ macro(define_module_test)
   add_test(
     NAME ${TARGET_NAME}
     COMMAND ${TARGET_NAME}
-    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY})
+    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
+  )
   add_dependencies(tests ${TARGET_NAME}) # Set this to be built on `make tests`
 
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PUBLIC ${TARGET_ARG_PUBLIC_INCLUDE_PATHS}
-    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS})
+    PRIVATE ${TARGET_ARG_PRIVATE_INCLUDE_PATHS}
+  )
 
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main)
+            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
+  )
 
-    gtest_discover_tests(${TARGET_NAME} WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY} PROPERTIES TIMEOUT ${TEST_TIMEOUT_SECONDS})
-
+  gtest_discover_tests(
+    ${TARGET_NAME}
+    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
+    PROPERTIES
+    TIMEOUT ${TEST_TIMEOUT_SECONDS}
+  )
 
 endmacro()
 
-#==================================================================================================
-# (for internal use)
-# Create installation rules for library and executable targets in enabled modules
-# Description:
-#  Installs CMake config files to support calling find_package() in downstream projects. The
-#  following files are configured and installed in <installdir>/lib/cmake/<project>_<module>:
-#  - <project>_<module>-config.cmake
-#  - <project>_<module>-config-version.cmake
-#  - <project>_<module>-targets.cmake
+# ==================================================================================================
+# (for internal use) Create installation rules for library and executable targets in enabled modules Description:
+# Installs CMake config files to support calling find_package() in downstream projects. The following files are
+# configured and installed in <installdir>/lib/cmake/<project>_<module>: - <project>_<module>-config.cmake -
+# <project>_<module>-config-version.cmake - <project>_<module>-targets.cmake
 function(install_modules)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
   foreach(_module IN LISTS _enabled_modules_list)
@@ -661,17 +643,18 @@ function(install_modules)
 
     # create package config information for third parties
     configure_package_config_file(
-      ${CMAKE_TEMPLATES_DIR}/module-config.cmake.in
-      ${config_create_location}/${INSTALL_MODULE_NAME}-config.cmake
+      ${CMAKE_TEMPLATES_DIR}/module-config.cmake.in ${config_create_location}/${INSTALL_MODULE_NAME}-config.cmake
       INSTALL_DESTINATION ${config_install_location}
       PATH_VARS CMAKE_INSTALL_FULL_INCLUDEDIR CMAKE_INSTALL_FULL_LIBDIR
-      NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+      NO_SET_AND_CHECK_MACRO NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    )
 
     # create package version information
     write_basic_package_version_file(
       ${config_create_location}/${INSTALL_MODULE_NAME}-config-version.cmake
       VERSION ${VERSION}
-      COMPATIBILITY AnyNewerVersion)
+      COMPATIBILITY AnyNewerVersion
+    )
 
     # install package targets
     message(VERBOSE "Module \"${_module}\" installable targets:")
@@ -684,7 +667,8 @@ function(install_modules)
       LIBRARY DESTINATION lib
       ARCHIVE DESTINATION lib
       INCLUDES
-      DESTINATION include)
+      DESTINATION include
+    )
 
     # install public header files
     if(EXISTS ${MODULE_${_module}_PATH}/include)
@@ -696,12 +680,14 @@ function(install_modules)
       EXPORT ${INSTALL_MODULE_NAME}-targets
       FILE ${INSTALL_MODULE_NAME}-targets.cmake
       NAMESPACE ${CMAKE_PROJECT_NAME}::
-      DESTINATION ${config_install_location})
+      DESTINATION ${config_install_location}
+    )
 
     # install config files
     install(FILES "${config_create_location}/${INSTALL_MODULE_NAME}-config.cmake"
                   "${config_create_location}/${INSTALL_MODULE_NAME}-config-version.cmake"
-            DESTINATION ${config_install_location})
+            DESTINATION ${config_install_location}
+    )
   endforeach()
 
   # configure the uninstaller script
@@ -718,22 +704,23 @@ function(install_modules)
       GROUP_READ
       GROUP_EXECUTE
       WORLD_READ
-      WORLD_EXECUTE)
+      WORLD_EXECUTE
+  )
 
   # To support 'uninstall', process and append build manifest and set it to be installed too
   install(
     CODE "string(REPLACE \";\" \"\\n\" MY_CMAKE_INSTALL_MANIFEST_CONTENT \"\$\{CMAKE_INSTALL_MANIFEST_FILES\}\")\n\
-  file(WRITE ${CMAKE_BINARY_DIR}/manifest.txt \"\$\{MY_CMAKE_INSTALL_MANIFEST_CONTENT\}\")")
+  file(WRITE ${CMAKE_BINARY_DIR}/manifest.txt \"\$\{MY_CMAKE_INSTALL_MANIFEST_CONTENT\}\")"
+  )
   install(FILES "${CMAKE_BINARY_DIR}/manifest.txt" DESTINATION share/${CMAKE_PROJECT_NAME})
 
 endfunction()
 
-#==================================================================================================
-# (for internal use)
-# Recursively walk through dependencies of the given module and mark them for building.
-# Set ENABLED_MODULES property to a list of modules that should be built. The list is sorted by
-# modules dependencies, i.e. each module is preceded by its dependencies.
-# Set EXTERNAL_PROJECTS property to a list of external projects required by the enabled modules.
+# ==================================================================================================
+# (for internal use) Recursively walk through dependencies of the given module and mark them for building. Set
+# ENABLED_MODULES property to a list of modules that should be built. The list is sorted by modules dependencies, i.e.
+# each module is preceded by its dependencies. Set EXTERNAL_PROJECTS property to a list of external projects required by
+# the enabled modules.
 function(mark_module_and_dependencies_to_build)
   set(flags "")
   set(single_opts MODULE_NAME)
@@ -772,8 +759,7 @@ function(mark_module_and_dependencies_to_build)
     endif()
     mark_module_and_dependencies_to_build(MODULE_NAME ${_dep})
 
-    # Set a corresponding global property to list of all modules that the module depends on,
-    # directly or indirectly.
+    # Set a corresponding global property to list of all modules that the module depends on, directly or indirectly.
     get_property(MODULE_DEP_LIST GLOBAL PROPERTY MODULE_${_dep}_ALL_DEPS)
     set_property(GLOBAL APPEND PROPERTY MODULE_${_ARG_MODULE_NAME}_ALL_DEPS ${MODULE_DEP_LIST})
     set_property(GLOBAL APPEND PROPERTY MODULE_${_ARG_MODULE_NAME}_ALL_DEPS ${_dep})
@@ -803,8 +789,7 @@ function(mark_module_and_dependencies_to_build)
 endfunction()
 
 # ==================================================================================================
-# (for internal use) Walk through all enabled modules and their dependencies and mark them for
-# building
+# (for internal use) Walk through all enabled modules and their dependencies and mark them for building
 function(mark_modules_to_build)
   get_property(_declared_modules GLOBAL PROPERTY DECLARED_MODULES)
   foreach(_module IN LISTS _declared_modules)
@@ -815,8 +800,7 @@ function(mark_modules_to_build)
 endfunction()
 
 # ==================================================================================================
-# (for internal use) Recurse through directory tree and find all CMakeLists.txt files that contains
-# module declaration
+# (for internal use) Recurse through directory tree and find all CMakeLists.txt files that contains module declaration
 function(find_module_declarations _result)
   set(flags "")
   set(single_opts ROOT_PATH)
@@ -849,17 +833,16 @@ function(find_module_declarations _result)
   endforeach()
   set(${_result}
       ${_module_files_list}
-      PARENT_SCOPE)
+      PARENT_SCOPE
+  )
 
 endfunction()
 
 # ==================================================================================================
 # Documentation target (`make docs`)
 #
-# The following variables must be set for the documentation generation system to work
-# DOC_INPUT_PATHS (set elsewhere)
-# DOC_EXAMPLE_PATHS (set elsewhere)
-# DOC_OUTPUT_PATH (set here)
+# The following variables must be set for the documentation generation system to work DOC_INPUT_PATHS (set elsewhere)
+# DOC_EXAMPLE_PATHS (set elsewhere) DOC_OUTPUT_PATH (set here)
 #
 if(NOT CMAKE_CROSSCOMPILING)
   find_package(Doxygen OPTIONAL_COMPONENTS doxygen dot mscgen dia)
@@ -873,7 +856,8 @@ if(NOT CMAKE_CROSSCOMPILING)
       WORKING_DIRECTORY ${DOC_OUTPUT_PATH}
       SOURCES ""
       COMMENT "Generating API documentation"
-      VERBATIM)
+      VERBATIM
+    )
 
     # install(DIRECTORY ${DOC_OUTPUT_PATH} DESTINATION ${CMAKE_INSTALL_DOCDIR})
     message(STATUS "Documentation ('make docs') path: ${DOC_OUTPUT_PATH}")
