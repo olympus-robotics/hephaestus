@@ -15,8 +15,8 @@ Eolo provides functionalities that cover the following domains:
 * Inter Process Comunication (IPC).
 * Data serialization for IPC and storage.
 * Multi-threading, e.g. thread pools and parallelism primitive.
-* Containers, e.g. thread save container for sharing data across threads.
-* Memory pool
+* Containers, e.g. thread safe containers for sharing data across threads.
+* Memory pool.
 * Functionalities to run real-time code.
 
 > NOTE: most of the above functionalities are still work in progress.
@@ -28,7 +28,7 @@ The best way to build eolo is to do it inside the docker container provided in t
 
 ### Compilation
 
-Eolo uses CMake to build, the build infrastructure is heavily inspired (see copied) from [grape](https://github.com/cvilas/grape).
+Eolo uses CMake to build, the build infrastructure is copied and adapted from [grape](https://github.com/cvilas/grape).
 
 To build it:
 ```bash
