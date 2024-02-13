@@ -45,6 +45,56 @@ ninja checks
 
 > TODO: add section on the different flags and options.
 
+## Build system
+You can use the build system of `eolo` in your own project by importing the CMake files and recreating the required folder structure.
+
+Create the top level `CMakeLists.txt` as:
+```cmake
+cmake_minimum_required(VERSION 3.27.3)
+project(my_project LANGUAGES CXX C)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+    eolo
+    GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+    GIT_TAG "main"
+)
+FetchContent_GetProperties(eolo)
+if(NOT eolo_POPULATED)
+  FetchContent_Populate(eolo)
+endif()
+
+# If you want to use eolo toolchain add:
+# set(CMAKE_TOOLCHAIN_FILE ${eolo_SOURCE_DIR}/toolchains/toolchain_clang.cmake)
+
+# Include the Cmake functions.
+include(${eolo_SOURCE_DIR}/cmake/build.cmake)
+```
+
+Create the `modules` folder and add your modules. You can use the eolo script by calling:
+```bash
+cd modules
+python3 ../build/_deps/eolo-src/cmake/create_module.py my_module
+```
+
+Create the `external` folder and add a `CMakeLists.txt` file as:
+```cmake
+cmake_minimum_required(VERSION 3.27.3)
+project(my_project-external LANGUAGES C CXX)
+
+include(${CMAKE_TEMPLATE_DIR}/external.cmake)
+
+# Add your desired dependencies:
+# add_cmake_dependency(
+#     NAME eolo
+#     GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+#     GIT_TAG "main"
+#     CMAKE_ARGS -DBUILD_MODULES="utils"
+# )
+```
 
 ## Notes
 
@@ -55,9 +105,9 @@ When switching again back to C++23 it will be possible to remove `fmt` and `rang
 ## TODO
 
 `devenv`
-- [ ] Add a new docker image on top of the existing one that build the dependencies
-  - [ ] Understand how we can automatically re-build if something changes
-- [ ] Improve usage of Github action as CI
+- [x] Add a new docker image on top of the existing one that build the dependencies
+  - [x] Understand how we can automatically re-build if something changes
+- [x] Improve usage of Github action as CI
 
 `zenoh`
 - [x] Add liveliness client (i.e. topic list)
