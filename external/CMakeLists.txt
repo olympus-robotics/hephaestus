@@ -1,5 +1,4 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
 # Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
@@ -11,42 +10,16 @@
 cmake_minimum_required(VERSION 3.27.3)
 project(eolo-external LANGUAGES C CXX)
 
-find_package(Git REQUIRED)
-include(ExternalProject)
+include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
 # --------------------------------------------------------------------------------------------------
-# Setup baseline build configuration
+# For each target add the list of dependencies.
+# This needs to be done at the beginning to make sure that the macro correctly includes them.
 # --------------------------------------------------------------------------------------------------
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
-set_directory_properties(PROPERTIES EP_UPDATE_DISCONNECTED 1) # skip update step
-
-# Collect common arguments to configure external projects
-set(EP_CMAKE_EXTRA_ARGS
-    -DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
-    -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
-    -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-    -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
-    -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-)
-
-make_directory(${CMAKE_INSTALL_PREFIX}/bin)
-make_directory(${CMAKE_INSTALL_PREFIX}/lib)
-make_directory(${CMAKE_INSTALL_PREFIX}/include)
-
-# helper macro useful for dependency handling
-macro(add_dummy_target)
-  if(NOT TARGET ${ARGV0})
-    add_custom_target(${ARGV0})
-  endif()
-endmacro()
-
-# --------------------------------------------------------------------------------------------------
-# Setup additional dependencies for some projects
-# --------------------------------------------------------------------------------------------------
+if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(ZENOHCXX_DEPENDS zenohc zenohd)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${ZENOHCXX_DEPENDS})
+endif()
 
 if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
   set(PROTOBUF_DEPENDS absl)
@@ -54,18 +27,15 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 # --------------------------------------------------------------------------------------------------
-# External projects follow
-# --------------------------------------------------------------------------------------------------
+# zenoh
 
-# --------------------------------------------------------------------------------------------------
-# zenohcxx
-if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(zenohc_VERION_REQUIRED 0.10.1-rc)
+if(zenohd IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(zenohd_VERION_REQUIRED 0.10.1-rc)
   if(EXISTS "${CMAKE_PREFIX_PATH}/bin/zenohd")
     message(STATUS "zenohd: Using from ${CMAKE_PREFIX_PATH}")
     add_dummy_target(zenohd)
   else()
-    message(STATUS "zenohd: Building ${zenohc_VERION_REQUIRED} from source")
+    message(STATUS "zenohd: Building ${zenohd_VERION_REQUIRED} from source")
     set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.so")
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.dylib")
@@ -73,7 +43,7 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
     ExternalProject_Add(
       zenohd
       GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
-      GIT_TAG ${zenohc_VERION_REQUIRED}
+      GIT_TAG ${zenohd_VERION_REQUIRED}
       GIT_SHALLOW true
       CONFIGURE_COMMAND ""
       BUILD_COMMAND
@@ -84,217 +54,115 @@ if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
       LOG_BUILD ON
     )
   endif()
-
-  # install zenoh-c first
-  find_package(zenohc QUIET) # ${zenohc_VERION_REQUIRED} QUIET)
-  if(zenohc_FOUND)
-    message(STATUS "zenohc: Using version ${zenohc_VERSION} from ${zenohc_DIR}")
-    add_dummy_target(zenohc)
-  else()
-    message(STATUS "zenohc: Building ${zenohc_VERION_REQUIRED} from source")
-    ExternalProject_Add(
-      zenohc
-      DEPENDS zenohd
-      GIT_REPOSITORY https://github.com/filippobrizzi/zenoh-c.git
-      GIT_TAG df4682bd397723a62853dae62cdf65305c08958d
-      # GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git" GIT_TAG d1ec83dee421054bed034e0e60abc98a526bae0a #
-      # v${zenohc_VERION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DCMAKE_VERBOSE_MAKEFILE=ON
-    )
-  endif()
-
-  # set(zenohcxx_VERION_REQUIRED 0.11.0.0)
-  find_package(zenohcxx QUIET) # ${zenohcxx_VERION_REQUIRED} QUIET)
-  if(zenohcxx_FOUND)
-    message(STATUS "zenohcxx: Using version ${zenohcxx_VERSION} from ${zenohcxx_DIR}")
-    add_dummy_target(zenohcxx)
-  else()
-    message(STATUS "zenohcxx: Building ${zenohcxx_VERION_REQUIRED} from source")
-    ExternalProject_Add(
-      zenohcxx
-      DEPENDS zenohc
-      GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-cpp.git"
-      GIT_TAG 457775eecc2b4fab15349464c373e59127896c28
-      # GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git" GIT_TAG 10ced293dd72ed5ec55c36b57672e0cc21932761
-      # # v${zenohcxx_VERION_REQUIRED}
-      GIT_SHALLOW true
-      SOURCE_SUBDIR install # configure the 'install' sub-project to avoid
-      # building zenoh-c again
-      LOG_BUILD true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS}
-    )
-
-  endif()
 endif()
+
+add_cmake_dependency(
+    NAME zenohc
+    DEPENDS zenohd
+    GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-c.git"
+    GIT_TAG "df4682bd397723a62853dae62cdf65305c08958d"
+)
+
+add_cmake_dependency(
+    NAME zenohcxx
+    DEPENDS zenohc
+    GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-cpp.git"
+    GIT_TAG "457775eecc2b4fab15349464c373e59127896c28"
+    SOURCE_SUBDIR install
+)
 
 # --------------------------------------------------------------------------------------------------
 # Abseil C++
-if(absl IN_LIST EXTERNAL_PROJECTS_LIST)
-
-  set(ABSEIL_VERSION_REQUIRED 20230802)
-  set(ABSEIL_TAG ${ABSEIL_VERSION_REQUIRED}.1)
-  find_package(absl ${ABSEIL_VERSION_REQUIRED} QUIET)
-  if(absl_FOUND)
-    message(STATUS "Abseil: Using version ${absl_VERSION} from ${absl_DIR}")
-    add_dummy_target(absl)
-  else()
-    message(STATUS "Abseil: Building ${ABSEIL_VERSION_REQUIRED} from source")
-    set(ABSEIL_CMAKE_ARGS -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
+set(ABSEIL_VERSION 20230802)
+set(ABSEIL_TAG ${ABSEIL_VERSION}.1)
+set(ABSEIL_CMAKE_ARGS -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
                           -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
     )
-    ExternalProject_Add(
-      absl
-      GIT_REPOSITORY https://github.com/abseil/abseil-cpp
-      GIT_TAG ${ABSEIL_TAG}
-      LOG_BUILD true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${ABSEIL_CMAKE_ARGS}
-    )
-  endif()
-endif()
+add_cmake_dependency(
+    NAME absl
+    VERSION ${ABSEIL_VERSION}
+    GIT_REPOSITORY "https://github.com/abseil/abseil-cpp.git"
+    GIT_TAG ${ABSEIL_TAG}
+    CMAKE_ARGS ${ABSEIL_CMAKE_ARGS}
+)
+
 
 # --------------------------------------------------------------------------------------------------
 # protobuf
-if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(PROTOBUF_TAG 25.2)
-  set(PROTOBUF_VERSION_REQUIRED 4.${PROTOBUF_TAG})
-  find_package(Protobuf ${PROTOBUF_VERSION_REQUIRED} QUIET)
-  if(Protobuf_FOUND)
-    message(STATUS "Protobuf: Using version ${Protobuf_VERSION} (${Protobuf_LIBRARIES}, ${Protobuf_PROTOC_LIBRARIES})")
-    add_dummy_target(Protobuf)
-  else()
-    message(STATUS "Protobuf: Building ${PROTOBUF_VERSION_REQUIRED} from source")
-    set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
+set(PROTOBUF_TAG v25.2)
+set(PROTOBUF_VERSION 4.25.2)
+set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
                             -Dprotobuf_BUILD_CONFORMANCE=OFF
     )
-    ExternalProject_Add(
-      Protobuf
-      DEPENDS ${PROTOBUF_DEPENDS}
-      GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
-      GIT_TAG "v${PROTOBUF_TAG}"
-      GIT_SHALLOW true
-      GIT_SUBMODULES_RECURSE false
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${PROTOBUF_CMAKE_ARGS}
-    )
-  endif()
-endif()
+add_cmake_dependency(
+    NAME Protobuf
+    DEPENDS ${PROTOBUF_DEPENDS}
+    VERSION ${PROTOBUF_VERSION}
+    GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
+    GIT_TAG ${PROTOBUF_TAG}
+    CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS}
+)
 
 # --------------------------------------------------------------------------------------------------
 # Eigen
-if(Eigen3 IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(EIGEN3_VERSION_REQUIRED 3.4.0)
-  find_package(Eigen3 ${EIGEN3_VERSION_REQUIRED} QUIET)
-  if(Eigen3_FOUND)
-    message(STATUS "Eigen3: Using version ${Eigen3_VERSION} from ${Eigen3_DIR}")
-    add_dummy_target(Eigen3)
-  else()
-    message(STATUS "Eigen3: Building ${EIGEN3_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      Eigen3
-      GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git"
-      GIT_TAG ${EIGEN3_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS -DCMAKE_POLICY_DEFAULT_CMP0090:STRING=NEW ${EP_CMAKE_EXTRA_ARGS}
-    )
-  endif()
-endif()
+set(EIGEN_VERSION 3.4.0)
+set(EIGEN_CMAKE_ARGS -DCMAKE_POLICY_DEFAULT_CMP0090:STRING=NEW)
+add_cmake_dependency(
+    NAME Eigen3
+    VERSION ${EIGEN_VERSION}
+    GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git"
+    GIT_TAG ${EIGEN_VERSION}
+    CMAKE_ARGS ${EIGEN_CMAKE_ARGS}
+)
 
 # --------------------------------------------------------------------------------------------------
 # nlohmann json
-if(nlohmann_json IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(NLOHMANN_JSON_VERSION_REQUIRED 3.11.3)
-  find_package(nlohmann_json ${NLOHMANN_JSON_VERSION_REQUIRED} QUIET)
-  if(nlohmann_json_FOUND)
-    message(STATUS "NLohmann JSON: Using version ${nlohmann_json_VERSION} from ${nlohmann_json_DIR}")
-    add_dummy_target(nlohmann_json)
-  else()
-    message(STATUS "NLohmann JSON: Building ${NLOHMANN_JSON_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      nlohmann_json
-      GIT_REPOSITORY "https://github.com/nlohmann/json"
-      GIT_TAG v${NLOHMANN_JSON_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DJSON_BuildTests=OFF
-    )
-  endif()
-endif()
+
+set(NLOHMANN_JSON_VERSION 3.11.3)
+set(NLOHMANN_JSON_TAG v${NLOHMANN_JSON_VERSION})
+set(NLOHMANN_JSON_CMAKE_ARGS -DJSON_BuildTests=OFF)
+add_cmake_dependency(
+    NAME nlohmann_json
+    VERSION ${NLOHMANN_JSON_VERSION}
+    GIT_REPOSITORY "https://github.com/nlohmann/json.git"
+    GIT_TAG ${NLOHMANN_JSON_TAG}
+    CMAKE_ARGS ${NLOHMANN_JSON_CMAKE_ARGS}
+)
 
 # --------------------------------------------------------------------------------------------------
 # magic_enum
-if(magic_enum IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(MAGIC_ENUM_VERSION_REQUIRED 0.9.5)
-  find_package(magic_enum ${MAGIC_ENUM_VERSION_REQUIRED} QUIET)
-  if(magic_enum_FOUND)
-    message(STATUS "Magic Enum: Using version ${magic_enum_VERSION} from ${magic_enum_DIR}")
-    add_dummy_target(magic_enum)
-  else()
-    message(STATUS "Magic Enum: Building ${MAGIC_ENUM_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      magic_enum
-      GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
-      GIT_TAG v${MAGIC_ENUM_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DMAGIC_ENUM_OPT_BUILD_EXAMPLES=OFF -DMAGIC_ENUM_OPT_BUILD_TESTS=OFF
-                 -DMAGIC_ENUM_OPT_INSTALL=ON
-    )
-  endif()
-endif()
-
-# --------------------------------------------------------------------------------------------------
-# tabulate
-if(tabulate IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(TABULATE_VERSION_REQUIRED 1.5)
-  find_package(tabulate ${TABULATE_VERSION_REQUIRED} QUIET)
-  if(tabulate_FOUND)
-    message(STATUS "Tabulate: Using version ${tabulate_VERSION} from ${tabulate_DIR}")
-    add_dummy_target(tabulate)
-  else()
-    message(STATUS "Tabulate: Building ${TABULATE_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      tabulate
-      GIT_REPOSITORY "https://github.com/p-ranav/tabulate.git"
-      GIT_TAG v${TABULATE_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DSAMPLES=OFF
-    )
-  endif()
-endif()
+set(MAGIC_ENUM_VERSION 0.9.5)
+set(MAGIC_ENUM_TAG v${MAGIC_ENUM_VERSION})
+set(MAGIC_ENUM_CMAKE_ARGS -DMAGIC_ENUM_OPT_BUILD_EXAMPLES=OFF -DMAGIC_ENUM_OPT_BUILD_TESTS=OFF
+    -DMAGIC_ENUM_OPT_INSTALL=ON)
+add_cmake_dependency(
+    NAME magic_enum
+    VERSION ${MAGIC_ENUM_VERSION}
+    GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
+    GIT_TAG ${MAGIC_ENUM_TAG}
+    CMAKE_ARGS ${MAGIC_ENUM_CMAKE_ARGS}
+)
 
 # --------------------------------------------------------------------------------------------------
 # fmt
-if(fmt IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(FMT_VERSION_REQUIRED 10.2.1)
-  find_package(fmt ${FMT_VERSION_REQUIRED} QUIET)
-  if(fmt_FOUND)
-    message(STATUS "fmt: Using version ${fmt_VERSION} from ${fmt_DIR}")
-    add_dummy_target(fmt)
-  else()
-    message(STATUS "fmt: Building ${FMT_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      fmt
-      GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
-      GIT_TAG ${FMT_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DFMT_MASTER_PROJECT=OFF
-    )
-  endif()
-endif()
+set(FMT_VERSION 10.2.1)
+set(FMT_CMAKE_ARGS -DFMT_MASTER_PROJECT=OFF)
+add_cmake_dependency(
+    NAME fmt
+    VERSION ${FMT_VERSION}
+    GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
+    GIT_TAG ${FMT_VERSION}
+    CMAKE_ARGS ${FMT_CMAKE_ARGS}
+)
 
 # --------------------------------------------------------------------------------------------------
 # range_v3
-if(range-v3 IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(RANGE_V3_VERSION_REQUIRED 0.12.0)
-  find_package(range-v3 ${RANGE_V3_VERSION_REQUIRED} QUIET)
-  if(range-v3_FOUND)
-    message(STATUS "range-v3: Using version ${RANGE_V3_VERSION_REQUIRED} from ${range-v3_DIR}")
-  else()
-    message(STATUS "range_v3: Building ${RANGE_V3_VERSION_REQUIRED} from source")
-    ExternalProject_Add(
-      range_v3
-      GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
-      GIT_TAG ${RANGE_V3_VERSION_REQUIRED}
-      GIT_SHALLOW true
-      CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_DOCS=OFF
-    )
-  endif()
-endif()
+set(RANGE-V3_VERSION 0.12.0)
+set(RANGE-V3_CMAKE_ARGS -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_DOCS=OFF)
+add_cmake_dependency(
+    NAME range-v3
+    VERSION ${RANGE-V3_VERSION}
+    GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
+    GIT_TAG ${RANGE-V3_VERSION}
+    CMAKE_ARGS ${RANGE-V3_CMAKE_ARGS}
+)

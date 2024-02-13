@@ -10,7 +10,12 @@ DEVICES_=()
 NETWORKING=''
 DOCKER_EXTRA_FLAGS_=()
 ENTRYPOINT="/bin/bash"
-DEVIMAGE=${IMAGE}:${VERSION}
+
+ARCH=$(uname -m)
+if [ "${ARCH}" == "aarch64" ]; then
+    ARCH = "arm64"
+fi
+DEVIMAGE="${HOST}/${ARCH}/${IMAGE}:${VERSION}"
 
 usage() {
     echo "usage: $0 ..."
