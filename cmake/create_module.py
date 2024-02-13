@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+# Copyright (C) 2018 GRAPE Contributors
 # Copyright (C) 2023-2024 EOLO Contributors
 #
 
