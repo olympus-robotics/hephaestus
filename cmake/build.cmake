@@ -18,7 +18,7 @@ include(${CMAKE_TEMPLATES_DIR}/06_packager_config.cmake)
 
 # -------------------------------------------------------------------------------------------------
 # Enumerate all modules and those selected for build (with -DBUILD_MODULES)
-enumerate_modules(ROOT_PATH ${CMAKE_SOURCE_DIR}/modules)
+enumerate_modules(ROOT_PATH ${PROJECT_SOURCE_DIR}/modules)
 
 # -------------------------------------------------------------------------------------------------
 # Build external dependencies before configuring project
@@ -38,7 +38,7 @@ string(REPLACE ";" "\\;" formatted_external_projects_list "${_external_projects_
 message(STATUS "========= External dependencies: Configuring =========")
 execute_process(
   COMMAND
-    ${CMAKE_COMMAND} -G "Ninja" ${CMAKE_SOURCE_DIR}/external # Use 'Ninja' for parallel build
+    ${CMAKE_COMMAND} -G "Ninja" ${PROJECT_SOURCE_DIR}/external # Use 'Ninja' for parallel build
     -DEXTERNAL_PROJECTS_LIST=${formatted_external_projects_list} -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
     -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} -DCMAKE_INSTALL_PREFIX=${EP_DEPLOY_DIR}
@@ -61,7 +61,7 @@ endif()
 
 # If anything went wrong with external project build, stop and exit
 if(NOT ${_result} EQUAL 0)
-  message(FATAL_ERROR "Error processing ${CMAKE_SOURCE_DIR}/external/CMakeLists.txt")
+  message(FATAL_ERROR "Error processing ${PROJECT_SOURCE_DIR}/external/CMakeLists.txt")
 endif()
 
 list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)

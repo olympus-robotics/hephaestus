@@ -10,7 +10,7 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 set(FETCHCONTENT_QUIET OFF) # some downloads take long. Be verbose so we know status.
 
 # disallow in-source builds
-get_filename_component(srcdir "${CMAKE_SOURCE_DIR}" REALPATH)
+get_filename_component(srcdir "${PROJECT_SOURCE_DIR}" REALPATH)
 get_filename_component(bindir "${CMAKE_BINARY_DIR}" REALPATH)
 if("${srcdir}" STREQUAL "${bindir}")
   message(FATAL_ERROR "In-source build is not supported. Create a separate build directory and try again")
