@@ -36,7 +36,14 @@ set(SOURCES
 # library target
 define_module_library(
   NAME ipc
-  PUBLIC_LINK_LIBS absl::base eolo::base eolo::cli fmt::fmt nlohmann_json::nlohmann_json range-v3::range-v3 zenohc::lib
+  PUBLIC_LINK_LIBS
+    absl::base
+    eolo::base
+    eolo::cli
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    range-v3::range-v3
+    zenohc::lib
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
