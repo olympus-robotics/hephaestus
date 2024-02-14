@@ -67,7 +67,7 @@ add_cmake_dependency(
   NAME zenohcxx
   DEPENDS zenohc
   GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-cpp.git"
-  GIT_TAG "457775eecc2b4fab15349464c373e59127896c28"
+  GIT_TAG "37bbdcf3d8ed94918433e4b09861b21eaf44ac34"
   SOURCE_SUBDIR install
 )
 
