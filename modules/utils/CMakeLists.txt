@@ -33,7 +33,7 @@ define_module_library(
   NAME
   utils
   PUBLIC_LINK_LIBS
-  ""
+  fmt::fmt
   PRIVATE_LINK_LIBS
   ""
   SOURCES
