@@ -65,7 +65,7 @@ if(NOT ${_result} EQUAL 0)
   message(FATAL_ERROR "Error processing ${PROJECT_SOURCE_DIR}/external/CMakeLists.txt")
 endif()
 
-# list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)
+list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)
 install(
   DIRECTORY ${EP_DEPLOY_DIR}/
   DESTINATION ${CMAKE_INSTALL_PREFIX}
