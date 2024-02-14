@@ -36,12 +36,13 @@ string(REPLACE ";" "\\;" formatted_external_projects_list "${_external_projects_
 # as if it was a separate project. This means: - Variables set there are not shared by the rest of this project - CMake
 # parameters must be explicitly passed as if cmake was called on it from the command line
 message(STATUS "========= External dependencies: Configuring =========")
+set(EXTERNAL_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_INSTALL_PREFIX})
 execute_process(
   COMMAND
     ${CMAKE_COMMAND} -G "Ninja" ${PROJECT_SOURCE_DIR}/external # Use 'Ninja' for parallel build
     -DEXTERNAL_PROJECTS_LIST=${formatted_external_projects_list} -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
     -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} -DCMAKE_INSTALL_PREFIX=${EP_DEPLOY_DIR}
+    -DCMAKE_PREFIX_PATH=${EXTERNAL_PREFIX_PATH} -DCMAKE_INSTALL_PREFIX=${EP_DEPLOY_DIR}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
     -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER} -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
     -DCMAKE_TEMPLATE_DIR=${CMAKE_TEMPLATES_DIR}
