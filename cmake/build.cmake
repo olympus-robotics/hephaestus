@@ -36,7 +36,7 @@ string(REPLACE ";" "\\;" formatted_external_projects_list "${_external_projects_
 # as if it was a separate project. This means: - Variables set there are not shared by the rest of this project - CMake
 # parameters must be explicitly passed as if cmake was called on it from the command line
 message(STATUS "========= External dependencies: Configuring =========")
-set(EXTERNAL_PREFIX_PATH "${CMAKE_PREFIX_PATH} ${CMAKE_INSTALL_PREFIX}")
+set(EXTERNAL_PREFIX_PATH "${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH}")
 execute_process(
   COMMAND
     ${CMAKE_COMMAND} -G "Ninja" ${PROJECT_SOURCE_DIR}/external # Use 'Ninja' for parallel build
