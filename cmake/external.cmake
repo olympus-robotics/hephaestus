@@ -72,7 +72,7 @@ macro(add_cmake_dependency)
   endif()
 
   list(APPEND CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${TARGET_ARG_CMAKE_ARGS})
-  message("CMAKE_ARGS: ${CMAKE_ARGS`}")
+  message("CMAKE_ARGS: ${CMAKE_ARGS}")
 
   if(${TARGET_ARG_NAME} IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "Looking for ${TARGET_ARG_NAME} in ${CMAKE_PREFIX_PATH}")
