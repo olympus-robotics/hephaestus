@@ -71,6 +71,7 @@ macro(add_cmake_dependency)
   endif()
 
   if(${TARGET_ARG_NAME} IN_LIST EXTERNAL_PROJECTS_LIST)
+    list(PREPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
     message(STATUS "Looking for ${TARGET_ARG_NAME} in ${CMAKE_PREFIX_PATH}")
     find_package(${TARGET_ARG_NAME} ${TARGET_ARG_VERSION} QUIET)
     if(${TARGET_ARG_NAME}_FOUND)
