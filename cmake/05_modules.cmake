@@ -1,6 +1,5 @@
 # ==================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # ==================================================================================================
 
 include(CMakePackageConfigHelpers)
@@ -118,7 +117,7 @@ macro(configure_modules)
   endforeach()
 
   # Generate input paths for source code documentation DOC_INPUT_PATHS DOC_EXAMPLE_PATHS
-  set(DOC_INPUT_PATHS ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/docs ${CMAKE_SOURCE_DIR}/README.md)
+  set(DOC_INPUT_PATHS ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/docs ${PROJECT_SOURCE_DIR}/README.md)
   foreach(_module IN LISTS _enabled_modules_list)
     set(DOC_INPUT_PATHS ${DOC_INPUT_PATHS} ${MODULE_${_module}_PATH}/include ${MODULE_${_module}_PATH}/docs
                         ${MODULE_${_module}_PATH}/README.md

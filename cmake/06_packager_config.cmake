@@ -1,12 +1,11 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VERSION ${EOLO_VERSION})
 set(CPACK_PACKAGE_VENDOR "Filippo Brizzi")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)

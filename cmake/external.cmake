@@ -22,10 +22,13 @@ set(EP_CMAKE_EXTRA_ARGS
     -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
     -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
 )
+list(PREPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
 
 make_directory(${CMAKE_INSTALL_PREFIX}/bin)
 make_directory(${CMAKE_INSTALL_PREFIX}/lib)
 make_directory(${CMAKE_INSTALL_PREFIX}/include)
+
+message(STATUS "Dependencies")
 
 # helper macro useful for dependency handling
 macro(add_dummy_target)
@@ -64,28 +67,31 @@ macro(add_cmake_dependency)
     set(TARGET_ARG_CMAKE_ARGS "")
   endif()
 
-  if (NOT TARGET_ARG_SOURCE_SUBDIR)
+  if(NOT TARGET_ARG_SOURCE_SUBDIR)
     set(TARGET_ARG_SOURCE_SUBDIR "./")
   endif()
 
+  set(CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS})
+  list(APPEND CMAKE_ARGS ${TARGET_ARG_CMAKE_ARGS})
+
   if(${TARGET_ARG_NAME} IN_LIST EXTERNAL_PROJECTS_LIST)
     find_package(${TARGET_ARG_NAME} ${TARGET_ARG_VERSION} QUIET)
-    if (${TARGET_ARG_NAME}_FOUND)
-      if (${TARGET_ARG_NAME}_DIR)
+    if(${TARGET_ARG_NAME}_FOUND)
+      if(${TARGET_ARG_NAME}_DIR)
         set(TARGET_DIR ${${TARGET_ARG_NAME}_DIR})
       else()
         set(TARGET_DIR ${${TARGET_ARG_NAME}_LIBRARIES})
       endif()
-      message(STATUS "${TARGET_ARG_NAME}: Using version ${TARGET_ARG_VERSION} from ${TARGET_DIR}")
+      message(STATUS "    ${TARGET_ARG_NAME}: Using version ${TARGET_ARG_VERSION} from ${TARGET_DIR}")
       add_dummy_target(${TARGET_ARG_NAME})
     else()
-      message(STATUS "${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
+      message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
       ExternalProject_Add(
         ${TARGET_ARG_NAME}
         DEPENDS ${TARGET_ARG_GIT_DEPENDS}
         GIT_REPOSITORY ${TARGET_ARG_GIT_REPOSITORY}
         GIT_TAG ${TARGET_ARG_GIT_TAG}
-        CMAKE_ARGS ${EP_CMAKE_EXTRA_ARGS} ${TARGET_ARG_CMAKE_ARGS}
+        CMAKE_ARGS ${CMAKE_ARGS}
         GIT_SHALLOW true
         GIT_SUBMODULES_RECURSE false
         SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}

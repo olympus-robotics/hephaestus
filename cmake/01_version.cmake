@@ -1,12 +1,11 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 # Extract current branch name
 execute_process(
   COMMAND git rev-parse --abbrev-ref HEAD
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_BRANCH
   ERROR_VARIABLE error_branch_check
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -19,7 +18,7 @@ endif()
 # Extract commit hash of the head
 execute_process(
   COMMAND git log -1 --format=%h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_HASH
   ERROR_VARIABLE error_hash_check
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -32,7 +31,7 @@ endif()
 # Extract version information
 execute_process(
   COMMAND git describe --tags --abbrev=0
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   OUTPUT_VARIABLE REPO_TAG
   ERROR_VARIABLE error_version_check
   OUTPUT_STRIP_TRAILING_WHITESPACE

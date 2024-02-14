@@ -1,6 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 # --------------------------------------------------------------------------------------------------
@@ -33,21 +32,21 @@ endif()
 
 if(CMAKE_FORMAT_BIN AND ENABLE_FORMATTER)
   set(_cmake_files
-      "${CMAKE_SOURCE_DIR}/CMakeLists.txt;${CMAKE_SOURCE_DIR}/external/CMakeLists.txt;${CMAKE_SOURCE_DIR}/cmake/*.cmake;${CMAKE_SOURCE_DIR}/modules/**/*.txt;toolchains/*.cmake"
+      "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/external/CMakeLists.txt;${PROJECT_SOURCE_DIR}/cmake/*.cmake;${PROJECT_SOURCE_DIR}/modules/**/*.txt;toolchains/*.cmake"
   )
   if(FORMAT_FAIL_ON_CHANGE)
     add_custom_command(
       TARGET format
       PRE_BUILD
       COMMAND ${CMAKE_FORMAT_BIN} --check ${_cmake_files}
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
   else()
     add_custom_command(
       TARGET format
       PRE_BUILD
       COMMAND ${CMAKE_FORMAT_BIN} -i ${_cmake_files}
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
   endif()
 endif()

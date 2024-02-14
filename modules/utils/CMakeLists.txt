@@ -3,13 +3,10 @@
 # =================================================================================================
 
 declare_module(
-  NAME
-  utils
+  NAME utils
+  DEPENDS_ON_MODULES "" # **Note**: This module should not depend on any other module
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt
   ALWAYS_BUILD
-  DEPENDS_ON_MODULES
-  "" # **Note**: This module should not depend on any other module
-  DEPENDS_ON_EXTERNAL_PROJECTS
-  fmt
 )
 
 find_package(fmt REQUIRED)
@@ -30,21 +27,13 @@ set(SOURCES
 
 # library target
 define_module_library(
-  NAME
-  utils
-  PUBLIC_LINK_LIBS
-  ""
-  PRIVATE_LINK_LIBS
-  ""
-  SOURCES
-  ${SOURCES}
-  PUBLIC_INCLUDE_PATHS
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  PRIVATE_INCLUDE_PATHS
-  ""
-  SYSTEM_PRIVATE_INCLUDE_PATHS
-  ""
+  NAME utils
+  PUBLIC_LINK_LIBS fmt::fmt
+  PRIVATE_LINK_LIBS ""
+  SOURCES ${SOURCES}
+  PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
+  PRIVATE_INCLUDE_PATHS ""
+  SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
 
 # Subprojects
