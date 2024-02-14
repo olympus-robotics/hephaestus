@@ -27,6 +27,8 @@ make_directory(${CMAKE_INSTALL_PREFIX}/bin)
 make_directory(${CMAKE_INSTALL_PREFIX}/lib)
 make_directory(${CMAKE_INSTALL_PREFIX}/include)
 
+message(STATUS "Dependencies")
+
 # helper macro useful for dependency handling
 macro(add_dummy_target)
   if(NOT TARGET ${ARGV0})
@@ -76,10 +78,10 @@ macro(add_cmake_dependency)
       else()
         set(TARGET_DIR ${${TARGET_ARG_NAME}_LIBRARIES})
       endif()
-      message(STATUS "${TARGET_ARG_NAME}: Using version ${TARGET_ARG_VERSION} from ${TARGET_DIR}")
+      message(STATUS "    ${TARGET_ARG_NAME}: Using version ${TARGET_ARG_VERSION} from ${TARGET_DIR}")
       add_dummy_target(${TARGET_ARG_NAME})
     else()
-      message(STATUS "${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
+      message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
       ExternalProject_Add(
         ${TARGET_ARG_NAME}
         DEPENDS ${TARGET_ARG_GIT_DEPENDS}
