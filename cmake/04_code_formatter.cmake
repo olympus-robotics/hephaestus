@@ -65,13 +65,23 @@ function(add_clang_format _targetname)
     get_target_property(_builddir ${_targetname} BINARY_DIR)
 
     # There are file types we don't want to process (or may be the inverse list is shorter)
-    set(_supported_file_types ".c" ".cpp" ".h" ".hpp" ".inl")
+    set(_supported_file_types
+        ".c"
+        ".cpp"
+        ".h"
+        ".hpp"
+        ".inl"
+    )
 
     set(_sources "")
     foreach(_source ${_clang_sources})
       if(NOT TARGET ${_source})
         get_filename_component(_ext_type ${_source} EXT)
-        if(NOT ${_ext_type} STREQUAL "")
+        if(NOT
+           ${_ext_type}
+           STREQUAL
+           ""
+        )
           if(${_ext_type} IN_LIST _supported_file_types)
             get_filename_component(_source_file ${_source} NAME)
             get_source_file_property(_clang_loc "${_source}" LOCATION)

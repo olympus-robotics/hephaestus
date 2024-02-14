@@ -38,10 +38,22 @@ macro(add_dummy_target)
 endmacro()
 
 macro(add_cmake_dependency)
-  set(single_opts NAME VERSION GIT_TAG GIT_REPOSITORY SOURCE_SUBDIR)
+  set(single_opts
+      NAME
+      VERSION
+      GIT_TAG
+      GIT_REPOSITORY
+      SOURCE_SUBDIR
+  )
   set(multi_opts CMAKE_ARGS DEPENDS)
   include(CMakeParseArguments)
-  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
+  cmake_parse_arguments(
+    TARGET_ARG
+    "${flags}"
+    "${single_opts}"
+    "${multi_opts}"
+    ${ARGN}
+  )
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
