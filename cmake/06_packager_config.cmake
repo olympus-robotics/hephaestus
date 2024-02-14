@@ -1,6 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})

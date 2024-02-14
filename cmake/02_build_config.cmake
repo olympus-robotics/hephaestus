@@ -1,6 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
 # =================================================================================================
 
 find_package(Git REQUIRED)
