@@ -51,13 +51,7 @@ function(enumerate_modules)
   set(multi_opts "")
   include(CMakeParseArguments)
 
-  cmake_parse_arguments(
-    _ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${_ARG_UNPARSED_ARGUMENTS}")
@@ -76,11 +70,7 @@ function(enumerate_modules)
   )
   message(STATUS "Enumerating ${PROJID} modules")
   foreach(_module IN LISTS _module_paths)
-    if(NOT
-       ${_module}
-       STREQUAL
-       ${CMAKE_CURRENT_LIST_FILE}
-    ) # avoid recursion
+    if(NOT ${_module} STREQUAL ${CMAKE_CURRENT_LIST_FILE}) # avoid recursion
       message(VERBOSE "  Parsing ${_module}")
       include(${_module})
     endif()
@@ -129,26 +119,13 @@ macro(configure_modules)
   # Generate input paths for source code documentation DOC_INPUT_PATHS DOC_EXAMPLE_PATHS
   set(DOC_INPUT_PATHS ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/docs ${PROJECT_SOURCE_DIR}/README.md)
   foreach(_module IN LISTS _enabled_modules_list)
-    set(DOC_INPUT_PATHS
-        ${DOC_INPUT_PATHS}
-        ${MODULE_${_module}_PATH}/include
-        ${MODULE_${_module}_PATH}/docs
-        ${MODULE_${_module}_PATH}/README.md
+    set(DOC_INPUT_PATHS ${DOC_INPUT_PATHS} ${MODULE_${_module}_PATH}/include ${MODULE_${_module}_PATH}/docs
+                        ${MODULE_${_module}_PATH}/README.md
     )
     set(DOC_EXAMPLE_PATHS ${DOC_EXAMPLE_PATHS} ${MODULE_${_module}_PATH}/examples)
   endforeach()
-  string(
-    REPLACE ";"
-            " "
-            DOC_INPUT_PATHS
-            "${DOC_INPUT_PATHS}"
-  )
-  string(
-    REPLACE ";"
-            " "
-            DOC_EXAMPLE_PATHS
-            "${DOC_EXAMPLE_PATHS}"
-  )
+  string(REPLACE ";" " " DOC_INPUT_PATHS "${DOC_INPUT_PATHS}")
+  string(REPLACE ";" " " DOC_EXAMPLE_PATHS "${DOC_EXAMPLE_PATHS}")
 
   # Create doxygen configuration for source code documentation generation
   configure_file(${CMAKE_TEMPLATES_DIR}/doxyfile.in ${CMAKE_BINARY_DIR}/doxyfile @ONLY)
@@ -172,13 +149,7 @@ macro(declare_module)
   set(multi_opts DEPENDS_ON_MODULES DEPENDS_ON_EXTERNAL_PROJECTS)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    MODULE_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(MODULE_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(MODULE_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${MODULE_ARG_UNPARSED_ARGUMENTS}")
@@ -284,13 +255,7 @@ macro(define_module_library)
   )
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    TARGET_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
@@ -368,22 +333,10 @@ add_custom_target(examples COMMENT "Building examples")
 macro(define_module_example)
   set(flags "")
   set(single_opts NAME)
-  set(multi_opts
-      SOURCES
-      PUBLIC_INCLUDE_PATHS
-      PRIVATE_INCLUDE_PATHS
-      PUBLIC_LINK_LIBS
-      PRIVATE_LINK_LIBS
-  )
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    TARGET_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
@@ -432,22 +385,10 @@ endmacro()
 macro(define_module_executable)
   set(flags "")
   set(single_opts NAME)
-  set(multi_opts
-      SOURCES
-      PUBLIC_INCLUDE_PATHS
-      PRIVATE_INCLUDE_PATHS
-      PUBLIC_LINK_LIBS
-      PRIVATE_LINK_LIBS
-  )
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    TARGET_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
@@ -498,13 +439,7 @@ macro(define_module_proto_library)
   set(multi_opts SOURCES PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    TARGET_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
@@ -514,11 +449,7 @@ macro(define_module_proto_library)
     message(FATAL_ERROR "Library name not specified")
   endif()
 
-  if(NOT
-     ${TARGET_ARG_NAME}
-     MATCHES
-     "_proto$"
-  )
+  if(NOT ${TARGET_ARG_NAME} MATCHES "_proto$")
     message(FATAL_ERROR "Protobuf library should end with '_proto' suffix")
   endif()
 
@@ -644,22 +575,10 @@ include(GoogleTest)
 macro(define_module_test)
   set(flags "")
   set(single_opts NAME COMMAND WORKING_DIRECTORY)
-  set(multi_opts
-      SOURCES
-      PUBLIC_INCLUDE_PATHS
-      PRIVATE_INCLUDE_PATHS
-      PUBLIC_LINK_LIBS
-      PRIVATE_LINK_LIBS
-  )
+  set(multi_opts SOURCES PUBLIC_INCLUDE_PATHS PRIVATE_INCLUDE_PATHS PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    TARGET_ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
@@ -692,11 +611,7 @@ macro(define_module_test)
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS}
-            GTest::gtest
-            GTest::gmock
-            GTest::gtest_main
-            GTest::gmock_main
+            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
   )
 
   gtest_discover_tests(
@@ -812,13 +727,7 @@ function(mark_module_and_dependencies_to_build)
   set(multi_opts "")
   include(CMakeParseArguments)
 
-  cmake_parse_arguments(
-    _ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${_ARG_UNPARSED_ARGUMENTS}")
@@ -901,13 +810,7 @@ function(find_module_declarations _result)
   set(_declaration_search_regex "^declare_module\\(")
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(
-    _ARG
-    "${flags}"
-    "${single_opts}"
-    "${multi_opts}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
 
   if(_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${_ARG_UNPARSED_ARGUMENTS}")
@@ -942,14 +845,7 @@ endfunction()
 # DOC_EXAMPLE_PATHS (set elsewhere) DOC_OUTPUT_PATH (set here)
 #
 if(NOT CMAKE_CROSSCOMPILING)
-  find_package(
-    Doxygen
-    OPTIONAL_COMPONENTS
-      doxygen
-      dot
-      mscgen
-      dia
-  )
+  find_package(Doxygen OPTIONAL_COMPONENTS doxygen dot mscgen dia)
   if(DOXYGEN_FOUND)
     set(DOC_OUTPUT_PATH ${CMAKE_BINARY_DIR}/docs/)
     file(MAKE_DIRECTORY ${DOC_OUTPUT_PATH})

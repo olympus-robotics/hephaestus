@@ -25,22 +25,14 @@ define_module_library(
 )
 
 # library sources
-set(TYPES_PROTOBUF_SOURCES
-    src/types_protobuf/geometry.cpp
-    src/types_protobuf/pose.cpp
-    include/eolo/examples/types_protobuf/geometry.h
-    include/eolo/examples/types_protobuf/pose.h
+set(TYPES_PROTOBUF_SOURCES src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp
+                           include/eolo/examples/types_protobuf/geometry.h include/eolo/examples/types_protobuf/pose.h
 )
 
 # library target
 define_module_library(
   NAME examples_types_protobuf
-  PUBLIC_LINK_LIBS
-    eolo::base
-    eolo::serdes
-    eolo::examples_types
-    eolo::examples_types_proto
-    Eigen3::Eigen
+  PUBLIC_LINK_LIBS eolo::base eolo::serdes eolo::examples_types eolo::examples_types_proto Eigen3::Eigen
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_PROTOBUF_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

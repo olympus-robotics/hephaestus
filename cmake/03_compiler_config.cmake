@@ -8,12 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # required by source analysis tools
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # Baseline compiler warning settings for project and external targets
-set(EOLO_COMPILER_WARNINGS
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Werror
-)
+set(EOLO_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror)
 set(THIRD_PARTY_COMPILER_WARNINGS -Wall -Wextra -Wpedantic)
 
 # clang warnings
@@ -101,18 +96,9 @@ if(${ENABLE_MSAN})
   endif()
 endif()
 
-list(
-  JOIN
-  SANITIZERS
-  ","
-  LIST_OF_SANITIZERS
-)
+list(JOIN SANITIZERS "," LIST_OF_SANITIZERS)
 if(LIST_OF_SANITIZERS)
-  if(NOT
-     "${LIST_OF_SANITIZERS}"
-     STREQUAL
-     ""
-  )
+  if(NOT "${LIST_OF_SANITIZERS}" STREQUAL "")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=${LIST_OF_SANITIZERS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${LIST_OF_SANITIZERS}")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=${LIST_OF_SANITIZERS}")

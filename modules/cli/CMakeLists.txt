@@ -11,12 +11,8 @@ declare_module(
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES
-    src/keyboard.cpp
-    src/program_options.cpp
-    README.md
-    include/eolo/cli/keyboard.h
-    include/eolo/cli/program_options.h
+set(SOURCES src/keyboard.cpp src/program_options.cpp README.md include/eolo/cli/keyboard.h
+            include/eolo/cli/program_options.h
 )
 
 # library target

@@ -30,12 +30,7 @@ file(MAKE_DIRECTORY ${EP_DEPLOY_DIR})
 get_property(_external_projects_list GLOBAL PROPERTY EXTERNAL_PROJECTS)
 
 # Because execute_process() cannot handle ';' character in a list when passed as argument, escape it
-string(
-  REPLACE ";"
-          "\\;"
-          formatted_external_projects_list
-          "${_external_projects_list}"
-)
+string(REPLACE ";" "\\;" formatted_external_projects_list "${_external_projects_list}")
 
 # Configuration of all external dependencies are in external/CMakeLists.txt NOTE: external/CMakeLists.txt is processed
 # as if it was a separate project. This means: - Variables set there are not shared by the rest of this project - CMake
@@ -67,11 +62,7 @@ if(${_result} EQUAL 0)
 endif()
 
 # If anything went wrong with external project build, stop and exit
-if(NOT
-   ${_result}
-   EQUAL
-   0
-)
+if(NOT ${_result} EQUAL 0)
   message(FATAL_ERROR "Error processing ${PROJECT_SOURCE_DIR}/external/CMakeLists.txt")
 endif()
 

@@ -75,11 +75,8 @@ add_cmake_dependency(
 # Abseil C++
 set(ABSEIL_VERSION 20230802)
 set(ABSEIL_TAG ${ABSEIL_VERSION}.1)
-set(ABSEIL_CMAKE_ARGS
-    -DABSL_BUILD_TESTING=OFF
-    -DABSL_ENABLE_INSTALL=ON
-    -DABSL_PROPAGATE_CXX_STD=ON
-    -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+set(ABSEIL_CMAKE_ARGS -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
+                      -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
 )
 add_cmake_dependency(
   NAME absl
@@ -93,11 +90,8 @@ add_cmake_dependency(
 # protobuf
 set(PROTOBUF_TAG v25.2)
 set(PROTOBUF_VERSION 4.25.2)
-set(PROTOBUF_CMAKE_ARGS
-    -Dprotobuf_BUILD_EXAMPLES=OFF
-    -Dprotobuf_BUILD_TESTS=OFF
-    -Dprotobuf_ABSL_PROVIDER=package
-    -Dprotobuf_BUILD_CONFORMANCE=OFF
+set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
+                        -Dprotobuf_BUILD_CONFORMANCE=OFF
 )
 add_cmake_dependency(
   NAME Protobuf

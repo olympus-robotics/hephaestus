@@ -97,9 +97,6 @@ with section("format"):
   # How many spaces to tab for indent
   tab_size = 2
 
-  max_subgroups_hwrap = 2
-  max_pargs_hwrap = 3
-
   # If true, separate flow control names from their parentheses with a space
   separate_ctrl_name_with_space = False
 
