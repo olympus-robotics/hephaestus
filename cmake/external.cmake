@@ -70,7 +70,7 @@ macro(add_cmake_dependency)
   if(NOT TARGET_ARG_SOURCE_SUBDIR)
     set(TARGET_ARG_SOURCE_SUBDIR "./")
   endif()
-`
+
   if(${TARGET_ARG_NAME} IN_LIST EXTERNAL_PROJECTS_LIST)
     message(STATUS "Looking for ${TARGET_ARG_NAME} in ${CMAKE_PREFIX_PATH}")
     find_package(${TARGET_ARG_NAME} ${TARGET_ARG_VERSION} QUIET)
