@@ -96,6 +96,65 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 # )
 ```
 
+## Using Eolo
+There are multiple ways to use Eolo in your repo.
+
+### Global installation
+Install eolo in a known folder, e.g. `/install`. When you compile your project pass `-DCMAKE_PREFIX_PATH=/install` and in your CMakeLists.txt:
+
+```cmake
+find_package(eolo REQUIRED <component1> <component2>) # e.g. find_package(eolo REQUIRED ipc serdes)
+
+add_library(my-lib ...)
+target_link_libraries(my-lib
+    PUBLIC eolo::ipc eolo::serdes
+)
+```
+
+### Use Eolo CMake build system
+Using Eolo build system build eolo together with your project:
+
+```cmake
+add_cmake_dependency(
+    NAME eolo
+    GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+    GIT_TAG "main"
+    CMAKE_ARGS -DBUILD_MODULES="utils"
+)
+```
+
+and in your library CMakeLists.txt:
+```cmake
+find_package(eolo REQUIRED <component1> <component2>) # e.g. find_package(eolo REQUIRED ipc serdes)
+
+add_library(my-lib ...)
+target_link_libraries(my-lib
+    PUBLIC eolo::ipc eolo::serdes
+)
+```
+
+### Include Eolo as a submodule
+Add Eolo as a git submodule to your project (e.g. in `third_party/eolo`) and in the root CMakeLists.txt before adding your libraries add:
+
+```cmake
+set(BUILD_MODULES "ipc;serdes") # or `all` if you want to build all of it.
+add_subdirectory(third_party/eolo)
+```
+
+if you are using Eolo build system for your project you need to backup the modules list to keep it separate between the Eolo ones and yours:
+
+
+```cmake
+set(eolo_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/eolo)
+
+set(BUILD_MODULES_BAK ${BUILD_MODULES})
+set(BUILD_MODULES "utils")
+add_subdirectory(${eolo_SOURCE_DIR})
+
+set(BUILD_MODULES ${BUILD_MODULES_BAK})
+include(${eolo_SOURCE_DIR}/cmake/build.cmake)
+```
+
 ## Notes
 
 Initially this repo was supporting C++23, but to maximise compatibilty we reverted back to C++20.
