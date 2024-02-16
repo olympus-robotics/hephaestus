@@ -8,6 +8,11 @@
 option(ENABLE_FORMATTER "Enable automatic source file formatting with clang-format" ON)
 option(FORMAT_FAIL_ON_CHANGE "Fail build if format causes formatting changes" OFF)
 
+set(FORMAT_TARGET format)
+if(BUILD_AS_SUBPROJECT)
+  set(FORMAT_TARGET "${PROJECT_NAME}_${FORMAT_TARGET}")
+endif()
+
 if(ENABLE_FORMATTER)
   find_program(CLANG_FORMAT_BIN NAMES clang-format QUIET)
   if(NOT CLANG_FORMAT_BIN)
@@ -19,11 +24,11 @@ endif()
 message(STATUS "Auto-format code (ENABLE_FORMATTER): ${ENABLE_FORMATTER} (${CLANG_FORMAT_BIN})")
 message(STATUS "Fail if code not formatted (FORMAT_FAIL_ON_CHANGE): ${FORMAT_FAIL_ON_CHANGE}")
 
-# Target to run clang-format on all files without having to compile them
-add_custom_target(format)
-
 # Setup format for cmake files
 if(ENABLE_FORMATTER)
+  # Target to run clang-format on all files without having to compile them
+  add_custom_target(${FORMAT_TARGET})
+
   find_program(CMAKE_FORMAT_BIN NAMES cmake-format QUIET)
   if(NOT CMAKE_FORMAT_BIN)
     message(WARNING "cmake-format requested but not found")
@@ -36,14 +41,14 @@ if(CMAKE_FORMAT_BIN AND ENABLE_FORMATTER)
   )
   if(FORMAT_FAIL_ON_CHANGE)
     add_custom_command(
-      TARGET format
+      TARGET ${FORMAT_TARGET}
       PRE_BUILD
       COMMAND ${CMAKE_FORMAT_BIN} --check ${_cmake_files}
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
   else()
     add_custom_command(
-      TARGET format
+      TARGET ${FORMAT_TARGET}
       PRE_BUILD
       COMMAND ${CMAKE_FORMAT_BIN} -i ${_cmake_files}
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -107,7 +112,7 @@ function(add_clang_format _targetname)
         COMMENT "Format target ${_target}"
       )
       add_dependencies(${_targetname} ${_targetname}_clangformat)
-      add_dependencies(format ${_targetname}_clangformat)
+      add_dependencies(${FORMAT_TARGET} ${_targetname}_clangformat)
     endif()
   endif() # CLANG_FORMAT_BIN found
 endfunction()

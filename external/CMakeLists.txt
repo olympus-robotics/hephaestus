@@ -66,15 +66,15 @@ endif()
 add_cmake_dependency(
   NAME zenohc
   DEPENDS zenohd
-  GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-c.git"
-  GIT_TAG "df4682bd397723a62853dae62cdf65305c08958d"
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
+  GIT_TAG "de57b3fed5b1c3f4a83a2c0c0cb6a642c09a6210"
 )
 
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS zenohc
-  GIT_REPOSITORY "https://github.com/filippobrizzi/zenoh-cpp.git"
-  GIT_TAG "37bbdcf3d8ed94918433e4b09861b21eaf44ac34"
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
+  GIT_TAG "5d97863fb091a64936a73a7ca0adc22b478b447e"
   SOURCE_SUBDIR install
 )
 

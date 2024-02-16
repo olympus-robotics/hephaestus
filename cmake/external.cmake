@@ -88,7 +88,7 @@ macro(add_cmake_dependency)
       message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
       ExternalProject_Add(
         ${TARGET_ARG_NAME}
-        DEPENDS ${TARGET_ARG_GIT_DEPENDS}
+        DEPENDS ${TARGET_ARG_DEPENDS}
         GIT_REPOSITORY ${TARGET_ARG_GIT_REPOSITORY}
         GIT_TAG ${TARGET_ARG_GIT_TAG}
         CMAKE_ARGS ${CMAKE_ARGS}
