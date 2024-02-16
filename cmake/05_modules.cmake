@@ -108,6 +108,15 @@ endfunction()
 # Description: Configures modules that have been marked to be built during enumeration. See enumerate_modules()
 #
 macro(configure_modules)
+  if(NOT BUILD_MODULES)
+    message(STATUS "BUILD_MODULES not specified. Only modules set to ALWAYS_BUILD will be enabled.")
+  else()
+    message(STATUS "Requested modules (BUILD_MODULES): ${BUILD_MODULES}")
+  endif()
+  message(STATUS "----------------------------------------------------------------------")
+  message(STATUS "Configuring modules")
+  message(STATUS "----------------------------------------------------------------------")
+
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
 
   # Add each marked module into the build
@@ -265,9 +274,9 @@ macro(define_module_library)
     message(FATAL_ERROR "Library name not specified")
   endif()
 
-  set(LIBRARY_NAME ${CMAKE_PROJECT_NAME}_${TARGET_ARG_NAME})
+  set(LIBRARY_NAME ${PROJECT_NAME}_${TARGET_ARG_NAME})
   set(LIBRARY_EXPORT_NAME ${TARGET_ARG_NAME})
-  set(LIBRARY_NAME_ALIAS ${CMAKE_PROJECT_NAME}::${TARGET_ARG_NAME})
+  set(LIBRARY_NAME_ALIAS ${PROJECT_NAME}::${TARGET_ARG_NAME})
 
   add_library(${LIBRARY_NAME} ${TARGET_ARG_SOURCES})
   add_library(${LIBRARY_NAME_ALIAS} ALIAS ${LIBRARY_NAME})
@@ -312,7 +321,12 @@ endmacro()
 
 # ==================================================================================================
 # Adds a custom target to group all example programs built on call to `make examples`. See `define_module_example`
-add_custom_target(examples COMMENT "Building examples")
+set(EXAMPLES_TARGET examples)
+if(BUILD_AS_SUBPROJECT)
+  set(EXAMPLES_TARGET "${PROJECT_NAME}_${EXAMPLES_TARGET}")
+endif()
+
+add_custom_target(${EXAMPLES_TARGET} COMMENT "Building examples")
 
 # ==================================================================================================
 # macro: define_module_example
@@ -346,11 +360,12 @@ macro(define_module_example)
     message(FATAL_ERROR "Executable name not specified")
   endif()
 
-  set(TARGET_NAME ${CMAKE_PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
+  set(TARGET_NAME ${PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
 
   add_executable(${TARGET_NAME} EXCLUDE_FROM_ALL ${TARGET_ARG_SOURCES})
   add_clang_format(${TARGET_NAME})
-  add_dependencies(examples ${TARGET_NAME}) # Set this example to be built on `make examples`
+
+  add_dependencies(${EXAMPLES_TARGET} ${TARGET_NAME}) # Set this example to be built on `make examples`
 
   target_include_directories(
     ${TARGET_NAME} BEFORE
@@ -398,7 +413,7 @@ macro(define_module_executable)
     message(FATAL_ERROR "Executable name not specified")
   endif()
 
-  set(TARGET_NAME ${CMAKE_PROJECT_NAME}_${TARGET_ARG_NAME})
+  set(TARGET_NAME ${PROJECT_NAME}_${TARGET_ARG_NAME})
 
   add_executable(${TARGET_NAME} ${TARGET_ARG_SOURCES})
   add_clang_format(${TARGET_NAME})
@@ -476,12 +491,12 @@ macro(define_module_proto_library)
 
   protobuf_generate_cpp(PROTOBUF_SOURCES PROTOBUF_HEADERS ${TARGET_ARG_SOURCES})
 
-  set(PROTOBUF_LIBRARY eolo_${TARGET_ARG_NAME})
+  set(PROTOBUF_LIBRARY ${PROJECT_NAME}_${TARGET_ARG_NAME})
 
   message(STATUS "Create protobuf library: ${PROTOBUF_LIBRARY}")
 
   add_library(${PROTOBUF_LIBRARY} ${PROTOBUF_SOURCES} ${PROTOBUF_HEADERS})
-  set(LIBRARY_NAME_ALIAS ${CMAKE_PROJECT_NAME}::${TARGET_ARG_NAME})
+  set(LIBRARY_NAME_ALIAS ${PROJECT_NAME}::${TARGET_ARG_NAME})
   add_library(${LIBRARY_NAME_ALIAS} ALIAS ${PROTOBUF_LIBRARY})
 
   # NOTE A proto-library should provide a path to its root dir, so dependent libs could find its .proto files. Also, the
@@ -544,17 +559,25 @@ set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
 
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
-add_custom_target(tests COMMENT "Building tests")
+set(TESTS_TARGET tests)
+if(BUILD_AS_SUBPROJECT)
+  set(TESTS_TARGET "${PROJECT_NAME}_${TESTS_TARGET}")
+endif()
+add_custom_target(${TESTS_TARGET} COMMENT "Building tests")
 
 # ==================================================================================================
 # Adds a custom convenience target to run all tests and generate report on 'make check'
+set(CHECK_TARGET check)
+if(BUILD_AS_SUBPROJECT)
+  set(CHECK_TARGET "${PROJECT_NAME}_${CHECK_TARGET}")
+endif()
 add_custom_target(
-  check
+  ${CHECK_TARGET}
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --output-log tests_log.txt --verbose
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Building and running tests"
 )
-add_dependencies(check tests) # `check` depends on `tests` target
+add_dependencies(${CHECK_TARGET} ${TESTS_TARGET}) # `check` depends on `tests` target
 
 # ==================================================================================================
 # macro: define_module_test
@@ -588,7 +611,7 @@ macro(define_module_test)
     message(FATAL_ERROR "Executable name not specified")
   endif()
 
-  set(TARGET_NAME ${CMAKE_PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
+  set(TARGET_NAME ${PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
 
   add_executable(${TARGET_NAME} EXCLUDE_FROM_ALL ${TARGET_ARG_SOURCES}) # Don't build on `make`
   add_clang_format(${TARGET_NAME})
@@ -599,7 +622,8 @@ macro(define_module_test)
     COMMAND ${TARGET_NAME}
     WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
   )
-  add_dependencies(tests ${TARGET_NAME}) # Set this to be built on `make tests`
+
+  add_dependencies(${TESTS_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
 
   target_include_directories(
     ${TARGET_NAME} BEFORE
@@ -633,7 +657,7 @@ function(install_modules)
   foreach(_module IN LISTS _enabled_modules_list)
 
     # These variables are copied into module-config.cmake.in to set up dependencies
-    set(INSTALL_MODULE_NAME ${CMAKE_PROJECT_NAME}_${_module})
+    set(INSTALL_MODULE_NAME ${PROJECT_NAME}_${_module})
     set(INSTALL_MODULE_LIB_TARGETS ${MODULE_${_module}_LIB_TARGETS})
     set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON})
     set(INSTALL_MODULE_EXTERNAL_DEPENDENCIES ${MODULE_${_module}_EXTERNAL_PROJECT_DEPS})
@@ -679,7 +703,7 @@ function(install_modules)
     install(
       EXPORT ${INSTALL_MODULE_NAME}-targets
       FILE ${INSTALL_MODULE_NAME}-targets.cmake
-      NAMESPACE ${CMAKE_PROJECT_NAME}::
+      NAMESPACE ${PROJECT_NAME}::
       DESTINATION ${config_install_location}
     )
 
@@ -712,7 +736,7 @@ function(install_modules)
     CODE "string(REPLACE \";\" \"\\n\" MY_CMAKE_INSTALL_MANIFEST_CONTENT \"\$\{CMAKE_INSTALL_MANIFEST_FILES\}\")\n\
   file(WRITE ${CMAKE_BINARY_DIR}/manifest.txt \"\$\{MY_CMAKE_INSTALL_MANIFEST_CONTENT\}\")"
   )
-  install(FILES "${CMAKE_BINARY_DIR}/manifest.txt" DESTINATION share/${CMAKE_PROJECT_NAME})
+  install(FILES "${CMAKE_BINARY_DIR}/manifest.txt" DESTINATION share/${PROJECT_NAME})
 
 endfunction()
 
@@ -850,14 +874,16 @@ if(NOT CMAKE_CROSSCOMPILING)
     set(DOC_OUTPUT_PATH ${CMAKE_BINARY_DIR}/docs/)
     file(MAKE_DIRECTORY ${DOC_OUTPUT_PATH})
 
-    add_custom_target(
-      docs
-      COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doxyfile
-      WORKING_DIRECTORY ${DOC_OUTPUT_PATH}
-      SOURCES ""
-      COMMENT "Generating API documentation"
-      VERBATIM
-    )
+    if(NOT BUILD_AS_SUBPROJECT)
+      add_custom_target(
+        docs
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doxyfile
+        WORKING_DIRECTORY ${DOC_OUTPUT_PATH}
+        SOURCES ""
+        COMMENT "Generating API documentation"
+        VERBATIM
+      )
+    endif()
 
     # install(DIRECTORY ${DOC_OUTPUT_PATH} DESTINATION ${CMAKE_INSTALL_DOCDIR})
     message(STATUS "Documentation ('make docs') path: ${DOC_OUTPUT_PATH}")
