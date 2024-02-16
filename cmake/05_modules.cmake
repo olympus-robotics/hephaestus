@@ -874,16 +874,18 @@ if(NOT CMAKE_CROSSCOMPILING)
     set(DOC_OUTPUT_PATH ${CMAKE_BINARY_DIR}/docs/)
     file(MAKE_DIRECTORY ${DOC_OUTPUT_PATH})
 
-    if(NOT BUILD_AS_SUBPROJECT)
-      add_custom_target(
-        docs
-        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doxyfile
-        WORKING_DIRECTORY ${DOC_OUTPUT_PATH}
-        SOURCES ""
-        COMMENT "Generating API documentation"
-        VERBATIM
-      )
+    set(DOCS_TARGET docs)
+    if(BUILD_AS_SUBPROJECT)
+      set(DOCS_TARGET "${PROJECT_NAME}_${DOCS_TARGET}")
     endif()
+    add_custom_target(
+      ${DOCS_TARGET}
+      COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doxyfile
+      WORKING_DIRECTORY ${DOC_OUTPUT_PATH}
+      SOURCES ""
+      COMMENT "Generating API documentation"
+      VERBATIM
+    )
 
     # install(DIRECTORY ${DOC_OUTPUT_PATH} DESTINATION ${CMAKE_INSTALL_DOCDIR})
     message(STATUS "Documentation ('make docs') path: ${DOC_OUTPUT_PATH}")
