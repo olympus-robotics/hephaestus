@@ -11,6 +11,11 @@
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
+namespace {
+[[nodiscard]] constexpr auto getTypeServiceTopic(const std::string& topic) -> std::string {
+  return std::format("type_info/{}", topic);
+}
+}  // namespace
 
 Publisher::Publisher(SessionPtr session, Config config, MatchCallback&& match_cb)
   : config_(std::move(config)), session_(std::move(session)), match_cb_(std ::move(match_cb)) {
@@ -52,6 +57,12 @@ Publisher::Publisher(SessionPtr session, Config config, MatchCallback&& match_cb
     auto callback = cb.take();
     subscriers_listener_ = zcu_publisher_matching_listener_callback(publisher_->loan(), z_move(callback));
   }
+
+  auto type_info_callback = [type_info = config_.type_info](const auto& request) {
+    (void)request;
+    return toJson(type_info);
+  };
+  type_service_ = std::make_unique<Service>(session_, getTypeServiceTopic(config_.topic), type_info_callback);
 }
 
 Publisher::~Publisher() {

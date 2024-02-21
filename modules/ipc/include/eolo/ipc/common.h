@@ -11,9 +11,16 @@ namespace eolo::ipc {
 
 enum class Mode : uint8_t { PEER = 0, CLIENT, ROUTER };
 enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
+struct TypeInfo {
+  std::string name;
+  std::string schema;
+};
+[[nodiscard]] auto toJson(const TypeInfo& info) -> std::string;
+[[nodiscard]] auto fromJson(const std::string& info) -> TypeInfo;
 
 struct Config {
   std::string topic;
+  TypeInfo type_info;
   bool enable_shared_memory = false;  //! NOTE: With shared-memory enabled, the publisher still uses the
                                       //! network transport layer to notify subscribers of the shared-memory
                                       //! segment to read. Therefore, for very small messages, shared -

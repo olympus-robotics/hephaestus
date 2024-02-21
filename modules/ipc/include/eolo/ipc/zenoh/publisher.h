@@ -10,6 +10,7 @@
 #include <zenohc.hxx>
 
 #include "eolo/ipc/common.h"
+#include "eolo/ipc/zenoh/service.h"
 #include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/utils.h"
 
@@ -42,6 +43,8 @@ private:
 
   SessionPtr session_;
   std::unique_ptr<zenohc::Publisher> publisher_;
+
+  std::unique_ptr<Service> type_service_;
 
   zc_owned_liveliness_token_t liveliness_token_{};
   ze_owned_publication_cache_t pub_cache_{};
