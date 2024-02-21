@@ -1,11 +1,12 @@
 declare_module(
   NAME examples
   DEPENDS_ON_MODULES base ipc serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS Eigen3 fmt Protobuf
+  DEPENDS_ON_EXTERNAL_PROJECTS Eigen3 fmt mcap Protobuf
   EXCLUDE_FROM_ALL
 )
 
 find_package(Eigen3 REQUIRED)
+find_package(mcap REQUIRED)
 find_package(fmt REQUIRED)
 
 add_subdirectory(proto)
