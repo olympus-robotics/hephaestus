@@ -15,6 +15,7 @@
 #include "eolo/ipc/publisher.h"
 #include "eolo/ipc/zenoh/publisher.h"
 #include "eolo/ipc/zenoh/session.h"
+#include "eolo/serdes/serdes.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -25,7 +26,8 @@ auto main(int argc, const char* argv[]) -> int {
     auto config = parseArgs(args);
     auto session = eolo::ipc::zenoh::createSession(config);
 
-    eolo::ipc::zenoh::Publisher publisher{ session, config, [](const auto& status) {
+    auto type_info = eolo::serdes::getSerializedTypeInfo<eolo::examples::types::Pose>();
+    eolo::ipc::zenoh::Publisher publisher{ session, config, type_info, [](const auto& status) {
                                             if (status.matching) {
                                               fmt::println("Subscriber match");
                                             } else {
@@ -39,6 +41,8 @@ auto main(int argc, const char* argv[]) -> int {
     while (true) {
       eolo::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ 1, 2, 3 };
+      pose.orientation =
+          Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 
       fmt::println("Publishing Data ('{} : {})", config.topic, pose);
       auto res = eolo::ipc::publish(publisher, pose);

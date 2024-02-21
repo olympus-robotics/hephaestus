@@ -38,4 +38,13 @@ auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   }
 }
 
+template <class T>
+auto getSerializedTypeInfo() -> TypeInfo {
+  if constexpr (ProtobufSerializable<T>) {
+    return protobuf::getTypeInfo<T>();
+  } else {
+    static_assert(false, "no serialization supported");
+  }
+}
+
 }  // namespace eolo::serdes

@@ -3,3 +3,5 @@
 //=================================================================================================
 
 #include "eolo/serdes/serdes.h"
+
+namespace eolo::serdes {}  // namespace eolo::serdes

@@ -17,6 +17,13 @@ define_module_example(
         PUBLIC_LINK_LIBS eolo::ipc)
 
 define_module_example(
+        NAME zenoh_sub_any
+        SOURCES zenoh_sub_any.cpp zenoh_program_options.h
+        PUBLIC_INCLUDE_PATHS
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        PUBLIC_LINK_LIBS eolo::ipc)
+
+define_module_example(
         NAME mcap_writer
         SOURCES mcap_writer.cpp
         PUBLIC_INCLUDE_PATHS

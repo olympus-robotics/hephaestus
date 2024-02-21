@@ -13,6 +13,7 @@
 #include "eolo/ipc/zenoh/service.h"
 #include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/utils.h"
+#include "eolo/serdes/serdes.h"
 
 namespace eolo::ipc::zenoh {
 
@@ -25,7 +26,8 @@ class Publisher {
 public:
   using MatchCallback = std::function<void(MatchingStatus)>;
 
-  Publisher(SessionPtr session, Config config, MatchCallback&& match_cb = nullptr);
+  Publisher(SessionPtr session, Config config, serdes::TypeInfo type_info,
+            MatchCallback&& match_cb = nullptr);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -44,6 +46,7 @@ private:
   SessionPtr session_;
   std::unique_ptr<zenohc::Publisher> publisher_;
 
+  serdes::TypeInfo type_info_;
   std::unique_ptr<Service> type_service_;
 
   zc_owned_liveliness_token_t liveliness_token_{};

@@ -4,6 +4,7 @@
 
 #include "eolo/ipc/zenoh/publisher.h"
 
+#include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
@@ -11,14 +12,12 @@
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-namespace {
-[[nodiscard]] constexpr auto getTypeServiceTopic(const std::string& topic) -> std::string {
-  return std::format("type_info/{}", topic);
-}
-}  // namespace
 
-Publisher::Publisher(SessionPtr session, Config config, MatchCallback&& match_cb)
-  : config_(std::move(config)), session_(std::move(session)), match_cb_(std ::move(match_cb)) {
+Publisher::Publisher(SessionPtr session, Config config, serdes::TypeInfo type_info, MatchCallback&& match_cb)
+  : config_(std::move(config))
+  , session_(std::move(session))
+  , type_info_(std::move(type_info))
+  , match_cb_(std ::move(match_cb)) {
   // Enable publishing of a liveliness token.
   liveliness_token_ =
       zc_liveliness_declare_token(session_->loan(), z_keyexpr(config_.topic.c_str()), nullptr);
@@ -58,11 +57,13 @@ Publisher::Publisher(SessionPtr session, Config config, MatchCallback&& match_cb
     subscriers_listener_ = zcu_publisher_matching_listener_callback(publisher_->loan(), z_move(callback));
   }
 
-  auto type_info_callback = [type_info = config_.type_info](const auto& request) {
+  auto type_info_json = toJson(this->type_info_);
+  auto type_info_callback = [type_info_json](const auto& request) {
     (void)request;
-    return toJson(type_info);
+    return type_info_json;
   };
-  type_service_ = std::make_unique<Service>(session_, getTypeServiceTopic(config_.topic), type_info_callback);
+  auto type_service_topic = getTypeInfoServiceTopic(config_.topic);
+  type_service_ = std::make_unique<Service>(session_, type_service_topic, std::move(type_info_callback));
 }
 
 Publisher::~Publisher() {

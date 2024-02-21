@@ -4,7 +4,7 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES base cli
+  DEPENDS_ON_MODULES base cli serdes
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohcxx
 )
 
@@ -40,11 +40,13 @@ define_module_library(
   NAME ipc
   PUBLIC_LINK_LIBS
     absl::base
+    absl::status
     eolo::base
     eolo::cli
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3
+    eolo::serdes
     zenohc::lib
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
