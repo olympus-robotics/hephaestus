@@ -27,7 +27,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = eolo::ipc::zenoh::createSession(config);
 
     auto type_info = eolo::serdes::getSerializedTypeInfo<eolo::examples::types::Pose>();
-    eolo::ipc::zenoh::Publisher publisher{ session, config, type_info, [](const auto& status) {
+    eolo::ipc::zenoh::Publisher publisher{ session, type_info, [](const auto& status) {
                                             if (status.matching) {
                                               fmt::println("Subscriber match");
                                             } else {

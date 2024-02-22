@@ -10,7 +10,6 @@
 
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/session.h"
-#include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
 
@@ -21,7 +20,7 @@ auto getListOfPublishers(const Config& config) -> std::vector<PublisherInfo> {
 
   z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
   auto keyexpr = z_keyexpr(config.topic.c_str());
-  zc_liveliness_get(session->loan(), keyexpr, z_move(channel.send), nullptr);
+  zc_liveliness_get(session->zenoh_session.loan(), keyexpr, z_move(channel.send), nullptr);
   z_owned_reply_t reply = z_reply_null();
 
   std::vector<PublisherInfo> infos;

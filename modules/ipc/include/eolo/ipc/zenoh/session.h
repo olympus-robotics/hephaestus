@@ -12,11 +12,18 @@
 
 namespace eolo::ipc::zenoh {
 
-using SessionPtr = std::shared_ptr<zenohc::Session>;
+struct Session {
+  zenohc::Session zenoh_session;
+  Config config;
+};
+
+using SessionPtr = std::shared_ptr<Session>;
 
 [[nodiscard]] inline auto createSession(const Config& config) -> SessionPtr {
   auto zconfig = createZenohConfig(config);
+  auto session = std::make_shared<Session>(
+      ::eolo::ipc::zenoh::expect<zenohc::Session>(open(std::move(zconfig))), config);
 
-  return expectAsSharedPtr(open(std::move(zconfig)));
+  return session;
 }
 }  // namespace eolo::ipc::zenoh

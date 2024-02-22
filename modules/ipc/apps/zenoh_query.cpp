@@ -18,9 +18,9 @@ auto main(int argc, const char* argv[]) -> int {
     auto config = parseArgs(args);
 
     auto session = eolo::ipc::zenoh::createSession(config);
-    fmt::println("Opening session: {}", eolo::ipc::zenoh::toString(session->info_zid()));
+    fmt::println("Opening session: {}", eolo::ipc::zenoh::toString(session->zenoh_session.info_zid()));
 
-    auto results = eolo::ipc::zenoh::query(*session, config.topic, value);
+    auto results = eolo::ipc::zenoh::query(session->zenoh_session, config.topic, value);
 
     std::ranges::for_each(
         results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });

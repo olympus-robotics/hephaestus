@@ -19,6 +19,7 @@ Service::Service(SessionPtr session, std::string topic, Callback&& callback)
     query.reply(query.get_keyexpr(), result, options);
   };
 
-  queryable_ = expectAsUniquePtr(session_->declare_queryable(topic_, { std::move(query), []() {} }));
+  queryable_ =
+      expectAsUniquePtr(session_->zenoh_session.declare_queryable(topic_, { std::move(query), []() {} }));
 }
 }  // namespace eolo::ipc::zenoh
