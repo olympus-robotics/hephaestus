@@ -18,12 +18,4 @@ void fromProto(const proto::Pose& proto_pose, Pose& pose) {
   fromProto(proto_pose.orientation(), pose.orientation);
 }
 
-// void toProtobuf(serdes::protobuf::SerializerBuffer& buffer, const Pose& pose) {
-//   serdes::protobuf::toProtobuf<proto::Pose>(buffer, pose);
-// }
-
-// void fromProtobuf(serdes::protobuf::DeserializerBuffer& buffer, Pose& pose) {
-//   serdes::protobuf::fromProtobuf<proto::Pose>(buffer, pose);
-// }
-
 }  // namespace eolo::examples::types
