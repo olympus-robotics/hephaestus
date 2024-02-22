@@ -19,10 +19,10 @@ struct Session {
 
 using SessionPtr = std::shared_ptr<Session>;
 
-[[nodiscard]] inline auto createSession(const Config& config) -> SessionPtr {
+[[nodiscard]] inline auto createSession(Config&& config) -> SessionPtr {
   auto zconfig = createZenohConfig(config);
   auto session = std::make_shared<Session>(
-      ::eolo::ipc::zenoh::expect<zenohc::Session>(open(std::move(zconfig))), config);
+      ::eolo::ipc::zenoh::expect<zenohc::Session>(open(std::move(zconfig))), std::move(config));
 
   return session;
 }

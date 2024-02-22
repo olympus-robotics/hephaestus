@@ -15,12 +15,11 @@ auto main(int argc, const char* argv[]) -> int {
     desc.defineOption<std::string>("value", 'v', "the value to pass the query", "");
     const auto args = std::move(desc).parse(argc, argv);
     const auto value = args.getOption<std::string>("value");
-    auto config = parseArgs(args);
 
-    auto session = eolo::ipc::zenoh::createSession(config);
+    auto session = eolo::ipc::zenoh::createSession(parseArgs(args));
     fmt::println("Opening session: {}", eolo::ipc::zenoh::toString(session->zenoh_session.info_zid()));
 
-    auto results = eolo::ipc::zenoh::query(session->zenoh_session, config.topic, value);
+    auto results = eolo::ipc::zenoh::query(session->zenoh_session, session->config.topic, value);
 
     std::ranges::for_each(
         results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });

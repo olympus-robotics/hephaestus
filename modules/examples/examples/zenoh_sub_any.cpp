@@ -20,10 +20,9 @@
 #include "eolo/serdes/type_info.h"
 #include "zenoh_program_options.h"
 
-[[nodiscard]] auto getTopicTypeInfo(zenohc::Session& session,
-                                    const std::string& topic) -> eolo::serdes::TypeInfo {
-  auto service_topic = eolo::ipc::getTypeInfoServiceTopic(topic);
-  auto response = eolo::ipc::zenoh::query(session, service_topic, "");
+[[nodiscard]] auto getTopicTypeInfo(eolo::ipc::zenoh::Session& session) -> eolo::serdes::TypeInfo {
+  auto service_topic = eolo::ipc::getTypeInfoServiceTopic(session.config.topic);
+  auto response = eolo::ipc::zenoh::query(session.zenoh_session, service_topic, "");
   eolo::throwExceptionIf<eolo::InvalidDataException>(
       response.size() != 1,
       std::format("received {} responses for type from service {}", response.size(), service_topic));
@@ -44,7 +43,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = eolo::ipc::zenoh::createSession(config);
 
     // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
-    auto type_info = getTopicTypeInfo(*session, config.topic);
+    auto type_info = getTopicTypeInfo(*session);
     eolo::serdes::DynamicDeserializer dynamic_deserializer;
     dynamic_deserializer.registerSchema(type_info);
 
@@ -54,7 +53,7 @@ auto main(int argc, const char* argv[]) -> int {
       fmt::println("From: {}. Topic: {} - {}", metadata.sender_id, metadata.topic, msg_json);
     };
 
-    auto subscriber = eolo::ipc::zenoh::Subscriber{ std::move(session), std::move(config), std::move(cb) };
+    auto subscriber = eolo::ipc::zenoh::Subscriber{ std::move(session), std::move(cb) };
     (void)subscriber;
 
     while (true) {
