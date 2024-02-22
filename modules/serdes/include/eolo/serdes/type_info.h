@@ -16,6 +16,8 @@ struct TypeInfo {
   std::vector<std::byte> schema;
   Serialization serialization = Serialization::TEXT;
 
+  std::string original_type;  /// The type that is serialized by this.
+
   [[nodiscard]] auto toJson() const -> std::string;
   [[nodiscard]] static auto fromJson(const std::string& info) -> TypeInfo;
 };

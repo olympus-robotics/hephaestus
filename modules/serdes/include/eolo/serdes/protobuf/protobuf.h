@@ -10,6 +10,7 @@
 #include "eolo/serdes/protobuf/buffers.h"
 #include "eolo/serdes/protobuf/protobuf_internal.h"
 #include "eolo/serdes/type_info.h"
+#include "eolo/utils/utils.h"
 
 namespace eolo::serdes::protobuf {
 
@@ -45,10 +46,11 @@ auto getTypeInfo() -> TypeInfo {
 
   std::vector<std::byte> schema(file_descriptor.size());
   std::transform(file_descriptor.begin(), file_descriptor.end(), schema.begin(),
-                 [](char c) { return std::byte{ c }; });
+                 [](char c) { return static_cast<std::byte>(c); });
   return { .name = proto_descriptor->full_name(),
            .schema = schema,
-           .serialization = TypeInfo::Serialization::PROTOBUF };
+           .serialization = TypeInfo::Serialization::PROTOBUF,
+           .original_type = utils::getTypeName<T>() };
 }
 
 }  // namespace eolo::serdes::protobuf

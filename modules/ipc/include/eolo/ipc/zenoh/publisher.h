@@ -47,6 +47,12 @@ public:
   }
 
 private:
+  void enableCache();
+  void initAttachments();
+  void enableMatchingListener();
+  void createTypeInfoService();
+
+private:
   Config config_;
 
   SessionPtr session_;
