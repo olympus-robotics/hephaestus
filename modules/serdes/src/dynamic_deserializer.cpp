@@ -4,9 +4,6 @@
 
 #include "eolo/serdes/dynamic_deserializer.h"
 
-#include <cstddef>
-
-#include "eolo/base/exception.h"
 #include "eolo/serdes/type_info.h"
 
 namespace eolo::serdes {

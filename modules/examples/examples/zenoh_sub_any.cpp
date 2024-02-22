@@ -13,7 +13,6 @@
 #include <zenohc.hxx>
 
 #include "eolo/base/exception.h"
-#include "eolo/examples/types_protobuf/pose.h"
 #include "eolo/ipc/zenoh/query.h"
 #include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/subscriber.h"
@@ -56,7 +55,6 @@ auto main(int argc, const char* argv[]) -> int {
     };
 
     auto subscriber = eolo::ipc::zenoh::Subscriber{ std::move(session), std::move(config), std::move(cb) };
-
     (void)subscriber;
 
     while (true) {
