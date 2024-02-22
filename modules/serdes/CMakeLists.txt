@@ -15,14 +15,20 @@ find_package(Protobuf REQUIRED)
 set(SOURCES
     src/serdes.cpp
     src/type_info.cpp
+    src/dynamic_deserializer.cpp
+    src/protobuf/dynamic_deserializer.cpp
     src/protobuf/buffers.cpp
     src/protobuf/protobuf.cpp
+    src/protobuf/protobuf_internal.cpp
     README.md
+    include/eolo/serdes/dynamic_deserializer.h
     include/eolo/serdes/serdes.h
     include/eolo/serdes/type_info.h
     include/eolo/serdes/protobuf/concepts.h
     include/eolo/serdes/protobuf/buffers.h
+    include/eolo/serdes/protobuf/dynamic_deserializer.h
     include/eolo/serdes/protobuf/protobuf.h
+    include/eolo/serdes/protobuf/protobuf_internal.h
 )
 
 # library target

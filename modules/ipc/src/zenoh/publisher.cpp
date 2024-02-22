@@ -57,7 +57,7 @@ Publisher::Publisher(SessionPtr session, Config config, serdes::TypeInfo type_in
     subscriers_listener_ = zcu_publisher_matching_listener_callback(publisher_->loan(), z_move(callback));
   }
 
-  auto type_info_json = toJson(this->type_info_);
+  auto type_info_json = this->type_info_.toJson();
   auto type_info_callback = [type_info_json](const auto& request) {
     (void)request;
     return type_info_json;

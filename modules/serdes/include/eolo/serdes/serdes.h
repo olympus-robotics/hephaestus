@@ -4,17 +4,18 @@
 
 #pragma once
 
-#include "eolo/serdes/protobuf/buffers.h"
+#include <type_traits>
+
 #include "eolo/serdes/protobuf/protobuf.h"
 
 namespace eolo::serdes {
 
 template <class T>
-concept ProtobufSerializable =
-    requires(T proto, protobuf::SerializerBuffer ser_buffer, protobuf::DeserializerBuffer des_buffer) {
-      { toProtobuf(ser_buffer, proto) };
-      { fromProtobuf(des_buffer, proto) };
-    };
+concept ProtobufSerializable = requires(T data) {
+  { !std::is_same_v<typename protobuf::ProtoAssociation<T>::Type, void> };
+};
+
+// ProtoAssociation<T>::Type
 
 template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;

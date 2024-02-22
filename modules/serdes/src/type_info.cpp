@@ -11,17 +11,18 @@
 #include "eolo/base/exception.h"
 
 namespace eolo::serdes {
+// TODO(filippo): add tests.
 
-[[nodiscard]] auto toJson(const TypeInfo& info) -> std::string {
+auto TypeInfo::toJson() const -> std::string {
   nlohmann::json data;
-  data["name"] = info.name;
-  data["schema"] = info.schema;
-  data["serialization"] = magic_enum::enum_name(info.serialization);
+  data["name"] = name;
+  data["schema"] = schema;
+  data["serialization"] = magic_enum::enum_name(serialization);
   auto res = data.dump();
   return data.dump();
 }
 
-[[nodiscard]] auto fromJson(const std::string& info) -> TypeInfo {
+auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
   auto data = nlohmann::json::parse(info);
   auto serialization_str = data["serialization"].get<std::string>();
   auto serialization = magic_enum::enum_cast<TypeInfo::Serialization>(serialization_str);

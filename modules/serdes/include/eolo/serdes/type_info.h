@@ -15,9 +15,9 @@ struct TypeInfo {
   std::string name;
   std::vector<std::byte> schema;
   Serialization serialization = Serialization::TEXT;
-};
 
-[[nodiscard]] auto toJson(const TypeInfo& info) -> std::string;
-[[nodiscard]] auto fromJson(const std::string& info) -> TypeInfo;
+  [[nodiscard]] auto toJson() const -> std::string;
+  [[nodiscard]] static auto fromJson(const std::string& info) -> TypeInfo;
+};
 
 }  // namespace eolo::serdes
