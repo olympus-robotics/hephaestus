@@ -5,7 +5,6 @@
 #include "eolo/examples/types_protobuf/pose.h"
 
 #include "eolo/examples/types_protobuf/geometry.h"
-#include "eolo/serdes/protobuf/protobuf.h"
 
 namespace eolo::examples::types {
 void toProto(proto::Pose& proto_pose, const Pose& pose) {

@@ -177,7 +177,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # mcap
 set(MCAP_VERSION 1.3.0)
-set(MCAP_TAG ada3a729e06cd640c0e787905da8ab2d1c48293d)
+set(MCAP_TAG b0e82f0a7af74d20152a582926b8bd3b5f2756fe)
 add_cmake_dependency(
   NAME mcap
   VERSION ${MCAP_VERSION}
