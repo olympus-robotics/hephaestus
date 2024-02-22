@@ -1,0 +1,149 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 EOLO Contributors
+//=================================================================================================
+
+#include <future>
+#include <optional>
+
+#include <gtest/gtest.h>
+
+#include "eolo/containers/blocking_queue.h"
+#include "gmock/gmock.h"
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
+
+namespace eolo::containers::tests {
+
+TEST(BlockingQueue, Failures) {
+  EXPECT_THROW(BlockingQueue<int>{ 0 }, InvalidParameterException);
+}
+
+TEST(BlockingQueue, Push) {
+  constexpr int QUEUE_SIZE = 2;
+  BlockingQueue<int> block_queue(QUEUE_SIZE);
+  EXPECT_THAT(block_queue, IsEmpty());
+
+  auto success = block_queue.tryPush(1);
+  EXPECT_TRUE(success);
+  EXPECT_THAT(block_queue, SizeIs(1));
+
+  success = block_queue.tryPush(2);
+  EXPECT_TRUE(success);
+  EXPECT_THAT(block_queue, SizeIs(2));
+
+  success = block_queue.tryPush(3);
+  EXPECT_FALSE(success);
+  EXPECT_THAT(block_queue, SizeIs(2));
+
+  auto element_dropped = block_queue.forcePush(4);
+  EXPECT_TRUE(element_dropped);
+  EXPECT_EQ(*element_dropped, 1);
+  EXPECT_THAT(block_queue, SizeIs(2));
+
+  auto data = block_queue.tryPop();
+  EXPECT_EQ(data, 2);
+  EXPECT_THAT(block_queue, SizeIs(1));
+
+  data = block_queue.tryPop();
+  EXPECT_EQ(data, 4);
+  EXPECT_THAT(block_queue, IsEmpty());
+
+  data = block_queue.tryPop();
+  EXPECT_THAT(data, Eq(std::nullopt));
+  EXPECT_THAT(block_queue, IsEmpty());
+
+  auto future = std::async([&block_queue]() { return block_queue.waitAndPop(); });
+  EXPECT_TRUE(block_queue.tryPush(1));
+  EXPECT_EQ(future.get(), 1);
+
+  future = std::async([&block_queue]() { return block_queue.waitAndPop(); });
+  block_queue.stop();
+  future.wait();
+  EXPECT_TRUE(true);
+}
+
+TEST(BlockingQueue, WaitPush) {
+  constexpr int QUEUE_SIZE = 1;
+  BlockingQueue<std::string> block_queue(QUEUE_SIZE);
+  std::string message = "hello";
+  block_queue.waitAndPush(message);
+  auto future = std::async([&block_queue]() {
+    std::string message = "hello again";
+    block_queue.waitAndPush(std::move(message));
+  });
+  auto data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(*data, message);
+  future.get();
+  data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(*data, "hello again");
+}
+
+TEST(BlockingQueue, TryEmplace) {
+  constexpr int QUEUE_SIZE = 1;
+  BlockingQueue<std::tuple<int, std::string, double>> block_queue(QUEUE_SIZE);
+  EXPECT_TRUE(block_queue.tryEmplace(1, "hello", 1.0));
+  EXPECT_FALSE(block_queue.tryEmplace(0, "bye", 0.0));
+  auto data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(std::get<2>(*data), 1.0);
+}
+
+TEST(BlockingQueue, ForceEmplace) {
+  constexpr int QUEUE_SIZE = 1;
+  BlockingQueue<std::tuple<int, std::string, double>> block_queue(QUEUE_SIZE);
+
+  EXPECT_TRUE(block_queue.tryEmplace(1, "hello", 1.0));
+  auto element_dropped = block_queue.forceEmplace(0, "bye", 0.0);
+  EXPECT_TRUE(element_dropped);
+  auto expected_element_dropped = std::tuple{ 1, "hello", 1.0 };
+  EXPECT_EQ(*element_dropped, expected_element_dropped);
+  auto data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(std::get<2>(*data), 0.0);
+}
+
+TEST(BlockingQueue, WaitEmplace) {
+  constexpr int QUEUE_SIZE = 1;
+  BlockingQueue<std::tuple<int, std::string, double>> block_queue(QUEUE_SIZE);
+
+  block_queue.waitAndEmplace(1, "hello", 1.0);
+  auto future = std::async([&block_queue]() { return block_queue.waitAndEmplace(2, "hello", 1.0); });
+  auto data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(std::get<0>(*data), 1);
+  future.get();
+  data = block_queue.tryPop();
+  EXPECT_TRUE(data);
+  EXPECT_EQ(std::get<0>(*data), 2);
+}
+
+TEST(BlockingQueue, InfiniteQueue) {
+  BlockingQueue<double> block_queue{ {} };
+
+  static constexpr double A_NUMBER = 42;
+  auto element_dropped = block_queue.forceEmplace(A_NUMBER);
+  EXPECT_FALSE(element_dropped);
+  EXPECT_TRUE(block_queue.tryEmplace(A_NUMBER));
+  block_queue.waitAndEmplace(A_NUMBER);
+  element_dropped = block_queue.forcePush(A_NUMBER);
+  EXPECT_FALSE(element_dropped);
+  EXPECT_TRUE(block_queue.tryPush(A_NUMBER));
+  block_queue.waitAndPush(A_NUMBER);
+
+  EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
+  auto res = block_queue.tryPop();
+  EXPECT_TRUE(res);
+  EXPECT_EQ(*res, A_NUMBER);
+  EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
+  EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
+  EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
+  EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
+
+  res = block_queue.tryPop();
+  EXPECT_FALSE(res);
+}
+
+}  // namespace eolo::containers::tests
