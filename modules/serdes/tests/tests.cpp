@@ -27,6 +27,21 @@ public:
   MOCK_METHOD(bool, ParseFromArray, (const void*, int), (const));
 };
 
+struct Data {
+  int a = NUMBER;
+};
+
+}  // namespace eolo::serdes::tests
+
+namespace eolo::serdes::protobuf {
+template <>
+struct ProtoAssociation<eolo::serdes::tests::Data> {
+  using Type = eolo::serdes::tests::MockProtoMessage;
+};
+}  // namespace eolo::serdes::protobuf
+
+namespace eolo::serdes::tests {
+
 TEST(Protobuf, SerializerBuffers) {
   protobuf::SerializerBuffer buffer;
   MockProtoMessage proto;
@@ -55,19 +70,12 @@ TEST(Protobuf, DeserializerBuffers) {
   EXPECT_TRUE(res);
 }
 
-struct Data {
-  int a = NUMBER;
-};
-
-void toProtobuf(protobuf::SerializerBuffer& buffer, const Data& data) {
-  MockProtoMessage proto;
+void toProto(MockProtoMessage& proto, const Data& data) {
   EXPECT_CALL(proto, ByteSizeLong).Times(1).WillOnce(Return(data.a));
-
-  buffer.serialize(proto);
 }
 
-void fromProtobuf(const protobuf::DeserializerBuffer& buffer, Data& data) {
-  (void)buffer;
+void fromProto(const MockProtoMessage& proto, Data& data) {
+  (void)proto;
   data.a = NUMBER * 2;
 }
 
@@ -76,6 +84,7 @@ TEST(Serialization, Protobuf) {
   auto buffer = serialize(data);
   EXPECT_THAT(buffer, SizeIs(NUMBER));
 
+  DefaultValue<bool>::Set(true);
   deserialize(buffer, data);
   EXPECT_EQ(data.a, NUMBER * 2);
 }

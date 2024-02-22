@@ -7,6 +7,12 @@
 #include <concepts>
 
 namespace eolo::serdes::protobuf {
+
+template <class T>
+struct ProtoAssociation {
+  using Type = void;
+};
+
 template <typename T>
 concept ProtobufMessage = requires(T proto, void* out_data, const void* in_data, int size) {
   { proto.SerializeToArray(out_data, size) };

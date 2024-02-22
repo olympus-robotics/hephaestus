@@ -4,7 +4,7 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES base cli
+  DEPENDS_ON_MODULES base cli serdes
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohcxx
 )
 
@@ -21,6 +21,7 @@ set(SOURCES
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
     src/zenoh/query.cpp
+    src/zenoh/service.cpp
     src/zenoh/scout.cpp
     src/zenoh/subscriber.cpp
     src/zenoh/utils.cpp
@@ -29,6 +30,7 @@ set(SOURCES
     include/eolo/ipc/zenoh/utils.h
     include/eolo/ipc/zenoh/publisher.h
     include/eolo/ipc/zenoh/query.h
+    include/eolo/ipc/zenoh/service.h
     include/eolo/ipc/zenoh/scout.h
     include/eolo/ipc/zenoh/subscriber.h
 )
@@ -38,11 +40,13 @@ define_module_library(
   NAME ipc
   PUBLIC_LINK_LIBS
     absl::base
+    absl::status
     eolo::base
     eolo::cli
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3
+    eolo::serdes
     zenohc::lib
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}

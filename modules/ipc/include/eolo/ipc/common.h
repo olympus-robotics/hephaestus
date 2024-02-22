@@ -31,8 +31,13 @@ struct Config {
 struct MessageMetadata {
   // TODO: convert this to a uuid
   std::string sender_id;
+  std::string topic;
   std::chrono::nanoseconds timestamp{};
   std::size_t sequence_id{};
 };
+
+[[nodiscard]] constexpr auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
+  return std::format("type_info/{}", topic);
+}
 
 }  // namespace eolo::ipc

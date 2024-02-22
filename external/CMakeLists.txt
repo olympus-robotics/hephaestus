@@ -173,3 +173,15 @@ add_cmake_dependency(
   GIT_TAG ${RANGE-V3_VERSION}
   CMAKE_ARGS ${RANGE-V3_CMAKE_ARGS}
 )
+
+# --------------------------------------------------------------------------------------------------
+# mcap
+set(MCAP_VERSION 1.3.0)
+set(MCAP_TAG b0e82f0a7af74d20152a582926b8bd3b5f2756fe)
+add_cmake_dependency(
+  NAME mcap
+  VERSION ${MCAP_VERSION}
+  GIT_REPOSITORY "https://github.com/filippobrizzi/mcap.git"
+  GIT_TAG ${MCAP_TAG}
+  SOURCE_SUBDIR cpp
+)

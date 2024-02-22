@@ -5,24 +5,36 @@
 declare_module(
   NAME serdes
   DEPENDS_ON_MODULES base
-  DEPENDS_ON_EXTERNAL_PROJECTS ""
+  DEPENDS_ON_EXTERNAL_PROJECTS magic_enum Protobuf
 )
+
+find_package(magic_enum REQUIRED)
+find_package(Protobuf REQUIRED)
 
 # library sources
 set(SOURCES
     src/serdes.cpp
+    src/type_info.cpp
+    src/dynamic_deserializer.cpp
+    src/protobuf/dynamic_deserializer.cpp
     src/protobuf/buffers.cpp
     src/protobuf/protobuf.cpp
+    src/protobuf/protobuf_internal.cpp
     README.md
+    include/eolo/serdes/dynamic_deserializer.h
+    include/eolo/serdes/serdes.h
+    include/eolo/serdes/type_info.h
     include/eolo/serdes/protobuf/concepts.h
     include/eolo/serdes/protobuf/buffers.h
+    include/eolo/serdes/protobuf/dynamic_deserializer.h
     include/eolo/serdes/protobuf/protobuf.h
+    include/eolo/serdes/protobuf/protobuf_internal.h
 )
 
 # library target
 define_module_library(
   NAME serdes
-  PUBLIC_LINK_LIBS eolo::base
+  PUBLIC_LINK_LIBS eolo::base magic_enum::magic_enum protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

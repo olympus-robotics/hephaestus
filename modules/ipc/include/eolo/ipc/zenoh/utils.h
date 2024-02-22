@@ -15,12 +15,13 @@
 #include "eolo/ipc/common.h"
 namespace eolo::ipc::zenoh {
 
+/// We use single char key to reduce the overhead of the attachment.
 [[nodiscard]] static constexpr auto messageCounterKey() -> const char* {
-  return "msg_counter";
+  return "0";
 }
 
 [[nodiscard]] static constexpr auto sessionIdKey() -> const char* {
-  return "session_id";
+  return "1";
 }
 
 inline auto toString(const zenohc::Id& id) -> std::string {

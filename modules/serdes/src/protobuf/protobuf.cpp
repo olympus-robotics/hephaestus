@@ -4,4 +4,4 @@
 
 #include "eolo/serdes/protobuf/protobuf.h"
 
-namespace eolo::protobuf {}
+namespace eolo::serdes::protobuf {}  // namespace eolo::serdes::protobuf

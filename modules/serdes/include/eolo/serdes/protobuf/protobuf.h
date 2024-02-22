@@ -5,47 +5,52 @@
 #pragma once
 
 #include <eolo/base/exception.h>
+#include <range/v3/range/conversion.hpp>
 
 #include "eolo/serdes/protobuf/buffers.h"
+#include "eolo/serdes/protobuf/protobuf_internal.h"
+#include "eolo/serdes/type_info.h"
+#include "eolo/utils/utils.h"
 
 namespace eolo::serdes::protobuf {
+
 template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
 
 template <class T>
 auto deserialize(std::span<const std::byte> buffer, T& data) -> void;
 
+/// Create the type info for the serialized type associated with `T`.
+template <class T>
+[[nodiscard]] auto getTypeInfo() -> TypeInfo;
+
+// --- Implementation ---
 template <class T>
 auto serialize(const T& data) -> std::vector<std::byte> {
   SerializerBuffer buffer{};
-  toProtobuf(buffer, data);
+  internal::toProtobuf(buffer, data);
   return std::move(buffer).exctractSerializedData();
 }
 
 template <class T>
 auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   DeserializerBuffer des_buffer{ buffer };
-  fromProtobuf(des_buffer, data);
+  internal::fromProtobuf(des_buffer, data);
 }
 
-template <class Proto, class T>
-void toProtobuf(serdes::protobuf::SerializerBuffer& buffer, const T& data)
-  requires ProtobufConvertible<Proto, T>
-{
-  Proto proto;
-  toProto(proto, data);
-  buffer.serialize(proto);
-}
+template <class T>
+auto getTypeInfo() -> TypeInfo {
+  using Proto = ProtoAssociation<T>::Type;
+  auto proto_descriptor = Proto::descriptor();
+  auto file_descriptor = internal::buildFileDescriptorSet(proto_descriptor).SerializeAsString();
 
-template <class Proto, class T>
-void fromProtobuf(serdes::protobuf::DeserializerBuffer& buffer, T& data)
-  requires ProtobufConvertible<Proto, T>
-{
-  Proto proto;
-  auto res = buffer.deserialize(proto);
-  throwExceptionIf<InvalidDataException>(!res, "Failed to parse proto::pose from incoming buffer");
-
-  fromProto(proto, data);
+  std::vector<std::byte> schema(file_descriptor.size());
+  std::transform(file_descriptor.begin(), file_descriptor.end(), schema.begin(),
+                 [](char c) { return static_cast<std::byte>(c); });
+  return { .name = proto_descriptor->full_name(),
+           .schema = schema,
+           .serialization = TypeInfo::Serialization::PROTOBUF,
+           .original_type = utils::getTypeName<T>() };
 }
 
 }  // namespace eolo::serdes::protobuf

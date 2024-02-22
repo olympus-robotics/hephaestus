@@ -37,6 +37,7 @@ void Subscriber::callback(const zenohc::Sample& sample) {
   }
 
   metadata.timestamp = toChrono(sample.get_timestamp());
+  metadata.topic = sample.get_keyexpr().as_string_view();
 
   auto buffer = toByteSpan(sample.get_payload());
   callback_(metadata, buffer);
