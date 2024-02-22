@@ -51,7 +51,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
   return topics_type_db_[topic];
 }
 
-// ------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 auto createZenohTopicDatabase(std::shared_ptr<zenoh::Session> session) -> std::unique_ptr<ITopicDatabase> {
   return std::make_unique<ZenohTopicDatabase>(std::move(session));
 }

@@ -5,7 +5,11 @@
 #include "eolo/bag/zenoh_recorder.h"
 
 #include <future>
+#include <mutex>
 #include <utility>
+
+#include <absl/base/thread_annotations.h>
+#include <fmt/core.h>
 
 #include "eolo/bag/writer.h"
 #include "eolo/containers/blocking_queue.h"
@@ -38,6 +42,9 @@ private:
   std::unique_ptr<ipc::ITopicDatabase> topic_db_;
 
   std::future<void> job_;
+
+  std::unordered_map<std::string, std::once_flag> topic_flags_ ABSL_GUARDED_BY(flags_mutex_);
+  std::mutex flags_mutex_;
 };
 
 ZenohRecorder::Impl::Impl(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params)
@@ -69,6 +76,15 @@ void ZenohRecorder::Impl::createSubscriber() {
   // Here we leverage the fact that zenoh allows to subscribe to multiple topic via a single subscriber by
   // using wildcards.
   auto cb = [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> buffer) {
+    {
+      // TODO: find a better way to do this.
+      std::unique_lock<std::mutex> lock(flags_mutex_);  // This is need to protect topic_flags_.
+      std::call_once(topic_flags_[metadata.topic], [&metadata]() {
+        // TODO: replace with log.
+        fmt::println("Recording topic: {}", metadata.topic);
+      });
+    }
+
     auto topic_info = topic_db_->getTypeInfo(metadata.topic);
     // TODO: copying the schema everytime is not efficient at all and should be optimized.
     // Ideally we want to call register schema once for the first topic and then avoid copying the schema.
@@ -90,11 +106,13 @@ void ZenohRecorder::Impl::startRecordingBlocking() {
   }
 }
 
-// ---------------------
+// ----------------------------------------------------------------------------------------------------------
 
 ZenohRecorder::ZenohRecorder(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params)
-  : impl_(std::make_unique<ZenohRecorder::Impl>(std::move(writer), std::move(params))) {
+  : impl_(std::make_unique<Impl>(std::move(writer), std::move(params))) {
 }
+
+ZenohRecorder::~ZenohRecorder() = default;
 
 auto ZenohRecorder::start() -> std::future<void> {
   return impl_->start();
@@ -102,6 +120,10 @@ auto ZenohRecorder::start() -> std::future<void> {
 
 auto ZenohRecorder::stop() -> std::future<void> {
   return impl_->stop();
+}
+
+auto ZenohRecorder::create(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params) -> ZenohRecorder {
+  return { std::move(writer), std::move(params) };
 }
 
 }  // namespace eolo::bag

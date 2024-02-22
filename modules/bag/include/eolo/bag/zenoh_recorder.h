@@ -23,11 +23,17 @@ struct ZenohRecorderParams {
 
 class ZenohRecorder {
 public:
-  ZenohRecorder(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params);
+  ~ZenohRecorder();
+
+  [[nodiscard]] static auto create(std::unique_ptr<IBagWriter> writer,
+                                   ZenohRecorderParams params) -> ZenohRecorder;
 
   [[nodiscard]] auto start() -> std::future<void>;
 
   [[nodiscard]] auto stop() -> std::future<void>;
+
+private:
+  ZenohRecorder(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params);
 
 private:
   class Impl;
