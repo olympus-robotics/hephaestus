@@ -37,7 +37,8 @@ public:
   void registerSchema(const serdes::TypeInfo& type_info) override;
 
 private:
-  [[nodiscard]] auto registerChannel(const std::string& topic, const std::string& type) -> mcap::ChannelId;
+  [[nodiscard]] auto registerChannel(const std::string& topic,
+                                     const serdes::TypeInfo& type_info) -> mcap::ChannelId;
 
   mcap::McapWriter writer_;
 
@@ -66,13 +67,11 @@ void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
 }
 
 void McapWriter::writeRecord(const RecordMetadata& metadata, std::span<const std::byte> data) {
-  (void)data;
-
   mcap::ChannelId channel_id = 0;
   if (channel_db_.contains(metadata.metadata.topic)) {
     channel_id = channel_db_[metadata.metadata.topic].id;
   } else {
-    channel_id = registerChannel(metadata.metadata.topic, metadata.type_info.name);
+    channel_id = registerChannel(metadata.metadata.topic, metadata.type_info);
   }
 
   mcap::Message msg;
@@ -88,12 +87,13 @@ void McapWriter::writeRecord(const RecordMetadata& metadata, std::span<const std
       !write_res.ok(), std::format("failed to write msg from topic {} to bag", metadata.metadata.topic));
 }
 
-auto McapWriter::registerChannel(const std::string& topic, const std::string& type) -> mcap::ChannelId {
-  throwExceptionIf<InvalidDataException>(
-      schema_db_.contains(type),
-      std::format("cannot write record from topic {}, type {} as I don't have an associated schema", topic,
-                  type));
-  const auto& schema = schema_db_[type];
+auto McapWriter::registerChannel(const std::string& topic,
+                                 const serdes::TypeInfo& type_info) -> mcap::ChannelId {
+  if (!schema_db_.contains(type_info.name)) {
+    registerSchema(type_info);
+  }
+
+  const auto& schema = schema_db_[type_info.name];
   mcap::Channel channel(topic, schema.encoding, schema.id);
   writer_.addChannel(channel);
   channel_db_[topic] = channel;
