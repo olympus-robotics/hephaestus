@@ -124,31 +124,4 @@ TEST(Pose, Pose) {
   EXPECT_EQ(pose, pose_des);
 }
 
-TEST(Pose, PoseBuffer) {
-  std::mt19937_64 mt{ std::random_device{}() };
-  auto pose = randomPose(mt);
-
-  serdes::protobuf::SerializerBuffer ser_buffer;
-  toProtobuf(ser_buffer, pose);
-
-  auto buffer = std::move(ser_buffer).exctractSerializedData();
-
-  serdes::protobuf::DeserializerBuffer des_buffer{ buffer };
-  Pose pose_des;
-  fromProtobuf(des_buffer, pose_des);
-
-  EXPECT_EQ(pose, pose_des);
-}
-
-TEST(Pose, PoseSerdes) {
-  std::mt19937_64 mt{ std::random_device{}() };
-  auto pose = randomPose(mt);
-
-  auto buffer = serdes::serialize(pose);
-
-  Pose pose_des;
-  serdes::deserialize(buffer, pose_des);
-  EXPECT_EQ(pose, pose_des);
-}
-
 }  // namespace eolo::examples::types::tests

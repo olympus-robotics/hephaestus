@@ -8,6 +8,7 @@
 
 #include "eolo/base/exception.h"
 #include "eolo/serdes/protobuf/buffers.h"
+#include "eolo/utils/utils.h"
 
 namespace eolo::serdes::protobuf::internal {
 
@@ -24,7 +25,8 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto res = buffer.deserialize(proto);
-  throwExceptionIf<InvalidDataException>(!res, "Failed to parse proto::pose from incoming buffer");
+  throwExceptionIf<InvalidDataException>(
+      !res, std::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
 
   fromProto(proto, data);
 }
