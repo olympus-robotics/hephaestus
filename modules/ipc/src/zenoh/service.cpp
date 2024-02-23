@@ -16,7 +16,7 @@ Service::Service(SessionPtr session, std::string topic, Callback&& callback)
 
     zenohc::QueryReplyOptions options;
     options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });
-    query.reply(query.get_keyexpr(), result, options);
+    query.reply(this->topic_, result, options);
   };
 
   queryable_ =

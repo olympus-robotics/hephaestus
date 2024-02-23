@@ -36,7 +36,7 @@ auto main(int argc, const char* argv[]) -> int {
       fmt::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
                    std::chrono::system_clock::time_point{
                        std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
-                   topic, metadata.sender_id, metadata.sequence_id, *pose);
+                   metadata.topic, metadata.sender_id, metadata.sequence_id, *pose);
     };
     auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::examples::types::Pose>(
         session, std::move(cb));

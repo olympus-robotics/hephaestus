@@ -30,7 +30,7 @@ namespace {
 
 class McapWriter final : public IBagWriter {
 public:
-  explicit McapWriter(const McapWriterParams& params);
+  explicit McapWriter(McapWriterParams params);
   ~McapWriter() = default;
 
   void writeRecord(const RecordMetadata& metadata, std::span<const std::byte> data) override;
@@ -40,18 +40,20 @@ private:
   [[nodiscard]] auto registerChannel(const std::string& topic,
                                      const serdes::TypeInfo& type_info) -> mcap::ChannelId;
 
+private:
+  McapWriterParams params_;
   mcap::McapWriter writer_;
 
   std::unordered_map<std::string, mcap::Schema> schema_db_;    /// Key is the type name.
   std::unordered_map<std::string, mcap::Channel> channel_db_;  /// Key is the topic.
 };
 
-McapWriter::McapWriter(const McapWriterParams& params) {
+McapWriter::McapWriter(McapWriterParams params) : params_(std::move(params)) {
   auto options = mcap::McapWriterOptions("");
-  const auto status = writer_.open(params.output_file.string(), options);
+  const auto status = writer_.open(params_.output_file.string(), options);
   throwExceptionIf<InvalidParameterException>(
       !status.ok(), std::format("failed to create Mcap writer for file {}, with error: {}",
-                                params.output_file.string(), status.message));
+                                params_.output_file.string(), status.message));
 }
 
 void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
@@ -102,8 +104,8 @@ auto McapWriter::registerChannel(const std::string& topic,
 
 }  // namespace
 
-auto createMcapWriter() -> std::unique_ptr<IBagWriter> {
-  return {};
+auto createMcapWriter(McapWriterParams params) -> std::unique_ptr<IBagWriter> {
+  return std::make_unique<McapWriter>(std::move(params));
 }
 
 }  // namespace eolo::bag

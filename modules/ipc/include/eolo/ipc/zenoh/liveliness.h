@@ -12,7 +12,7 @@ struct PublisherInfo {
   std::string topic;
 };
 
-[[nodiscard]] auto getListOfPublishers(const Config& config) -> std::vector<PublisherInfo>;
+[[nodiscard]] auto getListOfPublishers(Config&& config) -> std::vector<PublisherInfo>;
 
 void printPublisherInfo(const PublisherInfo& info);
 

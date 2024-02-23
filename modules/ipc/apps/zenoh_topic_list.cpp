@@ -20,7 +20,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto config = parseArgs(args);
 
     fmt::println("Opening session...");
-    const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(config);
+    const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(std::move(config));
     std::ranges::for_each(publishers_info,
                           [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); });
 

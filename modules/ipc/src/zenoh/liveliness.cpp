@@ -13,10 +13,10 @@
 
 namespace eolo::ipc::zenoh {
 
-auto getListOfPublishers(const Config& config) -> std::vector<PublisherInfo> {
+auto getListOfPublishers(Config&& config) -> std::vector<PublisherInfo> {
   static constexpr auto FIFO_BOUND = 100;
 
-  auto session = createSession(config);
+  auto session = createSession(std::move(config));
 
   z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
   auto keyexpr = z_keyexpr(config.topic.c_str());

@@ -18,7 +18,7 @@
 
 namespace eolo::bag {
 
-using BagRecord = std::pair<RecordMetadata, std::vector<std::byte>>;
+using BagRecord = std::pair<ipc::MessageMetadata, std::vector<std::byte>>;
 
 class ZenohRecorder::Impl {
 public:
@@ -85,12 +85,7 @@ void ZenohRecorder::Impl::createSubscriber() {
       });
     }
 
-    auto topic_info = topic_db_->getTypeInfo(metadata.topic);
-    // TODO: copying the schema everytime is not efficient at all and should be optimized.
-    // Ideally we want to call register schema once for the first topic and then avoid copying the schema.
-    // To do this we need a DB to remember what we already registered.
-    messages_.forceEmplace(RecordMetadata{ metadata, std::move(topic_info) },
-                           std::vector<std::byte>{ buffer.begin(), buffer.end() });
+    messages_.forceEmplace(metadata, std::vector<std::byte>{ buffer.begin(), buffer.end() });
   };
 
   subscriber_ = std::make_unique<ipc::zenoh::Subscriber>(params_.session, std::move(cb));
@@ -102,7 +97,12 @@ void ZenohRecorder::Impl::startRecordingBlocking() {
     if (!message) {
       break;
     }
-    bag_writer_->writeRecord(message->first, message->second);
+
+    const auto& metadata = message->first;
+    auto type_info = topic_db_->getTypeInfo(metadata.topic);
+    // TODO: copying the schema everytime is not efficient at all and should be optimized.
+    fmt::println("Write msg to bag for topic: {}", metadata.topic);
+    bag_writer_->writeRecord({ std::move(message->first), std::move(type_info) }, message->second);
   }
 }
 

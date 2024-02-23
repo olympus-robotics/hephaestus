@@ -29,6 +29,7 @@ public:
 struct McapWriterParams {
   std::filesystem::path output_file;
 };
+
 [[nodiscard]] auto createMcapWriter(McapWriterParams params) -> std::unique_ptr<IBagWriter>;
 
 }  // namespace eolo::bag

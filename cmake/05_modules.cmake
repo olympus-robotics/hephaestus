@@ -473,6 +473,7 @@ macro(define_module_proto_library)
     message(FATAL_ERROR "Protobuf library directory must contain buf.yaml file")
   endif()
 
+  find_package(absl REQUIRED)
   find_package(Protobuf REQUIRED)
 
   set(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
@@ -505,7 +506,7 @@ macro(define_module_proto_library)
 
   target_link_libraries(
     ${PROTOBUF_LIBRARY}
-    PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS} protobuf::libprotobuf
+    PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS} absl::base absl::log_severity absl::raw_logging_internal absl::log_internal_check_op protobuf::libprotobuf
     PRIVATE ${TARGET_ARG_PRIVATE_LINK_LIBS}
   )
 

@@ -40,7 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Opening session...");
     fmt::println("Declaring Subscriber on '{}'", config.topic);
 
-    auto session = eolo::ipc::zenoh::createSession(config);
+    auto session = eolo::ipc::zenoh::createSession(std::move(config));
 
     // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
     auto type_info = getTopicTypeInfo(*session);

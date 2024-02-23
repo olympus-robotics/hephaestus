@@ -5,9 +5,10 @@
 declare_module(
   NAME bag
   DEPENDS_ON_MODULES containers ipc
-  DEPENDS_ON_EXTERNAL_PROJECTS mcap
+  DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
 )
 
+find_package(absl REQUIRED)
 find_package(mcap REQUIRED)
 
 # library sources
@@ -16,7 +17,7 @@ set(SOURCES src/zenoh_recorder.cpp src/writer.cpp README.md include/eolo/bag/zen
 # library target
 define_module_library(
   NAME bag
-  PUBLIC_LINK_LIBS eolo::containers  eolo::ipc mcap
+  PUBLIC_LINK_LIBS absl::base eolo::containers  eolo::ipc mcap
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
