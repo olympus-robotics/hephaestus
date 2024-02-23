@@ -19,7 +19,7 @@ auto getListOfPublishers(Config&& config) -> std::vector<PublisherInfo> {
   auto session = createSession(std::move(config));
 
   z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
-  auto keyexpr = z_keyexpr(config.topic.c_str());
+  auto keyexpr = z_keyexpr(session->config.topic.c_str());
   zc_liveliness_get(session->zenoh_session.loan(), keyexpr, z_move(channel.send), nullptr);
   z_owned_reply_t reply = z_reply_null();
 

@@ -76,18 +76,11 @@ void ZenohRecorder::Impl::createSubscriber() {
   // Here we leverage the fact that zenoh allows to subscribe to multiple topic via a single subscriber by
   // using wildcards.
   auto cb = [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> buffer) {
-    {
-      // TODO: find a better way to do this.
-      std::unique_lock<std::mutex> lock(flags_mutex_);  // This is need to protect topic_flags_.
-      std::call_once(topic_flags_[metadata.topic], [&metadata]() {
-        // TODO: replace with log.
-        fmt::println("Recording topic: {}", metadata.topic);
-      });
-    }
-
     messages_.forceEmplace(metadata, std::vector<std::byte>{ buffer.begin(), buffer.end() });
   };
 
+  // TODO: use topic filter and add subscribers accordingly.
+  params_.session->config.topic = params_.topics_filter_params.prefix;
   subscriber_ = std::make_unique<ipc::zenoh::Subscriber>(params_.session, std::move(cb));
 }
 
@@ -99,10 +92,20 @@ void ZenohRecorder::Impl::startRecordingBlocking() {
     }
 
     const auto& metadata = message->first;
-    auto type_info = topic_db_->getTypeInfo(metadata.topic);
-    // TODO: copying the schema everytime is not efficient at all and should be optimized.
+    {
+      // TODO: find a better way to do this as we don't want to block execution in this loop.
+      std::unique_lock<std::mutex> lock(flags_mutex_);  // This is need to protect topic_flags_.
+      std::call_once(topic_flags_[metadata.topic], [this, &metadata]() {
+        // TODO: replace with log.
+        fmt::println("Recording topic: {}", metadata.topic);
+        auto type_info = topic_db_->getTypeInfo(metadata.topic);
+        bag_writer_->registerSchema(type_info);
+        bag_writer_->registerChannel(metadata.topic, type_info);
+      });
+    }
+
     fmt::println("Write msg to bag for topic: {}", metadata.topic);
-    bag_writer_->writeRecord({ std::move(message->first), std::move(type_info) }, message->second);
+    bag_writer_->writeRecord(metadata, message->second);
   }
 }
 

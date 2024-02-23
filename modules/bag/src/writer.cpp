@@ -10,6 +10,7 @@
 #include <magic_enum.hpp>
 
 #include "eolo/base/exception.h"
+#include "eolo/ipc/common.h"
 #include "eolo/serdes/type_info.h"
 
 // TODO: add support for serialization
@@ -33,13 +34,11 @@ public:
   explicit McapWriter(McapWriterParams params);
   ~McapWriter() = default;
 
-  void writeRecord(const RecordMetadata& metadata, std::span<const std::byte> data) override;
+  void writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) override;
   void registerSchema(const serdes::TypeInfo& type_info) override;
+  void registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) override;
 
 private:
-  [[nodiscard]] auto registerChannel(const std::string& topic,
-                                     const serdes::TypeInfo& type_info) -> mcap::ChannelId;
-
 private:
   McapWriterParams params_;
   mcap::McapWriter writer_;
@@ -68,38 +67,33 @@ void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
   schema_db_[type_info.name] = schema;
 }
 
-void McapWriter::writeRecord(const RecordMetadata& metadata, std::span<const std::byte> data) {
-  mcap::ChannelId channel_id = 0;
-  if (channel_db_.contains(metadata.metadata.topic)) {
-    channel_id = channel_db_[metadata.metadata.topic].id;
-  } else {
-    channel_id = registerChannel(metadata.metadata.topic, metadata.type_info);
-  }
+void McapWriter::writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) {
+  throwExceptionIf<InvalidDataException>(!channel_db_.contains(metadata.topic),
+                                         std::format("no channel registered for topic {}", metadata.topic));
+
+  auto channel_id = channel_db_[metadata.topic].id;
 
   mcap::Message msg;
   msg.channelId = channel_id;
-  msg.sequence = static_cast<uint32_t>(metadata.metadata.sequence_id);
-  msg.publishTime = static_cast<mcap::Timestamp>(metadata.metadata.timestamp.count());
-  msg.logTime = static_cast<mcap::Timestamp>(metadata.metadata.timestamp.count());
+  msg.sequence = static_cast<uint32_t>(metadata.sequence_id);
+  msg.publishTime = static_cast<mcap::Timestamp>(metadata.timestamp.count());
+  msg.logTime = static_cast<mcap::Timestamp>(metadata.timestamp.count());
   msg.data = data.data();
   msg.dataSize = data.size();
 
   const auto write_res = writer_.write(msg);
   throwExceptionIf<InvalidOperationException>(
-      !write_res.ok(), std::format("failed to write msg from topic {} to bag", metadata.metadata.topic));
+      !write_res.ok(), std::format("failed to write msg from topic {} to bag", metadata.topic));
 }
 
-auto McapWriter::registerChannel(const std::string& topic,
-                                 const serdes::TypeInfo& type_info) -> mcap::ChannelId {
-  if (!schema_db_.contains(type_info.name)) {
-    registerSchema(type_info);
-  }
+void McapWriter::registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) {
+  throwExceptionIf<InvalidDataException>(!schema_db_.contains(type_info.name),
+                                         std::format("no schema registered for type {}", type_info.name));
 
   const auto& schema = schema_db_[type_info.name];
   mcap::Channel channel(topic, schema.encoding, schema.id);
   writer_.addChannel(channel);
   channel_db_[topic] = channel;
-  return channel.id;
 }
 
 }  // namespace

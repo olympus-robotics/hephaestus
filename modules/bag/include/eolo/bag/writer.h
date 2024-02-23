@@ -13,17 +13,13 @@
 
 namespace eolo::bag {
 
-struct RecordMetadata {
-  ipc::MessageMetadata metadata;
-  serdes::TypeInfo type_info;
-};
-
 class IBagWriter {
 public:
   virtual ~IBagWriter() = default;
 
-  virtual void writeRecord(const RecordMetadata& metadata, std::span<const std::byte> data) = 0;
   virtual void registerSchema(const serdes::TypeInfo& type_info) = 0;
+  virtual void registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) = 0;
+  virtual void writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) = 0;
 };
 
 struct McapWriterParams {
