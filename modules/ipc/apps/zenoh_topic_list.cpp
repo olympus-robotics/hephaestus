@@ -29,7 +29,7 @@ void getListOfPublisher(const eolo::ipc::zenoh::Session& session) {
 void getLiveListOfPublisher(eolo::ipc::zenoh::SessionPtr session) {
   auto callback = [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); };
 
-  eolo::ipc::zenoh::DiscoverPublishers discover{ std::move(session), std::move(callback) };
+  eolo::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(callback) };
 
   stop_flag.wait(false);
 }

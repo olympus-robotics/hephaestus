@@ -56,8 +56,28 @@ void printPublisherInfo(const PublisherInfo& info) {
   fmt::println("{}", text);
 }
 
-DiscoverPublishers::DiscoverPublishers(SessionPtr session, Callback&& callback)
+PublisherDiscovery::PublisherDiscovery(SessionPtr session, Callback&& callback)
   : session_(std::move(session)), callback_(std::move(callback)) {
+  // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
+  // This means that we won't get the list of publisher that are already running.
+  // To do that we need to query the list of publisher beforehand.
+  auto publishers_info = getListOfPublishers(*session_);
+
+  // Here we create the subscriber for the liveliness tokens.
+  // NOTE: If a publisher start publishing between the previous call and the time needed to start the
+  // subscriber, we will loose that publisher.
+  // This could be avoided by querying for the list of publisher after we start the subscriber and keeping a
+  // track of what we already advertised so not to call the user callback twice on the same event.
+  // TODO: implement the optimization described above.
+  createLivelinessSubscriber();
+
+  // We call the user callback after we setup the subscriber to minimize the chances of missing publishers.
+  for (const auto& info : publishers_info) {
+    this->callback_(info);
+  }
+}
+
+void PublisherDiscovery::createLivelinessSubscriber() {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) {
     PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                         .status = toPublisherStatus(sample.get_kind()) };

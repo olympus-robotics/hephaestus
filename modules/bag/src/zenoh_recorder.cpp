@@ -15,6 +15,7 @@
 #include "eolo/containers/blocking_queue.h"
 #include "eolo/ipc/topic_database.h"
 #include "eolo/ipc/zenoh/subscriber.h"
+#include "zenoh_recorder_subscribers_manager.h"
 
 namespace eolo::bag {
 
@@ -58,7 +59,9 @@ auto ZenohRecorder::Impl::start() -> std::future<void> {
   createSubscriber();
   job_ = std::async(std::launch::async, [this]() { startRecordingBlocking(); });
 
-  return std::async(std::launch::async, [] {});
+  std::promise<void> promise;
+  promise.set_value();
+  return promise.get_future();
 }
 
 auto ZenohRecorder::Impl::stop() -> std::future<void> {

@@ -17,6 +17,7 @@ set(SOURCES
     src/topic_filter.cpp
     src/writer.cpp
     src/zenoh_recorder_subscribers_manager.h
+    src/zenoh_recorder_subscribers_manager.cpp
     README.md
     include/eolo/bag/topic_filter.h
     include/eolo/bag/zenoh_recorder.h

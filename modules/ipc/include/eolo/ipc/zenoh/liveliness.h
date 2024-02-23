@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/session.h"
 
 namespace eolo::ipc::zenoh {
@@ -19,10 +18,17 @@ struct PublisherInfo {
 
 void printPublisherInfo(const PublisherInfo& info);
 
-class DiscoverPublishers {
+/// Class to detect all the publisher present in the network.
+/// The publisher need to advertise their presence with the liveliness token.
+class PublisherDiscovery {
 public:
   using Callback = std::function<void(const PublisherInfo& info)>;
-  explicit DiscoverPublishers(SessionPtr session, Callback&& callback);
+  /// The callback needs to be thread safe as they maybe called in parallel for different publishers
+  /// discovered.
+  explicit PublisherDiscovery(SessionPtr session, Callback&& callback);
+
+private:
+  void createLivelinessSubscriber();
 
 private:
   SessionPtr session_;
