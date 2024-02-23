@@ -506,7 +506,8 @@ macro(define_module_proto_library)
 
   target_link_libraries(
     ${PROTOBUF_LIBRARY}
-    PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS} absl::base absl::log_severity absl::raw_logging_internal absl::log_internal_check_op protobuf::libprotobuf
+    PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS} absl::base absl::log_severity absl::raw_logging_internal
+           absl::log_internal_check_op protobuf::libprotobuf
     PRIVATE ${TARGET_ARG_PRIVATE_LINK_LIBS}
   )
 

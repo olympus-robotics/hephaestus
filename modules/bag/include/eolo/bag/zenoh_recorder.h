@@ -6,18 +6,11 @@
 
 #include <future>
 
+#include "eolo/bag/topic_filter.h"
 #include "eolo/bag/writer.h"
 #include "eolo/ipc/zenoh/session.h"
 
 namespace eolo::bag {
-
-struct TopicsFilterParams {
-  std::vector<std::string> include_topics_only;  //!< If specified only the topics in this list are
-                                                 //!< going to be recorded. This rule has precedence
-                                                 //!< over all the other
-  std::string prefix;                            //!< Record all the topic sharing the prefix
-  std::vector<std::string> exclude_topics;       //!< List of topics to exclude
-};
 
 struct ZenohRecorderParams {
   // Something to fileter topic to record.
@@ -26,7 +19,7 @@ struct ZenohRecorderParams {
 
   ipc::zenoh::SessionPtr session;
 
-  TopicsFilterParams topics_filter_params;
+  TopicFilterParams topics_filter_params;
 };
 
 class ZenohRecorder {

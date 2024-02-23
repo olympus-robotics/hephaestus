@@ -35,9 +35,9 @@ auto main(int argc, const char* argv[]) -> int {
                                              eolo::bag::ZenohRecorderParams::DEFAULT_MESSAGES_QUEUE_SIZE,
                                          .session = session,
                                          .topics_filter_params =
-                                             eolo::bag::TopicsFilterParams{ .include_topics_only = {},
-                                                                            .prefix = session->config.topic,
-                                                                            .exclude_topics = {} } };
+                                             eolo::bag::TopicFilterParams{ .include_topics_only = {},
+                                                                           .prefix = session->config.topic,
+                                                                           .exclude_topics = {} } };
 
   auto zeno_recorder = eolo::bag::ZenohRecorder::create(std::move(bag_writer), std::move(params));
   zeno_recorder.start().wait();
