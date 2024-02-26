@@ -38,7 +38,6 @@ private:
   ZenohRecorderParams params_;
 
   containers::BlockingQueue<BagRecord> messages_;
-  std::unique_ptr<ipc::zenoh::Subscriber> subscriber_;
 
   std::unique_ptr<ipc::ITopicDatabase> topic_db_;
 
@@ -69,7 +68,7 @@ auto ZenohRecorder::Impl::stop() -> std::future<void> {
   // Wait for all the data to be exhausted.
   return std::async(std::launch::async, [this] {
     // TODO: check that killing the subscriber actually stop receiving msgs.
-    subscriber_ = nullptr;
+    // subscriber_ = nullptr;
     messages_.stop();
     job_.wait();
   });
@@ -78,13 +77,13 @@ auto ZenohRecorder::Impl::stop() -> std::future<void> {
 void ZenohRecorder::Impl::createSubscriber() {
   // Here we leverage the fact that zenoh allows to subscribe to multiple topic via a single subscriber by
   // using wildcards.
-  auto cb = [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> buffer) {
-    messages_.forceEmplace(metadata, std::vector<std::byte>{ buffer.begin(), buffer.end() });
-  };
+  // auto cb = [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> buffer) {
+  //   messages_.forceEmplace(metadata, std::vector<std::byte>{ buffer.begin(), buffer.end() });
+  // };
 
   // TODO: use topic filter and add subscribers accordingly.
   params_.session->config.topic = params_.topics_filter_params.prefix;
-  subscriber_ = std::make_unique<ipc::zenoh::Subscriber>(params_.session, std::move(cb));
+  // subscriber_ = std::make_unique<ipc::zenoh::Subscriber>(params_.session, std::move(cb));
 }
 
 void ZenohRecorder::Impl::startRecordingBlocking() {
