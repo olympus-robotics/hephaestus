@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 
 #include "eolo/bag/topic_filter.h"
 #include "eolo/bag/writer.h"
@@ -42,16 +43,18 @@ private:
   ipc::zenoh::SessionPtr session_;
   SubscriberCallback callback_;
   TopicFilter topic_filter_;
-  IBagWriter* const bag_writer_;
+  IBagWriter* const bag_writer_ ABSL_GUARDED_BY(writer_mutex_);
+  absl::Mutex writer_mutex_;
 
+  ipc::zenoh::SessionPtr topic_info_query_session_;  // Session used to query topic service.
+  std::unique_ptr<ipc::ITopicDatabase> topic_db_;
+
+  ipc::zenoh::SessionPtr publisher_discovery_session_;
   std::unique_ptr<ipc::zenoh::PublisherDiscovery> discover_publishers_;
 
-  mutable std::mutex subscribers_mutex_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::Subscriber>>
       subscribers_ ABSL_GUARDED_BY(subscribers_mutex_);
-
-  ipc::zenoh::SessionPtr query_session_;  // Session used to query topic service.
-  std::unique_ptr<ipc::ITopicDatabase> topic_db_;
+  mutable absl::Mutex subscribers_mutex_;
 };
 
 // auto stop() -> std::future<void>;

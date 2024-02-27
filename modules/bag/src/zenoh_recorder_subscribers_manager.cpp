@@ -6,11 +6,14 @@
 
 #include <memory>
 
+#include <absl/synchronization/mutex.h>
+
 #include "eolo/base/exception.h"
 #include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/liveliness.h"
 #include "eolo/ipc/zenoh/query.h"
 #include "eolo/ipc/zenoh/session.h"
+#include "eolo/ipc/zenoh/subscriber.h"
 #include "gmock/gmock.h"
 
 namespace eolo::bag {
@@ -22,8 +25,9 @@ ZenohRecorderSubscribersManager::ZenohRecorderSubscribersManager(ipc::zenoh::Ses
   , callback_(std::move(callback))
   , topic_filter_(std::move(topic_filter))
   , bag_writer_(&bag_writer)
-  , query_session_(ipc::zenoh::createSession({}))
-  , topic_db_(ipc::createZenohTopicDatabase(query_session_)) {  // We create it with default settings.
+  , topic_info_query_session_(ipc::zenoh::createSession({}))
+  , topic_db_(ipc::createZenohTopicDatabase(topic_info_query_session_)) {  // We create it with default
+                                                                           // settings.
 }
 
 auto ZenohRecorderSubscribersManager::start() -> std::future<void> {
@@ -55,25 +59,31 @@ void ZenohRecorderSubscribersManager::onPublisher(const ipc::zenoh::PublisherInf
 }
 
 void ZenohRecorderSubscribersManager::onPublisherAdded(const ipc::zenoh::PublisherInfo& info) {
-  // This callback happen on the same session as the subscribers so it's sequential.
-  // Is this going to be a problem?!?!
+  auto type_info = topic_db_->getTypeInfo(info.topic);
+  {
+    absl::MutexLock lock{ &writer_mutex_ };
+    bag_writer_->registerSchema(type_info);
+    bag_writer_->registerChannel(info.topic, type_info);
+  }
 
-  auto service_topic = ipc::getTypeInfoServiceTopic(info.topic);
-  auto topic_type_info = ipc::zenoh::query(query_session_->zenoh_session, service_topic, "");
-  throwExceptionIf<InvalidDataException>(
-      topic_type_info.size() != 1, std::format("expect 1 response from service on topic: {}, received {}",
-                                               info.topic, topic_type_info.size()));
-  const auto& topic = topic_type_info.front().topic;
-  auto type_info = topic_db_->getTypeInfo(topic);
-  bag_writer_->registerSchema(type_info);
-  bag_writer_->registerChannel(topic, type_info);
+  {
+    absl::MutexLock lock{ &subscribers_mutex_ };
+    throwExceptionIf<InvalidOperationException>(
+        subscribers_.contains(info.topic),
+        std::format("adding subscriber for topic: {}, but one already exists", info.topic));
 
-  // writer register schema and channel
-  // Create new subscriber
+    auto cb = [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> data) {
+      // TODO: Hate that we need a mutex here, but the discovery needs to happen in a different session,
+      // otherwise when looking for the type we may block.
+      absl::MutexLock lock{ &writer_mutex_ };
+      bag_writer_->writeRecord(metadata, data);
+    };
+    subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(session_, std::move(cb));
+  }
 }
 
 void ZenohRecorderSubscribersManager::onPublisherDropped(const ipc::zenoh::PublisherInfo& info) {
-  std::unique_lock<std::mutex> lock{ subscribers_mutex_ };
+  absl::MutexLock lock{ &subscribers_mutex_ };
   throwExceptionIf<InvalidOperationException>(
       !subscribers_.contains(info.topic),
       std::format("trying to stop recording from dropped topic {}, but subscriber doesn't exist",
