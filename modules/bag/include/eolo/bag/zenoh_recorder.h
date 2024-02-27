@@ -13,12 +13,8 @@
 namespace eolo::bag {
 
 struct ZenohRecorderParams {
-  // Something to fileter topic to record.
-  static constexpr size_t DEFAULT_MESSAGES_QUEUE_SIZE = 1e2;
-  size_t messages_queue_size{ DEFAULT_MESSAGES_QUEUE_SIZE };
-
   ipc::zenoh::SessionPtr session;
-
+  std::unique_ptr<IBagWriter> bag_writer;
   TopicFilterParams topics_filter_params;
 };
 
@@ -26,15 +22,14 @@ class ZenohRecorder {
 public:
   ~ZenohRecorder();
 
-  [[nodiscard]] static auto create(std::unique_ptr<IBagWriter> writer,
-                                   ZenohRecorderParams params) -> ZenohRecorder;
+  [[nodiscard]] static auto create(ZenohRecorderParams params) -> ZenohRecorder;
 
   [[nodiscard]] auto start() -> std::future<void>;
 
   [[nodiscard]] auto stop() -> std::future<void>;
 
 private:
-  ZenohRecorder(std::unique_ptr<IBagWriter> writer, ZenohRecorderParams params);
+  explicit ZenohRecorder(ZenohRecorderParams params);
 
 private:
   class Impl;
