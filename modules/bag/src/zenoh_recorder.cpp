@@ -23,6 +23,17 @@ namespace eolo::bag {
 
 using BagRecord = std::pair<ipc::MessageMetadata, std::vector<std::byte>>;
 
+/// This class does the following:
+/// - constantly checks for new topics
+/// - for each new topic, check if it passes the recording filter
+/// - query topic service to get topic type and register the new schema and channel with the bag writer
+/// - create a new subscriber to it
+/// This class uses 3 different sessions:
+/// - to subscribe to the topics
+/// - for the topic service query
+/// - for the topic discovery
+/// the reason we need three sessions is to allow parallel execution of callback as for one session all
+/// callbacks happen sequentially.
 class ZenohRecorder::Impl {
 public:
   explicit Impl(ZenohRecorderParams params);
