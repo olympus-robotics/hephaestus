@@ -63,8 +63,26 @@ TEST(TopicFilter, Prefix) {
     auto filter = TopicFilter::create().prefix({ "hostname" });
     runTestCases(filter, test_cases);
   }
-  if (false) {
+  {
     TopicFilterParams params{ .include_topics_only = {}, .prefix = "hostname", .exclude_topics = {} };
+    auto filter = TopicFilter::create(params);
+    runTestCases(filter, test_cases);
+  }
+}
+
+TEST(TopicFilter, PrefixWildcard) {
+  TestCasesT test_cases{
+    { "hostname/image", true },
+    { "hostname/video", true },
+    { "topic", true },
+  };
+
+  {
+    auto filter = TopicFilter::create().prefix({ "**" });
+    runTestCases(filter, test_cases);
+  }
+  {
+    TopicFilterParams params{ .include_topics_only = {}, .prefix = "**", .exclude_topics = {} };
     auto filter = TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
@@ -80,7 +98,7 @@ TEST(TopicFilter, PrefixAndExcluding) {
     auto filter = TopicFilter::create().prefix({ "hostname" }).anyExcluding({ "hostname/video" });
     runTestCases(filter, test_cases);
   }
-  if (false) {
+  {
     TopicFilterParams params{ .include_topics_only = {},
                               .prefix = "hostname",
                               .exclude_topics = { "hostname/video" } };

@@ -39,7 +39,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
   }  // Unlock while querying the service.
 
   auto query_topic = getTypeInfoServiceTopic(topic);
-  fmt::println("Query service: {}", query_topic);
+
   const auto response = zenoh::query(session_->zenoh_session, query_topic, "");
   throwExceptionIf<eolo::InvalidDataException>(
       response.size() != 1,

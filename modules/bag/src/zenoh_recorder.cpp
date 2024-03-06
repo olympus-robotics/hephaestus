@@ -9,6 +9,7 @@
 #include <utility>
 
 #include <absl/base/thread_annotations.h>
+#include <absl/log/log.h>
 #include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 
@@ -57,9 +58,9 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
   : bag_writer_(std::move(params.bag_writer))
   , topic_filter_(TopicFilter::create(params.topics_filter_params))
   , session_(std::move(params.session))
-  , topic_info_query_session_(ipc::zenoh::createSession({}))
+  , topic_info_query_session_(ipc::zenoh::createSession({ .topic = "**" }))
   , topic_db_(ipc::createZenohTopicDatabase(topic_info_query_session_))
-  , publisher_discovery_session_(ipc::zenoh::createSession({})) {
+  , publisher_discovery_session_(ipc::zenoh::createSession({ .topic = "**" })) {
 }
 
 auto ZenohRecorder::Impl::start() -> std::future<void> {
@@ -109,12 +110,16 @@ void ZenohRecorder::Impl::onPublisherAdded(const ipc::zenoh::PublisherInfo& info
     absl::MutexLock lock{ &writer_mutex_ };
     bag_writer_->writeRecord(metadata, data);
   };
+
   {
     absl::MutexLock lock{ &subscribers_mutex_ };
     throwExceptionIf<InvalidOperationException>(
         subscribers_.contains(info.topic),
         std::format("adding subscriber for topic: {}, but one already exists", info.topic));
 
+    LOG(INFO) << std::format("Create subscriber for topic: {}", info.topic);
+    // TODO: I don't like this at all I need to decouple the topic from the session
+    session_->config.topic = info.topic;
     subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(session_, std::move(cb));
   }
 }
@@ -127,6 +132,7 @@ void ZenohRecorder::Impl::onPublisherDropped(const ipc::zenoh::PublisherInfo& in
                   info.topic));
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
+  LOG(INFO) << std::format("Drop subscriber for topic: {}", info.topic);
 }
 
 // ----------------------------------------------------------------------------------------------------------

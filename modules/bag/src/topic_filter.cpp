@@ -40,8 +40,13 @@ auto TopicFilter::onlyIncluding(const std::vector<std::string>& topic_names) && 
 }
 
 auto TopicFilter::prefix(std::string prefix) && -> TopicFilter {
-  match_cb_.emplace_back(
-      [prefix = std::move(prefix)](const auto& topic) { return topic.starts_with(prefix); });
+  match_cb_.emplace_back([prefix = std::move(prefix)](const auto& topic) {
+    if (prefix == "**") {
+      return true;
+    }
+
+    return topic.starts_with(prefix);
+  });
   return std::move(*this);
 }
 
