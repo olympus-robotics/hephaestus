@@ -19,7 +19,7 @@ auto TypeInfo::toJson() const -> std::string {
   data["schema"] = schema;
   data["serialization"] = magic_enum::enum_name(serialization);
   data["original_type"] = original_type;
-  auto res = data.dump();
+
   return data.dump();
 }
 
@@ -32,7 +32,7 @@ auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
       std::format("failed to convert {} to Serialization enum", serialization_str));
   return { .name = data["name"],
            .schema = data["schema"],
-           .serialization = serialization.value(),
+           .serialization = serialization.value(),  // NOLINT(bugprone-unchecked-optional-access)
            .original_type = data["original_type"] };
 }
 }  // namespace eolo::serdes

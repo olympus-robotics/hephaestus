@@ -67,14 +67,14 @@ add_cmake_dependency(
   NAME zenohc
   DEPENDS zenohd
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-  GIT_TAG "de57b3fed5b1c3f4a83a2c0c0cb6a642c09a6210"
+  GIT_TAG "06b2dba5a381e340d2539233cef1c4716f40c556"
 )
 
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS zenohc
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
-  GIT_TAG "5d97863fb091a64936a73a7ca0adc22b478b447e"
+  GIT_TAG "72cedc9400434829e50835b5c6c7c3dbb82843ca"
   SOURCE_SUBDIR install
 )
 
@@ -177,7 +177,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # mcap
 set(MCAP_VERSION 1.3.0)
-set(MCAP_TAG b0e82f0a7af74d20152a582926b8bd3b5f2756fe)
+set(MCAP_TAG d2f6efa2272657e9753408d4dff2293f5aa56996)
 add_cmake_dependency(
   NAME mcap
   VERSION ${MCAP_VERSION}
