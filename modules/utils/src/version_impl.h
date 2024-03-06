@@ -15,10 +15,10 @@ namespace eolo::utils
 
 static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
-static constexpr std::uint16_t VERSION_PATCH = 0;
+static constexpr std::uint16_t VERSION_PATCH = 1;
 
 static constexpr std::string_view REPO_BRANCH = "bag_recorder";
-static constexpr std::string_view BUILD_PROFILE = "Debug";
-static constexpr std::string_view REPO_HASH = "f8df0c5";
+static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
+static constexpr std::string_view REPO_HASH = "d1cf90a";
 
 } // namespace eolo::utils

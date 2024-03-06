@@ -32,7 +32,7 @@ namespace {
 class McapWriter final : public IBagWriter {
 public:
   explicit McapWriter(McapWriterParams params);
-  ~McapWriter() = default;
+  ~McapWriter() override = default;
 
   void writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) override;
   void registerSchema(const serdes::TypeInfo& type_info) override;

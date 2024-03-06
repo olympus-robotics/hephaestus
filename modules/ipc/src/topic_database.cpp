@@ -16,7 +16,7 @@ namespace eolo::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {
 public:
   explicit ZenohTopicDatabase(zenoh::SessionPtr session);
-  ~ZenohTopicDatabase() = default;
+  ~ZenohTopicDatabase() override = default;
 
   [[nodiscard]] auto getTypeInfo(const std::string& topic) -> const serdes::TypeInfo& override;
 

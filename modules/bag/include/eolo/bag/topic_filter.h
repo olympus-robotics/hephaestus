@@ -27,7 +27,7 @@ public:
   /// no other filter can be specified after.
   [[nodiscard]] auto onlyIncluding(const std::vector<std::string>& topic_names) && -> TopicFilter;
 
-  [[nodiscard]] auto prefix(const std::string& prefix) && -> TopicFilter;
+  [[nodiscard]] auto prefix(std::string prefix) && -> TopicFilter;
 
   [[nodiscard]] auto anyExcluding(const std::vector<std::string>& topic_names) && -> TopicFilter;
 
