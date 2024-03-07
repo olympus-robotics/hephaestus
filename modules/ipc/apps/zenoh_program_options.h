@@ -8,7 +8,7 @@
 
 [[nodiscard]] inline auto
 getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescription {
-  static constexpr auto DEFAULT_KEY = "eolo/ipc/example/zenoh/put";
+  static constexpr auto DEFAULT_KEY = "**";
 
   auto desc = eolo::cli::ProgramDescription(description);
   desc.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)

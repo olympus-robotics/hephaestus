@@ -18,7 +18,7 @@ class Subscriber {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
-  Subscriber(SessionPtr session, Config config, DataCallback&& callback);
+  Subscriber(SessionPtr session, DataCallback&& callback);
   ~Subscriber();
   Subscriber(const Subscriber&) = delete;
   Subscriber(Subscriber&&) = default;
@@ -29,7 +29,6 @@ private:
   void callback(const zenohc::Sample& sample);
 
 private:
-  Config config_;
   SessionPtr session_;
 
   DataCallback callback_;

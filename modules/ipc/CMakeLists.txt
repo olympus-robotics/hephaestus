@@ -18,6 +18,7 @@ find_package(zenohcxx REQUIRED)
 # library sources
 set(SOURCES
     src/common.cpp
+    src/topic_database.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
     src/zenoh/query.cpp
@@ -27,6 +28,7 @@ set(SOURCES
     src/zenoh/utils.cpp
     README.md
     include/eolo/ipc/common.h
+    include/eolo/ipc/topic_database.h
     include/eolo/ipc/zenoh/utils.h
     include/eolo/ipc/zenoh/publisher.h
     include/eolo/ipc/zenoh/query.h

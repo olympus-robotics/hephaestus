@@ -9,7 +9,6 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/service.h"
 #include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/utils.h"
@@ -32,8 +31,7 @@ class Publisher {
 public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
-  Publisher(SessionPtr session, Config config, serdes::TypeInfo type_info,
-            MatchCallback&& match_cb = nullptr);
+  Publisher(SessionPtr session, serdes::TypeInfo type_info, MatchCallback&& match_cb = nullptr);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -43,7 +41,7 @@ public:
   [[nodiscard]] auto publish(std::span<std::byte> data) -> bool;
 
   [[nodiscard]] auto id() const -> std::string {
-    return toString(session_->info_zid());
+    return toString(session_->zenoh_session.info_zid());
   }
 
 private:
@@ -53,8 +51,6 @@ private:
   void createTypeInfoService();
 
 private:
-  Config config_;
-
   SessionPtr session_;
   std::unique_ptr<zenohc::Publisher> publisher_;
 

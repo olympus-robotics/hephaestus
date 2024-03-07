@@ -24,10 +24,10 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
 
     auto config = parseArgs(args);
-    auto session = eolo::ipc::zenoh::createSession(config);
+    auto session = eolo::ipc::zenoh::createSession(std::move(config));
 
     auto type_info = eolo::serdes::getSerializedTypeInfo<eolo::examples::types::Pose>();
-    eolo::ipc::zenoh::Publisher publisher{ session, config, type_info, [](const auto& status) {
+    eolo::ipc::zenoh::Publisher publisher{ session, type_info, [](const auto& status) {
                                             if (status.matching) {
                                               fmt::println("Subscriber match");
                                             } else {
@@ -38,9 +38,10 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
+    double count = 0;
     while (true) {
       eolo::examples::types::Pose pose;
-      pose.position = Eigen::Vector3d{ 1, 2, 3 };
+      pose.position = Eigen::Vector3d{ 1, 2, count++ };
       pose.orientation =
           Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 

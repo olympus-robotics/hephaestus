@@ -9,29 +9,28 @@
 #include <zenohc.hxx>
 
 #include "eolo/base/exception.h"
+#include "eolo/ipc/zenoh/session.h"
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
 
-Publisher::Publisher(SessionPtr session, Config config, serdes::TypeInfo type_info, MatchCallback&& match_cb)
-  : config_(std::move(config))
-  , session_(std::move(session))
-  , type_info_(std::move(type_info))
-  , match_cb_(std ::move(match_cb)) {
+Publisher::Publisher(SessionPtr session, serdes::TypeInfo type_info, MatchCallback&& match_cb)
+  : session_(std::move(session)), type_info_(std::move(type_info)), match_cb_(std ::move(match_cb)) {
   // Enable publishing of a liveliness token.
-  liveliness_token_ =
-      zc_liveliness_declare_token(session_->loan(), z_keyexpr(config_.topic.c_str()), nullptr);
+  liveliness_token_ = zc_liveliness_declare_token(session_->zenoh_session.loan(),
+                                                  z_keyexpr(session_->config.topic.c_str()), nullptr);
   throwExceptionIf<FailedZenohOperation>(!z_check(liveliness_token_), "failed to create livelines token");
 
-  if (config_.cache_size > 0) {
+  if (session_->config.cache_size > 0) {
     enableCache();
   }
 
   zenohc::PublisherOptions pub_options;
-  if (config_.real_time) {
+  if (session_->config.real_time) {
     pub_options.set_priority(zenohc::Priority::Z_PRIORITY_REAL_TIME);
   }
-  publisher_ = expectAsUniquePtr(session_->declare_publisher(config_.topic, pub_options));
+  publisher_ =
+      expectAsUniquePtr(session_->zenoh_session.declare_publisher(session_->config.topic, pub_options));
 
   initAttachments();
 
@@ -55,16 +54,16 @@ auto Publisher::publish(std::span<std::byte> data) -> bool {
 
 void Publisher::enableCache() {
   auto pub_cache_opts = ze_publication_cache_options_default();
-  pub_cache_opts.history = config_.cache_size;
-  pub_cache_ =
-      ze_declare_publication_cache(session_->loan(), z_keyexpr(config_.topic.c_str()), &pub_cache_opts);
+  pub_cache_opts.history = session_->config.cache_size;
+  pub_cache_ = ze_declare_publication_cache(session_->zenoh_session.loan(),
+                                            z_keyexpr(session_->config.topic.c_str()), &pub_cache_opts);
   throwExceptionIf<FailedZenohOperation>(!z_check(pub_cache_), "failed to enable cache");
 }
 
 void Publisher::initAttachments() {
   put_options_.set_encoding(Z_ENCODING_PREFIX_APP_CUSTOM);
   attachment_[messageCounterKey()] = "0";
-  attachment_[sessionIdKey()] = toString(session_->info_zid());
+  attachment_[sessionIdKey()] = toString(session_->zenoh_session.info_zid());
   put_options_.set_attachment(attachment_);
 
   // TODO: add type info.
@@ -88,7 +87,7 @@ void Publisher::createTypeInfoService() {
     (void)request;
     return type_info_json;
   };
-  auto type_service_topic = getTypeInfoServiceTopic(config_.topic);
+  auto type_service_topic = getTypeInfoServiceTopic(session_->config.topic);
   type_service_ = std::make_unique<Service>(session_, type_service_topic, std::move(type_info_callback));
 }
 }  // namespace eolo::ipc::zenoh

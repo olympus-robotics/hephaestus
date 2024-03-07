@@ -1,13 +1,14 @@
 declare_module(
   NAME examples
-  DEPENDS_ON_MODULES base ipc serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS Eigen3 fmt mcap Protobuf
+  DEPENDS_ON_MODULES bag base ipc serdes
+  DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf
   EXCLUDE_FROM_ALL
 )
 
+find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(mcap REQUIRED)
 find_package(fmt REQUIRED)
+find_package(mcap REQUIRED)
 
 add_subdirectory(proto)
 
@@ -17,7 +18,7 @@ set(TYPES_SOURCES src/types/pose.cpp README.md include/eolo/examples/types/pose.
 # library target
 define_module_library(
   NAME examples_types
-  PUBLIC_LINK_LIBS Eigen3::Eigen fmt::fmt
+  PUBLIC_LINK_LIBS absl::base Eigen3::Eigen eolo::bag fmt::fmt mcap
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
