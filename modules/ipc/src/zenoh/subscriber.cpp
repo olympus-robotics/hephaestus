@@ -4,20 +4,21 @@
 
 #include "eolo/ipc/zenoh/subscriber.h"
 
+#include "eolo/ipc/common.h"
 #include "eolo/ipc/zenoh/utils.h"
 
 namespace eolo::ipc::zenoh {
-Subscriber::Subscriber(SessionPtr session, DataCallback&& callback)
-  : session_(std::move(session)), callback_(std::move(callback)) {
+Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback)
+  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
   if (session_->config.cache_size == 0) {
-    const auto& topic = session_->config.topic;
+    const auto& topic = topic_config_.name;
     subscriber_ = expectAsUniquePtr(session_->zenoh_session.declare_subscriber(topic, std::move(cb)));
   } else {
     const auto sub_opts = ze_querying_subscriber_options_default();
     auto c = cb.take();
     cache_subscriber_ = ze_declare_querying_subscriber(
-        session_->zenoh_session.loan(), z_keyexpr(session_->config.topic.c_str()), z_move(c), &sub_opts);
+        session_->zenoh_session.loan(), z_keyexpr(topic_config_.name.c_str()), z_move(c), &sub_opts);
     eolo::throwExceptionIf<eolo::FailedZenohOperation>(!z_check(cache_subscriber_),
                                                        "failed to create zenoh sub");
   }

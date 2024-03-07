@@ -20,16 +20,17 @@ auto signalHandler(int /*unused*/) -> void {
   stop_flag.notify_all();
 }
 
-void getListOfPublisher(const eolo::ipc::zenoh::Session& session) {
-  const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(session);
+void getListOfPublisher(const eolo::ipc::zenoh::Session& session, std::string_view topic) {
+  const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(session, topic);
   std::ranges::for_each(publishers_info,
                         [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); });
 }
 
-void getLiveListOfPublisher(eolo::ipc::zenoh::SessionPtr session) {
+void getLiveListOfPublisher(eolo::ipc::zenoh::SessionPtr session, eolo::ipc::TopicConfig topic_config) {
   auto callback = [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); };
 
-  eolo::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(callback) };
+  eolo::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
+                                                 std::move(callback) };
 
   stop_flag.wait(false);
 }
@@ -43,15 +44,15 @@ auto main(int argc, const char* argv[]) -> int {
     desc.defineFlag("live", 'l', "if set the app will keep running waiting for new publisher to advertise");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto config = parseArgs(args);
+    auto [session_config, topic_config] = parseArgs(args);
 
     fmt::println("Opening session...");
-    auto session = eolo::ipc::zenoh::createSession(std::move(config));
+    auto session = eolo::ipc::zenoh::createSession(std::move(session_config));
 
     if (!args.getOption<bool>("live")) {
-      getListOfPublisher(*session);
+      getListOfPublisher(*session, topic_config.name);
     } else {
-      getLiveListOfPublisher(session);
+      getLiveListOfPublisher(session, std::move(topic_config));
     }
 
     return EXIT_SUCCESS;

@@ -18,7 +18,7 @@ class Subscriber {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
-  Subscriber(SessionPtr session, DataCallback&& callback);
+  Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback);
   ~Subscriber();
   Subscriber(const Subscriber&) = delete;
   Subscriber(Subscriber&&) = default;
@@ -30,6 +30,7 @@ private:
 
 private:
   SessionPtr session_;
+  TopicConfig topic_config_;
 
   DataCallback callback_;
 

@@ -23,11 +23,11 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = getProgramDescription("Periodic publisher example");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto config = parseArgs(args);
-    auto session = eolo::ipc::zenoh::createSession(std::move(config));
+    auto [session_config, topic_config] = parseArgs(args);
+    auto session = eolo::ipc::zenoh::createSession(std::move(session_config));
 
     auto type_info = eolo::serdes::getSerializedTypeInfo<eolo::examples::types::Pose>();
-    eolo::ipc::zenoh::Publisher publisher{ session, type_info, [](const auto& status) {
+    eolo::ipc::zenoh::Publisher publisher{ session, topic_config, type_info, [](const auto& status) {
                                             if (status.matching) {
                                               fmt::println("Subscriber match");
                                             } else {
@@ -35,7 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
                                             }
                                           } };
 
-    fmt::println("Declaring Publisher on '{}' with id: '{}'", config.topic, publisher.id());
+    fmt::println("Declaring Publisher on '{}' with id: '{}'", topic_config.name, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     double count = 0;
@@ -45,7 +45,7 @@ auto main(int argc, const char* argv[]) -> int {
       pose.orientation =
           Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 
-      fmt::println("Publishing Data ('{} : {})", config.topic, pose);
+      fmt::println("Publishing Data ('{} : {})", topic_config.name, pose);
       auto res = eolo::ipc::publish(publisher, pose);
       eolo::throwExceptionIf<eolo::InvalidOperationException>(!res, "failed to publish message");
 

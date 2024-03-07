@@ -20,8 +20,9 @@
 #include "eolo/serdes/type_info.h"
 #include "zenoh_program_options.h"
 
-[[nodiscard]] auto getTopicTypeInfo(eolo::ipc::zenoh::Session& session) -> eolo::serdes::TypeInfo {
-  auto service_topic = eolo::ipc::getTypeInfoServiceTopic(session.config.topic);
+[[nodiscard]] auto getTopicTypeInfo(eolo::ipc::zenoh::Session& session,
+                                    const std::string& topic) -> eolo::serdes::TypeInfo {
+  auto service_topic = eolo::ipc::getTypeInfoServiceTopic(topic);
   auto response = eolo::ipc::zenoh::query(session.zenoh_session, service_topic, "");
   eolo::throwExceptionIf<eolo::InvalidDataException>(
       response.size() != 1,
@@ -35,15 +36,15 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = getProgramDescription("Periodic publisher example");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto config = parseArgs(args);
+    auto [session_config, topic_config] = parseArgs(args);
 
     fmt::println("Opening session...");
-    fmt::println("Declaring Subscriber on '{}'", config.topic);
+    fmt::println("Declaring Subscriber on '{}'", topic_config.name);
 
-    auto session = eolo::ipc::zenoh::createSession(std::move(config));
+    auto session = eolo::ipc::zenoh::createSession(std::move(session_config));
 
     // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
-    auto type_info = getTopicTypeInfo(*session);
+    auto type_info = getTopicTypeInfo(*session, topic_config.name);
     eolo::serdes::DynamicDeserializer dynamic_deserializer;
     dynamic_deserializer.registerSchema(type_info);
 
@@ -53,7 +54,8 @@ auto main(int argc, const char* argv[]) -> int {
       fmt::println("From: {}. Topic: {} - {}", metadata.sender_id, metadata.topic, msg_json);
     };
 
-    auto subscriber = eolo::ipc::zenoh::Subscriber{ std::move(session), std::move(cb) };
+    auto subscriber =
+        eolo::ipc::zenoh::Subscriber{ std::move(session), std::move(topic_config), std::move(cb) };
     (void)subscriber;
 
     while (true) {

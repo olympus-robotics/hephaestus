@@ -14,7 +14,8 @@ struct PublisherInfo {
   PublisherStatus status;
 };
 
-[[nodiscard]] auto getListOfPublishers(const Session& session) -> std::vector<PublisherInfo>;
+[[nodiscard]] auto getListOfPublishers(const Session& session,
+                                       std::string_view topic = "**") -> std::vector<PublisherInfo>;
 
 void printPublisherInfo(const PublisherInfo& info);
 
@@ -25,13 +26,14 @@ public:
   using Callback = std::function<void(const PublisherInfo& info)>;
   /// The callback needs to be thread safe as they maybe called in parallel for different publishers
   /// discovered.
-  explicit PublisherDiscovery(SessionPtr session, Callback&& callback);
+  explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
 
 private:
   void createLivelinessSubscriber();
 
 private:
   SessionPtr session_;
+  TopicConfig topic_config_;
   Callback callback_;
 
   z_owned_subscriber_t liveliness_subscriber_{};
