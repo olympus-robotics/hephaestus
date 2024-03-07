@@ -27,11 +27,8 @@ auto main(int argc, const char* argv[]) -> int {
     auto topic = args.getOption<std::string>("topic");
     auto output_file = args.getOption<std::string>("output_bag");
 
-    auto config = eolo::ipc::Config{};
-    config.topic = topic;
-
     eolo::bag::ZenohRecorderParams params{
-      .session = eolo::ipc::zenoh::createSession(std::move(config)),
+      .session = eolo::ipc::zenoh::createSession({}),
       .bag_writer = eolo::bag::createMcapWriter({ .output_file = std::move(output_file) }),
       .topics_filter_params =
           eolo::bag::TopicFilterParams{ .include_topics_only = {}, .prefix = topic, .exclude_topics = {} }

@@ -31,7 +31,8 @@ class Publisher {
 public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
-  Publisher(SessionPtr session, serdes::TypeInfo type_info, MatchCallback&& match_cb = nullptr);
+  Publisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
+            MatchCallback&& match_cb = nullptr);
   ~Publisher();
   Publisher(const Publisher&) = delete;
   Publisher(Publisher&&) = default;
@@ -52,6 +53,7 @@ private:
 
 private:
   SessionPtr session_;
+  TopicConfig topic_config_;
   std::unique_ptr<zenohc::Publisher> publisher_;
 
   serdes::TypeInfo type_info_;

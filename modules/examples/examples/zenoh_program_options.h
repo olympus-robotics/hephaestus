@@ -23,9 +23,11 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
   return desc;
 }
 
-[[nodiscard]] inline auto parseArgs(const eolo::cli::ProgramOptions& args) -> eolo::ipc::Config {
+[[nodiscard]] inline auto
+parseArgs(const eolo::cli::ProgramOptions& args) -> std::pair<eolo::ipc::Config, eolo::ipc::TopicConfig> {
+  eolo::ipc::TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
+
   eolo::ipc::Config config;
-  config.topic = args.getOption<std::string>("topic");
   config.cache_size = args.getOption<std::size_t>("cache");
 
   auto mode = args.getOption<std::string>("mode");
@@ -54,5 +56,5 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
   config.qos = args.getOption<bool>("qos");
   config.real_time = args.getOption<bool>("realtime");
 
-  return config;
+  return { std::move(config), std::move(topic_config) };
 }

@@ -23,11 +23,11 @@ namespace {
 }
 }  // namespace
 
-auto getListOfPublishers(const Session& session) -> std::vector<PublisherInfo> {
+auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
   static constexpr auto FIFO_BOUND = 100;
 
   z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
-  auto keyexpr = z_keyexpr(session.config.topic.c_str());
+  auto keyexpr = z_keyexpr(topic.data());
   zc_liveliness_get(session.zenoh_session.loan(), keyexpr, z_move(channel.send), nullptr);
   z_owned_reply_t reply = z_reply_null();
 
@@ -56,12 +56,13 @@ void printPublisherInfo(const PublisherInfo& info) {
   fmt::println("{}", text);
 }
 
-PublisherDiscovery::PublisherDiscovery(SessionPtr session, Callback&& callback)
-  : session_(std::move(session)), callback_(std::move(callback)) {
+PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
+                                       Callback&& callback)
+  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfPublishers(*session_);
+  auto publishers_info = getListOfPublishers(*session_, topic_config_.name);
 
   // Here we create the subscriber for the liveliness tokens.
   // NOTE: If a publisher start publishing between the previous call and the time needed to start the
@@ -84,7 +85,7 @@ void PublisherDiscovery::createLivelinessSubscriber() {
     this->callback_(info);
   };
 
-  auto keyexpr = z_keyexpr(session_->config.topic.c_str());
+  auto keyexpr = z_keyexpr(topic_config_.name.data());
   auto c = cb.take();
   liveliness_subscriber_ =
       zc_liveliness_declare_subscriber(session_->zenoh_session.loan(), keyexpr, z_move(c), nullptr);

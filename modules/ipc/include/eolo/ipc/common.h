@@ -13,7 +13,6 @@ enum class Mode : uint8_t { PEER = 0, CLIENT, ROUTER };
 enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
 
 struct Config {
-  std::string topic;
   bool enable_shared_memory = false;  //! NOTE: With shared-memory enabled, the publisher still uses the
                                       //! network transport layer to notify subscribers of the shared-memory
                                       //! segment to read. Therefore, for very small messages, shared -
@@ -26,6 +25,10 @@ struct Config {
   bool qos = false;
   bool real_time = false;
   Protocol protocol{ Protocol::ANY };
+};
+
+struct TopicConfig {
+  std::string name;
 };
 
 struct MessageMetadata {

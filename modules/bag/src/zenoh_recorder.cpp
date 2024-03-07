@@ -69,14 +69,15 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
   : bag_writer_(std::move(params.bag_writer))
   , topic_filter_(TopicFilter::create(params.topics_filter_params))
   , session_(std::move(params.session))
-  , topic_info_query_session_(ipc::zenoh::createSession({ .topic = "**" }))
+  , topic_info_query_session_(ipc::zenoh::createSession({}))
   , topic_db_(ipc::createZenohTopicDatabase(topic_info_query_session_))
-  , publisher_discovery_session_(ipc::zenoh::createSession({ .topic = "**" })) {
+  , publisher_discovery_session_(ipc::zenoh::createSession({})) {
 }
 
 auto ZenohRecorder::Impl::start() -> std::future<void> {
   discover_publishers_ = std::make_unique<ipc::zenoh::PublisherDiscovery>(
-      publisher_discovery_session_, [this](const ipc::zenoh::PublisherInfo& info) { onPublisher(info); });
+      publisher_discovery_session_, ipc::TopicConfig{ .name = "**" },
+      [this](const ipc::zenoh::PublisherInfo& info) { onPublisher(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -129,9 +130,8 @@ void ZenohRecorder::Impl::onPublisherAdded(const ipc::zenoh::PublisherInfo& info
         std::format("adding subscriber for topic: {}, but one already exists", info.topic));
 
     LOG(INFO) << std::format("Create subscriber for topic: {}", info.topic);
-    // TODO: I don't like this at all I need to decouple the topic from the session
-    session_->config.topic = info.topic;
-    subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(session_, std::move(cb));
+    subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(
+        session_, ipc::TopicConfig{ .name = info.topic }, std::move(cb));
   }
 }
 

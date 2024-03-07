@@ -19,7 +19,8 @@ template <class DataType>
 using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<DataType>&)>;
 
 template <class Subscriber, class DataType>
-[[nodiscard]] auto subscribe(zenoh::SessionPtr session, DataCallback<DataType>&& callback) -> Subscriber {
+[[nodiscard]] auto subscribe(zenoh::SessionPtr session, TopicConfig topic_config,
+                             DataCallback<DataType>&& callback) -> Subscriber {
   auto cb = [callback = std::move(callback)](const MessageMetadata& metadata,
                                              std::span<const std::byte> buffer) mutable {
     auto data = std::make_shared<DataType>();
@@ -27,7 +28,7 @@ template <class Subscriber, class DataType>
     callback(metadata, std::move(data));
   };
 
-  return Subscriber{ std::move(session), std::move(cb) };
+  return Subscriber{ std::move(session), std::move(topic_config), std::move(cb) };
 }
 
 }  // namespace eolo::ipc
