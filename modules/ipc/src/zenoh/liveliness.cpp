@@ -1,17 +1,17 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
 
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/ipc/common.h"
-#include "eolo/ipc/zenoh/session.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/session.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 namespace {
 [[nodiscard]] auto toPublisherStatus(zenohc::SampleKind kind) -> PublisherStatus {
   switch (kind) {
@@ -89,8 +89,8 @@ void PublisherDiscovery::createLivelinessSubscriber() {
   auto c = cb.take();
   liveliness_subscriber_ =
       zc_liveliness_declare_subscriber(session_->zenoh_session.loan(), keyexpr, z_move(c), nullptr);
-  eolo::throwExceptionIf<eolo::FailedZenohOperation>(!z_check(liveliness_subscriber_),
+  heph::throwExceptionIf<heph::FailedZenohOperation>(!z_check(liveliness_subscriber_),
                                                      "failed to create zenoh liveliness subscriber");
 }
 
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

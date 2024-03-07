@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package heph.examples.types.proto;
+
+message Vector3d {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Quaterniond {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double w = 4;
+}
+
+message MatrixXd {
+  uint32 rows = 1;
+  uint32 cols = 2;
+  repeated double data = 3;
+}
+
+message MatrixXf {
+    uint32 rows = 1;
+    uint32 cols = 2;
+    repeated float data = 3;
+}
+
+message VectorXf {
+    repeated float data = 1;
+}
+
+message Vector2f {
+    float x = 1;
+    float y = 2;
+}

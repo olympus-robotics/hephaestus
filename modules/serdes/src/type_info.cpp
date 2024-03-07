@@ -1,16 +1,16 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/serdes/type_info.h"
+#include "hephaestus/serdes/type_info.h"
 
 #include <fmt/core.h>
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
-#include "eolo/base/exception.h"
+#include "hephaestus/base/exception.h"
 
-namespace eolo::serdes {
+namespace heph::serdes {
 // TODO(filippo): add tests.
 
 auto TypeInfo::toJson() const -> std::string {
@@ -35,4 +35,4 @@ auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
            .serialization = serialization.value(),  // NOLINT(bugprone-unchecked-optional-access)
            .original_type = data["original_type"] };
 }
-}  // namespace eolo::serdes
+}  // namespace heph::serdes

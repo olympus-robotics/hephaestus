@@ -1,9 +1,9 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/@module@/@module@.h"
+#include "hephaestus/@module@/@module@.h"
 
-namespace eolo::@module@{
+namespace heph@module@{
 
 }

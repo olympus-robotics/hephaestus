@@ -1,8 +1,8 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/scout.h"
+#include "hephaestus/ipc/zenoh/scout.h"
 
 #include <algorithm>
 #include <mutex>
@@ -14,11 +14,11 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/base/exception.h"
-#include "eolo/ipc/zenoh/query.h"
-#include "eolo/ipc/zenoh/utils.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/zenoh/utils.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 
 namespace {
 
@@ -45,7 +45,7 @@ private:
 
 [[nodiscard]] auto getRouterInfoJson(const std::string& router_id) -> std::string {
   zenohc::Config zconfig;
-  auto session = ::eolo::ipc::zenoh::expect(open(std::move(zconfig)));
+  auto session = ::heph::ipc::zenoh::expect(open(std::move(zconfig)));
 
   static constexpr auto ROUTER_TOPIC = "@/router/{}";
   const auto query_topic = std::format(ROUTER_TOPIC, router_id);
@@ -99,4 +99,4 @@ auto getListOfNodes() -> std::vector<NodeInfo> {
 auto toString(const NodeInfo& info) -> std::string {
   return std::format("[{}] ID: {}. Locators: {}", toString(info.mode), info.id, toString(info.locators));
 }
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

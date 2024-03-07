@@ -1,7 +1,7 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/serdes/serdes.h"
+#include "hephaestus/serdes/serdes.h"
 
-namespace eolo::serdes {}  // namespace eolo::serdes
+namespace heph::serdes {}  // namespace heph::serdes

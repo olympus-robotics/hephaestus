@@ -1,8 +1,8 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/cli/keyboard.h"
+#include "hephaestus/cli/keyboard.h"
 
 #include <cstdio>
 
@@ -11,7 +11,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-namespace eolo::cli {
+namespace heph::cli {
 
 auto kbhit() -> bool {
   /// reference:
@@ -41,4 +41,4 @@ auto getch() -> int {
   return ch;
 }
 
-}  // namespace eolo::cli
+}  // namespace heph::cli

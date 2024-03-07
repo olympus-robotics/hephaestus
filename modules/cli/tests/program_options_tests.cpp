@@ -1,16 +1,16 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <gtest/gtest.h>
 
-#include "eolo/base/exception.h"
-#include "eolo/cli/program_options.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/cli/program_options.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::cli::tests {
+namespace heph::cli::tests {
 
 TEST(ProgramOptions, Empty) {
   auto desc = ProgramDescription("A dummy service that does nothing");
@@ -77,4 +77,4 @@ TEST(ProgramOptions, Errors) {
   }
 }
 
-}  // namespace eolo::cli::tests
+}  // namespace heph::cli::tests

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source "${DIR}/version.sh"
 
-CONTAINER="eolo"
+CONTAINER="hephaestus"
 EXTRA_MOUNTS_=()
 DEVICES_=()
 NETWORKING=''
@@ -115,7 +115,7 @@ docker run --privileged --shm-size=512m --cap-add=SYS_PTRACE --security-opt secc
        --network host  -ti \
        -v $XSOCK:$XSOCK \
        -v $XAUTH:$XAUTH \
-       -v ${PWD}/..:/workdir/eolo \
+       -v ${PWD}/..:/workdir/hephaestus \
        ${EXTRA_MOUNTS} \
        ${DEVICES} \
        ${DOCKER_EXTRA_FLAGS} \

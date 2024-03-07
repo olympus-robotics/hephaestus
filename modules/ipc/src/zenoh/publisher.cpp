@@ -1,19 +1,19 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
 
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/base/exception.h"
-#include "eolo/ipc/common.h"
-#include "eolo/ipc/zenoh/session.h"
-#include "eolo/ipc/zenoh/utils.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/utils.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 
 Publisher::Publisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
                      MatchCallback&& match_cb)
@@ -94,4 +94,4 @@ void Publisher::createTypeInfoService() {
   auto type_service_topic = getTypeInfoServiceTopic(topic_config_.name);
   type_service_ = std::make_unique<Service>(session_, type_service_topic, std::move(type_info_callback));
 }
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

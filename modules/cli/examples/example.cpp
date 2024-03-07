@@ -1,17 +1,17 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <cstdlib>
 
 #include <fmt/core.h>
 
-#include "eolo/cli/program_options.h"
+#include "hephaestus/cli/program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {
     // describe the program and all it's command line options
-    auto desc = eolo::cli::ProgramDescription("A dummy service that does nothing");
+    auto desc = heph::cli::ProgramDescription("A dummy service that does nothing");
     desc.defineOption<int>("port", 'p', "The port this service is available on")
         .defineOption<std::string>("address", "The IP address of this service", "[::]")
         .defineFlag("broadcast", 'b', "enable broadcast");

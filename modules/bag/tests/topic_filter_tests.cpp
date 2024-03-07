@@ -1,14 +1,14 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <gtest/gtest.h>
 
-#include "eolo/bag/topic_filter.h"
+#include "hephaestus/bag/topic_filter.h"
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::bag::tests {
+namespace heph::bag::tests {
 
 using TestCasesT = std::vector<std::pair<std::string, bool>>;
 
@@ -126,4 +126,4 @@ TEST(TopicFilter, IncludeOnly) {
   }
 }
 
-}  // namespace eolo::bag::tests
+}  // namespace heph::bag::tests

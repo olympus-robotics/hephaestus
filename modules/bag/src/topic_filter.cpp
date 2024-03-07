@@ -1,12 +1,12 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/bag/topic_filter.h"
+#include "hephaestus/bag/topic_filter.h"
 
 #include <unordered_set>
 
-namespace eolo::bag {
+namespace heph::bag {
 
 auto TopicFilter::create() -> TopicFilter {
   return {};
@@ -63,4 +63,4 @@ auto TopicFilter::isAcceptable(const std::string& topic) const -> bool {
   return std::all_of(match_cb_.begin(), match_cb_.end(), [&topic](const auto& cb) { return cb(topic); });
 }
 
-}  // namespace eolo::bag
+}  // namespace heph::bag

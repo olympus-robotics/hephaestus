@@ -1,7 +1,7 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/utils/utils.h"
+#include "hephaestus/utils/utils.h"
 
-namespace eolo::utils {}  // namespace eolo::utils
+namespace heph::utils {}  // namespace heph::utils

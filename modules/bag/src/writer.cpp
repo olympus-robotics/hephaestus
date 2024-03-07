@@ -1,17 +1,17 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/bag/writer.h"
+#include "hephaestus/bag/writer.h"
 
 #include <algorithm>
 #include <format>
 
 #include <magic_enum.hpp>
 
-#include "eolo/base/exception.h"
-#include "eolo/ipc/common.h"
-#include "eolo/serdes/type_info.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/serdes/type_info.h"
 
 // TODO: add support for serialization
 #define MCAP_IMPLEMENTATION
@@ -19,7 +19,7 @@
 #define MCAP_COMPRESSION_NO_LZ4
 #include <mcap/writer.hpp>
 
-namespace eolo::bag {
+namespace heph::bag {
 namespace {
 
 [[nodiscard]] auto serializationType(const serdes::TypeInfo::Serialization& serialization) -> std::string {
@@ -102,4 +102,4 @@ auto createMcapWriter(McapWriterParams params) -> std::unique_ptr<IBagWriter> {
   return std::make_unique<McapWriter>(std::move(params));
 }
 
-}  // namespace eolo::bag
+}  // namespace heph::bag

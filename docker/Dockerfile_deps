@@ -3,16 +3,16 @@ FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-c"]
 
-COPY . /tmp/eolo/
-RUN ls /tmp/eolo/
+COPY . /tmp/hephaestus/
+RUN ls /tmp/hephaestus/
 
-RUN mkdir /tmp/eolo/build
-WORKDIR /tmp/eolo/build
+RUN mkdir /tmp/hephaestus/build
+WORKDIR /tmp/hephaestus/build
 RUN  . "$HOME/.cargo/env" && cmake ../ --preset deps-docker
 RUN ninja all && \
     ninja install
 
-# Remove all eolo install
-RUN cd / && rm -rf /tmp/eolo && rm -rf /install/include/eolo && rm -rf /install/lib/libeolo* && rm -rf /install/lib/cmake/eolo* && rm -rf /install/share/eolo*
+# Remove all hephaestus install
+RUN cd / && rm -rf /tmp/hephaestus && rm -rf /install/include/hephaestus && rm -rf /install/lib/libhephaestus* && rm -rf /install/lib/cmake/hephaestus* && rm -rf /install/share/hephaestus*
 
 WORKDIR /

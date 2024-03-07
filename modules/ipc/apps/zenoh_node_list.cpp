@@ -1,12 +1,12 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/ipc/zenoh/scout.h"
+#include "hephaestus/ipc/zenoh/scout.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -16,9 +16,9 @@ auto main(int argc, const char* argv[]) -> int {
   try {
     fmt::println("Scouting..");
 
-    auto nodes_info = eolo::ipc::zenoh::getListOfNodes();
+    auto nodes_info = heph::ipc::zenoh::getListOfNodes();
     std::ranges::for_each(nodes_info,
-                          [](const auto& info) { fmt::println("{}", eolo::ipc::zenoh::toString(info)); });
+                          [](const auto& info) { fmt::println("{}", heph::ipc::zenoh::toString(info)); });
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

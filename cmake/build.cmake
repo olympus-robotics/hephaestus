@@ -1,11 +1,11 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Required for shared libraries
 
-# Top level CMake file for the Eolo Build System. See README.md
+# Top level CMake file for the Hephaestus Build System. See README.md
 
 set(CMAKE_TEMPLATES_DIR ${CMAKE_CURRENT_LIST_DIR})
 

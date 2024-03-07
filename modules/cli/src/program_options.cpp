@@ -1,15 +1,15 @@
 //=================================================================================================
 // Copyright(C) 2018 GRAPE Contributors
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include "eolo/cli/program_options.h"
+#include "hephaestus/cli/program_options.h"
 
 #include <fmt/core.h>
 
-#include "eolo/base/exception.h"
-#include "eolo/utils/utils.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/utils.h"
 
-namespace eolo::cli {
+namespace heph::cli {
 namespace {
 auto getKeyStringForHelper(const ProgramOptions::Option& option) -> std::string {
   if (option.short_key == '\0') {
@@ -123,4 +123,4 @@ auto ProgramDescription::getHelpMessage() const -> std::string {
   return help_stream.str();
 }
 
-}  // namespace eolo::cli
+}  // namespace heph::cli

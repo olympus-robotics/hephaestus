@@ -1,15 +1,15 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <gtest/gtest.h>
 
-#include "eolo/utils/utils.h"
+#include "hephaestus/utils/utils.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::utils::tests {
+namespace heph::utils::tests {
 
 TEST(String, Truncate) {
   constexpr auto STR = "/path/to/some/file.txt";
@@ -56,4 +56,4 @@ TEST(String, TruncateEmpty) {
   EXPECT_EQ(TRUNCATED, EXPECTED);
 }
 
-}  // namespace eolo::utils::tests
+}  // namespace heph::utils::tests

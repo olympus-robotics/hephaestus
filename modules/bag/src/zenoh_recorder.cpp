@@ -1,8 +1,8 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/bag/zenoh_recorder.h"
+#include "hephaestus/bag/zenoh_recorder.h"
 
 #include <future>
 #include <memory>
@@ -13,13 +13,13 @@
 #include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 
-#include "eolo/bag/topic_filter.h"
-#include "eolo/bag/writer.h"
-#include "eolo/ipc/topic_database.h"
-#include "eolo/ipc/zenoh/liveliness.h"
-#include "eolo/ipc/zenoh/subscriber.h"
+#include "hephaestus/bag/topic_filter.h"
+#include "hephaestus/bag/writer.h"
+#include "hephaestus/ipc/topic_database.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
 
-namespace eolo::bag {
+namespace heph::bag {
 
 using BagRecord = std::pair<ipc::MessageMetadata, std::vector<std::byte>>;
 
@@ -165,4 +165,4 @@ auto ZenohRecorder::create(ZenohRecorderParams params) -> ZenohRecorder {
   return ZenohRecorder{ std::move(params) };
 }
 
-}  // namespace eolo::bag
+}  // namespace heph::bag

@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # required by source analysis tools
@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # required by source analysis tools
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # Baseline compiler warning settings for project and external targets
-set(EOLO_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror)
+set(HEPHAESTUS_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror)
 set(THIRD_PARTY_COMPILER_WARNINGS -Wall -Wextra -Wpedantic)
 
 # clang warnings
@@ -40,16 +40,16 @@ set(GCC_WARNINGS
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   add_compile_options(-fcolor-diagnostics)
-  set(EOLO_COMPILER_WARNINGS ${EOLO_COMPILER_WARNINGS} ${CLANG_WARNINGS})
+  set(HEPHAESTUS_COMPILER_WARNINGS ${HEPHAESTUS_COMPILER_WARNINGS} ${CLANG_WARNINGS})
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   add_compile_options(-fdiagnostics-color=always)
-  set(EOLO_COMPILER_WARNINGS ${EOLO_COMPILER_WARNINGS} ${GCC_WARNINGS})
+  set(HEPHAESTUS_COMPILER_WARNINGS ${HEPHAESTUS_COMPILER_WARNINGS} ${GCC_WARNINGS})
 else()
   message(FATAL_ERROR "Unsupported compiler '${CMAKE_CXX_COMPILER_ID}'")
 endif()
 
 # set those compiler warning options
-add_compile_options(${EOLO_COMPILER_WARNINGS})
+add_compile_options(${HEPHAESTUS_COMPILER_WARNINGS})
 
 # enable sanitizer options
 set(SANITIZERS "")
@@ -173,5 +173,5 @@ message(STATUS "\tENABLE_TSAN                    : ${ENABLE_TSAN}")
 message(STATUS "\tENABLE_UBSAN                   : ${ENABLE_UBSAN}")
 message(STATUS "\tENABLE_COVERAGE                : ${ENABLE_COVERAGE}")
 message(STATUS "\tENABLE_LINTER                  : ${ENABLE_LINTER} (${LINTER_BIN})")
-message(STATUS "\tEnabled warnings (eolo)        : ${EOLO_COMPILER_WARNINGS}")
+message(STATUS "\tEnabled warnings (hephaestus)        : ${HEPHAESTUS_COMPILER_WARNINGS}")
 message(STATUS "\tEnabled warnings (third-party) : ${THIRD_PARTY_COMPILER_WARNINGS}")
