@@ -1,16 +1,16 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/serdes/protobuf/dynamic_deserializer.h"
+#include "hephaestus/serdes/protobuf/dynamic_deserializer.h"
 
 #include <cstddef>
 
-#include "eolo/base/exception.h"
+#include "hephaestus/base/exception.h"
 
-namespace eolo::serdes::protobuf {
+namespace heph::serdes::protobuf {
 namespace {
-void loadSchema(const eolo::serdes::TypeInfo& type_info,
+void loadSchema(const heph::serdes::TypeInfo& type_info,
                 google::protobuf::SimpleDescriptorDatabase& proto_db) {
   google::protobuf::FileDescriptorSet fd_set;
   auto res = fd_set.ParseFromArray(type_info.schema.data(), static_cast<int>(type_info.schema.size()));
@@ -58,4 +58,4 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
   return msg_json;
 }
 
-}  // namespace eolo::serdes::protobuf
+}  // namespace heph::serdes::protobuf

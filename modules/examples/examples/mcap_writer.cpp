@@ -1,12 +1,12 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
 
-#include "eolo/serdes/serdes.h"
+#include "hephaestus/serdes/serdes.h"
 #define MCAP_IMPLEMENTATION
 #define MCAP_COMPRESSION_NO_ZSTD
 #define MCAP_COMPRESSION_NO_LZ4
@@ -15,9 +15,9 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <mcap/writer.hpp>
 
-#include "eolo/bag/writer.h"
-#include "eolo/examples/types/pose.h"
-#include "eolo/examples/types_protobuf/pose.h"
+#include "hephaestus/bag/writer.h"
+#include "hephaestus/examples/types/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {
@@ -28,9 +28,9 @@ auto main(int argc, const char* argv[]) -> int {
     }
     std::filesystem::path output{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    auto bag_writer = eolo::bag::createMcapWriter({ std::move(output) });
+    auto bag_writer = heph::bag::createMcapWriter({ std::move(output) });
 
-    auto type_info = eolo::serdes::getSerializedTypeInfo<eolo::examples::types::Pose>();
+    auto type_info = heph::serdes::getSerializedTypeInfo<heph::examples::types::Pose>();
     bag_writer->registerSchema(type_info);
     bag_writer->registerChannel("pose", type_info);
 
@@ -40,10 +40,10 @@ auto main(int argc, const char* argv[]) -> int {
     for (uint32_t i = 0; i < TOTAL_MSGS; ++i) {
       auto frame_time = start_time + i * INTERVAL;
 
-      eolo::examples::types::Pose pose;
+      heph::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ static_cast<double>(i), 2, 3 };
-      auto data = eolo::serdes::serialize(pose);
-      eolo::ipc::MessageMetadata metadata{
+      auto data = heph::serdes::serialize(pose);
+      heph::ipc::MessageMetadata metadata{
         .sender_id = "myself", .topic = "pose", .timestamp = frame_time, .sequence_id = i
       };
 

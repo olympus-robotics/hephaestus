@@ -1,13 +1,13 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/utils.h"
+#include "hephaestus/ipc/zenoh/utils.h"
 
-#include "eolo/base/exception.h"
-#include "eolo/ipc/common.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/ipc/common.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> zenohc::Config {
@@ -62,4 +62,4 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
 
   return zconfig;
 }
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

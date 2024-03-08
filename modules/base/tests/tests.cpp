@@ -1,17 +1,17 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 #include <gtest/gtest.h>
 
-#include "eolo/base/exception.h"
+#include "hephaestus/base/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::base::tests {
+namespace heph::base::tests {
 TEST(Exception, Throw) {
-  auto throwing_func = []() { throwException<eolo::TypeMismatchException>("type mismatch"); };
-  EXPECT_THROW(throwing_func(), eolo::TypeMismatchException);
+  auto throwing_func = []() { throwException<heph::TypeMismatchException>("type mismatch"); };
+  EXPECT_THROW(throwing_func(), heph::TypeMismatchException);
 
   try {
     throwing_func();
@@ -20,4 +20,4 @@ TEST(Exception, Throw) {
   }
 }
 
-}  // namespace eolo::base::tests
+}  // namespace heph::base::tests

@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 declare_module(
@@ -9,12 +9,12 @@ declare_module(
 )
 
 # library sources
-set(SOURCES src/exception.cpp README.md include/eolo/base/exception.h)
+set(SOURCES src/exception.cpp README.md include/hephaestus/base/exception.h)
 
 # library target
 define_module_library(
   NAME base
-  PUBLIC_LINK_LIBS eolo::utils
+  PUBLIC_LINK_LIBS hephaestus::utils
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

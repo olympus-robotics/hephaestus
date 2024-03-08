@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 # =================================================================================================
@@ -8,7 +8,7 @@
 # =================================================================================================
 
 cmake_minimum_required(VERSION 3.27.3)
-project(eolo-external LANGUAGES C CXX)
+project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
@@ -67,7 +67,7 @@ add_cmake_dependency(
   NAME zenohc
   DEPENDS zenohd
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-  GIT_TAG "06b2dba5a381e340d2539233cef1c4716f40c556"
+  GIT_TAG "5be32c83a93c2f7bb1ff8455b01bd479ae3524f5"
 )
 
 add_cmake_dependency(

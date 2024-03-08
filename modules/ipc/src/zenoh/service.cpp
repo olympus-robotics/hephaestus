@@ -1,10 +1,10 @@
 //================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/service.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 
 Service::Service(SessionPtr session, std::string topic, Callback&& callback)
   : session_(std::move(session)), topic_(std::move(topic)), callback_(std::move(callback)) {
@@ -22,4 +22,4 @@ Service::Service(SessionPtr session, std::string topic, Callback&& callback)
   queryable_ =
       expectAsUniquePtr(session_->zenoh_session.declare_queryable(topic_, { std::move(query), []() {} }));
 }
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

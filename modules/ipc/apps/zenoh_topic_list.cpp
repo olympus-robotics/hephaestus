@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <algorithm>
@@ -10,8 +10,8 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/ipc/zenoh/liveliness.h"
-#include "eolo/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "zenoh_program_options.h"
 
 std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
@@ -20,16 +20,16 @@ auto signalHandler(int /*unused*/) -> void {
   stop_flag.notify_all();
 }
 
-void getListOfPublisher(const eolo::ipc::zenoh::Session& session, std::string_view topic) {
-  const auto publishers_info = eolo::ipc::zenoh::getListOfPublishers(session, topic);
+void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
+  const auto publishers_info = heph::ipc::zenoh::getListOfPublishers(session, topic);
   std::ranges::for_each(publishers_info,
-                        [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); });
+                        [](const auto& info) { heph::ipc::zenoh::printPublisherInfo(info); });
 }
 
-void getLiveListOfPublisher(eolo::ipc::zenoh::SessionPtr session, eolo::ipc::TopicConfig topic_config) {
-  auto callback = [](const auto& info) { eolo::ipc::zenoh::printPublisherInfo(info); };
+void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
+  auto callback = [](const auto& info) { heph::ipc::zenoh::printPublisherInfo(info); };
 
-  eolo::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
+  heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
                                                  std::move(callback) };
 
   stop_flag.wait(false);
@@ -47,7 +47,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto [session_config, topic_config] = parseArgs(args);
 
     fmt::println("Opening session...");
-    auto session = eolo::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     if (!args.getOption<bool>("live")) {
       getListOfPublisher(*session, topic_config.name);

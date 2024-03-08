@@ -1,5 +1,5 @@
 # ==================================================================================================
-# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # ==================================================================================================
 
 include(CMakePackageConfigHelpers)
@@ -439,14 +439,14 @@ macro(define_module_executable)
 endmacro()
 
 # --------------------------------------------------------------------------------------------------
-# A macro to generate eolo library target from .proto files NOTE A proto library name must end with _proto suffix.
+# A macro to generate hephaestus library target from .proto files NOTE A proto library name must end with _proto suffix.
 #
 # Usage example: declare_module(NAME my_proto_module DEPENDS_ON_EXTERNAL_PROJECTS Protobuf # MUST be present )
 #
 # # No need to add the `find_package(Protobuf)` as it's done implicitly by `define_module_proto_library`.
 #
 # define_module_proto_library( NAME example_proto SOURCES messages_one.proto messages_two.proto PUBLIC_LINK_LIBS
-# eolo_example_dependencies_proto  # Module containing proto files used by this module. )
+# hephaestus_example_dependencies_proto  # Module containing proto files used by this module. )
 # --------------------------------------------------------------------------------------------------
 macro(define_module_proto_library)
   set(flags "")

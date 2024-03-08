@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 declare_module(
@@ -20,9 +20,9 @@ set(SOURCES
     src/version.cpp
     src/utils.cpp
     README.md
-    include/eolo/utils/concepts.h
-    include/eolo/utils/utils.h
-    include/eolo/utils/version.h
+    include/hephaestus/utils/concepts.h
+    include/hephaestus/utils/utils.h
+    include/hephaestus/utils/version.h
 )
 
 # library target

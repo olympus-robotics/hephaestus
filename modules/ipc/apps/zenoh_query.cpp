@@ -1,12 +1,12 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <fmt/core.h>
 
-#include "eolo/ipc/zenoh/query.h"
-#include "eolo/ipc/zenoh/session.h"
-#include "eolo/ipc/zenoh/utils.h"
+#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/utils.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -17,10 +17,10 @@ auto main(int argc, const char* argv[]) -> int {
     const auto value = args.getOption<std::string>("value");
 
     auto [config, topic_config] = parseArgs(args);
-    auto session = eolo::ipc::zenoh::createSession(std::move(config));
-    fmt::println("Opening session: {}", eolo::ipc::zenoh::toString(session->zenoh_session.info_zid()));
+    auto session = heph::ipc::zenoh::createSession(std::move(config));
+    fmt::println("Opening session: {}", heph::ipc::zenoh::toString(session->zenoh_session.info_zid()));
 
-    auto results = eolo::ipc::zenoh::query(session->zenoh_session, topic_config.name, value);
+    auto results = heph::ipc::zenoh::query(session->zenoh_session, topic_config.name, value);
 
     std::ranges::for_each(
         results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });

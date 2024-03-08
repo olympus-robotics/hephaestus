@@ -1,13 +1,13 @@
 //================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/zenoh/subscriber.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
 
-#include "eolo/ipc/common.h"
-#include "eolo/ipc/zenoh/utils.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/utils.h"
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback)
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
@@ -19,7 +19,7 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
     auto c = cb.take();
     cache_subscriber_ = ze_declare_querying_subscriber(
         session_->zenoh_session.loan(), z_keyexpr(topic_config_.name.c_str()), z_move(c), &sub_opts);
-    eolo::throwExceptionIf<eolo::FailedZenohOperation>(!z_check(cache_subscriber_),
+    heph::throwExceptionIf<heph::FailedZenohOperation>(!z_check(cache_subscriber_),
                                                        "failed to create zenoh sub");
   }
 }
@@ -43,4 +43,4 @@ void Subscriber::callback(const zenohc::Sample& sample) {
   callback_(metadata, buffer);
 }
 
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

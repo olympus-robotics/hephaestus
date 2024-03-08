@@ -13,12 +13,12 @@ find_package(mcap REQUIRED)
 add_subdirectory(proto)
 
 # library sources
-set(TYPES_SOURCES src/types/pose.cpp README.md include/eolo/examples/types/pose.h)
+set(TYPES_SOURCES src/types/pose.cpp README.md include/hephaestus/examples/types/pose.h)
 
 # library target
 define_module_library(
   NAME examples_types
-  PUBLIC_LINK_LIBS absl::base Eigen3::Eigen eolo::bag fmt::fmt mcap
+  PUBLIC_LINK_LIBS absl::base Eigen3::Eigen hephaestus::bag fmt::fmt mcap
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -27,14 +27,16 @@ define_module_library(
 )
 
 # library sources
-set(TYPES_PROTOBUF_SOURCES src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp
-                           include/eolo/examples/types_protobuf/geometry.h include/eolo/examples/types_protobuf/pose.h
+set(TYPES_PROTOBUF_SOURCES
+    src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp include/hephaestus/examples/types_protobuf/geometry.h
+    include/hephaestus/examples/types_protobuf/pose.h
 )
 
 # library target
 define_module_library(
   NAME examples_types_protobuf
-  PUBLIC_LINK_LIBS eolo::base eolo::serdes eolo::examples_types eolo::examples_types_proto Eigen3::Eigen
+  PUBLIC_LINK_LIBS hephaestus::base hephaestus::serdes hephaestus::examples_types hephaestus::examples_types_proto
+                   Eigen3::Eigen
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_PROTOBUF_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

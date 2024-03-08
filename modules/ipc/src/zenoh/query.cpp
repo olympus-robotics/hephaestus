@@ -1,7 +1,7 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include "eolo/ipc/zenoh/query.h"
+#include "hephaestus/ipc/zenoh/query.h"
 
 #include <barrier>
 #include <mutex>
@@ -9,7 +9,7 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-namespace eolo::ipc::zenoh {
+namespace heph::ipc::zenoh {
 
 auto query(zenohc::Session& session, const std::string& topic,
            const std::string& value) -> std::vector<QueryResponse> {
@@ -41,4 +41,4 @@ auto query(zenohc::Session& session, const std::string& topic,
 
   return results;
 }
-}  // namespace eolo::ipc::zenoh
+}  // namespace heph::ipc::zenoh

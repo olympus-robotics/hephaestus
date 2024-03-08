@@ -1,10 +1,10 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <cstdlib>
 
-#include "eolo/serdes/serdes.h"
+#include "hephaestus/serdes/serdes.h"
 
 //=================================================================================================
 auto main(int argc, const char* argv[]) -> int {

@@ -1,5 +1,5 @@
 #=================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 #=================================================================================================
 
 declare_module(NAME @module@ DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS "")
@@ -8,7 +8,7 @@ declare_module(NAME @module@ DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS 
 set(SOURCES
         src/@module@.cpp
         README.md
-        include/eolo/@module@/@module@.h)
+        include/hephaestus/@module@/@module@.h)
 
 # library target
 define_module_library(

@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 declare_module(
@@ -27,14 +27,14 @@ set(SOURCES
     src/zenoh/subscriber.cpp
     src/zenoh/utils.cpp
     README.md
-    include/eolo/ipc/common.h
-    include/eolo/ipc/topic_database.h
-    include/eolo/ipc/zenoh/utils.h
-    include/eolo/ipc/zenoh/publisher.h
-    include/eolo/ipc/zenoh/query.h
-    include/eolo/ipc/zenoh/service.h
-    include/eolo/ipc/zenoh/scout.h
-    include/eolo/ipc/zenoh/subscriber.h
+    include/hephaestus/ipc/common.h
+    include/hephaestus/ipc/topic_database.h
+    include/hephaestus/ipc/zenoh/utils.h
+    include/hephaestus/ipc/zenoh/publisher.h
+    include/hephaestus/ipc/zenoh/query.h
+    include/hephaestus/ipc/zenoh/service.h
+    include/hephaestus/ipc/zenoh/scout.h
+    include/hephaestus/ipc/zenoh/subscriber.h
 )
 
 # library target
@@ -43,12 +43,12 @@ define_module_library(
   PUBLIC_LINK_LIBS
     absl::base
     absl::status
-    eolo::base
-    eolo::cli
+    hephaestus::base
+    hephaestus::cli
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3
-    eolo::serdes
+    hephaestus::serdes
     zenohc::lib
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}

@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/examples/types/pose.h"
+#include "hephaestus/examples/types/pose.h"

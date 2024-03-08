@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <future>
@@ -7,13 +7,13 @@
 
 #include <gtest/gtest.h>
 
-#include "eolo/containers/blocking_queue.h"
 #include "gmock/gmock.h"
+#include "hephaestus/containers/blocking_queue.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::containers::tests {
+namespace heph::containers::tests {
 
 TEST(BlockingQueue, Failures) {
   EXPECT_THROW(BlockingQueue<int>{ 0 }, InvalidParameterException);
@@ -146,4 +146,4 @@ TEST(BlockingQueue, InfiniteQueue) {
   EXPECT_FALSE(res);
 }
 
-}  // namespace eolo::containers::tests
+}  // namespace heph::containers::tests

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Copyright (C) 2018 GRAPE Contributors
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 #
 
 import os
@@ -26,12 +26,12 @@ def create_module(module_name):
 
     # rename newly created template files
     os.rename(
-        os.path.join(module_name, "include", "eolo", "@module@", "@module@.h"),
-        os.path.join(module_name, "include", "eolo", "@module@", module_name + ".h")
+        os.path.join(module_name, "include", "hephaestus", "@module@", "@module@.h"),
+        os.path.join(module_name, "include", "hephaestus", "@module@", module_name + ".h")
     )
     os.rename(
-        os.path.join(module_name, "include", "eolo", "@module@"),
-        os.path.join(module_name, "include", "eolo", module_name)
+        os.path.join(module_name, "include", "hephaestus", "@module@"),
+        os.path.join(module_name, "include", "hephaestus", module_name)
     )
     os.rename(
         os.path.join(module_name, "src", "@module@.cpp"),

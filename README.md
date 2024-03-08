@@ -1,8 +1,8 @@
-# Eolo
+# Hephaestus
 
-Eolo is a C++ framework designed to facilitate robotics development by providing commonly needed functionality and abstractions.
+Hephaestus is a C++ framework designed to facilitate robotics development by providing commonly needed functionality and abstractions.
 
-The goal of Eolo is to support the deployment of robotic code in production. This means:
+The goal of Hephaestus is to support the deployment of robotic code in production. This means:
 * Simple, stable, performant functionalities.
 * No focus on simplifying experimentation and no-nonsense functionality.
     * New features will be added if they make production code better (faster/stable/simpler), not for making running experiments faster (I am looking at you ROS).
@@ -11,7 +11,7 @@ The goal of Eolo is to support the deployment of robotic code in production. Thi
     * Parallelism and multi/threading.
     * Containers and basic algorithm.
 
-Eolo provides functionalities that cover the following domains:
+Hephaestus provides functionalities that cover the following domains:
 * Inter Process Comunication (IPC).
 * Data serialization for IPC and storage.
 * Multi-threading, e.g. thread pools and parallelism primitive.
@@ -24,15 +24,15 @@ Eolo provides functionalities that cover the following domains:
 ## Build
 
 ### Env
-The best way to build eolo is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
+The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
 
 ### Compilation
 
-Eolo uses CMake to build, the build infrastructure is copied and adapted from [grape](https://github.com/cvilas/grape).
+Hephaestus uses CMake to build, the build infrastructure is copied and adapted from [grape](https://github.com/cvilas/grape).
 
 To build it:
 ```bash
-cd eolo
+cd hephaestus
 mkdir build && cd build
 cmake --preset preferred
 ninja all examples
@@ -46,7 +46,7 @@ ninja checks
 > TODO: add section on the different flags and options.
 
 ## Build system
-You can use the build system of `eolo` in your own project by importing the CMake files and recreating the required folder structure.
+You can use the build system of `hephaestus` in your own project by importing the CMake files and recreating the required folder structure.
 
 Create the top level `CMakeLists.txt` as:
 ```cmake
@@ -58,26 +58,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 FetchContent_Declare(
-    eolo
-    GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+    hephaestus
+    GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
     GIT_TAG "main"
 )
-FetchContent_GetProperties(eolo)
-if(NOT eolo_POPULATED)
-  FetchContent_Populate(eolo)
+FetchContent_GetProperties(hephaestus)
+if(NOT hephaestus_POPULATED)
+  FetchContent_Populate(hephaestus)
 endif()
 
-# If you want to use eolo toolchain add:
-# set(CMAKE_TOOLCHAIN_FILE ${eolo_SOURCE_DIR}/toolchains/toolchain_clang.cmake)
+# If you want to use hephaestus toolchain add:
+# set(CMAKE_TOOLCHAIN_FILE ${hephaestus_SOURCE_DIR}/toolchains/toolchain_clang.cmake)
 
 # Include the Cmake functions.
-include(${eolo_SOURCE_DIR}/cmake/build.cmake)
+include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 ```
 
-Create the `modules` folder and add your modules. You can use the eolo script by calling:
+Create the `modules` folder and add your modules. You can use the hephaestus script by calling:
 ```bash
 cd modules
-python3 ../build/_deps/eolo-src/cmake/create_module.py my_module
+python3 ../build/_deps/hephaestus-src/cmake/create_module.py my_module
 ```
 
 Create the `external` folder and add a `CMakeLists.txt` file as:
@@ -89,35 +89,35 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
 # Add your desired dependencies:
 # add_cmake_dependency(
-#     NAME eolo
-#     GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+#     NAME hephaestus
+#     GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
 #     GIT_TAG "main"
 #     CMAKE_ARGS -DBUILD_MODULES="utils"
 # )
 ```
 
-## Using Eolo
-There are multiple ways to use Eolo in your repo.
+## Using Hephaestus
+There are multiple ways to use Hephaestus in your repo.
 
 ### Global installation
-Install eolo in a known folder, e.g. `/install`. When you compile your project pass `-DCMAKE_PREFIX_PATH=/install` and in your CMakeLists.txt:
+Install hephaestus in a known folder, e.g. `/install`. When you compile your project pass `-DCMAKE_PREFIX_PATH=/install` and in your CMakeLists.txt:
 
 ```cmake
-find_package(eolo REQUIRED <component1> <component2>) # e.g. find_package(eolo REQUIRED ipc serdes)
+find_package(hephaestus REQUIRED <component1> <component2>) # e.g. find_package(hephaestus REQUIRED ipc serdes)
 
 add_library(my-lib ...)
 target_link_libraries(my-lib
-    PUBLIC eolo::ipc eolo::serdes
+    PUBLIC hephaestus::ipc hephaestus::serdes
 )
 ```
 
-### Use Eolo CMake build system
-Using Eolo build system build eolo together with your project:
+### Use Hephaestus CMake build system
+Using Hephaestus build system build hephaestus together with your project:
 
 ```cmake
 add_cmake_dependency(
-    NAME eolo
-    GIT_REPOSITORY "https://github.com/filippobrizzi/eolo.git"
+    NAME hephaestus
+    GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
     GIT_TAG "main"
     CMAKE_ARGS -DBUILD_MODULES="utils"
 )
@@ -125,34 +125,34 @@ add_cmake_dependency(
 
 and in your library CMakeLists.txt:
 ```cmake
-find_package(eolo REQUIRED <component1> <component2>) # e.g. find_package(eolo REQUIRED ipc serdes)
+find_package(hephaestus REQUIRED <component1> <component2>) # e.g. find_package(hephaestus REQUIRED ipc serdes)
 
 add_library(my-lib ...)
 target_link_libraries(my-lib
-    PUBLIC eolo::ipc eolo::serdes
+    PUBLIC hephaestus::ipc hephaestus::serdes
 )
 ```
 
-### Include Eolo as a submodule
-Add Eolo as a git submodule to your project (e.g. in `third_party/eolo`) and in the root CMakeLists.txt before adding your libraries add:
+### Include Hephaestus as a submodule
+Add Hephaestus as a git submodule to your project (e.g. in `third_party/hephaestus`) and in the root CMakeLists.txt before adding your libraries add:
 
 ```cmake
 set(BUILD_MODULES "ipc;serdes") # or `all` if you want to build all of it.
-add_subdirectory(third_party/eolo)
+add_subdirectory(third_party/hephaestus)
 ```
 
-if you are using Eolo build system for your project you need to backup the modules list to keep it separate between the Eolo ones and yours:
+if you are using Hephaestus build system for your project you need to backup the modules list to keep it separate between the Hephaestus ones and yours:
 
 
 ```cmake
-set(eolo_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/eolo)
+set(hephaestus_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/hephaestus)
 
 set(BUILD_MODULES_BAK ${BUILD_MODULES})
 set(BUILD_MODULES "utils")
-add_subdirectory(${eolo_SOURCE_DIR})
+add_subdirectory(${hephaestus_SOURCE_DIR})
 
 set(BUILD_MODULES ${BUILD_MODULES_BAK})
-include(${eolo_SOURCE_DIR}/cmake/build.cmake)
+include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 ```
 
 ## Notes

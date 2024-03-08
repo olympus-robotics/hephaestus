@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <chrono>
@@ -12,11 +12,11 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "eolo/examples/types/pose.h"
-#include "eolo/examples/types_protobuf/pose.h"
-#include "eolo/ipc/subscriber.h"
-#include "eolo/ipc/zenoh/session.h"
-#include "eolo/ipc/zenoh/subscriber.h"
+#include "hephaestus/examples/types/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -29,16 +29,16 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Opening session...");
     fmt::println("Declaring Subscriber on '{}'", topic_config.name);
 
-    auto session = eolo::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    auto cb = [topic = topic_config.name](const eolo::ipc::MessageMetadata& metadata,
-                                          const std::shared_ptr<eolo::examples::types::Pose>& pose) {
+    auto cb = [topic = topic_config.name](const heph::ipc::MessageMetadata& metadata,
+                                          const std::shared_ptr<heph::examples::types::Pose>& pose) {
       fmt::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
                    std::chrono::system_clock::time_point{
                        std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
                    metadata.topic, metadata.sender_id, metadata.sequence_id, *pose);
     };
-    auto subscriber = eolo::ipc::subscribe<eolo::ipc::zenoh::Subscriber, eolo::examples::types::Pose>(
+    auto subscriber = heph::ipc::subscribe<heph::ipc::zenoh::Subscriber, heph::examples::types::Pose>(
         session, std::move(topic_config), std::move(cb));
     (void)subscriber;
 

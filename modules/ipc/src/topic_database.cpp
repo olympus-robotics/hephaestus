@@ -1,18 +1,18 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/topic_database.h"
+#include "hephaestus/ipc/topic_database.h"
 
 #include <mutex>
 
 #include <fmt/core.h>
 
-#include "eolo/ipc/common.h"
-#include "eolo/ipc/zenoh/query.h"
-#include "eolo/ipc/zenoh/session.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/zenoh/session.h"
 
-namespace eolo::ipc {
+namespace heph::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {
 public:
   explicit ZenohTopicDatabase(zenoh::SessionPtr session);
@@ -41,7 +41,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
   auto query_topic = getTypeInfoServiceTopic(topic);
 
   const auto response = zenoh::query(session_->zenoh_session, query_topic, "");
-  throwExceptionIf<eolo::InvalidDataException>(
+  throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       std::format("received {} responses for type from service {}", response.size(), query_topic));
 
@@ -59,4 +59,4 @@ auto createZenohTopicDatabase(std::shared_ptr<zenoh::Session> session) -> std::u
   return std::make_unique<ZenohTopicDatabase>(std::move(session));
 }
 
-}  // namespace eolo::ipc
+}  // namespace heph::ipc

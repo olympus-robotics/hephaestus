@@ -1,17 +1,17 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "eolo/serdes/protobuf/buffers.h"
-#include "eolo/serdes/serdes.h"
+#include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/serdes.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::serdes::tests {
+namespace heph::serdes::tests {
 
 static constexpr int NUMBER = 42;
 
@@ -31,16 +31,16 @@ struct Data {
   int a = NUMBER;
 };
 
-}  // namespace eolo::serdes::tests
+}  // namespace heph::serdes::tests
 
-namespace eolo::serdes::protobuf {
+namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<eolo::serdes::tests::Data> {
-  using Type = eolo::serdes::tests::MockProtoMessage;
+struct ProtoAssociation<heph::serdes::tests::Data> {
+  using Type = heph::serdes::tests::MockProtoMessage;
 };
-}  // namespace eolo::serdes::protobuf
+}  // namespace heph::serdes::protobuf
 
-namespace eolo::serdes::tests {
+namespace heph::serdes::tests {
 
 TEST(Protobuf, SerializerBuffers) {
   protobuf::SerializerBuffer buffer;
@@ -89,4 +89,4 @@ TEST(Serialization, Protobuf) {
   EXPECT_EQ(data.a, NUMBER * 2);
 }
 
-}  // namespace eolo::serdes::tests
+}  // namespace heph::serdes::tests

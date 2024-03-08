@@ -1,7 +1,7 @@
 //================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/ipc/common.h"
+#include "hephaestus/ipc/common.h"
 
-namespace eolo::ipc {}  // namespace eolo::ipc
+namespace heph::ipc {}  // namespace heph::ipc

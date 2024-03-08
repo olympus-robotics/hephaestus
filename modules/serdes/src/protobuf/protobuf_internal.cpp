@@ -1,10 +1,10 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/serdes/protobuf/protobuf_internal.h"
+#include "hephaestus/serdes/protobuf/protobuf_internal.h"
 
-namespace eolo::serdes::protobuf::internal {
+namespace heph::serdes::protobuf::internal {
 auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descriptor)
     -> google::protobuf::FileDescriptorSet {
   google::protobuf::FileDescriptorSet fd_set;
@@ -27,4 +27,4 @@ auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descrip
 
   return fd_set;
 }
-}  // namespace eolo::serdes::protobuf::internal
+}  // namespace heph::serdes::protobuf::internal

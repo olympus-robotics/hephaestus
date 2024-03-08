@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 declare_module(
@@ -11,14 +11,14 @@ declare_module(
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES src/keyboard.cpp src/program_options.cpp README.md include/eolo/cli/keyboard.h
-            include/eolo/cli/program_options.h
+set(SOURCES src/keyboard.cpp src/program_options.cpp README.md include/hephaestus/cli/keyboard.h
+            include/hephaestus/cli/program_options.h
 )
 
 # library target
 define_module_library(
   NAME cli
-  PUBLIC_LINK_LIBS eolo::base fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::base fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

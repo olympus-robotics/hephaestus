@@ -1,22 +1,22 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <random>
 
 #include <gtest/gtest.h>
 
-#include "eolo/examples/types/pose.h"
-#include "eolo/examples/types/proto/geometry.pb.h"
-#include "eolo/examples/types_protobuf/geometry.h"
-#include "eolo/examples/types_protobuf/pose.h"
-#include "eolo/serdes/protobuf/buffers.h"
-#include "eolo/serdes/serdes.h"
+#include "hephaestus/examples/types/pose.h"
+#include "hephaestus/examples/types/proto/geometry.pb.h"
+#include "hephaestus/examples/types_protobuf/geometry.h"
+#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/serdes.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace eolo::examples::types::tests {
+namespace heph::examples::types::tests {
 
 auto randomPose(std::mt19937_64& mt) -> Pose {
   static constexpr auto RANDOM_TRANSLATION_RANGE = 100.0;
@@ -124,4 +124,4 @@ TEST(Pose, Pose) {
   EXPECT_EQ(pose, pose_des);
 }
 
-}  // namespace eolo::examples::types::tests
+}  // namespace heph::examples::types::tests

@@ -1,9 +1,9 @@
 # =================================================================================================
-# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2018 GRAPE Contributors Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-set(CPACK_PACKAGE_VERSION ${EOLO_VERSION})
+set(CPACK_PACKAGE_VERSION ${HEPHAESTUS_VERSION})
 set(CPACK_PACKAGE_VENDOR "Filippo Brizzi")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 

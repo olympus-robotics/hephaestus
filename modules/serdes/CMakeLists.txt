@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 EOLO Contributors
+# Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
 declare_module(
@@ -21,20 +21,20 @@ set(SOURCES
     src/protobuf/protobuf.cpp
     src/protobuf/protobuf_internal.cpp
     README.md
-    include/eolo/serdes/dynamic_deserializer.h
-    include/eolo/serdes/serdes.h
-    include/eolo/serdes/type_info.h
-    include/eolo/serdes/protobuf/concepts.h
-    include/eolo/serdes/protobuf/buffers.h
-    include/eolo/serdes/protobuf/dynamic_deserializer.h
-    include/eolo/serdes/protobuf/protobuf.h
-    include/eolo/serdes/protobuf/protobuf_internal.h
+    include/hephaestus/serdes/dynamic_deserializer.h
+    include/hephaestus/serdes/serdes.h
+    include/hephaestus/serdes/type_info.h
+    include/hephaestus/serdes/protobuf/concepts.h
+    include/hephaestus/serdes/protobuf/buffers.h
+    include/hephaestus/serdes/protobuf/dynamic_deserializer.h
+    include/hephaestus/serdes/protobuf/protobuf.h
+    include/hephaestus/serdes/protobuf/protobuf_internal.h
 )
 
 # library target
 define_module_library(
   NAME serdes
-  PUBLIC_LINK_LIBS eolo::base magic_enum::magic_enum protobuf::libprotobuf
+  PUBLIC_LINK_LIBS hephaestus::base magic_enum::magic_enum protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

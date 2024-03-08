@@ -1,16 +1,16 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/base/exception.h"
-#include "eolo/cli/program_options.h"
-#include "eolo/ipc/common.h"
+#include "hephaestus/base/exception.h"
+#include "hephaestus/cli/program_options.h"
+#include "hephaestus/ipc/common.h"
 
 [[nodiscard]] inline auto
-getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescription {
-  static constexpr auto DEFAULT_KEY = "eolo/ipc/example/zenoh/put";
+getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {
+  static constexpr auto DEFAULT_KEY = "hephaestus/ipc/example/zenoh/put";
 
-  auto desc = eolo::cli::ProgramDescription(description);
+  auto desc = heph::cli::ProgramDescription(description);
   desc.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)
       .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
       .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
@@ -24,30 +24,30 @@ getProgramDescription(const std::string& description) -> eolo::cli::ProgramDescr
 }
 
 [[nodiscard]] inline auto
-parseArgs(const eolo::cli::ProgramOptions& args) -> std::pair<eolo::ipc::Config, eolo::ipc::TopicConfig> {
-  eolo::ipc::TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
+parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config, heph::ipc::TopicConfig> {
+  heph::ipc::TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
 
-  eolo::ipc::Config config;
+  heph::ipc::Config config;
   config.cache_size = args.getOption<std::size_t>("cache");
 
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
-    config.mode = eolo::ipc::Mode::PEER;
+    config.mode = heph::ipc::Mode::PEER;
   } else if (mode == "client") {
-    config.mode = eolo::ipc::Mode::CLIENT;
+    config.mode = heph::ipc::Mode::CLIENT;
   } else {
-    eolo::throwException<eolo::InvalidParameterException>(std::format("invalid mode value: {}", mode));
+    heph::throwException<heph::InvalidParameterException>(std::format("invalid mode value: {}", mode));
   }
 
   auto protocol = args.getOption<std::string>("protocol");
   if (protocol == "any") {
-    config.protocol = eolo::ipc::Protocol::ANY;
+    config.protocol = heph::ipc::Protocol::ANY;
   } else if (protocol == "udp") {
-    config.protocol = eolo::ipc::Protocol::UDP;
+    config.protocol = heph::ipc::Protocol::UDP;
   } else if (protocol == "tcp") {
-    config.protocol = eolo::ipc::Protocol::TCP;
+    config.protocol = heph::ipc::Protocol::TCP;
   } else {
-    eolo::throwException<eolo::InvalidParameterException>(
+    heph::throwException<heph::InvalidParameterException>(
         std::format("invalid value {} for option 'protocol'", protocol));
   }
 

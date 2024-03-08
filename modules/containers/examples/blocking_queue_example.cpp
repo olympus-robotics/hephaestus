@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include <cstdlib>
@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#include "eolo/containers/blocking_queue.h"
+#include "hephaestus/containers/blocking_queue.h"
 
 class String {
 public:
@@ -57,7 +57,7 @@ void pushVsEmplace() {
   // push methods require extra moving (or copying if move semantics is not supported).
   {
     fmt::print("=== Use push to add new element into the queue\n");
-    eolo::containers::BlockingQueue<std::pair<String, String>> queue{ {} };
+    heph::containers::BlockingQueue<std::pair<String, String>> queue{ {} };
     if (!queue.tryPush({ String{ "1" }, String{ "2" } })) {
       return;
     }
@@ -66,7 +66,7 @@ void pushVsEmplace() {
   // Using emplace helps to reduce the number a move constructor is called.
   {
     fmt::println("=== Use emplace to add new element into the queue");
-    eolo::containers::BlockingQueue<std::pair<String, String>> queue{ {} };
+    heph::containers::BlockingQueue<std::pair<String, String>> queue{ {} };
     if (!queue.tryEmplace(String{ "1" }, String{ "2" })) {
       return;
     }

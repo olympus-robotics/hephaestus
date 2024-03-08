@@ -1,12 +1,12 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 EOLO Contributors
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "eolo/serdes/dynamic_deserializer.h"
+#include "hephaestus/serdes/dynamic_deserializer.h"
 
-#include "eolo/serdes/type_info.h"
+#include "hephaestus/serdes/type_info.h"
 
-namespace eolo::serdes {
+namespace heph::serdes {
 
 void DynamicDeserializer::registerSchema(const TypeInfo& type_info) {
   switch (type_info.serialization) {
@@ -31,4 +31,4 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
       return std::string{ reinterpret_cast<const char*>(data.data()), data.size() };
   }
 }
-}  // namespace eolo::serdes
+}  // namespace heph::serdes
