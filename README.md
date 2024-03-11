@@ -59,7 +59,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(FetchContent)
 FetchContent_Declare(
     hephaestus
-    GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
+    GIT_REPOSITORY "https://github.com/olympus-robotics/hephaestus.git"
     GIT_TAG "main"
 )
 FetchContent_GetProperties(hephaestus)
@@ -90,7 +90,7 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 # Add your desired dependencies:
 # add_cmake_dependency(
 #     NAME hephaestus
-#     GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
+#     GIT_REPOSITORY "https://github.com/olympus-robotics/hephaestus.git"
 #     GIT_TAG "main"
 #     CMAKE_ARGS -DBUILD_MODULES="utils"
 # )
@@ -117,7 +117,7 @@ Using Hephaestus build system build hephaestus together with your project:
 ```cmake
 add_cmake_dependency(
     NAME hephaestus
-    GIT_REPOSITORY "https://github.com/filippobrizzi/hephaestus.git"
+    GIT_REPOSITORY "https://github.com/olympus-robotics/hephaestus.git"
     GIT_TAG "main"
     CMAKE_ARGS -DBUILD_MODULES="utils"
 )

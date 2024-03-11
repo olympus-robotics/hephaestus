@@ -61,7 +61,7 @@ jobs:
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/filippobrizzi/x86_64/hephaestus-dev_deps:latest
+      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev_deps:latest
       credentials:
         username: ${{ github.actor}}
         password: ${{secrets.GITHUB_TOKEN}}
