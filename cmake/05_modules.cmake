@@ -618,15 +618,6 @@ macro(define_module_test)
   add_executable(${TARGET_NAME} EXCLUDE_FROM_ALL ${TARGET_ARG_SOURCES}) # Don't build on `make`
   add_clang_format(${TARGET_NAME})
 
-  # Add to cmake tests (call using ctest)
-  add_test(
-    NAME ${TARGET_NAME}
-    COMMAND ${TARGET_NAME}
-    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
-  )
-
-  add_dependencies(${TESTS_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
-
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PUBLIC ${TARGET_ARG_PUBLIC_INCLUDE_PATHS}
@@ -640,12 +631,23 @@ macro(define_module_test)
             ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
   )
 
+  add_dependencies(${TESTS_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
+
+  if (NOT BUILD_AS_SUBPROJECT)
+  # Add to cmake tests (call using ctest)
+  add_test(
+    NAME ${TARGET_NAME}
+    COMMAND ${TARGET_NAME}
+    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
+  )
+
   gtest_discover_tests(
     ${TARGET_NAME}
     WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
     PROPERTIES
     TIMEOUT ${TEST_TIMEOUT_SECONDS}
   )
+  endif()
 
 endmacro()
 
