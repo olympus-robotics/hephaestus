@@ -40,10 +40,9 @@ if(CMAKE_FORMAT_BIN AND ENABLE_FORMATTER)
       "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/external/CMakeLists.txt;${PROJECT_SOURCE_DIR}/modules/**/*.txt"
   )
   if(EXISTS "${PROJECT_SOURCE_DIR}/cmake")
-    list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake"
-  )
+    list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake")
   endif()
-  if (EXISTS  "${PROJECT_SOURCE_DIR}/toolchains/*.cmake")
+  if(EXISTS "${PROJECT_SOURCE_DIR}/toolchains/*.cmake")
     list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake")
   endif()
 
