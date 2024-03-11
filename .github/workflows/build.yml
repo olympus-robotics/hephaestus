@@ -40,6 +40,9 @@ jobs:
   docker_deps_build_and_publish:
     needs: docker_build_and_publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read|write
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: dorny/paths-filter@v3.0.0
@@ -47,6 +50,7 @@ jobs:
         with:
           filters: |
             external:
+              - 'docker/**'
               - 'external/**'
       - name: Docker login
         uses: docker/login-action@v3
@@ -63,9 +67,7 @@ jobs:
     needs: docker_deps_build_and_publish
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    permissions: read-all
     container:
       image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev_deps:latest
       credentials:
