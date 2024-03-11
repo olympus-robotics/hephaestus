@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read|write
+      packages: write
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: dorny/paths-filter@v3.0.0
