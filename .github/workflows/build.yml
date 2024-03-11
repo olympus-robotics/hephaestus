@@ -15,6 +15,9 @@ env:
 jobs:
   docker_build_and_publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: dorny/paths-filter@v3.0.0
@@ -60,6 +63,9 @@ jobs:
     needs: docker_deps_build_and_publish
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     container:
       image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev_deps:latest
       credentials:
