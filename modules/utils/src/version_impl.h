@@ -17,8 +17,8 @@ static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
 static constexpr std::uint16_t VERSION_PATCH = 1;
 
-static constexpr std::string_view REPO_BRANCH = "hephaestus";
+static constexpr std::string_view REPO_BRANCH = "update_zenohc";
 static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
-static constexpr std::string_view REPO_HASH = "f46def4";
+static constexpr std::string_view REPO_HASH = "28cb39d";
 
 } // namespace heph::utils

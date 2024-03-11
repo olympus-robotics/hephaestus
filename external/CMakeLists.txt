@@ -67,14 +67,14 @@ add_cmake_dependency(
   NAME zenohc
   DEPENDS zenohd
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c.git"
-  GIT_TAG "5be32c83a93c2f7bb1ff8455b01bd479ae3524f5"
+  GIT_TAG "10176b911096cb92b8ee46bc491b78079ee26c20"
 )
 
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS zenohc
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp.git"
-  GIT_TAG "72cedc9400434829e50835b5c6c7c3dbb82843ca"
+  GIT_TAG "c0b7adb077cbf0b7b0cd04addb6de741b338fc49"
   SOURCE_SUBDIR install
 )
 
