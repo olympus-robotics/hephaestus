@@ -1,4 +1,4 @@
-HOST=ghcr.io/filippobrizzi
+HOST=ghcr.io/olympus-robotics
 VERSION=1.0.3
 IMAGE=hephaestus-dev
 
