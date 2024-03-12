@@ -17,7 +17,7 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 # correctly includes them.
 # --------------------------------------------------------------------------------------------------
 if(zenohcxx IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(ZENOHCXX_DEPENDS zenohc zenohd)
+  set(ZENOHCXX_DEPENDS zenohc)
   list(APPEND EXTERNAL_PROJECTS_LIST ${ZENOHCXX_DEPENDS})
 endif()
 
@@ -29,42 +29,8 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-if(zenohd IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(zenohd_VERION_REQUIRED 0.10.1-rc)
-
-  foreach(path ${CMAKE_PREFIX_PATH})
-    if(EXISTS "${path}/bin/zenohd")
-      set(ZENOHD_BIN "${path}/bin/zenohd")
-      break()
-    endif()
-  endforeach()
-  if(ZENOHD_BIN)
-    message(STATUS "zenohd: Using from ${ZENOHD_BIN}")
-    add_dummy_target(zenohd)
-  else()
-    message(STATUS "zenohd: Building ${zenohd_VERION_REQUIRED} from source")
-    set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.so")
-    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      set(ZENOH_PLUGIN_LIB "target/release/libzenoh_plugin_rest.dylib")
-    endif()
-    ExternalProject_Add(
-      zenohd
-      GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh.git"
-      GIT_TAG ${zenohd_VERION_REQUIRED}
-      GIT_SHALLOW true
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND
-      COMMAND cargo build --release --package zenoh-plugin-rest --package zenohd
-      BUILD_IN_SOURCE true
-      INSTALL_COMMAND cp target/release/zenohd ${CMAKE_INSTALL_PREFIX}/bin/ && cp ${ZENOH_PLUGIN_LIB}
-                      ${CMAKE_INSTALL_PREFIX}/bin/
-      LOG_BUILD ON
-    )
-  endif()
-endif()
-
 set(GIT_TAG "10176b911096cb92b8ee46bc491b78079ee26c20")
-add_cmake_dependency(NAME zenohc DEPENDS zenohd URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip")
+add_cmake_dependency(NAME zenohc URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip")
 
 set(GIT_TAG "c0b7adb077cbf0b7b0cd04addb6de741b338fc49")
 add_cmake_dependency(
