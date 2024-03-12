@@ -38,7 +38,7 @@ macro(add_dummy_target)
 endmacro()
 
 macro(add_cmake_dependency)
-  set(single_opts NAME VERSION GIT_TAG GIT_REPOSITORY SOURCE_SUBDIR)
+  set(single_opts NAME VERSION URL GIT_TAG GIT_REPOSITORY SOURCE_SUBDIR)
   set(multi_opts CMAKE_ARGS DEPENDS)
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -51,11 +51,15 @@ macro(add_cmake_dependency)
     message(FATAL_ERROR "Library name not specified")
   endif()
 
-  if(NOT TARGET_ARG_GIT_REPOSITORY)
-    message(FATAL_ERROR "Git repository not specified")
+  if(NOT TARGET_ARG_GIT_REPOSITORY AND NOT TARGET_ARG_URL)
+    message(FATAL_ERROR "Specify one between GIT_REPOSITORY and URL")
   endif()
 
-  if(NOT TARGET_ARG_GIT_TAG)
+  if(TARGET_ARG_GIT_REPOSITORY AND TARGET_ARG_URL)
+    message(FATAL_ERROR "Specify only one between GIT_REPOSITORY and URL")
+  endif()
+
+  if(TARGET_ARG_GIT_REPOSITORY AND NOT TARGET_ARG_GIT_TAG)
     message(FATAL_ERROR "Git tag not specified")
   endif()
 
@@ -86,16 +90,26 @@ macro(add_cmake_dependency)
       add_dummy_target(${TARGET_ARG_NAME})
     else()
       message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
-      ExternalProject_Add(
-        ${TARGET_ARG_NAME}
-        DEPENDS ${TARGET_ARG_DEPENDS}
-        GIT_REPOSITORY ${TARGET_ARG_GIT_REPOSITORY}
-        GIT_TAG ${TARGET_ARG_GIT_TAG}
-        CMAKE_ARGS ${CMAKE_ARGS}
-        GIT_SHALLOW true
-        GIT_SUBMODULES_RECURSE false
-        SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
-      )
+      if (TARGET_ARG_GIT_REPOSITORY)
+        ExternalProject_Add(
+          ${TARGET_ARG_NAME}
+          DEPENDS ${TARGET_ARG_DEPENDS}
+          GIT_REPOSITORY ${TARGET_ARG_GIT_REPOSITORY}
+          GIT_TAG ${TARGET_ARG_GIT_TAG}
+          CMAKE_ARGS ${CMAKE_ARGS}
+          GIT_SHALLOW true
+          GIT_SUBMODULES_RECURSE false
+          SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
+        )
+      else()
+        ExternalProject_Add(
+          ${TARGET_ARG_NAME}
+          DEPENDS ${TARGET_ARG_DEPENDS}
+          URL ${TARGET_ARG_URL}
+          CMAKE_ARGS ${CMAKE_ARGS}
+          SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
+        )
+      endif()
     endif()
   endif()
 endmacro()
