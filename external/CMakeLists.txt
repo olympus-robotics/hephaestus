@@ -64,18 +64,12 @@ if(zenohd IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 set(GIT_TAG "10176b911096cb92b8ee46bc491b78079ee26c20")
-add_cmake_dependency(
-  NAME zenohc
-  DEPENDS zenohd
-  URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip"
-
-)
+add_cmake_dependency(NAME zenohc DEPENDS zenohd URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip")
 
 set(GIT_TAG "c0b7adb077cbf0b7b0cd04addb6de741b338fc49")
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS zenohc
-  URL "https://github.com/eclipse-zenoh/zenoh-cpp/archive/${GIT_TAG}.zip"
+  DEPENDS zenohc URL "https://github.com/eclipse-zenoh/zenoh-cpp/archive/${GIT_TAG}.zip"
   SOURCE_SUBDIR install
 )
 

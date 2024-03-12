@@ -90,7 +90,7 @@ macro(add_cmake_dependency)
       add_dummy_target(${TARGET_ARG_NAME})
     else()
       message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
-      if (TARGET_ARG_GIT_REPOSITORY)
+      if(TARGET_ARG_GIT_REPOSITORY)
         ExternalProject_Add(
           ${TARGET_ARG_NAME}
           DEPENDS ${TARGET_ARG_DEPENDS}
