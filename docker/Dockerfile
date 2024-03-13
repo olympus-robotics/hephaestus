@@ -35,6 +35,10 @@ RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VE
 
 RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
 
+RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee -a /etc/apt/sources.list.d/zenoh.list > /dev/null && \
+    apt-get update && apt-get install -y systemctl zenoh && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust_installer.sh && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 RUN echo "export RUSTC_WRAPPER=sccache" >> $HOME/.bashrc

@@ -633,20 +633,20 @@ macro(define_module_test)
 
   add_dependencies(${TESTS_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
 
-  if (NOT BUILD_AS_SUBPROJECT)
-  # Add to cmake tests (call using ctest)
-  add_test(
-    NAME ${TARGET_NAME}
-    COMMAND ${TARGET_NAME}
-    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
-  )
+  if(NOT BUILD_AS_SUBPROJECT)
+    # Add to cmake tests (call using ctest)
+    add_test(
+      NAME ${TARGET_NAME}
+      COMMAND ${TARGET_NAME}
+      WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
+    )
 
-  gtest_discover_tests(
-    ${TARGET_NAME}
-    WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
-    PROPERTIES
-    TIMEOUT ${TEST_TIMEOUT_SECONDS}
-  )
+    gtest_discover_tests(
+      ${TARGET_NAME}
+      WORKING_DIRECTORY ${TARGET_ARG_WORKING_DIRECTORY}
+      PROPERTIES
+      TIMEOUT ${TEST_TIMEOUT_SECONDS}
+    )
   endif()
 
 endmacro()

@@ -37,8 +37,15 @@ endif()
 
 if(CMAKE_FORMAT_BIN AND ENABLE_FORMATTER)
   set(_cmake_files
-      "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/external/CMakeLists.txt;${PROJECT_SOURCE_DIR}/cmake/*.cmake;${PROJECT_SOURCE_DIR}/modules/**/*.txt;toolchains/*.cmake"
+      "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/external/CMakeLists.txt;${PROJECT_SOURCE_DIR}/modules/**/*.txt"
   )
+  if(EXISTS "${PROJECT_SOURCE_DIR}/cmake")
+    list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake")
+  endif()
+  if(EXISTS "${PROJECT_SOURCE_DIR}/toolchains/*.cmake")
+    list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake")
+  endif()
+
   if(FORMAT_FAIL_ON_CHANGE)
     add_custom_command(
       TARGET ${FORMAT_TARGET}
