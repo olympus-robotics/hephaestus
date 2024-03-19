@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <absl/base/thread_annotations.h>
 
 #include "hephaestus/serdes/type_info.h"

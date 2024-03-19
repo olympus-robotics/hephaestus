@@ -6,6 +6,8 @@
 
 #include <cstddef>
 
+#include <fmt/format.h>
+
 #include "hephaestus/base/exception.h"
 
 namespace heph::serdes::protobuf {

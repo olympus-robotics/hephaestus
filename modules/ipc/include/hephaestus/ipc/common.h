@@ -7,6 +7,8 @@
 #include <chrono>
 #include <string>
 
+#include <fmt/format.h>
+
 namespace heph::ipc {
 
 enum class Mode : uint8_t { PEER = 0, CLIENT, ROUTER };

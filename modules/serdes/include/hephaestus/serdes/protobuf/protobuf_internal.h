@@ -3,6 +3,9 @@
 //=================================================================================================
 
 #pragma once
+#include <queue>
+
+#include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 

@@ -49,7 +49,8 @@ Checks:          '-*,
                  -readability-magic-numbers,
                  -readability-function-cognitive-complexity,
                  -readability-redundant-access-specifiers,
-                 -readability-identifier-length
+                 -readability-identifier-length,
+                 -cert-dcl58-cpp
                   '
 
 # Check headers from `modules` only.
