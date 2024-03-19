@@ -5,8 +5,8 @@
 #include "hephaestus/bag/writer.h"
 
 #include <algorithm>
-#include <fmt/format.h>
 
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/base/exception.h"

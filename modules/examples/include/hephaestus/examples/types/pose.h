@@ -3,8 +3,6 @@
 //=================================================================================================
 
 #pragma once
-#include <fmt/format.h>
-
 #include <Eigen/Dense>
 
 #include <fmt/format.h>
@@ -25,14 +23,6 @@ struct Pose {
 }
 
 }  // namespace heph::examples::types
-
-template <>
-struct std::formatter<heph::examples::types::Pose> final : public std::formatter<std::string_view> {
-  template <typename FormatContext>
-  auto format(const heph::examples::types::Pose& pose, FormatContext& ctx) {
-    return std::format_to(ctx.out(), toString(pose));
-  }
-};
 
 template <>
 struct fmt::formatter<heph::examples::types::Pose> : fmt::formatter<std::string_view> {
