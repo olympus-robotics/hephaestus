@@ -10,7 +10,9 @@
 namespace heph {
 
 template <typename T>
-concept ScalarType = requires(T a) { std::is_scalar_v<T>; };
+concept ScalarType = requires(T a) {
+  std::is_scalar_v<T>;
+};
 
 /// Types that are convertable to and from a string
 template <typename T>
