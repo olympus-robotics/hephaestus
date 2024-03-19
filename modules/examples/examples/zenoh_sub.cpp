@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <format>
+#include <fmt/format.h>
 #include <thread>
 
 #include <fmt/chrono.h>

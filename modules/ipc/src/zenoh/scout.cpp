@@ -48,7 +48,7 @@ private:
   auto session = ::heph::ipc::zenoh::expect(open(std::move(zconfig)));
 
   static constexpr auto ROUTER_TOPIC = "@/router/{}";
-  const auto query_topic = std::format(ROUTER_TOPIC, router_id);
+  const auto query_topic = fmt::format(ROUTER_TOPIC, router_id);
   fmt::println("QUERY TOPIC: {}", query_topic);
   auto query_res = query(session, query_topic, "");
   throwExceptionIf<FailedZenohOperation>(query_res.empty(), "failed to query for router info: no response");
@@ -97,6 +97,6 @@ auto getListOfNodes() -> std::vector<NodeInfo> {
 }
 
 auto toString(const NodeInfo& info) -> std::string {
-  return std::format("[{}] ID: {}. Locators: {}", toString(info.mode), info.id, toString(info.locators));
+  return fmt::format("[{}] ID: {}. Locators: {}", toString(info.mode), info.id, toString(info.locators));
 }
 }  // namespace heph::ipc::zenoh

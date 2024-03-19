@@ -43,7 +43,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
   const auto response = zenoh::query(session_->zenoh_session, query_topic, "");
   throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
-      std::format("received {} responses for type from service {}", response.size(), query_topic));
+      fmt::format("received {} responses for type from service {}", response.size(), query_topic));
 
   std::unique_lock<std::mutex> lock(mutex_);
   // While waiting for the query someone else could have added the topic to the DB.

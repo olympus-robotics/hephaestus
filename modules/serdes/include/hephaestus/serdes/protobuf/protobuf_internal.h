@@ -26,7 +26,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   Proto proto;
   auto res = buffer.deserialize(proto);
   throwExceptionIf<InvalidDataException>(
-      !res, std::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
+      !res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
 
   fromProto(proto, data);
 }

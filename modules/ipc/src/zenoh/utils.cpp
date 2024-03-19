@@ -43,7 +43,7 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
 
   // Add router endpoint.
   if (!config.router.empty()) {
-    const auto router_endpoint = std::format(R"(["tcp/{}"])", config.router);
+    const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
     auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
     throwExceptionIf<FailedZenohOperation>(!res, "failed to add router endpoint");
   }

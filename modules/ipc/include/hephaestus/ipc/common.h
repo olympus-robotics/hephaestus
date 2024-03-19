@@ -40,7 +40,7 @@ struct MessageMetadata {
 };
 
 [[nodiscard]] constexpr auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
-  return std::format("type_info/{}", topic);
+  return fmt::format("type_info/{}", topic);
 }
 
 }  // namespace heph::ipc
