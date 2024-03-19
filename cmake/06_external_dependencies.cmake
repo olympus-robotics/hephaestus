@@ -34,14 +34,6 @@ macro(build_external_dependencies)
   # CMake parameters must be explicitly passed as if cmake was called on it from the command line
   message(STATUS "========= External dependencies (from folder: ${TARGET_ARG_FOLDER}): Configuring =========")
   list(APPEND EXTERNAL_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH})
-  message(ERROR, "External prefix path: ${EXTERNAL_PREFIX_PATH}")
-  message(ERROR, "TARGET_ARG_FOLDER: ${TARGET_ARG_FOLDER}")
-  message(ERROR, "CMAKE_INSTALL_RPATH: ${CMAKE_INSTALL_RPATH}")
-  message(ERROR, "BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
-  message(ERROR, "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-  message(ERROR, "EP_DEPLOY_DIR: ${EP_DEPLOY_DIR}")
-  message(ERROR, "CMAKE_TEMPLATES_DIR: ${CMAKE_TEMPLATES_DIR}")
-  message(ERROR, "CMAKE_COMMAND: ${CMAKE_COMMAND}")
 
   execute_process(
     COMMAND
@@ -55,9 +47,6 @@ macro(build_external_dependencies)
     WORKING_DIRECTORY ${EP_BINARY_DIR}
     RESULT_VARIABLE _result
   )
-
-  message(ERROR, "RESULT: ${_result}")
-  message(ERROR, "External projects list: ${formatted_external_projects_list}")
 
   # if configuration succeeded, then build all external projects
   if(${_result} EQUAL 0)
