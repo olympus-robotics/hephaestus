@@ -26,7 +26,7 @@ namespace heph::ipc::zenoh {
 
 inline auto toString(const zenohc::Id& id) -> std::string {
   return std::accumulate(std::begin(id.id), std::end(id.id), std::string(),
-                         [](const std::string& s, uint8_t v) { return std::format("{:02x}", v) + s; });
+                         [](const std::string& s, uint8_t v) { return fmt::format("{:02x}", v) + s; });
 }
 
 constexpr auto toString(const zenohc::WhatAmI& me) -> std::string_view {
@@ -68,7 +68,7 @@ inline auto toStringVector(const zenohc::StrArrayView& arr) -> std::vector<std::
   vec.reserve(size);
 
   for (size_t i = 0; i < size; ++i) {
-    vec.emplace_back(std::format("{:s}", arr[i]));
+    vec.emplace_back(fmt::format("{:s}", arr[i]));
   }
 
   return vec;
@@ -77,7 +77,7 @@ inline auto toStringVector(const zenohc::StrArrayView& arr) -> std::vector<std::
 inline auto toString(const std::vector<std::string>& vec) -> std::string {
   std::string str = "[";
   for (const auto& value : vec) {
-    str += std::format("\"{:s}\", ", value);
+    str += fmt::format("\"{:s}\", ", value);
   }
 
   str += "]";
@@ -99,7 +99,7 @@ template <typename T>
 constexpr auto expect(std::variant<T, zenohc::ErrorMessage>&& v) -> T {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
-    throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));
+    throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
   }
 
   return std::get<T>(std::move(v));
@@ -109,7 +109,7 @@ template <typename T>
 constexpr auto expectAsSharedPtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::shared_ptr<T> {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
-    throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));
+    throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
   }
 
   return std::make_shared<T>(std::move(std::get<T>(std::move(v))));
@@ -119,7 +119,7 @@ template <typename T>
 constexpr auto expectAsUniquePtr(std::variant<T, zenohc::ErrorMessage>&& v) -> std::unique_ptr<T> {
   if (std::holds_alternative<zenohc::ErrorMessage>(v)) {
     const auto msg = std::get<zenohc::ErrorMessage>(v).as_string_view();
-    throwException<InvalidOperationException>(std::format("zenoh error: {}", msg));
+    throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
   }
 
   return std::make_unique<T>(std::move(std::get<T>(std::move(v))));

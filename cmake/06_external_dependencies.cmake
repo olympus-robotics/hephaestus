@@ -34,6 +34,7 @@ macro(build_external_dependencies)
   # CMake parameters must be explicitly passed as if cmake was called on it from the command line
   message(STATUS "========= External dependencies (from folder: ${TARGET_ARG_FOLDER}): Configuring =========")
   list(APPEND EXTERNAL_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH})
+
   execute_process(
     COMMAND
       ${CMAKE_COMMAND} -G "Ninja" ${TARGET_ARG_FOLDER} # Use 'Ninja' for parallel build

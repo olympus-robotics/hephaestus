@@ -5,6 +5,8 @@
 #define MCAP_IMPLEMENTATION
 #define MCAP_COMPRESSION_NO_ZSTD
 #define MCAP_COMPRESSION_NO_LZ4
+#include <filesystem>
+
 #include <fmt/core.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>

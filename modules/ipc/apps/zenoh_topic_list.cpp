@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <csignal>
-#include <print>
 
 #include <fmt/core.h>
 #include <zenoh.h>

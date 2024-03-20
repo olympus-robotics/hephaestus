@@ -48,9 +48,9 @@ auto getListOfPublishers(const Session& session, std::string_view topic) -> std:
 }
 
 void printPublisherInfo(const PublisherInfo& info) {
-  auto text = std::format("[Publisher] Topic: {}", info.topic);
+  auto text = fmt::format("[Publisher] Topic: {}", info.topic);
   if (info.status == PublisherStatus::DROPPED) {
-    text = std::format("{} - DROPPED", text);
+    text = fmt::format("{} - DROPPED", text);
   }
 
   fmt::println("{}", text);

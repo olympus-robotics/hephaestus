@@ -127,9 +127,9 @@ void ZenohRecorder::Impl::onPublisherAdded(const ipc::zenoh::PublisherInfo& info
     absl::MutexLock lock{ &subscribers_mutex_ };
     throwExceptionIf<InvalidOperationException>(
         subscribers_.contains(info.topic),
-        std::format("adding subscriber for topic: {}, but one already exists", info.topic));
+        fmt::format("adding subscriber for topic: {}, but one already exists", info.topic));
 
-    LOG(INFO) << std::format("Create subscriber for topic: {}", info.topic);
+    LOG(INFO) << fmt::format("Create subscriber for topic: {}", info.topic);
     subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(
         session_, ipc::TopicConfig{ .name = info.topic }, std::move(cb));
   }
@@ -139,11 +139,11 @@ void ZenohRecorder::Impl::onPublisherDropped(const ipc::zenoh::PublisherInfo& in
   absl::MutexLock lock{ &subscribers_mutex_ };
   throwExceptionIf<InvalidOperationException>(
       !subscribers_.contains(info.topic),
-      std::format("trying to stop recording from dropped topic {}, but subscriber doesn't exist",
+      fmt::format("trying to stop recording from dropped topic {}, but subscriber doesn't exist",
                   info.topic));
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
-  LOG(INFO) << std::format("Drop subscriber for topic: {}", info.topic);
+  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
 }
 
 // ----------------------------------------------------------------------------------------------------------

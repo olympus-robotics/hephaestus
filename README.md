@@ -50,7 +50,7 @@ You can use the build system of `hephaestus` in your own project by importing th
 
 Create the top level `CMakeLists.txt` as:
 ```cmake
-cmake_minimum_required(VERSION 3.27.3)
+cmake_minimum_required(VERSION 3.22.1)
 project(my_project LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)

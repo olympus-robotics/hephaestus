@@ -7,7 +7,7 @@
 # the project. The dependencies declared in this file are downloaded, configured and built at configuration time.
 # =================================================================================================
 
-cmake_minimum_required(VERSION 3.27.3)
+cmake_minimum_required(VERSION 3.22.1)
 project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)

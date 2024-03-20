@@ -54,7 +54,7 @@ auto main(int argc, const char* argv[]) -> int {
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
     std::ignore =
-        std::fputs(std::format("main terminated with an exception: {}\n", ex.what()).c_str(), stderr);
+        std::fputs(fmt::format("main terminated with an exception: {}\n", ex.what()).c_str(), stderr);
     return EXIT_FAILURE;
   }
 }

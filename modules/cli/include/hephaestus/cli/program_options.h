@@ -6,10 +6,11 @@
 #pragma once
 
 #include <algorithm>
-#include <format>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <fmt/format.h>
 
 #include "hephaestus/base/exception.h"
 #include "hephaestus/utils/concepts.h"
@@ -162,7 +163,7 @@ void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k
   const auto it =
       std::find_if(options_.begin(), options_.end(), [&key](const auto& opt) { return key == opt.key; });
   throwExceptionIf<InvalidOperationException>(it != options_.end(),
-                                              std::format("Attempted redefinition of option '{}'", key));
+                                              fmt::format("Attempted redefinition of option '{}'", key));
 
   if (k == '\0') {
     return;
@@ -172,7 +173,7 @@ void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k
       std::find_if(options_.begin(), options_.end(), [k](const auto& opt) { return k == opt.short_key; });
   throwExceptionIf<InvalidOperationException>(
       short_it != options_.end(),
-      std::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
+      fmt::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
 }
 
 template <StringStreamable T>
@@ -203,7 +204,7 @@ constexpr auto ProgramDescription::defineOption(const std::string& key, char sho
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(),
-                        std::format("{}", default_value), false, false);
+                        fmt::format("{}", default_value), false, false);
   return *this;
 }
 
@@ -225,12 +226,12 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   const auto it = std::find_if(options_.begin(), options_.end(),
                                [&option](const auto& opt) { return option == opt.key; });
   throwExceptionIf<InvalidParameterException>(it == options_.end(),
-                                              std::format("Undefined option '{}'", option));
+                                              fmt::format("Undefined option '{}'", option));
 
   const auto my_type = utils::getTypeName<T>();
   throwExceptionIf<TypeMismatchException>(
       it->value_type != my_type,
-      std::format("Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
+      fmt::format("Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
                   it->value_type));
 
   if constexpr (std::is_same_v<T, std::string>) {
@@ -243,7 +244,7 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   std::istringstream stream(it->value);
   throwExceptionIf<TypeMismatchException>(
       not(stream >> std::boolalpha >> value),
-      std::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option));
+      fmt::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option));
 
   return value;
 }

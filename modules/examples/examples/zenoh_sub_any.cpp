@@ -4,11 +4,11 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <format>
 #include <thread>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
@@ -26,7 +26,7 @@
   auto response = heph::ipc::zenoh::query(session.zenoh_session, service_topic, "");
   heph::throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
-      std::format("received {} responses for type from service {}", response.size(), service_topic));
+      fmt::format("received {} responses for type from service {}", response.size(), service_topic));
 
   return heph::serdes::TypeInfo::fromJson(response.front().value);
 }

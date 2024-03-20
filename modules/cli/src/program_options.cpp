@@ -13,10 +13,10 @@ namespace heph::cli {
 namespace {
 auto getKeyStringForHelper(const ProgramOptions::Option& option) -> std::string {
   if (option.short_key == '\0') {
-    return std::format("--{}   ", option.key);
+    return fmt::format("--{}   ", option.key);
   }
 
-  return std::format("--{} -{}", option.key, option.short_key);
+  return fmt::format("--{} -{}", option.key, option.short_key);
 }
 }  // namespace
 
@@ -53,10 +53,10 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
 
     ++arg_it;
     throwExceptionIf<InvalidParameterException>(
-        arg_it == args.end(), std::format("After option --{} there is supposed to be a value", option.key));
+        arg_it == args.end(), fmt::format("After option --{} there is supposed to be a value", option.key));
     throwExceptionIf<InvalidParameterException>(
         arg_it->starts_with('-'),
-        std::format("Option --{} is supposed to be followed by a value, not another option {}", option.key,
+        fmt::format("Option --{} is supposed to be followed by a value, not another option {}", option.key,
                     *arg_it));
 
     option.value = *arg_it;
@@ -67,7 +67,7 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
   for (const auto& entry : options_) {
     throwExceptionIf<InvalidConfigurationException>(
         entry.is_required and not entry.is_specified,
-        std::format("Required option '{}' not specified", entry.key));
+        fmt::format("Required option '{}' not specified", entry.key));
   }
 
   return ProgramOptions(std::move(options_));
@@ -80,13 +80,13 @@ auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOpti
         std::find_if(options_.begin(), options_.end(), [&key](const auto& opt) { return key == opt.key; });
 
     throwExceptionIf<InvalidParameterException>(it == options_.end(),
-                                                std::format("Undefined option '{}'", key));
+                                                fmt::format("Undefined option '{}'", key));
     return *it;
   }
 
   if (arg.starts_with("-")) {
     throwExceptionIf<InvalidParameterException>(arg.size() != 2,
-                                                std::format("Undefined option '{}'", arg.substr(1)));
+                                                fmt::format("Undefined option '{}'", arg.substr(1)));
     const auto short_key = arg[1];
     const auto it = std::find_if(options_.begin(), options_.end(),
                                  [short_key](const auto& opt) { return short_key == opt.short_key; });
@@ -94,7 +94,7 @@ auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOpti
   }
 
   throwException<InvalidParameterException>(
-      std::format("Arg {} is not a valid option, it must start with either '--' or '-'", arg));
+      fmt::format("Arg {} is not a valid option, it must start with either '--' or '-'", arg));
 
   // NOTE: this will never happen as we will throw an exception before getting here, but compiler
   // wants this.
@@ -109,16 +109,16 @@ auto ProgramDescription::getHelpMessage() const -> std::string {
       continue;
     }
     if (entry.is_required) {
-      help_stream << std::format("{} [required]: {}. [type: {}]\n", getKeyStringForHelper(entry),
+      help_stream << fmt::format("{} [required]: {}. [type: {}]\n", getKeyStringForHelper(entry),
                                  entry.description, entry.value_type);
     } else {
-      help_stream << std::format("{} [optional]: {}; (default: {}) [type: {}]\n",
+      help_stream << fmt::format("{} [optional]: {}; (default: {}) [type: {}]\n",
                                  getKeyStringForHelper(entry), entry.description, entry.value,
                                  entry.value_type);
     }
   }
 
-  help_stream << std::format("--{} -{} [optional]: {}", HELP_KEY, HELP_SHORT_KEY, "This text!");
+  help_stream << fmt::format("--{} -{} [optional]: {}", HELP_KEY, HELP_SHORT_KEY, "This text!");
 
   return help_stream.str();
 }

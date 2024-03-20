@@ -3,6 +3,9 @@
 //=================================================================================================
 
 #pragma once
+#include <queue>
+
+#include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
@@ -26,7 +29,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   Proto proto;
   auto res = buffer.deserialize(proto);
   throwExceptionIf<InvalidDataException>(
-      !res, std::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
+      !res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
 
   fromProto(proto, data);
 }
