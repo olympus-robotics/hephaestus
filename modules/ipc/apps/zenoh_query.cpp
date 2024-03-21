@@ -4,10 +4,10 @@
 
 #include <fmt/core.h>
 
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/query.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
-#include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {

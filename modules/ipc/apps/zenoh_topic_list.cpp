@@ -10,8 +10,8 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "zenoh_program_options.h"
 
 std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 auto signalHandler(int /*unused*/) -> void {

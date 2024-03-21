@@ -20,6 +20,7 @@ set(SOURCES
     src/common.cpp
     src/topic_database.cpp
     src/zenoh/liveliness.cpp
+    src/zenoh/program_options.cpp
     src/zenoh/publisher.cpp
     src/zenoh/query.cpp
     src/zenoh/service.cpp
@@ -30,6 +31,7 @@ set(SOURCES
     include/hephaestus/ipc/common.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/zenoh/utils.h
+    include/hephaestus/ipc/zenoh/program_options.h
     include/hephaestus/ipc/zenoh/publisher.h
     include/hephaestus/ipc/zenoh/query.h
     include/hephaestus/ipc/zenoh/service.h

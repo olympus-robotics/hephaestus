@@ -6,8 +6,8 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/scout.h"
-#include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   (void)argc;
