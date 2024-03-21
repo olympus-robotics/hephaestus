@@ -6,6 +6,8 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/common.h"
 
+namespace heph::ipc {
+
 [[nodiscard]] inline auto
 getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {
   static constexpr auto DEFAULT_KEY = "**";
@@ -57,4 +59,5 @@ parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config,
   config.real_time = args.getOption<bool>("realtime");
 
   return { std::move(config), std::move(topic_config) };
+}
 }
