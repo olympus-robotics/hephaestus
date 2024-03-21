@@ -39,11 +39,11 @@ auto main(int argc, const char* argv[]) -> int {
   (void)signal(SIGTERM, signalHandler);
 
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = heph::ipc::zenoh::getProgramDescription("Periodic publisher example");
     desc.defineFlag("live", 'l', "if set the app will keep running waiting for new publisher to advertise");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = parseArgs(args);
+    auto [session_config, topic_config] = heph::ipc::zenoh::parseArgs(args);
 
     fmt::println("Opening session...");
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));

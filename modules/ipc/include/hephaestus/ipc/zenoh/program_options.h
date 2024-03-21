@@ -6,7 +6,7 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/common.h"
 
-namespace heph::ipc {
+namespace heph::ipc::zenoh {
 
 [[nodiscard]] inline auto
 getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {
@@ -60,4 +60,4 @@ parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config,
 
   return { std::move(config), std::move(topic_config) };
 }
-}
+}  // namespace heph::ipc::zenoh

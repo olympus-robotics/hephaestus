@@ -11,12 +11,12 @@
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    auto desc = getProgramDescription("Query");
+    auto desc = heph::ipc::zenoh::getProgramDescription("Query");
     desc.defineOption<std::string>("value", 'v', "the value to pass the query", "");
     const auto args = std::move(desc).parse(argc, argv);
     const auto value = args.getOption<std::string>("value");
 
-    auto [config, topic_config] = parseArgs(args);
+    auto [config, topic_config] = heph::ipc::zenoh::parseArgs(args);
     auto session = heph::ipc::zenoh::createSession(std::move(config));
     fmt::println("Opening session: {}", heph::ipc::zenoh::toString(session->zenoh_session.info_zid()));
 
