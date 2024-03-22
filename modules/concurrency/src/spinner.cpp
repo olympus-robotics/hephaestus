@@ -4,27 +4,30 @@
 
 #include "hephaestus/concurrency/spinner.h"
 
+#include <fmt/format.h>
+
 #include "hephaestus/base/exception.h"
 
 namespace heph::concurrency {
-Spinner::Spinner() : is_started_(false), stop_token_(std::nullopt), spinner_thread_() {
+Spinner::Spinner() : is_started_(false) {
 }
 
-virtual ~Spinner::Spinner() {
-  stop();
+Spinner::~Spinner() {
+  if (is_started_.load() && spinner_thread_.joinable()) {
+    stop();
+  }
 }
 
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(is_started_.load(), fmt::format("Spinner is already started."));
 
-  stop_token_.emplace();
-  spinner_thread_ = std::jthread([this](std::stop_token st) { spin(); }, stop_token_.value());
+  spinner_thread_ = std::jthread([this](std::stop_token stop_token) { spin(stop_token); });
 
   is_started_.store(true);
 }
 
-virtual void Spinner::spin() {
-  while (!stop_token_->stop_requested()) {
+void Spinner::spin(std::stop_token& stop_token) {
+  while (!stop_token->stop_requested()) {
     spinOnce();
   }
 }
@@ -32,11 +35,8 @@ virtual void Spinner::spin() {
 void Spinner::stop() {
   throwExceptionIf<InvalidOperationException>(!is_started_.load(),
                                               fmt::format("Spinner not yet started, cannot stop."));
-  if (stop_token_) {
-    stop_token_->request_stop();
-    spinner_thread_.join();
-    stop_token_.reset();
-  }
+  spinner_threat_.request_stop();
+  spinner_thread_.join();
 
   if (stop_callback_) {
     stop_callback_();

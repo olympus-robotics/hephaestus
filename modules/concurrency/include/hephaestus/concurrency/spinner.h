@@ -6,6 +6,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
+#include <optional>
 #include <thread>
 
 namespace heph::concurrency {
@@ -14,16 +16,20 @@ class Spinner {
 public:
   Spinner();
   virtual ~Spinner();
+  Spinner(const Spinner&) = delete;
+  auto operator=(const Spinner&) -> Spinner& = delete;
+  Spinner(Spinner&&) = default;
+  auto operator=(Spinner&&) -> Spinner& = default;
+
   void start();
   void stop();
-  virtual void spin();
+  virtual void spin(std::stop_token& stop_token);
   virtual void spinOnce() = 0;  // Pure virtual function
   void addStopCallback(std::function<void> callback);
 
 private:
   std::atomic<bool> is_started_ = false;
   std::function<void> stop_callback_;
-  std::optional<std::stop_source> stop_token_;
   std::jthread spinner_thread_;
 };
 }  // namespace heph::concurrency
