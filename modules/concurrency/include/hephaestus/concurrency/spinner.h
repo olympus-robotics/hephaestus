@@ -5,9 +5,7 @@
 #pragma once
 
 #include <atomic>
-#include <chrono>
 #include <functional>
-#include <optional>
 #include <thread>
 
 namespace heph::concurrency {
