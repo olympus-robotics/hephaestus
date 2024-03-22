@@ -13,8 +13,12 @@ Spinner::Spinner() : is_started_(false) {
 }
 
 Spinner::~Spinner() {
-  if (is_started_.load() && spinner_thread_.joinable()) {
-    stop();
+  try {
+    if (is_started_.load() && spinner_thread_.joinable()) {
+      stop();
+    }
+  } catch (const std::exception& ex) {
+    fmt::print("Error stopping spinner: {}", ex.what());
   }
 }
 
@@ -27,7 +31,7 @@ void Spinner::start() {
 }
 
 void Spinner::spin(std::stop_token& stop_token) {
-  while (!stop_token->stop_requested()) {
+  while (!stop_token.stop_requested()) {
     spinOnce();
   }
 }
@@ -35,7 +39,7 @@ void Spinner::spin(std::stop_token& stop_token) {
 void Spinner::stop() {
   throwExceptionIf<InvalidOperationException>(!is_started_.load(),
                                               fmt::format("Spinner not yet started, cannot stop."));
-  spinner_threat_.request_stop();
+  spinner_thread_.request_stop();
   spinner_thread_.join();
 
   if (stop_callback_) {
@@ -43,6 +47,10 @@ void Spinner::stop() {
   }
 
   is_started_.store(false);
+}
+
+void Spinner::addStopCallback(std::function<void()> callback) {
+  stop_callback_ = std::move(callback);
 }
 
 }  // namespace heph::concurrency
