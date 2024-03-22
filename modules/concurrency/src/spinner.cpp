@@ -4,6 +4,7 @@
 
 #include "hephaestus/concurrency/spinner.h"
 
+#include <absl/log/log.h>
 #include <fmt/format.h>
 
 #include "hephaestus/base/exception.h"
@@ -13,12 +14,9 @@ Spinner::Spinner() : is_started_(false) {
 }
 
 Spinner::~Spinner() {
-  try {
-    if (is_started_.load() && spinner_thread_.joinable()) {
-      stop();
-    }
-  } catch (const std::exception& ex) {
-    fmt::print("Error stopping spinner: {}", ex.what());
+  if (is_started_.load() || spinner_thread_.joinable()) {
+    LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
+    std::terminate();
   }
 }
 
