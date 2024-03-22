@@ -8,7 +8,7 @@
 
 namespace heph::serdes::protobuf {
 
-template <class T>
+template <class T, class... Args>
 struct ProtoAssociation {
   using Type = void;
 };

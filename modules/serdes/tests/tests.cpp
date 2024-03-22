@@ -2,6 +2,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -31,11 +33,26 @@ struct Data {
   int a = NUMBER;
 };
 
+template <class T, size_t Size>
+struct TemplatedData {
+  std::array<T, Size> data;
+  TemplatedData() {
+    std::fill(data.begin(), data.end(), static_cast<T>(NUMBER));
+  }
+};
+
+using TemplatedData3d = TemplatedData<double, 3>;
+
 }  // namespace heph::serdes::tests
 
 namespace heph::serdes::protobuf {
 template <>
 struct ProtoAssociation<heph::serdes::tests::Data> {
+  using Type = heph::serdes::tests::MockProtoMessage;
+};
+
+template <class... Args>
+    struct ProtoAssociation < heph::serdes::tests::TemplatedData<Args...> {
   using Type = heph::serdes::tests::MockProtoMessage;
 };
 }  // namespace heph::serdes::protobuf
