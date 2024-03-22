@@ -2,9 +2,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <condition_variable>
+#include <atomic>
 #include <csignal>
-#include <mutex>
 
 #include <fmt/core.h>
 
@@ -22,12 +21,13 @@ protected:
   }
 };
 
-std::condition_variable cv;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-std::mutex cv_m;             // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::atomic_flag stop_called = ATOMIC_FLAG_INIT;
 void handleSigint(int signal) {
   if (signal == SIGINT) {
     fmt::println("Stop called.");
-    cv.notify_one();
+    stop_called.test_and_set();
+    stop_called.notify_all();
   }
 }
 
@@ -38,8 +38,9 @@ auto main() -> int {
 
     spinner.start();
 
-    std::unique_lock<std::mutex> lock(cv_m);
-    cv.wait(lock);
+    // Wait until stop_called is set
+    stop_called.wait(false);
+
     spinner.stop();
   } catch (const std::exception& ex) {
     fmt::println("{}", ex.what());
