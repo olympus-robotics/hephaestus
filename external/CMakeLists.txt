@@ -30,7 +30,10 @@ endif()
 # zenoh
 
 set(GIT_TAG "0d0a6d8d1488a71224c3bf6929714036945e7947")
-add_cmake_dependency(NAME zenohc URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip")
+add_cmake_dependency(
+  NAME zenohc URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip"
+  CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=1.76.0
+)
 
 set(GIT_TAG "2013df93ee771ed691e0bf85f55c61d9cb85119d")
 add_cmake_dependency(
