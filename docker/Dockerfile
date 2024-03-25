@@ -6,10 +6,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
     apt install -y --no-install-recommends x11-apps g++ mesa-utils make cmake-curses-gui ninja-build git gdb vim htop \
-        curl zlib1g-dev libffi-dev libssl-dev libbz2-dev libsqlite3-dev iproute2 tk-dev texlive-latex-extra texlive-fonts-recommended dvipng cm-super libnotify-bin \
-        pkg-config gpg wget ca-certificates git-lfs curl ccache ninja-build doxygen graphviz linux-generic python3-dev python3-pip iproute2 python-is-python3 \
-        net-tools iftop htop lsb-release software-properties-common gnupg bash-completion psmisc less tree && \
-        rm -rf /var/lib/apt/lists/*
+    curl zlib1g-dev libffi-dev libssl-dev libbz2-dev libsqlite3-dev iproute2 tk-dev texlive-latex-extra texlive-fonts-recommended dvipng cm-super libnotify-bin \
+    pkg-config gpg wget ca-certificates git-lfs curl ccache ninja-build doxygen graphviz linux-generic python3-dev python3-pip iproute2 python-is-python3 \
+    net-tools iftop htop lsb-release software-properties-common gnupg bash-completion psmisc less tree && \
+    rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip install cmakelang
 
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
@@ -39,7 +39,9 @@ RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" |
     apt-get update && apt-get install -y systemctl zenoh && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rust_installer.sh && chmod +x rust_installer.sh && ./rust_installer.sh -y
+ENV RUST_VERSION=1.76.0
+RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y && \
+    . "$CARGO_HOME/env" && rustup install "$RUST_VERSION" && rustup default "$RUST_VERSION"
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 RUN echo "export RUSTC_WRAPPER=sccache" >> $HOME/.bashrc
 
