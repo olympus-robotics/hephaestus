@@ -29,10 +29,10 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-set(GIT_TAG "10176b911096cb92b8ee46bc491b78079ee26c20")
+set(GIT_TAG "0d0a6d8d1488a71224c3bf6929714036945e7947")
 add_cmake_dependency(NAME zenohc URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip")
 
-set(GIT_TAG "c0b7adb077cbf0b7b0cd04addb6de741b338fc49")
+set(GIT_TAG "2013df93ee771ed691e0bf85f55c61d9cb85119d")
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS zenohc URL "https://github.com/eclipse-zenoh/zenoh-cpp/archive/${GIT_TAG}.zip"
