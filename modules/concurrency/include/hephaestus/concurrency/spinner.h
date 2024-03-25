@@ -7,6 +7,7 @@
 #include <atomic>
 #include <functional>
 #include <thread>
+#include <stop_token>
 
 namespace heph::concurrency {
 
