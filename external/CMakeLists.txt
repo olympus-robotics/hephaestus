@@ -145,4 +145,5 @@ add_cmake_dependency(
   GIT_REPOSITORY "https://github.com/filippobrizzi/mcap.git"
   GIT_TAG ${MCAP_TAG}
   SOURCE_SUBDIR cpp
+  CMAKE_ARGS -DBUILD_TESTING=OFF
 )
