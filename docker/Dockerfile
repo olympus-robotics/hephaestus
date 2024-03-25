@@ -41,7 +41,7 @@ RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" |
 
 ENV RUST_VERSION=1.76.0
 RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y && \
-    . "$CARGO_HOME/env" && rustup install "$RUST_VERSION" && rustup default "$RUST_VERSION"
+    . "$HOME/.carg/env" && rustup install "$RUST_VERSION" && rustup default "$RUST_VERSION"
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 RUN echo "export RUSTC_WRAPPER=sccache" >> $HOME/.bashrc
 
