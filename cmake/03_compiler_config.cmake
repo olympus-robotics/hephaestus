@@ -105,8 +105,7 @@ if(LIST_OF_SANITIZERS)
   endif()
 endif()
 
-# Set whether to enable inter-procedural optimisation
-# TODO: This is working with latest release of Clang.
+# Set whether to enable inter-procedural optimisation TODO: This is working with latest release of Clang.
 option(ENABLE_IPO "Enable interprocedural optimization" OFF)
 if(ENABLE_IPO)
   include(CheckIPOSupported)
