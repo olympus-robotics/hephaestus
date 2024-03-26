@@ -19,6 +19,6 @@ static constexpr std::uint16_t VERSION_PATCH = 1;
 
 static constexpr std::string_view REPO_BRANCH = "zenohc_fix_carg_version";
 static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
-static constexpr std::string_view REPO_HASH = "d40880c";
+static constexpr std::string_view REPO_HASH = "1d313dc";
 
 } // namespace heph::utils
