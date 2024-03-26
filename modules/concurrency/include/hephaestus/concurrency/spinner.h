@@ -7,7 +7,6 @@
 #include <atomic>
 #include <functional>
 #include <thread>
-#include <stop_token>
 
 namespace heph::concurrency {
 
@@ -22,13 +21,14 @@ public:
 
   void start();
   void stop();
-  virtual void spin(std::stop_token& stop_token);
+  virtual void spin();
   virtual void spinOnce() = 0;  // Pure virtual function
   void addStopCallback(std::function<void()> callback);
 
 private:
   std::atomic<bool> is_started_ = false;
+  std::atomic<bool> stop_requested_ = false;
   std::function<void()> stop_callback_;
-  std::jthread spinner_thread_;
+  std::thread spinner_thread_;
 };
 }  // namespace heph::concurrency

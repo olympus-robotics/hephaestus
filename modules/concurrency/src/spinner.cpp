@@ -10,7 +10,7 @@
 #include "hephaestus/base/exception.h"
 
 namespace heph::concurrency {
-Spinner::Spinner() : is_started_(false) {
+Spinner::Spinner() : is_started_(false), stop_requested_(false) {
 }
 
 Spinner::~Spinner() {
@@ -23,13 +23,14 @@ Spinner::~Spinner() {
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(is_started_.load(), fmt::format("Spinner is already started."));
 
-  spinner_thread_ = std::jthread([this](std::stop_token stop_token) { spin(stop_token); });
+  // NOTE: Replace with std::stop_token and std::jthread when clang supports it.
+  spinner_thread_ = std::thread([this]() { spin(); });
 
   is_started_.store(true);
 }
 
-void Spinner::spin(std::stop_token& stop_token) {
-  while (!stop_token.stop_requested()) {
+void Spinner::spin() {
+  while (!stop_requested_.load()) {
     spinOnce();
   }
 }
@@ -37,7 +38,7 @@ void Spinner::spin(std::stop_token& stop_token) {
 void Spinner::stop() {
   throwExceptionIf<InvalidOperationException>(!is_started_.load(),
                                               fmt::format("Spinner not yet started, cannot stop."));
-  spinner_thread_.request_stop();
+  stop_requested_.store(true);
   spinner_thread_.join();
 
   if (stop_callback_) {
