@@ -26,8 +26,8 @@ public:
   void addStopCallback(std::function<void()> callback);
 
 private:
-  std::atomic<bool> is_started_ = false;
-  std::atomic<bool> stop_requested_ = false;
+  std::atomic_bool is_started_ = false;
+  std::atomic_bool stop_requested_ = false;
   std::function<void()> stop_callback_;
   std::thread spinner_thread_;
 };
