@@ -18,7 +18,7 @@ set(TYPES_SOURCES src/types/pose.cpp README.md include/hephaestus/examples/types
 # library target
 define_module_library(
   NAME examples_types
-  PUBLIC_LINK_LIBS absl::base Eigen3::Eigen hephaestus::bag fmt::fmt mcap
+  PUBLIC_LINK_LIBS absl::base absl::status Eigen3::Eigen hephaestus::bag fmt::fmt mcap
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
