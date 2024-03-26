@@ -24,7 +24,8 @@ TEST(SpinnerTest, StartStopTest) {
   spinner.start();
 
   EXPECT_THROW(spinner.start(), heph::InvalidOperationException);
-  spinner.stop();
+  auto future = spinner.stop();
+  future.get();
 
   EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
 }
@@ -36,7 +37,8 @@ TEST(SpinnerTest, SpinTest) {
 
   // Wait for a while to let the spinner do some work.
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  spinner.stop();
+  auto future = spinner.stop();
+  future.get();
 
   // The counter should have been incremented.
   EXPECT_GT(spinner.counter.load(), 0);
@@ -49,7 +51,8 @@ TEST(SpinnerTest, StopCallbackTest) {
   spinner.addStopCallback([&]() { callback_called.store(true); });
 
   spinner.start();
-  spinner.stop();
+  auto future = spinner.stop();
+  future.get();
 
   // The callback should have been called.
   EXPECT_TRUE(callback_called.load());

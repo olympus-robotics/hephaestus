@@ -41,7 +41,8 @@ auto main() -> int {
     // Wait until stop_called is set
     stop_called.wait(false);
 
-    spinner.stop();
+    auto future = spinner.stop();
+    future.get();
   } catch (const std::exception& ex) {
     fmt::println("{}", ex.what());
     return EXIT_FAILURE;

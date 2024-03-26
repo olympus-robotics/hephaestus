@@ -4,6 +4,8 @@
 
 #include "hephaestus/concurrency/spinner.h"
 
+#include <future>
+
 #include <absl/log/log.h>
 #include <fmt/format.h>
 
@@ -35,10 +37,15 @@ void Spinner::spin() {
   }
 }
 
-void Spinner::stop() {
+auto Spinner::stop() -> std::future<void> {
   throwExceptionIf<InvalidOperationException>(!is_started_.load(),
                                               fmt::format("Spinner not yet started, cannot stop."));
   stop_requested_.store(true);
+
+  return std::async(std::launch::async, [this]() { stopImpl(); });
+}
+
+void Spinner::stopImpl() {
   spinner_thread_.join();
 
   if (stop_callback_) {
