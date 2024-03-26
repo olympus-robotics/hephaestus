@@ -21,9 +21,11 @@ public:
 
   void start();
   void stop();
-  virtual void spin();
   virtual void spinOnce() = 0;  // Pure virtual function
   void addStopCallback(std::function<void()> callback);
+
+private:
+  void spin();
 
 private:
   std::atomic_bool is_started_ = false;
