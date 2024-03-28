@@ -11,11 +11,7 @@
 namespace heph::serdes {
 
 template <class T>
-concept ProtobufSerializable = requires(T data) {
-  { !std::is_same_v<typename protobuf::ProtoAssociation<T>::Type, void> };
-};
-
-// ProtoAssociation<T>::Type
+concept ProtobufSerializable = protobuf::ProtobufMessage<typename protobuf::ProtoAssociation<T>::Type>;
 
 template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;

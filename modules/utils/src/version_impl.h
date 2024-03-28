@@ -15,10 +15,10 @@ namespace heph::utils
 
 static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
-static constexpr std::uint16_t VERSION_PATCH = 1;
+static constexpr std::uint16_t VERSION_PATCH = 0;
 
-static constexpr std::string_view REPO_BRANCH = "feature/spinner";
-static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
-static constexpr std::string_view REPO_HASH = "6b4f737";
+static constexpr std::string_view REPO_BRANCH = "unknown-branch";
+static constexpr std::string_view BUILD_PROFILE = "Release";
+static constexpr std::string_view REPO_HASH = "ffffffff";
 
 } // namespace heph::utils
