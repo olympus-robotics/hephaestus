@@ -3,16 +3,13 @@
 //=================================================================================================
 
 #include <cstdlib>
-#include <thread>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
@@ -30,9 +27,9 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(1);
     const auto reply =
-        heph::ipc::zenoh::callBinaryService<heph::examples::types::Pose, heph::examples::types::Pose>(
+        heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
             session, "test",
-            heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },
+            heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                          .position = Eigen::Vector3d{ 3, 2, 1 } },
             K_TIMEOUT);
     if (reply) {

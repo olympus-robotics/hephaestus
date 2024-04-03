@@ -57,7 +57,7 @@ private:
   std::unique_ptr<zenohc::Publisher> publisher_;
 
   serdes::TypeInfo type_info_;
-  std::unique_ptr<StringService> type_service_;
+  std::unique_ptr<Service<std::string, std::string>> type_service_;
 
   zc_owned_liveliness_token_t liveliness_token_{};
   ze_owned_publication_cache_t pub_cache_{};

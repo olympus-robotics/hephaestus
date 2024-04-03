@@ -10,12 +10,9 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/serdes/serdes.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -29,13 +26,13 @@ auto main(int argc, const char* argv[]) -> int {
     auto callback = [](const heph::examples::types::Pose& sample) {
       LOG(INFO) << "Received query: " << heph::examples::types::toString(sample);
       heph::examples::types::Pose sample_reply{
-        .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },
+        .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
         .position = Eigen::Vector3d{ 1, 2, 3 },
       };
       return sample_reply;
     };
 
-    heph::ipc::zenoh::BinaryService<heph::examples::types::Pose, heph::examples::types::Pose> server(
+    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
         session, "test", callback);
 
     while (true) {
