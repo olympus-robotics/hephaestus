@@ -43,6 +43,7 @@ define_module_library(
   PUBLIC_LINK_LIBS
     absl::base
     absl::status
+    absl::log
     hephaestus::base
     hephaestus::cli
     fmt::fmt
