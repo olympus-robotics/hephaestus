@@ -69,7 +69,7 @@ class ProgramDescription {
 public:
   /// @brief Creates object
   /// @param brief A brief text describing the program
-  explicit ProgramDescription(std::string brief);  // NOTE: GCC doesn't like this to be constexpr
+  explicit ProgramDescription(std::string brief);
 
   /// @brief Defines a required option (--key=value) on the command line
   /// @tparam T Value type
