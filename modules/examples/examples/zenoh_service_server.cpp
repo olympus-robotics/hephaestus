@@ -34,8 +34,8 @@ auto main(int argc, const char* argv[]) -> int {
     };
 
     const std::string topic = "test";
-    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(session, topic,
-                                                                                               callback);
+    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
+        session, topic_config, callback);
 
     LOG(INFO) << fmt::format("Server started. Wating for queries on {} topic", topic);
 

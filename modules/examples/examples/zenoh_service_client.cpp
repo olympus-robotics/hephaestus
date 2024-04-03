@@ -26,16 +26,15 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto type_info = heph::serdes::getSerializedTypeInfo<heph::examples::types::Pose>();
 
-    const std::string topic = "test";
     static constexpr auto K_TIMEOUT = std::chrono::seconds(1);
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };
-    LOG(INFO) << fmt::format("Calling service on topic: {} with {}", topic,
+    LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name,
                              heph::examples::types::toString(query));
     const auto reply =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
-            session, topic, query, K_TIMEOUT);
+            session, topic_config, query, K_TIMEOUT);
     if (reply) {
       LOG(INFO) << "Received: " << heph::examples::types::toString(reply.value());
     } else {

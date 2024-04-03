@@ -9,6 +9,7 @@
 #include <absl/log/log.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/serdes/serdes.h"
@@ -19,18 +20,18 @@ template <typename RequestT, typename ReplyT>
 class Service {
 public:
   using Callback = std::function<ReplyT(const RequestT&)>;
-  explicit Service(SessionPtr session, std::string topic, Callback&& callback);
+  explicit Service(SessionPtr session, TopicConfig topic_config, Callback&& callback);
 
 private:
   SessionPtr session_;
   std::unique_ptr<zenohc::Queryable> queryable_;
 
-  std::string topic_;
+  TopicConfig topic_config_;
   Callback callback_;
 };
 
 template <typename RequestT, typename ReplyT>
-auto callService(const Session& session, const std::string& topic, const RequestT& request,
+auto callService(const Session& session, const TopicConfig& topic_config, const RequestT& request,
                  const std::chrono::milliseconds& timeout) -> ReplyT;
 
 // --------- Implementation ----------
@@ -44,8 +45,8 @@ constexpr void checkTemplatedTypes() {
 }
 
 template <typename RequestT, typename ReplyT>
-Service<RequestT, ReplyT>::Service(SessionPtr session, std::string topic, Callback&& callback)
-  : session_(std::move(session)), topic_(std::move(topic)), callback_(std::move(callback)) {
+Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback)
+  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   checkTemplatedTypes<RequestT, ReplyT>();
 
   auto query = [this](const zenohc::Query& query) mutable {
@@ -69,23 +70,23 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, std::string topic, Callba
     zenohc::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_APP_CUSTOM });  // Update encoding.
-      query.reply(this->topic_, reply, options);
+      query.reply(this->topic_config_.name, reply, options);
     } else {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
-      query.reply(this->topic_, serdes::serialize(reply), options);
+      query.reply(this->topic_config_.name, serdes::serialize(reply), options);
     }
   };
 
-  queryable_ =
-      expectAsUniquePtr(session_->zenoh_session.declare_queryable(topic_, { std::move(query), []() {} }));
+  queryable_ = expectAsUniquePtr(
+      session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query), []() {} }));
 }
 
 template <typename RequestT, typename ReplyT>
-auto callService(const SessionPtr& session, const std::string& topic, const RequestT& request,
+auto callService(const SessionPtr& session, const TopicConfig& topic_config, const RequestT& request,
                  const std::chrono::milliseconds& timeout) -> std::optional<ReplyT> {
   checkTemplatedTypes<RequestT, ReplyT>();
 
-  DLOG(INFO) << fmt::format("Calling service on '{}'", topic);
+  DLOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
   std::mutex m;
   std::condition_variable done_signal;
   bool done = false;
@@ -125,16 +126,16 @@ auto callService(const SessionPtr& session, const std::string& topic, const Requ
     options.value = zenohc::Value(serdes::serialize(request), Z_ENCODING_PREFIX_APP_CUSTOM);
   }
   const auto success =
-      session->zenoh_session.get(topic.c_str(), "", { on_reply, on_done }, options, error_code);
+      session->zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
 
   std::unique_lock lock(m);
   if (!done_signal.wait_for(lock, timeout, [&done] { return done; })) {
-    LOG(WARNING) << fmt::format("Timeout while waiting for service reply of '{}'", topic);
+    LOG(WARNING) << fmt::format("Timeout while waiting for service reply of '{}'", topic_config.name);
     return {};
   }
 
   if (!success) {
-    LOG(ERROR) << fmt::format("Error while calling service on '{}': {}", topic, error_code);
+    LOG(ERROR) << fmt::format("Error while calling service on '{}': {}", topic_config.name, error_code);
     return {};
   }
 
