@@ -20,6 +20,8 @@ namespace {
     case Z_SAMPLE_KIND_DELETE:
       return PublisherStatus::DROPPED;
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
 }  // namespace
 

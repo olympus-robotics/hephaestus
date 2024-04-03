@@ -24,7 +24,7 @@ auto serialize(const T& data) -> std::vector<std::byte> {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::serialize(data);
   } else {
-    static_assert(false, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "no serialization supported");
   }
 }
 
@@ -40,7 +40,7 @@ auto getSerializedTypeInfo() -> TypeInfo {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::getTypeInfo<T>();
   } else {
-    static_assert(false, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "no serialization supported");
   }
 }
 

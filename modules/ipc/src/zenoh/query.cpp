@@ -23,11 +23,11 @@ auto query(zenohc::Session& session, const std::string& topic,
     }
 
     const auto sample = std::get<zenohc::Sample>(r);
-    auto topic = std::string{ sample.get_keyexpr().as_string_view() };
+    auto reply_topic = std::string{ sample.get_keyexpr().as_string_view() };
     auto result = std::string{ sample.get_payload().as_string_view() };
 
     std::unique_lock<std::mutex> lock(mutex);
-    results.emplace_back(std::move(topic), std::move(result));
+    results.emplace_back(std::move(reply_topic), std::move(result));
   };
 
   auto on_done = [&sync_point] { sync_point.arrive_and_drop(); };

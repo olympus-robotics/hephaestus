@@ -69,7 +69,7 @@ class ProgramDescription {
 public:
   /// @brief Creates object
   /// @param brief A brief text describing the program
-  constexpr explicit ProgramDescription(std::string brief);
+  explicit ProgramDescription(std::string brief);
 
   /// @brief Defines a required option (--key=value) on the command line
   /// @tparam T Value type
@@ -77,7 +77,7 @@ public:
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key, const std::string& description) -> ProgramDescription&;
+  auto defineOption(const std::string& key, const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a required option (--key=value) on the command line
   /// @tparam T Value type
@@ -86,8 +86,8 @@ public:
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key, char short_key,
-                              const std::string& description) -> ProgramDescription&;
+  auto defineOption(const std::string& key, char short_key,
+                    const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a command line option (--key=value) that is optional
   /// @tparam T Value type
@@ -96,8 +96,8 @@ public:
   /// @param default_value Default value to use if the option is not specified on the command line
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key, const std::string& description,
-                              const T& default_value) -> ProgramDescription&;
+  auto defineOption(const std::string& key, const std::string& description,
+                    const T& default_value) -> ProgramDescription&;
 
   /// @brief Defines a command line option (--key=value) that is optional
   /// @tparam T Value type
@@ -107,8 +107,8 @@ public:
   /// @param default_value Default value to use if the option is not specified on the command line
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  constexpr auto defineOption(const std::string& key, char short_key, const std::string& description,
-                              const T& default_value) -> ProgramDescription&;
+  auto defineOption(const std::string& key, char short_key, const std::string& description,
+                    const T& default_value) -> ProgramDescription&;
 
   /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
   /// passed the value of the option is true, false otherwise.
@@ -116,15 +116,15 @@ public:
   /// @param short_key Single char (can be used as alias for --key)
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
-  constexpr auto defineFlag(const std::string& key, char short_key,
-                            const std::string& description) -> ProgramDescription&;
+  auto defineFlag(const std::string& key, char short_key,
+                  const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
   /// passed the value of the option is true, false otherwise.
   /// @param key Key of the key-value pair
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
-  constexpr auto defineFlag(const std::string& key, const std::string& description) -> ProgramDescription&;
+  auto defineFlag(const std::string& key, const std::string& description) -> ProgramDescription&;
 
   /// @brief Builds the container to parse command line options.
   /// @note: The resources in this object is moved into the returned object, making this object
@@ -155,7 +155,7 @@ private:
   std::vector<ProgramOptions::Option> options_;
 };
 
-constexpr ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {
+ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {
   options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), "", false, false);
 }
 
@@ -177,14 +177,14 @@ void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(const std::string& key,
-                                                const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key,
+                                      const std::string& description) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description);
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
-                                                const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key, char short_key,
+                                      const std::string& description) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(), "", true, false);
@@ -192,15 +192,14 @@ constexpr auto ProgramDescription::defineOption(const std::string& key, char sho
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(const std::string& key, const std::string& description,
-                                                const T& default_value) -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key, const std::string& description,
+                                      const T& default_value) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description, default_value);
 }
 
 template <StringStreamable T>
-constexpr auto ProgramDescription::defineOption(const std::string& key, char short_key,
-                                                const std::string& description,
-                                                const T& default_value) -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key, char short_key, const std::string& description,
+                                      const T& default_value) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(),
@@ -208,16 +207,16 @@ constexpr auto ProgramDescription::defineOption(const std::string& key, char sho
   return *this;
 }
 
-constexpr auto ProgramDescription::defineFlag(const std::string& key, char short_key,
-                                              const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineFlag(const std::string& key, char short_key,
+                                    const std::string& description) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false, false);
   return *this;
 }
 
-constexpr auto ProgramDescription::defineFlag(const std::string& key,
-                                              const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineFlag(const std::string& key,
+                                    const std::string& description) -> ProgramDescription& {
   return defineFlag(key, '\0', description);
 }
 

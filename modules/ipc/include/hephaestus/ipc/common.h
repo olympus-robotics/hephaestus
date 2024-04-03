@@ -41,7 +41,7 @@ struct MessageMetadata {
   std::size_t sequence_id{};
 };
 
-[[nodiscard]] constexpr auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
+[[nodiscard]] static inline auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
   return fmt::format("type_info/{}", topic);
 }
 
