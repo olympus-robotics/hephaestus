@@ -57,7 +57,10 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, std::string topic, Callba
         return static_cast<std::string>(query.get_value().as_string_view());
       } else {
         RequestT request;
-        serdes::deserialize<RequestT>(query.get_value().get_payload(), request);
+        auto payload = query.get_value().get_payload();
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+        serdes::deserialize<RequestT>(buffer, request);
         return request;
       }
     }();
@@ -95,7 +98,10 @@ auto callService(const SessionPtr& session, const std::string& topic, const Requ
       if constexpr (std::is_same_v<ReplyT, std::string>) {
         reply_message = sample->get_payload().as_string_view();
       } else {
-        serdes::deserialize(sample->get_payload(), reply_message);
+        auto payload = sample->get_payload();
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+        serdes::deserialize(buffer, reply_message);
       }
     } else if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
       LOG(ERROR) << fmt::format("Received an error on '{}': {}", sample->get_keyexpr().as_string_view(),
@@ -116,7 +122,7 @@ auto callService(const SessionPtr& session, const std::string& topic, const Requ
   if constexpr (std::is_same_v<RequestT, std::string>) {
     options.value = zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN);
   } else {
-    options.value = serdes::serialize(request, Z_ENCODING_PREFIX_APP_CUSTOM);
+    options.value = zenohc::Value(serdes::serialize(request), Z_ENCODING_PREFIX_APP_CUSTOM);
   }
   const auto success =
       session->zenoh_session.get(topic.c_str(), "", { on_reply, on_done }, options, error_code);
