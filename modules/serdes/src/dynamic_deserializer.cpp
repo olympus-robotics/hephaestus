@@ -1,3 +1,4 @@
+
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
@@ -30,5 +31,7 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       return std::string{ reinterpret_cast<const char*>(data.data()), data.size() };
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
 }  // namespace heph::serdes

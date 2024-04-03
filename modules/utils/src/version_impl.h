@@ -17,8 +17,8 @@ static constexpr std::uint8_t VERSION_MAJOR = 0;
 static constexpr std::uint8_t VERSION_MINOR = 0;
 static constexpr std::uint16_t VERSION_PATCH = 1;
 
-static constexpr std::string_view REPO_BRANCH = "fix/proto_concept";
-static constexpr std::string_view BUILD_PROFILE = "Release";
-static constexpr std::string_view REPO_HASH = "900c283";
+static constexpr std::string_view REPO_BRANCH = "gcc_fix";
+static constexpr std::string_view BUILD_PROFILE = "RelWithDebInfo";
+static constexpr std::string_view REPO_HASH = "77f82e1";
 
 } // namespace heph::utils
