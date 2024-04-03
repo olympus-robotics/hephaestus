@@ -33,8 +33,11 @@ auto main(int argc, const char* argv[]) -> int {
       return sample_reply;
     };
 
-    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
-        session, "test", callback);
+    const std::string topic = "test";
+    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(session, topic,
+                                                                                               callback);
+
+    LOG(INFO) << fmt::format("Server started. Wating for queries on {} topic", topic);
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
