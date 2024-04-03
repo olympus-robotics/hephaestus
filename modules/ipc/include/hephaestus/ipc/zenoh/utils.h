@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chrono>
-#include <expected>
 #include <numeric>
 #include <span>
 
@@ -49,6 +48,8 @@ constexpr auto toString(const Mode& mode) -> std::string_view {
     case Mode::CLIENT:
       return "Client";
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 constexpr auto toMode(const zenohc::WhatAmI& me) -> Mode {
@@ -60,6 +61,8 @@ constexpr auto toMode(const zenohc::WhatAmI& me) -> Mode {
     case zenohc::WhatAmI::Z_WHATAMI_CLIENT:
       return Mode::CLIENT;
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 inline auto toStringVector(const zenohc::StrArrayView& arr) -> std::vector<std::string> {
