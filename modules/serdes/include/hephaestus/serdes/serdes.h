@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <type_traits>
 
 #include "hephaestus/serdes/protobuf/protobuf.h"
@@ -17,7 +18,23 @@ template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
 
 template <class T>
+[[nodiscard]] auto serializeToJSON(const T& data) -> std::string;
+
+template <class T>
+[[nodiscard]] auto serializeToText(const T& data) -> std::string;
+
+template <class T>
 auto deserialize(std::span<const std::byte> buffer, T& data) -> void;
+
+template <class T>
+auto deserializeFromJSON(std::string_view buffer, T& data) -> void;
+
+template <class T>
+auto deserializeFromText(std::string_view buffer, T& data) -> void;
+
+// -----------------------------------------------------------------------------------------------
+// Implementation
+// -----------------------------------------------------------------------------------------------
 
 template <class T>
 auto serialize(const T& data) -> std::vector<std::byte> {
@@ -29,9 +46,47 @@ auto serialize(const T& data) -> std::vector<std::byte> {
 }
 
 template <class T>
+auto serializeToJSON(const T& data) -> std::string {
+  if constexpr (ProtobufSerializable<T>) {
+    return protobuf::serializeToJSON(data);
+  } else {
+    static_assert(ProtobufSerializable<T>, "no serialization supported");
+  }
+}
+
+template <class T>
+[[nodiscard]] auto serializeToText(const T& data) -> std::string {
+  if constexpr (ProtobufSerializable<T>) {
+    return protobuf::serializeToText(data);
+  } else {
+    static_assert(ProtobufSerializable<T>, "no serialization supported");
+  }
+}
+
+template <class T>
 auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   if constexpr (ProtobufSerializable<T>) {
     protobuf::deserialize(buffer, data);
+  } else {
+    static_assert(ProtobufSerializable<T>, "no deserialization supported");
+  }
+}
+
+template <class T>
+auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
+  if constexpr (ProtobufSerializable<T>) {
+    protobuf::deserializeFromJSON(buffer, data);
+  } else {
+    static_assert(ProtobufSerializable<T>, "no deserialization supported");
+  }
+}
+
+template <class T>
+auto deserializeFromText(std::string_view buffer, T& data) -> void {
+  if constexpr (ProtobufSerializable<T>) {
+    protobuf::deserializeFromText(buffer, data);
+  } else {
+    static_assert(ProtobufSerializable<T>, "no deserialization supported");
   }
 }
 

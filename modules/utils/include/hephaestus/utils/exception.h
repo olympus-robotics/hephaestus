@@ -91,4 +91,12 @@ public:
   }
 };
 
+//=================================================================================================
+/// Exception raised due failed serdes operation
+class FailedSerdesOperation : public heph::Exception {
+public:
+  FailedSerdesOperation(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
+  }
+};
+
 }  // namespace heph
