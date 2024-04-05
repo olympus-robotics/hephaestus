@@ -41,7 +41,7 @@ auto serialize(const T& data) -> std::vector<std::byte> {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::serialize(data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "No serialization supported");
   }
 }
 
@@ -50,7 +50,7 @@ auto serializeToJSON(const T& data) -> std::string {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::serializeToJSON(data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "No serialization to JSON supported");
   }
 }
 
@@ -59,7 +59,7 @@ template <class T>
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::serializeToText(data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "No serialization to text supported");
   }
 }
 
@@ -68,7 +68,7 @@ auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   if constexpr (ProtobufSerializable<T>) {
     protobuf::deserialize(buffer, data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no deserialization supported");
+    static_assert(ProtobufSerializable<T>, "No deserialization supported");
   }
 }
 
@@ -77,7 +77,7 @@ auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
   if constexpr (ProtobufSerializable<T>) {
     protobuf::deserializeFromJSON(buffer, data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no deserialization supported");
+    static_assert(ProtobufSerializable<T>, "No deserialization from JSON supported");
   }
 }
 
@@ -86,7 +86,7 @@ auto deserializeFromText(std::string_view buffer, T& data) -> void {
   if constexpr (ProtobufSerializable<T>) {
     protobuf::deserializeFromText(buffer, data);
   } else {
-    static_assert(ProtobufSerializable<T>, "no deserialization supported");
+    static_assert(ProtobufSerializable<T>, "No deserialization from text supported");
   }
 }
 
@@ -95,7 +95,7 @@ auto getSerializedTypeInfo() -> TypeInfo {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::getTypeInfo<T>();
   } else {
-    static_assert(ProtobufSerializable<T>, "no serialization supported");
+    static_assert(ProtobufSerializable<T>, "No serialization supported");
   }
 }
 
