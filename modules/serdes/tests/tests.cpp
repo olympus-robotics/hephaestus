@@ -7,6 +7,8 @@
 
 #include "hephaestus/serdes/protobuf/buffers.h"
 #include "hephaestus/serdes/serdes.h"
+#include "test.pb.h"
+#include "test_proto_conversion.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -87,6 +89,39 @@ TEST(Serialization, Protobuf) {
   DefaultValue<bool>::Set(true);
   deserialize(buffer, data);
   EXPECT_EQ(data.a, NUMBER * 2);
+}
+
+[[nodiscard]] auto createTestMessage() -> User {
+  constexpr int AGE = 42;
+  constexpr float SCORE = 2.0f;
+  return { .name = "John Snow", .age = AGE, .scores = { 1.0f, SCORE } };
+}
+
+TEST(SerDes, Protobuf) {
+  const auto user = createTestMessage();
+  auto buffer = serialize(user);
+  User user_des;
+  deserialize(buffer, user_des);
+
+  EXPECT_EQ(user, user_des);
+}
+
+TEST(SerDesJSON, Protobuf) {
+  const auto user = createTestMessage();
+  auto buffer = serializeToJSON(user);
+  User user_des;
+  deserializeFromJSON(buffer, user_des);
+
+  EXPECT_EQ(user, user_des);
+}
+
+TEST(SerDesText, Protobuf) {
+  const auto user = createTestMessage();
+  auto buffer = serializeToText(user);
+  User user_des;
+  deserializeFromText(buffer, user_des);
+
+  EXPECT_EQ(user, user_des);
 }
 
 }  // namespace heph::serdes::tests
