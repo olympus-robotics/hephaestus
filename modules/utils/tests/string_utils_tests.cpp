@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/utils/utils.h"
+#include "hephaestus/utils/string_utils.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
