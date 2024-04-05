@@ -8,11 +8,10 @@
 
 namespace heph::utils {
 
-/// Truncates a string by returning the segment between start and end token strings, including
-/// the start token and the end token.
+/// Truncates a string by returning the segment between the first start token and the first end token strings,
+/// including the start token and the end token.
 /// If \param include_end_token is false, the end token will not be included in the result.
-/// For example, the following code will return
-/// 'to/some/file'
+/// For example, the following code will return 'to/some/file'
 /// @code
 /// constexpr auto str = "/path/to/some/file.txt";
 /// constexpr auto start_token = "to";
