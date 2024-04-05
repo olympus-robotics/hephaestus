@@ -42,7 +42,7 @@ void writeStringToFile(const std::filesystem::path& path, std::string_view conte
   outfile.write(content.data(), static_cast<std::streamsize>(content.size()));
 }
 
-void writeBufferToFile(const std::filesystem::path& path, std::span<std::byte> content) {
+void writeBufferToFile(const std::filesystem::path& path, std::span<const std::byte> content) {
   std::ofstream outfile{ path, std::ios::out | std::ios::binary };
   throwExceptionIf<InvalidDataException>(!outfile,
                                          fmt::format("Could not open file {} to write", path.string()));

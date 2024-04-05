@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/utils/utils.h"
+#include "hephaestus/utils/file.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -14,7 +14,7 @@ TEST(BinaryFile, ReadWrite) {
   const auto path = SelfDestructingPath::createFile();
   const auto content = std::vector<std::byte>{ std::byte{ 0x01 }, std::byte{ 0x02 }, std::byte{ 0x03 } };
 
-  writeBufferToFile(path, content);
+  writeBufferToFile(path, { content.data(), content.size() });
   const auto read_content = readBinaryFile(path);
 
   EXPECT_EQ(content, read_content);

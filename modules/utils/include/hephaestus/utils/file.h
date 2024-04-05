@@ -8,7 +8,7 @@ namespace heph::utils {
 [[nodiscard]] auto readBinaryFile(const std::filesystem::path& path) -> std::vector<std::byte>;
 
 void writeStringToFile(const std::filesystem::path& path, std::string_view content);
-void writeBufferToFile(const std::filesystem::path& path, std::span<std::byte> content);
+void writeBufferToFile(const std::filesystem::path& path, std::span<const std::byte> content);
 
 /// This class allows to create a file that is removed when the class goes out of scope (RAII).
 /// This is very useful in tests to avoid having dangling files.
