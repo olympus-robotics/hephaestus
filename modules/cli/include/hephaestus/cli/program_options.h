@@ -12,8 +12,8 @@
 
 #include <fmt/format.h>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/utils/concepts.h"
+#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::cli {

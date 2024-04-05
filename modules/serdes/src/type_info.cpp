@@ -8,7 +8,7 @@
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::serdes {
 // TODO(filippo): add tests.

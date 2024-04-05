@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <hephaestus/base/exception.h>
+#include <hephaestus/utils/exception.h>
 #include <range/v3/range/conversion.hpp>
 
 #include "hephaestus/serdes/protobuf/buffers.h"

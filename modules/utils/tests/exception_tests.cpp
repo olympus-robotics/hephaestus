@@ -3,21 +3,21 @@
 //=================================================================================================
 #include <gtest/gtest.h>
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph::base::tests {
+namespace heph::utils::tests {
 TEST(Exception, Throw) {
-  auto throwing_func = []() { throwException<heph::TypeMismatchException>("type mismatch"); };
-  EXPECT_THROW(throwing_func(), heph::TypeMismatchException);
+  auto throwing_func = []() { throwException<TypeMismatchException>("type mismatch"); };
+  EXPECT_THROW(throwing_func(), TypeMismatchException);
 
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_STREQ(e.what(), "[modules/base/tests/tests.cpp:13] type mismatch");
+    EXPECT_STREQ(e.what(), "[modules/utils/tests/tests.cpp:13] type mismatch");
   }
 }
 
-}  // namespace heph::base::tests
+}  // namespace heph::utils::tests

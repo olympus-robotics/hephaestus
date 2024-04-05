@@ -14,9 +14,9 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/ipc/zenoh/query.h"
 #include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 

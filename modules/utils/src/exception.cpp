@@ -3,7 +3,7 @@
 // MIT License
 //=================================================================================================
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 #include "hephaestus/utils/utils.h"
 

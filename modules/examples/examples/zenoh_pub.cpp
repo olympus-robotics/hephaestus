@@ -9,13 +9,13 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/utils/exception.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {

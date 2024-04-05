@@ -6,8 +6,8 @@
 
 #include <Eigen/Dense>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/examples/types/proto/geometry.pb.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::examples::types {
 

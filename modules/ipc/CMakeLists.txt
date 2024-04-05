@@ -4,7 +4,7 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES base cli serdes
+  DEPENDS_ON_MODULES utils cli serdes
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohcxx
 )
 
@@ -43,7 +43,7 @@ define_module_library(
   PUBLIC_LINK_LIBS
     absl::base
     absl::status
-    hephaestus::base
+    hephaestus::utils
     hephaestus::cli
     fmt::fmt
     nlohmann_json::nlohmann_json

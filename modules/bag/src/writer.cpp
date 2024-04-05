@@ -9,9 +9,9 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 // TODO: add support for serialization
 #define MCAP_IMPLEMENTATION
