@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <barrier>
 #include <condition_variable>
 
 #include <absl/log/log.h>
@@ -20,7 +21,7 @@ template <typename RequestT, typename ReplyT>
 class Service {
 public:
   using Callback = std::function<ReplyT(const RequestT&)>;
-  explicit Service(SessionPtr session, TopicConfig topic_config, Callback&& callback);
+  Service(SessionPtr session, TopicConfig topic_config, Callback&& callback);
 
 private:
   SessionPtr session_;
@@ -44,6 +45,20 @@ constexpr void checkTemplatedTypes() {
                 "Reply needs to be serializable or std::string.");
 }
 
+template <class RequestT>
+auto createRequest(const zenohc::Query& query) -> RequestT {
+  if constexpr (std::is_same_v<RequestT, std::string>) {
+    return static_cast<std::string>(query.get_value().as_string_view());
+  } else {
+    RequestT request;
+    auto payload = query.get_value().get_payload();
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+    serdes::deserialize<RequestT>(buffer, request);
+    return request;
+  }
+}
+
 template <typename RequestT, typename ReplyT>
 Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback)
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
@@ -52,21 +67,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   auto query = [this](const zenohc::Query& query) mutable {
     DLOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
-    // Deserialize the request into `RequestT`
-    auto request = [&query]() {
-      if constexpr (std::is_same_v<RequestT, std::string>) {
-        return static_cast<std::string>(query.get_value().as_string_view());
-      } else {
-        RequestT request;
-        auto payload = query.get_value().get_payload();
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
-        serdes::deserialize<RequestT>(buffer, request);
-        return request;
-      }
-    }();
-
-    auto reply = this->callback_(request);
+    auto reply = this->callback_(createRequest<RequestT>(query));
     zenohc::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_APP_CUSTOM });  // Update encoding.
@@ -92,21 +93,24 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
   bool done = false;
   ReplyT reply_message;
 
-  auto on_reply = [&reply_message](const zenohc::Reply& reply) {
-    auto result = reply.get();
-    if (const auto& sample = std::get_if<zenohc::Sample>(&result)) {
-      DLOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
-      if constexpr (std::is_same_v<ReplyT, std::string>) {
-        reply_message = sample->get_payload().as_string_view();
-      } else {
-        auto payload = sample->get_payload();
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
-        serdes::deserialize(buffer, reply_message);
-      }
-    } else if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
-      LOG(ERROR) << fmt::format("Received an error on '{}': {}", sample->get_keyexpr().as_string_view(),
-                                error->as_string_view());
+  auto on_reply = [&reply_message, &m, &topic_config](zenohc::Reply&& reply) {
+    const auto result = std::move(reply).get();
+    if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
+      LOG(ERROR) << fmt::format("Error on {} reply: {}", topic_config.name, error->as_string_view());
+      return;
+    }
+
+    const auto& sample = std::get_if<zenohc::Sample>(&result);
+    DLOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
+    if constexpr (std::is_same_v<ReplyT, std::string>) {
+      std::unique_lock<std::mutex> lock(m);
+      reply_message = sample->get_payload().as_string_view();
+    } else {
+      auto payload = sample->get_payload();
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+      std::unique_lock<std::mutex> lock(m);
+      serdes::deserialize(buffer, reply_message);
     }
   };
 
@@ -121,9 +125,9 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
   options.timeout_ms = static_cast<uint64_t>(timeout.count());
 
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    options.value = zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN);
+    options.set_value(zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN));
   } else {
-    options.value = zenohc::Value(serdes::serialize(request), Z_ENCODING_PREFIX_APP_CUSTOM);
+    options.set_value(zenohc::Value(serdes::serialize(request), Z_ENCODING_PREFIX_APP_CUSTOM));
   }
   const auto success =
       session->zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
