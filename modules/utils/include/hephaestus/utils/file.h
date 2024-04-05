@@ -21,9 +21,9 @@ public:
   auto operator=(const SelfDestructingPath&) -> SelfDestructingPath& = delete;
   auto operator=(SelfDestructingPath&&) -> SelfDestructingPath& = default;
 
-  [[nodiscard]] static auto tempFile() -> SelfDestructingPath;
+  [[nodiscard]] static auto createFile() -> SelfDestructingPath;
 
-  [[nodiscard]] static auto tempDir() -> SelfDestructingPath;
+  [[nodiscard]] static auto createDir() -> SelfDestructingPath;
 
   operator std::filesystem::path() const;  // NOLINT(google-explicit-conversion,
                                            // google-explicit-constructor)

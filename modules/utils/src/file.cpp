@@ -68,14 +68,23 @@ SelfDestructingPath::~SelfDestructingPath() {
   }
 }
 
-auto SelfDestructingPath::tempFile() -> SelfDestructingPath {
+auto SelfDestructingPath::createFile() -> SelfDestructingPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
-  return SelfDestructingPath{ global_temp_dir / randomString() };
+  auto file = global_temp_dir / randomString();
+  while (std::filesystem::exists(file)) {
+    file = global_temp_dir / randomString();
+  }
+
+  return SelfDestructingPath{ file };
 }
 
-auto SelfDestructingPath::tempDir() -> SelfDestructingPath {
+auto SelfDestructingPath::createDir() -> SelfDestructingPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
   auto temp_dir = global_temp_dir / randomString();
+  while (std::filesystem::exists(temp_dir)) {
+    temp_dir = global_temp_dir / randomString();
+  }
+
   std::filesystem::create_directory(temp_dir);
   return SelfDestructingPath{ std::move(temp_dir) };
 }
