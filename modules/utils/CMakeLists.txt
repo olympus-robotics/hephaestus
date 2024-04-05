@@ -9,6 +9,7 @@ declare_module(
   ALWAYS_BUILD
 )
 
+find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
 
 # generate version header
@@ -19,12 +20,14 @@ set(SOURCES
     src/concepts.cpp
     src/exception.cpp
     src/string_utils.cpp
+    src/file.cpp
     src/utils.cpp
     src/version.cpp
     README.md
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
     include/hephaestus/utils/string_utils.h
+    include/hephaestus/utils/file.h
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/version.h
 )
@@ -32,7 +35,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME utils
-  PUBLIC_LINK_LIBS fmt::fmt
+  PUBLIC_LINK_LIBS absl::random_random absl::time fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
