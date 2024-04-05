@@ -11,49 +11,57 @@ using namespace ::testing;
 
 namespace heph::utils::tests {
 
-TEST(String, Truncate) {
-  constexpr auto STR = "/path/to/some/file.txt";
-  constexpr auto START_TOKEN = "to";
-  constexpr auto END_TOKEN = ".txt";
-  constexpr auto TRUNCATED = truncate(STR, START_TOKEN, END_TOKEN);
-  constexpr auto EXPECTED = "to/some/file";
-  EXPECT_EQ(TRUNCATED, EXPECTED);
-}
+struct TestCase {
+  std::string description;
+  std::string str;
+  std::string start_token;
+  std::string end_token;
+  bool include_end_token;
+  std::string expected;
+};
 
-TEST(String, TruncateInvalid) {
-  constexpr auto STR = "/path/to/some/file.txt";
-  constexpr auto START_TOKEN = "aaa";
-  constexpr auto END_TOKEN = "bbb";
-  constexpr auto TRUNCATED = truncate(STR, START_TOKEN, END_TOKEN);
-  constexpr auto EXPECTED = STR;
-  EXPECT_EQ(TRUNCATED, EXPECTED);
-}
+TEST(Truncate, Truncate) {
+  const auto test_cases = std::array{ TestCase{ .description = "Truncate with include",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "to",
+                                                .end_token = ".txt",
+                                                .include_end_token = true,
+                                                .expected = "to/some/file.txt" },
+                                      TestCase{ .description = "Truncate with exclude",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "to",
+                                                .end_token = ".txt",
+                                                .include_end_token = false,
+                                                .expected = "to/some/file" },
+                                      TestCase{ .description = "Truncate invalid tokens",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "aaa",
+                                                .end_token = "bbb",
+                                                .include_end_token = true,
+                                                .expected = "/path/to/some/file.txt" },
+                                      TestCase{ .description = "Truncate start invalid",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "aaa",
+                                                .end_token = ".txt",
+                                                .include_end_token = false,
+                                                .expected = "/path/to/some/file" },
+                                      TestCase{ .description = "Truncate end invalid",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "some",
+                                                .end_token = "bbb",
+                                                .include_end_token = true,
+                                                .expected = "some/file.txt" },
+                                      TestCase{ .description = "Truncate start and end empty",
+                                                .str = "/path/to/some/file.txt",
+                                                .start_token = "",
+                                                .end_token = "",
+                                                .include_end_token = true,
+                                                .expected = "/path/to/some/file.txt" } };
 
-TEST(String, TruncateStartInvalid) {
-  constexpr auto STR = "/path/to/some/file.txt";
-  constexpr auto START_TOKEN = "aaa";
-  constexpr auto END_TOKEN = ".txt";
-  constexpr auto TRUNCATED = truncate(STR, START_TOKEN, END_TOKEN);
-  constexpr auto EXPECTED = "/path/to/some/file";
-  EXPECT_EQ(TRUNCATED, EXPECTED);
+  for (const auto& test_case : test_cases) {
+    const auto truncated =
+        truncate(test_case.str, test_case.start_token, test_case.end_token, test_case.include_end_token);
+    EXPECT_EQ(truncated, test_case.expected) << test_case.description;
+  }
 }
-
-TEST(String, TruncateEndInvalid) {
-  constexpr auto STR = "/path/to/some/file.txt";
-  constexpr auto START_TOKEN = "some";
-  constexpr auto END_TOKEN = "bbb";
-  constexpr auto TRUNCATED = truncate(STR, START_TOKEN, END_TOKEN);
-  constexpr auto EXPECTED = "some/file.txt";
-  EXPECT_EQ(TRUNCATED, EXPECTED);
-}
-
-TEST(String, TruncateEmpty) {
-  constexpr auto STR = "/path/to/some/file.txt";
-  constexpr auto START_TOKEN = "";
-  constexpr auto END_TOKEN = "";
-  constexpr auto TRUNCATED = truncate(STR, START_TOKEN, END_TOKEN);
-  constexpr auto EXPECTED = STR;
-  EXPECT_EQ(TRUNCATED, EXPECTED);
-}
-
 }  // namespace heph::utils::tests
