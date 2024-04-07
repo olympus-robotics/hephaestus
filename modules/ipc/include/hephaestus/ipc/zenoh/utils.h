@@ -67,7 +67,7 @@ constexpr auto toMode(const zenohc::WhatAmI& me) -> Mode {
 
 inline auto toStringVector(const zenohc::StrArrayView& arr) -> std::vector<std::string> {
   const auto size = arr.get_len();
-  std::vector<std::string> vec;
+  std::vector<std::string> vec{};
   vec.reserve(size);
 
   for (size_t i = 0; i < size; ++i) {

@@ -9,7 +9,7 @@
 #include <fmt/core.h>
 
 #include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::ipc {
@@ -40,10 +40,12 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
 
   auto query_topic = getTypeInfoServiceTopic(topic);
 
-  const auto response = zenoh::query(session_->zenoh_session, query_topic, "");
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 500 };
+  const auto response =
+      zenoh::callService<std::string, std::string>(session_, TopicConfig{ .name = query_topic }, "", TIMEOUT);
   throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
-      fmt::format("received {} responses for type from service {}", response.size(), query_topic));
+      fmt::format("received no or too many responses for type from service {}", query_topic));
 
   std::unique_lock<std::mutex> lock(mutex_);
   // While waiting for the query someone else could have added the topic to the DB.

@@ -24,21 +24,21 @@ auto main(int argc, const char* argv[]) -> int {
     auto [session_config, topic_config] = parseArgs(args);
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    auto type_info = heph::serdes::getSerializedTypeInfo<heph::examples::types::Pose>();
-
     static constexpr auto K_TIMEOUT = std::chrono::seconds(1);
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };
     LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name,
                              heph::examples::types::toString(query));
-    const auto reply =
+    const auto replies =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
             session, topic_config, query, K_TIMEOUT);
-    if (reply) {
-      LOG(INFO) << "Received: " << heph::examples::types::toString(reply.value());
+    if (!replies.empty()) {
+      LOG(INFO) << "Received: " << std::for_each(replies.begin(), replies.end(), [](const auto& reply) {
+        return fmt::format("{},\n", heph::examples::types::toString(reply.value));
+      });
     } else {
-      LOG(ERROR) << "Timeout after " << fmt::format("{}", K_TIMEOUT);
+      LOG(ERROR) << "No messages received after " << fmt::format("{}", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;
