@@ -24,7 +24,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto [session_config, topic_config] = parseArgs(args);
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    static constexpr auto K_TIMEOUT = std::chrono::seconds(1);
+    static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };
@@ -34,9 +34,11 @@ auto main(int argc, const char* argv[]) -> int {
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
             session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
-      LOG(INFO) << "Received: " << std::for_each(replies.begin(), replies.end(), [](const auto& reply) {
-        return fmt::format("{},\n", heph::examples::types::toString(reply.value));
+      std::string reply_str;
+      std::for_each(replies.begin(), replies.end(), [reply_str](const auto& reply) {
+        return fmt::format("{}\n-\t {}", reply_str, heph::examples::types::toString(reply.value));
       });
+      LOG(INFO) << "Received: \n" << reply_str;
     } else {
       LOG(ERROR) << "No messages received after " << fmt::format("{}", K_TIMEOUT);
     }

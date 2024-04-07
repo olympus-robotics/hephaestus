@@ -121,8 +121,10 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
       std::unique_lock<std::mutex> lock(m);
-      reply_messages.emplace_back(ServiceResponse<ReplyT>{
-          .topic = topic_config.name, .value = serdes::deserialize(buffer, reply_messages) });
+      ReplyT reply_deserialized;
+      serdes::deserialize(buffer, reply_deserialized);
+      reply_messages.emplace_back(
+          ServiceResponse<ReplyT>{ .topic = topic_config.name, .value = std::move(reply_deserialized) });
     }
   };
 

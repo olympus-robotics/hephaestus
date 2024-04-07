@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <string>
 #include <thread>
 
 #include <fmt/chrono.h>
@@ -13,17 +14,19 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/base/exception.h"
-#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
 #include "zenoh_program_options.h"
 
-[[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::Session& session,
+[[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::SessionPtr& session,
                                     const std::string& topic) -> heph::serdes::TypeInfo {
   auto service_topic = heph::ipc::getTypeInfoServiceTopic(topic);
-  auto response = heph::ipc::zenoh::query(session.zenoh_session, service_topic, "");
+  auto response = heph::ipc::zenoh::callService<std::string, std::string>(
+      session, heph::ipc::TopicConfig{ service_topic }, "");
   heph::throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), service_topic));
@@ -44,7 +47,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
-    auto type_info = getTopicTypeInfo(*session, topic_config.name);
+    auto type_info = getTopicTypeInfo(session, topic_config.name);
     heph::serdes::DynamicDeserializer dynamic_deserializer;
     dynamic_deserializer.registerSchema(type_info);
 
