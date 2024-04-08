@@ -55,6 +55,7 @@ constexpr void checkTemplatedTypes() {
 
 template <class RequestT>
 auto createRequest(const zenohc::Query& query) -> RequestT {
+  LOG(INFO) << "Creating request";
   if constexpr (std::is_same_v<RequestT, std::string>) {
     return static_cast<std::string>(query.get_value().as_string_view());
   } else {
@@ -62,7 +63,10 @@ auto createRequest(const zenohc::Query& query) -> RequestT {
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+    LOG(INFO) << "Deserializing buffer of size: " << buffer.size();
+    LOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
     serdes::deserialize<RequestT>(buffer, request);
+    LOG(INFO) << "Deserialized buffer of size: " << buffer.size();
     return request;
   }
 }
@@ -77,13 +81,17 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::createRequest<RequestT>(query));
+    LOG(INFO) << fmt::format("Replying to '{}'", query.get_keyexpr().as_string_view());
     zenohc::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
       query.reply(this->topic_config_.name, reply, options);
     } else {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_APP_CUSTOM });  // Update encoding.
-      query.reply(this->topic_config_.name, serdes::serialize(reply), options);
+      auto buffer = serdes::serialize(reply);
+      LOG(INFO) << "Replying with buffer of size: " << buffer.size();
+      query.reply(this->topic_config_.name, std::move(buffer), options);
+      LOG(INFO) << "Replied with buffer of size: " << buffer.size();
     }
   };
 
@@ -143,7 +151,10 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
   if constexpr (std::is_same_v<RequestT, std::string>) {
     options.set_value(zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN));
   } else {
-    options.set_value(zenohc::Value(serdes::serialize(request), Z_ENCODING_PREFIX_APP_CUSTOM));
+    auto buffer = serdes::serialize(request);
+    LOG(INFO) << "Sending buffer of size: " << buffer.size();
+    LOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
+    options.set_value(zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_APP_CUSTOM));
   }
   const auto success =
       session->zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
