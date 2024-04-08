@@ -4,7 +4,7 @@
 
 declare_module(
   NAME cli
-  DEPENDS_ON_MODULES base
+  DEPENDS_ON_MODULES utils
   DEPENDS_ON_EXTERNAL_PROJECTS fmt
 )
 
@@ -18,7 +18,7 @@ set(SOURCES src/keyboard.cpp src/program_options.cpp README.md include/hephaestu
 # library target
 define_module_library(
   NAME cli
-  PUBLIC_LINK_LIBS hephaestus::base fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::utils fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

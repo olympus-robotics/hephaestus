@@ -4,7 +4,7 @@
 
 declare_module(
   NAME serdes
-  DEPENDS_ON_MODULES base
+  DEPENDS_ON_MODULES utils
   DEPENDS_ON_EXTERNAL_PROJECTS absl magic_enum Protobuf
 )
 
@@ -35,7 +35,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME serdes
-  PUBLIC_LINK_LIBS absl::status hephaestus::base magic_enum::magic_enum protobuf::libprotobuf
+  PUBLIC_LINK_LIBS absl::status hephaestus::utils magic_enum::magic_enum protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

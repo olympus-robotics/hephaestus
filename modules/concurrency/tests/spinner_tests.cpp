@@ -2,8 +2,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 #include "gtest/gtest.h"
-#include "hephaestus/base/exception.h"
 #include "hephaestus/concurrency/spinner.h"
+#include "hephaestus/utils/exception.h"
 
 class TestSpinner : public heph::concurrency::Spinner {
 public:

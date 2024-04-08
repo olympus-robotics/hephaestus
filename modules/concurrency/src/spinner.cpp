@@ -9,7 +9,7 @@
 #include <absl/log/log.h>
 #include <fmt/format.h>
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
 Spinner::Spinner() : is_started_(false), stop_requested_(false) {

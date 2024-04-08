@@ -8,7 +8,7 @@
 
 #include <fmt/format.h>
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::serdes::protobuf {
 namespace {

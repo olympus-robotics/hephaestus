@@ -3,9 +3,9 @@
 // MIT License
 //=================================================================================================
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
-#include "hephaestus/utils/utils.h"
+#include "hephaestus/utils/string_utils.h"
 
 namespace heph {
 

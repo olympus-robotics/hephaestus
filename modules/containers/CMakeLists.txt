@@ -4,7 +4,7 @@
 
 declare_module(
   NAME containers
-  DEPENDS_ON_MODULES base
+  DEPENDS_ON_MODULES utils
   DEPENDS_ON_EXTERNAL_PROJECTS ""
 )
 
@@ -14,7 +14,7 @@ set(SOURCES src/blocking_queue.cpp README.md include/hephaestus/containers/block
 # library target
 define_module_library(
   NAME containers
-  PUBLIC_LINK_LIBS hephaestus::base
+  PUBLIC_LINK_LIBS hephaestus::utils
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

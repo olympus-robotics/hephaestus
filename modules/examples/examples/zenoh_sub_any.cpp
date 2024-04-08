@@ -13,13 +13,13 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 #include "zenoh_program_options.h"
 
 [[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::SessionPtr& session,

@@ -2,9 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/common.h"
+#include "hephaestus/utils/exception.h"
 
 [[nodiscard]] inline auto
 getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {

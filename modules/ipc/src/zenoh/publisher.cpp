@@ -8,10 +8,10 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 

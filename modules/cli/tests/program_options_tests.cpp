@@ -4,8 +4,8 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;

@@ -10,7 +10,7 @@
 #include <optional>
 #include <type_traits>
 
-#include "hephaestus/base/exception.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::containers {
 

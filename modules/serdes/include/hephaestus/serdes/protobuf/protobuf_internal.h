@@ -9,8 +9,8 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
-#include "hephaestus/base/exception.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::serdes::protobuf::internal {
