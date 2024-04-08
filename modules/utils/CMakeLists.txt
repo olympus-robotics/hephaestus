@@ -20,16 +20,16 @@ set(SOURCES
     src/concepts.cpp
     src/exception.cpp
     src/string_utils.cpp
-    src/file.cpp
     src/utils.cpp
     src/version.cpp
+    src/filesystem/file.cpp
     README.md
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
     include/hephaestus/utils/string_utils.h
-    include/hephaestus/utils/file.h
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/version.h
+    include/hephaestus/utils/filesystem/file.h
 )
 
 # library target

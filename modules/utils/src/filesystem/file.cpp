@@ -1,4 +1,4 @@
-#include "hephaestus/utils/file.h"
+#include "hephaestus/utils/filesystem/file.h"
 
 #include <fstream>
 
@@ -8,7 +8,7 @@
 
 #include "hephaestus/utils/exception.h"
 
-namespace heph::utils {
+namespace heph::utils::filesystem {
 auto readFile(const std::filesystem::path& path) -> std::string {
   std::ifstream infile{ path };
   throwExceptionIf<InvalidDataException>(
@@ -52,14 +52,13 @@ void writeBufferToFile(const std::filesystem::path& path, std::span<const std::b
 }
 
 // -------------------------------------------------------------------------------------------------
-// ScopedFilesystemPath implementation
+// ScopedPath implementation
 // -------------------------------------------------------------------------------------------------
 
-ScopedFilesystemPath::ScopedFilesystemPath(std::filesystem::path path)
-  : path_(std::move(path)), path_str_(path_.string()) {
+ScopedPath::ScopedPath(std::filesystem::path path) : path_(std::move(path)), path_str_(path_.string()) {
 }
 
-ScopedFilesystemPath::~ScopedFilesystemPath() {
+ScopedPath::~ScopedPath() {
   std::error_code e;
   std::filesystem::remove_all(path_, e);
   if (e) {
@@ -68,17 +67,17 @@ ScopedFilesystemPath::~ScopedFilesystemPath() {
   }
 }
 
-auto ScopedFilesystemPath::createFile() -> ScopedFilesystemPath {
+auto ScopedPath::createFile() -> ScopedPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
   auto file = global_temp_dir / randomString();
   while (std::filesystem::exists(file)) {
     file = global_temp_dir / randomString();
   }
 
-  return ScopedFilesystemPath{ file };
+  return ScopedPath{ file };
 }
 
-auto ScopedFilesystemPath::createDir() -> ScopedFilesystemPath {
+auto ScopedPath::createDir() -> ScopedPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
   auto temp_dir = global_temp_dir / randomString();
   while (std::filesystem::exists(temp_dir)) {
@@ -86,25 +85,25 @@ auto ScopedFilesystemPath::createDir() -> ScopedFilesystemPath {
   }
 
   std::filesystem::create_directory(temp_dir);
-  return ScopedFilesystemPath{ std::move(temp_dir) };
+  return ScopedPath{ std::move(temp_dir) };
 }
 
-ScopedFilesystemPath::operator std::filesystem::path() const {
+ScopedPath::operator std::filesystem::path() const {
   return path_;
 }
 
-ScopedFilesystemPath::operator std::string() const {
+ScopedPath::operator std::string() const {
   return path_;
 }
 
-ScopedFilesystemPath::operator std::string_view() const {
+ScopedPath::operator std::string_view() const {
   return { path_str_ };
 }
 
-auto ScopedFilesystemPath::randomString() -> std::string {
+auto ScopedPath::randomString() -> std::string {
   absl::BitGen bitgen;
   return fmt::format("{}_{}", absl::ToUnixMillis(absl::Now()),
                      bitgen() % 1000);  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 }
 
-}  // namespace heph::utils
+}  // namespace heph::utils::filesystem

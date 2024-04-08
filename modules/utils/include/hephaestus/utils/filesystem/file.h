@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <span>
 
-namespace heph::utils {
+namespace heph::utils::filesystem {
 
 [[nodiscard]] auto readFile(const std::filesystem::path& path) -> std::string;
 [[nodiscard]] auto readBinaryFile(const std::filesystem::path& path) -> std::vector<std::byte>;
@@ -12,18 +12,18 @@ void writeBufferToFile(const std::filesystem::path& path, std::span<const std::b
 
 /// This class allows to create a file that is removed when the class goes out of scope (RAII).
 /// This is very useful in tests to avoid having dangling files.
-class ScopedFilesystemPath {
+class ScopedPath {
 public:
-  explicit ScopedFilesystemPath(std::filesystem::path path);
-  ~ScopedFilesystemPath();
-  ScopedFilesystemPath(const ScopedFilesystemPath&) = delete;
-  ScopedFilesystemPath(ScopedFilesystemPath&&) = default;
-  auto operator=(const ScopedFilesystemPath&) -> ScopedFilesystemPath& = delete;
-  auto operator=(ScopedFilesystemPath&&) -> ScopedFilesystemPath& = default;
+  explicit ScopedPath(std::filesystem::path path);
+  ~ScopedPath();
+  ScopedPath(const ScopedPath&) = delete;
+  ScopedPath(ScopedPath&&) = default;
+  auto operator=(const ScopedPath&) -> ScopedPath& = delete;
+  auto operator=(ScopedPath&&) -> ScopedPath& = default;
 
-  [[nodiscard]] static auto createFile() -> ScopedFilesystemPath;
+  [[nodiscard]] static auto createFile() -> ScopedPath;
 
-  [[nodiscard]] static auto createDir() -> ScopedFilesystemPath;
+  [[nodiscard]] static auto createDir() -> ScopedPath;
 
   operator std::filesystem::path() const;  // NOLINT(google-explicit-conversion,
                                            // google-explicit-constructor)
@@ -41,4 +41,4 @@ private:
   std::string path_str_;
 };
 
-}  // namespace heph::utils
+}  // namespace heph::utils::filesystem
