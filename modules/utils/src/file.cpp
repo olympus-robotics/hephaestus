@@ -52,14 +52,14 @@ void writeBufferToFile(const std::filesystem::path& path, std::span<const std::b
 }
 
 // -------------------------------------------------------------------------------------------------
-// SelfDestructingPath implementation
+// ScopedFilesystemPath implementation
 // -------------------------------------------------------------------------------------------------
 
-SelfDestructingPath::SelfDestructingPath(std::filesystem::path path)
+ScopedFilesystemPath::ScopedFilesystemPath(std::filesystem::path path)
   : path_(std::move(path)), path_str_(path_.string()) {
 }
 
-SelfDestructingPath::~SelfDestructingPath() {
+ScopedFilesystemPath::~ScopedFilesystemPath() {
   std::error_code e;
   std::filesystem::remove_all(path_, e);
   if (e) {
@@ -68,17 +68,17 @@ SelfDestructingPath::~SelfDestructingPath() {
   }
 }
 
-auto SelfDestructingPath::createFile() -> SelfDestructingPath {
+auto ScopedFilesystemPath::createFile() -> ScopedFilesystemPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
   auto file = global_temp_dir / randomString();
   while (std::filesystem::exists(file)) {
     file = global_temp_dir / randomString();
   }
 
-  return SelfDestructingPath{ file };
+  return ScopedFilesystemPath{ file };
 }
 
-auto SelfDestructingPath::createDir() -> SelfDestructingPath {
+auto ScopedFilesystemPath::createDir() -> ScopedFilesystemPath {
   const auto global_temp_dir = std::filesystem::temp_directory_path();
   auto temp_dir = global_temp_dir / randomString();
   while (std::filesystem::exists(temp_dir)) {
@@ -86,22 +86,22 @@ auto SelfDestructingPath::createDir() -> SelfDestructingPath {
   }
 
   std::filesystem::create_directory(temp_dir);
-  return SelfDestructingPath{ std::move(temp_dir) };
+  return ScopedFilesystemPath{ std::move(temp_dir) };
 }
 
-SelfDestructingPath::operator std::filesystem::path() const {
+ScopedFilesystemPath::operator std::filesystem::path() const {
   return path_;
 }
 
-SelfDestructingPath::operator std::string() const {
+ScopedFilesystemPath::operator std::string() const {
   return path_;
 }
 
-SelfDestructingPath::operator std::string_view() const {
+ScopedFilesystemPath::operator std::string_view() const {
   return { path_str_ };
 }
 
-auto SelfDestructingPath::randomString() -> std::string {
+auto ScopedFilesystemPath::randomString() -> std::string {
   absl::BitGen bitgen;
   return fmt::format("{}_{}", absl::ToUnixMillis(absl::Now()),
                      bitgen() % 1000);  // NOLINT(cppcoreguidelines-avoid-magic-numbers)

@@ -11,7 +11,7 @@ using namespace ::testing;
 
 namespace heph::utils::tests {
 TEST(BinaryFile, ReadWrite) {
-  const auto path = SelfDestructingPath::createFile();
+  const auto path = ScopedFilesystemPath::createFile();
   const auto content = std::vector<std::byte>{ std::byte{ 0x01 }, std::byte{ 0x02 }, std::byte{ 0x03 } };
 
   writeBufferToFile(path, { content.data(), content.size() });
@@ -21,7 +21,7 @@ TEST(BinaryFile, ReadWrite) {
 }
 
 TEST(File, ReadWrite) {
-  const auto path = SelfDestructingPath::createFile();
+  const auto path = ScopedFilesystemPath::createFile();
   const auto content = std::string{ "Hello, World!" };
 
   writeStringToFile(path, content);
