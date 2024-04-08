@@ -22,6 +22,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
+    topic_config.name = "hephaestus/ipc/example/zenoh/service";
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
