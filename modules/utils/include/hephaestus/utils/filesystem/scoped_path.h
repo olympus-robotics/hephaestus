@@ -7,7 +7,6 @@ namespace heph::utils::filesystem {
 /// This is very useful in tests to avoid having dangling files.
 class ScopedPath {
 public:
-  explicit ScopedPath(std::filesystem::path path);
   ~ScopedPath();
   ScopedPath(const ScopedPath&) = delete;
   ScopedPath(ScopedPath&&) = default;
@@ -28,6 +27,8 @@ public:
                                       // google-explicit-constructor)
 
 private:
+  explicit ScopedPath(std::filesystem::path path);
+
   [[nodiscard]] static auto randomString() -> std::string;
 
   std::filesystem::path path_;
