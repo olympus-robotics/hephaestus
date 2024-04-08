@@ -7,7 +7,9 @@
 #include <condition_variable>
 #include <mutex>
 
+#include <absl/log/check.h>
 #include <absl/log/log.h>
+#include <zenoh.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
@@ -54,11 +56,15 @@ constexpr void checkTemplatedTypes() {
 }
 
 template <class RequestT>
-auto createRequest(const zenohc::Query& query) -> RequestT {
+auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   LOG(INFO) << "Creating request";
   if constexpr (std::is_same_v<RequestT, std::string>) {
+    CHECK(query.get_value().get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN)
+        << "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN";
     return static_cast<std::string>(query.get_value().as_string_view());
   } else {
+    CHECK(query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY)
+        << "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY";
     RequestT request;
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -80,18 +86,17 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   auto query = [this](const zenohc::Query& query) mutable {
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
-    auto reply = this->callback_(internal::createRequest<RequestT>(query));
+    auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
     LOG(INFO) << fmt::format("Replying to '{}'", query.get_keyexpr().as_string_view());
     zenohc::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
       query.reply(this->topic_config_.name, reply, options);
     } else {
-      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_APP_CUSTOM });  // Update encoding.
+      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
       auto buffer = serdes::serialize(reply);
       LOG(INFO) << "Replying with buffer of size: " << buffer.size();
       query.reply(this->topic_config_.name, std::move(buffer), options);
-      LOG(INFO) << "Replied with buffer of size: " << buffer.size();
     }
   };
 
@@ -120,12 +125,16 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
     const auto& sample = std::get_if<zenohc::Sample>(&result);
     LOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
     if constexpr (std::is_same_v<ReplyT, std::string>) {
-      std::unique_lock<std::mutex> lock(m);
+      CHECK(sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN)
+          << "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN";
       LOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
+      std::unique_lock<std::mutex> lock(m);
       reply_messages.emplace_back(ServiceResponse<ReplyT>{
           .topic = topic_config.name,
           .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
     } else {
+      CHECK(sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY)
+          << "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY";
       auto payload = sample->get_payload();
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
@@ -154,7 +163,8 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
     auto buffer = serdes::serialize(request);
     LOG(INFO) << "Sending buffer of size: " << buffer.size();
     LOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
-    options.set_value(zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_APP_CUSTOM));
+    auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
+    options.set_value(value);
   }
   const auto success =
       session->zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
