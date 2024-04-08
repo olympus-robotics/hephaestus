@@ -18,7 +18,7 @@
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = getProgramDescription("Binary service client example");
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);

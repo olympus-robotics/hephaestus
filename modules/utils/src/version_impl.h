@@ -19,6 +19,6 @@ static constexpr std::uint16_t VERSION_PATCH = 1;
 
 static constexpr std::string_view REPO_BRANCH = "feature/binary_service";
 static constexpr std::string_view BUILD_PROFILE = "Release";
-static constexpr std::string_view REPO_HASH = "1447d00";
+static constexpr std::string_view REPO_HASH = "8e0862a";
 
 } // namespace heph::utils

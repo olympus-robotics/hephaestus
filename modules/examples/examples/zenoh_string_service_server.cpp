@@ -18,26 +18,22 @@
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    auto desc = getProgramDescription("Binary service server example");
+    auto desc = getProgramDescription("String service server example");
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
-    topic_config.name = "hephaestus/ipc/example/zenoh/service";
+    topic_config.name = "hephaestus/ipc/example/zenoh/string_service";
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    auto callback = [](const heph::examples::types::Pose& sample) {
-      LOG(INFO) << "Received query: " << heph::examples::types::toString(sample);
-      heph::examples::types::Pose sample_reply{
-        .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
-        .position = Eigen::Vector3d{ 1, 2, 3 },
-      };
-      return sample_reply;
+    auto callback = [](const std::string& sample) {
+      LOG(INFO) << "Received query: " << sample;
+      std::string reply = (sample == "Marco") ? "Polo" : "What?";
+      return reply;
     };
 
-    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
-        session, topic_config, callback);
+    heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
 
-    LOG(INFO) << fmt::format("Server started. Wating for queries on '{}' topic", topic_config.name);
+    LOG(INFO) << fmt::format("String server started. Wating for queries on '{}' topic", topic_config.name);
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::seconds(1));

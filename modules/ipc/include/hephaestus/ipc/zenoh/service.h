@@ -74,7 +74,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
   auto query = [this](const zenohc::Query& query) mutable {
-    DLOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
+    LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::createRequest<RequestT>(query));
     zenohc::QueryReplyOptions options;
@@ -97,7 +97,7 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
     -> std::vector<ServiceResponse<ReplyT>> {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  DLOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
+  LOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
   std::mutex m;
   std::condition_variable done_signal;
   std::vector<ServiceResponse<ReplyT>> reply_messages;
@@ -105,14 +105,15 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
   auto on_reply = [&reply_messages, &m, &topic_config](zenohc::Reply&& reply) {
     const auto result = std::move(reply).get();
     if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
-      LOG(ERROR) << fmt::format("Error on {} reply: {}", topic_config.name, error->as_string_view());
+      LOG(ERROR) << fmt::format("Error on '{}' reply: '{}'", topic_config.name, error->as_string_view());
       return;
     }
 
     const auto& sample = std::get_if<zenohc::Sample>(&result);
-    DLOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
+    LOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       std::unique_lock<std::mutex> lock(m);
+      LOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
       reply_messages.emplace_back(ServiceResponse<ReplyT>{
           .topic = topic_config.name,
           .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
@@ -158,7 +159,7 @@ auto callService(const SessionPtr& session, const TopicConfig& topic_config, con
   }
 
   if (!success) {
-    LOG(ERROR) << fmt::format("Error while calling service on '{}': {}", topic_config.name, error_code);
+    LOG(ERROR) << fmt::format("Error while calling service on '{}': '{}'", topic_config.name, error_code);
     return {};
   }
 
