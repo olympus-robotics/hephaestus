@@ -5,12 +5,13 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/filesystem/file.h"
+#include "hephaestus/utils/filesystem/scoped_path.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::utils::filesystem::tests {
-TEST(BinaryFile, ReadWrite) {
+TEST(Filesystem, ReadWriteBinaryFile) {
   const auto path = ScopedPath::createFile();
   const auto content = std::vector<std::byte>{ std::byte{ 0x01 }, std::byte{ 0x02 }, std::byte{ 0x03 } };
 
@@ -20,7 +21,7 @@ TEST(BinaryFile, ReadWrite) {
   EXPECT_EQ(content, read_content);
 }
 
-TEST(File, ReadWrite) {
+TEST(Filesystem, ReadWriteTextFile) {
   const auto path = ScopedPath::createFile();
   const auto content = std::string{ "Hello, World!" };
 

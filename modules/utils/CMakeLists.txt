@@ -23,6 +23,7 @@ set(SOURCES
     src/utils.cpp
     src/version.cpp
     src/filesystem/file.cpp
+    src/filesystem/scoped_path.cpp
     README.md
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
@@ -30,6 +31,7 @@ set(SOURCES
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/version.h
     include/hephaestus/utils/filesystem/file.h
+    include/hephaestus/utils/filesystem/scoped_path.h
 )
 
 # library target
