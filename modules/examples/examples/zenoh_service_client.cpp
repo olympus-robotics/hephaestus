@@ -41,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
       });
       LOG(INFO) << "Received: \n" << reply_str;
     } else {
-      LOG(ERROR) << "No messages received after " << fmt::format("{}", K_TIMEOUT);
+      LOG(ERROR) << "Error or no messages received after " << fmt::format("{}", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;
