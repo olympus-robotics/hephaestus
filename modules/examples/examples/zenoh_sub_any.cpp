@@ -58,7 +58,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
-    auto type_info = getTopicTypeInfo(session, topic_config.name);
+    auto type_info = getTopicTypeInfo(*session, topic_config.name);
     heph::serdes::DynamicDeserializer dynamic_deserializer;
     dynamic_deserializer.registerSchema(type_info);
 
