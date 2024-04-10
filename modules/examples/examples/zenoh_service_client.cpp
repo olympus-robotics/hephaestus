@@ -28,17 +28,15 @@ auto main(int argc, const char* argv[]) -> int {
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };
-    LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name,
-                             heph::examples::types::toString(query));
+    LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name, query);
     const auto replies =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
             *session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
       std::string reply_str;
-      std::for_each(replies.begin(), replies.end(), [&reply_str](const auto& reply) {
-        reply_str += fmt::format("-\t {}\n", heph::examples::types::toString(reply.value));
-      });
-      LOG(INFO) << "Received: \n" << reply_str;
+      std::for_each(replies.begin(), replies.end(),
+                    [&reply_str](const auto& reply) { reply_str += fmt::format("-\t {}\n", reply.value); });
+      fmt::println("Received: \n{}\n", reply_str);
     } else {
       LOG(ERROR) << "Error or no messages received after " << fmt::format("{}", K_TIMEOUT);
     }

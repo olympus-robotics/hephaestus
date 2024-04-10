@@ -32,11 +32,11 @@ auto main(int argc, const char* argv[]) -> int {
     if (!replies.empty()) {
       std::string reply_str;
       std::for_each(replies.begin(), replies.end(), [&reply_str](const auto& reply) {
-        reply_str = fmt::format("{}\n-\t {}", reply_str, reply.value);
+        reply_str = fmt::format("{}\n-\t{}: {}", reply_str, reply.topic, reply.value);
       });
       LOG(INFO) << "Received:" << reply_str;
     } else {
-      LOG(ERROR) << "Error or no messages received after " << fmt::format("{}", K_TIMEOUT);
+      LOG(ERROR) << fmt::format("Error or no messages received after {}", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;

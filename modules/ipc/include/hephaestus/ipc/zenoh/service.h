@@ -48,11 +48,9 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
 namespace internal {
 
-// NOTE: These functions are necessary since zenoh changes the buffer depending on the encoding for some
-
+// TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
 static constexpr int CHANGING_BYTES = 19;
 
-// reason. Remove once resolved.
 auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte>;
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte>;
 
@@ -73,13 +71,13 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   } else {
     CHECK(query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY)
         << "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY";
-    RequestT request;
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     buffer = internal::removeChangingBytes(buffer);
     DLOG(INFO) << "Deserializing buffer of size: " << buffer.size();
     DLOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
+    RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
     return request;
   }
@@ -90,7 +88,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
              const std::string& topic_name) -> void {
   const auto result = std::move(reply).get();
   if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
-    LOG(ERROR) << fmt::format("Error on '{}' reply: '{}'", topic_name, error->as_string_view());
+    LOG(ERROR) << fmt::format("Error on service reply for '{}': '{}'", topic_name, error->as_string_view());
     return;
   }
 
@@ -126,7 +124,6 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
-    DLOG(INFO) << fmt::format("Replying to '{}'", query.get_keyexpr().as_string_view());
     zenohc::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.

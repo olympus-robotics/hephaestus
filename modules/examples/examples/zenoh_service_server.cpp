@@ -36,7 +36,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto callback = [](const heph::examples::types::Pose& sample) {
-      LOG(INFO) << "Received query: " << heph::examples::types::toString(sample);
+      LOG(INFO) << fmt::format("Received query: {}", sample);
       heph::examples::types::Pose sample_reply{
         .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
         .position = Eigen::Vector3d{ 1, 2, 3 },
