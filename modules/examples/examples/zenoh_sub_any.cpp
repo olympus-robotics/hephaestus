@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <string>
 #include <thread>
@@ -26,7 +27,7 @@
                                     const std::string& topic) -> heph::serdes::TypeInfo {
   auto service_topic = heph::ipc::getTypeInfoServiceTopic(topic);
   auto response = heph::ipc::zenoh::callService<std::string, std::string>(
-      session, heph::ipc::TopicConfig{ service_topic }, "");
+      *session, heph::ipc::TopicConfig{ service_topic }, "");
   heph::throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), service_topic));
@@ -34,9 +35,19 @@
   return heph::serdes::TypeInfo::fromJson(response.front().value);
 }
 
+namespace {
+volatile std::atomic_bool keep_running(true);  // NOLINT
+}  // namespace
+
 auto main(int argc, const char* argv[]) -> int {
+  std::ignore = std::signal(SIGINT, [](int signal) {
+    if (signal == SIGINT) {
+      LOG(INFO) << "SIGINT received. Shutting down...";
+      keep_running.store(false);
+    }
+  });
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
@@ -61,7 +72,7 @@ auto main(int argc, const char* argv[]) -> int {
         heph::ipc::zenoh::Subscriber{ std::move(session), std::move(topic_config), std::move(cb) };
     (void)subscriber;
 
-    while (true) {
+    while (keep_running.load()) {
       std::this_thread::sleep_for(std::chrono::seconds{ 1 });
     }
 

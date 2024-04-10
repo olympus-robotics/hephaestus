@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <csignal>
 #include <cstdlib>
 #include <thread>
 
@@ -16,13 +17,23 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "zenoh_program_options.h"
 
+namespace {
+volatile std::atomic_bool keep_running(true);  // NOLINT
+}  // namespace
+
 auto main(int argc, const char* argv[]) -> int {
+  std::ignore = std::signal(SIGINT, [](int signal) {
+    if (signal == SIGINT) {
+      LOG(INFO) << "SIGINT received. Shutting down...";
+      keep_running.store(false);
+    }
+  });
+
   try {
-    auto desc = getProgramDescription("String service server example");
+    auto desc = getProgramDescription("String service server example", ExampleType::Service);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
-    topic_config.name = "hephaestus/ipc/example/zenoh/string_service";
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto callback = [](const std::string& sample) {
@@ -35,10 +46,9 @@ auto main(int argc, const char* argv[]) -> int {
 
     LOG(INFO) << fmt::format("String server started. Wating for queries on '{}' topic", topic_config.name);
 
-    while (true) {
+    while (keep_running.load()) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
     std::ignore =

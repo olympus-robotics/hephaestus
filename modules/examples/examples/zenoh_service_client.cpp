@@ -18,11 +18,10 @@
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    auto desc = getProgramDescription("Binary service client example");
+    auto desc = getProgramDescription("Binary service client example", ExampleType::Service);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
-    topic_config.name = "hephaestus/ipc/example/zenoh/service";
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
@@ -33,11 +32,11 @@ auto main(int argc, const char* argv[]) -> int {
                              heph::examples::types::toString(query));
     const auto replies =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
-            session, topic_config, query, K_TIMEOUT);
+            *session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
       std::string reply_str;
-      std::for_each(replies.begin(), replies.end(), [reply_str](const auto& reply) {
-        return fmt::format("{}\n-\t {}", reply_str, heph::examples::types::toString(reply.value));
+      std::for_each(replies.begin(), replies.end(), [&reply_str](const auto& reply) {
+        reply_str += fmt::format("-\t {}\n", heph::examples::types::toString(reply.value));
       });
       LOG(INFO) << "Received: \n" << reply_str;
     } else {

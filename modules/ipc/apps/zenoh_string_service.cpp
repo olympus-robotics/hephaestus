@@ -22,7 +22,7 @@ auto main(int argc, const char* argv[]) -> int {
                  "with different types.");
     fmt::println("Opening session: {}", heph::ipc::zenoh::toString(session->zenoh_session.info_zid()));
 
-    auto results = heph::ipc::zenoh::callService<std::string, std::string>(session, topic_config, value);
+    auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value);
 
     std::ranges::for_each(
         results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });

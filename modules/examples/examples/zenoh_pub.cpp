@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <csignal>
 #include <cstdlib>
 #include <thread>
 
@@ -18,9 +19,19 @@
 #include "hephaestus/utils/exception.h"
 #include "zenoh_program_options.h"
 
+namespace {
+volatile std::atomic_bool keep_running(true);  // NOLINT
+}  // namespace
+
 auto main(int argc, const char* argv[]) -> int {
+  std::ignore = std::signal(SIGINT, [](int signal) {
+    if (signal == SIGINT) {
+      LOG(INFO) << "SIGINT received. Shutting down...";
+      keep_running.store(false);
+    }
+  });
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
@@ -39,7 +50,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     double count = 0;
-    while (true) {
+    while (keep_running.load()) {
       heph::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ 1, 2, count++ };
       pose.orientation =
