@@ -16,15 +16,15 @@ configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ON
 
 # library sources
 set(SOURCES
+    src/string/string_utils.cpp
     src/concepts.cpp
     src/exception.cpp
-    src/string_utils.cpp
     src/utils.cpp
     src/version.cpp
     README.md
+    include/hephaestus/utils/string/string_utils.h
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
-    include/hephaestus/utils/string_utils.h
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/version.h
 )
