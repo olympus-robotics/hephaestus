@@ -17,6 +17,7 @@ configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ON
 
 # library sources
 set(SOURCES
+    src/string/string_literal.cpp
     src/string/string_utils.cpp
     src/concepts.cpp
     src/exception.cpp
@@ -25,6 +26,7 @@ set(SOURCES
     src/filesystem/file.cpp
     src/filesystem/scoped_path.cpp
     README.md
+    include/hephaestus/utils/string/string_literal.h
     include/hephaestus/utils/string/string_utils.h
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
