@@ -17,17 +17,16 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "zenoh_program_options.h"
 
-namespace {
-volatile std::atomic_bool keep_running(true);  // NOLINT
-}  // namespace
+std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+auto signalHandler(int /*unused*/) -> void {
+  stop_flag.test_and_set();
+  stop_flag.notify_all();
+}
 
 auto main(int argc, const char* argv[]) -> int {
-  std::ignore = std::signal(SIGINT, [](int signal) {
-    if (signal == SIGINT) {
-      LOG(INFO) << "SIGINT received. Shutting down...";
-      keep_running.store(false);
-    }
-  });
+  (void)signal(SIGINT, signalHandler);
+  (void)signal(SIGTERM, signalHandler);
+
   try {
     auto desc = getProgramDescription("Binary service server example", ExampleType::Service);
     const auto args = std::move(desc).parse(argc, argv);
@@ -49,9 +48,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     LOG(INFO) << fmt::format("Server started. Wating for queries on '{}' topic", topic_config.name);
 
-    while (keep_running.load()) {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    stop_flag.wait(false);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

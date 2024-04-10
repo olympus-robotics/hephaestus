@@ -4,6 +4,8 @@
 
 #include "hephaestus/ipc/zenoh/service.h"
 
+#include "hephaestus/utils/exception.h"
+
 namespace heph::ipc::zenoh::internal {
 // reason. Remove once resolved.
 auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
@@ -15,8 +17,9 @@ auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
 }
 
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte> {
-  CHECK(buffer.size() >= internal::CHANGING_BYTES)
-      << "Buffer size should be at least " << internal::CHANGING_BYTES;
+  throwExceptionIf<InvalidDataException>(
+      buffer.size() >= internal::CHANGING_BYTES,
+      fmt::format("Buffer size should be at least {}.", internal::CHANGING_BYTES));
   return buffer.subspan(internal::CHANGING_BYTES);
 }
 }  // namespace heph::ipc::zenoh::internal

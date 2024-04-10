@@ -21,17 +21,16 @@
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "zenoh_program_options.h"
 
-namespace {
-volatile std::atomic_bool keep_running(true);  // NOLINT
-}  // namespace
+std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+auto signalHandler(int /*unused*/) -> void {
+  stop_flag.test_and_set();
+  stop_flag.notify_all();
+}
 
 auto main(int argc, const char* argv[]) -> int {
-  std::ignore = std::signal(SIGINT, [](int signal) {
-    if (signal == SIGINT) {
-      LOG(INFO) << "SIGINT received. Shutting down...";
-      keep_running.store(false);
-    }
-  });
+  (void)signal(SIGINT, signalHandler);
+  (void)signal(SIGTERM, signalHandler);
+
   try {
     auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
@@ -45,19 +44,16 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto cb = [topic = topic_config.name](const heph::ipc::MessageMetadata& metadata,
                                           const std::shared_ptr<heph::examples::types::Pose>& pose) {
-      LOG(INFO) << fmt::format(
-          ">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
-          std::chrono::system_clock::time_point{
-              std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
-          metadata.topic, metadata.sender_id, metadata.sequence_id, *pose);
+      fmt::println(">> Time: {}. Topic {}. From: {}. Counter: {}. Received {}",
+                   std::chrono::system_clock::time_point{
+                       std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp) },
+                   metadata.topic, metadata.sender_id, metadata.sequence_id, *pose);
     };
     auto subscriber = heph::ipc::subscribe<heph::ipc::zenoh::Subscriber, heph::examples::types::Pose>(
         session, std::move(topic_config), std::move(cb));
     (void)subscriber;
 
-    while (keep_running.load()) {
-      std::this_thread::sleep_for(std::chrono::seconds{ 1 });
-    }
+    stop_flag.wait(false);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

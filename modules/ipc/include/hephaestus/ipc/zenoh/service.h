@@ -7,7 +7,6 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <absl/log/check.h>
 #include <absl/log/log.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
@@ -16,6 +15,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 
@@ -65,12 +65,14 @@ constexpr void checkTemplatedTypes() {
 template <class RequestT>
 auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    CHECK(query.get_value().get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN)
-        << "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN";
+    throwExceptionIf<InvalidParameterException>(
+        query.get_value().get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     return static_cast<std::string>(query.get_value().as_string_view());
   } else {
-    CHECK(query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY)
-        << "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY";
+    throwExceptionIf<InvalidParameterException>(
+        query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
@@ -95,22 +97,26 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
   const auto& sample = std::get_if<zenohc::Sample>(&result);
   DLOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
   if constexpr (std::is_same_v<ReplyT, std::string>) {
-    CHECK(sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN)
-        << "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN";
+    throwExceptionIf<InvalidParameterException>(
+        sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
     std::unique_lock<std::mutex> lock(m);
-    reply_messages.emplace_back(ServiceResponse<ReplyT>{
-        .topic = topic_name, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
+    reply_messages.emplace_back(
+        ServiceResponse<ReplyT>{ .topic = static_cast<std::string>(sample->get_keyexpr().as_string_view()),
+                                 .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
   } else {
-    CHECK(sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY)
-        << "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY";
+    throwExceptionIf<InvalidParameterException>(
+        sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = sample->get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     ReplyT reply_deserialized;
     serdes::deserialize(buffer, reply_deserialized);
     std::unique_lock<std::mutex> lock(m);
-    reply_messages.emplace_back(topic_name, std::move(reply_deserialized));
+    reply_messages.emplace_back(static_cast<std::string>(sample->get_keyexpr().as_string_view()),
+                                std::move(reply_deserialized));
   }
 }
 }  // namespace internal
@@ -131,8 +137,8 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
     } else {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
       auto buffer = serdes::serialize(reply);
-      DLOG(INFO) << "Replying with buffer of size: " << buffer.size();
-      DLOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
+      DLOG(INFO) << fmt::format("Reply: payload size: {}, content: {}", buffer.size(),
+                                fmt::join(buffer, ","));
       query.reply(this->topic_config_.name, std::move(buffer), options);
     }
   };
@@ -148,16 +154,16 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
   LOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
-  std::mutex m;
+  std::mutex mutex;
   std::condition_variable done_signal;
   std::vector<ServiceResponse<ReplyT>> reply_messages;
 
-  auto on_reply = [&reply_messages, &m, &topic_config](zenohc::Reply&& reply) {
-    internal::onReply(std::move(reply), reply_messages, m, topic_config.name);
+  auto on_reply = [&reply_messages, &mutex, &topic_config](zenohc::Reply&& reply) {
+    internal::onReply(std::move(reply), reply_messages, mutex, topic_config.name);
   };
 
-  auto on_done = [&m, &done_signal]() {
-    std::lock_guard lock(m);
+  auto on_done = [&mutex, &done_signal]() {
+    std::lock_guard lock(mutex);
     done_signal.notify_all();
   };
 
@@ -172,8 +178,8 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     auto buffer = serdes::serialize(request);
     buffer = internal::addChangingBytes(buffer);
 
-    DLOG(INFO) << "Sending buffer of size: " << buffer.size();
-    DLOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
+    DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
+                              fmt::join(buffer, ","));
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
   }
@@ -181,8 +187,10 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   zenohc::ErrNo error_code{};
   const auto success =
       session.zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
+  throwExceptionIf<FailedZenohOperation>(!success,
+                                         fmt::format("Failed to call service on '{}'", topic_config.name));
 
-  std::unique_lock lock(m);
+  std::unique_lock lock(mutex);
   if (timeout.has_value()) {
     if (done_signal.wait_for(lock, timeout.value()) == std::cv_status::timeout) {
       LOG(WARNING) << fmt::format("Timeout while waiting for service reply of '{}'", topic_config.name);
@@ -192,7 +200,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     done_signal.wait(lock);
   }
 
-  if (!success) {
+  if (error_code != 0) {
     LOG(ERROR) << fmt::format("Error while calling service on '{}': '{}'", topic_config.name, error_code);
     return {};
   }

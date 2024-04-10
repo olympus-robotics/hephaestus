@@ -35,18 +35,17 @@
   return heph::serdes::TypeInfo::fromJson(response.front().value);
 }
 
-namespace {
-volatile std::atomic_bool keep_running(true);  // NOLINT
-}  // namespace
+std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+auto signalHandler(int /*unused*/) -> void {
+  stop_flag.test_and_set();
+  stop_flag.notify_all();
+}
 
 auto main(int argc, const char* argv[]) -> int {
-  std::ignore = std::signal(SIGINT, [](int signal) {
-    if (signal == SIGINT) {
-      LOG(INFO) << "SIGINT received. Shutting down...";
-      keep_running.store(false);
-    }
-  });
   try {
+    (void)signal(SIGINT, signalHandler);
+    (void)signal(SIGTERM, signalHandler);
+
     auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
 
@@ -72,9 +71,7 @@ auto main(int argc, const char* argv[]) -> int {
         heph::ipc::zenoh::Subscriber{ std::move(session), std::move(topic_config), std::move(cb) };
     (void)subscriber;
 
-    while (keep_running.load()) {
-      std::this_thread::sleep_for(std::chrono::seconds{ 1 });
-    }
+    stop_flag.wait(false);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
