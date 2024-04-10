@@ -16,7 +16,7 @@ TEST(Exception, Throw) {
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_STREQ(e.what(), "[modules/utils/tests/tests.cpp:13] type mismatch");
+    EXPECT_STREQ(e.what(), "[modules/utils/tests/exception_tests.cpp:13] type mismatch");
   }
 }
 
