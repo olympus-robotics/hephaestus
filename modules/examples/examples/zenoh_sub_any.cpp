@@ -23,11 +23,11 @@
 #include "hephaestus/utils/exception.h"
 #include "zenoh_program_options.h"
 
-[[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::SessionPtr& session,
+[[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::Session& session,
                                     const std::string& topic) -> heph::serdes::TypeInfo {
   auto service_topic = heph::ipc::getTypeInfoServiceTopic(topic);
   auto response = heph::ipc::zenoh::callService<std::string, std::string>(
-      *session, heph::ipc::TopicConfig{ service_topic }, "");
+      session, heph::ipc::TopicConfig{ service_topic }, "");
   heph::throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), service_topic));
