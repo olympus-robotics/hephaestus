@@ -32,7 +32,9 @@ namespace heph::utils::string {
 /// camelCase -> CAMEL_CASE
 [[nodiscard]] auto toScreamingSnakeCase(const std::string_view& camel_case) -> std::string;
 
-/* --- Implementation --- */
+//=================================================================================================
+// Implementation
+//=================================================================================================
 
 constexpr auto truncate(std::string_view str, std::string_view start_token, std::string_view end_token,
                         bool include_end_token) -> std::string_view {
