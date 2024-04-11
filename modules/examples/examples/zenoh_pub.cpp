@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <csignal>
 #include <cstdlib>
 #include <thread>
 
@@ -18,9 +19,18 @@
 #include "hephaestus/utils/exception.h"
 #include "zenoh_program_options.h"
 
+std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+auto signalHandler(int /*unused*/) -> void {
+  stop_flag.test_and_set();
+  stop_flag.notify_all();
+}
+
 auto main(int argc, const char* argv[]) -> int {
+  (void)signal(SIGINT, signalHandler);
+  (void)signal(SIGTERM, signalHandler);
+
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
@@ -39,7 +49,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     double count = 0;
-    while (true) {
+    while (!stop_flag.test()) {
       heph::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ 1, 2, count++ };
       pose.orientation =
