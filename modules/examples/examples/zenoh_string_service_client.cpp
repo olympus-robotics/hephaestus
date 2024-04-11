@@ -34,7 +34,7 @@ auto main(int argc, const char* argv[]) -> int {
       std::for_each(replies.begin(), replies.end(), [&reply_str](const auto& reply) {
         reply_str = fmt::format("{}\n-\t{}: {}", reply_str, reply.topic, reply.value);
       });
-      LOG(INFO) << "Received:" << reply_str;
+      LOG(INFO) << "Received: " << reply_str;
     } else {
       LOG(ERROR) << fmt::format("Error or no messages received after {}", K_TIMEOUT);
     }

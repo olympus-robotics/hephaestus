@@ -77,8 +77,9 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     buffer = internal::removeChangingBytes(buffer);
-    DLOG(INFO) << "Deserializing buffer of size: " << buffer.size();
-    DLOG(INFO) << fmt::format("Payload: {}", fmt::join(buffer, ","));
+    DLOG(INFO) << fmt::format("Deserializing buffer of size: {}, values: {}", buffer.size(),
+                              fmt::join(buffer, ","));
+
     RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
     return request;
@@ -95,16 +96,16 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
   }
 
   const auto& sample = std::get_if<zenohc::Sample>(&result);
-  DLOG(INFO) << fmt::format("Received answer of '{}'", sample->get_keyexpr().as_string_view());
+  const auto server_topic = static_cast<std::string>(sample->get_keyexpr().as_string_view());
+  DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
   if constexpr (std::is_same_v<ReplyT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
         sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
     std::unique_lock<std::mutex> lock(m);
-    reply_messages.emplace_back(
-        ServiceResponse<ReplyT>{ .topic = static_cast<std::string>(sample->get_keyexpr().as_string_view()),
-                                 .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
+    reply_messages.emplace_back(ServiceResponse<ReplyT>{
+        .topic = server_topic, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
   } else {
     throwExceptionIf<InvalidParameterException>(
         sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY,
@@ -115,8 +116,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
     ReplyT reply_deserialized;
     serdes::deserialize(buffer, reply_deserialized);
     std::unique_lock<std::mutex> lock(m);
-    reply_messages.emplace_back(static_cast<std::string>(sample->get_keyexpr().as_string_view()),
-                                std::move(reply_deserialized));
+    reply_messages.emplace_back(server_topic, std::move(reply_deserialized));
   }
 }
 }  // namespace internal
@@ -176,10 +176,10 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     options.set_value(zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN));
   } else {
     auto buffer = serdes::serialize(request);
-    buffer = internal::addChangingBytes(buffer);
 
     DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
                               fmt::join(buffer, ","));
+    buffer = internal::addChangingBytes(buffer);
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
   }
