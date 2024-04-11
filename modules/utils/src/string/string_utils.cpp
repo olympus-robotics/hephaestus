@@ -9,9 +9,7 @@ namespace heph::utils::string {
 auto toUpperCase(const std::string_view& any_case) -> std::string {
   std::string upper_case;
   upper_case.reserve(any_case.size());
-  for (auto c : any_case) {
-    upper_case.push_back(static_cast<char>(std::toupper(static_cast<int>(c))));
-  }
+  std::transform(any_case.begin(), any_case.end(), std::back_inserter(upper_case), std::toupper);
 
   return upper_case;
 }
