@@ -6,24 +6,10 @@
 
 namespace heph::utils::string {
 
-auto truncate(std::string_view str, std::string_view start_token, std::string_view end_token,
-              bool include_end_token) -> std::string_view {
-  const auto start_pos = str.find(start_token);
-  auto end_pos = end_token.empty() ? std::string_view::npos : str.find(end_token);
-  if (end_pos != std::string_view::npos && include_end_token) {
-    end_pos += end_token.size();
-  }
-
-  return (start_pos != std::string_view::npos) ? str.substr(start_pos, end_pos - start_pos) :
-                                                 str.substr(0, end_pos);
-}
-
 auto toUpperCase(const std::string_view& any_case) -> std::string {
   std::string upper_case;
   upper_case.reserve(any_case.size());
-  for (auto c : any_case) {
-    upper_case.push_back(static_cast<char>(std::toupper(static_cast<int>(c))));
-  }
+  std::transform(any_case.begin(), any_case.end(), std::back_inserter(upper_case), std::toupper);
 
   return upper_case;
 }

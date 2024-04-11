@@ -33,57 +33,63 @@ auto randomString(std::mt19937_64& mt) -> std::string {
 }
 
 struct TestCase {
-  std::string description;
-  std::string str;
-  std::string start_token;
-  std::string end_token;
+  std::string_view description;
+  std::string_view str;
+  std::string_view start_token;
+  std::string_view end_token;
   bool include_end_token;
-  std::string expected;
+  std::string_view expected;
 };
 
 TEST(StringUtilsTests, Truncate) {
-  const auto test_cases = std::array{ TestCase{ .description = "Truncate with include",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "to",
-                                                .end_token = ".txt",
-                                                .include_end_token = true,
-                                                .expected = "to/some/file.txt" },
-                                      TestCase{ .description = "Truncate with exclude",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "to",
-                                                .end_token = ".txt",
-                                                .include_end_token = false,
-                                                .expected = "to/some/file" },
-                                      TestCase{ .description = "Truncate invalid tokens",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "aaa",
-                                                .end_token = "bbb",
-                                                .include_end_token = true,
-                                                .expected = "/path/to/some/file.txt" },
-                                      TestCase{ .description = "Truncate start invalid",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "aaa",
-                                                .end_token = ".txt",
-                                                .include_end_token = false,
-                                                .expected = "/path/to/some/file" },
-                                      TestCase{ .description = "Truncate end invalid",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "some",
-                                                .end_token = "bbb",
-                                                .include_end_token = true,
-                                                .expected = "some/file.txt" },
-                                      TestCase{ .description = "Truncate start and end empty",
-                                                .str = "/path/to/some/file.txt",
-                                                .start_token = "",
-                                                .end_token = "",
-                                                .include_end_token = true,
-                                                .expected = "/path/to/some/file.txt" } };
+  constexpr auto TEST_CASES = std::array{ TestCase{ .description = "Truncate with include",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "to",
+                                                    .end_token = ".txt",
+                                                    .include_end_token = true,
+                                                    .expected = "to/some/file.txt" },
+                                          TestCase{ .description = "Truncate with exclude",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "to",
+                                                    .end_token = ".txt",
+                                                    .include_end_token = false,
+                                                    .expected = "to/some/file" },
+                                          TestCase{ .description = "Truncate invalid tokens",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "aaa",
+                                                    .end_token = "bbb",
+                                                    .include_end_token = true,
+                                                    .expected = "/path/to/some/file.txt" },
+                                          TestCase{ .description = "Truncate start invalid",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "aaa",
+                                                    .end_token = ".txt",
+                                                    .include_end_token = false,
+                                                    .expected = "/path/to/some/file" },
+                                          TestCase{ .description = "Truncate end invalid",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "some",
+                                                    .end_token = "bbb",
+                                                    .include_end_token = true,
+                                                    .expected = "some/file.txt" },
+                                          TestCase{ .description = "Truncate start and end empty",
+                                                    .str = "/path/to/some/file.txt",
+                                                    .start_token = "",
+                                                    .end_token = "",
+                                                    .include_end_token = true,
+                                                    .expected = "/path/to/some/file.txt" } };
 
-  for (const auto& test_case : test_cases) {
+  for (const auto& test_case : TEST_CASES) {
     const auto truncated =
         truncate(test_case.str, test_case.start_token, test_case.end_token, test_case.include_end_token);
     EXPECT_EQ(truncated, test_case.expected) << test_case.description;
   }
+
+  constexpr auto CONSTEXPR_TEST_CASE = TEST_CASES[0];
+  constexpr auto CONSTEXPR_TRUNCATED =
+      truncate(CONSTEXPR_TEST_CASE.str, CONSTEXPR_TEST_CASE.start_token, CONSTEXPR_TEST_CASE.end_token,
+               CONSTEXPR_TEST_CASE.include_end_token);
+  static_assert(CONSTEXPR_TRUNCATED == CONSTEXPR_TEST_CASE.expected);
 }
 
 TEST(StringUtilsTests, toUpperCase) {

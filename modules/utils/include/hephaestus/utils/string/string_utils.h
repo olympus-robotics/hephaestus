@@ -19,9 +19,9 @@ namespace heph::utils::string {
 /// constexpr auto truncated = truncate(str, start_token, end_token, false);
 /// std::cout << truncated << '\n'; // $ to/some/file
 /// @endcode
-[[nodiscard]] auto truncate(std::string_view str, std::string_view start_token,
-                            std::string_view end_token = std::string_view(""),
-                            bool include_end_token = true) -> std::string_view;
+[[nodiscard]] constexpr auto truncate(std::string_view str, std::string_view start_token,
+                                      std::string_view end_token = std::string_view(""),
+                                      bool include_end_token = true) -> std::string_view;
 
 /// aNy_CaSe -> ANY_CASE
 [[nodiscard]] auto toUpperCase(const std::string_view& any_case) -> std::string;
@@ -31,5 +31,16 @@ namespace heph::utils::string {
 
 /// camelCase -> CAMEL_CASE
 [[nodiscard]] auto toScreamingSnakeCase(const std::string_view& camel_case) -> std::string;
+
+/* --- Implementation --- */
+
+constexpr auto truncate(std::string_view str, std::string_view start_token, std::string_view end_token,
+                        bool include_end_token) -> std::string_view {
+  const auto start_pos = str.find(start_token);
+  auto end_pos = end_token.empty() ? std::string_view::npos : str.find(end_token);
+  if (end_pos != std::string_view::npos && include_end_token) {
+    end_pos += end_token.size();
+  }
+}
 
 }  // namespace heph::utils::string
