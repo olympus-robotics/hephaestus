@@ -7,10 +7,11 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh::internal {
-// reason. Remove once resolved.
+
+// TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
+static constexpr int CHANGING_BYTES = 19;
+
 auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
-  // NOTE: This is necessary since zenoh changes the buffer depending on the encoding for some reason.
-  // Remove once resolved.
   auto send_buffer = std::vector<std::byte>(internal::CHANGING_BYTES, std::byte{});
   send_buffer.insert(send_buffer.end(), buffer.begin(), buffer.end());
   return send_buffer;

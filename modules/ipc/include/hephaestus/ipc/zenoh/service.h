@@ -48,9 +48,6 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
 namespace internal {
 
-// TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
-static constexpr int CHANGING_BYTES = 19;
-
 auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte>;
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte>;
 
