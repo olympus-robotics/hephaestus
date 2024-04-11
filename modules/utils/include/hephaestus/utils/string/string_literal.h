@@ -25,7 +25,9 @@ struct StringLiteral {
   std::array<char, Size> value;  // Does include the null terminator.
 };
 
-/* --- Implementation --- */
+//=================================================================================================
+// Implementation
+//=================================================================================================
 
 template <size_t Size>
 constexpr StringLiteral<Size>::StringLiteral(
