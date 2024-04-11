@@ -4,12 +4,15 @@
 
 #include "hephaestus/utils/string/string_utils.h"
 
+#include <algorithm>
+
 namespace heph::utils::string {
 
 auto toUpperCase(const std::string_view& any_case) -> std::string {
   std::string upper_case;
   upper_case.reserve(any_case.size());
-  std::transform(any_case.begin(), any_case.end(), std::back_inserter(upper_case), std::toupper);
+  std::transform(any_case.begin(), any_case.end(), std::back_inserter(upper_case),
+                 [](unsigned char c) { return std::toupper(c); });
 
   return upper_case;
 }
