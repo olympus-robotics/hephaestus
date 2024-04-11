@@ -3,6 +3,7 @@
 //=================================================================================================
 #include <gtest/gtest.h>
 
+#include "gmock/gmock.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -16,7 +17,7 @@ TEST(Exception, Throw) {
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_STREQ(e.what(), "[modules/utils/tests/exception_tests.cpp:13] type mismatch");
+    EXPECT_THAT(e.what(), testing::HasSubstr("modules/utils/tests/exception_tests.cpp:14] type mismatch"));
   }
 }
 

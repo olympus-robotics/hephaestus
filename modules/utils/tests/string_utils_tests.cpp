@@ -89,7 +89,7 @@ TEST(StringUtilsTests, Truncate) {
   constexpr auto CONSTEXPR_TRUNCATED =
       truncate(CONSTEXPR_TEST_CASE.str, CONSTEXPR_TEST_CASE.start_token, CONSTEXPR_TEST_CASE.end_token,
                CONSTEXPR_TEST_CASE.include_end_token);
-  EXPECT_EQ(CONSTEXPR_TRUNCATED, CONSTEXPR_TEST_CASE.expected) << CONSTEXPR_TEST_CASE.description;
+  static_assert(CONSTEXPR_TRUNCATED == CONSTEXPR_TEST_CASE.expected);
 }
 
 TEST(StringUtilsTests, toUpperCase) {
