@@ -35,7 +35,7 @@ constexpr StringLiteral<Size>::StringLiteral(
 
 template <size_t Size>
 constexpr StringLiteral<Size>::StringLiteral::operator std::string_view() const noexcept {
-  return { value.data(), Size - 1 };  // Remouve the null terminator.
+  return { value.data(), Size - 1 };  // Remove the null terminator.
 }
 
 }  // namespace heph::utils::string
