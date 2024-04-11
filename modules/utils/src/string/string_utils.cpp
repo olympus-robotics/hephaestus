@@ -25,6 +25,7 @@ auto toSnakeCase(const std::string_view& camel_case) -> std::string {
         && (std::islower(camel_case[i - 1]) != 0)) {  // previous letter was lowercase.
       snake_case.push_back('_');
     }
+
     snake_case.push_back(static_cast<char>(std::tolower(static_cast<int>(camel_case[i]))));
   }
 

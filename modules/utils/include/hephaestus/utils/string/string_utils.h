@@ -41,6 +41,9 @@ constexpr auto truncate(std::string_view str, std::string_view start_token, std:
   if (end_pos != std::string_view::npos && include_end_token) {
     end_pos += end_token.size();
   }
+
+  return (start_pos != std::string_view::npos) ? str.substr(start_pos, end_pos - start_pos) :
+                                                 str.substr(0, end_pos);
 }
 
 }  // namespace heph::utils::string
