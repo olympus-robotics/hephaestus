@@ -6,12 +6,16 @@
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
 
-[[nodiscard]] inline auto
-getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {
-  static constexpr auto DEFAULT_KEY = "hephaestus/ipc/example/zenoh/put";
+enum class ExampleType : uint8_t { Pubsub, Service };
+
+[[nodiscard]] inline auto getProgramDescription(const std::string& description,
+                                                const ExampleType type) -> heph::cli::ProgramDescription {
+  static constexpr auto DEFAULT_PUBSUB_KEY = "hephaestus/ipc/example/zenoh/put";
+  static constexpr auto DEFAULT_SERVICE_KEY = "hephaestus/ipc/example/zenoh/service";
 
   auto desc = heph::cli::ProgramDescription(description);
-  desc.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)
+  desc.defineOption<std::string>("topic", 't', "Key expression",
+                                 type == ExampleType::Pubsub ? DEFAULT_PUBSUB_KEY : DEFAULT_SERVICE_KEY)
       .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
       .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", 'r', "Router endpoint", "")

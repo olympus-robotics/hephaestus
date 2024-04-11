@@ -3,7 +3,9 @@
 //=================================================================================================
 
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
+#include <string>
 #include <thread>
 
 #include <fmt/chrono.h>
@@ -12,7 +14,8 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/ipc/zenoh/query.h"
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
@@ -23,7 +26,8 @@
 [[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::Session& session,
                                     const std::string& topic) -> heph::serdes::TypeInfo {
   auto service_topic = heph::ipc::getTypeInfoServiceTopic(topic);
-  auto response = heph::ipc::zenoh::query(session.zenoh_session, service_topic, "");
+  auto response = heph::ipc::zenoh::callService<std::string, std::string>(
+      session, heph::ipc::TopicConfig{ service_topic }, "");
   heph::throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), service_topic));
@@ -31,9 +35,18 @@
   return heph::serdes::TypeInfo::fromJson(response.front().value);
 }
 
+std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+auto signalHandler(int /*unused*/) -> void {
+  stop_flag.test_and_set();
+  stop_flag.notify_all();
+}
+
 auto main(int argc, const char* argv[]) -> int {
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    (void)signal(SIGINT, signalHandler);
+    (void)signal(SIGTERM, signalHandler);
+
+    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
@@ -58,9 +71,7 @@ auto main(int argc, const char* argv[]) -> int {
         heph::ipc::zenoh::Subscriber{ std::move(session), std::move(topic_config), std::move(cb) };
     (void)subscriber;
 
-    while (true) {
-      std::this_thread::sleep_for(std::chrono::seconds{ 1 });
-    }
+    stop_flag.wait(false);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

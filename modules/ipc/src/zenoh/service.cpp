@@ -4,22 +4,23 @@
 
 #include "hephaestus/ipc/zenoh/service.h"
 
-namespace heph::ipc::zenoh {
+#include "hephaestus/utils/exception.h"
 
-Service::Service(SessionPtr session, std::string topic, Callback&& callback)
-  : session_(std::move(session)), topic_(std::move(topic)), callback_(std::move(callback)) {
-  auto query_cb = [this](const zenohc::Query& query) mutable {
-    QueryRequest request{ .topic = std::string{ query.get_keyexpr().as_string_view() },
-                          .parameters = std::string{ query.get_parameters().as_string_view() },
-                          .value = std::string{ query.get_value().as_string_view() } };
-    auto result = this->callback_(request);
+namespace heph::ipc::zenoh::internal {
 
-    zenohc::QueryReplyOptions options;
-    options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });
-    query.reply(this->topic_, result, options);
-  };
+// TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
+static constexpr int CHANGING_BYTES = 19;
 
-  queryable_ =
-      expectAsUniquePtr(session_->zenoh_session.declare_queryable(topic_, { std::move(query_cb), []() {} }));
+auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
+  auto send_buffer = std::vector<std::byte>(internal::CHANGING_BYTES, std::byte{});
+  send_buffer.insert(send_buffer.end(), buffer.begin(), buffer.end());
+  return send_buffer;
 }
-}  // namespace heph::ipc::zenoh
+
+auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte> {
+  throwExceptionIf<InvalidDataException>(
+      buffer.size() >= internal::CHANGING_BYTES,
+      fmt::format("Buffer size should be at least {}.", internal::CHANGING_BYTES));
+  return buffer.subspan(internal::CHANGING_BYTES);
+}
+}  // namespace heph::ipc::zenoh::internal
