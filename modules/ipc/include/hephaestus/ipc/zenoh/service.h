@@ -123,7 +123,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  auto query = [this](const zenohc::Query& query) mutable {
+  auto query_cb = [this](const zenohc::Query& query) mutable {
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
@@ -141,7 +141,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   };
 
   queryable_ = expectAsUniquePtr(
-      session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query), []() {} }));
+      session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query_cb), []() {} }));
 }
 
 template <typename RequestT, typename ReplyT>

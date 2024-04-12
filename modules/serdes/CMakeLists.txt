@@ -35,7 +35,8 @@ set(SOURCES
 # library target
 define_module_library(
   NAME serdes
-  PUBLIC_LINK_LIBS absl::status hephaestus::utils magic_enum::magic_enum protobuf::libprotobuf
+  PUBLIC_LINK_LIBS absl::log_internal_check_op absl::status hephaestus::utils magic_enum::magic_enum
+                   protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
