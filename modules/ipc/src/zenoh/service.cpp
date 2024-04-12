@@ -19,7 +19,7 @@ auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
 
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte> {
   throwExceptionIf<InvalidDataException>(
-      buffer.size() >= internal::CHANGING_BYTES,
+      buffer.size() < internal::CHANGING_BYTES,
       fmt::format("Buffer size should be at least {}.", internal::CHANGING_BYTES));
   return buffer.subspan(internal::CHANGING_BYTES);
 }
