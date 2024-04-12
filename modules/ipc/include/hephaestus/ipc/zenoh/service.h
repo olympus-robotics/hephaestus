@@ -63,12 +63,12 @@ template <class RequestT>
 auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
-        query.get_value().get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        query.get_value().get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     return static_cast<std::string>(query.get_value().as_string_view());
   } else {
     throwExceptionIf<InvalidParameterException>(
-        query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        query.get_value().get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -97,7 +97,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
   DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
   if constexpr (std::is_same_v<ReplyT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
-        sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        sample->get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
     std::unique_lock<std::mutex> lock(m);
@@ -105,7 +105,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
         .topic = server_topic, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
   } else {
     throwExceptionIf<InvalidParameterException>(
-        sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        sample->get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = sample->get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
