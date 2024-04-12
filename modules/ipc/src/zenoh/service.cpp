@@ -9,7 +9,7 @@
 namespace heph::ipc::zenoh::internal {
 
 // TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
-static constexpr int CHANGING_BYTES = 19;
+static constexpr int CHANGING_BYTES = 100;
 
 auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte> {
   auto send_buffer = std::vector<std::byte>(internal::CHANGING_BYTES, std::byte{});
