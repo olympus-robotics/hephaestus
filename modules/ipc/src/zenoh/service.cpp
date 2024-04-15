@@ -13,9 +13,7 @@ static constexpr int CHANGING_BYTES = 19;
 
 void addChangingBytes(std::vector<std::byte>& buffer) {
   auto send_buffer = std::vector<std::byte>(internal::CHANGING_BYTES, std::byte{});
-  // send_buffer.insert(send_buffer.end(), buffer.begin(), buffer.end());
   buffer.insert(buffer.begin(), internal::CHANGING_BYTES, std::byte{});
-  // return send_buffer;
 }
 
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte> {
