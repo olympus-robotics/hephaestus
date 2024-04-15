@@ -48,7 +48,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
 namespace internal {
 // TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
-auto addChangingBytes(std::vector<std::byte>& buffer);
+void addChangingBytes(std::vector<std::byte>& buffer);
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte>;
 
 template <typename RequestT, typename ReplyT>
