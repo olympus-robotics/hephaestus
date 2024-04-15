@@ -48,7 +48,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
 namespace internal {
 // TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
-auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte>;
+void addChangingBytes(std::vector<std::byte>& buffer);
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte>;
 
 template <typename RequestT, typename ReplyT>
@@ -176,7 +176,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
     DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
                               fmt::join(buffer, ","));
-    buffer = internal::addChangingBytes(buffer);
+    internal::addChangingBytes(buffer);
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
   }
