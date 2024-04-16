@@ -46,7 +46,7 @@ auto main(int argc, const char* argv[]) -> int {
     (void)signal(SIGINT, signalHandler);
     (void)signal(SIGTERM, signalHandler);
 
-    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
+    auto desc = getProgramDescription("Echo the data from a topic to the console.");
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
