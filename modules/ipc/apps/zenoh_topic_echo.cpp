@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributor
 //=================================================================================================
 
+#include <chrono>
 #include <csignal>
 #include <cstdlib>
 #include <string>
@@ -46,13 +47,15 @@ void truncateLongItems(std::string& msg_json, bool noarr, size_t max_length) {
 }
 
 [[nodiscard]] auto getTopicTypeInfo(heph::ipc::zenoh::Session& session,
-                                    const std::string& topic) -> heph::serdes::TypeInfo {
+                                    const std::string& topic) -> std::optional<heph::serdes::TypeInfo> {
+  constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   auto service_topic = heph::ipc::getTypeInfoServiceTopic(topic);
   auto response = heph::ipc::zenoh::callService<std::string, std::string>(
-      session, heph::ipc::TopicConfig{ service_topic }, "");
-  heph::throwExceptionIf<heph::InvalidDataException>(
-      response.size() != 1,
-      fmt::format("received {} responses for type from service {}", response.size(), service_topic));
+      session, heph::ipc::TopicConfig{ service_topic }, "", TIMEOUT);
+  if (response.size() != 1) {
+    LOG(ERROR) << fmt::format("Failed to subscribe to topic {}, found {} matches", topic, response.size());
+    return {};
+  }
 
   return heph::serdes::TypeInfo::fromJson(response.front().value);
 }
@@ -80,12 +83,15 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    // TODO: this needs to be done when we receive the first data as the publisher may not be publishing.
     auto type_info = getTopicTypeInfo(*session, topic_config.name);
-    heph::serdes::DynamicDeserializer dynamic_deserializer;
-    dynamic_deserializer.registerSchema(type_info);
+    if (!type_info.has_value()) {
+      return 0;
+    }
 
-    auto cb = [&dynamic_deserializer, type = type_info.name, noarr = args.getOption<bool>("noarr")](
+    heph::serdes::DynamicDeserializer dynamic_deserializer;
+    dynamic_deserializer.registerSchema(type_info.value());
+
+    auto cb = [&dynamic_deserializer, type = type_info->name, noarr = args.getOption<bool>("noarr")](
                   [[maybe_unused]] const heph::ipc::MessageMetadata& metadata,
                   std::span<const std::byte> buffer) mutable {
       auto msg_json = dynamic_deserializer.toJson(type, buffer);
@@ -101,7 +107,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
-    std::ignore = std::fputs(ex.what(), stderr);
+    std::string message = "Application terminated with an excpetion: " + std::string{ ex.what() } + "\n";
+    std::ignore = std::fputs(message.c_str(), stderr);
     return EXIT_FAILURE;
   }
 }
