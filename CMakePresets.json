@@ -51,6 +51,7 @@
      "ENABLE_LINTER": "ON",
      "FORMAT_FAIL_ON_CHANGE": "ON",
      "CMAKE_BUILD_TYPE": "Release",
+     "ENABLE_CACHE": "OFF",
      "CMAKE_PREFIX_PATH": "/install"
     }
    }
