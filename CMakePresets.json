@@ -46,7 +46,7 @@
     "installDir": "/install",
     "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
     "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
+     "BUILD_MODULES": "all",
      "ENABLE_LINTER": "ON",
      "FORMAT_FAIL_ON_CHANGE": "ON",
      "CMAKE_BUILD_TYPE": "Release",
