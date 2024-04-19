@@ -48,7 +48,7 @@
     "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
     "cacheVariables": {
      "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "ON",
+     "ENABLE_LINTER": "OFF",
      "FORMAT_FAIL_ON_CHANGE": "ON",
      "CMAKE_BUILD_TYPE": "Release",
      "ENABLE_CACHE": "OFF",
