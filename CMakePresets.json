@@ -48,6 +48,7 @@
     "cacheVariables": {
      "BUILD_MODULES": "all;examples",
      "ENABLE_LINTER": "ON",
+     "ENABLE_LINTER_CACHE": "OFF",
      "FORMAT_FAIL_ON_CHANGE": "ON",
      "CMAKE_BUILD_TYPE": "Release",
      "CMAKE_PREFIX_PATH": "/install"
