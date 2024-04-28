@@ -30,28 +30,16 @@ public:
   /// Attempt to enqueue the data if there is space in the queue.
   /// \note This is safe to call from multiple threads.
   /// \return true if the new data is added to the queue, false otherwise.
-  [[nodiscard]] auto tryPush(const T& obj) -> bool {
+  template <typename U>
+  [[nodiscard]] auto tryPush(U&& obj) -> bool {
+    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
+                  "Type used for tryPush must be T but is for Queue<T>");
     {
       std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
-      queue_.push_back(obj);
-    }
-    reader_signal_.notify_one();
-    return true;
-  }
-
-  /// Attempt to enqueue the data if there is space in the queue.
-  /// \note This is safe to call from multiple threads.
-  /// \return true if the new data is added to the queue, false otherwise.
-  [[nodiscard]] auto tryPush(T&& obj) -> bool {
-    {
-      std::unique_lock<std::mutex> lock(mutex_);
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
-        return false;
-      }
-      queue_.emplace_back(std::move(obj));
+      queue_.emplace_back(std::forward<U>(obj));
     }
     reader_signal_.notify_one();
     return true;
@@ -61,25 +49,11 @@ public:
   /// \note This is safe to call from multiple threads.
   /// \param obj The value to push into the queue.
   /// \return If the queue was full, the element dropped to make space for the new one.
-  auto forcePush(const T& obj) -> std::optional<T> {
-    std::optional<T> element_dropped;
-    {
-      std::unique_lock<std::mutex> lock(mutex_);
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
-        element_dropped.emplace(std::move(queue_.front()));
-        queue_.pop_front();
-      }
-      queue_.push_back(obj);
-    }
-    reader_signal_.notify_one();
-    return element_dropped;
-  }
+  template <typename U>
+  auto forcePush(U&& obj) -> std::optional<T> {
+    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
+                  "Type used for forcePush must be T but is for Queue<T>");
 
-  /// Write the data to the queue. If no space is left in the queue, the oldest element is dropped.
-  /// \note This is safe to call from multiple threads.
-  /// \param obj The value to push into the queue.
-  /// \return If the queue was full, the element dropped to make space for the new one.
-  auto forcePush(T&& obj) -> std::optional<T> {
     std::optional<T> element_dropped;
     {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -87,7 +61,7 @@ public:
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
-      queue_.push_back(std::move(obj));
+      queue_.emplace_back(std::forward(obj));
     }
     reader_signal_.notify_one();
     return element_dropped;
@@ -96,7 +70,10 @@ public:
   /// Write the data to the queue. If no space is left in the queue,
   /// the function blocks until either space is freed or stop is called.
   /// \note This is safe to call from multiple threads.
-  void waitAndPush(const T& obj) {
+  template <typename U>
+  void waitAndPush(U&& obj) {
+    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
+                  "Type used for waitAndPush must be T but is for Queue<T>");
     {
       std::unique_lock<std::mutex> lock(mutex_);
       writer_signal_.wait(lock,
@@ -104,23 +81,7 @@ public:
       if (stop_) {
         return;
       }
-      queue_.push_back(obj);
-    }
-    reader_signal_.notify_one();
-  }
-
-  /// Write the data to the queue. If no space is left in the queue,
-  /// the function blocks until either space is freed or stop is called.
-  /// \note This is safe to call from multiple threads.
-  void waitAndPush(T&& obj) {
-    {
-      std::unique_lock<std::mutex> lock(mutex_);
-      writer_signal_.wait(lock,
-                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
-      if (stop_) {
-        return;
-      }
-      queue_.push_back(std::move(obj));
+      queue_.emplace_back(std::forward(obj));
     }
     reader_signal_.notify_one();
   }
