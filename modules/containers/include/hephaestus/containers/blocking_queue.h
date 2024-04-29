@@ -13,6 +13,10 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::containers {
+namespace concepts {
+template <typename T, typename U>
+concept SimilarTo = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+}  // namespace concepts
 
 /// Queue that allows the consumer to block until new data is available, and immediately resume
 /// execution when new data is written in the queue.
@@ -30,10 +34,8 @@ public:
   /// Attempt to enqueue the data if there is space in the queue.
   /// \note This is safe to call from multiple threads.
   /// \return true if the new data is added to the queue, false otherwise.
-  template <typename U>
+  template <concepts::SimilarTo<T> U>
   [[nodiscard]] auto tryPush(U&& obj) -> bool {
-    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
-                  "Type used for tryPush must be T but is for Queue<T>");
     {
       std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
@@ -49,11 +51,8 @@ public:
   /// \note This is safe to call from multiple threads.
   /// \param obj The value to push into the queue.
   /// \return If the queue was full, the element dropped to make space for the new one.
-  template <typename U>
+  template <concepts::SimilarTo<T> U>
   auto forcePush(U&& obj) -> std::optional<T> {
-    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
-                  "Type used for forcePush must be T but is for Queue<T>");
-
     std::optional<T> element_dropped;
     {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -70,10 +69,8 @@ public:
   /// Write the data to the queue. If no space is left in the queue,
   /// the function blocks until either space is freed or stop is called.
   /// \note This is safe to call from multiple threads.
-  template <typename U>
+  template <concepts::SimilarTo<T> U>
   void waitAndPush(U&& obj) {
-    static_assert(std::is_same<typename std::decay_t<U>, T>::value,
-                  "Type used for waitAndPush must be T but is for Queue<T>");
     {
       std::unique_lock<std::mutex> lock(mutex_);
       writer_signal_.wait(lock,
