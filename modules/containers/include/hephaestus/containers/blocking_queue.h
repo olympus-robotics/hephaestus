@@ -61,7 +61,7 @@ public:
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
-      queue_.emplace_back(std::forward(obj));
+      queue_.emplace_back(std::forward<U>(obj));
     }
     reader_signal_.notify_one();
     return element_dropped;
@@ -81,7 +81,7 @@ public:
       if (stop_) {
         return;
       }
-      queue_.emplace_back(std::forward(obj));
+      queue_.emplace_back(std::forward<U>(obj));
     }
     reader_signal_.notify_one();
   }
