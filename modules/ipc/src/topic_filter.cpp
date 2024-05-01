@@ -2,11 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/bag/topic_filter.h"
+#include "hephaestus/ipc/topic_filter.h"
 
 #include <unordered_set>
 
-namespace heph::bag {
+namespace heph::ipc {
 
 auto TopicFilter::create() -> TopicFilter {
   return {};
@@ -63,4 +63,4 @@ auto TopicFilter::isAcceptable(const std::string& topic) const -> bool {
   return std::all_of(match_cb_.begin(), match_cb_.end(), [&topic](const auto& cb) { return cb(topic); });
 }
 
-}  // namespace heph::bag
+}  // namespace heph::ipc

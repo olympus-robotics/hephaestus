@@ -7,7 +7,8 @@
 #include <functional>
 #include <string>
 #include <vector>
-namespace heph::bag {
+
+namespace heph::ipc {
 
 struct TopicFilterParams {
   // TODO: add regex
@@ -44,4 +45,4 @@ private:
 
   bool include_only_filter_set_ = false;
 };
-}  // namespace heph::bag
+}  // namespace heph::ipc

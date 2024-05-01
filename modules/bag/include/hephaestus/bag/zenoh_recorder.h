@@ -6,8 +6,8 @@
 
 #include <future>
 
-#include "hephaestus/bag/topic_filter.h"
 #include "hephaestus/bag/writer.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::bag {
@@ -15,7 +15,7 @@ namespace heph::bag {
 struct ZenohRecorderParams {
   ipc::zenoh::SessionPtr session;
   std::unique_ptr<IBagWriter> bag_writer;
-  TopicFilterParams topics_filter_params;
+  ipc::TopicFilterParams topics_filter_params;
 };
 
 class ZenohRecorder {

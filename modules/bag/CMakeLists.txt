@@ -12,14 +12,8 @@ find_package(absl REQUIRED)
 find_package(mcap REQUIRED)
 
 # library sources
-set(SOURCES
-    src/zenoh_recorder.cpp
-    src/topic_filter.cpp
-    src/writer.cpp
-    README.md
-    include/hephaestus/bag/topic_filter.h
-    include/hephaestus/bag/zenoh_recorder.h
-    include/hephaestus/bag/writer.h
+set(SOURCES src/zenoh_recorder.cpp src/writer.cpp README.md include/hephaestus/bag/zenoh_recorder.h
+            include/hephaestus/bag/writer.h
 )
 
 # library target
