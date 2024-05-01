@@ -30,6 +30,7 @@ struct MatchingStatus {
 class Publisher {
 public:
   using MatchCallback = std::function<void(MatchingStatus)>;
+  ///
   Publisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
             MatchCallback&& match_cb = nullptr);
   ~Publisher();

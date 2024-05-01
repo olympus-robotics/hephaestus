@@ -11,7 +11,7 @@ namespace heph::ipc {
 template <class Publisher, class DataType>
 [[nodiscard]] auto publish(Publisher& publisher, const DataType& data) -> bool {
   auto buffer = serdes::serialize(data);
-  return publisher.publish({ buffer.data(), buffer.size() });
+  return publisher.publish(buffer);
 }
 
 }  // namespace heph::ipc
