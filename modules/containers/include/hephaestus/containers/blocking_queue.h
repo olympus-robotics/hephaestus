@@ -41,7 +41,7 @@ public:
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
-      queue_.emplace_back(std::forward<U>(obj));
+      queue_.push_back(std::forward<U>(obj));
     }
     reader_signal_.notify_one();
     return true;
