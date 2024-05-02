@@ -78,7 +78,7 @@ public:
       if (stop_) {
         return;
       }
-      queue_.emplace_back(std::forward<U>(obj));
+      queue_.push_back(std::forward<U>(obj));
     }
     reader_signal_.notify_one();
   }
