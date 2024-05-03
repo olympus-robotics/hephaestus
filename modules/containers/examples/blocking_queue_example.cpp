@@ -57,8 +57,9 @@ void pushVsEmplace() {
   // push methods require extra moving (or copying if move semantics is not supported).
   {
     fmt::print("=== Use push to add new element into the queue\n");
-    heph::containers::BlockingQueue<std::pair<String, String>> queue{ {} };
-    if (!queue.tryPush({ String{ "1" }, String{ "2" } })) {
+    using StringPair = std::pair<String, String>;
+    heph::containers::BlockingQueue<StringPair> queue{ {} };
+    if (!queue.tryPush(StringPair{ String{ "1" }, String{ "2" } })) {
       return;
     }
   }
