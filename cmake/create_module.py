@@ -9,7 +9,6 @@ import shutil
 import sys
 import fileinput
 
-
 def create_module(module_name):
     """
     Generate a template module to later populate. The module is created in the current location
