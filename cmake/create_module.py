@@ -27,7 +27,7 @@ def create_module(module_name):
     # rename newly created template files
     os.rename(
         os.path.join(module_name, "include", "hephaestus", "@module@", "@module@.h"),
-        os.path.join(module_name, "include", "hephaestus", "@module@", module_name + ".h")
+        os.path.join(module_name, "include", "hephaestus", "@module@", f"{module_name}.h")
     )
     os.rename(
         os.path.join(module_name, "include", "hephaestus", "@module@"),
@@ -35,7 +35,11 @@ def create_module(module_name):
     )
     os.rename(
         os.path.join(module_name, "src", "@module@.cpp"),
-        os.path.join(module_name, "src", module_name + ".cpp")
+        os.path.join(module_name, "src", f"{module_name}.cpp")
+    )
+    os.rename(
+        os.path.join(module_name, "apps", "@module@_app.cpp"),
+        os.path.join(module_name, "apps", f"{module_name}_app.cpp")
     )
 
     # Replace all instances of @module@ in files with module name
