@@ -4,10 +4,11 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 #
 
+import fileinput
 import os
 import shutil
 import sys
-import fileinput
+
 
 def create_module(module_name):
     """
@@ -15,10 +16,6 @@ def create_module(module_name):
     :param module_name: Name of the module
     :return:
     """
-
-    if len(sys.argv) != 2:
-        print("Usage: python3 create_module.py <module_name>")
-        sys.exit(1)
 
     # Copy the template over
     source_location = os.path.dirname(os.path.abspath(__file__))
@@ -48,4 +45,8 @@ def create_module(module_name):
     return
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python3 create_module.py <module_name>")
+        sys.exit(1)
+
     create_module(sys.argv[1])
