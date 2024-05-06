@@ -4,10 +4,10 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 #
 
-import fileinput
 import os
 import shutil
 import sys
+import fileinput
 
 
 def create_module(module_name):
