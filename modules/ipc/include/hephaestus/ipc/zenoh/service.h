@@ -48,7 +48,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
 namespace internal {
 // TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
-auto addChangingBytes(std::vector<std::byte> buffer) -> std::vector<std::byte>;
+void addChangingBytes(std::vector<std::byte>& buffer);
 auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const std::byte>;
 
 template <typename RequestT, typename ReplyT>
@@ -63,12 +63,12 @@ template <class RequestT>
 auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
-        query.get_value().get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        query.get_value().get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     return static_cast<std::string>(query.get_value().as_string_view());
   } else {
     throwExceptionIf<InvalidParameterException>(
-        query.get_value().get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        query.get_value().get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -97,7 +97,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
   DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
   if constexpr (std::is_same_v<ReplyT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
-        sample->get_encoding() == Z_ENCODING_PREFIX_TEXT_PLAIN,
+        sample->get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
     std::unique_lock<std::mutex> lock(m);
@@ -105,7 +105,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
         .topic = server_topic, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
   } else {
     throwExceptionIf<InvalidParameterException>(
-        sample->get_encoding() == Z_ENCODING_PREFIX_EMPTY,
+        sample->get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = sample->get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -123,7 +123,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  auto query = [this](const zenohc::Query& query) mutable {
+  auto query_cb = [this](const zenohc::Query& query) mutable {
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
@@ -141,7 +141,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   };
 
   queryable_ = expectAsUniquePtr(
-      session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query), []() {} }));
+      session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query_cb), []() {} }));
 }
 
 template <typename RequestT, typename ReplyT>
@@ -176,7 +176,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
 
     DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
                               fmt::join(buffer, ","));
-    buffer = internal::addChangingBytes(buffer);
+    internal::addChangingBytes(buffer);
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
   }
