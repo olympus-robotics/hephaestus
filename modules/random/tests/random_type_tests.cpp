@@ -6,14 +6,14 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/testing/random_container.h"
-#include "hephaestus/testing/random_generator.h"
-#include "hephaestus/testing/random_type.h"
+#include "hephaestus/random/random_container.h"
+#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_type.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph::testing {
+namespace heph::random {
 
 /// Compare the results of a randomly generated type multiple times to ensure that it is not equal by chance.
 template <class T>
@@ -88,4 +88,4 @@ TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
   }
 }
 
-}  // namespace heph::testing
+}  // namespace heph::random

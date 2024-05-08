@@ -6,7 +6,7 @@
 
 #include <random>
 
-namespace heph::testing {
+namespace heph::random {
 
 namespace random_number_generator {
 // TODO(@hruby) configure determinism via cmake
@@ -26,4 +26,4 @@ createRNG(bool is_deterministic = random_number_generator::IS_DETERMINISTIC) -> 
 createPairOfIdenticalRNGs(bool is_deterministic = random_number_generator::IS_DETERMINISTIC)
     -> std::pair<std::mt19937_64, std::mt19937_64>;
 
-}  // namespace heph::testing
+}  // namespace heph::random

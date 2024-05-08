@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/testing/random_generator.h"
+#include "hephaestus/random/random_generator.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph::testing {
+namespace heph::random {
 
 // Test that createRNG returns a std::mt19937_64 object
 TEST(RNGTests, ReturnsMersenneTwisterEngine) {
@@ -70,4 +70,4 @@ TEST(RNGTests, PairGeneratorsStayIdenticalAfterUse) {
                              "generating some numbers";
 }
 
-}  // namespace heph::testing
+}  // namespace heph::random

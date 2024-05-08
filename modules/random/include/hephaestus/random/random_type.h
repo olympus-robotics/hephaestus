@@ -11,7 +11,7 @@
 
 #include <magic_enum.hpp>
 
-namespace heph::testing {
+namespace heph::random {
 
 //=================================================================================================
 // Random integer value generation
@@ -133,4 +133,4 @@ concept IsRandomGeneratableT = requires(std::mt19937_64& mt) {
   { randomT<T>(mt) } -> std::convertible_to<T>;
 };
 
-}  // namespace heph::testing
+}  // namespace heph::random

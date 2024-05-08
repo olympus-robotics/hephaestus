@@ -9,9 +9,9 @@
 
 #include <magic_enum.hpp>
 
-#include "hephaestus/testing/random_type.h"
+#include "hephaestus/random/random_type.h"
 
-namespace heph::testing {
+namespace heph::random {
 
 //=================================================================================================
 // Random vector generation
@@ -42,4 +42,4 @@ template <IsRandomGeneratableVectorT T>
   return vec;
 };
 
-}  // namespace heph::testing
+}  // namespace heph::random

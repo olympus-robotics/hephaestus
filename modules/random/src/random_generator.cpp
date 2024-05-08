@@ -2,14 +2,14 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/testing/random_generator.h"
+#include "hephaestus/random/random_generator.h"
 
 #include <cstdint>
 #include <random>
 
 #include <fmt/core.h>
 
-namespace heph::testing {
+namespace heph::random {
 
 namespace {
 
@@ -36,4 +36,4 @@ auto createPairOfIdenticalRNGs(bool is_deterministic) -> std::pair<std::mt19937_
   return { std::mt19937_64{ seed }, std::mt19937_64{ seed } };
 }
 
-}  // namespace heph::testing
+}  // namespace heph::random

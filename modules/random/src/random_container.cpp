@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/testing/random_type.h"
+#include "hephaestus/random/random_container.h"
