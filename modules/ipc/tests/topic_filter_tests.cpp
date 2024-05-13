@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/bag/topic_filter.h"
+#include "hephaestus/ipc/topic_filter.h"
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
@@ -12,7 +12,7 @@ namespace heph::bag::tests {
 
 using TestCasesT = std::vector<std::pair<std::string, bool>>;
 
-auto runTestCases(const TopicFilter& filter, const TestCasesT& test_cases) -> void {
+auto runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) -> void {
   for (const auto& [input, expected_output] : test_cases) {
     EXPECT_EQ(filter.isAcceptable(input), expected_output) << "input: " << input;
   }
@@ -25,12 +25,12 @@ TEST(TopicFilter, NoFilters) {
     { "topic", true },
   };
   {
-    auto filter = TopicFilter::create();
+    auto filter = ipc::TopicFilter::create();
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params;
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params;
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
@@ -42,12 +42,12 @@ TEST(TopicFilter, AnyExcluding) {
     { "topic", false },
   };
   {
-    auto filter = TopicFilter::create().anyExcluding({ "topic" });
+    auto filter = ipc::TopicFilter::create().anyExcluding({ "topic" });
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params{ .include_topics_only = {}, .prefix = "", .exclude_topics = { "topic" } };
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params{ .include_topics_only = {}, .prefix = "", .exclude_topics = { "topic" } };
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
@@ -60,12 +60,12 @@ TEST(TopicFilter, Prefix) {
   };
 
   {
-    auto filter = TopicFilter::create().prefix({ "hostname" });
+    auto filter = ipc::TopicFilter::create().prefix({ "hostname" });
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params{ .include_topics_only = {}, .prefix = "hostname", .exclude_topics = {} };
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params{ .include_topics_only = {}, .prefix = "hostname", .exclude_topics = {} };
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
@@ -78,12 +78,12 @@ TEST(TopicFilter, PrefixWildcard) {
   };
 
   {
-    auto filter = TopicFilter::create().prefix({ "**" });
+    auto filter = ipc::TopicFilter::create().prefix({ "**" });
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params{ .include_topics_only = {}, .prefix = "**", .exclude_topics = {} };
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params{ .include_topics_only = {}, .prefix = "**", .exclude_topics = {} };
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
@@ -95,14 +95,14 @@ TEST(TopicFilter, PrefixAndExcluding) {
     { "topic", false },
   };
   {
-    auto filter = TopicFilter::create().prefix({ "hostname" }).anyExcluding({ "hostname/video" });
+    auto filter = ipc::TopicFilter::create().prefix({ "hostname" }).anyExcluding({ "hostname/video" });
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params{ .include_topics_only = {},
-                              .prefix = "hostname",
-                              .exclude_topics = { "hostname/video" } };
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params{ .include_topics_only = {},
+                                   .prefix = "hostname",
+                                   .exclude_topics = { "hostname/video" } };
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
@@ -114,14 +114,14 @@ TEST(TopicFilter, IncludeOnly) {
     { "topic", false },
   };
   {
-    auto filter = TopicFilter::create().onlyIncluding({ "hostname/video" });
+    auto filter = ipc::TopicFilter::create().onlyIncluding({ "hostname/video" });
     runTestCases(filter, test_cases);
   }
   {
-    TopicFilterParams params{ .include_topics_only = { "hostname/video" },
-                              .prefix = "",
-                              .exclude_topics = {} };
-    auto filter = TopicFilter::create(params);
+    ipc::TopicFilterParams params{ .include_topics_only = { "hostname/video" },
+                                   .prefix = "",
+                                   .exclude_topics = {} };
+    auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }

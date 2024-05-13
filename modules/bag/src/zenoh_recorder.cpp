@@ -13,9 +13,9 @@
 #include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 
-#include "hephaestus/bag/topic_filter.h"
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/ipc/topic_database.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 
@@ -51,7 +51,7 @@ private:
   std::unique_ptr<IBagWriter> bag_writer_ ABSL_GUARDED_BY(writer_mutex_);
   absl::Mutex writer_mutex_;
 
-  TopicFilter topic_filter_;
+  ipc::TopicFilter topic_filter_;
 
   ipc::zenoh::SessionPtr session_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::Subscriber>>
@@ -67,7 +67,7 @@ private:
 
 ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
   : bag_writer_(std::move(params.bag_writer))
-  , topic_filter_(TopicFilter::create(params.topics_filter_params))
+  , topic_filter_(ipc::TopicFilter::create(params.topics_filter_params))
   , session_(std::move(params.session))
   , topic_info_query_session_(ipc::zenoh::createSession({}))
   , topic_db_(ipc::createZenohTopicDatabase(topic_info_query_session_))
