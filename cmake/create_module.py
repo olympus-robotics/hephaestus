@@ -16,10 +16,6 @@ def create_module(module_name):
     :return:
     """
 
-    if len(sys.argv) != 2:
-        print("Usage: python3 create_module.py <module_name>")
-        sys.exit(1)
-
     # Copy the template over
     source_location = os.path.dirname(os.path.abspath(__file__))
     shutil.copytree(source_location+"/module_template", module_name)
@@ -52,4 +48,8 @@ def create_module(module_name):
     return
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python3 create_module.py <module_name>")
+        sys.exit(1)
+
     create_module(sys.argv[1])
