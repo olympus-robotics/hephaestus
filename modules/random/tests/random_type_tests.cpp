@@ -51,6 +51,7 @@ struct TestStruct {
 template <class T>
 class RandomTypeTests : public ::testing::Test {};
 using RandomTypeImplementations = ::testing::Types<
+    /* Boolean type */ bool,
     /* Integer types */ int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
     /* Floating point types */ float, double, long double,
     /* Enum type */ TestEnum,

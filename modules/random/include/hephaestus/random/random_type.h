@@ -14,6 +14,18 @@
 namespace heph::random {
 
 //=================================================================================================
+// Random boolean generation
+//=================================================================================================
+template <typename T>
+concept IsBooleanT = std::is_same_v<T, bool>;
+
+template <IsBooleanT T>
+[[nodiscard]] auto randomT(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  return dist(mt);
+}
+
+//=================================================================================================
 // Random integer value generation
 //=================================================================================================
 template <std::integral T>
