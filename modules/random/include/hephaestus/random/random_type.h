@@ -28,7 +28,10 @@ template <IsBooleanT T>
 //=================================================================================================
 // Random integer value generation
 //=================================================================================================
-template <std::integral T>
+template <typename T>
+concept IsNonBooleanIntegralT = std::integral<T> && !std::same_as<T, bool>;
+
+template <IsNonBooleanIntegralT T>
 [[nodiscard]] auto randomT(std::mt19937_64& mt) -> T {
   std::uniform_int_distribution<T> dist;
   return dist(mt);
