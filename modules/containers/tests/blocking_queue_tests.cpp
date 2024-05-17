@@ -38,7 +38,9 @@ TEST(BlockingQueue, Push) {
 
   auto element_dropped = block_queue.forcePush(4);
   EXPECT_TRUE(element_dropped);
-  EXPECT_EQ(*element_dropped, 1);
+  if (element_dropped.has_value()) {
+    EXPECT_EQ(*element_dropped, 1);
+  }
   EXPECT_THAT(block_queue, SizeIs(2));
 
   auto data = block_queue.tryPop();
@@ -74,11 +76,15 @@ TEST(BlockingQueue, WaitPush) {
   });
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(*data, message);
+  if (data.has_value()) {
+    EXPECT_EQ(*data, message);
+  }
   future.get();
   data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(*data, "hello again");
+  if (data.has_value()) {
+    EXPECT_EQ(*data, "hello again");
+  }
 }
 
 TEST(BlockingQueue, TryEmplace) {
@@ -88,7 +94,9 @@ TEST(BlockingQueue, TryEmplace) {
   EXPECT_FALSE(block_queue.tryEmplace(0, "bye", 0.0));
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(std::get<2>(*data), 1.0);
+  if (data.has_value()) {
+    EXPECT_EQ(std::get<2>(*data), 1.0);
+  }
 }
 
 TEST(BlockingQueue, ForceEmplace) {
@@ -99,10 +107,14 @@ TEST(BlockingQueue, ForceEmplace) {
   auto element_dropped = block_queue.forceEmplace(0, "bye", 0.0);
   EXPECT_TRUE(element_dropped);
   auto expected_element_dropped = std::tuple{ 1, "hello", 1.0 };
-  EXPECT_EQ(*element_dropped, expected_element_dropped);
+  if (element_dropped.has_value()) {
+    EXPECT_EQ(*element_dropped, expected_element_dropped);
+  }
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(std::get<2>(*data), 0.0);
+  if (data.has_value()) {
+    EXPECT_EQ(std::get<2>(*data), 0.0);
+  }
 }
 
 TEST(BlockingQueue, WaitEmplace) {
@@ -113,11 +125,15 @@ TEST(BlockingQueue, WaitEmplace) {
   auto future = std::async([&block_queue]() { return block_queue.waitAndEmplace(2, "hello", 1.0); });
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(std::get<0>(*data), 1);
+  if (data.has_value()) {
+    EXPECT_EQ(std::get<0>(*data), 1);
+  }
   future.get();
   data = block_queue.tryPop();
   EXPECT_TRUE(data);
-  EXPECT_EQ(std::get<0>(*data), 2);
+  if (data.has_value()) {
+    EXPECT_EQ(std::get<0>(*data), 2);
+  }
 }
 
 TEST(BlockingQueue, InfiniteQueue) {
@@ -136,7 +152,9 @@ TEST(BlockingQueue, InfiniteQueue) {
   EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
   auto res = block_queue.tryPop();
   EXPECT_TRUE(res);
-  EXPECT_EQ(*res, A_NUMBER);
+  if (res.has_value()) {
+    EXPECT_EQ(*res, A_NUMBER);
+  }
   EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
   EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
   EXPECT_EQ(block_queue.waitAndPop(), A_NUMBER);
