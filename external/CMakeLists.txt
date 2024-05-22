@@ -29,16 +29,18 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-set(GIT_TAG "0d0a6d8d1488a71224c3bf6929714036945e7947")
+set(ZENOH_VERSION "0.11.0.3")
 add_cmake_dependency(
-  NAME zenohc URL "https://github.com/eclipse-zenoh/zenoh-c/archive/${GIT_TAG}.zip"
-  CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=1.76.0
+  NAME zenohc
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"
+  GIT_TAG ${ZENOH_VERSION}
+  CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
-set(GIT_TAG "2013df93ee771ed691e0bf85f55c61d9cb85119d")
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS zenohc URL "https://github.com/eclipse-zenoh/zenoh-cpp/archive/${GIT_TAG}.zip"
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
+  GIT_TAG ${ZENOH_VERSION}
   SOURCE_SUBDIR install
 )
 
