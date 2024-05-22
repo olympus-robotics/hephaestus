@@ -41,7 +41,7 @@ RUN export ZENOH_VERSION="0.11.0-rc.3" && \
     sed -i 's/systemctl /# remove if fixed by zenoh: systemctl /' /var/lib/dpkg/info/zenohd.postinst && \
     rm -rf /var/lib/apt/lists/*
 
-ENV RUST_VERSION=1.76.0
+RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y && \
     . "$HOME/.cargo/env" && rustup install "$RUST_VERSION" && rustup default "$RUST_VERSION"
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
