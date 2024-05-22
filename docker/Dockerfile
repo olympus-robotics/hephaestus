@@ -42,8 +42,6 @@ RUN export ZENOH_VERSION="0.11.0-rc.3" && \
     rm -rf /var/lib/apt/lists/*
 
 RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y
-RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y && \
-    . "$HOME/.cargo/env" && rustup install "$RUST_VERSION" && rustup default "$RUST_VERSION"
 RUN . "$HOME/.cargo/env" && cargo install sccache --locked
 RUN echo "export RUSTC_WRAPPER=sccache" >> $HOME/.bashrc
 
