@@ -31,16 +31,16 @@ endif()
 
 set(ZENOH_VERSION "0.11.0.3")
 add_cmake_dependency(
-  NAME zenohc 
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"  
-  GIT_TAG ${ZENOH_VERSION}  
+  NAME zenohc
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"
+  GIT_TAG ${ZENOH_VERSION}
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
 add_cmake_dependency(
   NAME zenohcxx
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"  
-  GIT_TAG ${ZENOH_VERSION}  
+  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
+  GIT_TAG ${ZENOH_VERSION}
   SOURCE_SUBDIR install
 )
 
