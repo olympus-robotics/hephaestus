@@ -9,6 +9,7 @@
 #include "hephaestus/random/random_container.h"
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
+#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -55,9 +56,8 @@ using RandomTypeImplementations = ::testing::Types<
     /* Integer types */ int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
     /* Floating point types */ float, double, long double,
     /* Enum type */ TestEnum,
-    /* String types */ std::string,
     /* Timestamp type */ std::chrono::time_point<std::chrono::system_clock>,
-    /* Container types */ std::vector<int>, std::vector<double>, std::vector<std::string>,
+    /* Container types */ std::string, std::vector<int>, std::vector<double>,
     /* Custom types */ TestStruct>;
 TYPED_TEST_SUITE(RandomTypeTests, RandomTypeImplementations);
 
@@ -76,16 +76,23 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
 // case, as it is already included in testing for randomness. Repeadedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
-  if constexpr (IsRandomGeneratableVectorT<TypeParam>) {
+  if constexpr (IsRandomGeneratableVectorT<TypeParam> || IsStringT<TypeParam>) {
     auto mt = createRNG();
 
     static constexpr size_t SIZE_ZERO = 0;
-    auto vec_size_zero = randomT<TypeParam>(mt, SIZE_ZERO);
+    static constexpr bool ALLOW_EMPTY_CONTAINER = true;
+    static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
+    auto vec_size_zero = randomT<TypeParam>(mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
     EXPECT_EQ(vec_size_zero.size(), SIZE_ZERO);
+    EXPECT_THROW(auto _ = randomT<TypeParam>(mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER),
+                 InvalidParameterException);
 
     static constexpr size_t SIZE_SEVEN = 7;
     auto vec_size_seven = randomT<TypeParam>(mt, SIZE_SEVEN);
     EXPECT_EQ(vec_size_seven.size(), SIZE_SEVEN);
+
+    auto random_vec_non_empty = randomT<TypeParam>(mt, {}, DISALLOW_EMPTY_CONTAINER);
+    EXPECT_TRUE(vec_size_seven.size() > 0);
   }
 }
 
