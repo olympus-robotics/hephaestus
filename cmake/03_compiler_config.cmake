@@ -144,7 +144,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Linter (clang-tidy)
-option(ENABLE_LINTER "Enable static analysis" OFF)
+option(ENABLE_LINTER "Enable static analysis" On)
 if(ENABLE_LINTER)
   find_program(LINTER_BIN NAMES clang-tidy QUIET)
   if(LINTER_BIN)
