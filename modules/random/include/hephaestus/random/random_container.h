@@ -17,16 +17,19 @@
 namespace heph::random {
 
 namespace internal {
-[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> size,
+[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size,
                                   bool allow_empty) -> size_t {
-  if (size.has_value()) {
-    throwExceptionIf<InvalidParameterException>(allow_empty == false && size.value() == 0,
-                                                fmt::format("Size must be non-zero if allow_empty == true"));
-    return size.value();
+  if (fixed_size.has_value()) {
+    throwExceptionIf<InvalidParameterException>(
+        allow_empty == false && fixed_size.value() == 0,
+        fmt::format("fixed_size must be non-zero if allow_empty == true"));
+    return fixed_size.value();
   }
 
-  static constexpr size_t MAX_SIZE = 42;
-  std::uniform_int_distribution<size_t> dist(allow_empty == true ? 0 : 1, MAX_SIZE);
+  static constexpr auto MAX_SIZE = 42ul;
+  const auto MIN_SIZE = allow_empty ? 0ul : 1ul;
+  std::uniform_int_distribution<size_t> dist(MIN_SIZE, MAX_SIZE);
+
   return dist(mt);
 }
 }  // namespace internal
