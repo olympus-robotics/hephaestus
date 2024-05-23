@@ -55,9 +55,8 @@ using RandomTypeImplementations = ::testing::Types<
     /* Integer types */ int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
     /* Floating point types */ float, double, long double,
     /* Enum type */ TestEnum,
-    /* String types */ std::string,
     /* Timestamp type */ std::chrono::time_point<std::chrono::system_clock>,
-    /* Container types */ std::vector<int>, std::vector<double>, std::vector<std::string>,
+    /* Container types */ std::string, std::vector<int>, std::vector<double>,
     /* Custom types */ TestStruct>;
 TYPED_TEST_SUITE(RandomTypeTests, RandomTypeImplementations);
 

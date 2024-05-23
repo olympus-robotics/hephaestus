@@ -102,32 +102,6 @@ template <IsTimestampT T>
 }
 
 //=================================================================================================
-// Random string generation
-//=================================================================================================
-template <typename T>
-concept IsStringT = std::same_as<T, std::string>;
-
-/// Generate a random string of characters, including special case characters and numbers.
-template <IsStringT T>
-[[nodiscard]] auto randomT(std::mt19937_64& mt) -> T {
-  static constexpr auto PRINTABLE_ASCII_START = 32;  // Space
-  static constexpr auto PRINTABLE_ASCII_END = 126;   // Equivalency sign - tilde
-  static constexpr size_t MAX_LENGTH = 42;
-
-  std::uniform_int_distribution<unsigned char> char_dist(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
-  std::uniform_int_distribution<size_t> size_dist(0, MAX_LENGTH);
-
-  auto size = size_dist(mt);
-  std::string random_string;
-  random_string.reserve(size);
-
-  auto gen_random_char = [&mt, &char_dist]() { return static_cast<char>(char_dist(mt)); };
-  std::generate_n(std::back_inserter(random_string), size, gen_random_char);
-
-  return random_string;
-}
-
-//=================================================================================================
 // Random struct/class generation
 //=================================================================================================
 template <class T>
