@@ -23,7 +23,7 @@ define_module_executable(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS "")
 
-define_module_example(
+define_module_executable(
         NAME zenoh_topic_echo
         SOURCES zenoh_topic_echo.cpp zenoh_program_options.h
         PUBLIC_INCLUDE_PATHS
