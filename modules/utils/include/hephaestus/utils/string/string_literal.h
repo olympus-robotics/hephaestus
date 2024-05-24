@@ -32,7 +32,7 @@ struct StringLiteral {
 template <size_t Size>
 constexpr StringLiteral<Size>::StringLiteral(
     const char (&str)[Size]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-  std::copy_n(str, Size, value.begin());
+  std::copy_n(static_cast<const char*>(str), Size, value.begin());
 }
 
 template <size_t Size>

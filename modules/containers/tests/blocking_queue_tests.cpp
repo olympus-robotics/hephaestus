@@ -122,7 +122,7 @@ TEST(BlockingQueue, WaitEmplace) {
   BlockingQueue<std::tuple<int, std::string, double>> block_queue(QUEUE_SIZE);
 
   block_queue.waitAndEmplace(1, "hello", 1.0);
-  auto future = std::async([&block_queue]() { return block_queue.waitAndEmplace(2, "hello", 1.0); });
+  auto future = std::async([&block_queue]() { block_queue.waitAndEmplace(2, "hello", 1.0); });
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);
   if (data.has_value()) {

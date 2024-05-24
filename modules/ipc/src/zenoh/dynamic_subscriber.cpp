@@ -7,6 +7,7 @@
 #include <absl/log/log.h>
 
 namespace heph::ipc::zenoh {
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)
 DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
   : session_(std::move(params.session))
   , topic_filter_(ipc::TopicFilter::create(params.topics_filter_params))
