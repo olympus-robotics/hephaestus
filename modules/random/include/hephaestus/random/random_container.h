@@ -27,8 +27,8 @@ namespace internal {
   }
 
   static constexpr auto MAX_SIZE = 42ul;
-  const auto MIN_SIZE = allow_empty ? 0ul : 1ul;
-  std::uniform_int_distribution<size_t> dist(MIN_SIZE, MAX_SIZE);
+  const auto min_size = allow_empty ? 0ul : 1ul;
+  std::uniform_int_distribution<size_t> dist(min_size, MAX_SIZE);
 
   return dist(mt);
 }
