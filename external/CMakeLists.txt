@@ -147,8 +147,7 @@ set(MCAP_TAG be4188d7f77838372ec609a733c65dc6b167f517)
 add_cmake_dependency(
   NAME mcap
   VERSION ${MCAP_VERSION}
-  GIT_REPOSITORY "https://github.com/filippobrizzi/mcap.git"
-  GIT_TAG ${MCAP_TAG}
+  URL https://github.com/filippobrizzi/mcap/archive/${MCAP_TAG}.zip
   SOURCE_SUBDIR cpp
   CMAKE_ARGS -DBUILD_TESTING=OFF
 )
