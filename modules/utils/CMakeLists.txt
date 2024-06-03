@@ -22,6 +22,7 @@ set(SOURCES
     src/concepts.cpp
     src/exception.cpp
     src/utils.cpp
+    src/stack_trace.cpp
     src/version.cpp
     src/filesystem/file.cpp
     src/filesystem/scoped_path.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
     include/hephaestus/utils/utils.h
+    include/hephaestus/utils/stack_trace.h
     include/hephaestus/utils/version.h
     include/hephaestus/utils/filesystem/file.h
     include/hephaestus/utils/filesystem/scoped_path.h

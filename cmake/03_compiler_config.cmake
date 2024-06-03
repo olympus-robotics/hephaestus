@@ -7,6 +7,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # required by source analysis tools
 # Build shared libraries by default
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
+# This helps make stack trace more readable
+add_link_options("$<$<CONFIG:Debug>:-rdynamic>" "$<$<CONFIG:RelWithDebInfo>:-rdynamic>")
+
 # Baseline compiler warning settings for project and external targets
 set(HEPHAESTUS_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror)
 set(THIRD_PARTY_COMPILER_WARNINGS -Wall -Wextra -Wpedantic)

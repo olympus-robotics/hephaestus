@@ -13,10 +13,12 @@
 #include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
+  heph::utils::StackTrace stack_trace;
+
   try {
     auto desc = getProgramDescription("Binary service client example", ExampleType::Service);
     const auto args = std::move(desc).parse(argc, argv);

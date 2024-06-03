@@ -7,9 +7,12 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
+  heph::utils::StackTrace stack_trace;
+
   try {
     auto desc = getProgramDescription("Simple service for std::string types for both Request and Reply. "
                                       "Don't use for services with different types.");

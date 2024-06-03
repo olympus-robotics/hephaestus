@@ -7,7 +7,7 @@
 
 #include "hephaestus/bag/zenoh_recorder.h"
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/utils/stack_trace.h"
 
 std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 auto signalHandler(int /*unused*/) -> void {
@@ -18,6 +18,8 @@ auto signalHandler(int /*unused*/) -> void {
 auto main(int argc, const char* argv[]) -> int {
   (void)signal(SIGINT, signalHandler);
   (void)signal(SIGTERM, signalHandler);
+
+  heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = heph::cli::ProgramDescription("Record a bag from zenoh topics");

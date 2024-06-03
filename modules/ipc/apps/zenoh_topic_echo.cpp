@@ -19,6 +19,7 @@
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 namespace {
@@ -101,10 +102,12 @@ auto signalHandler(int /*unused*/) -> void {
 }
 
 auto main(int argc, const char* argv[]) -> int {
-  try {
-    (void)signal(SIGINT, signalHandler);
-    (void)signal(SIGTERM, signalHandler);
+  (void)signal(SIGINT, signalHandler);
+  (void)signal(SIGTERM, signalHandler);
 
+  heph::utils::StackTrace stack_trace;
+
+  try {
     auto desc = getProgramDescription("Echo the data from a topic to the console.");
     desc.defineFlag("noarr", "Truncate print of long arrays");
     desc.defineOption<std::size_t>(

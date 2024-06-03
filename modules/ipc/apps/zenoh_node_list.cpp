@@ -7,11 +7,13 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/zenoh/scout.h"
-#include "zenoh_program_options.h"
+#include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
   (void)argc;
   (void)argv;
+
+  heph::utils::StackTrace stack_trace;
 
   try {
     fmt::println("Scouting..");

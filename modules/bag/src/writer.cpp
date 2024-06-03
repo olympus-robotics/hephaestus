@@ -13,7 +13,7 @@
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
-// TODO: add support for serialization
+// TODO: add support for compression
 #define MCAP_IMPLEMENTATION
 #define MCAP_COMPRESSION_NO_ZSTD
 #define MCAP_COMPRESSION_NO_LZ4
