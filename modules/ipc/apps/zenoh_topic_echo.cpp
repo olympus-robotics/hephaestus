@@ -14,13 +14,14 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
-#include "zenoh_program_options.h"
 
 namespace {
 constexpr auto DEFAULT_MAX_ARRAY_LENGTH = 100;
@@ -95,20 +96,13 @@ private:
 };
 }  // namespace heph::ipc::apps
 
-std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-auto signalHandler(int /*unused*/) -> void {
-  stop_flag.test_and_set();
-  stop_flag.notify_all();
-}
-
 auto main(int argc, const char* argv[]) -> int {
-  (void)signal(SIGINT, signalHandler);
-  (void)signal(SIGTERM, signalHandler);
-
   heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Echo the data from a topic to the console.");
+    auto desc = heph::cli::ProgramDescription("Echo the data from a topic to the console.");
+    heph::ipc::appendIPCProgramOption(desc);
+
     desc.defineFlag("noarr", "Truncate print of long arrays");
     desc.defineOption<std::size_t>(
         "noarr-max-size",
@@ -117,7 +111,7 @@ auto main(int argc, const char* argv[]) -> int {
         DEFAULT_MAX_ARRAY_LENGTH);
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = parseArgs(args);
+    auto [session_config, topic_config] = heph::ipc::parseIPCProgramOptions(args);
     const auto noarr = args.getOption<bool>("noarr");
     const auto max_array_length = args.getOption<std::size_t>("noarr-max-size");
 
@@ -128,7 +122,7 @@ auto main(int argc, const char* argv[]) -> int {
     heph::ipc::apps::TopicEcho topic_echo{ std::move(session), topic_config, noarr, max_array_length };
     topic_echo.start().wait();
 
-    stop_flag.wait(false);
+    heph::utils::SignalHandlerStop::wait();
 
     topic_echo.stop().wait();
 
