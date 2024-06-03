@@ -12,15 +12,23 @@
 namespace heph::utils {
 
 /// \brief Use this class to block until a signal is received.
+/// > NOTE: can be extended to call a generic callback when a signal is received.
 /// Usage:
 /// ```
 /// int main() {
 ///  // Do something
 ///  SignalHandlerStop::wait();
 /// }
+/// // Or
+/// while (SignalHandlerStop::ok()) {
+/// // Do something
+/// }
 /// ```
 class SignalHandlerStop {
 public:
+  /// Return false if a signal has been received, true otherwise.
+  [[nodiscard]] static auto ok() -> bool;
+  /// Blocks until a signal has been received.
   static void wait();
 
 private:

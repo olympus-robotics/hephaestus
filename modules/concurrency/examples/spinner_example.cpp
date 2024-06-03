@@ -3,11 +3,11 @@
 //=================================================================================================
 
 #include <atomic>
-#include <csignal>
 
 #include <fmt/core.h>
 
 #include "hephaestus/concurrency/spinner.h"
+#include "hephaestus/utils/signal_handler.h"
 
 class TestSpinner : public heph::concurrency::Spinner {
 public:
@@ -21,28 +21,17 @@ protected:
   }
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::atomic_flag stop_called = ATOMIC_FLAG_INIT;
-void handleSigint(int signal) {
-  if (signal == SIGINT) {
-    fmt::println("Stop called.");
-    stop_called.test_and_set();
-    stop_called.notify_all();
-  }
-}
-
 auto main() -> int {
   try {
     TestSpinner spinner;
-    std::ignore = std::signal(SIGINT, handleSigint);
 
     spinner.start();
 
-    // Wait until stop_called is set
-    stop_called.wait(false);
+    // Wait until signal is set
+    heph::utils::SignalHandlerStop::wait();
 
-    auto future = spinner.stop();
-    future.get();
+    spinner.stop().get();
+
   } catch (const std::exception& ex) {
     fmt::println("{}", ex.what());
     return EXIT_FAILURE;

@@ -6,6 +6,10 @@
 
 namespace heph::utils {
 
+auto SignalHandlerStop::ok() -> bool {
+  return instance().stop_flag_.test();
+}
+
 void SignalHandlerStop::wait() {
   (void)signal(SIGINT, SignalHandlerStop::signalHandler);
   (void)signal(SIGTERM, SignalHandlerStop::signalHandler);
