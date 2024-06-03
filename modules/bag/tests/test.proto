@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package heph.bag.tests.proto;
+
+message User {
+    string name = 1;
+    int32 age = 2;
+    repeated float scores = 3;
+}
+
+message Company {
+  string name = 1;
+  int32 employer_count = 2;
+}

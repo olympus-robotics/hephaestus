@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <csignal>
+#include <future>
 
 #include "hephaestus/utils/concepts.h"
 
