@@ -125,7 +125,6 @@ void ZenohPlayer::Impl::run() {
   std::size_t msgs_played_count = 0;
   std::size_t deadline_missed_count = 0;
 
-  // TODO: wait for all subscriber to be available before publishing
   LOG_IF(WARNING, wait_for_readers_to_connect_) << "Waiting for subscribers to connect is NOT supported yet!";
   if (wait_for_readers_to_connect_) {
     all_publisher_connected_.wait(false);
