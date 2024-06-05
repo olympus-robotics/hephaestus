@@ -513,8 +513,14 @@ macro(define_module_proto_library)
 
   target_include_directories(
     ${PROTOBUF_LIBRARY} SYSTEM # for clang-tidy to ignore header files from this directory
-    BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:install>
+    BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> # $<INSTALL_INTERFACE:include>
   )
+
+  target_sources(${PROTOBUF_LIBRARY}
+    PRIVATE ${PROTOBUF_SOURCES}
+    PUBLIC FILE_SET HEADERS
+    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+    FILES ${PROTOBUF_HEADERS})
 
   # Register protobuf library as a dependency for the module.
   set(MODULE_${MODULE_NAME}_LIB_TARGETS
@@ -696,6 +702,7 @@ function(install_modules)
       ARCHIVE DESTINATION lib
       INCLUDES
       DESTINATION include
+      FILE_SET HEADERS
     )
 
     # install public header files
