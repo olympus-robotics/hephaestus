@@ -513,7 +513,7 @@ macro(define_module_proto_library)
 
   target_include_directories(
     ${PROTOBUF_LIBRARY} SYSTEM # for clang-tidy to ignore header files from this directory
-    BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> # $<INSTALL_INTERFACE:include>
+    BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   )
 
   target_sources(${PROTOBUF_LIBRARY}
