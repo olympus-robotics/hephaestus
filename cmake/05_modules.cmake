@@ -516,11 +516,11 @@ macro(define_module_proto_library)
     BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   )
 
-  target_sources(${PROTOBUF_LIBRARY}
+  target_sources(
+    ${PROTOBUF_LIBRARY}
     PRIVATE ${PROTOBUF_SOURCES}
-    PUBLIC FILE_SET HEADERS
-    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
-    FILES ${PROTOBUF_HEADERS})
+    PUBLIC FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} FILES ${PROTOBUF_HEADERS}
+  )
 
   if(NOT TARGET_ARG_NOINSTALL)
     # Register protobuf library as a dependency for the module.
