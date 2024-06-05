@@ -282,7 +282,7 @@ macro(define_module_library)
   add_library(${LIBRARY_NAME_ALIAS} ALIAS ${LIBRARY_NAME})
   add_clang_format(${LIBRARY_NAME})
 
-  if(NOT NOINSTALL)
+  if(NOT TARGET_ARG_NOINSTALL)
     set(MODULE_${MODULE_NAME}_LIB_TARGETS
         ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${LIBRARY_NAME}
         CACHE INTERNAL "Library targets in module ${MODULE_NAME}"
@@ -449,7 +449,7 @@ endmacro()
 # hephaestus_example_dependencies_proto  # Module containing proto files used by this module. )
 # --------------------------------------------------------------------------------------------------
 macro(define_module_proto_library)
-  set(flags "")
+  set(flags NOINSTALL)
   set(single_opts NAME)
   set(multi_opts SOURCES PUBLIC_LINK_LIBS PRIVATE_LINK_LIBS)
 
@@ -522,11 +522,13 @@ macro(define_module_proto_library)
     BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
     FILES ${PROTOBUF_HEADERS})
 
-  # Register protobuf library as a dependency for the module.
-  set(MODULE_${MODULE_NAME}_LIB_TARGETS
-      ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${PROTOBUF_LIBRARY}
-      CACHE INTERNAL "Targets in module ${MODULE_NAME}"
-  )
+  if(NOT TARGET_ARG_NOINSTALL)
+    # Register protobuf library as a dependency for the module.
+    set(MODULE_${MODULE_NAME}_LIB_TARGETS
+        ${MODULE_${MODULE_NAME}_LIB_TARGETS} ${PROTOBUF_LIBRARY}
+        CACHE INTERNAL "Targets in module ${MODULE_NAME}"
+    )
+  endif()
 
   set_target_properties(
     ${PROTOBUF_LIBRARY}
