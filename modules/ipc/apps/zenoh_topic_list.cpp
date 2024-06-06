@@ -9,16 +9,11 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
-#include "zenoh_program_options.h"
-
-std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-auto signalHandler(int /*unused*/) -> void {
-  stop_flag.test_and_set();
-  stop_flag.notify_all();
-}
 
 void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
   const auto publishers_info = heph::ipc::zenoh::getListOfPublishers(session, topic);
@@ -32,21 +27,19 @@ void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::Top
   heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
                                                  std::move(callback) };
 
-  stop_flag.wait(false);
+  heph::utils::InterruptHandler::wait();
 }
 
 auto main(int argc, const char* argv[]) -> int {
-  (void)signal(SIGINT, signalHandler);
-  (void)signal(SIGTERM, signalHandler);
-
   heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Periodic publisher example");
+    auto desc = heph::cli::ProgramDescription("List all the publishers of a topic.");
+    heph::ipc::appendIPCProgramOption(desc);
     desc.defineFlag("live", 'l', "if set the app will keep running waiting for new publisher to advertise");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = parseArgs(args);
+    auto [session_config, topic_config] = heph::ipc::parseIPCProgramOptions(args);
 
     fmt::println("Opening session...");
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));

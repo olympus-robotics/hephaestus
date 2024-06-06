@@ -2,16 +2,17 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include "hephaestus/ipc/program_options.h"
+
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
 
-[[nodiscard]] inline auto
-getProgramDescription(const std::string& description) -> heph::cli::ProgramDescription {
+namespace heph::ipc {
+
+void appendIPCProgramOption(cli::ProgramDescription& program_description) {
   static constexpr auto DEFAULT_KEY = "**";
 
-  auto desc = heph::cli::ProgramDescription(description);
-  desc.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)
+  program_description.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)
       .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
       .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", 'r', "Router endpoint", "")
@@ -19,33 +20,30 @@ getProgramDescription(const std::string& description) -> heph::cli::ProgramDescr
       .defineFlag("shared_memory", 's', "Enable shared memory")
       .defineFlag("qos", 'q', "Enable QoS")
       .defineFlag("realtime", "Enable real-time communication");
-
-  return desc;
 }
 
-[[nodiscard]] inline auto
-parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config, heph::ipc::TopicConfig> {
-  heph::ipc::TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
+auto parseIPCProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
+  TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
 
-  heph::ipc::Config config;
+  Config config;
   config.cache_size = args.getOption<std::size_t>("cache");
 
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
-    config.mode = heph::ipc::Mode::PEER;
+    config.mode = Mode::PEER;
   } else if (mode == "client") {
-    config.mode = heph::ipc::Mode::CLIENT;
+    config.mode = Mode::CLIENT;
   } else {
     heph::throwException<heph::InvalidParameterException>(fmt::format("invalid mode value: {}", mode));
   }
 
   auto protocol = args.getOption<std::string>("protocol");
   if (protocol == "any") {
-    config.protocol = heph::ipc::Protocol::ANY;
+    config.protocol = Protocol::ANY;
   } else if (protocol == "udp") {
-    config.protocol = heph::ipc::Protocol::UDP;
+    config.protocol = Protocol::UDP;
   } else if (protocol == "tcp") {
-    config.protocol = heph::ipc::Protocol::TCP;
+    config.protocol = Protocol::TCP;
   } else {
     heph::throwException<heph::InvalidParameterException>(
         fmt::format("invalid value {} for option 'protocol'", protocol));
@@ -58,3 +56,5 @@ parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config,
 
   return { std::move(config), std::move(topic_config) };
 }
+
+}  // namespace heph::ipc

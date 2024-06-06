@@ -18,6 +18,7 @@ find_package(zenohcxx REQUIRED)
 # library sources
 set(SOURCES
     src/common.cpp
+    src/program_options.cpp
     src/topic_database.cpp
     src/topic_filter.cpp
     src/zenoh/dynamic_subscriber.cpp
@@ -29,6 +30,7 @@ set(SOURCES
     src/zenoh/utils.cpp
     README.md
     include/hephaestus/ipc/common.h
+    include/hephaestus/ipc/program_options.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/topic_filter.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h

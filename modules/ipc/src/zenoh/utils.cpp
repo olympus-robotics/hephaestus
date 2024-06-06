@@ -47,12 +47,10 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
     auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
     throwExceptionIf<FailedZenohOperation>(!res, "failed to add router endpoint");
   }
-
-  if (config.qos) {
-    auto res = zconfig.insert_json("transport/unicast/qos/enabled", "true");
+  {
+    auto res = zconfig.insert_json("transport/unicast/qos/enabled", config.qos ? "true" : "false");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to set QoS");
   }
-
   if (config.real_time) {
     auto res = zconfig.insert_json("transport/unicast/qos/enabled", "false");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to set QoS");
