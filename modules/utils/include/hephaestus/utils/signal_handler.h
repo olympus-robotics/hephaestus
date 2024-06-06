@@ -7,8 +7,6 @@
 #include <atomic>
 #include <csignal>
 
-#include <range/v3/range/conversion.hpp>
-
 namespace heph::utils {
 
 /// \brief Use this class to block until a signal is received.
