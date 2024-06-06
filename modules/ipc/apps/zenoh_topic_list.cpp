@@ -11,6 +11,7 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
@@ -37,6 +38,8 @@ void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::Top
 auto main(int argc, const char* argv[]) -> int {
   (void)signal(SIGINT, signalHandler);
   (void)signal(SIGTERM, signalHandler);
+
+  heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("Periodic publisher example");

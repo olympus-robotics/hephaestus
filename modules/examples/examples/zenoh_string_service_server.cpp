@@ -15,6 +15,7 @@
 #include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
@@ -26,6 +27,8 @@ auto signalHandler(int /*unused*/) -> void {
 auto main(int argc, const char* argv[]) -> int {
   (void)signal(SIGINT, signalHandler);
   (void)signal(SIGTERM, signalHandler);
+
+  heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("String service server example", ExampleType::Service);
