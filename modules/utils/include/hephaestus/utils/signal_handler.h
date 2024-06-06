@@ -57,8 +57,9 @@ concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
 /// > NOTE: `MayApp` needs to satify the stoppable compoenent interface.
 class InterruptHandlerOrAppComplete {
 public:
+  /// Wait returns when a signal is received or the app completes.
   template <StoppableAndWaitable T>
-  void wait(T& app);
+  static void wait(T& app);
 
 private:
   InterruptHandlerOrAppComplete() = default;

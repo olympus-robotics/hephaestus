@@ -50,7 +50,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto zenoh_player = heph::bag::ZenohPlayer::create(std::move(params));
     zenoh_player.start().get();
 
-    heph::utils::SignalHandlerStopOrAppComplete::wait(zenoh_player);
+    heph::utils::InterruptHandlerOrAppComplete::wait(zenoh_player);
 
   } catch (std::exception& e) {
     fmt::println("Failed with exception: {}", e.what());
