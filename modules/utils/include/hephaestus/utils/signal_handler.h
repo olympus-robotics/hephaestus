@@ -17,14 +17,14 @@ namespace heph::utils {
 /// ```
 /// int main() {
 ///  // Do something
-///  SignalHandlerStop::wait();
+///  InterruptHandler::wait();
 /// }
 /// // Or
-/// while (SignalHandlerStop::ok()) {
+/// while (InterruptHandler::stopRequested()) {
 /// // Do something
 /// }
 /// ```
-class SignalHandlerStop {
+class InterruptHandler {
 public:
   /// Return false if a signal has been received, true otherwise.
   [[nodiscard]] static auto ok() -> bool;
@@ -32,8 +32,8 @@ public:
   static void wait();
 
 private:
-  SignalHandlerStop() = default;
-  [[nodiscard]] static auto instance() -> SignalHandlerStop&;
+  InterruptHandler() = default;
+  [[nodiscard]] static auto instance() -> InterruptHandler&;
 
   static auto signalHandler(int /*unused*/) -> void;
 

@@ -6,23 +6,23 @@
 
 namespace heph::utils {
 
-auto SignalHandlerStop::ok() -> bool {
+auto InterruptHandler::stopRequested() -> bool {
   return instance().stop_flag_.test();
 }
 
-void SignalHandlerStop::wait() {
-  (void)signal(SIGINT, SignalHandlerStop::signalHandler);
-  (void)signal(SIGTERM, SignalHandlerStop::signalHandler);
+void InterruptHandler::wait() {
+  (void)signal(SIGINT, InterruptHandler::signalHandler);
+  (void)signal(SIGTERM, InterruptHandler::signalHandler);
 
   instance().stop_flag_.wait(false);
 }
 
-auto SignalHandlerStop::instance() -> SignalHandlerStop& {
-  static SignalHandlerStop instance;
+auto InterruptHandler::instance() -> InterruptHandler& {
+  static InterruptHandler instance;
   return instance;
 }
 
-auto SignalHandlerStop::signalHandler(int /*unused*/) -> void {
+auto InterruptHandler::signalHandler(int /*unused*/) -> void {
   instance().stop_flag_.test_and_set();
   instance().stop_flag_.notify_all();
 }

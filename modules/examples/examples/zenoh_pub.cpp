@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     double count = 0;
-    while (heph::utils::SignalHandlerStop::ok()) {
+    while (!heph::utils::InterruptHandler::stopRequested()) {
       heph::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ 1, 2, count++ };
       pose.orientation =

@@ -28,7 +28,7 @@ auto main() -> int {
     spinner.start();
 
     // Wait until signal is set
-    heph::utils::SignalHandlerStop::wait();
+    heph::utils::InterruptHandler::wait();
 
     spinner.stop().get();
 

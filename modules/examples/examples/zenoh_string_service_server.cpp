@@ -38,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     LOG(INFO) << fmt::format("String server started. Wating for queries on '{}' topic", topic_config.name);
 
-    heph::utils::SignalHandlerStop::wait();
+    heph::utils::InterruptHandler::wait();
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
