@@ -24,9 +24,15 @@ void printPublisherInfo(const PublisherInfo& info);
 class PublisherDiscovery {
 public:
   using Callback = std::function<void(const PublisherInfo& info)>;
-  /// The callback needs to be thread safe as they maybe called in parallel for different publishers
+  /// The callback needs to be thread safe as they may be called in parallel for different publishers
   /// discovered.
   explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
+  ~PublisherDiscovery();
+
+  PublisherDiscovery(const PublisherDiscovery&) = delete;
+  PublisherDiscovery(PublisherDiscovery&&) = delete;
+  auto operator=(const PublisherDiscovery&) -> PublisherDiscovery& = delete;
+  auto operator=(PublisherDiscovery&&) -> PublisherDiscovery& = delete;
 
 private:
   void createLivelinessSubscriber();

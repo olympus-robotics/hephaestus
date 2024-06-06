@@ -50,7 +50,7 @@ Publisher::~Publisher() {
   z_drop(z_move(pub_cache_));
 }
 
-auto Publisher::publish(std::span<std::byte> data) -> bool {
+auto Publisher::publish(std::span<const std::byte> data) -> bool {
   attachment_[messageCounterKey()] = std::to_string(pub_msg_count_++);
 
   return publisher_->put({ data.data(), data.size() }, put_options_);

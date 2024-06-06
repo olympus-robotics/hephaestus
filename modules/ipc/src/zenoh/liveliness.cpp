@@ -80,6 +80,10 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   }
 }
 
+PublisherDiscovery::~PublisherDiscovery() {
+  z_undeclare_subscriber(&liveliness_subscriber_);
+}
+
 void PublisherDiscovery::createLivelinessSubscriber() {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) {
     PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
