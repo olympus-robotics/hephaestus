@@ -27,7 +27,7 @@ namespace heph::utils {
 class InterruptHandler {
 public:
   /// Return false if a signal has been received, true otherwise.
-  [[nodiscard]] static auto ok() -> bool;
+  [[nodiscard]] static auto stopRequested() -> bool;
   /// Blocks until a signal has been received.
   static void wait();
 
