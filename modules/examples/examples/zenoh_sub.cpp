@@ -48,7 +48,7 @@ auto main(int argc, const char* argv[]) -> int {
         session, std::move(topic_config), std::move(cb));
     (void)subscriber;
 
-    heph::utils::InterruptHandler::wait();
+    heph::utils::TerminationBlocker::waitForInterrupt();
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

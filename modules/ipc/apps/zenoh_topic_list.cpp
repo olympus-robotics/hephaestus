@@ -27,7 +27,7 @@ void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::Top
   heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
                                                  std::move(callback) };
 
-  heph::utils::InterruptHandler::wait();
+  heph::utils::TerminationBlocker::waitForInterrupt();
 }
 
 auto main(int argc, const char* argv[]) -> int {

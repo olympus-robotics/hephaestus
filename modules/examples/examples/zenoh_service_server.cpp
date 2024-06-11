@@ -42,7 +42,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     LOG(INFO) << fmt::format("Server started. Wating for queries on '{}' topic", topic_config.name);
 
-    heph::utils::InterruptHandler::wait();
+    heph::utils::TerminationBlocker::waitForInterrupt();
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

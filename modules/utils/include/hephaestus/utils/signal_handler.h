@@ -12,72 +12,52 @@
 
 namespace heph::utils {
 
+template <typename T>
+concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
+
 /// \brief Use this class to block until a signal is received.
 /// > NOTE: can be extended to call a generic callback when a signal is received.
 /// Usage:
 /// ```
 /// int main() {
 ///  // Do something
-///  InterruptHandler::wait();
+///  TerminationBlocker::waitForInterrupt();
 /// }
 /// // Or
-/// while (InterruptHandler::stopRequested()) {
+/// while (TerminationBlocker::stopRequested()) {
 /// // Do something
 /// }
 /// ```
-class InterruptHandler {
+class TerminationBlocker {
 public:
   /// Return false if a signal has been received, true otherwise.
   [[nodiscard]] static auto stopRequested() -> bool;
+
   /// Blocks until a signal has been received.
-  static void wait();
+  static void waitForInterrupt();
+
+  /// Wait returns when a signal is received or the app completes.
+  template <StoppableAndWaitable T>
+  static void waitForInterruptOrAppCompletion(T& app);
 
 private:
-  InterruptHandler() = default;
-  [[nodiscard]] static auto instance() -> InterruptHandler&;
+  TerminationBlocker() = default;
+  [[nodiscard]] static auto instance() -> TerminationBlocker&;
 
   static auto signalHandler(int /*unused*/) -> void;
 
 private:
   std::atomic_flag stop_flag_ = ATOMIC_FLAG_INIT;
+  std::future<void> stop_future_;
+  std::function<std::future<void>()> app_stop_callback_ = []() { return std::future<void>{}; };
 };  // namespace heph::utils
 
-template <typename T>
-concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
-
-/// \brief Use this class to block until a signal is received or the application completes.
-/// Usage:
-/// ```
-/// int main() {
-///   auto app = MyApp{};
-///   app.start().get();
-///   InterruptHandlerOrAppComplete::wait(app);
-/// }
-/// ```
-/// > NOTE: `MyApp` needs to satify the stoppable compoenent interface.
-class InterruptHandlerOrAppComplete {
-public:
-  /// Wait returns when a signal is received or the app completes.
-  template <StoppableAndWaitable T>
-  static void wait(T& app);
-
-private:
-  InterruptHandlerOrAppComplete() = default;
-  [[nodiscard]] static auto instance() -> InterruptHandlerOrAppComplete&;
-
-  static auto signalHandler(int /*unused*/) -> void;
-
-private:
-  std::future<void> stop_future_;
-  std::function<std::future<void>()> app_stop_cb_;
-};
-
 template <StoppableAndWaitable T>
-void InterruptHandlerOrAppComplete::wait(T& app) {
-  instance().app_stop_cb_ = [&app]() { return app.stop(); };
+void TerminationBlocker::waitForInterruptOrAppCompletion(T& app) {
+  instance().app_stop_callback_ = [&app]() { return app.stop(); };
 
-  (void)signal(SIGINT, InterruptHandlerOrAppComplete::signalHandler);
-  (void)signal(SIGTERM, InterruptHandlerOrAppComplete::signalHandler);
+  (void)signal(SIGINT, TerminationBlocker::signalHandler);
+  (void)signal(SIGTERM, TerminationBlocker::signalHandler);
 
   app.wait();
 
@@ -86,15 +66,6 @@ void InterruptHandlerOrAppComplete::wait(T& app) {
   } else {
     app.stop().get();
   }
-}
-
-auto InterruptHandlerOrAppComplete::instance() -> InterruptHandlerOrAppComplete& {
-  static InterruptHandlerOrAppComplete instance;
-  return instance;
-}
-
-auto InterruptHandlerOrAppComplete::signalHandler(int /*unused*/) -> void {
-  instance().stop_future_ = instance().app_stop_cb_();
 }
 
 }  // namespace heph::utils
