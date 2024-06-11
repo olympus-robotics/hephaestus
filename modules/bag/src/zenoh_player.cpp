@@ -130,7 +130,7 @@ void ZenohPlayer::Impl::run() {
     all_publisher_connected_.wait(false);
   }
 
-  const auto first_playback_timestamp = std::chrono::steady_clock::now();
+  const auto first_playback_timestamp = std::chrono::system_clock::now();
   for (const auto& message : messages) {
     if (terminate_) {
       break;
@@ -144,9 +144,9 @@ void ZenohPlayer::Impl::run() {
 
     const auto write_timestamp = current_msg_timestamp - first_msg_timestamp + first_playback_timestamp;
 
-    if (auto now = std::chrono::steady_clock::now(); now > write_timestamp && msgs_played_count > 0) {
+    if (const auto now = std::chrono::system_clock::now(); now > write_timestamp && msgs_played_count > 0) {
       ++deadline_missed_count;
-      LOG(WARNING) << fmt::format("failed to publish message {} in time for topic {}, delay {}",
+      LOG(WARNING) << fmt::format("deadline misseed on message {} for topic {}, delay {}",
                                   message.message.sequence, topic, now - write_timestamp);
     } else {
       std::unique_lock<std::mutex> guard(play_mutex_);

@@ -2,6 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+#include <thread>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -19,74 +22,75 @@ using namespace ::testing;
 
 namespace heph::bag::tests {
 namespace {
-constexpr std::size_t USER_MSG_COUNT = 10;
-constexpr auto USER_MSG_PERIOD = std::chrono::milliseconds{ 1 };
-constexpr std::size_t COMPANY_MSG_COUNT = 5;
-constexpr auto COMPANY_MSG_PERIOD = std::chrono::milliseconds{ 2 };
+constexpr std::size_t ROBOT_MSG_COUNT = 10;
+constexpr auto ROBOT_MSG_PERIOD = std::chrono::milliseconds{ 1 };
+constexpr std::size_t FLEET_MSG_COUNT = 5;
+constexpr auto FLEET_MSG_PERIOD = std::chrono::milliseconds{ 2 };
 constexpr auto SENDER_ID = "bag_tester";
-constexpr auto USER_TOPIC = "user";
-constexpr auto COMPANY_TOPIC = "company";
+constexpr auto ROBOT_TOPIC = "robot";
+constexpr auto FLEET_TOPIC = "fleet";
 
 [[nodiscard]] auto
-createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<User>, std::vector<Company>> {
+createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
   auto mcap_writer = createMcapWriter({ scoped_path });
 
-  auto user_type_info = serdes::getSerializedTypeInfo<User>();
-  mcap_writer->registerSchema(user_type_info);
-  mcap_writer->registerChannel(USER_TOPIC, user_type_info);
+  auto robot_type_info = serdes::getSerializedTypeInfo<Robot>();
+  mcap_writer->registerSchema(robot_type_info);
+  mcap_writer->registerChannel(ROBOT_TOPIC, robot_type_info);
 
-  auto company_type_info = serdes::getSerializedTypeInfo<Company>();
-  mcap_writer->registerSchema(company_type_info);
-  mcap_writer->registerChannel(COMPANY_TOPIC, company_type_info);
+  auto fleet_type_info = serdes::getSerializedTypeInfo<Fleet>();
+  mcap_writer->registerSchema(fleet_type_info);
+  mcap_writer->registerChannel(FLEET_TOPIC, fleet_type_info);
 
   auto mt = random::createRNG();
 
   const auto start_time = std::chrono::nanoseconds{ 0 };
-  std::vector<User> users(USER_MSG_COUNT);
-  for (std::size_t i = 0; i < USER_MSG_COUNT; ++i) {
-    users[i] = User::random(mt);
+  std::vector<Robot> robots(ROBOT_MSG_COUNT);
+  for (std::size_t i = 0; i < ROBOT_MSG_COUNT; ++i) {
+    robots[i] = Robot::random(mt);
     mcap_writer->writeRecord({ .sender_id = SENDER_ID,
-                               .topic = USER_TOPIC,
-                               .timestamp = start_time + i * USER_MSG_PERIOD,
+                               .topic = ROBOT_TOPIC,
+                               .timestamp = start_time + i * ROBOT_MSG_PERIOD,
                                .sequence_id = i },
-                             serdes::serialize(users[i]));
+                             serdes::serialize(robots[i]));
   }
 
-  std::vector<Company> company(COMPANY_MSG_COUNT);
-  for (std::size_t i = 0; i < COMPANY_MSG_COUNT; ++i) {
-    company[i] = Company::random(mt);
+  std::vector<Fleet> fleet(FLEET_MSG_COUNT);
+  for (std::size_t i = 0; i < FLEET_MSG_COUNT; ++i) {
+    fleet[i] = Fleet::random(mt);
     mcap_writer->writeRecord({ .sender_id = SENDER_ID,
-                               .topic = COMPANY_TOPIC,
-                               .timestamp = start_time + i * COMPANY_MSG_PERIOD,
+                               .topic = FLEET_TOPIC,
+                               .timestamp = start_time + i * FLEET_MSG_PERIOD,
                                .sequence_id = i },
-                             serdes::serialize(company[i]));
+                             serdes::serialize(fleet[i]));
   }
 
-  return { std::move(scoped_path), std::move(users), std::move(company) };
+  return { std::move(scoped_path), std::move(robots), std::move(fleet) };
 }
 
 TEST(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
-  auto [bag_path, users, companies] = createBag();
+  auto [bag_path, robots, companies] = createBag();
   {
     auto reader = std::make_unique<mcap::McapReader>();
     const auto status = reader->open(bag_path);
     EXPECT_TRUE(status.ok());
 
     auto session = ipc::zenoh::createSession({});
-    auto player = ZenohPlayer::create(
-        { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
-
     auto bag_writer = createMcapWriter({ output_bag });
     auto recorder = ZenohRecorder::create(
         { .session = session, .bag_writer = std::move(bag_writer), .topics_filter_params = {} });
+    {
+      auto player = ZenohPlayer::create(
+          { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
+      recorder.start().get();
+      player.start().get();
+      player.wait();
 
-    recorder.start().get();
-    player.start().get();
-    player.wait();
-
-    player.stop().get();
+      player.stop().get();
+    }
+    // std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
     recorder.stop().get();
   }
 
@@ -100,7 +104,7 @@ TEST(Bag, PlayAndRecord) {
   auto statistics = reader->statistics();
   ASSERT_TRUE(statistics.has_value());
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->messageCount, USER_MSG_COUNT + COMPANY_MSG_COUNT);
+  EXPECT_EQ(statistics->messageCount, ROBOT_MSG_COUNT + FLEET_MSG_COUNT);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(statistics->channelCount, 2);
   const auto channels = reader->channels();
@@ -111,23 +115,23 @@ TEST(Bag, PlayAndRecord) {
   }
 
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[USER_TOPIC]], USER_MSG_COUNT);
+  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[ROBOT_TOPIC]], ROBOT_MSG_COUNT);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[COMPANY_TOPIC]], COMPANY_MSG_COUNT);
+  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[FLEET_TOPIC]], FLEET_MSG_COUNT);
 
   auto read_options = mcap::ReadMessageOptions{};
   read_options.readOrder = mcap::ReadMessageOptions::ReadOrder::LogTimeOrder;
   auto messages = reader->readMessages([](const auto&) {}, read_options);
 
   for (const auto& message : messages) {
-    if (message.channel->topic == USER_TOPIC) {
-      User user;
-      serdes::deserialize<User>({ message.message.data, message.message.dataSize }, user);
-      EXPECT_EQ(user, users[message.message.sequence]);
-    } else if (message.channel->topic == COMPANY_TOPIC) {
-      Company company;
-      serdes::deserialize<Company>({ message.message.data, message.message.dataSize }, company);
-      EXPECT_EQ(company, companies[message.message.sequence]);
+    if (message.channel->topic == ROBOT_TOPIC) {
+      Robot robot;
+      serdes::deserialize<Robot>({ message.message.data, message.message.dataSize }, robot);
+      EXPECT_EQ(robot, robots[message.message.sequence]);
+    } else if (message.channel->topic == FLEET_TOPIC) {
+      Fleet fleet;
+      serdes::deserialize<Fleet>({ message.message.data, message.message.dataSize }, fleet);
+      EXPECT_EQ(fleet, companies[message.message.sequence]);
     } else {
       FAIL() << "unexpected channel id: " << message.channel->topic;
     }

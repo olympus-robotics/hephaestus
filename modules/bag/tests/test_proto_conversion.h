@@ -7,67 +7,67 @@
 #include "test.pb.h"
 
 namespace heph::bag::tests {
-struct User {
-  auto operator==(const User& other) const -> bool = default;
-  [[nodiscard]] static auto random(std::mt19937_64& mt) -> User;
+struct Robot {
+  auto operator==(const Robot& other) const -> bool = default;
+  [[nodiscard]] static auto random(std::mt19937_64& mt) -> Robot;
 
   std::string name;
-  int age{};
+  int version{};
   std::vector<float> scores;
 };
 
-auto User::random(std::mt19937_64& mt) -> User {
+auto Robot::random(std::mt19937_64& mt) -> Robot {
   return { .name = random::randomT<std::string>(mt),
-           .age = random::randomT<int>(mt),
+           .version = random::randomT<int>(mt),
            .scores = random::randomT<std::vector<float>>(mt) };
 }
 
-struct Company {
-  auto operator==(const Company& other) const -> bool = default;
-  [[nodiscard]] static auto random(std::mt19937_64& mt) -> Company;
+struct Fleet {
+  auto operator==(const Fleet& other) const -> bool = default;
+  [[nodiscard]] static auto random(std::mt19937_64& mt) -> Fleet;
 
   std::string name;
-  int employer_count{};
+  int robot_count{};
 };
 
-auto Company::random(std::mt19937_64& mt) -> Company {
-  return { .name = random::randomT<std::string>(mt), .employer_count = random::randomT<int>(mt) };
+auto Fleet::random(std::mt19937_64& mt) -> Fleet {
+  return { .name = random::randomT<std::string>(mt), .robot_count = random::randomT<int>(mt) };
 }
 }  // namespace heph::bag::tests
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<heph::bag::tests::User> {
-  using Type = heph::bag::tests::proto::User;
+struct ProtoAssociation<heph::bag::tests::Robot> {
+  using Type = heph::bag::tests::proto::Robot;
 };
 
 template <>
-struct ProtoAssociation<heph::bag::tests::Company> {
-  using Type = heph::bag::tests::proto::Company;
+struct ProtoAssociation<heph::bag::tests::Fleet> {
+  using Type = heph::bag::tests::proto::Fleet;
 };
 }  // namespace heph::serdes::protobuf
 
 namespace heph::bag::tests {
-void toProto(proto::User& proto_user, const User& user) {
+void toProto(proto::Robot& proto_user, const Robot& user) {
   proto_user.set_name(user.name);
-  proto_user.set_age(user.age);
+  proto_user.set_version(user.version);
   proto_user.mutable_scores()->Add(user.scores.begin(), user.scores.end());
 }
 
-void fromProto(const proto::User& proto_user, User& user) {
+void fromProto(const proto::Robot& proto_user, Robot& user) {
   user.name = proto_user.name();
-  user.age = proto_user.age();
+  user.version = proto_user.version();
   user.scores = { proto_user.scores().begin(), proto_user.scores().end() };
 }
 
-void toProto(proto::Company& proto_company, const Company& company) {
+void toProto(proto::Fleet& proto_company, const Fleet& company) {
   proto_company.set_name(company.name);
-  proto_company.set_employer_count(company.employer_count);
+  proto_company.set_robot_count(company.robot_count);
 }
 
-void fromProto(const proto::Company& proto_company, Company& company) {
+void fromProto(const proto::Fleet& proto_company, Fleet& company) {
   company.name = proto_company.name();
-  company.employer_count = proto_company.employer_count();
+  company.robot_count = proto_company.robot_count();
 }
 
 }  // namespace heph::bag::tests

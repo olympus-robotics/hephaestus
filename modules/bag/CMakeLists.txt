@@ -14,10 +14,10 @@ find_package(mcap REQUIRED)
 # library sources
 set(SOURCES
     src/zenoh_player.cpp
-    include/hephaestus/bag/zenoh_player.h
     src/zenoh_recorder.cpp
     src/writer.cpp
     README.md
+    include/hephaestus/bag/zenoh_player.h
     include/hephaestus/bag/zenoh_recorder.h
     include/hephaestus/bag/writer.h
 )

@@ -54,7 +54,7 @@ concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
 ///   InterruptHandlerOrAppComplete::wait(app);
 /// }
 /// ```
-/// > NOTE: `MayApp` needs to satify the stoppable compoenent interface.
+/// > NOTE: `MyApp` needs to satify the stoppable compoenent interface.
 class InterruptHandlerOrAppComplete {
 public:
   /// Wait returns when a signal is received or the app completes.
