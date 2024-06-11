@@ -4,7 +4,7 @@
 
 declare_module(
   NAME bag
-  DEPENDS_ON_MODULES containers ipc
+  DEPENDS_ON_MODULES containers ipc random
   DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
 )
 
@@ -12,8 +12,14 @@ find_package(absl REQUIRED)
 find_package(mcap REQUIRED)
 
 # library sources
-set(SOURCES src/zenoh_recorder.cpp src/writer.cpp README.md include/hephaestus/bag/zenoh_recorder.h
-            include/hephaestus/bag/writer.h
+set(SOURCES
+    src/zenoh_player.cpp
+    src/zenoh_recorder.cpp
+    src/writer.cpp
+    README.md
+    include/hephaestus/bag/zenoh_player.h
+    include/hephaestus/bag/zenoh_recorder.h
+    include/hephaestus/bag/writer.h
 )
 
 # library target

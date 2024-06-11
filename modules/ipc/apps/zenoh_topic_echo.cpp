@@ -122,7 +122,7 @@ auto main(int argc, const char* argv[]) -> int {
     heph::ipc::apps::TopicEcho topic_echo{ std::move(session), topic_config, noarr, max_array_length };
     topic_echo.start().wait();
 
-    heph::utils::InterruptHandler::wait();
+    heph::utils::TerminationBlocker::waitForInterrupt();
 
     topic_echo.stop().wait();
 

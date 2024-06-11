@@ -82,6 +82,7 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
 
 PublisherDiscovery::~PublisherDiscovery() {
   z_undeclare_subscriber(&liveliness_subscriber_);
+  z_drop(z_move(liveliness_subscriber_));
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {
