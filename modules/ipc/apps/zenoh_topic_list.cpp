@@ -17,8 +17,8 @@
 
 void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
   const auto publishers_info = heph::ipc::zenoh::getListOfPublishers(session, topic);
-  std::ranges::for_each(publishers_info,
-                        [](const auto& info) { heph::ipc::zenoh::printPublisherInfo(info); });
+  std::for_each(publishers_info.begin(), publishers_info.end(),
+                [](const auto& info) { heph::ipc::zenoh::printPublisherInfo(info); });
 }
 
 void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
