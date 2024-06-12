@@ -19,8 +19,8 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Scouting..");
 
     auto nodes_info = heph::ipc::zenoh::getListOfNodes();
-    std::ranges::for_each(nodes_info,
-                          [](const auto& info) { fmt::println("{}", heph::ipc::zenoh::toString(info)); });
+    std::for_each(nodes_info.begin(), nodes_info.end(),
+                  [](const auto& info) { fmt::println("{}", heph::ipc::zenoh::toString(info)); });
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
