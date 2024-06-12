@@ -27,6 +27,9 @@ auto main(int argc, const char* argv[]) -> int {
       fmt::println(stderr, "Failed to open: {} for writing", input.c_str());
       std::exit(1);
     }
+
+    reader.readMessages();
+
   } catch (const std::exception& e) {
     fmt::print("Error: {}\n", e.what());
     return 1;

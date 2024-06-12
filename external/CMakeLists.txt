@@ -143,7 +143,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # mcap
 set(MCAP_VERSION 1.4.0)
-set(MCAP_TAG be4188d7f77838372ec609a733c65dc6b167f517)
+set(MCAP_TAG cfd117ea989e7e6c415ef2a485b751775c70c5a7)
 add_cmake_dependency(
   NAME mcap
   VERSION ${MCAP_VERSION} URL https://github.com/filippobrizzi/mcap/archive/${MCAP_TAG}.zip

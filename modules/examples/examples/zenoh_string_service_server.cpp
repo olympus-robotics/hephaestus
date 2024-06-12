@@ -4,7 +4,6 @@
 
 #include <csignal>
 #include <cstdlib>
-#include <thread>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
@@ -15,17 +14,12 @@
 #include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/utils/signal_handler.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
-std::atomic_flag stop_flag = false;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-auto signalHandler(int /*unused*/) -> void {
-  stop_flag.test_and_set();
-  stop_flag.notify_all();
-}
-
 auto main(int argc, const char* argv[]) -> int {
-  (void)signal(SIGINT, signalHandler);
-  (void)signal(SIGTERM, signalHandler);
+  heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("String service server example", ExampleType::Service);
@@ -44,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     LOG(INFO) << fmt::format("String server started. Wating for queries on '{}' topic", topic_config.name);
 
-    stop_flag.wait(false);
+    heph::utils::TerminationBlocker::waitForInterrupt();
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

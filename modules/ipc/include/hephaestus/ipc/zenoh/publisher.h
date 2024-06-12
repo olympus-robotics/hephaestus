@@ -35,11 +35,11 @@ public:
             MatchCallback&& match_cb = nullptr);
   ~Publisher();
   Publisher(const Publisher&) = delete;
-  Publisher(Publisher&&) = default;
+  Publisher(Publisher&&) = delete;
   auto operator=(const Publisher&) -> Publisher& = delete;
-  auto operator=(Publisher&&) -> Publisher& = default;
+  auto operator=(Publisher&&) -> Publisher& = delete;
 
-  [[nodiscard]] auto publish(std::span<std::byte> data) -> bool;
+  [[nodiscard]] auto publish(std::span<const std::byte> data) -> bool;
 
   [[nodiscard]] auto id() const -> std::string {
     return toString(session_->zenoh_session.info_zid());
