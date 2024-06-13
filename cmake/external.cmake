@@ -100,6 +100,7 @@ macro(add_cmake_dependency)
           GIT_SHALLOW true
           GIT_SUBMODULES_RECURSE false
           SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
+          DOWNLOAD_EXTRACT_TIMESTAMP true
         )
       else()
         ExternalProject_Add(
@@ -108,6 +109,7 @@ macro(add_cmake_dependency)
           URL ${TARGET_ARG_URL}
           CMAKE_ARGS ${CMAKE_ARGS}
           SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
+          DOWNLOAD_EXTRACT_TIMESTAMP true
         )
       endif()
     endif()
