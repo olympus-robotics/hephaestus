@@ -38,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
                                                                    }
                                                                  } };
 
-    fmt::println("Declaring BinaryPublisher on '{}' with id: '{}'", topic_config.name, publisher.id());
+    fmt::println("Declaring RawPublisher on '{}' with id: '{}'", topic_config.name, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
     double count = 0;

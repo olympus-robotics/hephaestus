@@ -13,7 +13,7 @@ template <class T>
 class Publisher {
 public:
   Publisher(zenoh::SessionPtr session, TopicConfig topic_config,
-            zenoh::BinaryPublisher::MatchCallback&& match_cb = nullptr)
+            zenoh::RawPublisher::MatchCallback&& match_cb = nullptr)
     : publisher_(std::move(session), std::move(topic_config), serdes::getSerializedTypeInfo<T>(),
                  std::move(match_cb)) {
   }
@@ -28,6 +28,6 @@ public:
   }
 
 private:
-  zenoh::BinaryPublisher publisher_;
+  zenoh::RawPublisher publisher_;
 };
 }  // namespace heph::ipc
