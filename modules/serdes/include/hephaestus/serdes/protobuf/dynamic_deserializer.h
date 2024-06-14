@@ -20,6 +20,11 @@ class DynamicDeserializer {
 public:
   void registerSchema(const TypeInfo& type_info);
   [[nodiscard]] auto toJson(const std::string& type, std::span<const std::byte> data) -> std::string;
+  [[nodiscard]] auto toText(const std::string& type, std::span<const std::byte> data) -> std::string;
+
+private:
+  [[nodiscard]] auto getMessage(const std::string& type,
+                                std::span<const std::byte> data) -> google::protobuf::Message*;
 
 private:
   google::protobuf::SimpleDescriptorDatabase proto_db_;

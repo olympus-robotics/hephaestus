@@ -15,6 +15,7 @@ class DynamicDeserializer {
 public:
   void registerSchema(const TypeInfo& type_info);
   [[nodiscard]] auto toJson(const std::string& type, std::span<const std::byte> data) -> std::string;
+  [[nodiscard]] auto toText(const std::string& type, std::span<const std::byte> data) -> std::string;
 
 private:
   protobuf::DynamicDeserializer proto_deserializer_;
