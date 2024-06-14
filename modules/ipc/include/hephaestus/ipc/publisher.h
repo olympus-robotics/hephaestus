@@ -4,14 +4,30 @@
 
 #pragma once
 
+#include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/serdes/serdes.h"
 
 namespace heph::ipc {
 
-template <class Publisher, class DataType>
-[[nodiscard]] auto publish(Publisher& publisher, const DataType& data) -> bool {
-  auto buffer = serdes::serialize(data);
-  return publisher.publish(buffer);
-}
+template <class T>
+class Publisher {
+public:
+  Publisher(zenoh::SessionPtr session, TopicConfig topic_config,
+            zenoh::BinaryPublisher::MatchCallback&& match_cb = nullptr)
+    : publisher_(std::move(session), std::move(topic_config), serdes::getSerializedTypeInfo<T>(),
+                 std::move(match_cb)) {
+  }
 
+  [[nodiscard]] auto publish(const T& data) -> bool {
+    auto buffer = serdes::serialize(data);
+    return publisher_.publish(buffer);
+  }
+
+  [[nodiscard]] auto id() const -> std::string {
+    return publisher_.id();
+  }
+
+private:
+  zenoh::BinaryPublisher publisher_;
+};
 }  // namespace heph::ipc

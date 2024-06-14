@@ -27,17 +27,17 @@ struct MatchingStatus {
 ///   - the service returns the Json representation of the type info, that can be converted using
 ///     serdes::TypeInfo::fromJson(str);
 /// - If `match_cb` is passed, it is called when the first subscriber matches and when the last one unmatch.
-class Publisher {
+class BinaryPublisher {
 public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
-  Publisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
-            MatchCallback&& match_cb = nullptr);
-  ~Publisher();
-  Publisher(const Publisher&) = delete;
-  Publisher(Publisher&&) = delete;
-  auto operator=(const Publisher&) -> Publisher& = delete;
-  auto operator=(Publisher&&) -> Publisher& = delete;
+  BinaryPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
+                  MatchCallback&& match_cb = nullptr);
+  ~BinaryPublisher();
+  BinaryPublisher(const BinaryPublisher&) = delete;
+  BinaryPublisher(BinaryPublisher&&) = delete;
+  auto operator=(const BinaryPublisher&) -> BinaryPublisher& = delete;
+  auto operator=(BinaryPublisher&&) -> BinaryPublisher& = delete;
 
   [[nodiscard]] auto publish(std::span<const std::byte> data) -> bool;
 

@@ -35,7 +35,7 @@ private:
   bool wait_for_readers_to_connect_;
 
   std::size_t channel_count_{};
-  std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::Publisher>> publishers_;
+  std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::BinaryPublisher>> publishers_;
   std::unordered_set<std::string> publishers_with_subscriber_;
   std::atomic_flag all_publisher_connected_ = ATOMIC_FLAG_INIT;
 
@@ -97,7 +97,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
         "",  // TODO: figure out if there is a way to get this. We can use the channel metadata!!!
   };
 
-  publishers_[channel.topic] = std::make_unique<ipc::zenoh::Publisher>(
+  publishers_[channel.topic] = std::make_unique<ipc::zenoh::BinaryPublisher>(
       session_, ipc::TopicConfig{ .name = channel.topic }, std::move(type_info),
       [this, &channel](ipc::zenoh::MatchingStatus status) {
         if (!status.matching) {
