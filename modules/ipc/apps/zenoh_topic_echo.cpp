@@ -82,7 +82,7 @@ private:
                          const std::optional<serdes::TypeInfo>& type_info) {
     throwExceptionIf<InvalidParameterException>(!type_info, "Topic echo requires the type info to run");
     auto msg_json =
-        dynamic_deserializer_.toText(type_info->name, data);  // NOLINT(bugprone-unchecked-optional-access)
+        dynamic_deserializer_.toJson(type_info->name, data);  // NOLINT(bugprone-unchecked-optional-access)
     truncateLongItems(msg_json, noarr_, max_array_length_);
     fmt::println("From: {}. Topic: {}\n{}", metadata.sender_id, metadata.topic, msg_json);
   }

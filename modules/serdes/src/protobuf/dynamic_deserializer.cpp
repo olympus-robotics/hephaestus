@@ -48,6 +48,7 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
   google::protobuf::util::JsonPrintOptions options;
   options.always_print_primitive_fields = true;
   options.add_whitespace = true;
+  options.unquote_int64_if_possible = true;
   const auto status = google::protobuf::util::MessageToJsonString(*message, &msg_json, options);
   throwExceptionIf<InvalidDataException>(
       !status.ok(),
@@ -59,7 +60,9 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
 auto DynamicDeserializer::toText(const std::string& type, std::span<const std::byte> data) -> std::string {
   auto* message = getMessage(type, data);
   std::string msg_text;
-  const auto success = google::protobuf::TextFormat::PrintToString(*message, &msg_text);
+  auto printer = google::protobuf::TextFormat::Printer();
+  printer.SetUseShortRepeatedPrimitives(true);
+  const auto success = printer.PrintToString(*message, &msg_text);
   throwExceptionIf<InvalidDataException>(
       !success, fmt::format("failed to convert proto message of type {} to text", type));
 
