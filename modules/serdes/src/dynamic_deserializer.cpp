@@ -34,4 +34,18 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
 
   __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
+
+auto DynamicDeserializer::toText(const std::string& type, std::span<const std::byte> data) -> std::string {
+  switch (type_to_serialization_[type]) {
+    case TypeInfo::Serialization::PROTOBUF:
+      return proto_deserializer_.toText(type, data);
+    case TypeInfo::Serialization::JSON:
+      [[fallthrough]];
+    case TypeInfo::Serialization::TEXT:
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      return std::string{ reinterpret_cast<const char*>(data.data()), data.size() };
+  }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
+}
 }  // namespace heph::serdes

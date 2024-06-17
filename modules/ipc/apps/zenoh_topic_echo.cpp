@@ -84,7 +84,7 @@ private:
     auto msg_json =
         dynamic_deserializer_.toJson(type_info->name, data);  // NOLINT(bugprone-unchecked-optional-access)
     truncateLongItems(msg_json, noarr_, max_array_length_);
-    fmt::println("From: {}. Topic: {} - {}", metadata.sender_id, metadata.topic, msg_json);
+    fmt::println("From: {}. Topic: {}\n{}", metadata.sender_id, metadata.topic, msg_json);
   }
 
 private:

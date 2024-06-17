@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include <fmt/format.h>
+#include <google/protobuf/text_format.h>
 
 #include "hephaestus/utils/exception.h"
 
@@ -41,6 +42,35 @@ void DynamicDeserializer::registerSchema(const TypeInfo& type_info) {
 }
 
 auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::byte> data) -> std::string {
+  auto* message = getMessage(type, data);
+
+  std::string msg_json;
+  google::protobuf::util::JsonPrintOptions options;
+  options.always_print_primitive_fields = true;
+  options.add_whitespace = true;
+  options.unquote_int64_if_possible = true;
+  const auto status = google::protobuf::util::MessageToJsonString(*message, &msg_json, options);
+  throwExceptionIf<InvalidDataException>(
+      !status.ok(),
+      fmt::format("failed to convert proto message of type {} to json: {}", type, status.message()));
+
+  return msg_json;
+}
+
+auto DynamicDeserializer::toText(const std::string& type, std::span<const std::byte> data) -> std::string {
+  auto* message = getMessage(type, data);
+  std::string msg_text;
+  auto printer = google::protobuf::TextFormat::Printer();
+  printer.SetUseShortRepeatedPrimitives(true);
+  const auto success = printer.PrintToString(*message, &msg_text);
+  throwExceptionIf<InvalidDataException>(
+      !success, fmt::format("failed to convert proto message of type {} to text", type));
+
+  return msg_text;
+}
+
+auto DynamicDeserializer::getMessage(const std::string& type,
+                                     std::span<const std::byte> data) -> google::protobuf::Message* {
   const auto* descriptor = proto_pool_.FindMessageTypeByName(type);
   throwExceptionIf<InvalidDataException>(
       descriptor == nullptr,
@@ -50,14 +80,7 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
   const auto res = message->ParseFromArray(data.data(), static_cast<int>(data.size()));
   throwExceptionIf<InvalidDataException>(!res, fmt::format("failed to parse message of type {}", type));
 
-  std::string msg_json;
-  google::protobuf::util::JsonPrintOptions options;
-  options.always_print_primitive_fields = true;
-  auto status = google::protobuf::util::MessageToJsonString(*message, &msg_json);
-  throwExceptionIf<InvalidDataException>(
-      !status.ok(), fmt::format("failed to convert proto message to json: {}", status.message()));
-
-  return msg_json;
+  return message;
 }
 
 }  // namespace heph::serdes::protobuf
