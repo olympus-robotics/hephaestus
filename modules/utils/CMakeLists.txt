@@ -19,6 +19,7 @@ configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ON
 set(SOURCES
     src/string/string_literal.cpp
     src/string/string_utils.cpp
+    src/bit_flag.cpp
     src/concepts.cpp
     src/exception.cpp
     src/utils.cpp
@@ -30,6 +31,7 @@ set(SOURCES
     README.md
     include/hephaestus/utils/string/string_literal.h
     include/hephaestus/utils/string/string_utils.h
+    include/hephaestus/utils/bit_flag.h
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
     include/hephaestus/utils/utils.h
