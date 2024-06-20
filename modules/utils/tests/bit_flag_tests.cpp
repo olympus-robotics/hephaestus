@@ -65,13 +65,13 @@ TEST(BitFlag, HasAny) {
   EXPECT_TRUE(flag.hasAny(E));
 }
 
-TEST(BitFlag, HasOnly) {
+TEST(BitFlag, HasExactly) {
   BitFlag<TestEnum> flag{ TestEnum::A };
   flag.set(TestEnum::B).set(TestEnum::C);
-  EXPECT_FALSE(flag.hasOnly(TestEnum::A));
+  EXPECT_FALSE(flag.hasExactly(TestEnum::A));
 
   static constexpr auto E = BitFlag<TestEnum>{ TestEnum::A }.set(TestEnum::B).set(TestEnum::C);
-  EXPECT_TRUE(flag.hasOnly(E));
+  EXPECT_TRUE(flag.hasExactly(E));
 }
 
 TEST(BitFlag, Unset) {

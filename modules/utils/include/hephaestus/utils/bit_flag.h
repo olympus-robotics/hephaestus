@@ -6,20 +6,26 @@
 
 #include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
+#include <magic_enum.hpp>
 #include <magic_enum_all.hpp>
 
 namespace heph::utils {
 
 template <typename EnumT>
 concept UnsignedEnum =
-    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type<EnumT>::type>; };
+    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
 
 template <UnsignedEnum EnumT>
 constexpr auto checkEnumValuesArePowerOf2() -> bool {
   constexpr auto POWER_OF_TWO = magic_enum::enum_for_each<EnumT>([](auto val) {
     constexpr EnumT VALUE = val;
-    constexpr auto VALUE_T = static_cast<std::underlying_type<EnumT>::type>(VALUE);
-    return (VALUE_T & (VALUE_T - 1)) == 0;  // check if VALUE_T is power of 2
+    constexpr auto VALUE_T = static_cast<std::underlying_type_t<EnumT>>(VALUE);
+    if constexpr (VALUE_T == 0) {
+      return true;  // 0 is not power of 2
+    }
+
+    return (VALUE_T & static_cast<std::underlying_type_t<EnumT>>(VALUE_T - 1)) ==
+           0;  // check if VALUE_T is power of 2
   });
 
   return std::all_of(POWER_OF_TWO.begin(), POWER_OF_TWO.end(), [](bool val) { return val; });
@@ -43,54 +49,53 @@ template <UnsignedEnum EnumT>
 class BitFlag {
 public:
   // see https://dietertack.medium.com/using-bit-flags-in-c-d39ec6e30f08
-  using T = std::underlying_type<EnumT>::type;
+  using T = std::underlying_type_t<EnumT>;
 
-  constexpr explicit BitFlag(EnumT value) : value_{ value } {
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  constexpr BitFlag(EnumT value) : value_{ static_cast<T>(value) } {
+    // NOTE: the constructor is not marked explicit to allow implicit conversion from EnumT to it.
+    // This allows to use the member methods with EnumT values directly at the cost of allocating the BitFlag
+    // value.
+    // TODO: consider if there is a way to avoid this allocation.
     static_assert(checkEnumValuesArePowerOf2<EnumT>(),
                   "Enum is not valid for BitFlag, its values must be power of 2.");
   }
 
-  /// Unset all flags and set the given flag.
-  constexpr auto reset(EnumT flag) -> BitFlag& {
-    value_ = flag;
+  constexpr auto reset(const BitFlag& flag) -> BitFlag& {
+    value_ = flag.value_;
     return *this;
   }
 
-  /// Set the input flag
-  constexpr auto set(EnumT flag) -> BitFlag& {
-    value_ = static_cast<EnumT>(static_cast<T>(value_) | static_cast<T>(flag));
+  /// Set the input flag(s)
+  constexpr auto set(const BitFlag& flag) -> BitFlag& {
+    value_ = value_ | flag.value_;
     return *this;
   }
 
-  /// Unset the given flag
-  constexpr auto unset(EnumT flag) -> BitFlag& {
-    value_ =
-        static_cast<EnumT>(static_cast<T>(value_) & ~static_cast<T>(flag));  // NOLINT(hicpp-signed-bitwise)
+  /// Unset the given flag(s)
+  constexpr auto unset(const BitFlag& flag) -> BitFlag& {
+    value_ = value_ & static_cast<T>(~flag.value_);
     return *this;
   }
 
-  /// Retunrs true if the input flag is set
-  [[nodiscard]] constexpr auto has(EnumT flag) const -> bool {
-    return (static_cast<T>(value_) & static_cast<T>(flag)) == static_cast<T>(flag);
+  /// Retunrs true if the input flag(s) is set
+  [[nodiscard]] constexpr auto has(const BitFlag& flag) const -> bool {
+    return (value_ & flag.value_) == flag.value_;
   }
 
   /// Retunrs true if the input flag is the only one set
-  [[nodiscard]] constexpr auto hasOnly(EnumT flag) const -> bool {
-    return (static_cast<T>(value_) & static_cast<T>(flag)) == static_cast<T>(value_);
+  [[nodiscard]] constexpr auto hasExactly(const BitFlag& flag) const -> bool {
+    return (value_ & flag.value_) == value_;
   }
 
   /// Retunrs true if any of the input flags are set
-  [[nodiscard]] constexpr auto hasAny(EnumT flag) const -> bool {
-    return (static_cast<T>(value_) & static_cast<T>(flag)) != 0u;
-  }
-
-  constexpr operator EnumT() const {  // NOLINT(google-explicit-conversion, google-explicit-constructor,
-                                      // hicpp-explicit-conversions)
-    return value_;
+  [[nodiscard]] constexpr auto hasAny(const BitFlag& flag) const -> bool {
+    return (value_ & flag.value_) != 0u;
   }
 
 private:
-  EnumT value_;
+  T value_;  // We need to store the underlying value to be able to store multiple flags which
+             // do not reprenset any enum value.
 };
 
 }  // namespace heph::utils
