@@ -37,11 +37,6 @@ TEST(BitFlag, Set) {
   flag.set(TestEnum::B);
   EXPECT_TRUE(flag.has(TestEnum::A));
   EXPECT_TRUE(flag.has(TestEnum::B));
-
-  static constexpr auto E = BitFlag<TestEnum>{ TestEnum::C }.set(TestEnum::D);
-  flag.set(E);
-  EXPECT_TRUE(flag.has(TestEnum::C));
-  EXPECT_TRUE(flag.has(TestEnum::D));
 }
 
 TEST(BitFlag, SetMultiple) {

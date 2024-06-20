@@ -11,11 +11,8 @@
 
 namespace heph::utils {
 
+namespace internal {
 template <typename EnumT>
-concept UnsignedEnum =
-    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
-
-template <UnsignedEnum EnumT>
 constexpr auto checkEnumValuesArePowerOf2() -> bool {
   constexpr auto POWER_OF_TWO = magic_enum::enum_for_each<EnumT>([](auto val) {
     constexpr EnumT VALUE = val;
@@ -30,6 +27,11 @@ constexpr auto checkEnumValuesArePowerOf2() -> bool {
 
   return std::all_of(POWER_OF_TWO.begin(), POWER_OF_TWO.end(), [](bool val) { return val; });
 }
+}  // namespace internal
+
+template <typename EnumT>
+concept UnsignedEnum =
+    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
 
 /// This class allows to use enum classes as bit flags.
 /// Enum classes need to satisfy three properties:
@@ -57,39 +59,39 @@ public:
     // This allows to use the member methods with EnumT values directly at the cost of allocating the BitFlag
     // value.
     // TODO: consider if there is a way to avoid this allocation.
-    static_assert(checkEnumValuesArePowerOf2<EnumT>(),
+    static_assert(internal::checkEnumValuesArePowerOf2<EnumT>(),
                   "Enum is not valid for BitFlag, its values must be power of 2.");
   }
 
-  constexpr auto reset(const BitFlag& flag) -> BitFlag& {
+  constexpr auto reset(BitFlag flag) -> BitFlag& {
     value_ = flag.value_;
     return *this;
   }
 
   /// Set the input flag(s)
-  constexpr auto set(const BitFlag& flag) -> BitFlag& {
+  constexpr auto set(BitFlag flag) -> BitFlag& {
     value_ = value_ | flag.value_;
     return *this;
   }
 
   /// Unset the given flag(s)
-  constexpr auto unset(const BitFlag& flag) -> BitFlag& {
+  constexpr auto unset(BitFlag flag) -> BitFlag& {
     value_ = value_ & static_cast<T>(~flag.value_);
     return *this;
   }
 
-  /// Retunrs true if the input flag(s) is set
-  [[nodiscard]] constexpr auto has(const BitFlag& flag) const -> bool {
+  /// Returns true if the input flag(s) is set
+  [[nodiscard]] constexpr auto has(BitFlag flag) const -> bool {
     return (value_ & flag.value_) == flag.value_;
   }
 
-  /// Retunrs true if the input flag is the only one set
-  [[nodiscard]] constexpr auto hasExactly(const BitFlag& flag) const -> bool {
+  /// Returns true if the input flag is the only one set
+  [[nodiscard]] constexpr auto hasExactly(BitFlag flag) const -> bool {
     return (value_ & flag.value_) == value_;
   }
 
-  /// Retunrs true if any of the input flags are set
-  [[nodiscard]] constexpr auto hasAny(const BitFlag& flag) const -> bool {
+  /// Returns true if any of the input flags are set
+  [[nodiscard]] constexpr auto hasAny(BitFlag flag) const -> bool {
     return (value_ & flag.value_) != 0u;
   }
 
