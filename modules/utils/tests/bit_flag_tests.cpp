@@ -12,10 +12,10 @@ namespace heph::utils::tests {
 
 TEST(BitFlag, EnumValuesPowerOfTwo) {
   enum class ValidEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u };
-  static_assert(checkEnumValuesArePowerOf2<ValidEnum>());
+  static_assert(internal::checkEnumValuesArePowerOf2<ValidEnum>());
 
   enum class InValidEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u, D = 3u };
-  static_assert(!checkEnumValuesArePowerOf2<InValidEnum>());
+  static_assert(!internal::checkEnumValuesArePowerOf2<InValidEnum>());
 }
 
 enum class TestEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u, D = 1u << 4u };
@@ -27,9 +27,10 @@ TEST(BitFlag, Default) {
 
 TEST(BitFlag, Reset) {
   BitFlag<TestEnum> flag{ TestEnum::A };
-  flag.reset(TestEnum::B);
+  flag.reset();
   EXPECT_FALSE(flag.has(TestEnum::A));
-  EXPECT_TRUE(flag.has(TestEnum::B));
+  constexpr auto ALL = BitFlag{ TestEnum::A }.set(TestEnum::B).set(TestEnum::C).set(TestEnum::D);
+  EXPECT_FALSE(flag.hasAnyOf(ALL));
 }
 
 TEST(BitFlag, Set) {
@@ -41,23 +42,23 @@ TEST(BitFlag, Set) {
 
 TEST(BitFlag, SetMultiple) {
   BitFlag<TestEnum> flag{ TestEnum::A };
-  static constexpr auto E = BitFlag<TestEnum>{ TestEnum::C }.set(TestEnum::D);
+  static constexpr auto E = BitFlag{ TestEnum::C }.set(TestEnum::D);
   flag.set(E);
   EXPECT_TRUE(flag.has(TestEnum::C));
   EXPECT_TRUE(flag.has(TestEnum::D));
 }
 
-TEST(BitFlag, HasAny) {
-  static constexpr auto E = BitFlag<TestEnum>{ TestEnum::C }.set(TestEnum::D);
+TEST(BitFlag, hasAnyOf) {
+  static constexpr auto E = BitFlag{ TestEnum::C }.set(TestEnum::D);
 
   BitFlag<TestEnum> flag{ TestEnum::A };
   flag.set(TestEnum::C).set(TestEnum::D);
   EXPECT_TRUE(flag.has(E));
-  EXPECT_TRUE(flag.hasAny(E));
+  EXPECT_TRUE(flag.hasAnyOf(E));
 
   flag.unset(TestEnum::C);
   EXPECT_FALSE(flag.has(E));
-  EXPECT_TRUE(flag.hasAny(E));
+  EXPECT_TRUE(flag.hasAnyOf(E));
 }
 
 TEST(BitFlag, HasExactly) {
@@ -65,7 +66,7 @@ TEST(BitFlag, HasExactly) {
   flag.set(TestEnum::B).set(TestEnum::C);
   EXPECT_FALSE(flag.hasExactly(TestEnum::A));
 
-  static constexpr auto E = BitFlag<TestEnum>{ TestEnum::A }.set(TestEnum::B).set(TestEnum::C);
+  static constexpr auto E = BitFlag{ TestEnum::A }.set(TestEnum::B).set(TestEnum::C);
   EXPECT_TRUE(flag.hasExactly(E));
 }
 
@@ -77,7 +78,7 @@ TEST(BitFlag, Unset) {
 
 TEST(BitFlag, UnsetMultiple) {
   BitFlag<TestEnum> flag{ TestEnum::A };
-  static constexpr auto E = BitFlag<TestEnum>{ TestEnum::C }.set(TestEnum::D);
+  static constexpr auto E = BitFlag{ TestEnum::C }.set(TestEnum::D);
   flag.set(E);
   flag.unset(E);
   EXPECT_FALSE(flag.has(TestEnum::C));

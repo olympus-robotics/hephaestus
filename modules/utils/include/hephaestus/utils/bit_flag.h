@@ -46,12 +46,15 @@ concept UnsignedEnum =
 /// flag.unset(Flag::A);
 /// Variable containing multiple flags can be created as constexpr:
 /// constexpr auto D = BitFlag<Flag>{ Flag::B }.set(Flag::C); // == Flag::B | Flag::C
-/// flag.hasAny(D); // true
+/// flag.hasAnyOf(D); // true
 template <UnsignedEnum EnumT>
 class BitFlag {
 public:
   // see https://dietertack.medium.com/using-bit-flags-in-c-d39ec6e30f08
   using T = std::underlying_type_t<EnumT>;
+
+  constexpr BitFlag() : value_{ 0 } {
+  }
 
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   constexpr BitFlag(EnumT value) : value_{ static_cast<T>(value) } {
@@ -63,8 +66,8 @@ public:
                   "Enum is not valid for BitFlag, its values must be power of 2.");
   }
 
-  constexpr auto reset(BitFlag flag) -> BitFlag& {
-    value_ = flag.value_;
+  constexpr auto reset() -> BitFlag& {
+    value_ = 0;
     return *this;
   }
 
@@ -80,18 +83,21 @@ public:
     return *this;
   }
 
-  /// Returns true if the input flag(s) is set
+  /// Returns true if the input flag is set.
+  /// In case of multiple input flags, returns true if all input flags are set.
+  /// `has` logically behaves as `hasAll`.
   [[nodiscard]] constexpr auto has(BitFlag flag) const -> bool {
     return (value_ & flag.value_) == flag.value_;
   }
 
-  /// Returns true if the input flag is the only one set
+  /// Returns true if any of the input flags are set.
+  /// In case of a single input flag, hasAny is equivalent to has.
   [[nodiscard]] constexpr auto hasExactly(BitFlag flag) const -> bool {
     return (value_ & flag.value_) == value_;
   }
 
   /// Returns true if any of the input flags are set
-  [[nodiscard]] constexpr auto hasAny(BitFlag flag) const -> bool {
+  [[nodiscard]] constexpr auto hasAnyOf(BitFlag flag) const -> bool {
     return (value_ & flag.value_) != 0u;
   }
 
