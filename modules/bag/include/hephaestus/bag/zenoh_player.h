@@ -6,12 +6,9 @@
 
 #include <future>
 
-#include "hephaestus/ipc/zenoh/session.h"
-
-#define MCAP_IMPLEMENTATION
-#define MCAP_COMPRESSION_NO_ZSTD
-#define MCAP_COMPRESSION_NO_LZ4
 #include <mcap/reader.hpp>
+
+#include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::bag {
 
