@@ -1,9 +1,9 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "gmock/gmock.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
