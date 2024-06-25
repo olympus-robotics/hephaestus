@@ -13,16 +13,11 @@
 
 #include <fmt/core.h>
 #include <magic_enum.hpp>
+#include <mcap/writer.hpp>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
-
-// TODO: add support for compression
-#define MCAP_IMPLEMENTATION
-#define MCAP_COMPRESSION_NO_ZSTD
-#define MCAP_COMPRESSION_NO_LZ4
-#include <mcap/writer.hpp>
 
 namespace heph::bag {
 namespace {

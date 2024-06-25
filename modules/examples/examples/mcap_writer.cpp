@@ -6,10 +6,6 @@
 #include <cstdlib>
 #include <filesystem>
 
-#include "hephaestus/serdes/serdes.h"
-#define MCAP_IMPLEMENTATION
-#define MCAP_COMPRESSION_NO_ZSTD
-#define MCAP_COMPRESSION_NO_LZ4
 #include <fmt/core.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -18,6 +14,7 @@
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/serdes/serdes.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {
