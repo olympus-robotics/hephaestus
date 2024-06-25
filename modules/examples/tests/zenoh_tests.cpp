@@ -1,5 +1,6 @@
 #include <chrono>
 #include <random>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <hephaestus/ipc/common.h>
