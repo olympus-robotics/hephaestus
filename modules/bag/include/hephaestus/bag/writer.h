@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <span>
+#include <string>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/serdes/type_info.h"

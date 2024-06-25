@@ -5,9 +5,10 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <string>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace heph::ipc {
 

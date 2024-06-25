@@ -1,7 +1,12 @@
 #include "hephaestus/utils/filesystem/scoped_path.h"
 
+#include <string_view>
+#include <system_error>
+#include <utility>
+
 #include <absl/random/random.h>
 #include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <fmt/core.h>
 
 namespace heph::utils::filesystem {

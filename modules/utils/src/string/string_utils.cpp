@@ -5,6 +5,7 @@
 #include "hephaestus/utils/string/string_utils.h"
 
 #include <algorithm>
+#include <cctype>
 
 namespace heph::utils::string {
 
@@ -21,7 +22,7 @@ auto toSnakeCase(const std::string_view& camel_case) -> std::string {
   std::string snake_case;
   snake_case.reserve(camel_case.size() * 2);  // Reserve enough space to avoid reallocations
 
-  for (size_t i = 0; i < camel_case.size(); ++i) {
+  for (std::size_t i = 0; i < camel_case.size(); ++i) {
     // Add an underscore if it's an uppercase letter not following another uppercase letter.
     if ((i != 0)                                      // Omit first letter to avoid leading underscore.
         && (std::isupper(camel_case[i]) != 0)         // Current letter is uppercase AND

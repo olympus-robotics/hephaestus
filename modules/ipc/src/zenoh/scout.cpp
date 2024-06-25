@@ -5,16 +5,24 @@
 #include "hephaestus/ipc/zenoh/scout.h"
 
 #include <algorithm>
+#include <memory>
 #include <mutex>
+#include <ranges>
+#include <unordered_map>
+#include <utility>
 
 #include <absl/base/thread_annotations.h>
 #include <fmt/core.h>
+#include <meta/meta.hpp>
+#include <nlohmann/detail/iterators/iter_impl.hpp>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <zenoh.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/utils/exception.h"
 

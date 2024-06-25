@@ -4,16 +4,20 @@
 
 #include "hephaestus/bag/zenoh_recorder.h"
 
+#include <cstddef>
 #include <future>
 #include <memory>
+#include <optional>
+#include <span>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include <absl/base/thread_annotations.h>
-#include <absl/log/log.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/core.h>
 
 #include "hephaestus/bag/writer.h"
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 
 namespace heph::bag {

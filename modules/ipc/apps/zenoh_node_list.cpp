@@ -2,9 +2,14 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+#include <tuple>
+#include <vector>
+
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/zenoh/scout.h"
 #include "hephaestus/utils/stack_trace.h"

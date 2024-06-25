@@ -6,6 +6,7 @@
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
+#include "zenoh.h"
 
 namespace heph::ipc::zenoh {
 

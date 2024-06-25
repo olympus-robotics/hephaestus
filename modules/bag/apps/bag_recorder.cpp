@@ -1,13 +1,20 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <csignal>
+#include <cstdlib>
+#include <exception>
+#include <future>
+#include <string>
+#include <utility>
 
 #include <fmt/core.h>
 
+#include "hephaestus/bag/writer.h"
 #include "hephaestus/bag/zenoh_recorder.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/topic_filter.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 

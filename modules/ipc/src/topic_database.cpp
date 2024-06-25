@@ -4,13 +4,21 @@
 
 #include "hephaestus/ipc/topic_database.h"
 
+#include <chrono>
 #include <mutex>
+#include <optional>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
+#include <absl/base/thread_annotations.h>
 #include <fmt/core.h>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {

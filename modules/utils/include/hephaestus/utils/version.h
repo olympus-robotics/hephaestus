@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <compare>
 #include <cstdint>
 #include <string_view>
 

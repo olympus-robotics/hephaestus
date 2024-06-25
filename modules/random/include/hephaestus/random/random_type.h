@@ -7,6 +7,7 @@
 #include <chrono>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <random>
 
 #include <magic_enum.hpp>

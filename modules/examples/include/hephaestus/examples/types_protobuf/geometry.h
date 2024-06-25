@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
+
 #include <Eigen/Dense>
 
 #include "hephaestus/examples/types/proto/geometry.pb.h"

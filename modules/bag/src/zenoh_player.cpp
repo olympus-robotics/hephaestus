@@ -4,11 +4,27 @@
 
 #include "hephaestus/bag/zenoh_player.h"
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <cstddef>
+#include <mutex>
+#include <span>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
+#include <absl/log/log.h>
 #include <fmt/chrono.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <mcap/errors.hpp>
+#include <mcap/types.hpp>
 
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::bag {

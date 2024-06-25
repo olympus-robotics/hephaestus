@@ -4,7 +4,9 @@
 
 #include "hephaestus/ipc/topic_filter.h"
 
+#include <algorithm>
 #include <unordered_set>
+#include <utility>
 
 namespace heph::ipc {
 

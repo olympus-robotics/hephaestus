@@ -7,6 +7,7 @@
 
 #include <source_location>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 namespace heph {

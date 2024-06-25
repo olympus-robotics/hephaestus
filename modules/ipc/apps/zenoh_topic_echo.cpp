@@ -2,16 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributor
 //=================================================================================================
 
-#include <csignal>
 #include <cstdlib>
 #include <string>
 
-#include <fmt/chrono.h>
 #include <fmt/core.h>
-#include <fmt/format.h>
 #include <nlohmann/json.hpp>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/program_options.h"

@@ -2,18 +2,24 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <csignal>
+#include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <future>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include <absl/log/log.h>
 #include <fmt/core.h>
+#include <mcap/errors.hpp>
 #include <mcap/reader.hpp>
 
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"

@@ -2,8 +2,21 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <fmt/core.h>
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
+#include <absl/log/log.h>
+#include <fmt/core.h>
+#include <zenohc.hxx>
+
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"

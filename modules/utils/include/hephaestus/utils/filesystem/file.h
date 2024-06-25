@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace heph::utils::filesystem {

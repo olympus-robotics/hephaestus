@@ -5,8 +5,13 @@
 #include "hephaestus/bag/writer.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdint>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/ipc/common.h"

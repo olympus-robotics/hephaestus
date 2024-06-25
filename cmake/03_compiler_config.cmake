@@ -171,6 +171,19 @@ if(ENABLE_LINTER)
   endif()
 endif()
 
+# TODO: right now include-what-you-use gives a lot of false negative and false positive
+# In particular, it also analyzes proto generated files and gives contraddictory result as clang-tidy.
+# Need to investigate how to set it up properly.
+option(ENABLE_IWYU "Enable include-what-you-use" OFF)
+if (ENABLE_IWYU)
+  find_program(IWYU_BIN NAMES include-what-you-use QUIET)
+  if (IWYU_BIN)
+    set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_BIN})
+  else()
+    message(WARNING "include-what-you-use not found.")
+  endif()
+endif()
+
 # print summary
 message(STATUS "Compiler configuration:")
 message(STATUS "\tCompiler                       : ${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")

@@ -5,13 +5,23 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <memory>
 #include <numeric>
 #include <span>
+#include <string>
+#include <string_view>
+#include <variant>
+#include <vector>
 
+#include <fmt/core.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
+
 namespace heph::ipc::zenoh {
 
 /// We use single char key to reduce the overhead of the attachment.

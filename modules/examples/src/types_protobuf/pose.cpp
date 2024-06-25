@@ -4,6 +4,11 @@
 
 #include "hephaestus/examples/types_protobuf/pose.h"
 
+#include <Eigen/Core>
+
+#include <hephaestus/examples/types/proto/pose.pb.h>
+
+#include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/geometry.h"
 
 namespace heph::examples::types {

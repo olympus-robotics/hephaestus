@@ -4,12 +4,16 @@
 
 #pragma once
 
+#include <algorithm>
+#include <concepts>
 #include <cstddef>
+#include <iterator>
+#include <optional>
 #include <random>
+#include <string>
 #include <vector>
 
-#include <fmt/format.h>
-#include <magic_enum.hpp>
+#include <fmt/core.h>
 
 #include "hephaestus/random/random_type.h"
 #include "hephaestus/utils/exception.h"

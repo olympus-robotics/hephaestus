@@ -4,10 +4,15 @@
 
 #pragma once
 
-#include <filesystem>
-#include <type_traits>
+#include <cstddef>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
+#include "hephaestus/serdes/type_info.h"
 
 namespace heph::serdes {
 
