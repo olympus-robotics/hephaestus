@@ -2,9 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#define MCAP_IMPLEMENTATION
-#define MCAP_COMPRESSION_NO_ZSTD
-#define MCAP_COMPRESSION_NO_LZ4
 #include <filesystem>
 
 #include <fmt/core.h>
