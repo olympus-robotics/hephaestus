@@ -5,6 +5,8 @@
 #pragma once
 
 #include <chrono>
+#include <condition_variable>
+#include <cstdint>
 #include <functional>
 #include <thread>
 

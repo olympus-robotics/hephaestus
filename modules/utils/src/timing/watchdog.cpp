@@ -4,6 +4,9 @@
 
 #include "hephaestus/utils/timing/watchdog.h"
 
+#include <mutex>
+#include <utility>
+
 namespace heph::utils::timing {
 void WatchdogTimer::start(std::chrono::milliseconds period, Callback&& callback) {
   period_ = period;
