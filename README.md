@@ -40,7 +40,7 @@ ninja all examples
 
 To compile and run the unit test
 ```bash
-ninja checks
+ninja check
 ```
 
 > TODO: add section on the different flags and options.
