@@ -23,17 +23,22 @@ ENV CLANG_VERSION=18
 RUN wget https://apt.llvm.org/llvm.sh && \
     sed -i "s/add-apt-repository \"${REPO_NAME}\"/add-apt-repository \"${REPO_NAME}\" -y/g" llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh $CLANG_VERSION -y && \
-    apt install -y clang-$CLANG_VERSION clang-tidy-$CLANG_VERSION clang-format-$CLANG_VERSION \
-    llvm-$CLANG_VERSION-dev libc++-$CLANG_VERSION-dev libomp-$CLANG_VERSION-dev libc++abi-$CLANG_VERSION-dev libunwind-$CLANG_VERSION-dev && \
+    ./llvm.sh ${CLANG_VERSION} -y && \
+    apt install -y clang-${CLANG_VERSION} clang-tidy-${CLANG_VERSION} clang-format-${CLANG_VERSION} \
+    llvm-${CLANG_VERSION}-dev libc++-${CLANG_VERSION}-dev libomp-${CLANG_VERSION}-dev libc++abi-${CLANG_VERSION}-dev libunwind-${CLANG_VERSION}-dev libclang-${CLANG_VERSION}-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VERSION $CLANG_VERSION \
-    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-$CLANG_VERSION \
-    --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-$CLANG_VERSION \
-    --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-$CLANG_VERSION
+RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} ${CLANG_VERSION} \
+    --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} \
+    --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${CLANG_VERSION} \
+    --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_VERSION}
 
 RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
+
+RUN git clone -b clang_${CLANG_VERSION} https://github.com/include-what-you-use/include-what-you-use.git && \
+    mkdir include-what-you-use/build && cd include-what-you-use/build && \
+    cmake -G Ninja .. && ninja install && \
+    cd ../.. && rm -rf include-what-you-use
 
 RUN export ZENOH_VERSION="0.11.0-rc.3" && \
     echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
