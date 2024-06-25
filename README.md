@@ -34,7 +34,7 @@ To build it:
 ```bash
 cd hephaestus
 mkdir build && cd build
-cmake --preset preferred
+cmake --preset default
 ninja all examples
 ```
 
