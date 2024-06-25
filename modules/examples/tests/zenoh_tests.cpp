@@ -44,21 +44,23 @@ TEST(ZenohTests, MessageExchange) {
   EXPECT_EQ(send_message, received_message);
 }
 
-TEST(IPCExampleClientTest, ServiceCallExchange) {
+TEST(ZenohTests, ServiceCallExchange) {
   std::mt19937_64 mt{ kSeed };  // NOLINT
 
   const auto request_message = randomPose(mt);
   auto response_message = randomPose(mt);
-  EXPECT_NE(response_message, response_message);
+  EXPECT_NE(request_message, response_message);
 
   const auto service_topic = ipc::TopicConfig("test_service");
-  ipc::Config config{};
-  auto session = ipc::zenoh::createSession(std::move(config));
 
-  auto service_server =
-      ipc::zenoh::Service<Pose, Pose>(session, service_topic, [](const Pose& request) { return request; });
+  ipc::Config server_config{};
+  auto server_session = ipc::zenoh::createSession(std::move(server_config));
+  auto service_server = ipc::zenoh::Service<Pose, Pose>(server_session, service_topic,
+                                                        [](const Pose& request) { return request; });
 
-  const auto reply = ipc::zenoh::callService<Pose, Pose>(*session, service_topic, request_message,
+  ipc::Config client_config{};
+  auto client_session = ipc::zenoh::createSession(std::move(client_config));
+  const auto reply = ipc::zenoh::callService<Pose, Pose>(*client_session, service_topic, request_message,
                                                          std::chrono::milliseconds(1000));
   EXPECT_FALSE(reply.empty());
   EXPECT_EQ(reply.size(), 1);
