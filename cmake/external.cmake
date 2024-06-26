@@ -91,9 +91,9 @@ macro(add_cmake_dependency)
     else()
       message(STATUS "    ${TARGET_ARG_NAME}: Building ${TARGET_ARG_VERSION} from source")
       if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.29")
-          set(download_extract_timestamp_arg "DOWNLOAD_EXTRACT_TIMESTAMP;TRUE")
+          set(DOWNLOAD_EXTRACT_TIMESTAMP_ARG "DOWNLOAD_EXTRACT_TIMESTAMP;TRUE")
       else()
-          set(download_extract_timestamp_arg "")
+          set(DOWNLOAD_EXTRACT_TIMESTAMP_ARG "")
       endif()
       if(TARGET_ARG_GIT_REPOSITORY)
         ExternalProject_Add(
@@ -105,7 +105,7 @@ macro(add_cmake_dependency)
           GIT_SHALLOW true
           GIT_SUBMODULES_RECURSE false
           SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
-          ${download_extract_timestamp_arg}
+          ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
         )
       else()
         ExternalProject_Add(
@@ -114,7 +114,7 @@ macro(add_cmake_dependency)
           URL ${TARGET_ARG_URL}
           CMAKE_ARGS ${CMAKE_ARGS}
           SOURCE_SUBDIR ${TARGET_ARG_SOURCE_SUBDIR}
-          ${download_extract_timestamp_arg}
+          ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
         )
       endif()
     endif()
