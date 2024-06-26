@@ -12,7 +12,8 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
-Spinner::Spinner() : is_started_(false), stop_requested_(false) {
+Spinner::Spinner(std::chrono::microseconds spin_period /*= std::chrono::microseconds{0}*/)
+  : is_started_(false), stop_requested_(false), spin_period_(spin_period) {
 }
 
 Spinner::~Spinner() {
@@ -34,6 +35,14 @@ void Spinner::start() {
 void Spinner::spin() {
   while (!stop_requested_.load()) {
     spinOnce();
+
+    if (spin_period_.count() == 0) {
+      continue;
+    }
+
+    const auto target_timestamp = start_timestamp_ + (++spin_count_) * spin_period_;
+    std::unique_lock<std::mutex> lock(mutex_);
+    condition_.wait_until(lock, target_timestamp);
   }
 }
 
@@ -41,6 +50,7 @@ auto Spinner::stop() -> std::future<void> {
   throwExceptionIf<InvalidOperationException>(!is_started_.load(),
                                               fmt::format("Spinner not yet started, cannot stop."));
   stop_requested_.store(true);
+  condition_.notify_all();
 
   return std::async(std::launch::async, [this]() { stopImpl(); });
 }
