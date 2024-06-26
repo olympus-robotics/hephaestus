@@ -516,11 +516,15 @@ macro(define_module_proto_library)
     BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   )
 
-  target_sources(
-    ${PROTOBUF_LIBRARY}
-    PRIVATE ${PROTOBUF_SOURCES}
-    PUBLIC FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} FILES ${PROTOBUF_HEADERS}
-  )
+  if(CMAKE_VERSION VERSION_LESS 3.29)
+    message(WARNING "CMake version 3.29 or higher is required for proto install to work correctly.")
+  else()
+    target_sources(
+      ${PROTOBUF_LIBRARY}
+      PRIVATE ${PROTOBUF_SOURCES}
+      PUBLIC FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR} FILES ${PROTOBUF_HEADERS}
+    )
+  endif()
 
   if(NOT TARGET_ARG_NOINSTALL)
     # Register protobuf library as a dependency for the module.
@@ -696,16 +700,29 @@ function(install_modules)
     message(VERBOSE "Module \"${_module}\" installable targets:")
     message(VERBOSE "  Library targets\t : ${MODULE_${_module}_LIB_TARGETS}")
     message(VERBOSE "  Executable targets\t : ${MODULE_${_module}_EXE_TARGETS}")
-    install(
-      TARGETS ${MODULE_${_module}_LIB_TARGETS} ${MODULE_${_module}_EXE_TARGETS}
-      EXPORT ${INSTALL_MODULE_NAME}-targets
-      RUNTIME DESTINATION bin
-      LIBRARY DESTINATION lib
-      ARCHIVE DESTINATION lib
-      INCLUDES
-      DESTINATION include
-      FILE_SET HEADERS
-    )
+
+    if(CMAKE_VERSION VERSION_LESS 3.29)
+      install(
+        TARGETS ${MODULE_${_module}_LIB_TARGETS} ${MODULE_${_module}_EXE_TARGETS}
+        EXPORT ${INSTALL_MODULE_NAME}-targets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES
+        DESTINATION include
+      )
+    else()
+      install(
+        TARGETS ${MODULE_${_module}_LIB_TARGETS} ${MODULE_${_module}_EXE_TARGETS}
+        EXPORT ${INSTALL_MODULE_NAME}-targets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES
+        DESTINATION include
+        FILE_SET HEADERS
+      )
+    endif()
 
     # install public header files
     if(EXISTS ${MODULE_${_module}_PATH}/include)

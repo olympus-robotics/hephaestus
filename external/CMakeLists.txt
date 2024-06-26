@@ -142,7 +142,7 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # mcap
-set(MCAP_TAG 0277c8b3f7fc20f1184bdd9497422f16a0d979fa)
+set(MCAP_TAG cb34e058cfd529f694a4ff1747517478339fc866)
 add_cmake_dependency(
   NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
 )

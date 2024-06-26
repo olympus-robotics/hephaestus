@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "helpers.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types/proto/geometry.pb.h"
 #include "hephaestus/examples/types_protobuf/geometry.h"
@@ -17,19 +18,6 @@
 using namespace ::testing;
 
 namespace heph::examples::types::tests {
-
-auto randomPose(std::mt19937_64& mt) -> Pose {
-  static constexpr auto RANDOM_TRANSLATION_RANGE = 100.0;
-
-  using DistT = std::uniform_real_distribution<double>;
-  DistT t_distribution(RANDOM_TRANSLATION_RANGE);
-  DistT r_distribution(-M_PI, M_PI);
-
-  return { .orientation = Eigen::Quaterniond{ r_distribution(mt), r_distribution(mt), r_distribution(mt),
-                                              r_distribution(mt) }
-                              .normalized(),
-           .position = Eigen::Vector3d{ t_distribution(mt), t_distribution(mt), t_distribution(mt) } };
-}
 
 TEST(Geometry, StaticMatrix) {
   Eigen::Matrix4d matrix4d = Eigen::Matrix4d::Random();
