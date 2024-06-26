@@ -4,6 +4,7 @@
 
 #include "hephaestus/concurrency/spinner.h"
 
+#include <chrono>
 #include <future>
 
 #include <absl/log/log.h>
@@ -33,6 +34,8 @@ void Spinner::start() {
 }
 
 void Spinner::spin() {
+  start_timestamp_ = std::chrono::system_clock::now();
+
   while (!stop_requested_.load()) {
     spinOnce();
 

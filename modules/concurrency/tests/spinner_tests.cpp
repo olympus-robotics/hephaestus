@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 #include <chrono>
-#include <ratio>
 
 #include "gtest/gtest.h"
 #include "hephaestus/concurrency/spinner.h"
@@ -73,5 +72,5 @@ TEST(SpinnerTest, SpinWithPeriod) {
   spinner.stop().get();
 
   EXPECT_GT(spinner.counter.load(), 8);
-  EXPECT_LT(spinner.counter.load(), 10);
+  EXPECT_LT(spinner.counter.load(), 11);
 }
