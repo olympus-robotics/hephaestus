@@ -10,6 +10,7 @@ define_module_test(
         PUBLIC_LINK_LIBS "")
 
 
+# TODO: This test should be in the IPC package, as soon as we have a proto helper package in there
 define_module_test(
         NAME zenoh_tests
         SOURCES zenoh_tests.cpp helpers.h

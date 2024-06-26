@@ -40,7 +40,7 @@ TEST(ZenohTests, MessageExchange) {
   EXPECT_TRUE(success);
 
   // Give enough time for the message to be received
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   EXPECT_EQ(send_message, received_message);
 }
@@ -62,7 +62,7 @@ TEST(ZenohTests, ServiceCallExchange) {
   ipc::Config client_config{};
   auto client_session = ipc::zenoh::createSession(std::move(client_config));
   const auto reply = ipc::zenoh::callService<Pose, Pose>(*client_session, service_topic, request_message,
-                                                         std::chrono::milliseconds(1000));
+                                                         std::chrono::milliseconds(10));
   EXPECT_FALSE(reply.empty());
   EXPECT_EQ(reply.size(), 1);
   EXPECT_EQ(reply.front().topic, service_topic.name);
