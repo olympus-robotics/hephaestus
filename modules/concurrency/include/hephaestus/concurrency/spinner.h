@@ -14,11 +14,11 @@ namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.
 /// If the function is blocking, the spinner will block the thread.
-/// If the input `spin_period` is set to a non-zero value, the spinner will call the user-defined function at
+/// If the input `rate_hz` is set to a non-zero value, the spinner will call the user-defined function at
 /// the given fixed rate.
 class Spinner {
 public:
-  explicit Spinner(std::chrono::microseconds spin_period = std::chrono::microseconds{ 0 });
+  explicit Spinner(double rate_hz = 0);
   virtual ~Spinner();
   Spinner(const Spinner&) = delete;
   auto operator=(const Spinner&) -> Spinner& = delete;

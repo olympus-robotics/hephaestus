@@ -13,8 +13,21 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
-Spinner::Spinner(std::chrono::microseconds spin_period /*= std::chrono::microseconds{0}*/)
-  : is_started_(false), stop_requested_(false), spin_period_(spin_period) {
+namespace {
+[[nodiscard]] auto rateHzToMicroseconds(double rate_hz) -> std::chrono::microseconds {
+  if (rate_hz == 0) {
+    return std::chrono::microseconds{ 0 };
+  }
+
+  const double period_seconds = 1 / rate_hz;
+  const auto period_microseconds = static_cast<uint64_t>(period_seconds * 1e6);
+
+  return std::chrono::microseconds{ period_microseconds };
+}
+}  // namespace
+
+Spinner::Spinner(double rate_hz /*= 0*/)
+  : is_started_(false), stop_requested_(false), spin_period_(rateHzToMicroseconds(rate_hz)) {
 }
 
 Spinner::~Spinner() {

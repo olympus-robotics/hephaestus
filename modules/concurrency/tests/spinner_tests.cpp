@@ -9,7 +9,7 @@
 
 class TestSpinner : public heph::concurrency::Spinner {
 public:
-  explicit TestSpinner(std::chrono::microseconds period = std::chrono::microseconds{ 0 }) : Spinner(period) {
+  explicit TestSpinner(double rate_hz = 0) : Spinner(rate_hz) {
   }
 
   std::atomic<int> counter = 0;
@@ -63,12 +63,12 @@ TEST(SpinnerTest, StopCallbackTest) {
 }
 
 TEST(SpinnerTest, SpinWithPeriod) {
-  static constexpr auto PERIOD = std::chrono::microseconds{ 1000 };
-  static constexpr auto PERIOD_MULTIPLIER = 10;
+  static constexpr auto RATE_HZ = 1e3;
+  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
-  TestSpinner spinner{ PERIOD };
+  TestSpinner spinner{ RATE_HZ };
   spinner.start();
-  std::this_thread::sleep_for(PERIOD_MULTIPLIER * PERIOD);
+  std::this_thread::sleep_for(WAIT_FOR);
   spinner.stop().get();
 
   EXPECT_GT(spinner.counter.load(), 8);
