@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/examples/types/pose.h"
+#include "hephaestus/examples/types/pose.h"  // NOLINT(misc-include-cleaner)

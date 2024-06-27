@@ -4,7 +4,9 @@
 
 #include "hephaestus/ipc/zenoh/utils.h"
 
-#include <zenoh_commons.h>
+#include <fmt/core.h>
+#include <zenoh.h>
+#include <zenoh.hxx>
 #include <zenohcxx/api.hxx>
 
 #include "hephaestus/ipc/common.h"

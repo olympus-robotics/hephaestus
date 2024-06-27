@@ -12,6 +12,7 @@
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
+
 namespace heph::ipc::zenoh {
 
 /// We use single char key to reduce the overhead of the attachment.

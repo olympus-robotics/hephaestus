@@ -3,18 +3,23 @@
 //=================================================================================================
 
 #include <csignal>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <future>
+#include <memory>
+#include <optional>
+#include <span>
 #include <string>
 #include <tuple>
+#include <utility>
 
-#include <fmt/chrono.h>
 #include <fmt/core.h>
-#include <fmt/format.h>
 #include <nlohmann/json.hpp>
-#include <zenoh.h>
-#include <zenohc.hxx>
+#include <nlohmann/json_fwd.hpp>
 
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
@@ -99,7 +104,7 @@ private:
 }  // namespace heph::ipc::apps
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = heph::cli::ProgramDescription("Echo the data from a topic to the console.");

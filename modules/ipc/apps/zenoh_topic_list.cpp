@@ -8,10 +8,13 @@
 #include <cstdlib>
 #include <exception>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 #include <fmt/core.h>
 
+#include "hephaestus/cli/program_options.h"
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"

@@ -8,7 +8,7 @@
 #include <utility>
 
 #include <zenoh_macros.h>
-#include <zenohcxx/api.hxx>
+#include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"

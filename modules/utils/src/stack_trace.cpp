@@ -17,7 +17,7 @@
 #include <execinfo.h>
 
 namespace heph::utils {
-
+// NOLINTBEGIN(misc-include-cleaner) // Lots of false positives
 class StackTrace::Impl {
 public:
   Impl();
@@ -140,4 +140,5 @@ StackTrace::StackTrace() : impl_{ std::make_unique<Impl>() } {
 
 StackTrace::~StackTrace() = default;
 
+// NOLINTEND(misc-include-cleaner)
 }  // namespace heph::utils

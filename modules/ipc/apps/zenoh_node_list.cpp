@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <tuple>
 
 #include <fmt/core.h>
 
