@@ -29,18 +29,24 @@ TEST(ZenohTests, MessageExchange) {
   auto received_message = randomPose(mt);
   EXPECT_NE(received_message, send_message);
 
+  std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
+
   // Create publisher and subscriber
   ipc::Publisher<Pose> publisher(session, topic);
   auto subscriber = ipc::subscribe<heph::ipc::zenoh::Subscriber, Pose>(
       session, topic,
-      [&received_message]([[maybe_unused]] const ipc::MessageMetadata& metadata,
-                          const std::shared_ptr<Pose>& message) { received_message = *message; });
+      [&received_message, &stop_flag]([[maybe_unused]] const ipc::MessageMetadata& metadata,
+                                      const std::shared_ptr<Pose>& message) {
+        received_message = *message;
+        stop_flag.test_and_set();
+        stop_flag.notify_all();
+      });
 
   const auto success = publisher.publish(send_message);
   EXPECT_TRUE(success);
 
-  // Give enough time for the message to be received
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  // Wait to receive the message
+  stop_flag.wait(false);
 
   EXPECT_EQ(send_message, received_message);
 }
