@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/protobuf/buffers.h"  // NOLINT(misc-include-cleaner)

@@ -6,7 +6,6 @@
 
 #include <cstdio>
 
-#include <fcntl.h>
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>

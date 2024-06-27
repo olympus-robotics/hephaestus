@@ -4,6 +4,13 @@
 //=================================================================================================
 #include "hephaestus/cli/program_options.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <fmt/core.h>
 
 #include "hephaestus/utils/exception.h"
@@ -26,6 +33,40 @@ ProgramOptions::ProgramOptions(std::vector<Option>&& options) : options_(std::mo
 auto ProgramOptions::hasOption(const std::string& option) const -> bool {
   return (options_.end() != std::find_if(options_.begin(), options_.end(),
                                          [&option](const auto& opt) { return option == opt.key; }));
+}
+
+ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {
+  options_.emplace_back(HELP_KEY, HELP_SHORT_KEY, "", utils::getTypeName<std::string>(), "", false, false);
+}
+
+void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k) const {
+  const auto it =
+      std::find_if(options_.begin(), options_.end(), [&key](const auto& opt) { return key == opt.key; });
+  throwExceptionIf<InvalidOperationException>(it != options_.end(),
+                                              fmt::format("Attempted redefinition of option '{}'", key));
+
+  if (k == '\0') {
+    return;
+  }
+
+  const auto short_it =
+      std::find_if(options_.begin(), options_.end(), [k](const auto& opt) { return k == opt.short_key; });
+  throwExceptionIf<InvalidOperationException>(
+      short_it != options_.end(),
+      fmt::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
+}
+
+auto ProgramDescription::defineFlag(const std::string& key, char short_key,
+                                    const std::string& description) -> ProgramDescription& {
+  checkOptionAlreadyExists(key, short_key);
+
+  options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false, false);
+  return *this;
+}
+
+auto ProgramDescription::defineFlag(const std::string& key,
+                                    const std::string& description) -> ProgramDescription& {
+  return defineFlag(key, '\0', description);
 }
 
 auto ProgramDescription::parse(int argc, const char** argv) && -> ProgramOptions {

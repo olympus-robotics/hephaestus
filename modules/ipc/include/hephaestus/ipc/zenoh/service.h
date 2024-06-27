@@ -100,7 +100,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
         sample->get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
     DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
-    std::unique_lock<std::mutex> lock(m);
+    const std::unique_lock<std::mutex> lock(m);
     reply_messages.emplace_back(ServiceResponse<ReplyT>{
         .topic = server_topic, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
   } else {
@@ -112,7 +112,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     ReplyT reply_deserialized;
     serdes::deserialize(buffer, reply_deserialized);
-    std::unique_lock<std::mutex> lock(m);
+    const std::unique_lock<std::mutex> lock(m);
     reply_messages.emplace_back(server_topic, std::move(reply_deserialized));
   }
 }
@@ -160,7 +160,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   };
 
   auto on_done = [&mutex, &done_signal]() {
-    std::lock_guard lock(mutex);
+    const std::lock_guard lock(mutex);
     done_signal.notify_all();
   };
 

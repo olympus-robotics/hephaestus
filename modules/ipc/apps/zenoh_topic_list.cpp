@@ -4,10 +4,13 @@
 
 #include <algorithm>
 #include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+#include <string_view>
+#include <utility>
 
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
@@ -24,14 +27,14 @@ void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_vi
 void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
   auto callback = [](const auto& info) { heph::ipc::zenoh::printPublisherInfo(info); };
 
-  heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
-                                                 std::move(callback) };
+  const heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
+                                                       std::move(callback) };
 
   heph::utils::TerminationBlocker::waitForInterrupt();
 }
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = heph::cli::ProgramDescription("List all the publishers of a topic.");

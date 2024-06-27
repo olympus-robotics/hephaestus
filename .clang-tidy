@@ -21,6 +21,7 @@
 
 # Enable rule sets. Some checks are turned off because they are flagged by multiple rule-sets
 Checks:          '-*,
+                 misc-*,
                  cppcoreguidelines-*,
                  clang-analyzer-*,
                  google-*,
@@ -80,4 +81,5 @@ CheckOptions:
   - { key: readability-function-cognitive-complexity.Threshold,                     value: 40 }
   - { key: readability-function-cognitive-complexity.DescribeBasicIncrements,       value: 0 }
   - { key: readability-function-cognitive-complexity.IgnoreMacros,                  value: 1 }
+  - { key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic, value: 1}
 ...

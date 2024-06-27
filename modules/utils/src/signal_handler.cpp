@@ -4,6 +4,8 @@
 
 #include "hephaestus/utils/signal_handler.h"
 
+#include <csignal>
+
 namespace heph::utils {
 
 auto TerminationBlocker::stopRequested() -> bool {

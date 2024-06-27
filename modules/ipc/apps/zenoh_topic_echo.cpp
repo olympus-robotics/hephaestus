@@ -3,8 +3,10 @@
 //=================================================================================================
 
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <tuple>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>

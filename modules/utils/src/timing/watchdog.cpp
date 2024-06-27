@@ -4,6 +4,7 @@
 
 #include "hephaestus/utils/timing/watchdog.h"
 
+#include <chrono>
 #include <mutex>
 #include <utility>
 

@@ -4,6 +4,13 @@
 
 #include "hephaestus/ipc/program_options.h"
 
+#include <cstddef>
+#include <string>
+#include <utility>
+
+#include <fmt/core.h>
+
+#include "hephaestus//ipc/common.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/utils/exception.h"
 

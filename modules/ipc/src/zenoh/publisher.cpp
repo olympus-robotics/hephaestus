@@ -4,13 +4,20 @@
 
 #include "hephaestus/ipc/zenoh/publisher.h"
 
-#include <fmt/core.h>
+#include <cstddef>
+#include <memory>
+#include <span>
+#include <string>
+#include <utility>
+
 #include <zenoh.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
@@ -77,7 +84,7 @@ void RawPublisher::enableMatchingListener() {
   using ClosureMatchingListener = zenohc::ClosureConstRefParam<zcu_owned_closure_matching_status_t,
                                                                zcu_matching_status_t, zcu_matching_status_t>;
   ClosureMatchingListener cb = [this](zcu_matching_status_t matching_status) {
-    MatchingStatus status{ .matching = matching_status.matching };
+    const MatchingStatus status{ .matching = matching_status.matching };
     this->match_cb_(status);
   };
 

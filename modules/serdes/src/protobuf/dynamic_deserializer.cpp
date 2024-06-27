@@ -5,10 +5,17 @@
 #include "hephaestus/serdes/protobuf/dynamic_deserializer.h"
 
 #include <cstddef>
+#include <span>
+#include <string>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
+#include <google/protobuf/descriptor.pb.h>
+#include <google/protobuf/descriptor_database.h>
+#include <google/protobuf/message.h>
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/util/json_util.h>
 
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::serdes::protobuf {

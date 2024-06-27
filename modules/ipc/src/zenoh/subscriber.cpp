@@ -4,8 +4,16 @@
 
 #include "hephaestus/ipc/zenoh/subscriber.h"
 
+#include <string>
+#include <utility>
+
+#include <zenoh_macros.h>
+#include <zenohcxx/api.hxx>
+
 #include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback)

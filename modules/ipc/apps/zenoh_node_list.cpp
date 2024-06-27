@@ -2,9 +2,12 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/zenoh/scout.h"
 #include "hephaestus/utils/stack_trace.h"
@@ -13,7 +16,7 @@ auto main(int argc, const char* argv[]) -> int {
   (void)argc;
   (void)argv;
 
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     fmt::println("Scouting..");

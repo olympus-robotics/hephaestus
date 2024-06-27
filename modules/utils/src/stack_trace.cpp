@@ -11,10 +11,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 #include <cxxabi.h>
 #include <execinfo.h>
-#include <unistd.h>
 
 namespace heph::utils {
 

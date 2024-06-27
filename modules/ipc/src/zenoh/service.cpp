@@ -4,6 +4,12 @@
 
 #include "hephaestus/ipc/zenoh/service.h"
 
+#include <cstddef>
+#include <span>
+#include <vector>
+
+#include <fmt/core.h>
+
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh::internal {

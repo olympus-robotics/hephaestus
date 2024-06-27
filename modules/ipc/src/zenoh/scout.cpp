@@ -6,15 +6,21 @@
 
 #include <algorithm>
 #include <mutex>
+#include <ranges>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <absl/base/thread_annotations.h>
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <zenoh.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/utils/exception.h"
 
@@ -25,16 +31,16 @@ namespace {
 class ScoutDataManager {
 public:
   void onDiscovery(const zenohc::HelloView& hello) {
-    std::unique_lock<std::mutex> lock{ mutex_ };
-    auto id = toString(hello.get_id());
+    const std::unique_lock<std::mutex> lock{ mutex_ };
+    const auto id = toString(hello.get_id());
     nodes_info_.emplace(id, NodeInfo{ .id = id,
                                       .mode = toMode(hello.get_whatami()),
                                       .locators = toStringVector(hello.get_locators()) });
   }
 
   [[nodiscard]] auto getNodesInfo() const -> std::vector<NodeInfo> {
-    std::unique_lock<std::mutex> lock{ mutex_ };
-    auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
+    const std::unique_lock<std::mutex> lock{ mutex_ };
+    const auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
     return values;
   }
 
