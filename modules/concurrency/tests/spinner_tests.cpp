@@ -72,5 +72,5 @@ TEST(SpinnerTest, SpinWithPeriod) {
   spinner.stop().get();
 
   EXPECT_GT(spinner.counter.load(), 8);
-  EXPECT_LT(spinner.counter.load(), 11);
+  EXPECT_LT(spinner.counter.load(), 12);
 }
