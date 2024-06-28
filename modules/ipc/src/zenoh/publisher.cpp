@@ -13,6 +13,7 @@
 #include <zenoh.h>
 #include <zenoh_macros.h>
 #include <zenohc.hxx>
+#include <zenohcxx/base.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
