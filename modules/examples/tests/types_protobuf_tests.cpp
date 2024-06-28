@@ -4,8 +4,6 @@
 
 #include <random>
 
-#include <Eigen/Core>
-
 #include <gtest/gtest.h>
 
 #include "helpers.h"
@@ -19,7 +17,7 @@
 using namespace ::testing;
 
 namespace heph::examples::types::tests {
-
+// NOLINTBEGIN(misc-include-cleaner) // Unfortunately Eigen doesn't work well with this check
 TEST(Geometry, StaticMatrix) {
   const Eigen::Matrix4d matrix4d = Eigen::Matrix4d::Random();
   proto::MatrixXd proto_matrix;
@@ -112,5 +110,5 @@ TEST(Pose, Pose) {
   fromProto(proto_pose, pose_des);
   EXPECT_EQ(pose, pose_des);
 }
-
+// NOLINTEND(misc-include-cleaner)
 }  // namespace heph::examples::types::tests
