@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <zenoh.h>
+#include <zenoh_macros.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
