@@ -11,6 +11,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <mcap/reader.hpp>
+#include <mcap/types.hpp>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/bag/zenoh_player.h"

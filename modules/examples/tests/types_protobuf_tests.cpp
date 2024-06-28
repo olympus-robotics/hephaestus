@@ -4,6 +4,8 @@
 
 #include <random>
 
+#include <Eigen/Core>
+
 #include <gtest/gtest.h>
 
 #include "helpers.h"
