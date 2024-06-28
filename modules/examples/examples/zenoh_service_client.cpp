@@ -2,7 +2,13 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
+#include <chrono>
+#include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <tuple>
+#include <utility>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
@@ -10,14 +16,14 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("Binary service client example", ExampleType::Service);

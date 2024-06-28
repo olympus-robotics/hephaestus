@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 
-#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/serdes.h"  // NOLINT(misc-include-cleaner)
 
 //=================================================================================================
 auto main(int argc, const char* argv[]) -> int {

@@ -4,11 +4,15 @@
 
 #include <future>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
 
 #include <gtest/gtest.h>
 
 #include "gmock/gmock.h"
 #include "hephaestus/containers/blocking_queue.h"
+#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -68,7 +72,7 @@ TEST(BlockingQueue, Push) {
 TEST(BlockingQueue, WaitPush) {
   constexpr int QUEUE_SIZE = 1;
   BlockingQueue<std::string> block_queue(QUEUE_SIZE);
-  std::string message = "hello";
+  const std::string message = "hello";
   block_queue.waitAndPush(message);
   auto future = std::async([&block_queue]() {
     std::string message = "hello again";

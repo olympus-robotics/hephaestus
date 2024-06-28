@@ -3,7 +3,11 @@
 //=================================================================================================
 
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <tuple>
+#include <utility>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
@@ -11,7 +15,7 @@
 #include <zenohc.hxx>
 
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -19,7 +23,7 @@
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("Binary service server example", ExampleType::Service);
@@ -37,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
       return sample_reply;
     };
 
-    heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
+    const heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
         session, topic_config, callback);
 
     LOG(INFO) << fmt::format("Server started. Wating for queries on '{}' topic", topic_config.name);

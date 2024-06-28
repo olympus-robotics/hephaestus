@@ -109,7 +109,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
     auto payload = sample->get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
+    const std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     ReplyT reply_deserialized;
     serdes::deserialize(buffer, reply_deserialized);
     const std::unique_lock<std::mutex> lock(m);

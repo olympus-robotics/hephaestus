@@ -2,16 +2,21 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <chrono>
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <thread>
+#include <tuple>
+#include <utility>
 
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
@@ -20,7 +25,7 @@
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);

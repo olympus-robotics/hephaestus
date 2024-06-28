@@ -2,12 +2,16 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+#include <utility>
+#include <vector>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
-#include "test.pb.h"
 #include "test_proto_conversion.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -46,7 +50,7 @@ namespace heph::serdes::tests {
 
 TEST(Protobuf, SerializerBuffers) {
   protobuf::SerializerBuffer buffer;
-  MockProtoMessage proto;
+  const MockProtoMessage proto;
 
   EXPECT_CALL(proto, ByteSizeLong).Times(1).WillOnce(Return(NUMBER));
   EXPECT_CALL(proto, SerializeToArray).Times(1);
@@ -54,20 +58,20 @@ TEST(Protobuf, SerializerBuffers) {
 
   buffer.serialize(proto);
 
-  auto data = std::move(buffer).exctractSerializedData();
+  const auto data = std::move(buffer).exctractSerializedData();
   EXPECT_THAT(data, SizeIs(NUMBER));
 }
 
 TEST(Protobuf, DeserializerBuffers) {
-  std::vector<std::byte> data{ NUMBER };
-  protobuf::DeserializerBuffer buffer{ data };
+  const std::vector<std::byte> data{ NUMBER };
+  const protobuf::DeserializerBuffer buffer{ data };
   MockProtoMessage proto;
 
   EXPECT_CALL(proto, ByteSizeLong).Times(0);
   EXPECT_CALL(proto, SerializeToArray).Times(0);
   EXPECT_CALL(proto, ParseFromArray).Times(1).WillOnce(Return(true));
 
-  auto res = buffer.deserialize(proto);
+  const auto res = buffer.deserialize(proto);
 
   EXPECT_TRUE(res);
 }
