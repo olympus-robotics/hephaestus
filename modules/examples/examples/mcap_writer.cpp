@@ -11,9 +11,6 @@
 #include <utility>
 
 #include <fmt/core.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/descriptor.pb.h>
-#include <mcap/writer.hpp>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"

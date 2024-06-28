@@ -9,10 +9,8 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/chrono.h>
+#include <absl/log/log.h>
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)

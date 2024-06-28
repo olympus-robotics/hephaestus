@@ -9,10 +9,8 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/chrono.h>
+#include <absl/log/log.h>
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"

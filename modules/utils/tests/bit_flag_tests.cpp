@@ -88,4 +88,10 @@ TEST(BitFlag, UnsetMultiple) {
   EXPECT_FALSE(flag.has(E));
 }
 
+TEST(BitFlag, Empty) {
+  BitFlag<TestEnum> flag{ TestEnum::A };
+  flag.unset(TestEnum::A);
+  EXPECT_FALSE(flag.has(TestEnum::A));
+}
+
 }  // namespace heph::utils::tests
