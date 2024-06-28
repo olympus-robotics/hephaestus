@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-#include <zenoh_macros.h>
+#include <zenoh.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
