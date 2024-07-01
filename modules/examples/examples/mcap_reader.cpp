@@ -2,11 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstdlib>
+#include <exception>
 #include <filesystem>
 
 #include <fmt/core.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/descriptor.pb.h>
 #include <mcap/reader.hpp>
 
 auto main(int argc, const char* argv[]) -> int {
@@ -16,7 +16,7 @@ auto main(int argc, const char* argv[]) -> int {
                    argv[0]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       std::exit(1);
     }
-    std::filesystem::path input{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const std::filesystem::path input{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
     mcap::McapReader reader;
     const auto res = reader.open(input.string());

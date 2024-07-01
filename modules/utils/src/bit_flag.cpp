@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/bit_flag.h"
+#include "hephaestus/utils/bit_flag.h"  // NOLINT(misc-include-cleaner)

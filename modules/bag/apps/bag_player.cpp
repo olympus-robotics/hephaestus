@@ -3,23 +3,28 @@
 //=================================================================================================
 
 #include <csignal>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <future>
+#include <memory>
+#include <utility>
 
 #include <absl/log/log.h>
 #include <fmt/core.h>
+#include <mcap/errors.hpp>
 #include <mcap/reader.hpp>
 
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = heph::cli::ProgramDescription("Playback a bag to zenoh topics");

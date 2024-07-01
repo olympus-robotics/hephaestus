@@ -1,6 +1,14 @@
 #include "hephaestus/utils/filesystem/file.h"
 
+#include <cstddef>
+#include <filesystem>
 #include <fstream>
+#include <ios>
+#include <iterator>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include <fmt/core.h>
 

@@ -4,7 +4,24 @@
 
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 
+#include <cstddef>
+#include <future>
+#include <memory>
+#include <optional>
+#include <span>
+#include <utility>
+
 #include <absl/log/log.h>
+#include <fmt/core.h>
+
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic_database.h"
+#include "hephaestus/ipc/topic_filter.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)

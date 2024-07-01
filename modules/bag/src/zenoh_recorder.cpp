@@ -4,17 +4,22 @@
 
 #include "hephaestus/bag/zenoh_recorder.h"
 
+#include <cstddef>
 #include <future>
 #include <memory>
+#include <optional>
+#include <span>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include <absl/base/thread_annotations.h>
-#include <absl/log/log.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/core.h>
 
 #include "hephaestus/bag/writer.h"
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
+#include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {
 
@@ -53,7 +58,7 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
         .topics_filter_params = std::move(params.topics_filter_params),
         .init_subscriber_cb =
             [this](const std::string& topic, const serdes::TypeInfo& type_info) {
-              absl::MutexLock lock{ &writer_mutex_ };
+              const absl::MutexLock lock{ &writer_mutex_ };
               bag_writer_->registerSchema(type_info);
               bag_writer_->registerChannel(topic, type_info);
             },
@@ -61,7 +66,7 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
             [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> data,
                    const std::optional<serdes::TypeInfo>& type_info) {
               (void)type_info;
-              absl::MutexLock lock{ &writer_mutex_ };
+              const absl::MutexLock lock{ &writer_mutex_ };
               bag_writer_->writeRecord(metadata, data);
             },
     })) {

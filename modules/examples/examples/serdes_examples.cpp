@@ -2,8 +2,12 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <exception>
+
+#include <fmt/core.h>
+
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/serdes/serdes.h"
 
 //=================================================================================================

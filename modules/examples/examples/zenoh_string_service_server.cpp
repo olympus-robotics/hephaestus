@@ -3,15 +3,15 @@
 //=================================================================================================
 
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
+#include <exception>
+#include <tuple>
+#include <utility>
 
-#include <fmt/chrono.h>
+#include <absl/log/log.h>
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
-#include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -19,7 +19,7 @@
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("String service server example", ExampleType::Service);
@@ -34,7 +34,7 @@ auto main(int argc, const char* argv[]) -> int {
       return reply;
     };
 
-    heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
+    const heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
 
     LOG(INFO) << fmt::format("String server started. Wating for queries on '{}' topic", topic_config.name);
 

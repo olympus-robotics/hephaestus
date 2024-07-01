@@ -2,8 +2,17 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+#include <tuple>
+#include <utility>
+
+#include <absl/log/log.h>
 #include <fmt/core.h>
 
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -11,7 +20,7 @@
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc =

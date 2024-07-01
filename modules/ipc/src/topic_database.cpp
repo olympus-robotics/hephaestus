@@ -4,13 +4,20 @@
 
 #include "hephaestus/ipc/topic_database.h"
 
+#include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
+#include <absl/base/thread_annotations.h>
 #include <fmt/core.h>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {
@@ -32,7 +39,7 @@ ZenohTopicDatabase::ZenohTopicDatabase(zenoh::SessionPtr session) : session_(std
 
 auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::TypeInfo& {
   {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     if (topics_type_db_.contains(topic)) {
       return topics_type_db_[topic];
     }
@@ -47,7 +54,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), query_topic));
 
-  std::unique_lock<std::mutex> lock(mutex_);
+  const std::unique_lock<std::mutex> lock(mutex_);
   // While waiting for the query someone else could have added the topic to the DB.
   if (!topics_type_db_.contains(topic)) {
     topics_type_db_[topic] = serdes::TypeInfo::fromJson(response.front().value);

@@ -37,7 +37,7 @@ public:
   template <concepts::SimilarTo<T> U>
   [[nodiscard]] auto tryPush(U&& obj) -> bool {
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
@@ -55,7 +55,7 @@ public:
   auto forcePush(U&& obj) -> std::optional<T> {
     std::optional<T> element_dropped;
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
@@ -90,7 +90,7 @@ public:
   template <typename... Args>
   [[nodiscard]] auto tryEmplace(Args&&... args) -> bool {
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
@@ -108,7 +108,7 @@ public:
   auto forceEmplace(Args&&... args) -> std::optional<T> {
     std::optional<T> element_dropped;
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
@@ -157,7 +157,7 @@ public:
   /// \note This is safe to call from multiple threads.
   /// \return The first element from the queue if the queue contains data, std::nullopt otherwise.
   [[nodiscard]] auto tryPop() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::optional<T> {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     if (queue_.empty()) {
       return {};
     }
@@ -171,7 +171,7 @@ public:
   /// \note This is safe to call from multiple threads.
   void stop() {
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       stop_ = true;
     }
     reader_signal_.notify_all();
@@ -179,12 +179,12 @@ public:
   }
 
   [[nodiscard]] auto size() const -> std::size_t {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     return queue_.size();
   }
 
   [[nodiscard]] auto empty() const -> bool {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     return queue_.empty();
   }
 

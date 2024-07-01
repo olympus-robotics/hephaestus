@@ -2,7 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <random>
+#include <array>
+#include <string>
+#include <string_view>
 
 #include <gtest/gtest.h>
 

@@ -4,6 +4,13 @@
 
 #include "hephaestus/serdes/protobuf/protobuf_internal.h"
 
+#include <queue>
+#include <string>
+#include <unordered_set>
+
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
+
 namespace heph::serdes::protobuf::internal {
 auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descriptor)
     -> google::protobuf::FileDescriptorSet {

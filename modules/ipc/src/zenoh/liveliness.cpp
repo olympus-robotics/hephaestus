@@ -4,12 +4,19 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenoh_macros.h>
 #include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -87,12 +94,12 @@ PublisherDiscovery::~PublisherDiscovery() {
 
 void PublisherDiscovery::createLivelinessSubscriber() {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) {
-    PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
-                        .status = toPublisherStatus(sample.get_kind()) };
+    const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
+                              .status = toPublisherStatus(sample.get_kind()) };
     this->callback_(info);
   };
 
-  auto keyexpr = z_keyexpr(topic_config_.name.data());
+  const auto keyexpr = z_keyexpr(topic_config_.name.data());
   auto c = cb.take();
   liveliness_subscriber_ =
       zc_liveliness_declare_subscriber(session_->zenoh_session.loan(), keyexpr, z_move(c), nullptr);

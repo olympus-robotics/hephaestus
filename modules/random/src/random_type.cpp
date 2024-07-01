@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/random/random_type.h"
+#include "hephaestus/random/random_type.h"  // NOLINT(misc-include-cleaner)

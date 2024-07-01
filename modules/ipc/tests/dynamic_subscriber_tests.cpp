@@ -2,6 +2,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <utility>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"

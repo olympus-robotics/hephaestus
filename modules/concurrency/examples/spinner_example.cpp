@@ -3,6 +3,8 @@
 //=================================================================================================
 
 #include <atomic>
+#include <cstdlib>
+#include <exception>
 
 #include <fmt/core.h>
 

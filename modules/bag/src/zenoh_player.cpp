@@ -4,11 +4,28 @@
 
 #include "hephaestus/bag/zenoh_player.h"
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <cstddef>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
-#include <fmt/chrono.h>
+#include <absl/log/log.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
+#include <fmt/core.h>
+#include <mcap/reader.hpp>
+#include <mcap/types.hpp>
 
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::bag {
@@ -66,7 +83,7 @@ auto ZenohPlayer::Impl::start() -> std::future<void> {
 
   run_job_ = std::async(std::launch::async, [this]() { run(); });
 
-  std::promise<void> promise;
+  std::promise<void> promise;  // NOLINT(misc-const-correctness) // false positive
   promise.set_value();
   return promise.get_future();
 }

@@ -5,10 +5,14 @@
 #include "hephaestus/concurrency/spinner.h"
 
 #include <chrono>
+#include <cstdint>
+#include <exception>
+#include <functional>
 #include <future>
+#include <mutex>
+#include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/format.h>
 
 #include "hephaestus/utils/exception.h"
 
@@ -38,7 +42,7 @@ Spinner::~Spinner() {
 }
 
 void Spinner::start() {
-  throwExceptionIf<InvalidOperationException>(is_started_.load(), fmt::format("Spinner is already started."));
+  throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
 
   // NOTE: Replace with std::stop_token and std::jthread when clang supports it.
   spinner_thread_ = std::thread([this]() { spin(); });
@@ -63,8 +67,7 @@ void Spinner::spin() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(!is_started_.load(),
-                                              fmt::format("Spinner not yet started, cannot stop."));
+  throwExceptionIf<InvalidOperationException>(!is_started_.load(), "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
 
@@ -81,7 +84,7 @@ void Spinner::stopImpl() {
   is_started_.store(false);
 }
 
-void Spinner::addStopCallback(std::function<void()> callback) {
+void Spinner::addStopCallback(std::function<void()>&& callback) {
   stop_callback_ = std::move(callback);
 }
 

@@ -1,6 +1,8 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <cstdint>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/bit_flag.h"
@@ -20,7 +22,7 @@ TEST(BitFlag, EnumValuesPowerOfTwo) {
 
 enum class TestEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u, D = 1u << 4u };
 TEST(BitFlag, Default) {
-  BitFlag<TestEnum> flag{ TestEnum::A };
+  const BitFlag<TestEnum> flag{ TestEnum::A };
   EXPECT_TRUE(flag.has(TestEnum::A));
   EXPECT_FALSE(flag.has(TestEnum::B));
 }
@@ -84,6 +86,12 @@ TEST(BitFlag, UnsetMultiple) {
   EXPECT_FALSE(flag.has(TestEnum::C));
   EXPECT_FALSE(flag.has(TestEnum::D));
   EXPECT_FALSE(flag.has(E));
+}
+
+TEST(BitFlag, Empty) {
+  BitFlag<TestEnum> flag{ TestEnum::A };
+  flag.unset(TestEnum::A);
+  EXPECT_FALSE(flag.has(TestEnum::A));
 }
 
 }  // namespace heph::utils::tests

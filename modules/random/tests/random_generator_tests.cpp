@@ -2,6 +2,10 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+#include <random>
+#include <type_traits>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/random/random_generator.h"
@@ -20,7 +24,7 @@ TEST(RNGTests, ReturnsMersenneTwisterEngine) {
 // Test that if IS_DETERMINISTIC is true, two generated random number generators are equal
 TEST(RNGTests, GeneratorsAreDeterministic) {
   {
-    bool is_deterministic = true;
+    const bool is_deterministic = true;
     auto mt1 = createRNG(is_deterministic);
     auto mt2 = createRNG(is_deterministic);
     ASSERT_EQ(mt1(), mt2()) << "Random number generators must produce the same sequence when deterministic";
@@ -29,7 +33,7 @@ TEST(RNGTests, GeneratorsAreDeterministic) {
   }
 
   {
-    bool is_deterministic = false;
+    const bool is_deterministic = false;
     auto mt1 = createRNG(is_deterministic);
     auto mt2 = createRNG(is_deterministic);
     ASSERT_NE(mt1(), mt2()) << "Random number generators must not produce the same sequence when non "
