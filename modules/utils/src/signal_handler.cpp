@@ -7,8 +7,6 @@
 #include <csignal>
 #include <mutex>
 
-#include <fmt/core.h>
-
 namespace heph::utils {
 
 auto TerminationBlocker::stopRequested() -> bool {
