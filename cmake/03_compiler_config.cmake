@@ -174,7 +174,7 @@ endif()
 # Configure test coverage
 option(DISABLE_EXCEPTIONS "Disable exceptions and use CHECK instead" OFF)
 if(DISABLE_EXCEPTIONS)
-  add_definitions(-DDISABLE_EXCEPTIONS)
+  add_compile_definitions(-DDISABLE_EXCEPTIONS)
 endif()
 
 # print summary

@@ -47,7 +47,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME utils
-  PUBLIC_LINK_LIBS absl::random_random absl::time fmt::fmt absl::log
+  PUBLIC_LINK_LIBS absl::random_random absl::time fmt::fmt absl::log magic_enum::magic_enum
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
