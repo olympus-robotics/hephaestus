@@ -9,6 +9,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <absl/log/check.h>
+#include <fmt/core.h>
+
 namespace heph {
 
 //=================================================================================================
@@ -29,16 +32,28 @@ template <typename T>
   requires std::is_base_of_v<Exception, T>
 constexpr void throwException(const std::string& message,
                               std::source_location location = std::source_location::current()) {
+#ifdef DISABLE_EXCEPTIONS
   throw T{ message, location };
+#else
+  auto e = T{ message, location };
+  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                              location.line());
+#endif
 }
 
 template <typename T>
   requires std::is_base_of_v<Exception, T>
 constexpr void throwExceptionIf(bool condition, const std::string& message,
                                 std::source_location location = std::source_location::current()) {
+#ifdef DISABLE_EXCEPTIONS
   if (condition) [[unlikely]] {
     throw T{ message, location };
   }
+#else
+  auto e = T{ message, location };
+  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                   location.line());
+#endif
 }
 
 //=================================================================================================
