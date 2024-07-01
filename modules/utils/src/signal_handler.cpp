@@ -5,10 +5,19 @@
 #include "hephaestus/utils/signal_handler.h"
 
 #include <csignal>
+#include <mutex>
+
+#include <fmt/core.h>
 
 namespace heph::utils {
 
 auto TerminationBlocker::stopRequested() -> bool {
+  static std::once_flag flag;
+  std::call_once(flag, []() {
+    (void)signal(SIGINT, TerminationBlocker::signalHandler);
+    (void)signal(SIGTERM, TerminationBlocker::signalHandler);
+  });
+
   return instance().stop_flag_.test();
 }
 
