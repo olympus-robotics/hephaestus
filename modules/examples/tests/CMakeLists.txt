@@ -16,4 +16,4 @@ define_module_test(
         SOURCES zenoh_tests.cpp helpers.h
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS hephaestus::random)

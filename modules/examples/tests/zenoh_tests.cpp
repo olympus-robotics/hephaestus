@@ -7,18 +7,18 @@
 #include <utility>
 
 #include <gtest/gtest.h>
-#include <hephaestus/ipc/common.h>
-#include <hephaestus/ipc/publisher.h>
-#include <hephaestus/ipc/subscriber.h>
-#include <hephaestus/ipc/zenoh/service.h>
-#include <hephaestus/ipc/zenoh/subscriber.h>
-#include <hephaestus/random/random_generator.h>
 
 #include "helpers.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/geometry.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/examples/types_protobuf/pose.h"      // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/publisher.h"
+#include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/random/random_generator.h"
 
 namespace heph::examples::types::tests {
 
@@ -26,8 +26,8 @@ namespace {
 constexpr auto kSeed = 42;  // NOLINT(readability-identifier-naming)
 }  // namespace
 
-TEST(ZenohTests, MessageExchange) {
-  std::mt19937_64 mt{ kSeed };  // NOLINT
+void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
+  auto mt = random::createRNG();
   ipc::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
@@ -40,6 +40,7 @@ TEST(ZenohTests, MessageExchange) {
 
   // Create publisher and subscriber
   ipc::Publisher<Pose> publisher(session, topic);
+
   auto subscriber = ipc::subscribe<heph::ipc::zenoh::Subscriber, Pose>(
       session, topic,
       [&received_message, &stop_flag]([[maybe_unused]] const ipc::MessageMetadata& metadata,
@@ -47,7 +48,8 @@ TEST(ZenohTests, MessageExchange) {
         received_message = *message;
         stop_flag.test_and_set();
         stop_flag.notify_all();
-      });
+      },
+      subscriber_dedicated_callback_thread);
 
   const auto success = publisher.publish(send_message);
   EXPECT_TRUE(success);
@@ -104,6 +106,11 @@ TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
       });
 
   EXPECT_THROW(std::ignore = publisher.publish(send_message);, std::exception);
+}
+
+TEST(ZenohTests, MessageExchange) {
+  checkMessageExchange(false);
+  checkMessageExchange(true);
 }
 
 TEST(ZenohTests, ServiceCallExchange) {

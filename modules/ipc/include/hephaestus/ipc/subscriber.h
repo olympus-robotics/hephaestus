@@ -20,7 +20,8 @@ using DataCallback = std::function<void(const MessageMetadata&, const std::share
 
 template <class Subscriber, class DataType>
 [[nodiscard]] auto subscribe(zenoh::SessionPtr session, TopicConfig topic_config,
-                             DataCallback<DataType>&& callback) -> std::unique_ptr<Subscriber> {
+                             DataCallback<DataType>&& callback,
+                             bool dedicated_callback_thread = false) -> std::unique_ptr<Subscriber> {
   auto cb = [callback = std::move(callback)](const MessageMetadata& metadata,
                                              std::span<const std::byte> buffer) mutable {
     auto data = std::make_shared<DataType>();
@@ -28,7 +29,8 @@ template <class Subscriber, class DataType>
     callback(metadata, std::move(data));
   };
 
-  return std::make_unique<Subscriber>(std::move(session), std::move(topic_config), std::move(cb));
+  return std::make_unique<Subscriber>(std::move(session), std::move(topic_config), std::move(cb),
+                                      dedicated_callback_thread);
 }
 
 }  // namespace heph::ipc

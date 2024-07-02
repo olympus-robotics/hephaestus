@@ -4,21 +4,30 @@
 
 #include "hephaestus/ipc/zenoh/subscriber.h"
 
+#include <cstddef>
+#include <memory>
+#include <span>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <zenoh.h>
 #include <zenoh_macros.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/concurrency/queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
-Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback)
-  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
+Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+                       bool dedicated_callback_thread /*= false*/)
+  : session_(std::move(session))
+  , topic_config_(std::move(topic_config))
+  , callback_(std::move(callback))
+  , dedicated_callback_thread_(dedicated_callback_thread) {
   zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) { this->callback(sample); };
   if (session_->config.cache_size == 0) {
     const auto& topic = topic_config_.name;
@@ -30,6 +39,15 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
         session_->zenoh_session.loan(), z_keyexpr(topic_config_.name.c_str()), z_move(c), &sub_opts);
     heph::throwExceptionIf<heph::FailedZenohOperation>(!z_check(cache_subscriber_),
                                                        "failed to create zenoh sub");
+  }
+
+  if (dedicated_callback_thread_) {
+    callback_messages_consumer_ = std::make_unique<concurrency::QueueConsumner<Message>>(
+        [this](const Message& message) {
+          const auto& [metadata, buffer] = message;
+          callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
+        },
+        DEFAULT_CACHE_RESERVES);
   }
 }
 
@@ -49,7 +67,12 @@ void Subscriber::callback(const zenohc::Sample& sample) {
   metadata.topic = sample.get_keyexpr().as_string_view();
 
   auto buffer = toByteSpan(sample.get_payload());
-  callback_(metadata, buffer);
+  if (dedicated_callback_thread_) {
+    callback_messages_consumer_->queue().forceEmplace(
+        metadata, std::vector<const std::byte>(buffer.begin(), buffer.end()));
+  } else {
+    callback_(metadata, buffer);
+  }
 }
 
 }  // namespace heph::ipc::zenoh

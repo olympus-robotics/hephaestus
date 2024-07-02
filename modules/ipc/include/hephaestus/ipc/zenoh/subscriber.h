@@ -9,6 +9,7 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
+#include "hephaestus/concurrency/queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
@@ -18,17 +19,23 @@ class Subscriber {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
-  Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback);
+  /// Note: setting dedicated_callback_thread to true will consume the messages in a dedicated thread.
+  /// While this avoid blocking the Zenoh session thread to process other messages,
+  /// it also introduce an overhead due to the message data being copied.
+  Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+             bool dedicated_callback_thread = false);
   ~Subscriber();
   Subscriber(const Subscriber&) = delete;
-  Subscriber(Subscriber&&) = default;
+  Subscriber(Subscriber&&) = delete;
   auto operator=(const Subscriber&) -> Subscriber& = delete;
-  auto operator=(Subscriber&&) -> Subscriber& = default;
+  auto operator=(Subscriber&&) -> Subscriber& = delete;
 
 private:
   void callback(const zenohc::Sample& sample);
 
 private:
+  using Message = std::pair<MessageMetadata, std::vector<const std::byte>>;
+
   SessionPtr session_;
   TopicConfig topic_config_;
 
@@ -36,6 +43,10 @@ private:
 
   std::unique_ptr<zenohc::Subscriber> subscriber_;
   ze_owned_querying_subscriber_t cache_subscriber_{};
+
+  bool dedicated_callback_thread_;
+  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
+  std::unique_ptr<concurrency::QueueConsumner<Message>> callback_messages_consumer_;
 };
 
 }  // namespace heph::ipc::zenoh
