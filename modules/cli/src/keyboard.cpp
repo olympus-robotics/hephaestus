@@ -5,8 +5,8 @@
 #include "hephaestus/cli/keyboard.h"
 
 #include <cstdio>
+#include <ctime>
 
-#include <fcntl.h>
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
@@ -16,7 +16,7 @@ namespace heph::cli {
 auto kbhit() -> bool {
   /// reference:
   /// https://github.com/cvilas/grape/blob/d008b53816272a0860487464fb12fa4d837759ad/modules/common/conio/src/conio.cpp#L17
-  timeval tv{};
+  timeval tv{};  // NOLINT(misc-include-cleaner)
   fd_set fds{};
   tv.tv_sec = 0;
   tv.tv_usec = 0;

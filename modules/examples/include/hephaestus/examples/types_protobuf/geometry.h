@@ -32,8 +32,8 @@ inline void fromProto(const ProtoMatrixT& proto_matrix, Eigen::Matrix<TypeT, ROW
                                              static_cast<uint32_t>(proto_matrix.data_size()),
                                          "Rows and cols count don't match with data size");
 
-  Eigen::Map<const Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_matrix.data().data(), proto_matrix.rows(),
-                                                         proto_matrix.cols());
+  const Eigen::Map<const Eigen::Matrix<TypeT, ROWS, COLS>> map(proto_matrix.data().data(),
+                                                               proto_matrix.rows(), proto_matrix.cols());
   matrix = map;
 }
 
@@ -47,7 +47,7 @@ inline void toProto(ProtoVectorT& proto_vec, const Eigen::VectorX<TypeT>& vec) {
 
 template <class TypeT, class ProtoVectorT>
 inline auto fromProto(const ProtoVectorT& proto_vec, Eigen::VectorX<TypeT>& vec) {
-  Eigen::Map<const Eigen::VectorX<TypeT>> map(proto_vec.data().data(), proto_vec.data_size());
+  const Eigen::Map<const Eigen::VectorX<TypeT>> map(proto_vec.data().data(), proto_vec.data_size());
   vec = map;
 }
 

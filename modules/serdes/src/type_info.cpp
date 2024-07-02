@@ -4,9 +4,12 @@
 
 #include "hephaestus/serdes/type_info.h"
 
+#include <string>
+
 #include <fmt/core.h>
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/utils/exception.h"
 

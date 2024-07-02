@@ -4,6 +4,10 @@
 
 #include "hephaestus/ipc/zenoh/utils.h"
 
+#include <fmt/core.h>
+#include <zenoh.h>
+#include <zenohc.hxx>
+
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"
 
@@ -27,28 +31,28 @@ auto createZenohConfig(const Config& config) -> zenohc::Config {
 
   // Set node in client mode.
   if (config.mode == Mode::CLIENT) {
-    bool res = zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
+    const bool res = zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to set node mode as client");
   }
 
   // Set the transport to UDP, but I am not sure it is the right way.
   // zconfig.insert_json(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
   if (config.protocol == Protocol::UDP) {
-    auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");
+    const auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to add UDP connection");
   } else if (config.protocol == Protocol::TCP) {
-    auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");
+    const auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to add TCP connection");
   }
 
   // Add router endpoint.
   if (!config.router.empty()) {
     const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
-    auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
+    const auto res = zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint.c_str());
     throwExceptionIf<FailedZenohOperation>(!res, "failed to add router endpoint");
   }
   {
-    auto res = zconfig.insert_json("transport/unicast/qos/enabled", config.qos ? "true" : "false");
+    const auto res = zconfig.insert_json("transport/unicast/qos/enabled", config.qos ? "true" : "false");
     throwExceptionIf<FailedZenohOperation>(!res, "failed to set QoS");
   }
   if (config.real_time) {

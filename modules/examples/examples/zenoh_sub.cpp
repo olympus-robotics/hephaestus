@@ -4,18 +4,21 @@
 
 #include <chrono>
 #include <csignal>
+#include <cstddef>
+#include <cstdio>
 #include <cstdlib>
-#include <thread>
+#include <exception>
+#include <memory>
+#include <tuple>
+#include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/chrono.h>
+#include <fmt/chrono.h>  //NOLINT(misc-include-cleaner)
 #include <fmt/core.h>
-#include <fmt/format.h>
-#include <zenoh.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
@@ -24,7 +27,7 @@
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::utils::StackTrace stack_trace;
+  const heph::utils::StackTrace stack_trace;
 
   try {
     auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);

@@ -1,9 +1,12 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <atomic>
 #include <chrono>
+#include <thread>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/utils/exception.h"
 

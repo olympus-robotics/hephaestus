@@ -6,7 +6,7 @@
 
 namespace heph::examples::types::tests {
 
-auto randomPose(std::mt19937_64& mt) -> Pose {
+inline auto randomPose(std::mt19937_64& mt) -> Pose {
   static constexpr auto RANDOM_TRANSLATION_RANGE = 100.0;
 
   using DistT = std::uniform_real_distribution<double>;

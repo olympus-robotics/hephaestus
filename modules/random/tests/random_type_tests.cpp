@@ -3,6 +3,12 @@
 //=================================================================================================
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <random>
+#include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -20,11 +26,11 @@ namespace heph::random {
 template <class T>
 [[nodiscard]] auto compareRandomEqualMultipleTimes(std::function<T(std::mt19937_64&)> gen,
                                                    std::mt19937_64& mt) -> bool {
-  static constexpr size_t MAX_COMPARISON_COUNT = 10;
+  static constexpr std::size_t MAX_COMPARISON_COUNT = 10;
 
-  for (size_t tries = 0; tries < MAX_COMPARISON_COUNT; ++tries) {
-    T first_result = gen(mt);
-    T second_result = gen(mt);
+  for (std::size_t tries = 0; tries < MAX_COMPARISON_COUNT; ++tries) {
+    const T first_result = gen(mt);
+    const T second_result = gen(mt);
 
     if (first_result != second_result) {
       return false;
@@ -79,7 +85,7 @@ TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
   if constexpr (IsRandomGeneratableVectorT<TypeParam> || IsStringT<TypeParam>) {
     auto mt = createRNG();
 
-    static constexpr size_t SIZE_ZERO = 0;
+    static constexpr std::size_t SIZE_ZERO = 0;
     static constexpr bool ALLOW_EMPTY_CONTAINER = true;
     static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
     auto vec_size_zero = randomT<TypeParam>(mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);

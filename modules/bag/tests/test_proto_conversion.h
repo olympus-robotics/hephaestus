@@ -16,7 +16,7 @@ struct Robot {
   std::vector<float> scores;
 };
 
-auto Robot::random(std::mt19937_64& mt) -> Robot {
+inline auto Robot::random(std::mt19937_64& mt) -> Robot {
   return { .name = random::randomT<std::string>(mt),
            .version = random::randomT<int>(mt),
            .scores = random::randomT<std::vector<float>>(mt) };
@@ -30,7 +30,7 @@ struct Fleet {
   int robot_count{};
 };
 
-auto Fleet::random(std::mt19937_64& mt) -> Fleet {
+inline auto Fleet::random(std::mt19937_64& mt) -> Fleet {
   return { .name = random::randomT<std::string>(mt), .robot_count = random::randomT<int>(mt) };
 }
 }  // namespace heph::bag::tests
@@ -48,24 +48,24 @@ struct ProtoAssociation<heph::bag::tests::Fleet> {
 }  // namespace heph::serdes::protobuf
 
 namespace heph::bag::tests {
-void toProto(proto::Robot& proto_user, const Robot& user) {
+inline void toProto(proto::Robot& proto_user, const Robot& user) {
   proto_user.set_name(user.name);
   proto_user.set_version(user.version);
   proto_user.mutable_scores()->Add(user.scores.begin(), user.scores.end());
 }
 
-void fromProto(const proto::Robot& proto_user, Robot& user) {
+inline void fromProto(const proto::Robot& proto_user, Robot& user) {
   user.name = proto_user.name();
   user.version = proto_user.version();
   user.scores = { proto_user.scores().begin(), proto_user.scores().end() };
 }
 
-void toProto(proto::Fleet& proto_company, const Fleet& company) {
+inline void toProto(proto::Fleet& proto_company, const Fleet& company) {
   proto_company.set_name(company.name);
   proto_company.set_robot_count(company.robot_count);
 }
 
-void fromProto(const proto::Fleet& proto_company, Fleet& company) {
+inline void fromProto(const proto::Fleet& proto_company, Fleet& company) {
   company.name = proto_company.name();
   company.robot_count = proto_company.robot_count();
 }

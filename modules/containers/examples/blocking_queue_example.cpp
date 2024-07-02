@@ -3,7 +3,9 @@
 //=================================================================================================
 
 #include <cstdlib>
+#include <exception>
 #include <string>
+#include <utility>
 
 #include <fmt/core.h>
 

@@ -28,7 +28,7 @@ public:
   void start();
   auto stop() -> std::future<void>;
   virtual void spinOnce() = 0;  // Pure virtual function
-  void addStopCallback(std::function<void()> callback);
+  void addStopCallback(std::function<void()>&& callback);
 
 private:
   void spin();

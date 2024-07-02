@@ -3,18 +3,24 @@
 //=================================================================================================
 
 #include <cstddef>
-#include <thread>
+#include <memory>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <mcap/reader.hpp>
+#include <mcap/types.hpp>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/bag/zenoh_recorder.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/utils/filesystem/scoped_path.h"
-#include "test.pb.h"
 #include "test_proto_conversion.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -109,7 +115,7 @@ TEST(Bag, PlayAndRecord) {
   EXPECT_EQ(statistics->channelCount, 2);
   const auto channels = reader->channels();
   EXPECT_THAT(channels, SizeIs(2));
-  std::unordered_map<std::string, mcap::ChannelId> reverse_channels;
+  std::unordered_map<std::string, mcap::ChannelId> reverse_channels;  // NOLINT(misc-const-correctness)
   for (const auto& [id, channel] : channels) {
     reverse_channels[channel->topic] = id;
   }
@@ -125,12 +131,12 @@ TEST(Bag, PlayAndRecord) {
 
   for (const auto& message : messages) {
     if (message.channel->topic == ROBOT_TOPIC) {
-      Robot robot;
-      serdes::deserialize<Robot>({ message.message.data, message.message.dataSize }, robot);
+      Robot robot;  // NOLINT(misc-const-correctness)
+      serdes::deserialize({ message.message.data, message.message.dataSize }, robot);
       EXPECT_EQ(robot, robots[message.message.sequence]);
     } else if (message.channel->topic == FLEET_TOPIC) {
-      Fleet fleet;
-      serdes::deserialize<Fleet>({ message.message.data, message.message.dataSize }, fleet);
+      Fleet fleet;  // NOLINT(misc-const-correctness)
+      serdes::deserialize({ message.message.data, message.message.dataSize }, fleet);
       EXPECT_EQ(fleet, companies[message.message.sequence]);
     } else {
       FAIL() << "unexpected channel id: " << message.channel->topic;

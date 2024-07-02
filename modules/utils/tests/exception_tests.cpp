@@ -1,6 +1,8 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <exception>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -18,7 +20,7 @@ TEST(Exception, Throw) {
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_THAT(e.what(), testing::HasSubstr("modules/utils/tests/exception_tests.cpp:15] type mismatch"));
+    EXPECT_THAT(e.what(), testing::HasSubstr("modules/utils/tests/exception_tests.cpp:17] type mismatch"));
   }
 #endif
 }

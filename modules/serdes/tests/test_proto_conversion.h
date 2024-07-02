@@ -22,13 +22,13 @@ struct ProtoAssociation<tests::User> {
 }  // namespace protobuf
 
 namespace tests {
-void toProto(proto::User& proto_user, const User& user) {
+inline void toProto(proto::User& proto_user, const User& user) {
   proto_user.set_name(user.name);
   proto_user.set_age(user.age);
   proto_user.mutable_scores()->Add(user.scores.begin(), user.scores.end());
 }
 
-void fromProto(const proto::User& proto_user, User& user) {
+inline void fromProto(const proto::User& proto_user, User& user) {
   user.name = proto_user.name();
   user.age = proto_user.age();
   user.scores = { proto_user.scores().begin(), proto_user.scores().end() };

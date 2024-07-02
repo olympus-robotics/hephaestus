@@ -5,6 +5,10 @@
 
 #include "hephaestus/serdes/dynamic_deserializer.h"
 
+#include <cstddef>
+#include <span>
+#include <string>
+
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::serdes {

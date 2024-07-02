@@ -1,6 +1,8 @@
+#include <atomic>
 #include <chrono>
+#include <memory>
 #include <random>
-#include <thread>
+#include <utility>
 
 #include <gtest/gtest.h>
 #include <hephaestus/ipc/common.h>
@@ -11,7 +13,8 @@
 
 #include "helpers.h"
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::examples::types::tests {
 

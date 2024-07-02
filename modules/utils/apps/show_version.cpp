@@ -3,6 +3,10 @@
 // MIT License
 //=================================================================================================
 
+#include <cstdio>
+#include <cstdlib>
+#include <tuple>
+
 #include <fmt/core.h>
 
 #include "hephaestus/utils/version.h"

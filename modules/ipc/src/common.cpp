@@ -2,6 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/common.h"
-
-namespace heph::ipc {}  // namespace heph::ipc
+#include "hephaestus/ipc/common.h"  // NOLINT(misc-include-cleaner)
