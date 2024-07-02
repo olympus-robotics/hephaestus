@@ -13,14 +13,16 @@ using namespace ::testing;
 
 namespace heph::utils::tests {
 TEST(Exception, Throw) {
+#ifndef DISABLE_EXCEPTIONS
   auto throwing_func = []() { throwException<TypeMismatchException>("type mismatch"); };
   EXPECT_THROW(throwing_func(), TypeMismatchException);
 
   try {
     throwing_func();
   } catch (std::exception& e) {
-    EXPECT_THAT(e.what(), testing::HasSubstr("modules/utils/tests/exception_tests.cpp:16] type mismatch"));
+    EXPECT_THAT(e.what(), testing::HasSubstr("modules/utils/tests/exception_tests.cpp:17] type mismatch"));
   }
+#endif
 }
 
 }  // namespace heph::utils::tests

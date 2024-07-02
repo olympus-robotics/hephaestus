@@ -171,6 +171,13 @@ if(ENABLE_LINTER)
   endif()
 endif()
 
+# This will deactivate the use of exception, and the utility functions we use to wrap throwing exceptions will instead
+# terminate displaying an error message. The whole code should be considered `noexcept`.
+option(DISABLE_EXCEPTIONS "Disable exceptions and terminate with a message instead" OFF)
+if(DISABLE_EXCEPTIONS)
+  add_compile_definitions(-DDISABLE_EXCEPTIONS)
+endif()
+
 # print summary
 message(STATUS "Compiler configuration:")
 message(STATUS "\tCompiler                       : ${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
@@ -184,5 +191,7 @@ message(STATUS "\tENABLE_TSAN                    : ${ENABLE_TSAN}")
 message(STATUS "\tENABLE_UBSAN                   : ${ENABLE_UBSAN}")
 message(STATUS "\tENABLE_COVERAGE                : ${ENABLE_COVERAGE}")
 message(STATUS "\tENABLE_LINTER                  : ${ENABLE_LINTER} (${LINTER_BIN})")
+message(STATUS "\tDISABLE_EXCEPTIONS             : ${DISABLE_EXCEPTIONS}")
+
 message(STATUS "\tEnabled warnings (hephaestus)        : ${HEPHAESTUS_COMPILER_WARNINGS}")
 message(STATUS "\tEnabled warnings (third-party) : ${THIRD_PARTY_COMPILER_WARNINGS}")

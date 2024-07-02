@@ -9,6 +9,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <absl/log/check.h>
+#include <fmt/core.h>
+
 namespace heph {
 
 //=================================================================================================
@@ -21,7 +24,10 @@ public:
   explicit Exception(const std::string& message, std::source_location location);
 };
 
-/// @brief  User function to throw an exception
+/// @brief  User function to throw an exception.
+/// > Note: If macro `DISABLE_EXCEPTIONS` is defined, this function terminates printing the message. In this
+/// case, the whole code should be considered noexcept.
+///
 /// @tparam T Exception type, derived from heph::Exception
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
@@ -29,16 +35,34 @@ template <typename T>
   requires std::is_base_of_v<Exception, T>
 constexpr void throwException(const std::string& message,
                               std::source_location location = std::source_location::current()) {
+#ifndef DISABLE_EXCEPTIONS
   throw T{ message, location };
+#else
+  auto e = T{ message, location };
+  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                              location.line());
+#endif
 }
 
+/// @brief  User function to throw a conditional exception. The whole code should be considered noexcept. Will
+/// use CHECK if DISABLE_EXCEPTIONS = ON
+/// @tparam T Exception type, derived from heph::Exception
+/// @param condition Condition whether to throw the exception
+/// @param message A message describing the error and what caused it
+/// @param location Location in the source where the error was triggered at
 template <typename T>
   requires std::is_base_of_v<Exception, T>
 constexpr void throwExceptionIf(bool condition, const std::string& message,
                                 std::source_location location = std::source_location::current()) {
+#ifndef DISABLE_EXCEPTIONS
   if (condition) [[unlikely]] {
     throw T{ message, location };
   }
+#else
+  auto e = T{ message, location };
+  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                   location.line());
+#endif
 }
 
 //=================================================================================================
