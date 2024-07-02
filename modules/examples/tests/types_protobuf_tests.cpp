@@ -110,5 +110,17 @@ TEST(Pose, Pose) {
   fromProto(proto_pose, pose_des);
   EXPECT_EQ(pose, pose_des);
 }
+
+TEST(FramedPose, FramedPose) {
+  std::mt19937_64 mt{ std::random_device{}() };
+  const auto pose = randomFramedPose(mt);
+
+  proto::FramedPose proto_pose;
+  toProto(proto_pose, pose);
+
+  FramedPose pose_des;
+  fromProto(proto_pose, pose_des);
+  EXPECT_EQ(pose, pose_des);
+}
 // NOLINTEND(misc-include-cleaner)
 }  // namespace heph::examples::types::tests

@@ -3,3 +3,11 @@
 //=================================================================================================
 
 #include "hephaestus/examples/types/pose.h"  // NOLINT(misc-include-cleaner)
+
+#include <string>
+
+namespace heph::examples::types {
+[[nodiscard]] inline auto toString(const FramedPose& pose) -> std::string {
+  return fmt::format("(frame: {}, pose: {}", pose.frame, pose.pose);
+}
+}  // namespace heph::examples::types
