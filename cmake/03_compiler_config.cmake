@@ -171,7 +171,8 @@ if(ENABLE_LINTER)
   endif()
 endif()
 
-# This will deactivate the use of exception, and the utility functions we use to wrap throwing exceptions will instead terminate displaying an error message. The whole code should be considered `noexcept`.
+# This will deactivate the use of exception, and the utility functions we use to wrap throwing exceptions will instead
+# terminate displaying an error message. The whole code should be considered `noexcept`.
 option(DISABLE_EXCEPTIONS "Disable exceptions and terminate with a message instead" OFF)
 if(DISABLE_EXCEPTIONS)
   add_compile_definitions(-DDISABLE_EXCEPTIONS)
