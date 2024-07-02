@@ -5,12 +5,13 @@
 declare_module(
   NAME utils
   DEPENDS_ON_MODULES "" # **Note**: This module should not depend on any other module
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt spdlog
   ALWAYS_BUILD
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
 
 # generate version header
 configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ONLY)
@@ -24,6 +25,7 @@ set(SOURCES
     src/utils.cpp
     src/signal_handler.cpp
     src/stack_trace.cpp
+    src/struclog.cpp
     src/version.cpp
     src/filesystem/file.cpp
     src/filesystem/scoped_path.cpp
@@ -35,6 +37,7 @@ set(SOURCES
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/signal_handler.h
     include/hephaestus/utils/stack_trace.h
+    include/hephaestus/utils/struclog.h
     include/hephaestus/utils/version.h
     include/hephaestus/utils/filesystem/file.h
     include/hephaestus/utils/filesystem/scoped_path.h

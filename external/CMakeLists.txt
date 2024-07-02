@@ -150,3 +150,18 @@ add_cmake_dependency(
   SOURCE_SUBDIR cpp
   CMAKE_ARGS -DBUILD_TESTING=OFF
 )
+
+# --------------------------------------------------------------------------------------------------
+# spdlog
+set(SPDLOG_VERSION 1.14.1)
+set(SPDLOG_TAG v${SPDLOG_VERSION})
+set(SPDLOG_CMAKE_ARGS -DSPDLOG_BUILD_EXAMPLE=OFF -DSPDLOG_INSTALL=ON)
+add_cmake_dependency(
+  NAME spdlog
+  VERSION ${SPDLOG_VERSION}
+  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+  GIT_TAG ${SPDLOG_TAG}
+  CMAKE_ARGS ${SPDLOG_CMAKE_ARGS}
+)
+
+
