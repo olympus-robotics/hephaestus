@@ -24,8 +24,9 @@ public:
   explicit Exception(const std::string& message, std::source_location location);
 };
 
-/// @brief  User function to throw an exception. The whole code should be considered noexcept. Will use CHECK
-/// if DISABLE_EXCEPTIONS = ON
+/// @brief  User function to throw an exception. 
+/// > Note: If macro `DISABLE_EXCEPTIONS` is defined, this function terminates printing the message. In this case, the whole code should be considered noexcept.
+/// 
 /// @tparam T Exception type, derived from heph::Exception
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
