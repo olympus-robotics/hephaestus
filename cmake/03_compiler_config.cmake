@@ -171,7 +171,7 @@ if(ENABLE_LINTER)
   endif()
 endif()
 
-# Configure test coverage
+# This will deactivate the use of exceptions and use CHECK instead. The whole code should be considered noexcept.
 option(DISABLE_EXCEPTIONS "Disable exceptions and use CHECK instead" OFF)
 if(DISABLE_EXCEPTIONS)
   add_compile_definitions(-DDISABLE_EXCEPTIONS)
