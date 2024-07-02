@@ -175,7 +175,7 @@ endif()
 # terminate displaying an error message. The whole code should be considered `noexcept`.
 option(DISABLE_EXCEPTIONS "Disable exceptions and terminate with a message instead" OFF)
 if(DISABLE_EXCEPTIONS)
-  add_compile_definitions(-DDISABLE_EXCEPTIONS)
+  add_compile_definitions(DISABLE_EXCEPTIONS)
 endif()
 
 # print summary
