@@ -8,3 +8,8 @@ message Pose {
     Vector3d position = 1;
     Quaterniond orientation = 2;
 }
+
+message FramedPose {
+    string frame = 1;
+    Pose pose = 2;
+}

@@ -2,6 +2,8 @@
 
 #include <random>
 
+#include <hephaestus/random/random_container.h>
+
 #include "hephaestus/examples/types/pose.h"
 
 namespace heph::examples::types::tests {
@@ -17,5 +19,12 @@ inline auto randomPose(std::mt19937_64& mt) -> Pose {
                                               r_distribution(mt) }
                               .normalized(),
            .position = Eigen::Vector3d{ t_distribution(mt), t_distribution(mt), t_distribution(mt) } };
+}
+
+inline auto randomFramedPose(std::mt19937_64& mt) -> FramedPose {
+  FramedPose pose;
+  pose.frame = random::randomT<std::string>(mt, std::nullopt, false);
+  pose.pose = randomPose(mt);
+  return pose;
 }
 }  // namespace heph::examples::types::tests

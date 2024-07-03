@@ -1,6 +1,6 @@
 declare_module(
   NAME examples
-  DEPENDS_ON_MODULES bag utils ipc serdes
+  DEPENDS_ON_MODULES bag utils ipc serdes random
   DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf
   EXCLUDE_FROM_ALL
 )
@@ -35,8 +35,8 @@ set(TYPES_PROTOBUF_SOURCES
 # library target
 define_module_library(
   NAME examples_types_protobuf
-  PUBLIC_LINK_LIBS hephaestus::utils hephaestus::serdes hephaestus::examples_types hephaestus::examples_types_proto
-                   Eigen3::Eigen
+  PUBLIC_LINK_LIBS hephaestus::utils hephaestus::serdes hephaestus::random hephaestus::examples_types
+                   hephaestus::examples_types_proto Eigen3::Eigen
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_PROTOBUF_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
