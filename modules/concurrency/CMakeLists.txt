@@ -4,7 +4,7 @@
 
 declare_module(
   NAME concurrency
-  DEPENDS_ON_MODULES utils containers
+  DEPENDS_ON_MODULES utils containers random
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt
 )
 

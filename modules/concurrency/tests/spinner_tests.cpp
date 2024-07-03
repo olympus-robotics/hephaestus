@@ -10,6 +10,8 @@
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/utils/exception.h"
 
+namespace heph::concurrency::tests {
+
 class TestSpinner : public heph::concurrency::Spinner {
 public:
   explicit TestSpinner(double rate_hz = 0) : Spinner(rate_hz) {
@@ -77,3 +79,5 @@ TEST(SpinnerTest, SpinWithPeriod) {
   EXPECT_GT(spinner.counter.load(), 8);
   EXPECT_LT(spinner.counter.load(), 12);
 }
+
+}  // namespace heph::concurrency::tests

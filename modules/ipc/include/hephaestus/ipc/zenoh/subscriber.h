@@ -46,7 +46,7 @@ private:
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
-  std::unique_ptr<concurrency::QueueConsumner<Message>> callback_messages_consumer_;
+  std::unique_ptr<concurrency::QueueConsumer<Message>> callback_messages_consumer_;
 };
 
 }  // namespace heph::ipc::zenoh

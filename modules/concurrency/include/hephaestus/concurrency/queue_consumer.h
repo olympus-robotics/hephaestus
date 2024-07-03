@@ -11,18 +11,18 @@
 
 namespace heph::concurrency {
 
-/// QueueConsumner creates a thread that wait for messages to be pushed in the queue and call the user
+/// QueueConsumer creates a thread that wait for messages to be pushed in the queue and call the user
 /// provided callback on them.
 template <typename T>
-class QueueConsumner {
+class QueueConsumer {
 public:
   using Callback = std::function<void(const T&)>;
-  QueueConsumner(Callback&& callback, std::optional<std::size_t> max_queue_size);
-  ~QueueConsumner();
-  QueueConsumner(const QueueConsumner&) = delete;
-  QueueConsumner(QueueConsumner&&) = delete;
-  auto operator=(const QueueConsumner&) -> QueueConsumner& = delete;
-  auto operator=(QueueConsumner&&) -> QueueConsumner& = delete;
+  QueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size);
+  ~QueueConsumer();
+  QueueConsumer(const QueueConsumer&) = delete;
+  QueueConsumer(QueueConsumer&&) = delete;
+  auto operator=(const QueueConsumer&) -> QueueConsumer& = delete;
+  auto operator=(QueueConsumer&&) -> QueueConsumer& = delete;
 
   /// Return the queue to allow to push messages to process.
   /// This is simpler than having to mask all the different type of push methods of the queue.
@@ -39,22 +39,22 @@ private:
 };
 
 template <typename T>
-QueueConsumner<T>::QueueConsumner(Callback&& callback, std::optional<std::size_t> max_queue_size)
+QueueConsumer<T>::QueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size)
   : callback_(std::move(callback)), message_queue_(max_queue_size), callback_thread_([this] { spin(); }){};
 
 template <typename T>
-QueueConsumner<T>::~QueueConsumner() {
+QueueConsumer<T>::~QueueConsumer() {
   message_queue_.stop();
   callback_thread_.join();
 }
 
 template <typename T>
-auto QueueConsumner<T>::queue() -> containers::BlockingQueue<T>& {
+auto QueueConsumer<T>::queue() -> containers::BlockingQueue<T>& {
   return message_queue_;
 }
 
 template <typename T>
-void QueueConsumner<T>::spin() {
+void QueueConsumer<T>::spin() {
   // TODO: set thread name
   while (true) {
     auto message = message_queue_.waitAndPop();

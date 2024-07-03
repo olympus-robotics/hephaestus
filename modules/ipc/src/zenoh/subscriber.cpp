@@ -42,7 +42,7 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
   }
 
   if (dedicated_callback_thread_) {
-    callback_messages_consumer_ = std::make_unique<concurrency::QueueConsumner<Message>>(
+    callback_messages_consumer_ = std::make_unique<concurrency::QueueConsumer<Message>>(
         [this](const Message& message) {
           const auto& [metadata, buffer] = message;
           callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
