@@ -12,6 +12,7 @@
 #include <hephaestus/ipc/subscriber.h>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <hephaestus/ipc/zenoh/subscriber.h>
+#include <hephaestus/random/random_generator.h>
 
 #include "helpers.h"
 #include "hephaestus/examples/types/pose.h"

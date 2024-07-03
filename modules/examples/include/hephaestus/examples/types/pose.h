@@ -18,7 +18,7 @@ struct Pose {
 
 struct FramedPose {
   std::string frame;
-  Pose pose;
+  Pose pose{};
 
   friend auto operator==(const FramedPose&, const FramedPose&) -> bool = default;
 };

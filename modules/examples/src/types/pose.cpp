@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include <fmt/format.h>
+
 namespace heph::examples::types {
 [[nodiscard]] inline auto toString(const FramedPose& pose) -> std::string {
   return fmt::format("(frame: {}, pose: {}", pose.frame, pose.pose);
