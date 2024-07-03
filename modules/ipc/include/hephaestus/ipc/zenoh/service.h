@@ -11,7 +11,6 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/concurrency/queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
@@ -24,24 +23,14 @@ template <typename RequestT, typename ReplyT>
 class Service {
 public:
   using Callback = std::function<ReplyT(const RequestT&)>;
-  Service(SessionPtr session, TopicConfig topic_config, Callback&& callback,
-          bool dedicated_callback_thread = false);
+  Service(SessionPtr session, TopicConfig topic_config, Callback&& callback);
 
 private:
-  void processRequest(const zenohc::Query& query);
-
-private:
-  using Message = RequestT;
-
   SessionPtr session_;
   std::unique_ptr<zenohc::Queryable> queryable_;
 
   TopicConfig topic_config_;
   Callback callback_;
-
-  bool dedicated_callback_thread_;
-  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
-  std::unique_ptr<concurrency::QueueConsumer<Message>> callback_messages_consumer_;
 };
 
 template <typename ReplyT>
@@ -55,9 +44,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
                  const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
     -> std::vector<ServiceResponse<ReplyT>>;
 
-// ---------------------------------------------------------------------------------------------------------
-// --------- Implementation --------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------
+// --------- Implementation ----------
 
 namespace internal {
 // TODO: Remove these functions once zenoh resolves the issue of changing buffers based on encoding.
@@ -83,11 +70,13 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
     throwExceptionIf<InvalidParameterException>(
         query.get_value().get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
-
     auto payload = query.get_value().get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     buffer = internal::removeChangingBytes(buffer);
+    DLOG(INFO) << fmt::format("Deserializing buffer of size: {}, values: {}", buffer.size(),
+                              fmt::join(buffer, ","));
+
     RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
     return request;
@@ -110,7 +99,7 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
     throwExceptionIf<InvalidParameterException>(
         sample->get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
         "Encoding for std::string should be Z_ENCODING_PREFIX_TEXT_PLAIN");
-
+    DLOG(INFO) << fmt::format("Payload is string: '{}'", sample->get_payload().as_string_view());
     const std::unique_lock<std::mutex> lock(m);
     reply_messages.emplace_back(ServiceResponse<ReplyT>{
         .topic = server_topic, .value = static_cast<std::string>(sample->get_payload().as_string_view()) });
@@ -118,7 +107,6 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
     throwExceptionIf<InvalidParameterException>(
         sample->get_encoding() != Z_ENCODING_PREFIX_EMPTY,
         "Encoding for binary types should be Z_ENCODING_PREFIX_EMPTY");
-
     auto payload = sample->get_payload();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
@@ -131,35 +119,29 @@ auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_
 }  // namespace internal
 
 template <typename RequestT, typename ReplyT>
-Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback,
-                                   bool dedicated_callback_thread /*= false*/)
-  : session_(std::move(session))
-  , topic_config_(std::move(topic_config))
-  , callback_(std::move(callback))
-  , dedicated_callback_thread_(dedicated_callback_thread) {
+Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback)
+  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
   auto query_cb = [this](const zenohc::Query& query) mutable {
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
-    processRequest(query);
+
+    auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
+    zenohc::QueryReplyOptions options;
+    if constexpr (std::is_same_v<ReplyT, std::string>) {
+      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
+      query.reply(this->topic_config_.name, reply, options);
+    } else {
+      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
+      auto buffer = serdes::serialize(reply);
+      DLOG(INFO) << fmt::format("Reply: payload size: {}, content: {}", buffer.size(),
+                                fmt::join(buffer, ","));
+      query.reply(this->topic_config_.name, std::move(buffer), options);
+    }
   };
 
   queryable_ = expectAsUniquePtr(
       session_->zenoh_session.declare_queryable(topic_config_.name, { std::move(query_cb), []() {} }));
-}
-
-template <typename RequestT, typename ReplyT>
-void Service<RequestT, ReplyT>::processRequest(const zenohc::Query& query) {
-  auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
-  zenohc::QueryReplyOptions options;
-  if constexpr (std::is_same_v<ReplyT, std::string>) {
-    options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
-    query.reply(this->topic_config_.name, reply, options);
-  } else {
-    options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
-    auto buffer = serdes::serialize(reply);
-    query.reply(this->topic_config_.name, std::move(buffer), options);
-  }
 }
 
 template <typename RequestT, typename ReplyT>
