@@ -2,8 +2,9 @@
 
 #include <random>
 
-#include "hephaestus/examples/types/pose.h"
 #include <hephaestus/random/random_container.h>
+
+#include "hephaestus/examples/types/pose.h"
 
 namespace heph::examples::types::tests {
 
