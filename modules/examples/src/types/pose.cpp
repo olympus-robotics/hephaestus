@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace heph::examples::types {
 [[nodiscard]] inline auto toString(const FramedPose& pose) -> std::string {
