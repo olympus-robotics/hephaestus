@@ -57,7 +57,7 @@ TEST(ZenohTests, MessageExchange) {
   EXPECT_EQ(send_message, received_message);
 }
 
-TEST(ZenohTests, WrongSubsriberType) {
+TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
   auto mt = random::createRNG();
   ipc::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
@@ -81,7 +81,7 @@ TEST(ZenohTests, WrongSubsriberType) {
   EXPECT_THROW(std::ignore = publisher.publish(send_message);, std::exception);
 }
 
-TEST(ZenohTests, WrongSubsriberType2) {
+TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
   auto mt = random::createRNG();
   ipc::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
