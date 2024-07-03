@@ -58,7 +58,7 @@ TEST(ZenohTests, MessageExchange) {
 }
 
 TEST(ZenohTests, WrongSubsriberType) {
-  std::mt19937_64 mt{ 42 };  // NOLINT
+  auto mt = random::createRNG();
   ipc::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
@@ -82,7 +82,7 @@ TEST(ZenohTests, WrongSubsriberType) {
 }
 
 TEST(ZenohTests, WrongSubsriberType2) {
-  std::mt19937_64 mt{ 42 };  // NOLINT
+  auto mt = random::createRNG();
   ipc::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
