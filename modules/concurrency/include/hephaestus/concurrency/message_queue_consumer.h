@@ -17,7 +17,7 @@ template <typename T>
 class MessageQueueConsumer {
 public:
   using Callback = std::function<void(const T&)>;
-  MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size);
+  [[nodiscard]] MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size);
   ~MessageQueueConsumer();
   MessageQueueConsumer(const MessageQueueConsumer&) = delete;
   MessageQueueConsumer(MessageQueueConsumer&&) = delete;
