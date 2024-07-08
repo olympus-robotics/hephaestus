@@ -9,7 +9,7 @@
 #include <zenoh.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/concurrency/queue_consumer.h"
+#include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
@@ -46,7 +46,7 @@ private:
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
-  std::unique_ptr<concurrency::QueueConsumer<Message>> callback_messages_consumer_;
+  std::unique_ptr<concurrency::MessageQueueConsumer<Message>> callback_messages_consumer_;
 };
 
 }  // namespace heph::ipc::zenoh

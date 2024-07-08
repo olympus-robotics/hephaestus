@@ -15,7 +15,7 @@
 #include <zenoh_macros.h>
 #include <zenohc.hxx>
 
-#include "hephaestus/concurrency/queue_consumer.h"
+#include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
@@ -42,7 +42,7 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
   }
 
   if (dedicated_callback_thread_) {
-    callback_messages_consumer_ = std::make_unique<concurrency::QueueConsumer<Message>>(
+    callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
         [this](const Message& message) {
           const auto& [metadata, buffer] = message;
           callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));

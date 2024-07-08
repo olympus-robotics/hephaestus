@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/concurrency/queue_consumer.h"
+#include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
 #include "hephaestus/utils/exception.h"
@@ -24,25 +24,25 @@ struct Message {
   int value;
 };
 
-TEST(QueueConsumer, Fail) {
+TEST(MessageQueueConsumer, Fail) {
 #ifndef DISABLE_EXCEPTION
-  EXPECT_THROW(QueueConsumer<Message>([](const Message&) {}, 0), InvalidParameterException);
+  EXPECT_THROW(MessageQueueConsumer<Message>([](const Message&) {}, 0), InvalidParameterException);
 #endif
 }
 
-TEST(QueueConsumer, ProcessMessages) {
+TEST(MessageQueueConsumer, ProcessMessages) {
   static constexpr std::size_t MESSAGE_COUNT = 2;
   std::atomic_flag flag = ATOMIC_FLAG_INIT;
   std::vector<Message> processed_messages;
 
-  QueueConsumer<Message> spinner{ [&processed_messages, &flag](const Message& message) {
-                                   processed_messages.push_back(message);
-                                   if (processed_messages.size() == MESSAGE_COUNT) {
-                                     flag.test_and_set();
-                                     flag.notify_all();
-                                   }
-                                 },
-                                  MESSAGE_COUNT };
+  MessageQueueConsumer<Message> spinner{ [&processed_messages, &flag](const Message& message) {
+                                          processed_messages.push_back(message);
+                                          if (processed_messages.size() == MESSAGE_COUNT) {
+                                            flag.test_and_set();
+                                            flag.notify_all();
+                                          }
+                                        },
+                                         MESSAGE_COUNT };
 
   auto mt = random::createRNG();
   std::vector<Message> messages(MESSAGE_COUNT);

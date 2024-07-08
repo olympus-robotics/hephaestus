@@ -12,7 +12,7 @@ find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES src/queue_consumer.cpp src/spinner.cpp README.md include/hephaestus/concurrency/queue_consumer.h
+set(SOURCES src/message_queue_consumer.cpp src/spinner.cpp README.md include/hephaestus/concurrency/message_queue_consumer.h
             include/hephaestus/concurrency/spinner.h
 )
 
