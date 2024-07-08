@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <tuple>
 #include <vector>
 
 #include <gtest/gtest.h>
