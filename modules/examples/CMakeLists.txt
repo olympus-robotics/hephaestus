@@ -1,6 +1,6 @@
 declare_module(
   NAME examples
-  DEPENDS_ON_MODULES bag utils ipc serdes random
+  DEPENDS_ON_MODULES bag utils ipc random serdes
   DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf
   EXCLUDE_FROM_ALL
 )
