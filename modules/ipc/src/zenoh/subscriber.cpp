@@ -68,8 +68,8 @@ void Subscriber::callback(const zenohc::Sample& sample) {
 
   auto buffer = toByteSpan(sample.get_payload());
   if (dedicated_callback_thread_) {
-    callback_messages_consumer_->queue().forceEmplace(
-        metadata, std::vector<const std::byte>(buffer.begin(), buffer.end()));
+    callback_messages_consumer_->queue().forceEmplace(metadata,
+                                                      std::vector<std::byte>(buffer.begin(), buffer.end()));
   } else {
     callback_(metadata, buffer);
   }
