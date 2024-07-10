@@ -4,12 +4,10 @@
 
 #include <chrono>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <random>
 #include <thread>
-#include <tuple>
 
 #include "example_proto_conversion.h"
 #include "hephaestus/random/random_container.h"
@@ -51,10 +49,13 @@ auto main(int argc, const char* argv[]) -> int {
     heph::telemetry::Telemetry::registerSink(terminal_sink.get());
     auto rest_sink = heph::telemetry::createRESTSink({ .url = "http://127.0.0.1:5000" });
     heph::telemetry::Telemetry::registerSink(rest_sink.get());
+    auto influxdb_sink = heph::telemetry::createInfluxDBSink(
+        { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "filics" });
+    heph::telemetry::Telemetry::registerSink(influxdb_sink.get());
 
     heph::telemetry::examples::run();
   } catch (std::exception& e) {
-    std::ignore = std::fputs(e.what(), stderr);
+    fmt::println(stderr, "Execution terminated with exception: {}", e.what());
   }
   return EXIT_SUCCESS;
 }

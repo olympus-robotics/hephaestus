@@ -6,7 +6,6 @@
 #include <magic_enum.hpp>
 
 #include "example.pb.h"
-#include "google/protobuf/util/time_util.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/utils/exception.h"
 
@@ -38,12 +37,8 @@ inline void toProto(proto::MotorLog& proto_motor_log, const MotorLog& motor_log)
   proto_motor_log.set_current_amp(motor_log.current_amp);
   proto_motor_log.set_velocity_rps(motor_log.velocity_rps);
   proto_motor_log.set_error_message(motor_log.error_message);
-
-  auto* proto_elapsed_time = proto_motor_log.mutable_elapsed_time();
-  const auto proto_duration =
-      google::protobuf::util::TimeUtil::MillisecondsToDuration(motor_log.elapsed_time.count());
-  proto_elapsed_time->set_nanos(proto_duration.nanos());
-  proto_elapsed_time->set_seconds(proto_duration.seconds());
+  proto_motor_log.set_elapsed_time_ns(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(motor_log.elapsed_time).count());
 }
 
 inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_log) {
@@ -53,9 +48,8 @@ inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_lo
   motor_log.current_amp = proto_motor_log.current_amp();
   motor_log.velocity_rps = proto_motor_log.velocity_rps();
   motor_log.error_message = proto_motor_log.error_message();
-  motor_log.elapsed_time = std::chrono::milliseconds{
-    google::protobuf::util::TimeUtil::DurationToMilliseconds(proto_motor_log.elapsed_time())
-  };
+  motor_log.elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::nanoseconds{ proto_motor_log.elapsed_time_ns() });
 }
 }  // namespace telemetry::examples
 

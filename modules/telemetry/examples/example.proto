@@ -16,5 +16,5 @@ message MotorLog {
     double current_amp = 2;
     double velocity_rps = 3;
     string error_message = 4;
-    google.protobuf.Duration elapsed_time = 5;
+    int64 elapsed_time_ns = 5;
 }

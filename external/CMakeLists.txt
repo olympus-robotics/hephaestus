@@ -31,6 +31,11 @@ if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
 endif()
 
+if(influxdb IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(INFLUXDB_DEPENDS cpr)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -173,4 +178,15 @@ add_cmake_dependency(
   GIT_REPOSITORY https://github.com/libcpr/cpr.git
   GIT_TAG ${CPR_GIT_TAG}
   CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
+)
+
+# --------------------------------------------------------------------------------------------------
+# influxdb (REST client)
+set(INFLUXDB_GIT_TAG 8d8ab3b5ddc40b767a3ebf5eb1df76aa170dbca9)
+add_cmake_dependency(
+  NAME influxdb
+  DEPENDS cpr
+  GIT_REPOSITORY https://github.com/offa/influxdb-cxx
+  GIT_TAG ${INFLUXDB_GIT_TAG}
+  CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )

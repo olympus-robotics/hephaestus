@@ -5,16 +5,18 @@
 declare_module(
   NAME telemetry
   DEPENDS_ON_MODULES random serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS cpr fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS cpr influxdb fmt
 )
 
 add_subdirectory(proto)
 
 find_package(cpr REQUIRED)
+find_package(InfluxDB REQUIRED)
 find_package(fmt REQUIRED)
 
 # library sources
 set(SOURCES
+    src/influxdb_sink.cpp
     src/telemetry.cpp
     src/rest_sink.cpp
     src/terminal_sink.cpp
@@ -28,7 +30,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::serdes hephaestus::telemetry_proto cpr::cpr fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::serdes hephaestus::telemetry_proto cpr::cpr InfluxData::InfluxDB fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

@@ -32,4 +32,11 @@ struct RESTSinkConfig {
 };
 [[nodiscard]] auto createRESTSink(RESTSinkConfig config) -> std::unique_ptr<ITelemetrySink>;
 
+struct InfluxDBSinkConfig {
+  std::string url;
+  std::string token;
+  std::string database;
+};
+[[nodiscard]] auto createInfluxDBSink(InfluxDBSinkConfig config) -> std::unique_ptr<ITelemetrySink>;
+
 }  // namespace heph::telemetry

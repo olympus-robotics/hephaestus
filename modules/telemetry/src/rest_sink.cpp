@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include <absl/log/log.h>
 #include <cpr/cpr.h>
 
 #include "hephaestus/serdes/serdes.h"
@@ -24,7 +25,6 @@ private:
 };
 
 RESTSink::RESTSink(RESTSinkConfig config) : config_(std::move(config)) {
-  (void)config_;
 }
 
 void RESTSink::send(const LogEntry& log_entry) {
@@ -32,6 +32,9 @@ void RESTSink::send(const LogEntry& log_entry) {
   auto response = cpr::Post(cpr::Url{ config_.url }, cpr::Body{ std::move(log_entry_json) },
                             cpr::Header{ { "Content-Type", "application/json" } });
   // TODO: if response.status_code != 200 -> log error
+  LOG_IF(ERROR, response.status_code != 200)
+      << fmt::format("Failed to publish to REST endpoint with code {}, reason: {}, message {}",
+                     response.status_code, response.reason, response.text);
 }
 
 auto createRESTSink(RESTSinkConfig config) -> std::unique_ptr<ITelemetrySink> {
