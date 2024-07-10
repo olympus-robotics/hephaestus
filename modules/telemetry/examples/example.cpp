@@ -23,8 +23,8 @@ namespace heph::telemetry::examples {
 
 void run() {
   auto mt = random::createRNG();
-  static constexpr auto MIN_DURATION = std::chrono::milliseconds{ 100 }.count();
-  static constexpr auto MAX_DURATION = std::chrono::milliseconds{ 500 }.count();
+  static constexpr auto MIN_DURATION = std::chrono::milliseconds{ 1000 }.count();
+  static constexpr auto MAX_DURATION = std::chrono::milliseconds{ 5000 }.count();
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   while (!heph::utils::TerminationBlocker::stopRequested()) {
     auto now = telemetry::ClockT::now();
@@ -49,6 +49,8 @@ auto main(int argc, const char* argv[]) -> int {
   try {
     auto terminal_sink = heph::telemetry::createTerminalSink();
     heph::telemetry::Telemetry::registerSink(terminal_sink.get());
+    auto rest_sink = heph::telemetry::createRESTSink({ .url = "http://127.0.0.1:5000" });
+    heph::telemetry::Telemetry::registerSink(rest_sink.get());
 
     heph::telemetry::examples::run();
   } catch (std::exception& e) {
