@@ -26,6 +26,11 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${PROTOBUF_DEPENDS})
 endif()
 
+if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(CPR_DEPENDS curl)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -39,6 +44,7 @@ add_cmake_dependency(
 
 add_cmake_dependency(
   NAME zenohcxx
+  DEPENDS zenohc
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
   GIT_TAG ${ZENOH_VERSION}
   SOURCE_SUBDIR install
@@ -145,4 +151,26 @@ add_cmake_dependency(
 set(MCAP_TAG cb34e058cfd529f694a4ff1747517478339fc866)
 add_cmake_dependency(
   NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
+)
+
+# --------------------------------------------------------------------------------------------------
+# curl (REST client)
+set(CURL_VERSION 8.7.1)
+set(CURL_TAG curl-8_7_1)
+add_cmake_dependency(
+  NAME curl
+  VERSION ${CURL_VERSION}
+  GIT_REPOSITORY https://github.com/curl/curl.git
+  GIT_TAG ${CURL_TAG}
+)
+
+# --------------------------------------------------------------------------------------------------
+# cpr (REST client)
+set(CPR_GIT_TAG 21d3ad51afbd8e28931f8067cee3ff1ebd854a85)
+add_cmake_dependency(
+  NAME cpr
+  DEPENDS curl
+  GIT_REPOSITORY https://github.com/libcpr/cpr.git
+  GIT_TAG ${CPR_GIT_TAG}
+  CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
 )

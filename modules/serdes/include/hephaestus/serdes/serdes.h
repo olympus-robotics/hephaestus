@@ -15,6 +15,9 @@ template <class T>
 concept ProtobufSerializable = protobuf::ProtobufMessage<typename protobuf::ProtoAssociation<T>::Type>;
 
 template <class T>
+concept JSONSerializable = ProtobufSerializable<T>;  // Add new options when we extend support.
+
+template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
 
 template <class T>
