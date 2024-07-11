@@ -74,6 +74,7 @@ auto main(int argc, const char* argv[]) -> int {
     slam.get();
   } catch (std::exception& e) {
     fmt::println(stderr, "Execution terminated with exception: {}", e.what());
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
