@@ -47,7 +47,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # Abseil C++
 set(ABSEIL_VERSION 20240116)
-set(ABSEIL_TAG ${ABSEIL_VERSION}.0)
+set(ABSEIL_TAG ${ABSEIL_VERSION}.2)
 set(ABSEIL_CMAKE_ARGS -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
                       -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
 )
