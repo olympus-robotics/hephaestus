@@ -1,6 +1,5 @@
 #include "hephaestus/utils/filesystem/scoped_path.h"
 
-#include <cstdio>
 #include <filesystem>
 #include <string>
 #include <string_view>
