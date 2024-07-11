@@ -174,8 +174,7 @@ add_cmake_dependency(
 set(CPR_GIT_TAG 21d3ad51afbd8e28931f8067cee3ff1ebd854a85)
 add_cmake_dependency(
   NAME cpr
-  DEPENDS curl
-  URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
+  DEPENDS curl URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
   CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
 )
 
@@ -184,7 +183,6 @@ add_cmake_dependency(
 set(INFLUXDB_GIT_TAG 8d8ab3b5ddc40b767a3ebf5eb1df76aa170dbca9)
 add_cmake_dependency(
   NAME influxdb
-  DEPENDS cpr
-  URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
+  DEPENDS cpr URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
   CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )
