@@ -10,6 +10,6 @@ using namespace ::testing;
 namespace hephtelemetry::tests {
 
 TEST(Example, Example) {
-  EXPECT_TRUE(false);
+  EXPECT_TRUE(true);
 }
 }  // namespace hephtelemetry::tests

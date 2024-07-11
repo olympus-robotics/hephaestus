@@ -1,8 +1,13 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <cerrno>
+#include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <memory>
+#include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
 
