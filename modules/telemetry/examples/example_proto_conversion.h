@@ -20,6 +20,8 @@ struct MotorLog {
   double velocity_rps{};
   std::string error_message;
   std::chrono::milliseconds elapsed_time;
+  uint32_t counter{};
+  int32_t temperature_celsius{};
 };
 
 }  // namespace telemetry::examples
@@ -39,6 +41,8 @@ inline void toProto(proto::MotorLog& proto_motor_log, const MotorLog& motor_log)
   proto_motor_log.set_error_message(motor_log.error_message);
   proto_motor_log.set_elapsed_time_ns(
       std::chrono::duration_cast<std::chrono::nanoseconds>(motor_log.elapsed_time).count());
+  proto_motor_log.set_counter(motor_log.counter);
+  proto_motor_log.set_temperature_celsius(motor_log.temperature_celsius);
 }
 
 inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_log) {
@@ -50,6 +54,8 @@ inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_lo
   motor_log.error_message = proto_motor_log.error_message();
   motor_log.elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::nanoseconds{ proto_motor_log.elapsed_time_ns() });
+  motor_log.counter = proto_motor_log.counter();
+  motor_log.temperature_celsius = proto_motor_log.temperature_celsius();
 }
 }  // namespace telemetry::examples
 

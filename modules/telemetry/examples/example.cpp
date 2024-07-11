@@ -35,6 +35,8 @@ void run() {
                                   .error_message = random::randomT<std::string>(mt, 4),
                                   .elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
                                       telemetry::ClockT::now() - now),
+                                  .counter = random::randomT<uint32_t>(mt),
+                                  .temperature_celsius = -random::randomT<int32_t>(mt),
                               });
   }
 }

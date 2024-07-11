@@ -17,4 +17,6 @@ message MotorLog {
     double velocity_rps = 3;
     string error_message = 4;
     int64 elapsed_time_ns = 5;
+    uint32 counter = 6;
+    int32 temperature_celsius = 7;
 }

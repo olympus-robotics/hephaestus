@@ -16,40 +16,50 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/telemetry/sink.h"
-#include "proto_conversion.h"  // NOLINT(misc-include-cleaner)
 
 namespace heph::telemetry {
 namespace {
-template <typename T>  // TODO: add requires T primitive type
-  requires std::is_integral_v<T>
+template <typename T>
+  requires std::is_same_v<T, int64_t> || std::is_same_v<T, double>
 [[nodiscard]] auto stringTo(const std::string& str) -> std::optional<T> {
+  const char* start = str.c_str();
+  char* end{};
+  errno = 0;
   T result{};
-  const auto* begin = str.data();
-  const auto* end = begin + str.size();  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  if constexpr (std::is_same_v<T, int64_t>) {
+    static constexpr int BASE = 10;
+    result = std::strtoll(start, &end, BASE);
+  } else {
+    result = std::strtod(start, &end);
+  }
 
-  auto [ptr, ec] = std::from_chars(begin, end, result);
-
-  if (ec == std::errc() && ptr == end) {
+  if (errno != ERANGE && *end == '\0') {
     return result;
   }
 
   return std::nullopt;
 }
 
-template <typename T>  // TODO: add requires T primitive type
-  requires std::is_floating_point_v<T>
-[[nodiscard]] auto stringToD(const std::string& str) -> std::optional<T> {
-  T result{};
-  const auto* begin = str.data();
-  const auto* end = begin + str.size();  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-
-  auto [ptr, ec] = std::from_chars(begin, end, result);
-
-  if (ec == std::errc() && ptr == end) {
-    return result;
+// We neeed to convert the JSON value to the original type.
+// Supported types are: int64_t, double, string.
+void addValueToPoint(influxdb::Point& point, const std::string& key, const nlohmann::json& value) {
+  if (value.is_number_float()) {
+    point.addField(key, value.get<double>());
+  } else if (value.is_number_integer() || value.is_number_unsigned()) {
+    point.addField(key, value.get<int64_t>());
+  } else if (value.is_string()) {
+    const auto value_str = value.get<std::string>();
+    // According to JSON specification integer bigger than 32bits are converted to string, so we need to check
+    // if the string is actually a number.
+    if (const auto value_i = stringTo<int64_t>(value_str); value_i.has_value()) {
+      point.addField(key, value_i.value());
+    } else {
+      point.addField(key, value_str);
+    }
+  } else {
+    LOG(ERROR) << fmt::format("Failed to add element {} with value {} to the influxdb point", key,
+                              value.dump());
   }
-
-  return std::nullopt;
 }
 
 }  // namespace
@@ -80,14 +90,7 @@ void InfluxDBSink::send(const LogEntry& log_entry) {
   fmt::println("Sending log entry: {}", log_entry.json_values);
   const auto json_obj = nlohmann::json::parse(log_entry.json_values);
   for (const auto& [key, value] : json_obj.items()) {
-    fmt::println("key: {}, value: {}", key, value.dump());
-    if (const auto value_i = stringTo<int64_t>(value.get<std::string>()); value_i.has_value()) {
-      point.addField(key, value_i.value());
-    } else if (const auto value_d = stringToD<double>(value.get<std::string>()); value_d.has_value()) {
-      point.addField(key, value_d.value());
-    } else {
-      point.addField(key, value.get<std::string>());
-    }
+    addValueToPoint(point, key, value);
   }
 
   try {

@@ -36,3 +36,6 @@ build/
 *.exe
 *.out
 *.app
+
+# Python
+**/__pycache__/
