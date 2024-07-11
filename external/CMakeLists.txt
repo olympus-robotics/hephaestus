@@ -175,7 +175,7 @@ set(CPR_GIT_TAG 21d3ad51afbd8e28931f8067cee3ff1ebd854a85)
 add_cmake_dependency(
   NAME cpr
   DEPENDS curl
-  URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.zip
+  URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
   CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
 )
 
