@@ -36,6 +36,7 @@ struct InfluxDBSinkConfig {
   std::string url;
   std::string token;
   std::string database;
+  std::size_t batch_size{ 0 };
 };
 [[nodiscard]] auto createInfluxDBSink(InfluxDBSinkConfig config) -> std::unique_ptr<ITelemetrySink>;
 

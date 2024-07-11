@@ -13,11 +13,11 @@ class InfluxDBRESTClient:
         self.INFLUXDB_URL = "http://localhost:8087"
         self.INFLUXDB_USER = "admin"
         self.INFLUXDB_PASSWORD = "adminadmin"
-        self.INFLUXDB_ORG = "filics"
-        self.INFLUXDB_BUCKET = "filics"
+        self.INFLUXDB_ORG = "olympus-robotics"
+        self.INFLUXDB_BUCKET = "hephaestus"
+
         try:
             self._client = InfluxDBClient(self.INFLUXDB_URL, org=self.INFLUXDB_ORG, username=self.INFLUXDB_USER, password=self.INFLUXDB_PASSWORD)
-            self._setup_influxdb()
         except Exception as e:
             print(f"Failed to connect to InfluxDB: {str(e)}")
             exit(1)
@@ -53,24 +53,6 @@ class InfluxDBRESTClient:
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-
-    def _setup_influxdb(self):
-        org_api = OrganizationsApi(self._client)
-        bucket_api = BucketsApi(self._client)
-
-        # Check if organization exists, create if it doesn't
-        try:
-            org = org_api.find_organizations(org=self.INFLUXDB_ORG)[0]
-        except IndexError:
-            org = org_api.create_organization(self.INFLUXDB_ORG)
-
-        self._org_id = org.id
-
-        # Check if bucket exists, create if it doesn't
-        try:
-            bucket_api.find_bucket_by_name(self.INFLUXDB_BUCKET)
-        except Exception:
-            bucket_api.create_bucket(bucket_name=self.INFLUXDB_BUCKET, org_id=self._org_id)
 
     def run(self):
         self._app.run(debug=True)

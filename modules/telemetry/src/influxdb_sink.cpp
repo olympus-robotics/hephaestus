@@ -19,6 +19,7 @@
 
 namespace heph::telemetry {
 namespace {
+// TODO: maybe move this to some central place
 template <typename T>
   requires std::is_same_v<T, int64_t> || std::is_same_v<T, double>
 [[nodiscard]] auto stringTo(const std::string& str) -> std::optional<T> {
@@ -79,15 +80,18 @@ private:
 InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config)) {
   static constexpr auto URI_FORMAT = "http://{}@{}?db={}";
   const auto url = fmt::format(URI_FORMAT, config_.token, config_.url, config_.database);
-  fmt::println("Connecting to InfluxDB at {}", url);
+  LOG(INFO) << fmt::format("Connecting to InfluxDB at {}", url);
   influxdb_ = influxdb::InfluxDBFactory::Get(url);
+  if (config_.batch_size > 0) {
+    influxdb_->batchOf(config_.batch_size);
+  }
 }
 
 void InfluxDBSink::send(const LogEntry& log_entry) {
   auto point = influxdb::Point{ log_entry.component }
                    .addTag("tag", log_entry.tag)
                    .setTimestamp(log_entry.log_timestamp);
-  fmt::println("Sending log entry: {}", log_entry.json_values);
+
   const auto json_obj = nlohmann::json::parse(log_entry.json_values);
   for (const auto& [key, value] : json_obj.items()) {
     addValueToPoint(point, key, value);
@@ -98,11 +102,6 @@ void InfluxDBSink::send(const LogEntry& log_entry) {
   } catch (std::exception& e) {
     LOG(ERROR) << fmt::format("Failed to publish to InfluxDB: {}", e.what());
   }
-
-  // TODO: if response.status_code != 200 -> log error
-  // LOG_IF(ERROR, response.status_code != 200)
-  //     << fmt::format("Failed to publish to REST endpoint with code {}, reason: {}, message {}",
-  //                    response.status_code, response.reason, response.text);
 }
 
 auto createInfluxDBSink(InfluxDBSinkConfig config) -> std::unique_ptr<ITelemetrySink> {

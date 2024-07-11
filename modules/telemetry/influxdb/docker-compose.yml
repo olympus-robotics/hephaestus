@@ -15,8 +15,8 @@ services:
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=adminadmin
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
-      - DOCKER_INFLUXDB_INIT_ORG=filics
-      - DOCKER_INFLUXDB_INIT_BUCKET=filics
+      - DOCKER_INFLUXDB_INIT_ORG=olympus-robotics
+      - DOCKER_INFLUXDB_INIT_BUCKET=hephaestus
 
   grafana:
     image: grafana/grafana:9.0.4

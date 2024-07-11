@@ -31,7 +31,7 @@ void RESTSink::send(const LogEntry& log_entry) {
   auto log_entry_json = serdes::serializeToJSON(log_entry);
   auto response = cpr::Post(cpr::Url{ config_.url }, cpr::Body{ std::move(log_entry_json) },
                             cpr::Header{ { "Content-Type", "application/json" } });
-  // TODO: if response.status_code != 200 -> log error
+
   LOG_IF(ERROR, response.status_code != 200)
       << fmt::format("Failed to publish to REST endpoint with code {}, reason: {}, message {}",
                      response.status_code, response.reason, response.text);
