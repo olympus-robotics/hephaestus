@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <mutex>
+#include <thread>
 #include <utility>
 
 namespace heph::utils::timing {
