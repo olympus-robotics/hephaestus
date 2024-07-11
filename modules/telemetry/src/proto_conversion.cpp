@@ -6,8 +6,8 @@
 
 #include <chrono>
 
+#include <google/protobuf/timestamp.pb.h>
 #include <google/protobuf/util/time_util.h>
-// #include <google/protobuf/>
 
 #include "hephaestus/telemetry/proto/log_entry.pb.h"
 #include "hephaestus/telemetry/sink.h"
