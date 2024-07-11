@@ -26,6 +26,8 @@ Hephaestus provides functionalities that cover the following domains:
 ### Env
 The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
 
+If you add or update a dependency, bump `DEPS_VERSION`.
+
 ### Compilation
 
 Hephaestus uses CMake to build, the build infrastructure is copied and adapted from [grape](https://github.com/cvilas/grape).
