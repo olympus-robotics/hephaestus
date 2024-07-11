@@ -10,7 +10,7 @@
 namespace heph::telemetry {
 using ClockT = std::chrono::system_clock;
 
-struct LogEntry {
+struct MetricEntry {
   std::string component;
   std::string tag;
   ClockT::time_point log_timestamp;
@@ -21,7 +21,7 @@ class ITelemetrySink {
 public:
   virtual ~ITelemetrySink() = default;
 
-  virtual void send(const LogEntry& log_entry) = 0;
+  virtual void send(const MetricEntry& log_entry) = 0;
 };
 
 /// Create a sink that print logs to the terminal.

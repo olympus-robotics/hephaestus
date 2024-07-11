@@ -74,7 +74,7 @@ public:
   explicit InfluxDBSink(InfluxDBSinkConfig config);
   ~InfluxDBSink() override = default;
 
-  void send(const LogEntry& log_entry) override;
+  void send(const MetricEntry& log_entry) override;
 
 private:
   InfluxDBSinkConfig config_;
@@ -91,7 +91,7 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
   }
 }
 
-void InfluxDBSink::send(const LogEntry& log_entry) {
+void InfluxDBSink::send(const MetricEntry& log_entry) {
   auto point = influxdb::Point{ log_entry.component }
                    .addTag("tag", log_entry.tag)
                    .setTimestamp(log_entry.log_timestamp);

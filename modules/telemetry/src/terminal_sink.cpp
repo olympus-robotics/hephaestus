@@ -13,10 +13,10 @@ class TerminalSink final : public ITelemetrySink {
 public:
   ~TerminalSink() override = default;
 
-  void send(const LogEntry& log_entry) override;
+  void send(const MetricEntry& log_entry) override;
 };
 
-void TerminalSink::send(const LogEntry& log_entry) {
+void TerminalSink::send(const MetricEntry& log_entry) {
   // TODO: we can replace this with spdlog or absl log
   fmt::println("Component: {} | Tag: {} | Values: [\n{}\n]", log_entry.component, log_entry.tag,
                log_entry.json_values);

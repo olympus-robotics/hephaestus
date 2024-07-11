@@ -10,14 +10,14 @@
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<heph::telemetry::LogEntry> {
-  using Type = heph::telemetry::proto::LogEntry;
+struct ProtoAssociation<heph::telemetry::MetricEntry> {
+  using Type = heph::telemetry::proto::MetricEntry;
 };
 }  // namespace heph::serdes::protobuf
 
 namespace heph::telemetry {
-void toProto(proto::LogEntry& proto_log_entry, const LogEntry& log_entry);
+void toProto(proto::MetricEntry& proto_log_entry, const MetricEntry& log_entry);
 
-void fromProto(const proto::LogEntry& proto_log_entry, LogEntry& log_entry);
+void fromProto(const proto::MetricEntry& proto_log_entry, MetricEntry& log_entry);
 
 }  // namespace heph::telemetry

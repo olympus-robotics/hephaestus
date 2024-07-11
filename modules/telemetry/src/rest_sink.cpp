@@ -18,7 +18,7 @@ public:
   explicit RESTSink(RESTSinkConfig config);
   ~RESTSink() override = default;
 
-  void send(const LogEntry& log_entry) override;
+  void send(const MetricEntry& log_entry) override;
 
 private:
   RESTSinkConfig config_;
@@ -27,7 +27,7 @@ private:
 RESTSink::RESTSink(RESTSinkConfig config) : config_(std::move(config)) {
 }
 
-void RESTSink::send(const LogEntry& log_entry) {
+void RESTSink::send(const MetricEntry& log_entry) {
   auto log_entry_json = serdes::serializeToJSON(log_entry);
   auto response = cpr::Post(cpr::Url{ config_.url }, cpr::Body{ std::move(log_entry_json) },
                             cpr::Header{ { "Content-Type", "application/json" } });

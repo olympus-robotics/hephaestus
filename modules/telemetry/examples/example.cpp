@@ -30,17 +30,17 @@ void runMotor() {
   while (!heph::utils::TerminationBlocker::stopRequested()) {
     auto now = telemetry::ClockT::now();
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
-    telemetry::Telemetry::log("telemetry_example", "motor1",
-                              MotorLog{
-                                  .status = random::randomT<MotorStatus>(mt),
-                                  .current_amp = random::randomT<double>(mt),
-                                  .velocity_rps = random::randomT<double>(mt),
-                                  .error_message = random::randomT<std::string>(mt, 4),
-                                  .elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                      telemetry::ClockT::now() - now),
-                                  .counter = random::randomT<uint32_t>(mt),
-                                  .temperature_celsius = -random::randomT<int32_t>(mt),
-                              });
+    telemetry::Telemetry::metric("telemetry_example", "motor1",
+                                 MotorLog{
+                                     .status = random::randomT<MotorStatus>(mt),
+                                     .current_amp = random::randomT<double>(mt),
+                                     .velocity_rps = random::randomT<double>(mt),
+                                     .error_message = random::randomT<std::string>(mt, 4),
+                                     .elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                         telemetry::ClockT::now() - now),
+                                     .counter = random::randomT<uint32_t>(mt),
+                                     .temperature_celsius = -random::randomT<int32_t>(mt),
+                                 });
   }
 }
 
@@ -48,7 +48,7 @@ void runSLAM() {
   auto mt = random::createRNG();
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   while (!heph::utils::TerminationBlocker::stopRequested()) {
-    telemetry::Telemetry::log("telemetry_example", "SLAM", "accuracy", random::randomT<double>(mt));
+    telemetry::Telemetry::metric("telemetry_example", "SLAM", "accuracy", random::randomT<double>(mt));
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
   }
 }

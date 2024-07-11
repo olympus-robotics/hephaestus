@@ -30,14 +30,14 @@ void fromProto(const google::protobuf::Timestamp& proto_timestamp, ClockT::time_
 
 }  // namespace
 
-void toProto(proto::LogEntry& proto_log_entry, const LogEntry& log_entry) {
+void toProto(proto::MetricEntry& proto_log_entry, const MetricEntry& log_entry) {
   proto_log_entry.set_component(log_entry.component);
   proto_log_entry.set_tag(log_entry.tag);
   toProto(*proto_log_entry.mutable_log_timestamp(), log_entry.log_timestamp);
   proto_log_entry.set_json_values(log_entry.json_values);
 }
 
-void fromProto(const proto::LogEntry& proto_log_entry, LogEntry& log_entry) {
+void fromProto(const proto::MetricEntry& proto_log_entry, MetricEntry& log_entry) {
   log_entry.component = proto_log_entry.component();
   log_entry.tag = proto_log_entry.tag();
   fromProto(proto_log_entry.log_timestamp(), log_entry.log_timestamp);
