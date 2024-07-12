@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include <absl/base/thread_annotations.h>
+
 #include "hephaestus/telemetry/sink.h"
 
 namespace heph::telemetry {
