@@ -8,38 +8,18 @@
 
 #include <absl/base/thread_annotations.h>
 
-#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/sink.h"
 
 namespace heph::telemetry {
 
-class Telemetry {
-public:
-  static void registerSink(ITelemetrySink* sink);
+void registerSink(ITelemetrySink* sink);
 
-  // Define the function input variable
-  template <serdes::JSONSerializable DataT>
-  static void metric(const std::string& component, const std::string& tag, const DataT& data,
-                     ClockT::time_point log_timestamp = ClockT::now());
-
-  template <typename DataT>
-    requires std::is_arithmetic_v<DataT> || std::is_same_v<DataT, std::string>
-  static void metric(const std::string& component, const std::string& tag, const std::string& key,
-                     const DataT& value, ClockT::time_point log_timestamp = ClockT::now());
-
-private:
-  [[nodiscard]] static auto instance() -> Telemetry&;
-
-  void metric(const MetricEntry& log_entry);
-
-private:
-  std::mutex sink_mutex_;
-  std::vector<ITelemetrySink*> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-};
+void metric(const MetricEntry& log_entry);
 
 template <serdes::JSONSerializable DataT>
-void Telemetry::metric(const std::string& component, const std::string& tag, const DataT& data,
-                       ClockT::time_point log_timestamp /*= ClockT::now()*/) {
+void metric(const std::string& component, const std::string& tag, const DataT& data,
+            ClockT::time_point log_timestamp = ClockT::now()) {
   const MetricEntry log_entry{
     .component = component,
     .tag = tag,
@@ -47,13 +27,13 @@ void Telemetry::metric(const std::string& component, const std::string& tag, con
     .json_values = serdes::serializeToJSON(data),
   };
 
-  instance().metric(log_entry);
+  metric(log_entry);
 }
 
 template <typename DataT>
   requires std::is_arithmetic_v<DataT> || std::is_same_v<DataT, std::string>
-void Telemetry::metric(const std::string& component, const std::string& tag, const std::string& key,
-                       const DataT& value, ClockT::time_point log_timestamp /*= ClockT::now()*/) {
+void metric(const std::string& component, const std::string& tag, const std::string& key, const DataT& value,
+            ClockT::time_point log_timestamp = ClockT::now()) {
   const MetricEntry log_entry{
     .component = component,
     .tag = tag,
@@ -61,7 +41,7 @@ void Telemetry::metric(const std::string& component, const std::string& tag, con
     .json_values = fmt::format("{{\"{}\": {}}}", key, value),
   };
 
-  instance().metric(log_entry);
+  metric(log_entry);
 }
 
 }  // namespace heph::telemetry
