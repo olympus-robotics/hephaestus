@@ -16,6 +16,8 @@ struct MetricEntry {
   ClockT::time_point log_timestamp;
   std::string json_values;
 };
+[[nodiscard]] auto toJSON(const MetricEntry& log) -> std::string;
+void fromJSON(std::string_view json, MetricEntry& log);
 
 class ITelemetrySink {
 public:

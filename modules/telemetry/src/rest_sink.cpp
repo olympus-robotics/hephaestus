@@ -6,10 +6,10 @@
 
 #include <absl/log/log.h>
 #include <cpr/cpr.h>
+#include <fmt/core.h>
 
-#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/sink.h"
-#include "proto_conversion.h"  // NOLINT(misc-include-cleaner)
 
 namespace heph::telemetry {
 

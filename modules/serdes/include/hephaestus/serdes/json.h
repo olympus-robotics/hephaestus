@@ -53,7 +53,8 @@ auto serializeToJSON(const T& data) -> std::string {
   } else if constexpr (HasJSONSerialization<T>) {
     return toJSON(data);
   } else if constexpr (HasNlohmannJSONSerialization<T>) {
-    return nlohmann::json{ data }.dump();
+    nlohmann::json j = data;
+    return j.dump();
   } else {
     static_assert(JSONSerializable<T>, "No serialization to JSON supported");
   }

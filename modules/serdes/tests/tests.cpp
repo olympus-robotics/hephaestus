@@ -9,6 +9,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/serdes/json.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"

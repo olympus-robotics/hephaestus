@@ -22,39 +22,27 @@
 #include "hephaestus/telemetry/sink.h"
 #include "hephaestus/telemetry/telemetry.h"
 #include "hephaestus/utils/signal_handler.h"
+#include "hephaestus/utils/stack_trace.h"
 
 namespace telemetry_example {
 constexpr auto MIN_DURATION = std::chrono::milliseconds{ 1000 }.count();
 constexpr auto MAX_DURATION = std::chrono::milliseconds{ 5000 }.count();
 
-struct NavigationLog {
+struct NavigationMetric {
   int frame_rate;
   double error_m;
 };
-
-[[nodiscard]] auto toJSON(const NavigationLog& log) -> std::string {
-  // NOTE: we can use nhlosom::json to serialize the data, but for this example we are using fmt::format.
+[[nodiscard]] auto toJSON(const NavigationMetric& log) -> std::string {
   return fmt::format(R"({{"frame_rate": {}, "error_m": {}}})", log.frame_rate, log.error_m);
 }
 
-struct ControllLog {
+struct ControlMetric {
   double error_m;
-  double drift;
+  int64_t elapsed_time;
   int frame_rate;
-  int64_t count;
 };
 // NOLINTNEXTLINE
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ControllLog, error_m, drift, frame_rate, count)
-
-// [[nodiscard]] auto toJSON(const ControllLog& log) -> std::string {
-//   const nlohmann::json j = log;
-//   return j.dump();
-// }
-
-// [[maybe_unused]] void fromJSON(std::string_view json, ControllLog& log) {
-//   auto j = nlohmann::json::parse(json);
-//   log = j.get<ControllLog>();
-// }
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ControlMetric, error_m, elapsed_time, frame_rate)
 
 void runMotor() {
   auto mt = heph::random::createRNG();
@@ -67,7 +55,7 @@ void runMotor() {
                             MotorLog{
                                 .status = heph::random::randomT<MotorStatus>(mt),
                                 .current_amp = heph::random::randomT<double>(mt),
-                                .velocity_rps = heph::random::randomT<double>(mt),
+                                .velocity_rps = heph::random::randomT<int64_t>(mt),
                                 .error_message = heph::random::randomT<std::string>(mt, 4),
                                 .elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
                                     heph::telemetry::ClockT::now() - now),
@@ -91,7 +79,7 @@ void runNavigation() {
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   while (!heph::utils::TerminationBlocker::stopRequested()) {
     heph::telemetry::metric("telemetry_example", "Navigation",
-                            NavigationLog{
+                            NavigationMetric{
                                 .frame_rate = heph::random::randomT<int>(mt),
                                 .error_m = heph::random::randomT<double>(mt),
                             });
@@ -104,11 +92,10 @@ void runControll() {
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   while (!heph::utils::TerminationBlocker::stopRequested()) {
     heph::telemetry::metric("telemetry_example", "Controll",
-                            ControllLog{
+                            ControlMetric{
                                 .error_m = heph::random::randomT<double>(mt),
-                                .drift = heph::random::randomT<double>(mt),
+                                .elapsed_time = heph::random::randomT<int64_t>(mt),
                                 .frame_rate = heph::random::randomT<int>(mt),
-                                .count = heph::random::randomT<int64_t>(mt),
                             });
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
   }
@@ -119,7 +106,10 @@ void runControll() {
 auto main(int argc, const char* argv[]) -> int {
   (void)argc;
   (void)argv;
+  const heph::utils::StackTrace stack;
+
   try {
+    // Register the sinks.
     auto terminal_sink = heph::telemetry::createTerminalSink();
     heph::telemetry::registerSink(terminal_sink.get());
     auto rest_sink = heph::telemetry::createRESTSink({ .url = "http://127.0.0.1:5000" });
@@ -128,9 +118,13 @@ auto main(int argc, const char* argv[]) -> int {
         { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "hephaestus" });
     heph::telemetry::registerSink(influxdb_sink.get());
 
+    // Motor: demonstrates protobuf serializable metric
     auto motor = std::async(std::launch::async, &telemetry_example::runMotor);
+    // SLAM: demonstrates single value metric
     auto slam = std::async(std::launch::async, &telemetry_example::runSLAM);
+    // Navigation: demonstrates JSON serializable metric
     auto navigation = std::async(std::launch::async, &telemetry_example::runNavigation);
+    // Navigation: demonstrates JSON serializable metric via nlohmann::json
     auto controll = std::async(std::launch::async, &telemetry_example::runControll);
 
     motor.get();

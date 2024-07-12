@@ -16,7 +16,7 @@ enum class MotorStatus : uint8_t { OK = 0, DISCONNECTED = 1, FAULT = 2, OVERHEAT
 struct MotorLog {
   MotorStatus status;
   double current_amp{};
-  double velocity_rps{};
+  int64_t velocity_rps{};
   std::string error_message;
   std::chrono::milliseconds elapsed_time;
   uint32_t counter{};

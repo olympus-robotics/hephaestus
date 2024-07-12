@@ -14,7 +14,7 @@ enum MotorStatus {
 message MotorLog {
     MotorStatus status = 1;
     double current_amp = 2;
-    double velocity_rps = 3;
+    int64 velocity_rps = 3;
     string error_message = 4;
     int64 elapsed_time_ns = 5;
     uint32 counter = 6;
