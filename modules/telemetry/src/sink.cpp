@@ -13,8 +13,8 @@
 #include <nlohmann/json.hpp>
 
 namespace heph::telemetry {
-// NOTE: we can use nhlosom::json to serialize the data, but for this example we are using fmt::format.
 auto toJSON(const MetricEntry& log) -> std::string {
+  // NOTE: we could use nhlosom::json to serialize the data, but we are using fmt::format for simplicity.
   return fmt::format(
       R"({{"component": "{}", "tag": "{}", "log_timestamp_ns": {}, "json_values": {}}})", log.component,
       log.tag,

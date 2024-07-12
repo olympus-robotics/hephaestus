@@ -10,9 +10,6 @@
 
 namespace heph::serdes {
 
-template <class T>
-concept ProtobufSerializable = protobuf::ProtobufMessage<typename protobuf::ProtoAssociation<T>::Type>;
-
 template <typename T>
 concept HasJSONSerialization = requires(const T& data) {
   { toJSON(data) } -> std::convertible_to<std::string>;
@@ -30,11 +27,11 @@ concept HasNlohmannJSONSerialization = requires(const T& data) {
 
 template <class T>
 concept JSONSerializable =
-    ProtobufSerializable<T> || HasJSONSerialization<T> || HasNlohmannJSONSerialization<T>;
+    protobuf::ProtobufSerializable<T> || HasJSONSerialization<T> || HasNlohmannJSONSerialization<T>;
 
 template <class T>
 concept JSONDeserializable =
-    ProtobufSerializable<T> || HasJSONDeserialization<T> || HasNlohmannJSONSerialization<T>;
+    protobuf::ProtobufSerializable<T> || HasJSONDeserialization<T> || HasNlohmannJSONSerialization<T>;
 
 template <class T>
 [[nodiscard]] auto serializeToJSON(const T& data) -> std::string;
@@ -48,12 +45,12 @@ auto deserializeFromJSON(std::string_view buffer, T& data) -> void;
 
 template <JSONSerializable T>
 auto serializeToJSON(const T& data) -> std::string {
-  if constexpr (ProtobufSerializable<T>) {
+  if constexpr (protobuf::ProtobufSerializable<T>) {
     return protobuf::serializeToJSON(data);
   } else if constexpr (HasJSONSerialization<T>) {
     return toJSON(data);
   } else if constexpr (HasNlohmannJSONSerialization<T>) {
-    nlohmann::json j = data;
+    const nlohmann::json j = data;
     return j.dump();
   } else {
     static_assert(JSONSerializable<T>, "No serialization to JSON supported");
@@ -62,7 +59,7 @@ auto serializeToJSON(const T& data) -> std::string {
 
 template <JSONDeserializable T>
 auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
-  if constexpr (ProtobufSerializable<T>) {
+  if constexpr (protobuf::ProtobufSerializable<T>) {
     protobuf::deserializeFromJSON(buffer, data);
   } else if constexpr (HasJSONDeserialization<T>) {
     fromJSON(buffer, data);
