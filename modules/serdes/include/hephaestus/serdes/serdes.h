@@ -14,8 +14,21 @@ namespace heph::serdes {
 template <class T>
 concept ProtobufSerializable = protobuf::ProtobufMessage<typename protobuf::ProtoAssociation<T>::Type>;
 
+template <typename T>
+concept HasJSONSerialization = requires(const T& data) {
+  { toJSON(data) } -> std::convertible_to<std::string>;
+};
+
+template <typename T>
+concept HasJSONDeserialization = requires(T& mutable_data, std::string_view json) {
+  { fromJSON(json, mutable_data) };
+};
+
 template <class T>
-concept JSONSerializable = ProtobufSerializable<T>;  // Add new options when we extend support.
+concept JSONSerializable = ProtobufSerializable<T> || HasJSONSerialization<T>;
+
+template <class T>
+concept JSONDeserializable = ProtobufSerializable<T> || HasJSONDeserialization<T>;
 
 template <class T>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
@@ -48,12 +61,14 @@ auto serialize(const T& data) -> std::vector<std::byte> {
   }
 }
 
-template <class T>
+template <JSONSerializable T>
 auto serializeToJSON(const T& data) -> std::string {
   if constexpr (ProtobufSerializable<T>) {
     return protobuf::serializeToJSON(data);
+  } else if (HasJSONSerialization<T>) {
+    return toJSON(data);
   } else {
-    static_assert(ProtobufSerializable<T>, "No serialization to JSON supported");
+    static_assert(JSONSerializable<T>, "No serialization to JSON supported");
   }
 }
 
@@ -75,12 +90,14 @@ auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
   }
 }
 
-template <class T>
+template <JSONDeserializable T>
 auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
   if constexpr (ProtobufSerializable<T>) {
     protobuf::deserializeFromJSON(buffer, data);
+  } else if (HasJSONDeserialization<T>) {
+    fromJSON(buffer, data);
   } else {
-    static_assert(ProtobufSerializable<T>, "No deserialization from JSON supported");
+    static_assert(JSONDeserializable<T>, "No deserialization from JSON supported");
   }
 }
 

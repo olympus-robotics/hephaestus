@@ -6,6 +6,8 @@
 
 #include <type_traits>
 
+#include <absl/base/thread_annotations.h>
+
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/sink.h"
 
@@ -31,7 +33,8 @@ private:
   void metric(const MetricEntry& log_entry);
 
 private:
-  std::vector<ITelemetrySink*> sinks_;
+  std::mutex sink_mutex_;
+  std::vector<ITelemetrySink*> sinks_ ABSL_GUARDED_BY(sink_mutex_);
 };
 
 template <serdes::JSONSerializable DataT>

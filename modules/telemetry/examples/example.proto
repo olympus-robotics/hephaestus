@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/duration.proto";
 
-package heph.telemetry.examples.proto;
+package telemetry_example.proto;
 
 enum MotorStatus {
     OK = 0;

@@ -9,8 +9,7 @@
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph {
-namespace telemetry::examples {
+namespace telemetry_example {
 
 enum class MotorStatus : uint8_t { OK = 0, DISCONNECTED = 1, FAULT = 2, OVERHEATING = 3 };
 
@@ -24,18 +23,18 @@ struct MotorLog {
   int32_t temperature_celsius{};
 };
 
-}  // namespace telemetry::examples
+}  // namespace telemetry_example
 
-namespace serdes::protobuf {
+namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<telemetry::examples::MotorLog> {
-  using Type = telemetry::examples::proto::MotorLog;
+struct ProtoAssociation<telemetry_example::MotorLog> {
+  using Type = telemetry_example::proto::MotorLog;
 };
-}  // namespace serdes::protobuf
+}  // namespace heph::serdes::protobuf
 
-namespace telemetry::examples {
+namespace telemetry_example {
 inline void toProto(proto::MotorLog& proto_motor_log, const MotorLog& motor_log) {
-  proto_motor_log.set_status(static_cast<examples::proto::MotorStatus>(motor_log.status));
+  proto_motor_log.set_status(static_cast<proto::MotorStatus>(motor_log.status));
   proto_motor_log.set_current_amp(motor_log.current_amp);
   proto_motor_log.set_velocity_rps(motor_log.velocity_rps);
   proto_motor_log.set_error_message(motor_log.error_message);
@@ -47,7 +46,7 @@ inline void toProto(proto::MotorLog& proto_motor_log, const MotorLog& motor_log)
 
 inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_log) {
   auto status = magic_enum::enum_cast<MotorStatus>(static_cast<uint8_t>(proto_motor_log.status()));
-  throwExceptionIf<InvalidDataException>(!status.has_value(), "failed to convert MotorStatus");
+  heph::throwExceptionIf<heph::InvalidDataException>(!status.has_value(), "failed to convert MotorStatus");
   motor_log.status = status.value();  // NOLINT(bugprone-unchecked-optional-access)
   motor_log.current_amp = proto_motor_log.current_amp();
   motor_log.velocity_rps = proto_motor_log.velocity_rps();
@@ -57,6 +56,4 @@ inline void fromProto(const proto::MotorLog& proto_motor_log, MotorLog& motor_lo
   motor_log.counter = proto_motor_log.counter();
   motor_log.temperature_celsius = proto_motor_log.temperature_celsius();
 }
-}  // namespace telemetry::examples
-
-}  // namespace heph
+}  // namespace telemetry_example
