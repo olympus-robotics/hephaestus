@@ -13,7 +13,7 @@
 
 namespace heph::telemetry {
 
-void registerSink(ITelemetrySink* sink);
+void registerSink(std::unique_ptr<ITelemetrySink> sink);
 
 void metric(const MetricEntry& log_entry);
 

@@ -9,8 +9,8 @@
 #include <future>
 #include <random>
 #include <string>
-// #include <string_view>
 #include <thread>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -110,13 +110,15 @@ auto main(int argc, const char* argv[]) -> int {
 
   try {
     // Register the sinks.
-    auto terminal_sink = heph::telemetry::createTerminalSink();
-    heph::telemetry::registerSink(terminal_sink.get());
-    auto rest_sink = heph::telemetry::createRESTSink({ .url = "http://127.0.0.1:5000" });
-    heph::telemetry::registerSink(rest_sink.get());
-    auto influxdb_sink = heph::telemetry::createInfluxDBSink(
-        { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "hephaestus" });
-    heph::telemetry::registerSink(influxdb_sink.get());
+    {
+      auto terminal_sink = heph::telemetry::createTerminalSink();
+      heph::telemetry::registerSink(std::move(terminal_sink));
+      auto rest_sink = heph::telemetry::createRESTSink({ .url = "http://127.0.0.1:5000" });
+      heph::telemetry::registerSink(std::move(rest_sink));
+      auto influxdb_sink = heph::telemetry::createInfluxDBSink(
+          { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "hephaestus" });
+      heph::telemetry::registerSink(std::move(influxdb_sink));
+    }
 
     // Motor: demonstrates protobuf serializable metric
     auto motor = std::async(std::launch::async, &telemetry_example::runMotor);
