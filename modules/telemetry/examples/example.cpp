@@ -30,6 +30,7 @@ struct NavigationLog {
 };
 
 [[nodiscard]] auto toJSON(const NavigationLog& log) -> std::string {
+  // NOTE: we can use nhlosom::json to serialize the data, but for this example we are using fmt::format.
   return fmt::format(R"({{"frame_rate": {}, "error_m": {}}})", log.frame_rate, log.error_m);
 }
 
