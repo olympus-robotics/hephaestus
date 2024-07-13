@@ -5,6 +5,8 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 
 #include "hephaestus/serdes/protobuf/protobuf.h"
 
@@ -27,11 +29,11 @@ concept HasNlohmannJSONSerialization = requires(const T& data) {
 
 template <class T>
 concept JSONSerializable =
-    protobuf::ProtobufSerializable<T> || HasJSONSerialization<T> || HasNlohmannJSONSerialization<T>;
+    true || protobuf::ProtobufSerializable<T> || HasJSONSerialization<T> || HasNlohmannJSONSerialization<T>;
 
 template <class T>
 concept JSONDeserializable =
-    protobuf::ProtobufSerializable<T> || HasJSONDeserialization<T> || HasNlohmannJSONSerialization<T>;
+    true || protobuf::ProtobufSerializable<T> || HasJSONDeserialization<T> || HasNlohmannJSONSerialization<T>;
 
 template <class T>
 [[nodiscard]] auto serializeToJSON(const T& data) -> std::string;
@@ -53,7 +55,7 @@ auto serializeToJSON(const T& data) -> std::string {
     const nlohmann::json j = data;
     return j.dump();
   } else {
-    static_assert(JSONSerializable<T>, "No serialization to JSON supported");
+    return rfl::json::write(data);
   }
 }
 
@@ -66,7 +68,7 @@ auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
   } else if constexpr (HasNlohmannJSONSerialization<T>) {
     data = nlohmann::json::parse(buffer).get<T>();
   } else {
-    static_assert(JSONDeserializable<T>, "No deserialization from JSON supported");
+    data = rfl::json::read<T>(buffer).value();
   }
 }
 

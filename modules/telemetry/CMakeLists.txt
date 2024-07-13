@@ -5,12 +5,13 @@
 declare_module(
   NAME telemetry
   DEPENDS_ON_MODULES random serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS cpr influxdb fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS cpr influxdb fmt reflect-cpp
 )
 
 find_package(cpr REQUIRED)
 find_package(InfluxDB REQUIRED)
 find_package(fmt REQUIRED)
+find_package(reflectcpp REQUIRED)
 
 # library sources
 set(SOURCES
@@ -27,7 +28,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::serdes cpr::cpr InfluxData::InfluxDB fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::serdes cpr::cpr InfluxData::InfluxDB fmt::fmt reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

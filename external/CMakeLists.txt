@@ -186,3 +186,15 @@ add_cmake_dependency(
   DEPENDS cpr URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
   CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )
+
+# --------------------------------------------------------------------------------------------------
+# reflect-cpp
+set(REFLECT_CPP_VERSION 0.13.0)
+set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION})
+add_cmake_dependency(
+  NAME reflect-cpp
+  VERSION ${REFLECT_CPP_VERSION}
+  GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+  GIT_TAG ${REFLECT_CPP_TAG}
+  CMAKE_ARGS -DREFLECTCPP_YAML=OFF
+)

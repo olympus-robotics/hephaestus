@@ -44,6 +44,12 @@ struct ControlMetric {
 // NOLINTNEXTLINE
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ControlMetric, error_m, elapsed_time, frame_rate)
 
+struct ReflectMetric {
+  double error_m;
+  int64_t elapsed_time;
+  int frame_rate;
+};
+
 void runMotor() {
   auto mt = heph::random::createRNG();
 
@@ -91,8 +97,8 @@ void runControll() {
   auto mt = heph::random::createRNG();
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   while (!heph::utils::TerminationBlocker::stopRequested()) {
-    heph::telemetry::metric("telemetry_example", "Controll",
-                            ControlMetric{
+    heph::telemetry::metric("telemetry_example", "Reflect",
+                            ReflectMetric{
                                 .error_m = heph::random::randomT<double>(mt),
                                 .elapsed_time = heph::random::randomT<int64_t>(mt),
                                 .frame_rate = heph::random::randomT<int>(mt),
