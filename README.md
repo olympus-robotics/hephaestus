@@ -21,6 +21,8 @@ Hephaestus provides functionalities that cover the following domains:
 
 > NOTE: most of the above functionalities are still work in progress.
 
+When should you use this over ROS? Click [here](comparison_to_ros.md)!
+
 ## Build
 
 ### Env
