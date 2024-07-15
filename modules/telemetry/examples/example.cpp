@@ -12,7 +12,7 @@
 #include <thread>
 #include <utility>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <nlohmann/detail/macro_scope.hpp>
 
 #include "example_proto_conversion.h"
