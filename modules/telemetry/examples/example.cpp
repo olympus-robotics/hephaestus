@@ -12,8 +12,8 @@
 #include <thread>
 #include <utility>
 
-#include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
+#include <fmt/format.h>
+#include <nlohmann/detail/macro_scope.hpp>
 
 #include "example_proto_conversion.h"
 #include "hephaestus/random/random_container.h"
