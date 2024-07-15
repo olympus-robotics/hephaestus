@@ -5,7 +5,6 @@
 
 #include "hephaestus/utils/stack_trace.h"
 
-#include <cerrno>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
