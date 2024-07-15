@@ -13,11 +13,18 @@
 
 namespace heph::telemetry {
 
+/// @brief Register a new telemetry sink.
+/// For every metric logged, the sink will be called to send the data.
+/// There is no limit on the number of sink supported.
 void registerSink(std::unique_ptr<ITelemetrySink> sink);
 
+/// @brief Generic metric logger.
 void metric(const MetricEntry& log_entry);
 
-template <serdes::JSONSerializable DataT>
+/// @brief Logs a metric entry.
+/// NOTE: the data needs to be serializable to JSON. For details on how to achieve this, see
+/// `heph::serdes::serializeToJSON`.
+template <typename DataT>
 void metric(const std::string& component, const std::string& tag, const DataT& data,
             ClockT::time_point log_timestamp = ClockT::now()) {
   const MetricEntry log_entry{

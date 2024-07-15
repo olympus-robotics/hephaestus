@@ -3,11 +3,14 @@
 //=================================================================================================
 
 #pragma once
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <vector>
 
-#include <nlohmann/json.hpp>
-
-#include "hephaestus/serdes/json.h"
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
+#include "hephaestus/serdes/type_info.h"
 
 namespace heph::serdes {
 

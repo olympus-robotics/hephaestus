@@ -4,10 +4,14 @@
 
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include <nlohmann/json.hpp>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
 
 namespace heph::serdes {
@@ -27,25 +31,26 @@ concept HasNlohmannJSONSerialization = requires(const T& data) {
   { nlohmann::json(data) } -> std::convertible_to<nlohmann::json>;
 };
 
-template <class T>
-concept JSONSerializable =
-    true || protobuf::ProtobufSerializable<T> || HasJSONSerialization<T> || HasNlohmannJSONSerialization<T>;
-
-template <class T>
-concept JSONDeserializable =
-    true || protobuf::ProtobufSerializable<T> || HasJSONDeserialization<T> || HasNlohmannJSONSerialization<T>;
-
+/// Serialize data to JSON.
+/// This is achieved by checking at compile time what serialization capabilities are provided for the input
+/// data. In order of priority, the following serialization methods are checked:
+// - Protobuf
+// - Custom `toJSON` / `fromJSON` functions
+// - Nlohmann JSON serialization
+// If none of the above are provided, we use reflection-based JSON serialization via `reflect-cpp` library.
 template <class T>
 [[nodiscard]] auto serializeToJSON(const T& data) -> std::string;
 
+/// Deserialize data from JSON.
+/// See `serializeToJSON` for more details.
 template <class T>
-auto deserializeFromJSON(std::string_view buffer, T& data) -> void;
+auto deserializeFromJSON(std::string_view json, T& data) -> void;
 
 // -----------------------------------------------------------------------------------------------
 // Implementation
 // -----------------------------------------------------------------------------------------------
 
-template <JSONSerializable T>
+template <typename T>
 auto serializeToJSON(const T& data) -> std::string {
   if constexpr (protobuf::ProtobufSerializable<T>) {
     return protobuf::serializeToJSON(data);
@@ -59,16 +64,16 @@ auto serializeToJSON(const T& data) -> std::string {
   }
 }
 
-template <JSONDeserializable T>
-auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
+template <typename T>
+auto deserializeFromJSON(std::string_view json, T& data) -> void {
   if constexpr (protobuf::ProtobufSerializable<T>) {
-    protobuf::deserializeFromJSON(buffer, data);
+    protobuf::deserializeFromJSON(json, data);
   } else if constexpr (HasJSONDeserialization<T>) {
-    fromJSON(buffer, data);
+    fromJSON(json, data);
   } else if constexpr (HasNlohmannJSONSerialization<T>) {
-    data = nlohmann::json::parse(buffer).get<T>();
+    data = nlohmann::json::parse(json).get<T>();
   } else {
-    data = rfl::json::read<T>(buffer).value();
+    data = rfl::json::read<T>(json).value();
   }
 }
 

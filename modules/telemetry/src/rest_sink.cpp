@@ -6,7 +6,6 @@
 
 #include <absl/log/log.h>
 #include <cpr/api.h>
-#include <cpr/cpr.h>
 #include <fmt/core.h>
 
 #include "hephaestus/serdes/json.h"
