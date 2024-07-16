@@ -65,8 +65,8 @@ auto ProgramDescription::defineFlag(const std::string& key, char short_key,
   return *this;
 }
 
-auto ProgramDescription::defineFlag(const std::string& key, const std::string& description)
-    -> ProgramDescription& {
+auto ProgramDescription::defineFlag(const std::string& key,
+                                    const std::string& description) -> ProgramDescription& {
   return defineFlag(key, '\0', description);
 }
 
