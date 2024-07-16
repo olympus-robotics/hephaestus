@@ -5,6 +5,7 @@
 #include "hephaestus/cli/program_options.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <sstream>
 #include <string>

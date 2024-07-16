@@ -76,7 +76,7 @@ template <IsTimestampT T, size_t Year>
   constexpr auto FINAL_MONTH = std::chrono::December;
   constexpr auto FINAL_DAY = std::chrono::last;
   constexpr auto FINAL_YEAR_MONTH_DAY = std::chrono::year_month_day_last{ YEAR / FINAL_MONTH / FINAL_DAY };
-  constexpr auto FINAL_DATE = T{ std::chrono::sys_days(FINAL_YEAR_MONTH_DAY) };
+  constexpr auto FINAL_DATE = T{ static_cast<std::chrono::sys_days>(FINAL_YEAR_MONTH_DAY) };
 
   // The final time of the day is 23:59:59.000...
   constexpr auto FINAL_TIME = std::chrono::duration_cast<typename T::duration>(std::chrono::hours{ 24 });

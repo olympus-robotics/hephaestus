@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributor
 //=================================================================================================
 
-#include <csignal>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
