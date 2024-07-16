@@ -24,13 +24,13 @@ concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
 ///  TerminationBlocker::waitForInterrupt();
 /// }
 /// // Or
-/// while (TerminationBlocker::stopRequested()) {
+/// while (!TerminationBlocker::stopRequested()) {
 /// // Do something
 /// }
 /// ```
 class TerminationBlocker {
 public:
-  /// Return false if a signal has been received, true otherwise.
+  /// Return true if a signal has been received, false otherwise.
   [[nodiscard]] static auto stopRequested() -> bool;
 
   /// Blocks until a signal has been received.
