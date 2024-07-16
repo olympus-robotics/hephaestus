@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/topic_database.h"
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>

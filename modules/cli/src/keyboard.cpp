@@ -5,7 +5,6 @@
 #include "hephaestus/cli/keyboard.h"
 
 #include <cstdio>
-#include <ctime>
 
 #include <sys/select.h>
 #include <termios.h>
