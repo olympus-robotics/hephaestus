@@ -7,6 +7,6 @@
 
 *Example*:
 
-For the Visual SLAM module instead of having one feature extraction, a feature cleaning, a prior estimation, a bundle adjustment and a mapping module, in hephaestus this all would be defined in one module that has images as input and map and pose as output.
+For the Visual SLAM module instead of having one feature extraction, a feature cleaning, a prior estimation, a bundle adjustment and a mapping module, all would be defined in one module that has images as input and map and pose as output.
 However hephaestus supports easy use of thread pools and asynchronous containers to still easily parallelize workload.
 Looking most of the SLAM code that is published, the ROS interface is usually just one node anyways. Hence hephaestus can be seen as facilitating multithreading by emposing clear architecture paradigms.
