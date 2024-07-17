@@ -21,13 +21,12 @@ Hephaestus provides functionalities that cover the following domains:
 
 > NOTE: most of the above functionalities are still work in progress.
 
-When should you use this over ROS? Click [here](comparison_to_ros.md)!
+When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 
 ## Build
 
 ### Env
 The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
-
 If you add or update a dependency, bump `DEPS_VERSION`.
 
 ### Compilation
