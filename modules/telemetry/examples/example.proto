@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+package telemetry_example.proto;
+
+enum MotorStatus {
+    OK = 0;
+    DISCONNECTED = 1;
+    FAULT = 2;
+    OVERHEATING = 3;
+}
+
+message MotorLog {
+    MotorStatus status = 1;
+    double current_amp = 2;
+    int64 velocity_rps = 3;
+    string error_message = 4;
+    int64 elapsed_time_ns = 5;
+    uint32 counter = 6;
+    int32 temperature_celsius = 7;
+}
