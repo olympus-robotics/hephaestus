@@ -10,6 +10,9 @@
 
 namespace heph::serdes {
 
+// TODO(filippo): I get the following compiler error, but it seems to me redundant to declare the constructor
+// for empty init. Remove lint warning?
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
 struct TypeInfo {
   enum class Serialization : uint8_t { TEXT = 0, JSON, PROTOBUF };
 
@@ -22,5 +25,6 @@ struct TypeInfo {
   [[nodiscard]] auto toJson() const -> std::string;
   [[nodiscard]] static auto fromJson(const std::string& info) -> TypeInfo;
 };
+// NOLINTEND(cppcoreguidelines-pro-type-member-init)
 
 }  // namespace heph::serdes

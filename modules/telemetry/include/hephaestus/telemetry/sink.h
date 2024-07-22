@@ -10,6 +10,8 @@
 namespace heph::telemetry {
 using ClockT = std::chrono::system_clock;
 
+// TODO(filippo): Seems redundant. Remove lint warning?
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
 struct MetricEntry {
   std::string component;
   std::string tag;
@@ -41,5 +43,6 @@ struct InfluxDBSinkConfig {
   std::size_t batch_size{ 0 };
 };
 [[nodiscard]] auto createInfluxDBSink(InfluxDBSinkConfig config) -> std::unique_ptr<ITelemetrySink>;
+// NOLINTEND(cppcoreguidelines-pro-type-member-init)
 
 }  // namespace heph::telemetry

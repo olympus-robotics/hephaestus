@@ -12,6 +12,9 @@
 namespace heph::serdes::protobuf {
 
 // TODO: add option to provide custom allocator for buffer.
+// TODO(filippo): I get the following compiler error, but it seems to me redundant to declare the constructor
+// for empty init. Remove lint warning?
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
 class SerializerBuffer {
 public:
   template <ProtobufMessage Proto>
@@ -41,5 +44,6 @@ public:
 private:
   std::span<const std::byte> buffer_;
 };
+// NOLINTEND(cppcoreguidelines-pro-type-member-init)
 
 }  // namespace heph::serdes::protobuf

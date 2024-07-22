@@ -18,10 +18,12 @@ set(SOURCES
     src/influxdb_sink.cpp
     src/rest_sink.cpp
     src/sink.cpp
+    src/struclog.cpp
     src/telemetry.cpp
     src/terminal_sink.cpp
     README.md
     include/hephaestus/telemetry/sink.h
+    include/hephaestus/telemetry/struclog.h
     include/hephaestus/telemetry/telemetry.h
 )
 
