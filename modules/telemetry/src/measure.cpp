@@ -5,13 +5,14 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <utility>
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/telemetry/sink.h"
+#include "hephaestus/telemetry/measure_sink.h"
 
 namespace heph::telemetry {
 
@@ -20,7 +21,7 @@ public:
   explicit Measure();
   static void registerSink(std::unique_ptr<IMeasureSink> sink);
 
-  static void metric(const MeasureEntry& log_entry);
+  static void measure(const MeasureEntry& measure_entry);
 
 private:
   [[nodiscard]] static auto instance() -> Measure&;
@@ -32,16 +33,17 @@ private:
   concurrency::MessageQueueConsumer<MeasureEntry> measure_entries_consumer_;
 };
 
-Measure::Measure()
-  : measure_entries_consumer_([this](const MeasureEntry& entry) { processMeasureEntries(entry); }) {
-}
-
 void registerSink(std::unique_ptr<IMeasureSink> sink) {
   Measure::registerSink(std::move(sink));
 }
 
-void metric(const MeasureEntry& log_entry) {
-  Measure::metric(log_entry);
+void measure(const MeasureEntry& measure_entry) {
+  Measure::measure(measure_entry);
+}
+
+Measure::Measure()
+  : measure_entries_consumer_([this](const MeasureEntry& entry) { processMeasureEntries(entry); },
+                              std::nullopt) {
 }
 
 auto Measure::instance() -> Measure& {
@@ -55,9 +57,9 @@ void Measure::registerSink(std::unique_ptr<IMeasureSink> sink) {
   telemetry.sinks_.push_back(std::move(sink));
 }
 
-void Measure::metric(const MeasureEntry& log_entry) {
+void Measure::measure(const MeasureEntry& measure_entry) {
   auto& telemetry = instance();
-  telemetry.measure_entries_consumer_.queue().push(log_entry);
+  telemetry.measure_entries_consumer_.queue().forcePush(measure_entry);
 }
 
 void Measure::processMeasureEntries(const MeasureEntry& entry) {

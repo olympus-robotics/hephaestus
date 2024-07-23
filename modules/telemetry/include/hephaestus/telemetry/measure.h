@@ -15,22 +15,22 @@ namespace heph::telemetry {
 void registerSink(std::unique_ptr<IMeasureSink> sink);
 
 /// @brief Generic metric logger.
-void measure(const MeasureEntry& log_entry);
+void measure(const MeasureEntry& measure_entry);
 
 /// @brief Logs a metric entry.
 /// NOTE: the data needs to be serializable to JSON. For details on how to achieve this, see
 /// `heph::serdes::serializeToJSON`.
 template <typename DataT>
 void measure(const std::string& component, const std::string& tag, const DataT& data,
-             ClockT::time_point log_timestamp = ClockT::now()) {
-  const MeasureEntry log_entry{
+             ClockT::time_point measure_timestamp = ClockT::now()) {
+  const MeasureEntry measure_entry{
     .component = component,
     .tag = tag,
-    .log_timestamp = log_timestamp,
+    .measure_timestamp = measure_timestamp,
     .json_values = serdes::serializeToJSON(data),
   };
 
-  measure(log_entry);
+  measure(measure_entry);
 }
 
 }  // namespace heph::telemetry
