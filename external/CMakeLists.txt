@@ -41,6 +41,7 @@ add_cmake_dependency(
 set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
 add_cmake_dependency(
   NAME zenohcxx
+  DEPENDS ${ZENOHCXX_DEPENDS}
   GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
   GIT_TAG ${ZENOHCXX_VERSION}
   SOURCE_SUBDIR install
