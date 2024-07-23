@@ -3,12 +3,15 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/serdes/json.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
@@ -36,6 +39,25 @@ public:
 struct Data {
   int a = NUMBER;
 };
+
+struct DummyJSONSerializable {
+  auto operator==(const DummyJSONSerializable& other) const -> bool = default;
+  int dummy = 0;
+};
+
+[[nodiscard]] auto toJSON(const DummyJSONSerializable& data) -> std::string {
+  return std::to_string(data.dummy);
+}
+
+void fromJSON(std::string_view json, DummyJSONSerializable& data) {
+  data.dummy = std::stoi(json.data());
+}
+
+struct DummyNlohmannJSONSerializable {
+  auto operator==(const DummyNlohmannJSONSerializable& other) const -> bool = default;
+  int dummy = 0;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DummyNlohmannJSONSerializable, dummy)
 
 }  // namespace heph::serdes::tests
 
@@ -117,6 +139,24 @@ TEST(SerDesJSON, Protobuf) {
   deserializeFromJSON(buffer, user_des);
 
   EXPECT_EQ(user, user_des);
+}
+
+TEST(SerDesJSON, JSONSerializable) {
+  const auto dummy = DummyJSONSerializable{ .dummy = NUMBER };
+  auto buffer = serializeToJSON(dummy);
+  DummyJSONSerializable dummy_des;
+  deserializeFromJSON(buffer, dummy_des);
+
+  EXPECT_EQ(dummy, dummy_des);
+}
+
+TEST(SerDesJSON, NlohmannJSONSerializable) {
+  const auto dummy = DummyNlohmannJSONSerializable{ .dummy = NUMBER };
+  auto buffer = serializeToJSON(dummy);
+  DummyNlohmannJSONSerializable dummy_des;
+  deserializeFromJSON(buffer, dummy_des);
+
+  EXPECT_EQ(dummy, dummy_des);
 }
 
 TEST(SerDesText, Protobuf) {

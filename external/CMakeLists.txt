@@ -146,3 +146,15 @@ set(MCAP_TAG cb34e058cfd529f694a4ff1747517478339fc866)
 add_cmake_dependency(
   NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
 )
+
+# --------------------------------------------------------------------------------------------------
+# reflect-cpp
+set(REFLECT_CPP_VERSION 0.13.0)
+set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION})
+add_cmake_dependency(
+  NAME reflect-cpp
+  VERSION ${REFLECT_CPP_VERSION}
+  GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+  GIT_TAG ${REFLECT_CPP_TAG}
+  CMAKE_ARGS -DREFLECTCPP_YAML=OFF
+)

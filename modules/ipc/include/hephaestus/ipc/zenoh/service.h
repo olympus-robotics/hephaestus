@@ -53,9 +53,9 @@ auto removeChangingBytes(std::span<const std::byte> buffer) -> std::span<const s
 
 template <typename RequestT, typename ReplyT>
 constexpr void checkTemplatedTypes() {
-  static_assert(serdes::ProtobufSerializable<RequestT> || std::is_same_v<RequestT, std::string>,
+  static_assert(serdes::protobuf::ProtobufSerializable<RequestT> || std::is_same_v<RequestT, std::string>,
                 "Request needs to be serializable or std::string.");
-  static_assert(serdes::ProtobufSerializable<ReplyT> || std::is_same_v<ReplyT, std::string>,
+  static_assert(serdes::protobuf::ProtobufSerializable<ReplyT> || std::is_same_v<ReplyT, std::string>,
                 "Reply needs to be serializable or std::string.");
 }
 

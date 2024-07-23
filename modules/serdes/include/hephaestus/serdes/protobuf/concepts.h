@@ -23,4 +23,7 @@ concept ProtobufConvertible = requires(T data, Proto proto) {
   { fromProto(proto, data) };
 };
 
+template <class T>
+concept ProtobufSerializable = protobuf::ProtobufMessage<typename protobuf::ProtoAssociation<T>::Type>;
+
 }  // namespace heph::serdes::protobuf
