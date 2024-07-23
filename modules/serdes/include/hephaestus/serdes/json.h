@@ -8,8 +8,6 @@
 #include <string_view>
 
 #include <nlohmann/json.hpp>
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
