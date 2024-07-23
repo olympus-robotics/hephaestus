@@ -10,6 +10,7 @@
 #include <functional>
 #include <future>
 #include <mutex>
+#include <thread>
 #include <utility>
 
 #include <absl/log/log.h>

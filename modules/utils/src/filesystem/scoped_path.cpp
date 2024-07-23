@@ -1,5 +1,6 @@
 #include "hephaestus/utils/filesystem/scoped_path.h"
 
+#include <cstdio>  // NOLINT(misc-include-cleaner)
 #include <filesystem>
 #include <string>
 #include <string_view>

@@ -1,9 +1,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <csignal>
 #include <cstdlib>
 #include <exception>
+#include <string>
 #include <utility>
 
 #include <fmt/core.h>
