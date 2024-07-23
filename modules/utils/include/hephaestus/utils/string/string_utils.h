@@ -50,4 +50,25 @@ constexpr auto truncate(std::string_view str, std::string_view start_token, std:
                                                  str.substr(0, end_pos);
 }
 
+template <typename T>
+  requires std::is_same_v<T, int64_t> || std::is_same_v<T, double>
+[[nodiscard]] auto stringTo(const std::string& str) -> std::optional<T> {
+  const char* start = str.c_str();
+  char* end{};
+  errno = 0;
+  T result{};
+  if constexpr (std::is_same_v<T, int64_t>) {
+    static constexpr int BASE = 10;
+    result = std::strtoll(start, &end, BASE);
+  } else {
+    result = std::strtod(start, &end);
+  }
+
+  if (errno != ERANGE && *end == '\0') {
+    return result;
+  }
+
+  return std::nullopt;
+}
+
 }  // namespace heph::utils::string
