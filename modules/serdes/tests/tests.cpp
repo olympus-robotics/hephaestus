@@ -10,6 +10,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <nlohmann/detail/macro_scope.hpp>
 
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
