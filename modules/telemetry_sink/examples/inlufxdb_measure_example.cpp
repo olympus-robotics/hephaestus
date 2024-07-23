@@ -64,7 +64,7 @@ auto main(int argc, const char* argv[]) -> int {
     {
       auto influxdb_sink = heph::telemetry_sink::InfluxDBSink::create(
           { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "hephaestus" });
-      heph::telemetry::registerSink(std::move(influxdb_sink));
+      heph::telemetry::registerMeasureSink(std::move(influxdb_sink));
     }
 
     // Navigation: demonstrates JSON serializable metric via nlohmann::json
