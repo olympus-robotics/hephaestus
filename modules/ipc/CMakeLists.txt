@@ -5,7 +5,7 @@
 declare_module(
   NAME ipc
   DEPENDS_ON_MODULES cli concurrency containers utils serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohcxx
+  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
 
 find_package(absl REQUIRED)
@@ -57,6 +57,7 @@ define_module_library(
     nlohmann_json::nlohmann_json
     range-v3::range-v3
     zenohc::lib
+    zenohcxx::zenohc::lib
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
