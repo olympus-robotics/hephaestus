@@ -66,6 +66,16 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
 }
 
 void InfluxDBSink::send(const telemetry::MeasureEntry& measure_entry) {
+  auto point = createInfluxdbPoint(measure_entry);
+
+  try {
+    influxdb_->write(std::move(point));
+  } catch (std::exception& e) {
+    LOG(ERROR) << fmt::format("Failed to publish to InfluxDB: {}", e.what());
+  }
+}
+
+auto createInfluxdbPoint(const telemetry::MeasureEntry& measure_entry) -> influxdb::Point {
   auto point = influxdb::Point{ measure_entry.component }
                    .addTag("tag", measure_entry.tag)
                    .setTimestamp(measure_entry.measure_timestamp);
@@ -75,11 +85,7 @@ void InfluxDBSink::send(const telemetry::MeasureEntry& measure_entry) {
     addValueToPoint(point, key, value);
   }
 
-  try {
-    influxdb_->write(std::move(point));
-  } catch (std::exception& e) {
-    LOG(ERROR) << fmt::format("Failed to publish to InfluxDB: {}", e.what());
-  }
+  return point;
 }
 
 }  // namespace heph::telemetry_sink

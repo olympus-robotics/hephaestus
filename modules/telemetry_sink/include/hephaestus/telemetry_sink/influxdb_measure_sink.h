@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include <Point.h>
+
 #include "hephaestus/telemetry/measure_sink.h"
 
 namespace influxdb {
@@ -34,5 +36,7 @@ private:
   InfluxDBSinkConfig config_;
   std::unique_ptr<influxdb::InfluxDB> influxdb_;
 };
+
+[[nodiscard]] auto createInfluxdbPoint(const telemetry::MeasureEntry& measure_entry) -> influxdb::Point;
 
 }  // namespace heph::telemetry_sink
