@@ -28,7 +28,7 @@ using namespace ::testing;
 namespace heph::telemetry::tests {
 namespace {
 
-class MockMeasureSink final : public IDataPointSink {
+class MockProbeSink final : public IDataPointSink {
 public:
   void send(const DataPoint& data_point) override {
     measure_entries_.push_back(data_point);
@@ -95,13 +95,18 @@ struct Dummy {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dummy, boolean, int32, int64, uint32, uint64, float32, float64, string,
                                    nested);
+// NOTE: this is needed otherwise the compiler complains that nlohmann::from_json is not used.
+[[maybe_unused]] void _() {
+  Dummy dummy;
+  serdes::deserializeFromJSON(serdes::serializeToJSON(Dummy{}), dummy);
+}
 
 }  // namespace
 
 TEST(Measure, DataPoint) {
   auto mt = random::createRNG();
 
-  auto mock_sink = std::make_unique<MockMeasureSink>();
+  auto mock_sink = std::make_unique<MockProbeSink>();
   const auto* mock_sink_ptr = mock_sink.get();
   registerDataPointSink(std::move(mock_sink));
 
@@ -119,17 +124,12 @@ TEST(Measure, DataPoint) {
 }
 
 TEST(Measure, Serialization) {
-  {
-    Dummy d;
-    serdes::deserializeFromJSON(serdes::serializeToJSON(d), d);
-  }
-
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
 
   auto mt = random::createRNG();
 
-  auto mock_sink = std::make_unique<MockMeasureSink>();
+  auto mock_sink = std::make_unique<MockProbeSink>();
   const auto* mock_sink_ptr = mock_sink.get();
   registerDataPointSink(std::move(mock_sink));
 
