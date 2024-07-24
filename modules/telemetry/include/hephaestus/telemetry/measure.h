@@ -10,8 +10,8 @@
 namespace heph::telemetry {
 
 /// @brief Register a new telemetry sink.
-/// For every measure logged, the sink will be called to send the data.
-/// There is no limit on the number of sink supported.
+/// For every measure logged, the sink will be called to consume the data.
+/// There is no limit on the number of sinks supported.
 void registerSink(std::unique_ptr<IMeasureSink> sink);
 
 /// @brief Generic measure logger.
@@ -23,6 +23,8 @@ void measure(const MeasureEntry& measure_entry);
 /// @brief Log a user defined measure.
 /// NOTE: the data needs to be serializable to JSON.
 /// For details on how to achieve this, see `heph::serdes::serializeToJSON`.
+/// @param component The component that is logging the measure, e.g. SLAM, Navigation, etc.
+/// @param tag The tag of the measure used to identify who created it, e.g. "front_camera", "motor1", etc.
 template <typename DataT>
 void measure(const std::string& component, const std::string& tag, const DataT& data,
              ClockT::time_point measure_timestamp = ClockT::now()) {
