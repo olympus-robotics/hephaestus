@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/telemetry/measure_sink.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/telemetry/data_point_sink.h"  // NOLINT(misc-include-cleaner)
