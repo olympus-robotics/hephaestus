@@ -18,8 +18,10 @@ namespace heph::concurrency {
 /// the given fixed rate.
 class Spinner {
 public:
-  explicit Spinner(double rate_hz = 0);
-  virtual ~Spinner();
+  using Callback = std::function<void()>;
+
+  explicit Spinner(Callback&& callback, double rate_hz = 0);
+  ~Spinner();
   Spinner(const Spinner&) = delete;
   auto operator=(const Spinner&) -> Spinner& = delete;
   Spinner(Spinner&&) = delete;
@@ -27,9 +29,6 @@ public:
 
   void start();
   auto stop() -> std::future<void>;
-  void addStopCallback(std::function<void()>&& callback);
-
-  virtual void spinOnce() = 0;  //!< Override this function to define the spinner's behavior.
 
   [[nodiscard]] auto spinCount() const -> uint64_t;
 
@@ -38,9 +37,10 @@ private:
   void stopImpl();
 
 private:
+  Callback callback_;
+
   std::atomic_bool is_started_ = false;
   std::atomic_bool stop_requested_ = false;
-  std::function<void()> stop_callback_;
   std::thread spinner_thread_;
 
   std::chrono::microseconds spin_period_;
