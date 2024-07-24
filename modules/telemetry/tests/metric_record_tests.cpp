@@ -19,8 +19,8 @@
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
 #include "hephaestus/serdes/json.h"
-#include "hephaestus/telemetry/data_point_record.h"
-#include "hephaestus/telemetry/data_point_sink.h"
+#include "hephaestus/telemetry/metric_record.h"
+#include "hephaestus/telemetry/metric_sink.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -28,15 +28,15 @@ using namespace ::testing;
 namespace heph::telemetry::tests {
 namespace {
 
-class MockProbeSink final : public IDataPointSink {
+class MockMetricSink final : public IMetricSink {
 public:
-  void send(const DataPoint& data_point) override {
-    measure_entries_.push_back(data_point);
+  void send(const Metric& metric) override {
+    measure_entries_.push_back(metric);
     flag_.test_and_set();
     flag_.notify_all();
   }
 
-  [[nodiscard]] auto getMeasureEntries() const -> const std::vector<DataPoint>& {
+  [[nodiscard]] auto getMeasureEntries() const -> const std::vector<Metric>& {
     return measure_entries_;
   }
 
@@ -45,7 +45,7 @@ public:
   }
 
 private:
-  std::vector<DataPoint> measure_entries_;
+  std::vector<Metric> measure_entries_;
   std::atomic_flag flag_ = ATOMIC_FLAG_INIT;
 };
 
@@ -103,18 +103,19 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dummy, boolean, int32, int64, uint32, uint64,
 
 }  // namespace
 
-TEST(Measure, DataPoint) {
+TEST(Measure, Metric) {
   auto mt = random::createRNG();
 
-  auto mock_sink = std::make_unique<MockProbeSink>();
+  auto mock_sink = std::make_unique<MockMetricSink>();
   const auto* mock_sink_ptr = mock_sink.get();
-  registerDataPointSink(std::move(mock_sink));
+  registerMetricSink(std::move(mock_sink));
 
   const auto entry =
-      DataPoint{ .component = random::randomT<std::string>(mt),
-                 .tag = random::randomT<std::string>(mt),
-                 .timestamp = random::randomT<ClockT::time_point>(mt),
-                 .values = { { random::randomT<std::string>(mt), random::randomT<int64_t>(mt) } } };
+      Metric{ .component = random::randomT<std::string>(mt),
+              .tag = random::randomT<std::string>(mt),
+              .id = random::randomT<std::size_t>(mt),
+              .timestamp = random::randomT<ClockT::time_point>(mt),
+              .values = { { random::randomT<std::string>(mt), random::randomT<int64_t>(mt) } } };
   record(entry);
 
   mock_sink_ptr->wait();
@@ -126,15 +127,16 @@ TEST(Measure, DataPoint) {
 TEST(Measure, Serialization) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
+  static constexpr auto ID = 42;
 
   auto mt = random::createRNG();
 
-  auto mock_sink = std::make_unique<MockProbeSink>();
+  auto mock_sink = std::make_unique<MockMetricSink>();
   const auto* mock_sink_ptr = mock_sink.get();
-  registerDataPointSink(std::move(mock_sink));
+  registerMetricSink(std::move(mock_sink));
 
   auto dummy = Dummy::random(mt);
-  record(COMPONENT, TAG, dummy);
+  record(COMPONENT, TAG, ID, dummy);
 
   mock_sink_ptr->wait();
   const auto& measure_entries = mock_sink_ptr->getMeasureEntries();
@@ -144,7 +146,7 @@ TEST(Measure, Serialization) {
   EXPECT_EQ(entry.component, COMPONENT);
   EXPECT_EQ(entry.tag, TAG);
   EXPECT_GE(entry.timestamp.time_since_epoch().count(), 0);
-  const std::unordered_map<std::string, DataPoint::ValueType> expected_values{
+  const std::unordered_map<std::string, Metric::ValueType> expected_values{
     { "boolean", dummy.boolean },
     { "int32", static_cast<int64_t>(dummy.int32) },
     { "int64", dummy.int64 },

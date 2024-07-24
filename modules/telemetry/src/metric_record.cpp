@@ -1,7 +1,7 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include "hephaestus/telemetry/data_point_record.h"
+#include "hephaestus/telemetry/metric_record.h"
 
 #include <cerrno>
 #include <cstdint>
@@ -19,7 +19,7 @@
 #include <absl/log/log.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/telemetry/data_point_sink.h"
+#include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry {
 
@@ -40,7 +40,7 @@ namespace {
   return std::nullopt;
 }
 
-[[nodiscard]] auto jsonToValue(const nlohmann::json& json_value) -> std::optional<DataPoint::ValueType> {
+[[nodiscard]] auto jsonToValue(const nlohmann::json& json_value) -> std::optional<Metric::ValueType> {
   if (json_value.is_boolean()) {
     return json_value.get<bool>();
   }
@@ -67,7 +67,7 @@ namespace {
   return {};
 }
 
-void jsonToValues(const nlohmann::json& json, std::unordered_map<std::string, DataPoint::ValueType>& values,
+void jsonToValues(const nlohmann::json& json, std::unordered_map<std::string, Metric::ValueType>& values,
                   std::string_view key_prefix) {
   for (const auto& [key, value] : json.items()) {
     const auto full_key = key_prefix.empty() ? key : fmt::format("{}.{}", key_prefix, key);
@@ -87,9 +87,9 @@ void jsonToValues(const nlohmann::json& json, std::unordered_map<std::string, Da
 
 }  // namespace
 
-auto jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, DataPoint::ValueType> {
+auto jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, Metric::ValueType> {
   const auto json_obj = nlohmann::json::parse(json);
-  std::unordered_map<std::string, DataPoint::ValueType> values;
+  std::unordered_map<std::string, Metric::ValueType> values;
 
   jsonToValues(json_obj, values, "");
 
@@ -97,53 +97,52 @@ auto jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, D
 }
 }  // namespace internal
 
-class Probe {
+class MetricRecorder {
 public:
-  explicit Probe();
-  static void registerDataPointSink(std::unique_ptr<IDataPointSink> sink);
+  explicit MetricRecorder();
+  static void registerMetricSink(std::unique_ptr<IMetricSink> sink);
 
-  static void record(const DataPoint& data_point);
+  static void record(const Metric& metric);
 
 private:
-  [[nodiscard]] static auto instance() -> Probe&;
-  void processMeasureEntries(const DataPoint& entry);
+  [[nodiscard]] static auto instance() -> MetricRecorder&;
+  void processMeasureEntries(const Metric& entry);
 
 private:
   std::mutex sink_mutex_;
-  std::vector<std::unique_ptr<IDataPointSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  concurrency::MessageQueueConsumer<DataPoint> measure_entries_consumer_;
+  std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
+  concurrency::MessageQueueConsumer<Metric> measure_entries_consumer_;
 };
 
-void registerDataPointSink(std::unique_ptr<IDataPointSink> sink) {
-  Probe::registerDataPointSink(std::move(sink));
+void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
+  MetricRecorder::registerMetricSink(std::move(sink));
 }
 
-void record(const DataPoint& data_point) {
-  Probe::record(data_point);
+void record(const Metric& metric) {
+  MetricRecorder::record(metric);
 }
 
-Probe::Probe()
-  : measure_entries_consumer_([this](const DataPoint& entry) { processMeasureEntries(entry); },
-                              std::nullopt) {
+MetricRecorder::MetricRecorder()
+  : measure_entries_consumer_([this](const Metric& entry) { processMeasureEntries(entry); }, std::nullopt) {
 }
 
-auto Probe::instance() -> Probe& {
-  static Probe telemetry;
+auto MetricRecorder::instance() -> MetricRecorder& {
+  static MetricRecorder telemetry;
   return telemetry;
 }
 
-void Probe::registerDataPointSink(std::unique_ptr<IDataPointSink> sink) {
+void MetricRecorder::registerMetricSink(std::unique_ptr<IMetricSink> sink) {
   auto& telemetry = instance();
   const std::lock_guard lock(telemetry.sink_mutex_);
   telemetry.sinks_.push_back(std::move(sink));
 }
 
-void Probe::record(const DataPoint& data_point) {
+void MetricRecorder::record(const Metric& metric) {
   auto& telemetry = instance();
-  telemetry.measure_entries_consumer_.queue().forcePush(data_point);
+  telemetry.measure_entries_consumer_.queue().forcePush(metric);
 }
 
-void Probe::processMeasureEntries(const DataPoint& entry) {
+void MetricRecorder::processMeasureEntries(const Metric& entry) {
   const std::lock_guard lock(sink_mutex_);
   for (auto& sink : sinks_) {
     sink->send(entry);

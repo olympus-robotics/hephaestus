@@ -12,10 +12,10 @@ find_package(fmt REQUIRED)
 
 # library sources
 set(SOURCES
-    src/data_point_sink.cpp
-    src/data_point_record.cpp
-    include/hephaestus/telemetry/data_point_sink.h
-    include/hephaestus/telemetry/data_point_record.h
+    src/metric_sink.cpp
+    src/metric_record.cpp
+    include/hephaestus/telemetry/metric_sink.h
+    include/hephaestus/telemetry/metric_record.h
 )
 
 # library target
