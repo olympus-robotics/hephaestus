@@ -42,7 +42,7 @@ struct Data {
 };
 
 struct DummyJSONSerializable {
-  auto operator==(const DummyJSONSerializable& other) const -> bool = default;
+  auto operator==(const DummyJSONSerializable&) const -> bool = default;
   int dummy = 0;
 };
 
@@ -55,7 +55,7 @@ void fromJSON(std::string_view json, DummyJSONSerializable& data) {
 }
 
 struct DummyNlohmannJSONSerializable {
-  auto operator==(const DummyNlohmannJSONSerializable& other) const -> bool = default;
+  auto operator==(const DummyNlohmannJSONSerializable&) const -> bool = default;
   int dummy = 0;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DummyNlohmannJSONSerializable, dummy)
