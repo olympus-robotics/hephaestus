@@ -13,8 +13,8 @@ using namespace ::testing;
 
 namespace heph::utils::timing::tests {
 TEST(Watchdog, TimerFiring) {
-  // TODO: a better way to write this test is to replace sleep_for with an atomic_flag, and then measure that
-  // the elapsed time is more than N * period.
+  // TODO: a better way to write this test is to replace sleep_for with an atomic_flag, and then
+  // data_point_record that the elapsed time is more than N * period.
   constexpr auto PERIOD = std::chrono::milliseconds{ 10 };
   WatchdogTimer timer;
   std::atomic<int> count{ 0 };

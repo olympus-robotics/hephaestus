@@ -3,8 +3,8 @@
 #=================================================================================================
 
 define_module_test(
-        NAME measure_tests
-        SOURCES measure_tests.cpp
+        NAME data_point_record_tests
+        SOURCES data_point_record_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS "")
