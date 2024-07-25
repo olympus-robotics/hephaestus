@@ -18,9 +18,9 @@
 #include "hephaestus/random/random_container.h"
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
-#include "hephaestus/telemetry/measure.h"
-#include "hephaestus/telemetry/measure_sink.h"
-#include "hephaestus/telemetry_sink/influxdb_measure_sink.h"
+#include "hephaestus/telemetry/metric_record.h"
+#include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/telemetry_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
@@ -40,15 +40,15 @@ void run() {
   auto mt = heph::random::createRNG();
 
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
-  while (!heph::utils::TerminationBlocker::stopRequested()) {
+  for (std::size_t counter = 0; !heph::utils::TerminationBlocker::stopRequested(); ++counter) {
     auto now = heph::telemetry::ClockT::now();
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
-    heph::telemetry::measure("telemetry_example", "motor1",
-                             DummyMeasure{
-                                 .error = heph::random::randomT<double>(mt),
-                                 .counter = heph::random::randomT<int64_t>(mt),
-                                 .message = heph::random::randomT<std::string>(mt, 4),
-                             });
+    heph::telemetry::record("telemetry_example", "motor1", counter,
+                            DummyMeasure{
+                                .error = heph::random::randomT<double>(mt),
+                                .counter = heph::random::randomT<int64_t>(mt),
+                                .message = heph::random::randomT<std::string>(mt, 4),
+                            });
   }
 }
 
@@ -64,7 +64,7 @@ auto main(int argc, const char* argv[]) -> int {
     {
       auto influxdb_sink = heph::telemetry_sink::InfluxDBSink::create(
           { .url = "localhost:8087", .token = "my-super-secret-auth-token", .database = "hephaestus" });
-      heph::telemetry::registerMeasureSink(std::move(influxdb_sink));
+      heph::telemetry::registerMetricSink(std::move(influxdb_sink));
     }
 
     // Navigation: demonstrates JSON serializable metric via nlohmann::json

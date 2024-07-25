@@ -13,8 +13,8 @@ find_package(fmt REQUIRED)
 
 # library sources
 set(SOURCES
-    src/influxdb_measure_sink.cpp
-    include/hephaestus/telemetry_sink/influxdb_measure_sink.h
+    src/influxdb_metric_sink.cpp
+    include/hephaestus/telemetry_sink/influxdb_metric_sink.h
 )
 
 # library target

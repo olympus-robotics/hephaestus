@@ -5,9 +5,7 @@
 #include <memory>
 #include <string>
 
-#include <Point.h>
-
-#include "hephaestus/telemetry/measure_sink.h"
+#include "hephaestus/telemetry/metric_sink.h"
 
 namespace influxdb {
 class InfluxDB;
@@ -22,12 +20,12 @@ struct InfluxDBSinkConfig {
   std::size_t batch_size{ 0 };
 };
 
-class InfluxDBSink final : public telemetry::IMeasureSink {
+class InfluxDBSink final : public telemetry::IMetricSink {
 public:
   ~InfluxDBSink() override = default;
   [[nodiscard]] static auto create(InfluxDBSinkConfig config) -> std::unique_ptr<InfluxDBSink>;
 
-  void send(const telemetry::MeasureEntry& measure_entry) override;
+  void send(const telemetry::Metric& entry) override;
 
 private:
   explicit InfluxDBSink(InfluxDBSinkConfig config);
@@ -36,7 +34,5 @@ private:
   InfluxDBSinkConfig config_;
   std::unique_ptr<influxdb::InfluxDB> influxdb_;
 };
-
-[[nodiscard]] auto createInfluxdbPoint(const telemetry::MeasureEntry& measure_entry) -> influxdb::Point;
 
 }  // namespace heph::telemetry_sink
