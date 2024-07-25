@@ -48,10 +48,15 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
           callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
         },
         DEFAULT_CACHE_RESERVES);
+    callback_messages_consumer_->start();
   }
 }
 
 Subscriber::~Subscriber() {
+  if (callback_messages_consumer_ != nullptr) {
+    callback_messages_consumer_->stop();
+  }
+
   z_drop(z_move(cache_subscriber_));
 }
 

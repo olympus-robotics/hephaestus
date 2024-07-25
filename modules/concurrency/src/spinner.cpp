@@ -55,6 +55,8 @@ void Spinner::start() {
 }
 
 void Spinner::spin() {
+  // TODO: set thread name
+
   start_timestamp_ = std::chrono::system_clock::now();
 
   while (!stop_requested_.load()) {
