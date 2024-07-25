@@ -24,12 +24,7 @@ services:
       - 3002:3000
     networks:
       - monitoring
-    # environment:
-      # - GF_SECURITY_ADMIN_USER=admin
-      # - GF_SECURITY_ADMIN_PASSWORD=adminadmin
-      # - GF_AUTH_DISABLE_LOGIN_FORM=false
-      # - GF_AUTH_ANONYMOUS_ENABLED=true  # Allow anonymous authentication or not
     volumes:
-      - ./grafana-provisioning/:/etc/grafana/provisioning
+      - ./grafana/:/etc/grafana/
     depends_on:
       - influxdb
