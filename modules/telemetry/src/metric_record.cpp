@@ -4,6 +4,7 @@
 #include "hephaestus/telemetry/metric_record.h"
 
 #include <cerrno>
+#include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -11,6 +12,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -26,14 +28,11 @@ namespace heph::telemetry {
 namespace internal {
 namespace {
 [[nodiscard]] auto stringToInt64(const std::string& str) -> std::optional<int64_t> {
-  const char* start = str.c_str();
-  char* end{};
-  errno = 0;
+  int64_t result = 0;
+  const auto* end = str.data() + str.size();  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  const auto [ptr, ec] = std::from_chars(str.data(), end, result);
 
-  static constexpr int BASE = 10;
-  int64_t result = std::strtoll(start, &end, BASE);
-
-  if (errno != ERANGE && *end == '\0') {
+  if (ec == std::errc() && ptr == end) {
     return result;
   }
 
@@ -100,22 +99,22 @@ auto jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, M
 class MetricRecorder {
 public:
   explicit MetricRecorder();
-  static void registerMetricSink(std::unique_ptr<IMetricSink> sink);
+  static void registerSink(std::unique_ptr<IMetricSink> sink);
 
   static void record(const Metric& metric);
 
 private:
   [[nodiscard]] static auto instance() -> MetricRecorder&;
-  void processMeasureEntries(const Metric& entry);
+  void processEntries(const Metric& entry);
 
 private:
   std::mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  concurrency::MessageQueueConsumer<Metric> measure_entries_consumer_;
+  concurrency::MessageQueueConsumer<Metric> entries_consumer_;
 };
 
 void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
-  MetricRecorder::registerMetricSink(std::move(sink));
+  MetricRecorder::registerSink(std::move(sink));
 }
 
 void record(const Metric& metric) {
@@ -123,7 +122,7 @@ void record(const Metric& metric) {
 }
 
 MetricRecorder::MetricRecorder()
-  : measure_entries_consumer_([this](const Metric& entry) { processMeasureEntries(entry); }, std::nullopt) {
+  : entries_consumer_([this](const Metric& entry) { processEntries(entry); }, std::nullopt) {
 }
 
 auto MetricRecorder::instance() -> MetricRecorder& {
@@ -131,7 +130,7 @@ auto MetricRecorder::instance() -> MetricRecorder& {
   return telemetry;
 }
 
-void MetricRecorder::registerMetricSink(std::unique_ptr<IMetricSink> sink) {
+void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
   auto& telemetry = instance();
   const std::lock_guard lock(telemetry.sink_mutex_);
   telemetry.sinks_.push_back(std::move(sink));
@@ -139,10 +138,10 @@ void MetricRecorder::registerMetricSink(std::unique_ptr<IMetricSink> sink) {
 
 void MetricRecorder::record(const Metric& metric) {
   auto& telemetry = instance();
-  telemetry.measure_entries_consumer_.queue().forcePush(metric);
+  telemetry.entries_consumer_.queue().forcePush(metric);
 }
 
-void MetricRecorder::processMeasureEntries(const Metric& entry) {
+void MetricRecorder::processEntries(const Metric& entry) {
   const std::lock_guard lock(sink_mutex_);
   for (auto& sink : sinks_) {
     sink->send(entry);

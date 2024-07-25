@@ -14,6 +14,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <nlohmann/detail/macro_scope.hpp>
 
 #include "hephaestus/random/random_container.h"
 #include "hephaestus/random/random_generator.h"
