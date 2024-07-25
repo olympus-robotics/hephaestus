@@ -1,0 +1,35 @@
+version: "3"
+name: influxdb-grafana
+networks:
+  monitoring:
+
+services:
+  influxdb:
+    image: influxdb:2.7.6
+    ports:
+      - 8087:8086
+    networks:
+      - monitoring
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminadmin
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+      - DOCKER_INFLUXDB_INIT_ORG=olympus-robotics
+      - DOCKER_INFLUXDB_INIT_BUCKET=hephaestus
+
+  grafana:
+    image: grafana/grafana:9.1.5
+    ports:
+      - 3002:3000
+    networks:
+      - monitoring
+    # environment:
+      # - GF_SECURITY_ADMIN_USER=admin
+      # - GF_SECURITY_ADMIN_PASSWORD=adminadmin
+      # - GF_AUTH_DISABLE_LOGIN_FORM=false
+      # - GF_AUTH_ANONYMOUS_ENABLED=true  # Allow anonymous authentication or not
+    volumes:
+      - ./grafana-provisioning/:/etc/grafana/provisioning
+    depends_on:
+      - influxdb

@@ -16,6 +16,7 @@
 #include <InfluxDBFactory.h>
 #include <Point.h>
 #include <absl/log/log.h>
+#include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -25,14 +26,19 @@
 namespace heph::telemetry_sink {
 namespace {
 
-auto createInfluxdbPoint(const telemetry::Metric& entry) -> influxdb::Point {
+[[nodiscard]] auto createInfluxdbPoint(const telemetry::Metric& entry) -> influxdb::Point {
   auto point = influxdb::Point{ entry.component }
                    .addTag("tag", entry.tag)
                    .addTag("id", std::to_string(entry.id))
                    .setTimestamp(entry.timestamp);
-
+  fmt::println("Timestamp: {}, id: {}", entry.timestamp, entry.id);
   for (const auto& [key, value] : entry.values) {
-    std::visit([&point, &key](auto&& arg) { point.addField(key, arg); }, value);
+    std::visit(
+        [&point, &key](auto&& arg) {
+          fmt::println("\tkey: {}, value: {}", key, arg);
+          point.addField(key, arg);
+        },
+        value);
   }
 
   return point;
@@ -53,6 +59,8 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
     influxdb_->batchOf(config_.batch_size);
   }
 }
+
+InfluxDBSink::~InfluxDBSink() = default;
 
 void InfluxDBSink::send(const telemetry::Metric& entry) {
   auto point = createInfluxdbPoint(entry);

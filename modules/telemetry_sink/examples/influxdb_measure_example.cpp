@@ -19,7 +19,6 @@
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
 #include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry/metric_sink.h"
 #include "hephaestus/telemetry_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
@@ -41,12 +40,17 @@ void run() {
 
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
   for (std::size_t counter = 0; !heph::utils::TerminationBlocker::stopRequested(); ++counter) {
-    auto now = heph::telemetry::ClockT::now();
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
+    // heph::telemetry::record("telemetry_example", "motor1", counter,
+    //                         DummyMeasure{
+    //                             .error = heph::random::randomT<double>(mt),
+    //                             .counter = heph::random::randomT<int64_t>(mt),
+    //                             .message = heph::random::randomT<std::string>(mt, 4),
+    //                         });
     heph::telemetry::record("telemetry_example", "motor1", counter,
                             DummyMeasure{
                                 .error = heph::random::randomT<double>(mt),
-                                .counter = heph::random::randomT<int64_t>(mt),
+                                .counter = static_cast<int64_t>(counter),
                                 .message = heph::random::randomT<std::string>(mt, 4),
                             });
   }

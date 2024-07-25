@@ -22,7 +22,7 @@ struct InfluxDBSinkConfig {
 
 class InfluxDBSink final : public telemetry::IMetricSink {
 public:
-  ~InfluxDBSink() override = default;
+  ~InfluxDBSink() override;
   [[nodiscard]] static auto create(InfluxDBSinkConfig config) -> std::unique_ptr<InfluxDBSink>;
 
   void send(const telemetry::Metric& entry) override;
