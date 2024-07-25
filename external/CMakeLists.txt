@@ -32,9 +32,7 @@ endif()
 # As soon as zenohcxx commit makes to a release, move back to the release. set(ZENOH_VERSION "1.0.0.4")
 set(ZENOH_VERSION "c75ce16e855e8b1f0562523cdf6be6c37f4ebb56")
 add_cmake_dependency(
-  NAME zenohc
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"
-  GIT_TAG ${ZENOH_VERSION}
+  NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
@@ -42,9 +40,7 @@ add_cmake_dependency(
 set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS}
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
-  GIT_TAG ${ZENOHCXX_VERSION}
+  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   SOURCE_SUBDIR install
 )
 
