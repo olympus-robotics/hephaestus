@@ -27,8 +27,11 @@ public:
 
   void start();
   auto stop() -> std::future<void>;
-  virtual void spinOnce() = 0;  // Pure virtual function
   void addStopCallback(std::function<void()>&& callback);
+
+  virtual void spinOnce() = 0;  //!< Override this function to define the spinner's behavior.
+
+  [[nodiscard]] auto spinCount() const -> uint64_t;
 
 private:
   void spin();
