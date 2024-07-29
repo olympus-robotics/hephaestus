@@ -26,14 +26,14 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${PROTOBUF_DEPENDS})
 endif()
 
-if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(CPR_DEPENDS curl)
-  list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
-endif()
-
 if(influxdb IN_LIST EXTERNAL_PROJECTS_LIST)
   set(INFLUXDB_DEPENDS cpr curl)
   list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
+endif()
+
+if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(CPR_DEPENDS curl)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
 endif()
 
 # --------------------------------------------------------------------------------------------------
