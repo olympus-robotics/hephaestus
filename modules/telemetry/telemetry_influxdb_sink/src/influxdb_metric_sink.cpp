@@ -16,10 +16,7 @@
 #include <InfluxDBFactory.h>
 #include <Point.h>
 #include <absl/log/log.h>
-#include <fmt/chrono.h>
 #include <fmt/core.h>
-#include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/telemetry/metric_sink.h"
 
