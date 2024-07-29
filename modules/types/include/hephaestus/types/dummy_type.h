@@ -48,7 +48,7 @@ struct DummyType {
 
   DummyEnum dummy_enum{};
 
-  using TimestampT = std::chrono::time_point<std::chrono::system_clock>;
+  using TimestampT = std::chrono::system_clock::time_point;
   TimestampT dummy_timestamp;
 
   std::string dummy_string;
