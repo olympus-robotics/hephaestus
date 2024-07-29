@@ -1,0 +1,47 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
+syntax = "proto3";
+
+package hephaestus.types.proto;
+
+import "google/protobuf/timestamp.proto";
+
+enum DummyTypeDummyEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+  D = 3;
+  E = 4;
+  F = 5;
+  G = 6;
+}
+
+message DummyPrimitivesType {
+  bool dummyBool = 1;
+
+  int32 dummyInt8t = 2;
+  int32 dummyInt16t = 3;
+  int32 dummyInt32t = 4;
+  int64 dummyInt64t = 5;
+
+  uint32 dummyUint8t = 6;
+  uint32 dummyUint16t = 7;
+  uint32 dummyUint32t = 8;
+  uint64 dummyUint64t = 9;
+
+  float dummyFloat = 10;
+  double dummyDouble = 11;
+}
+
+message DummyType {
+  DummyPrimitivesType dummy_primitives_type = 1;
+
+  DummyTypeDummyEnum dummyEnum = 2;
+
+  google.protobuf.Timestamp dummyTimestamp = 3;
+
+  string dummyString = 4;
+  repeated int32 dummyVector = 5;
+}
