@@ -19,7 +19,7 @@
 #include "hephaestus/random/random_generator.h"
 #include "hephaestus/random/random_type.h"
 #include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 

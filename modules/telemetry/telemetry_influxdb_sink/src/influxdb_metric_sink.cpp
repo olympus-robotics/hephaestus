@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/telemetry_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 
 #include <cerrno>
 #include <cstdlib>

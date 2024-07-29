@@ -17,7 +17,7 @@ struct Metric {
                           ///< etc.
   std::string tag;        ///< The tag of the metric_record used to identify who created it, e.g.
                           ///< "front_camera", "motor1", etc.
-  std::size_t id;         ///< The id of this metric. Can be used to match metrics from different components.
+  std::size_t id{};       ///< The id of this metric. Can be used to match metrics from different components.
   ClockT::time_point timestamp;
 
   using ValueType = std::variant<int64_t, double, std::string, bool>;
