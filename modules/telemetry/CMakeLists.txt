@@ -11,11 +11,8 @@ declare_module(
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES
-    src/metric_sink.cpp
-    src/metric_record.cpp
-    include/hephaestus/telemetry/metric_sink.h
-    include/hephaestus/telemetry/metric_record.h
+set(SOURCES src/metric_sink.cpp src/metric_record.cpp include/hephaestus/telemetry/metric_sink.h
+            include/hephaestus/telemetry/metric_record.h
 )
 
 # library target

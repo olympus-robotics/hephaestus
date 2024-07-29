@@ -22,23 +22,12 @@
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::telemetry {
 
 namespace internal {
 namespace {
-[[nodiscard]] auto stringToInt64(const std::string& str) -> std::optional<int64_t> {
-  int64_t result = 0;
-  const auto* end = str.data() + str.size();  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  const auto [ptr, ec] = std::from_chars(str.data(), end, result);
-
-  if (ec == std::errc() && ptr == end) {
-    return result;
-  }
-
-  return std::nullopt;
-}
-
 [[nodiscard]] auto jsonToValue(const nlohmann::json& json_value) -> std::optional<Metric::ValueType> {
   if (json_value.is_boolean()) {
     return json_value.get<bool>();
@@ -56,7 +45,7 @@ namespace {
     auto value_str = json_value.get<std::string>();
     // According to JSON specification integer bigger than 32bits are converted to string, so we need to check
     // if the string is actually a number.
-    if (const auto value_i = stringToInt64(value_str); value_i.has_value()) {
+    if (const auto value_i = utils::string::stringToInt64(value_str); value_i.has_value()) {
       return value_i.value();
     }
 
