@@ -31,14 +31,8 @@ namespace {
                    .addTag("tag", entry.tag)
                    .addTag("id", std::to_string(entry.id))
                    .setTimestamp(entry.timestamp);
-  fmt::println("Timestamp: {}, id: {}", entry.timestamp, entry.id);
   for (const auto& [key, value] : entry.values) {
-    std::visit(
-        [&point, &key](auto&& arg) {
-          fmt::println("\tkey: {}, value: {}", key, arg);
-          point.addField(key, arg);
-        },
-        value);
+    std::visit([&point, &key](auto&& arg) { point.addField(key, arg); }, value);
   }
 
   return point;
