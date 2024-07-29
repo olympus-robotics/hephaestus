@@ -17,6 +17,8 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/log/log.h>
+#include <fmt/core.h>
+#include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/telemetry/metric_sink.h"
