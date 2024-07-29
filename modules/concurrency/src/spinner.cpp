@@ -19,7 +19,7 @@
 
 namespace heph::concurrency {
 namespace {
-[[nodiscard]] auto rateHzToMicroseconds(double rate_hz) -> std::chrono::microseconds {
+[[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
   if (rate_hz == 0) {
     return std::chrono::microseconds{ 0 };
   }
@@ -35,7 +35,7 @@ Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
   : callback_(std::move(callback))
   , is_started_(false)
   , stop_requested_(false)
-  , spin_period_(rateHzToMicroseconds(rate_hz)) {
+  , spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
