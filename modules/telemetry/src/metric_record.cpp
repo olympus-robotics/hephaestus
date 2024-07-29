@@ -4,7 +4,6 @@
 #include "hephaestus/telemetry/metric_record.h"
 
 #include <cerrno>
-#include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -12,7 +11,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <unordered_map>
 #include <utility>
 #include <vector>
