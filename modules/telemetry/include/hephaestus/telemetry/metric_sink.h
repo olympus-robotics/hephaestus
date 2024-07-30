@@ -7,6 +7,7 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <variant>
 
 namespace heph::telemetry {
 using ClockT = std::chrono::system_clock;
