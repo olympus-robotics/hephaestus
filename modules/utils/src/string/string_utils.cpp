@@ -6,10 +6,14 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <cstdint>
 #include <cstdio>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 namespace heph::utils::string {
 
@@ -43,6 +47,18 @@ auto toSnakeCase(const std::string_view& camel_case) -> std::string {
 auto toScreamingSnakeCase(const std::string_view& camel_case) -> std::string {
   auto snake_case = toSnakeCase(camel_case);
   return toUpperCase(snake_case);
+}
+
+auto stringToInt64(const std::string& str) -> std::optional<int64_t> {
+  int64_t result = 0;
+  const auto* end = str.data() + str.size();  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  const auto [ptr, ec] = std::from_chars(str.data(), end, result);
+
+  if (ec == std::errc() && ptr == end) {
+    return result;
+  }
+
+  return std::nullopt;
 }
 
 }  // namespace heph::utils::string

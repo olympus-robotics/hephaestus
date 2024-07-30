@@ -26,15 +26,23 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${PROTOBUF_DEPENDS})
 endif()
 
+if(influxdb IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(INFLUXDB_DEPENDS cpr curl)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
+endif()
+
+if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(CPR_DEPENDS curl)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
 # As soon as zenohcxx commit makes to a release, move back to the release. set(ZENOH_VERSION "1.0.0.4")
 set(ZENOH_VERSION "c75ce16e855e8b1f0562523cdf6be6c37f4ebb56")
 add_cmake_dependency(
-  NAME zenohc
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"
-  GIT_TAG ${ZENOH_VERSION}
+  NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
@@ -42,9 +50,7 @@ add_cmake_dependency(
 set(ZENOHCXX_VERSION "1faf648f4e78e75a0ab0bbcafa6d31c0f6c92e8e")
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS}
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
-  GIT_TAG ${ZENOHCXX_VERSION}
+  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   SOURCE_SUBDIR install
 )
 
@@ -149,4 +155,33 @@ add_cmake_dependency(
 set(MCAP_TAG cb34e058cfd529f694a4ff1747517478339fc866)
 add_cmake_dependency(
   NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
+)
+
+# --------------------------------------------------------------------------------------------------
+# curl
+set(CURL_VERSION 8.7.1)
+set(CURL_TAG curl-8_7_1)
+add_cmake_dependency(
+  NAME curl
+  VERSION ${CURL_VERSION}
+  GIT_REPOSITORY https://github.com/curl/curl.git
+  GIT_TAG ${CURL_TAG}
+)
+
+# --------------------------------------------------------------------------------------------------
+# cpr (REST client)
+set(CPR_GIT_TAG 21d3ad51afbd8e28931f8067cee3ff1ebd854a85)
+add_cmake_dependency(
+  NAME cpr
+  DEPENDS ${CPR_DEPENDS} URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
+  CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
+)
+
+# --------------------------------------------------------------------------------------------------
+# influxdb
+set(INFLUXDB_GIT_TAG 8d8ab3b5ddc40b767a3ebf5eb1df76aa170dbca9)
+add_cmake_dependency(
+  NAME influxdb
+  DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
+  CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )
