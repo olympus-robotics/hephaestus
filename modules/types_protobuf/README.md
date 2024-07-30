@@ -10,4 +10,10 @@ Protobuf is used to serialize all data. Protobuf files are human readable, and e
 
 ### Goals
 * proto IDL files for a type are feature complete, i.e. serializing and deserializing leads to the exact same data structure
-* Types are independent of their serialization method, but types_protobus depends on types.
+* provide generic helper functions for serialization (e.g for `std::chrono::time_point`)
+
+### Non-goals
+* similar to module **types**, **types_protobuf** is meant to be generic, and project specific (non-generalizable) methods shall not be added
+
+### Requirements
+* Types are independent of their serialization method, but the module **types_protobuf** depends on module **types**.
