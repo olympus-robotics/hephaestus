@@ -47,7 +47,7 @@ add_cmake_dependency(
 )
 
 # This should be equal to ${ZENOH_VERSION}, but we need to point to the fix coming from this commit.
-set(ZENOHCXX_VERSION "1faf648f4e78e75a0ab0bbcafa6d31c0f6c92e8e")
+set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
