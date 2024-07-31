@@ -14,6 +14,9 @@
 
 namespace heph::types {
 
+/// @brief Collection of primitive types for testing purposes.
+/// NOTE: the data needs to be Protobuf serializable
+/// NOTE: missing primitive types shall be added at any time to increase the test coverage
 struct DummyPrimitivesType {
   [[nodiscard]] auto operator==(const DummyPrimitivesType&) const -> bool = default;
 
@@ -35,6 +38,9 @@ struct DummyPrimitivesType {
   double dummy_double{};
 };
 
+/// @brief Collection of non-primitive types for testing purposes.
+/// NOTE: the data needs to be Protobuf serializable
+/// NOTE: missing generic non-primitive types can be added to increase the test coverage
 auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream&;
 
 struct DummyType {
@@ -48,8 +54,9 @@ struct DummyType {
 
   DummyEnum dummy_enum{};
 
-  using TimestampT = std::chrono::system_clock::time_point;
-  TimestampT dummy_timestamp;
+  std::chrono::high_resolution_clock::time_point dummy_timestamp_high_resolution_clock{};
+  std::chrono::system_clock::time_point dummy_timestamp_system_clock{};
+  std::chrono::steady_clock::time_point dummy_timestamp_steady_clock{};
 
   std::string dummy_string;
   std::vector<int32_t> dummy_vector;

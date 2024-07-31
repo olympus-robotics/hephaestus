@@ -13,7 +13,9 @@ find_package(magic_enum REQUIRED)
 find_package(range-v3 REQUIRED)
 
 # library sources
-set(SOURCES src/dummy_type.cpp README.md include/hephaestus/types/dummy_type.h)
+set(SOURCES src/dummy_type.cpp src/type_formatting.cpp README.md include/hephaestus/types/dummy_type.h
+            include/hephaestus/types/type_formatting.h
+)
 
 # library target
 define_module_library(
