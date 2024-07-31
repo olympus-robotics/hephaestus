@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 namespace heph::utils::string {
