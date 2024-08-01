@@ -5,7 +5,7 @@
 #include <fmt/core.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/types/dummy_type.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
