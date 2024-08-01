@@ -12,9 +12,8 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_container.h"
-#include "hephaestus/random/random_generator.h"
-#include "hephaestus/random/random_type.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -51,7 +50,8 @@ struct TestStruct {
   [[nodiscard]] auto operator==(const TestStruct&) const -> bool = default;
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> TestStruct {
-    return { randomT<int>(mt), randomT<double>(mt), randomT<std::string>(mt), randomT<std::vector<int>>(mt) };
+    return { random::random<int>(mt), random::random<double>(mt), random::random<std::string>(mt),
+             random::random<std::vector<int>>(mt) };
   }
 };
 
@@ -69,12 +69,12 @@ TYPED_TEST_SUITE(RandomTypeTests, RandomTypeImplementations);
 
 TYPED_TEST(RandomTypeTests, DeterminismTest) {
   auto [mt, mt_copy] = createPairOfIdenticalRNGs();
-  EXPECT_EQ(randomT<TypeParam>(mt), randomT<TypeParam>(mt_copy));
+  EXPECT_EQ(random::random<TypeParam>(mt), random::random<TypeParam>(mt_copy));
 }
 
 TYPED_TEST(RandomTypeTests, RandomnessTest) {
   auto mt = createRNG();
-  auto gen = [](std::mt19937_64& gen) -> TypeParam { return randomT<TypeParam>(gen); };
+  auto gen = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
   EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen, mt));
 }
 
@@ -82,22 +82,22 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
 // case, as it is already included in testing for randomness. Repeadedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
-  if constexpr (IsRandomGeneratableVectorT<TypeParam> || IsStringT<TypeParam>) {
+  if constexpr (IsRandomCreatableVector<TypeParam> || IsString<TypeParam>) {
     auto mt = createRNG();
 
     static constexpr std::size_t SIZE_ZERO = 0;
     static constexpr bool ALLOW_EMPTY_CONTAINER = true;
     static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
-    auto vec_size_zero = randomT<TypeParam>(mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
+    auto vec_size_zero = random::random<TypeParam>(mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
     EXPECT_EQ(vec_size_zero.size(), SIZE_ZERO);
-    EXPECT_THROW(auto _ = randomT<TypeParam>(mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER),
+    EXPECT_THROW(auto _ = random::random<TypeParam>(mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER),
                  InvalidParameterException);
 
     static constexpr size_t SIZE_SEVEN = 7;
-    auto vec_size_seven = randomT<TypeParam>(mt, SIZE_SEVEN);
+    auto vec_size_seven = random::random<TypeParam>(mt, SIZE_SEVEN);
     EXPECT_EQ(vec_size_seven.size(), SIZE_SEVEN);
 
-    auto random_vec_non_empty = randomT<TypeParam>(mt, {}, DISALLOW_EMPTY_CONTAINER);
+    auto random_vec_non_empty = random::random<TypeParam>(mt, {}, DISALLOW_EMPTY_CONTAINER);
     EXPECT_TRUE(vec_size_seven.size() > 0);
   }
 }

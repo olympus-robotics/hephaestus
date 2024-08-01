@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 
 #include <cstdint>
 #include <random>
