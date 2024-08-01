@@ -12,14 +12,8 @@ find_package(fmt REQUIRED)
 find_package(magic_enum REQUIRED)
 
 # library sources
-set(SOURCES
-    src/random_container.cpp
-    src/random_generator.cpp
-    src/random_type.cpp
-    README.md
-    include/hephaestus/random/random_container.h
-    include/hephaestus/random/random_generator.h
-    include/hephaestus/random/random_type.h
+set(SOURCES src/random_number_generator.cpp src/random_object_creator.cpp README.md
+            include/hephaestus/random/random_number_generator.h include/hephaestus/random/random_object_creator.h
 )
 
 # library target

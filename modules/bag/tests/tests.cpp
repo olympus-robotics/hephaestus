@@ -18,7 +18,7 @@
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/bag/zenoh_recorder.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/utils/filesystem/scoped_path.h"
 #include "test_proto_conversion.h"

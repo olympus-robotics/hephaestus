@@ -18,7 +18,7 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 
 namespace heph::examples::types::tests {
 
