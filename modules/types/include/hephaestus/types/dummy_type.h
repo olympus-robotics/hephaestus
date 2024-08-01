@@ -54,7 +54,6 @@ struct DummyType {
 
   DummyEnum dummy_enum{};
 
-  std::chrono::high_resolution_clock::time_point dummy_timestamp_high_resolution_clock{};
   std::chrono::system_clock::time_point dummy_timestamp_system_clock{};
   std::chrono::steady_clock::time_point dummy_timestamp_steady_clock{};
 
