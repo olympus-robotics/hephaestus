@@ -63,31 +63,36 @@ template <IsEnumT T>
 // Random timestamp generation
 //=================================================================================================
 template <typename T>
-concept IsTimestampT = requires {
+concept IsTimestamp = requires {
   typename T::clock;
-  requires std::is_same_v<typename T::clock, std::chrono::system_clock>;
+  typename T::duration;
+  requires std::is_same_v<typename T::clock, std::chrono::system_clock> ||
+               std::is_same_v<typename T::clock, std::chrono::steady_clock>;
+  requires std::is_same_v<T, typename std::chrono::time_point<typename T::clock, typename T::duration>>;
 };
 
 namespace internal {
-template <IsTimestampT T, size_t Year>
+template <IsTimestamp T, size_t Year>
 [[nodiscard]] constexpr auto createFinalTimestampOfTheYear() -> T {
   // THe final date of the year is YYYY-12-31.
   constexpr auto YEAR = std::chrono::year{ Year };
   constexpr auto FINAL_MONTH = std::chrono::December;
-  constexpr auto FINAL_DAY = std::chrono::last;
-  constexpr auto FINAL_YEAR_MONTH_DAY = std::chrono::year_month_day_last{ YEAR / FINAL_MONTH / FINAL_DAY };
-  constexpr auto FINAL_DATE = T{ static_cast<std::chrono::sys_days>(FINAL_YEAR_MONTH_DAY) };
+  constexpr auto FINAL_DAY = std::chrono::year_month_day_last{ YEAR / FINAL_MONTH / std::chrono::last };
+  constexpr auto FINAL_DATE_SYS_DAYS = std::chrono::sys_days{ FINAL_DAY };
 
   // The final time of the day is 23:59:59.000...
-  constexpr auto FINAL_TIME = std::chrono::duration_cast<typename T::duration>(std::chrono::hours{ 24 });
+  constexpr auto FINAL_TIME =
+      std::chrono::hours{ 23 } + std::chrono::minutes{ 59 } + std::chrono::seconds{ 59 };
 
   // The final timestamp of the year is YYYY-12-31 23:59:59.000...
-  return FINAL_DATE + FINAL_TIME;
+  constexpr auto TOTAL_TIME = FINAL_DATE_SYS_DAYS + FINAL_TIME;
+
+  return T{ TOTAL_TIME.time_since_epoch() };
 }
 }  // namespace internal
 
-/// Generate a random timestamp between year 1970 and the year 2100.
-template <IsTimestampT T>
+/// Create a random timestamp between year 1970 and the year 2100.
+template <IsTimestamp T>
 [[nodiscard]] auto randomT(std::mt19937_64& mt) -> T {
   using DurationT = typename T::duration;
 
