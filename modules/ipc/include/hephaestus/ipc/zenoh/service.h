@@ -75,7 +75,7 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     buffer = internal::removeChangingBytes(buffer);
     DLOG(INFO) << fmt::format("Deserializing buffer of size: {}, values: {}", buffer.size(),
-                              fmt::join(buffer, ","));
+                              fmt::to_string(fmt::join(buffer, ",")));
 
     RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
@@ -135,7 +135,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
       auto buffer = serdes::serialize(reply);
       DLOG(INFO) << fmt::format("Reply: payload size: {}, content: {}", buffer.size(),
-                                fmt::join(buffer, ","));
+                                fmt::to_string(fmt::join(buffer, ",")));
       query.reply(this->topic_config_.name, std::move(buffer), options);
     }
   };

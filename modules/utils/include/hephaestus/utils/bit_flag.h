@@ -101,6 +101,11 @@ public:
     return (value_ & flag.value_) != 0u;
   }
 
+  /// Return the underlying type of the enum. This is to be used only for serialization.
+  [[nodiscard]] constexpr auto getUnderlyingValue() const -> T {
+    return value_;
+  }
+
 private:
   T value_;  // We need to store the underlying value to be able to store multiple flags which
              // do not reprenset any enum value.
