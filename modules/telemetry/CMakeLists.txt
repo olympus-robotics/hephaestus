@@ -12,6 +12,7 @@ find_package(cpr REQUIRED)
 find_package(InfluxDB REQUIRED)
 find_package(fmt REQUIRED)
 find_package(reflectcpp REQUIRED)
+find_package(absl REQUIRED)
 
 # library sources
 set(SOURCES
@@ -30,7 +31,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::serdes cpr::cpr InfluxData::InfluxDB fmt::fmt reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS hephaestus::serdes hephaestus::concurrency cpr::cpr InfluxData::InfluxDB fmt::fmt reflectcpp::reflectcpp absl::log absl::log_initialize absl::log_flags
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

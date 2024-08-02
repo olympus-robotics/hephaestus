@@ -7,11 +7,8 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <absl/base/thread_annotations.h>
-
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/sink.h"
-#include "hephaestus/telemetry/struclog.h"
 
 namespace heph::telemetry {
 
@@ -52,8 +49,5 @@ void metric(const std::string& component, const std::string& tag, const std::str
 
   metric(log_entry);
 }
-
-enum class Severity : std::uint8_t { Trace, Debug, Info, Warn, Error, Fatal };
-void log(const Severity& s, const Log& l);
 
 }  // namespace heph::telemetry
