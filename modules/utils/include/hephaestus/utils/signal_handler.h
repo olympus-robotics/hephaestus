@@ -40,6 +40,9 @@ public:
   template <StoppableAndWaitable T>
   static void waitForInterruptOrAppCompletion(T& app);
 
+  /// Register a callback to be called when a signal is received.
+  /// This function can be called together with others from this class.
+  /// Only one callback can be registered at a time.
   static void registerInterruptCallback(std::function<void()>&& interrupt_callback);
 
 private:
