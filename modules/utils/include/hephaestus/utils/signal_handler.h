@@ -40,6 +40,8 @@ public:
   template <StoppableAndWaitable T>
   static void waitForInterruptOrAppCompletion(T& app);
 
+  static void registerInterruptCallback(std::function<void()>&& interrupt_callback);
+
 private:
   TerminationBlocker() = default;
   [[nodiscard]] static auto instance() -> TerminationBlocker&;
@@ -50,6 +52,7 @@ private:
   std::atomic_flag stop_flag_ = ATOMIC_FLAG_INIT;
   std::future<void> stop_future_;
   std::function<std::future<void>()> app_stop_callback_ = []() { return std::future<void>{}; };
+  std::function<void()> interrupt_callback_ = []() {};
 };  // namespace heph::utils
 
 template <StoppableAndWaitable T>
