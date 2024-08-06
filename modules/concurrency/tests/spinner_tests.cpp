@@ -44,7 +44,7 @@ TEST(SpinnerTest, StopCallback) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   std::size_t callback_called_counter = 0;
-  Spinner spinner([&callback_called_counter] { ++callback_called_counter; });
+  Spinner spinner([&callback_called_counter]() { ++callback_called_counter; });
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
