@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package heph.ipc.zenoh.proto;
+
+enum ActionServerRequestStatus {
+    ACCEPTED = 0;
+    REJECTED_USER = 1;
+    REJECTED_ALREADY_RUNNING = 2;
+    INVALID = 3;
+}
+
+message ActionServerRequestResponse {
+    ActionServerRequestStatus status = 1;
+  };
