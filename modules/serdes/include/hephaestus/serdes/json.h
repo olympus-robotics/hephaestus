@@ -8,8 +8,6 @@
 #include <string_view>
 
 #include <nlohmann/json.hpp>
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
@@ -17,17 +15,17 @@
 namespace heph::serdes {
 
 template <typename T>
-concept HasJSONSerialization = requires(const T& data) {
+concept JSONSerializable = requires(const T& data) {
   { toJSON(data) } -> std::convertible_to<std::string>;
 };
 
 template <typename T>
-concept HasJSONDeserialization = requires(T& mutable_data, std::string_view json) {
+concept JSONDeserializable = requires(T& mutable_data, std::string_view json) {
   { fromJSON(json, mutable_data) };
 };
 
 template <typename T>
-concept HasNlohmannJSONSerialization = requires(const T& data) {
+concept NlohmannJSONSerializable = requires(const T& data) {
   { nlohmann::json(data) } -> std::convertible_to<nlohmann::json>;
 };
 
@@ -37,7 +35,6 @@ concept HasNlohmannJSONSerialization = requires(const T& data) {
 // - Protobuf
 // - Custom `toJSON` / `fromJSON` functions
 // - Nlohmann JSON serialization
-// If none of the above are provided, we use reflection-based JSON serialization via `reflect-cpp` library.
 template <class T>
 [[nodiscard]] auto serializeToJSON(const T& data) -> std::string;
 
@@ -47,34 +44,38 @@ template <class T>
 auto deserializeFromJSON(std::string_view json, T& data) -> void;
 
 // -----------------------------------------------------------------------------------------------
-// Implementation
+// Specializations
 // -----------------------------------------------------------------------------------------------
 
-template <typename T>
+template <protobuf::ProtobufSerializable T>
 auto serializeToJSON(const T& data) -> std::string {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    return protobuf::serializeToJSON(data);
-  } else if constexpr (HasJSONSerialization<T>) {
-    return toJSON(data);
-  } else if constexpr (HasNlohmannJSONSerialization<T>) {
-    const nlohmann::json j = data;
-    return j.dump();
-  } else {
-    return rfl::json::write(data);
-  }
+  return protobuf::serializeToJSON(data);
 }
 
-template <typename T>
+template <JSONSerializable T>
+auto serializeToJSON(const T& data) -> std::string {
+  return toJSON(data);
+}
+
+template <NlohmannJSONSerializable T>
+auto serializeToJSON(const T& data) -> std::string {
+  const nlohmann::json j = data;
+  return j.dump();
+}
+
+template <protobuf::ProtobufSerializable T>
 auto deserializeFromJSON(std::string_view json, T& data) -> void {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    protobuf::deserializeFromJSON(json, data);
-  } else if constexpr (HasJSONDeserialization<T>) {
-    fromJSON(json, data);
-  } else if constexpr (HasNlohmannJSONSerialization<T>) {
-    data = nlohmann::json::parse(json).get<T>();
-  } else {
-    data = rfl::json::read<T>(json).value();
-  }
+  protobuf::deserializeFromJSON(json, data);
+}
+
+template <JSONDeserializable T>
+auto deserializeFromJSON(std::string_view json, T& data) -> void {
+  fromJSON(json, data);
+}
+
+template <NlohmannJSONSerializable T>
+auto deserializeFromJSON(std::string_view json, T& data) -> void {
+  data = nlohmann::json::parse(json).get<T>();
 }
 
 }  // namespace heph::serdes

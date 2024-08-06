@@ -30,52 +30,32 @@ template <class T>
 auto getSerializedTypeInfo() -> TypeInfo;
 
 // -----------------------------------------------------------------------------------------------
-// Implementation
+// Specialization
 // -----------------------------------------------------------------------------------------------
 
-template <class T>
+template <protobuf::ProtobufSerializable T>
 auto serialize(const T& data) -> std::vector<std::byte> {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    return protobuf::serialize(data);
-  } else {
-    static_assert(protobuf::ProtobufSerializable<T>, "No serialization supported");
-  }
+  return protobuf::serialize(data);
 }
 
-template <class T>
+template <protobuf::ProtobufSerializable T>
 [[nodiscard]] auto serializeToText(const T& data) -> std::string {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    return protobuf::serializeToText(data);
-  } else {
-    static_assert(protobuf::ProtobufSerializable<T>, "No serialization to text supported");
-  }
+  return protobuf::serializeToText(data);
 }
 
-template <class T>
+template <protobuf::ProtobufSerializable T>
 auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    protobuf::deserialize(buffer, data);
-  } else {
-    static_assert(protobuf::ProtobufSerializable<T>, "No deserialization supported");
-  }
+  protobuf::deserialize(buffer, data);
 }
 
-template <class T>
+template <protobuf::ProtobufSerializable T>
 auto deserializeFromText(std::string_view buffer, T& data) -> void {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    protobuf::deserializeFromText(buffer, data);
-  } else {
-    static_assert(protobuf::ProtobufSerializable<T>, "No deserialization from text supported");
-  }
+  protobuf::deserializeFromText(buffer, data);
 }
 
-template <class T>
+template <protobuf::ProtobufSerializable T>
 auto getSerializedTypeInfo() -> TypeInfo {
-  if constexpr (protobuf::ProtobufSerializable<T>) {
-    return protobuf::getTypeInfo<T>();
-  } else {
-    static_assert(protobuf::ProtobufSerializable<T>, "No serialization supported");
-  }
+  return protobuf::getTypeInfo<T>();
 }
 
 }  // namespace heph::serdes

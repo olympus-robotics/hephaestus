@@ -89,4 +89,8 @@ void Spinner::addStopCallback(std::function<void()>&& callback) {
   stop_callback_ = std::move(callback);
 }
 
+auto Spinner::spinCount() const -> uint64_t {
+  return spin_count_;
+}
+
 }  // namespace heph::concurrency

@@ -26,32 +26,31 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${PROTOBUF_DEPENDS})
 endif()
 
+if(influxdb IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(INFLUXDB_DEPENDS cpr curl)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
+endif()
+
 if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
   set(CPR_DEPENDS curl)
   list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
 endif()
 
-if(influxdb IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(INFLUXDB_DEPENDS cpr)
-  list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
-endif()
-
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-set(ZENOH_VERSION "0.11.0.3")
+# As soon as zenohcxx commit makes to a release, move back to the release. set(ZENOH_VERSION "1.0.0.4")
+set(ZENOH_VERSION "c75ce16e855e8b1f0562523cdf6be6c37f4ebb56")
 add_cmake_dependency(
-  NAME zenohc
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-c"
-  GIT_TAG ${ZENOH_VERSION}
+  NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
+# This should be equal to ${ZENOH_VERSION}, but we need to the fix coming from this commit.
+set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS zenohc
-  GIT_REPOSITORY "https://github.com/eclipse-zenoh/zenoh-cpp"
-  GIT_TAG ${ZENOH_VERSION}
+  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   SOURCE_SUBDIR install
 )
 
@@ -159,7 +158,7 @@ add_cmake_dependency(
 )
 
 # --------------------------------------------------------------------------------------------------
-# curl (REST client)
+# curl
 set(CURL_VERSION 8.7.1)
 set(CURL_TAG curl-8_7_1)
 add_cmake_dependency(
@@ -174,27 +173,15 @@ add_cmake_dependency(
 set(CPR_GIT_TAG 21d3ad51afbd8e28931f8067cee3ff1ebd854a85)
 add_cmake_dependency(
   NAME cpr
-  DEPENDS curl URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
+  DEPENDS ${CPR_DEPENDS} URL https://github.com/libcpr/cpr/archive/${CPR_GIT_TAG}.tar.gz
   CMAKE_ARGS -DCPR_USE_SYSTEM_CURL=ON
 )
 
 # --------------------------------------------------------------------------------------------------
-# influxdb (REST client)
+# influxdb
 set(INFLUXDB_GIT_TAG 8d8ab3b5ddc40b767a3ebf5eb1df76aa170dbca9)
 add_cmake_dependency(
   NAME influxdb
-  DEPENDS cpr URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
+  DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
   CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
-)
-
-# --------------------------------------------------------------------------------------------------
-# reflect-cpp
-set(REFLECT_CPP_VERSION 0.13.0)
-set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION})
-add_cmake_dependency(
-  NAME reflect-cpp
-  VERSION ${REFLECT_CPP_VERSION}
-  GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
-  GIT_TAG ${REFLECT_CPP_TAG}
-  CMAKE_ARGS -DREFLECTCPP_YAML=OFF
 )

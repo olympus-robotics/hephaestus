@@ -14,9 +14,9 @@ using namespace heph::telemetry::literals;
 auto main(int /*argc*/, const char* /*argv*/[]) -> int {
   const heph::utils::StackTrace stack;
 
+  ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
+
   const std::string a = "testing absl log sink";
   const int num = 123;
-  const auto log_entry = ht::LogEntry{ ht::Level::Warn, a } | "num"_f(num);
-  ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
-  ht::log(log_entry);
+  ht::log(ht::LogEntry{ ht::Level::Warn, a } | "num"_f(num));
 }
