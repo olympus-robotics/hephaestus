@@ -79,7 +79,7 @@ concept IsTimestamp = requires {
 namespace internal {
 template <IsTimestamp T, size_t Year>
 [[nodiscard]] constexpr auto createFinalTimestampOfTheYear() -> T {
-  // THe final date of the year is YYYY-12-31.
+  // The final date of the year is YYYY-12-31.
   constexpr auto YEAR = std::chrono::year{ Year };
   constexpr auto FINAL_MONTH = std::chrono::December;
   constexpr auto FINAL_DAY = std::chrono::year_month_day_last{ YEAR / FINAL_MONTH / std::chrono::last };
