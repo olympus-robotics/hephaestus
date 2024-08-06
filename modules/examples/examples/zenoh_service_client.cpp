@@ -25,7 +25,7 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Binary service client example", ExampleType::Service);
+    auto desc = getProgramDescription("Binary service client example", ExampleType::SERVICE);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);

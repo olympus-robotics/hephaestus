@@ -26,7 +26,7 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Periodic publisher example", ExampleType::Pubsub);
+    auto desc = getProgramDescription("Periodic publisher example", ExampleType::PUBSUB);
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
