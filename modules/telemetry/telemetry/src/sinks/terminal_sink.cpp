@@ -4,9 +4,15 @@
 
 #include "hephaestus/telemetry/sinks/terminal_sink.h"
 
+#include <string>
+#include <unordered_map>
+#include <utility>
+
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <fmt/std.h>
+
+#include "hephaestus/telemetry/metric_sink.h"
 
 using ValueMap = std::unordered_map<std::string, heph::telemetry::Metric::ValueType>;
 using ValuePair = std::pair<const std::string, heph::telemetry::Metric::ValueType>;
