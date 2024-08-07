@@ -19,7 +19,7 @@
 
 namespace heph::concurrency {
 namespace {
-[[nodiscard]] auto rateHzToMicroseconds(double rate_hz) -> std::chrono::microseconds {
+[[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
   if (rate_hz == 0) {
     return std::chrono::microseconds{ 0 };
   }
@@ -31,8 +31,11 @@ namespace {
 }
 }  // namespace
 
-Spinner::Spinner(double rate_hz /*= 0*/)
-  : is_started_(false), stop_requested_(false), spin_period_(rateHzToMicroseconds(rate_hz)) {
+Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
+  : callback_(std::move(callback))
+  , is_started_(false)
+  , stop_requested_(false)
+  , spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
@@ -52,16 +55,20 @@ void Spinner::start() {
 }
 
 void Spinner::spin() {
+  // TODO: set thread name
+
   start_timestamp_ = std::chrono::system_clock::now();
 
   while (!stop_requested_.load()) {
-    spinOnce();
+    callback_();
+
+    ++spin_count_;
 
     if (spin_period_.count() == 0) {
       continue;
     }
 
-    const auto target_timestamp = start_timestamp_ + (++spin_count_) * spin_period_;
+    const auto target_timestamp = start_timestamp_ + spin_count_ * spin_period_;
     std::unique_lock<std::mutex> lock(mutex_);
     condition_.wait_until(lock, target_timestamp);
   }
@@ -78,15 +85,7 @@ auto Spinner::stop() -> std::future<void> {
 void Spinner::stopImpl() {
   spinner_thread_.join();
 
-  if (stop_callback_) {
-    stop_callback_();
-  }
-
   is_started_.store(false);
-}
-
-void Spinner::addStopCallback(std::function<void()>&& callback) {
-  stop_callback_ = std::move(callback);
 }
 
 auto Spinner::spinCount() const -> uint64_t {

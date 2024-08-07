@@ -2,37 +2,50 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <atomic>
 #include <cstdlib>
 #include <exception>
+#include <future>
 
 #include <fmt/core.h>
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/utils/signal_handler.h"
 
-class TestSpinner : public heph::concurrency::Spinner {
-public:
-  std::atomic<int> counter = 0;
+static constexpr auto RATE_HZ = 10;
 
-protected:
-  void spinOnce() override {
-    fmt::println("Spinning once. Counter: {}", counter.load());
-    ++counter;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // NOLINT
+class Worker {
+public:
+  Worker() : spinner_([this] { doWork(); }, RATE_HZ) {
   }
+
+  void start() {
+    spinner_.start();
+  }
+
+  [[nodiscard]] auto stop() -> std::future<void> {
+    return spinner_.stop();
+  }
+
+private:
+  void doWork() {
+    fmt::println("Spinning once. Counter: {}", counter_++);
+  }
+
+private:
+  heph::concurrency::Spinner spinner_;
+  std::size_t counter_ = 0;
 };
 
 auto main() -> int {
   try {
-    TestSpinner spinner;
+    Worker worker;
 
-    spinner.start();
+    worker.start();
 
     // Wait until signal is set
     heph::utils::TerminationBlocker::waitForInterrupt();
 
-    spinner.stop().get();
+    worker.stop().get();
 
   } catch (const std::exception& ex) {
     fmt::println("{}", ex.what());
