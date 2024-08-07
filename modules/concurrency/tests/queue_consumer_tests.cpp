@@ -45,7 +45,7 @@ TEST(MessageQueueConsumer, ProcessMessages) {
                                           }
                                         },
                                          MESSAGE_COUNT };
-
+  spinner.start();
   auto mt = random::createRNG();
   std::vector<Message> messages(MESSAGE_COUNT);
   std::for_each(messages.begin(), messages.end(),
@@ -57,6 +57,8 @@ TEST(MessageQueueConsumer, ProcessMessages) {
   flag.wait(false);
 
   EXPECT_EQ(messages, processed_messages);
+
+  spinner.stop();
 }
 
 }  // namespace heph::concurrency::tests
