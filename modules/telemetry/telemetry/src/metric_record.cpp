@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -50,6 +51,10 @@ namespace {
     }
 
     return value_str;
+  }
+
+  if (json_value.is_null()) {
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   return {};
