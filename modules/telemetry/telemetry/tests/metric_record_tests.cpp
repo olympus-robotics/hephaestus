@@ -33,10 +33,8 @@ class MockMetricSink final : public IMetricSink {
 public:
   void send(const Metric& metric) override {
     measure_entries_.push_back(metric);
-    fmt::println("Received metric");
     flag_.test_and_set();
     flag_.notify_all();
-    fmt::println("Received metric: notified");
   }
 
   [[nodiscard]] auto getMeasureEntries() const -> const std::vector<Metric>& {
@@ -44,9 +42,7 @@ public:
   }
 
   void wait() const {
-    fmt::println("Waiting for metric");
     flag_.wait(false);
-    fmt::println("Waiting completed");
   }
 
 private:
