@@ -5,6 +5,7 @@
 #include "hephaestus/telemetry/metric_sinks/terminal_sink.h"
 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -18,26 +19,16 @@ using ValueMap = std::unordered_map<std::string, heph::telemetry::Metric::ValueT
 using ValuePair = std::pair<const std::string, heph::telemetry::Metric::ValueType>;
 
 template <>
-struct fmt::formatter<ValuePair> {
-  template <typename FormatParseContext>
-  constexpr static auto parse(FormatParseContext& ctx) {
-    return ctx.end();
-  }
-
+struct fmt::formatter<ValuePair> : fmt::formatter<std::string_view> {
   constexpr static auto format(const ValuePair& value, fmt::format_context& ctx) {
     return fmt::format_to(ctx.out(), "\n  {}: {}", value.first, value.second);
   }
 };
 
 template <>
-struct fmt::formatter<ValueMap> {
-  template <typename FormatParseContext>
-  constexpr static auto parse(FormatParseContext& ctx) {
-    return ctx.end();
-  }
-
+struct fmt::formatter<ValueMap> : fmt::formatter<std::string_view> {
   static auto format(const ValueMap& value, fmt::format_context& ctx) {
-    return fmt::format_to(ctx.out(), "{}", fmt::join(value.begin(), value.end(), ""));
+    return fmt::format_to(ctx.out(), "{}", fmt::join(value.begin(), value.end(), "\n\t"));
   }
 };
 
