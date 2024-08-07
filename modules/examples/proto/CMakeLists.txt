@@ -3,7 +3,7 @@
 #=================================================================================================
 
 set(SOURCES
-    hephaestus/examples/types/proto/accumulator.proto
+    hephaestus/examples/types/proto/sample.proto
     hephaestus/examples/types/proto/geometry.proto
     hephaestus/examples/types/proto/pose.proto
 )

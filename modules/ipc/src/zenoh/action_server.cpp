@@ -16,7 +16,7 @@
 
 namespace heph::ipc::zenoh {
 auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config) -> bool {
-  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 500 };
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   const auto stop_topic = internal::getStopServiceTopic(topic_config);
   auto results = callService<std::string, std::string>(session, TopicConfig{ stop_topic }, "", TIMEOUT);
   if (results.size() != 1) {

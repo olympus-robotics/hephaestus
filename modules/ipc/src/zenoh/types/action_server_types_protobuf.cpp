@@ -9,11 +9,10 @@
 #include "hephaestus/ipc/zenoh/types/action_server_types.h"
 
 namespace heph::ipc::zenoh {
-namespace {
 void toProto(proto::ActionServerRequestStatus& proto_status, const ActionServerRequestStatus& status) {
   switch (status) {
-    case ActionServerRequestStatus::ACCEPTED:
-      proto_status = proto::ActionServerRequestStatus::ACCEPTED;
+    case ActionServerRequestStatus::SUCCESSFUL:
+      proto_status = proto::ActionServerRequestStatus::SUCCESSFUL;
       break;
     case ActionServerRequestStatus::REJECTED_USER:
       proto_status = proto::ActionServerRequestStatus::REJECTED_USER;
@@ -24,13 +23,16 @@ void toProto(proto::ActionServerRequestStatus& proto_status, const ActionServerR
     case ActionServerRequestStatus::INVALID:
       proto_status = proto::ActionServerRequestStatus::INVALID;
       break;
+    case ActionServerRequestStatus::STOPPED:
+      proto_status = proto::ActionServerRequestStatus::STOPPED;
+      break;
   }
 }
 
 void fromProto(const proto::ActionServerRequestStatus& proto_status, ActionServerRequestStatus& status) {
   switch (proto_status) {
-    case proto::ActionServerRequestStatus::ACCEPTED:
-      status = ActionServerRequestStatus::ACCEPTED;
+    case proto::ActionServerRequestStatus::SUCCESSFUL:
+      status = ActionServerRequestStatus::SUCCESSFUL;
       break;
     case proto::ActionServerRequestStatus::REJECTED_USER:
       status = ActionServerRequestStatus::REJECTED_USER;
@@ -41,12 +43,14 @@ void fromProto(const proto::ActionServerRequestStatus& proto_status, ActionServe
     case proto::ActionServerRequestStatus::INVALID:
       status = ActionServerRequestStatus::INVALID;
       break;
+    case proto::ActionServerRequestStatus::STOPPED:
+      status = ActionServerRequestStatus::STOPPED;
+      break;
     default:
       LOG(ERROR) << "Unknown ActionServerRequestStatus: " << magic_enum::enum_name(proto_status);
       status = ActionServerRequestStatus::REJECTED_USER;
   }
 }
-}  // namespace
 
 void toProto(proto::ActionServerRequestResponse& proto_response,
              const ActionServerRequestResponse& response) {

@@ -22,11 +22,11 @@
 
 namespace heph::ipc::zenoh {
 
-/// An action server is a server that execute user provided code in response to requests from clients.
+/// An action server is a server that execute a user function in response to trigger from a client.
 /// Upon completion a result is sent back to the client.
 /// Differently from classic request/response servers, action servers are asynchronous and non-blocking.
-/// Action servers also provide functionalities for the user to send status updates to the client and are
-/// interruptible.
+/// Action servers also provide functionalities for the user to send status updates to the client during
+/// execution of the action and are interruptible.
 /// To instantiate an ActionServer the user needs to provide two callbacks:
 /// - ActionTriggerCallback
 ///   - Takes in input the request and need to decide if the request is valid and if it can be served.
@@ -65,6 +65,11 @@ public:
 
   ActionServer(SessionPtr session, TopicConfig topic_config, ActionTriggerCallback&& action_trigger_cb,
                ExecuteCallback&& execute_cb);
+  ~ActionServer();
+  ActionServer(const ActionServer&) = delete;
+  ActionServer(ActionServer&&) = delete;
+  auto operator=(const ActionServer&) -> ActionServer& = delete;
+  auto operator=(ActionServer&&) -> ActionServer& = delete;
 
 private:
   [[nodiscard]] auto onRequest(const RequestT& request) -> ActionServerRequestResponse;
@@ -115,6 +120,12 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
   , request_service_(std::make_unique<Service<RequestT, ActionServerRequestResponse>>(
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
+  request_consumer_.start();
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
+  request_consumer_.stop();
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -123,12 +134,13 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
   if (is_running_) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): server is already serving one request.",
                               topic_config_.name);
+
     return { .status = ActionServerRequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
   try {
     const auto response = action_trigger_cb_(request);
-    if (response != ActionServerRequestStatus::ACCEPTED) {
+    if (response != ActionServerRequestStatus::SUCCESSFUL) {
       return { .status = response };
     }
   } catch (const std::exception& ex) {
@@ -146,7 +158,7 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
   }
 
   LOG(INFO) << fmt::format("ActionServer (topic: {}): request accepted.", topic_config_.name);
-  return { .status = ActionServerRequestStatus::ACCEPTED };
+  return { .status = ActionServerRequestStatus::SUCCESSFUL };
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -164,7 +176,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   auto stop_service = Service<std::string, std::string>(
       session_, internal::getStopServiceTopic(topic_config_), [&stop_requested](const std::string&) {
         stop_requested = true;
-        return "";
+        return "stopped";
       });
 
   const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
@@ -176,19 +188,16 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
     } catch (const std::exception& ex) {
       LOG(ERROR) << fmt::format("ActionServer (topic: {}): execute callback failed with exception: {}.",
                                 topic_config_.name, ex.what());
-      return ReplyT{};
+      return ActionServerResponse<ReplyT>{};
     }
   }();
   const auto response_topic = internal::getResponseServiceTopic(topic_config_);
-  // TODO: if stop_requested == true, should we communicate somehow that we terminate cause stop was
-  // requested?
   const auto client_response = callService<ActionServerResponse<ReplyT>, ActionServerRequestResponse>(
       *session_, response_topic, reply);
-  if (client_response.empty() ||
+  if (client_response.size() != 1 ||
       client_response.front().value.status != ActionServerRequestStatus::SUCCESSFUL) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to send final response to client.",
                               topic_config_.name);
-    // TODO: should we do something else?
   }
 
   is_running_ = false;
@@ -202,14 +211,16 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
                       StatusUpdateCallback<StatusT>&& status_update_cb)
     -> std::future<ActionServerResponse<ReplyT>> {
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   const auto server_responses =
-      callService<RequestT, ActionServerRequestResponse>(*session, topic_config, request);
+      callService<RequestT, ActionServerRequestResponse>(*session, topic_config, request, TIMEOUT);
   if (server_responses.empty()) {
-    return handleFailure<ReplyT>(topic_config.name, "no response", ActionServerRequestStatus::INVALID);
+    return internal::handleFailure<ReplyT>(topic_config.name, "no response",
+                                           ActionServerRequestStatus::INVALID);
   }
 
   if (server_responses.size() > 1) {
-    return handleFailure<ReplyT>(
+    return internal::handleFailure<ReplyT>(
         topic_config.name,
         fmt::format(
             "received more than one response ({}), make sure the topic matches a single action server",
@@ -219,12 +230,11 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
 
   const auto& server_response_status = server_responses.front().value.status;
   if (server_response_status != ActionServerRequestStatus::SUCCESSFUL) {
-    return handleFailure<ReplyT>(
+    return internal::handleFailure<ReplyT>(
         topic_config.name, fmt::format("request rejected {}", magic_enum::enum_name(server_response_status)),
         server_response_status);
   }
 
-  // TODO: figure out why we need this
   return std::async(
       // NOLINTNEXTLINE(bugprone-exception-escape)
       std::launch::async, [session, topic_config, status_update_cb = std::move(status_update_cb)]() mutable {

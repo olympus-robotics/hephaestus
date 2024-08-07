@@ -22,7 +22,7 @@ struct ActionServerRequestResponse {
 template <typename ReplyT>
 struct ActionServerResponse {
   ReplyT value;
-  ActionServerRequestStatus status;
+  ActionServerRequestStatus status{};
 };
 
 }  // namespace heph::ipc::zenoh

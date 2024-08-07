@@ -15,8 +15,8 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
-#include "hephaestus/examples/types/accumulator.h"
-#include "hephaestus/examples/types_protobuf/accumulator.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types/sample.h"
+#include "hephaestus/examples/types_protobuf/sample.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/zenoh/action_server.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -26,36 +26,38 @@
 #include "zenoh_program_options.h"
 
 [[nodiscard]] auto
-request(const heph::examples::types::Accumulator& sample) -> heph::ipc::zenoh::ActionServerRequestStatus {
-  LOG(INFO) << fmt::format("Request received: value {} | iterations: {}", sample.value, sample.counter);
-  if (sample.counter == 0) {
+request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::ActionServerRequestStatus {
+  LOG(INFO) << fmt::format("Request received: {}", sample);
+  if (sample.iterations_count == 0) {
     LOG(ERROR) << "Invalid request, iterations must be greater than 0";
     return heph::ipc::zenoh::ActionServerRequestStatus::REJECTED_USER;
   }
 
-  return heph::ipc::zenoh::ActionServerRequestStatus::ACCEPTED;
+  return heph::ipc::zenoh::ActionServerRequestStatus::SUCCESSFUL;
 }
 
-[[nodiscard]] auto execute(const heph::examples::types::Accumulator& sample,
-                           heph::ipc::Publisher<heph::examples::types::Accumulator>& publisher,
-                           std::atomic_bool& stop_requested) -> heph::examples::types::Accumulator {
+[[nodiscard]] auto execute(const heph::examples::types::SampleRequest& request,
+                           heph::ipc::Publisher<heph::examples::types::SampleReply>& status_update_publisher,
+                           std::atomic_bool& stop_requested) -> heph::examples::types::SampleReply {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 500 };
-  LOG(INFO) << fmt::format("Start execution, iterations: {}", sample.counter);
-  std::size_t accumulated = sample.value;
-  for (std::size_t i = 0; i < sample.counter; ++i) {
+  LOG(INFO) << fmt::format("Start execution, iterations: {}", request.iterations_count);
+  std::size_t accumulated = request.initial_value;
+  std::size_t counter = 0;
+  for (; counter < request.iterations_count; ++counter) {
     if (stop_requested) {
       LOG(INFO) << "Stop requested, stopping execution";
       break;
     }
 
     accumulated += 1;
-    const auto result = publisher.publish(heph::examples::types::Accumulator{ accumulated, i });
+    const auto result =
+        status_update_publisher.publish(heph::examples::types::SampleReply{ accumulated, counter });
     LOG_IF(ERROR, !result) << "Failed to publish status update";
-    fmt::println("- Update {}: {} ", i, accumulated);
+    fmt::println("- Update {}: {} ", counter, accumulated);
     std::this_thread::sleep_for(WAIT_FOR);
   }
 
-  return { accumulated, sample.counter };
+  return { accumulated, counter };
 }
 
 // We create a simple action server that accumulates a value for a given number of iterations.
@@ -69,26 +71,31 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = parseArgs(args);
+    auto stop_session_config = session_config;
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
+    auto stop_session = heph::ipc::zenoh::createSession(std::move(stop_session_config));
 
-    auto request_callback = [](const heph::examples::types::Accumulator& sample) { return request(sample); };
+    auto request_callback = [](const heph::examples::types::SampleRequest& sample) {
+      return request(sample);
+    };
 
-    auto execute_callback = [](const heph::examples::types::Accumulator& sample,
-                               heph::ipc::Publisher<heph::examples::types::Accumulator>& publisher,
+    auto execute_callback = [](const heph::examples::types::SampleRequest& sample,
+                               heph::ipc::Publisher<heph::examples::types::SampleReply>& publisher,
                                std::atomic_bool& stop_requested) {
       return execute(sample, publisher, stop_requested);
     };
 
-    const heph::ipc::zenoh::ActionServer<heph::examples::types::Accumulator,
-                                         heph::examples::types::Accumulator,
-                                         heph::examples::types::Accumulator>
+    const heph::ipc::zenoh::ActionServer<heph::examples::types::SampleRequest,
+                                         heph::examples::types::SampleReply,
+                                         heph::examples::types::SampleReply>
         action_server(session, topic_config, request_callback, execute_callback);
 
     LOG(INFO) << fmt::format("Action Server started. Wating for queries on '{}' topic", topic_config.name);
 
-    heph::utils::TerminationBlocker::registerInterruptCallback([session = std::ref(*session), &topic_config] {
-      std::ignore = heph::ipc::zenoh::requestActionServerToStopExecution(session, topic_config);
-    });
+    heph::utils::TerminationBlocker::registerInterruptCallback(
+        [stop_session = std::ref(*stop_session), &topic_config] {
+          std::ignore = heph::ipc::zenoh::requestActionServerToStopExecution(stop_session, topic_config);
+        });
 
     heph::utils::TerminationBlocker::waitForInterrupt();
 

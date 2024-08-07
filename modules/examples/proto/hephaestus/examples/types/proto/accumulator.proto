@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package heph.examples.types.proto;
-
-message Accumulator {
-    uint64 value = 1;
-    uint64 counter = 2;
-}

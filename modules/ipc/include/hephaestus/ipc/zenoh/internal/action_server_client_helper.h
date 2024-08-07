@@ -69,9 +69,9 @@ ActionServerClientHelper<RequestT, StatusT, ReplyT>::ActionServerClientHelper(
                                                          const std::shared_ptr<StatusT>& status) mutable {
           status_update_cb(*status);
         }))
-  , response_service_(std::make_unique<Service<ReplyT, ActionServerRequestResponse>>(
+  , response_service_(std::make_unique<Service<ActionServerResponse<ReplyT>, ActionServerRequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
-        [this](const ReplyT& reply) { return serviceCallback(reply); })) {
+        [this](const ActionServerResponse<ReplyT>& reply) { return serviceCallback(reply); })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
