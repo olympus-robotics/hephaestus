@@ -28,7 +28,7 @@ namespace heph::ipc::zenoh {
 /// Action servers also provide functionalities for the user to send status updates to the client and are
 /// interruptible.
 /// To instantiate an ActionServer the user needs to provide two callbacks:
-/// - RequestCallback
+/// - ActionTriggerCallback
 ///   - Takes in input the request and need to decide if the request is valid and if it can be served.
 ///   - The callback should not block and return immediately,
 /// - ExecuteCallback
@@ -59,11 +59,11 @@ namespace heph::ipc::zenoh {
 template <typename RequestT, typename StatusT, typename ReplyT>
 class ActionServer {
 public:
-  using RequestCallback = std::function<ActionServerRequestStatus(const RequestT&)>;
+  using ActionTriggerCallback = std::function<ActionServerRequestStatus(const RequestT&)>;
   using ExecuteCallback =
       std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool& stop_requested)>;
 
-  ActionServer(SessionPtr session, TopicConfig topic_config, RequestCallback&& request_cb,
+  ActionServer(SessionPtr session, TopicConfig topic_config, ActionTriggerCallback&& action_trigger_cb,
                ExecuteCallback&& execute_cb);
 
 private:
@@ -74,18 +74,12 @@ private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
-  RequestCallback request_cb_;
+  ActionTriggerCallback action_trigger_cb_;
   ExecuteCallback execute_cb_;
 
   std::unique_ptr<Service<RequestT, ActionServerRequestResponse>> request_service_;
   concurrency::MessageQueueConsumer<RequestT> request_consumer_;
   std::atomic_bool is_running_{ false };
-};
-
-template <typename ReplyT>
-struct ActionServerResponse {
-  ReplyT value;
-  ActionServerRequestStatus status;
 };
 
 template <typename StatusT>
@@ -104,17 +98,19 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 [[nodiscard]] auto requestActionServerToStopExecution(Session& session,
                                                       const TopicConfig& topic_config) -> bool;
 
+// TODO: add a function to get notified when the server is idle again.
+
 // ----------------------------------------------------------------------------------------------------------
 // --------- ActionServer Implementation --------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicConfig topic_config,
-                                                      RequestCallback&& request_cb,
+                                                      ActionTriggerCallback&& action_trigger_cb,
                                                       ExecuteCallback&& execute_cb)
   : session_(std::move((session)))
   , topic_config_(std::move(topic_config))
-  , request_cb_(std::move(request_cb))
+  , action_trigger_cb_(std::move(action_trigger_cb))
   , execute_cb_(std::move(execute_cb))
   , request_service_(std::make_unique<Service<RequestT, ActionServerRequestResponse>>(
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
@@ -131,7 +127,7 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
   }
 
   try {
-    const auto response = request_cb_(request);
+    const auto response = action_trigger_cb_(request);
     if (response != ActionServerRequestStatus::ACCEPTED) {
       return { .status = response };
     }
@@ -161,7 +157,8 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   // other, but has the great advantage that we do not risk receiving messages from other requests if our
   // request is rejected. auto publisher = Publisher<StatusT>{ session_,
   // internal::getStatusPublisherTopic(topic_config_) };
-  auto publisher = Publisher<StatusT>{ session_, internal::getStatusPublisherTopic(topic_config_) };
+  auto status_update_publisher =
+      Publisher<StatusT>{ session_, internal::getStatusPublisherTopic(topic_config_) };
 
   std::atomic_bool stop_requested{ false };
   auto stop_service = Service<std::string, std::string>(
@@ -170,9 +167,12 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
         return "";
       });
 
-  const auto reply = [this, &request, &publisher, &stop_requested]() noexcept {
+  const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
     try {
-      return execute_cb_(request, publisher, stop_requested);
+      return ActionServerResponse<ReplyT>{
+        .value = execute_cb_(request, status_update_publisher, stop_requested),
+        .status = stop_requested ? ActionServerRequestStatus::STOPPED : ActionServerRequestStatus::SUCCESSFUL,
+      };
     } catch (const std::exception& ex) {
       LOG(ERROR) << fmt::format("ActionServer (topic: {}): execute callback failed with exception: {}.",
                                 topic_config_.name, ex.what());
@@ -182,10 +182,10 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   const auto response_topic = internal::getResponseServiceTopic(topic_config_);
   // TODO: if stop_requested == true, should we communicate somehow that we terminate cause stop was
   // requested?
-  const auto client_response =
-      callService<ReplyT, ActionServerRequestResponse>(*session_, response_topic, reply);
+  const auto client_response = callService<ActionServerResponse<ReplyT>, ActionServerRequestResponse>(
+      *session_, response_topic, reply);
   if (client_response.empty() ||
-      client_response.front().value.status != ActionServerRequestStatus::ACCEPTED) {
+      client_response.front().value.status != ActionServerRequestStatus::SUCCESSFUL) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to send final response to client.",
                               topic_config_.name);
     // TODO: should we do something else?
@@ -197,16 +197,6 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
 // ----------------------------------------------------------------------------------------------------------
 // --------- ActionServerClient Implementation --------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
-
-template <typename ReplyT>
-[[nodiscard]] auto
-handleFailure(const std::string& topic_name, const std::string& error_message,
-              ActionServerRequestStatus error) -> std::future<ActionServerResponse<ReplyT>> {
-  LOG(ERROR) << fmt::format("Failed to call action server (topic: {}): {}.", topic_name, error_message);
-  std::promise<ActionServerResponse<ReplyT>> promise;
-  promise.set_value({ ReplyT{}, error });
-  return promise.get_future();
-}
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
@@ -228,7 +218,7 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
   }
 
   const auto& server_response_status = server_responses.front().value.status;
-  if (server_response_status != ActionServerRequestStatus::ACCEPTED) {
+  if (server_response_status != ActionServerRequestStatus::SUCCESSFUL) {
     return handleFailure<ReplyT>(
         topic_config.name, fmt::format("request rejected {}", magic_enum::enum_name(server_response_status)),
         server_response_status);
@@ -242,8 +232,7 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
             internal::ActionServerClientHelper<RequestT, StatusT, ReplyT>{ session, topic_config,
                                                                            std::move(status_update_cb) };
 
-        return ActionServerResponse<ReplyT>{ .value = client_helper.getResponse().get(),
-                                             .status = ActionServerRequestStatus::ACCEPTED };
+        return client_helper.getResponse().get();
       });
 }
 

@@ -8,13 +8,20 @@
 
 namespace heph::ipc::zenoh {
 enum class ActionServerRequestStatus : uint8_t {
-  ACCEPTED = 0,
+  SUCCESSFUL = 0,
   REJECTED_USER = 1,
   REJECTED_ALREADY_RUNNING = 2,
   INVALID = 3,
+  STOPPED = 4,
 };
 
 struct ActionServerRequestResponse {
+  ActionServerRequestStatus status;
+};
+
+template <typename ReplyT>
+struct ActionServerResponse {
+  ReplyT value;
   ActionServerRequestStatus status;
 };
 
