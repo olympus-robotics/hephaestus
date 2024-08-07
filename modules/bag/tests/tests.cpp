@@ -96,7 +96,7 @@ TEST(Bag, PlayAndRecord) {
 
       player.stop().get();
     }
-    // std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+
     recorder.stop().get();
   }
 
