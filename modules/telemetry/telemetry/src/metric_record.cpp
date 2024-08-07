@@ -88,6 +88,12 @@ auto jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, M
 class MetricRecorder {
 public:
   explicit MetricRecorder();
+  ~MetricRecorder();
+  MetricRecorder(const MetricRecorder&) = delete;
+  MetricRecorder(MetricRecorder&&) = delete;
+  auto operator=(const MetricRecorder&) -> MetricRecorder& = delete;
+  auto operator=(MetricRecorder&&) -> MetricRecorder& = delete;
+
   static void registerSink(std::unique_ptr<IMetricSink> sink);
 
   static void record(const Metric& metric);
@@ -112,6 +118,11 @@ void record(const Metric& metric) {
 
 MetricRecorder::MetricRecorder()
   : entries_consumer_([this](const Metric& entry) { processEntries(entry); }, std::nullopt) {
+  entries_consumer_.start();
+}
+
+MetricRecorder::~MetricRecorder() {
+  entries_consumer_.stop();
 }
 
 auto MetricRecorder::instance() -> MetricRecorder& {

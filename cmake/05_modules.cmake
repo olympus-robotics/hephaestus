@@ -573,11 +573,11 @@ set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
 
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
-set(TESTS_TARGET tests)
+set(TESTS_BUILD_TARGET tests_build)
 if(BUILD_AS_SUBPROJECT)
-  set(TESTS_TARGET "${PROJECT_NAME}_${TESTS_TARGET}")
+  set(TESTS_BUILD_TARGET "${PROJECT_NAME}_${TESTS_BUILD_TARGET}")
 endif()
-add_custom_target(${TESTS_TARGET} COMMENT "Building tests")
+add_custom_target(${TESTS_BUILD_TARGET} COMMENT "Building tests")
 
 # ==================================================================================================
 # Adds a custom convenience target to run all tests and generate report on 'make check'
@@ -591,7 +591,7 @@ add_custom_target(
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Building and running tests"
 )
-add_dependencies(${CHECK_TARGET} ${TESTS_TARGET}) # `check` depends on `tests` target
+add_dependencies(${CHECK_TARGET} ${TESTS_BUILD_TARGET}) # `check` depends on `tests` target
 
 # ==================================================================================================
 # macro: define_module_test
@@ -643,7 +643,7 @@ macro(define_module_test)
             ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
   )
 
-  add_dependencies(${TESTS_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
+  add_dependencies(${TESTS_BUILD_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`
 
   if(NOT BUILD_AS_SUBPROJECT)
     # Add to cmake tests (call using ctest)
