@@ -6,9 +6,9 @@
 
 #include "hephaestus/telemetry/metric_sink.h"
 
-namespace heph::telemetry::sinks {
-class TerminalMetricSink final : public heph::telemetry::IMetricSink {
+namespace heph::telemetry::metric_sinks {
+class TerminalMetricSink final : public IMetricSink {
 public:
-  void send(const heph::telemetry::Metric& metric) override;
+  void send(const Metric& metric) override;
 };
-}  // namespace heph::telemetry::sinks
+}  // namespace heph::telemetry::metric_sinks

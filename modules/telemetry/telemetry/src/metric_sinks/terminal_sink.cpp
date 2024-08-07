@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/telemetry/sinks/terminal_sink.h"
+#include "hephaestus/telemetry/metric_sinks/terminal_sink.h"
 
 #include <string>
 #include <unordered_map>
@@ -41,10 +41,10 @@ struct fmt::formatter<ValueMap> {
   }
 };
 
-namespace heph::telemetry::sinks {
+namespace heph::telemetry::metric_sinks {
 
-void TerminalMetricSink::send(const heph::telemetry::Metric& metric) {
+void TerminalMetricSink::send(const Metric& metric) {
   fmt::println("[Metrics][{}] [{}] tag: {}, id: {}{}", metric.timestamp, metric.component, metric.tag,
                metric.id, metric.values);
 };
-}  // namespace heph::telemetry::sinks
+}  // namespace heph::telemetry::metric_sinks
