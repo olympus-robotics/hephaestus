@@ -4,10 +4,22 @@
 
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <mutex>
+#include <optional>
+#include <span>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include <absl/log/log.h>
+#include <fmt/core.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
@@ -74,8 +86,7 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     std::span<const std::byte> buffer(reinterpret_cast<const std::byte*>(payload.start), payload.len);
     buffer = internal::removeChangingBytes(buffer);
-    DLOG(INFO) << fmt::format("Deserializing buffer of size: {}, values: {}", buffer.size(),
-                              fmt::to_string(fmt::join(buffer, ",")));
+    DLOG(INFO) << fmt::format("Deserializing buffer of size: {}", buffer.size());
 
     RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
@@ -134,8 +145,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
     } else {
       options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
       auto buffer = serdes::serialize(reply);
-      DLOG(INFO) << fmt::format("Reply: payload size: {}, content: {}", buffer.size(),
-                                fmt::to_string(fmt::join(buffer, ",")));
+      DLOG(INFO) << fmt::format("Reply: payload size: {}", buffer.size());
       query.reply(this->topic_config_.name, std::move(buffer), options);
     }
   };
@@ -174,8 +184,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   } else {
     auto buffer = serdes::serialize(request);
 
-    DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
-                              fmt::to_string(fmt::join(buffer, ",")));
+    DLOG(INFO) << fmt::format("Request: payload size: {}", buffer.size());
     internal::addChangingBytes(buffer);
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
