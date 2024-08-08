@@ -85,11 +85,9 @@ template <IsTimestamp T, size_t Year>
   constexpr auto FINAL_DAY = std::chrono::year_month_day_last{ YEAR / FINAL_MONTH / std::chrono::last };
   constexpr auto FINAL_DATE_SYS_DAYS = std::chrono::sys_days{ FINAL_DAY };
 
-  // The final time of the day is 23:59:59.000...
-  constexpr auto FINAL_TIME =
-      std::chrono::hours{ 23 } + std::chrono::minutes{ 59 } + std::chrono::seconds{ 59 };
-
-  // The final timestamp of the year is YYYY-12-31 23:59:59.000...
+  // The final time of the day is 23:59:59.999...
+  constexpr auto FINAL_TIME = std::chrono::hours{ 24 } - typename T::duration{ 1 };
+  // The final timestamp of the year is YYYY-12-31 23:59:59.999...
   constexpr auto TOTAL_TIME = FINAL_DATE_SYS_DAYS + FINAL_TIME;
 
   return T{ TOTAL_TIME.time_since_epoch() };
@@ -99,14 +97,13 @@ template <IsTimestamp T, size_t Year>
 /// Create a random timestamp between year 1970 and the year 2100.
 template <IsTimestamp T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  using DurationT = typename T::duration;
-
-  static constexpr size_t MIN_DURATION = 0;  // Start of UNIX epoch time == year 1970.
+  static constexpr auto MIN_DURATION = 0;  // Start of UNIX epoch time == year 1970.
   static constexpr auto FINAL_TIMESTAMP = internal::createFinalTimestampOfTheYear<T, 2100>();
-  static constexpr size_t MAX_DURATION = FINAL_TIMESTAMP.time_since_epoch().count();  // End of year 2100.
+  static constexpr auto MAX_DURATION = FINAL_TIMESTAMP.time_since_epoch().count();  // End of year 2100.
 
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
-  auto timestamp = T{ DurationT(duration_dist(mt)) };
+  const auto duration = typename T::duration{ duration_dist(mt) };
+  const auto timestamp = T{ duration };
 
   return timestamp;
 }
