@@ -2,6 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <sstream>
+#include <string>
+
 #include <fmt/core.h>
 #include <gtest/gtest.h>
 
@@ -21,7 +24,7 @@ using TypeImplementations = ::testing::Types<DummyType>;
 TYPED_TEST_SUITE(TypeTests, TypeImplementations);
 
 TYPED_TEST(TypeTests, OstreamTest) {
-  TypeParam type;
+  const TypeParam type;
   std::stringstream ss;
   EXPECT_TRUE(ss.str().empty());
   ss << type;
