@@ -2,7 +2,10 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
 #include <chrono>
+#include <string>
+#include <vector>
 
 #include <fmt/core.h>
 #include <gtest/gtest.h>
@@ -16,12 +19,12 @@ namespace heph::types::tests {
 
 // Test assumes sub-second precision of at most nanoseconds.
 TEST(TypeFormattingTests, TimestampFormattingSteadyClock) {
-  auto timestamp = std::chrono::steady_clock::now();
-  auto str = fmt::format("{}", toString(timestamp));
+  const auto timestamp = std::chrono::steady_clock::now();
+  const auto str = fmt::format("{}", toString(timestamp));
 
   ASSERT_TRUE(str.length() <= 24);
 
-  auto it = std::find(str.begin(), str.end(), 'd');
+  const auto it = std::find(str.begin(), str.end(), 'd');
   ASSERT_TRUE(it != str.end());
   ASSERT_EQ(*(it + 1), ' ');
   ASSERT_EQ(*(it + 4), 'h');
@@ -34,8 +37,8 @@ TEST(TypeFormattingTests, TimestampFormattingSteadyClock) {
 
 // Test assumes sub-second precision of at most nanoseconds.
 TEST(TypeFormattingTests, TimestampFormattingSystemClock) {
-  auto timestamp = std::chrono::system_clock::now();
-  auto str = fmt::format("{}", toString(timestamp));
+  const auto timestamp = std::chrono::system_clock::now();
+  const auto str = fmt::format("{}", toString(timestamp));
 
   ASSERT_TRUE(str.length() <= 27);
 
@@ -50,35 +53,35 @@ TEST(TypeFormattingTests, TimestampFormattingSystemClock) {
 }
 
 TEST(TypeFormattingTests, ConvertEmptyVector) {
-  std::vector<int> vec;
-  std::string result = toString(vec);
+  const std::vector<int> vec;
+  const std::string result = toString(vec);
   EXPECT_EQ(result, "");
 }
 
 TEST(TypeFormattingTests, ConvertIntVector) {
-  std::vector<int> vec = { 1, 2, 3 };
-  std::string result = toString(vec);
-  std::string expected = "  Index: 0, Value: 1\n"
-                         "  Index: 1, Value: 2\n"
-                         "  Index: 2, Value: 3\n";
+  const std::vector<int> vec = { 1, 2, 3 };
+  const std::string result = toString(vec);
+  const std::string expected = "  Index: 0, Value: 1\n"
+                               "  Index: 1, Value: 2\n"
+                               "  Index: 2, Value: 3\n";
   EXPECT_EQ(result, expected);
 }
 
 TEST(TypeFormattingTests, ConvertDoubleVector) {
-  std::vector<double> vec = { 1.1, 2.2, 3.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
-  std::string result = toString(vec);
-  std::string expected = "  Index: 0, Value: 1.1\n"
-                         "  Index: 1, Value: 2.2\n"
-                         "  Index: 2, Value: 3.3\n";
+  const std::vector<double> vec = { 1.1, 2.2, 3.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+  const std::string result = toString(vec);
+  const std::string expected = "  Index: 0, Value: 1.1\n"
+                               "  Index: 1, Value: 2.2\n"
+                               "  Index: 2, Value: 3.3\n";
   EXPECT_EQ(result, expected);
 }
 
 TEST(TypeFormattingTests, ConvertStringVector) {
-  std::vector<std::string> vec = { "one", "two", "three" };
-  std::string result = toString(vec);
-  std::string expected = "  Index: 0, Value: one\n"
-                         "  Index: 1, Value: two\n"
-                         "  Index: 2, Value: three\n";
+  const std::vector<std::string> vec = { "one", "two", "three" };
+  const std::string result = toString(vec);
+  const std::string expected = "  Index: 0, Value: one\n"
+                               "  Index: 1, Value: two\n"
+                               "  Index: 2, Value: three\n";
   EXPECT_EQ(result, expected);
 }
 
