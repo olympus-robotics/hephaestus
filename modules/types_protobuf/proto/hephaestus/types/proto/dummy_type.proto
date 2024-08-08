@@ -19,29 +19,30 @@ enum DummyTypeDummyEnum {
 }
 
 message DummyPrimitivesType {
-  bool dummyBool = 1;
+  bool dummy_bool = 1;
 
-  int32 dummyInt8t = 2;
-  int32 dummyInt16t = 3;
-  int32 dummyInt32t = 4;
-  int64 dummyInt64t = 5;
+  int32 dummy_int8_t = 2;
+  int32 dummy_int16_t = 3;
+  int32 dummy_int32_t = 4;
+  int64 dummy_int64_t = 5;
 
-  uint32 dummyUint8t = 6;
-  uint32 dummyUint16t = 7;
-  uint32 dummyUint32t = 8;
-  uint64 dummyUint64t = 9;
+  uint32 dummy_uint8_t = 6;
+  uint32 dummy_uint16_t = 7;
+  uint32 dummy_uint32_t = 8;
+  uint64 dummy_uint64_t = 9;
 
-  float dummyFloat = 10;
-  double dummyDouble = 11;
+  float dummy_float = 10;
+  double dummy_double = 11;
 }
 
 message DummyType {
   DummyPrimitivesType dummy_primitives_type = 1;
 
-  DummyTypeDummyEnum dummyEnum = 2;
+  DummyTypeDummyEnum dummy_enum = 2;
 
-  google.protobuf.Timestamp dummyTimestamp = 3;
+  google.protobuf.Timestamp dummy_timestamp_system_clock = 3;
+  google.protobuf.Timestamp dummy_timestamp_steady_clock = 4;
 
-  string dummyString = 4;
-  repeated int32 dummyVector = 5;
+  string dummy_string = 5;
+  repeated int32 dummy_vector = 6;
 }

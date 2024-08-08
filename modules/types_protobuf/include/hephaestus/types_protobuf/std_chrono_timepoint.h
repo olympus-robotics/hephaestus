@@ -15,8 +15,7 @@
 namespace heph::types {
 template <typename T>
 concept IsStdClock =
-    std::is_same_v<T, std::chrono::system_clock> || std::is_same_v<T, std::chrono::steady_clock> ||
-    std::is_same_v<T, std::chrono::high_resolution_clock>;
+    std::is_same_v<T, std::chrono::system_clock> || std::is_same_v<T, std::chrono::steady_clock>;
 }  // namespace heph::types
 
 namespace heph::serdes::protobuf {
@@ -28,12 +27,12 @@ struct ProtoAssociation<std::chrono::time_point<T>> {
 
 namespace heph::types {
 template <IsStdClock T>
-auto toProto(google::protobuf::Timestamp& proto_timestamp, const std::chrono::time_point<T>& timestamp)
-    -> void;
+auto toProto(google::protobuf::Timestamp& proto_timestamp,
+             const std::chrono::time_point<T>& timestamp) -> void;
 
 template <IsStdClock T>
-auto fromProto(const google::protobuf::Timestamp& proto_timestamp, std::chrono::time_point<T>& timestamp)
-    -> void;
+auto fromProto(const google::protobuf::Timestamp& proto_timestamp,
+               std::chrono::time_point<T>& timestamp) -> void;
 }  // namespace heph::types
 
 //=================================================================================================
@@ -43,17 +42,18 @@ auto fromProto(const google::protobuf::Timestamp& proto_timestamp, std::chrono::
 namespace heph::types {
 
 template <IsStdClock T>
-auto toProto(google::protobuf::Timestamp& proto_timestamp, const std::chrono::time_point<T>& timestamp)
-    -> void {
+auto toProto(google::protobuf::Timestamp& proto_timestamp,
+             const std::chrono::time_point<T>& timestamp) -> void {
   using DurationT = typename T::duration;
-  static constexpr auto TIME_BASE = std::chrono::system_clock::duration::period::den;  // sub-second precision
+  using TimeBase = DurationT::period;  // sub-second precision
   static constexpr int64_t GIGA = 1'000'000'000;
-  static constexpr int64_t SCALER = GIGA / TIME_BASE;  // 1 for time base nanoseconds, 1'000 for microseconds
+  static constexpr int64_t SCALER =
+      GIGA / TimeBase::den;  // 1 for time base nanoseconds, 1'000 for microseconds
 
   auto seconds = std::chrono::time_point_cast<std::chrono::seconds>(timestamp).time_since_epoch().count();
   auto sub_seconds_total = std::chrono::time_point_cast<DurationT>(timestamp).time_since_epoch().count();
 
-  auto nanoseconds_after_comma = (sub_seconds_total % TIME_BASE) * SCALER;
+  auto nanoseconds_after_comma = (sub_seconds_total % TimeBase::den) * SCALER;
 
   // Protobuf Timestamps are represented as seconds and nanoseconds.
   proto_timestamp.set_seconds(seconds);
@@ -61,8 +61,8 @@ auto toProto(google::protobuf::Timestamp& proto_timestamp, const std::chrono::ti
 }
 
 template <IsStdClock T>
-auto fromProto(const google::protobuf::Timestamp& proto_timestamp, std::chrono::time_point<T>& timestamp)
-    -> void {
+auto fromProto(const google::protobuf::Timestamp& proto_timestamp,
+               std::chrono::time_point<T>& timestamp) -> void {
   using DurationT = typename T::duration;
 
   // Protobuf Timestamps are represented as seconds and nanoseconds.

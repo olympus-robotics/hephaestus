@@ -11,12 +11,8 @@ declare_module(
 add_subdirectory(proto)
 
 # library sources
-set(SOURCES
-    src/dummy_type.cpp
-    src/std_chrono_timepoint.cpp
-    README.md
-    include/hephaestus/types_protobuf/dummy_type.h
-    include/hephaestus/types_protobuf/std_chrono_timepoint.h
+set(SOURCES src/dummy_type.cpp src/std_chrono_timepoint.cpp README.md include/hephaestus/types_protobuf/dummy_type.h
+            include/hephaestus/types_protobuf/std_chrono_timepoint.h
 )
 
 # library target

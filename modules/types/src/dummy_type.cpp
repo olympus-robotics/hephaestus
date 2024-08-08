@@ -27,11 +27,11 @@ auto DummyPrimitivesType::random(std::mt19937_64& mt) -> DummyPrimitivesType {
 
 auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream& {
   return os << "DummyPrimitivesType{" << "  dummy_bool=" << dummy_primitives_type.dummy_bool << "\n"
-            << "  dummy_int8_t=" << dummy_primitives_type.dummy_int8_t << "\n"
+            << "  dummy_int8_t=" << static_cast<int>(dummy_primitives_type.dummy_int8_t) << "\n"
             << "  dummy_int16_t=" << dummy_primitives_type.dummy_int16_t << "\n"
             << "  dummy_int32_t=" << dummy_primitives_type.dummy_int32_t << "\n"
             << "  dummy_int64_t=" << dummy_primitives_type.dummy_int64_t << "\n"
-            << "  dummy_uint8_t=" << dummy_primitives_type.dummy_uint8_t << "\n"
+            << "  dummy_uint8_t=" << static_cast<int>(dummy_primitives_type.dummy_uint8_t) << "\n"
             << "  dummy_uint16_t=" << dummy_primitives_type.dummy_uint16_t << "\n"
             << "  dummy_uint32_t=" << dummy_primitives_type.dummy_uint32_t << "\n"
             << "  dummy_uint64_t=" << dummy_primitives_type.dummy_uint64_t << "\n"

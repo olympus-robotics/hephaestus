@@ -13,8 +13,8 @@ namespace heph::types {
 // Vector
 //=================================================================================================
 template <typename T, typename ProtoT>
-auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec)
-    -> void {
+auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field,
+             const std::vector<T>& vec) -> void {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
   proto_repeated_field.Reserve(static_cast<int>(vec.size()));
   for (const auto& value : vec) {
@@ -23,8 +23,8 @@ auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, cons
 }
 
 template <typename T, typename ProtoT>
-auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec)
-    -> void {
+auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field,
+               std::vector<T>& vec) -> void {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
   for (const auto& proto_value : proto_repeated_field) {
@@ -82,42 +82,42 @@ auto getFromProto(const proto::DummyTypeDummyEnum& proto_dummy_enum) -> DummyTyp
 //=================================================================================================
 auto toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
              const DummyPrimitivesType& dummy_primitives_type) -> void {
-  proto_dummy_primitives_type.set_dummybool(dummy_primitives_type.dummy_bool);
+  proto_dummy_primitives_type.set_dummy_bool(dummy_primitives_type.dummy_bool);
 
-  proto_dummy_primitives_type.set_dummyint8t(dummy_primitives_type.dummy_int8_t);
-  proto_dummy_primitives_type.set_dummyint16t(dummy_primitives_type.dummy_int16_t);
-  proto_dummy_primitives_type.set_dummyint32t(dummy_primitives_type.dummy_int32_t);
-  proto_dummy_primitives_type.set_dummyint64t(dummy_primitives_type.dummy_int64_t);
+  proto_dummy_primitives_type.set_dummy_int8_t(dummy_primitives_type.dummy_int8_t);
+  proto_dummy_primitives_type.set_dummy_int16_t(dummy_primitives_type.dummy_int16_t);
+  proto_dummy_primitives_type.set_dummy_int32_t(dummy_primitives_type.dummy_int32_t);
+  proto_dummy_primitives_type.set_dummy_int64_t(dummy_primitives_type.dummy_int64_t);
 
-  proto_dummy_primitives_type.set_dummyuint8t(dummy_primitives_type.dummy_uint8_t);
-  proto_dummy_primitives_type.set_dummyuint16t(dummy_primitives_type.dummy_uint16_t);
-  proto_dummy_primitives_type.set_dummyuint32t(dummy_primitives_type.dummy_uint32_t);
-  proto_dummy_primitives_type.set_dummyuint64t(dummy_primitives_type.dummy_uint64_t);
+  proto_dummy_primitives_type.set_dummy_uint8_t(dummy_primitives_type.dummy_uint8_t);
+  proto_dummy_primitives_type.set_dummy_uint16_t(dummy_primitives_type.dummy_uint16_t);
+  proto_dummy_primitives_type.set_dummy_uint32_t(dummy_primitives_type.dummy_uint32_t);
+  proto_dummy_primitives_type.set_dummy_uint64_t(dummy_primitives_type.dummy_uint64_t);
 
-  proto_dummy_primitives_type.set_dummyfloat(dummy_primitives_type.dummy_float);
-  proto_dummy_primitives_type.set_dummydouble(dummy_primitives_type.dummy_double);
+  proto_dummy_primitives_type.set_dummy_float(dummy_primitives_type.dummy_float);
+  proto_dummy_primitives_type.set_dummy_double(dummy_primitives_type.dummy_double);
 }
 
 auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
                DummyPrimitivesType& dummy_primitives_type) -> void {
-  dummy_primitives_type.dummy_bool = proto_dummy_primitives_type.dummybool();
+  dummy_primitives_type.dummy_bool = proto_dummy_primitives_type.dummy_bool();
 
   dummy_primitives_type.dummy_int8_t =
-      static_cast<decltype(dummy_primitives_type.dummy_int8_t)>(proto_dummy_primitives_type.dummyint8t());
+      static_cast<decltype(dummy_primitives_type.dummy_int8_t)>(proto_dummy_primitives_type.dummy_int8_t());
   dummy_primitives_type.dummy_int16_t =
-      static_cast<decltype(dummy_primitives_type.dummy_int16_t)>(proto_dummy_primitives_type.dummyint16t());
-  dummy_primitives_type.dummy_int32_t = proto_dummy_primitives_type.dummyint32t();
-  dummy_primitives_type.dummy_int64_t = proto_dummy_primitives_type.dummyint64t();
+      static_cast<decltype(dummy_primitives_type.dummy_int16_t)>(proto_dummy_primitives_type.dummy_int16_t());
+  dummy_primitives_type.dummy_int32_t = proto_dummy_primitives_type.dummy_int32_t();
+  dummy_primitives_type.dummy_int64_t = proto_dummy_primitives_type.dummy_int64_t();
 
   dummy_primitives_type.dummy_uint8_t =
-      static_cast<decltype(dummy_primitives_type.dummy_uint8_t)>(proto_dummy_primitives_type.dummyuint8t());
-  dummy_primitives_type.dummy_uint16_t =
-      static_cast<decltype(dummy_primitives_type.dummy_uint16_t)>(proto_dummy_primitives_type.dummyuint16t());
-  dummy_primitives_type.dummy_uint32_t = proto_dummy_primitives_type.dummyuint32t();
-  dummy_primitives_type.dummy_uint64_t = proto_dummy_primitives_type.dummyuint64t();
+      static_cast<decltype(dummy_primitives_type.dummy_uint8_t)>(proto_dummy_primitives_type.dummy_uint8_t());
+  dummy_primitives_type.dummy_uint16_t = static_cast<decltype(dummy_primitives_type.dummy_uint16_t)>(
+      proto_dummy_primitives_type.dummy_uint16_t());
+  dummy_primitives_type.dummy_uint32_t = proto_dummy_primitives_type.dummy_uint32_t();
+  dummy_primitives_type.dummy_uint64_t = proto_dummy_primitives_type.dummy_uint64_t();
 
-  dummy_primitives_type.dummy_float = proto_dummy_primitives_type.dummyfloat();
-  dummy_primitives_type.dummy_double = proto_dummy_primitives_type.dummydouble();
+  dummy_primitives_type.dummy_float = proto_dummy_primitives_type.dummy_float();
+  dummy_primitives_type.dummy_double = proto_dummy_primitives_type.dummy_double();
 }
 
 //=================================================================================================
@@ -126,25 +126,27 @@ auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
 auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) -> void {
   toProto(*proto_dummy_type.mutable_dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
-  proto_dummy_type.set_dummyenum(getAsProto(dummy_type.dummy_enum));
+  proto_dummy_type.set_dummy_enum(getAsProto(dummy_type.dummy_enum));
 
-  ::heph::types::toProto(*proto_dummy_type.mutable_dummytimestamp(), dummy_type.dummy_timestamp);
+  toProto(*proto_dummy_type.mutable_dummy_timestamp_system_clock(), dummy_type.dummy_timestamp_system_clock);
+  toProto(*proto_dummy_type.mutable_dummy_timestamp_steady_clock(), dummy_type.dummy_timestamp_steady_clock);
 
-  proto_dummy_type.set_dummystring(dummy_type.dummy_string);
+  proto_dummy_type.set_dummy_string(dummy_type.dummy_string);
 
-  toProto(*proto_dummy_type.mutable_dummyvector(), dummy_type.dummy_vector);
+  toProto(*proto_dummy_type.mutable_dummy_vector(), dummy_type.dummy_vector);
 }
 
 auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) -> void {
   fromProto(proto_dummy_type.dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
-  dummy_type.dummy_enum = getFromProto(proto_dummy_type.dummyenum());
+  dummy_type.dummy_enum = getFromProto(proto_dummy_type.dummy_enum());
 
-  ::heph::types::fromProto(proto_dummy_type.dummytimestamp(), dummy_type.dummy_timestamp);
+  fromProto(proto_dummy_type.dummy_timestamp_system_clock(), dummy_type.dummy_timestamp_system_clock);
+  fromProto(proto_dummy_type.dummy_timestamp_steady_clock(), dummy_type.dummy_timestamp_steady_clock);
 
-  dummy_type.dummy_string = proto_dummy_type.dummystring();
+  dummy_type.dummy_string = proto_dummy_type.dummy_string();
 
-  fromProto(proto_dummy_type.dummyvector(), dummy_type.dummy_vector);
+  fromProto(proto_dummy_type.dummy_vector(), dummy_type.dummy_vector);
 }
 
 }  // namespace heph::types

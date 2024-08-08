@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/types_protobuf/dummy_type.h"
