@@ -46,7 +46,7 @@ add_cmake_dependency(
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
-# This should be equal to ${ZENOH_VERSION}, but we need to the fix coming from this commit.
+# This should be equal to ${ZENOH_VERSION}, but we need to point to the fix coming from this commit.
 set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
 add_cmake_dependency(
   NAME zenohcxx
