@@ -98,7 +98,8 @@ template <IsTimestamp T, size_t Year>
 template <IsTimestamp T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   static constexpr auto MIN_DURATION = 0;  // Start of UNIX epoch time == year 1970.
-  static constexpr auto FINAL_TIMESTAMP = internal::createFinalTimestampOfTheYear<T, 2100>();
+  static constexpr auto MAX_YEAR = 2100;
+  static constexpr auto FINAL_TIMESTAMP = internal::createFinalTimestampOfTheYear<T, MAX_YEAR>();
   static constexpr auto MAX_DURATION = FINAL_TIMESTAMP.time_since_epoch().count();  // End of year 2100.
 
   std::uniform_int_distribution<int64_t> duration_dist(MIN_DURATION, MAX_DURATION);
