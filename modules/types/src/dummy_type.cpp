@@ -5,8 +5,9 @@
 #include "hephaestus/types/dummy_type.h"
 
 #include <cstdint>
-#include <magic_enum.hpp>
 #include <random>
+
+#include <magic_enum.hpp>
 
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/types/type_formatting.h"
