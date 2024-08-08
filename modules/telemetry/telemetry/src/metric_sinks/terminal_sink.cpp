@@ -20,7 +20,7 @@ using ValuePair = std::pair<const std::string, heph::telemetry::Metric::ValueTyp
 
 template <>
 struct fmt::formatter<ValuePair> : fmt::formatter<std::string_view> {
-  constexpr static auto format(const ValuePair& value, fmt::format_context& ctx) {
+  static auto format(const ValuePair& value, fmt::format_context& ctx) {
     return fmt::format_to(ctx.out(), "{}: {}", value.first, value.second);
   }
 };
