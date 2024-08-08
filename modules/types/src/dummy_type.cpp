@@ -4,6 +4,8 @@
 
 #include "hephaestus/types/dummy_type.h"
 
+#include <cstdint>
+#include <magic_enum.hpp>
 #include <random>
 
 #include "hephaestus/random/random_object_creator.h"
