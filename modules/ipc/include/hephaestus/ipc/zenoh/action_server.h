@@ -22,6 +22,11 @@
 
 namespace heph::ipc::zenoh {
 
+enum class ActionServerTriggerStatus : uint8_t {
+  SUCCESSFUL = 0,
+  REJECTED = 1,
+};
+
 /// An action server is a server that execute a user function in response to trigger from a client.
 /// Upon completion a result is sent back to the client.
 /// Differently from classic request/response servers, action servers are asynchronous and non-blocking.
@@ -59,7 +64,7 @@ namespace heph::ipc::zenoh {
 template <typename RequestT, typename StatusT, typename ReplyT>
 class ActionServer {
 public:
-  using ActionTriggerCallback = std::function<ActionServerRequestStatus(const RequestT&)>;
+  using ActionTriggerCallback = std::function<ActionServerTriggerStatus(const RequestT&)>;
   using ExecuteCallback =
       std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool& stop_requested)>;
 
@@ -140,8 +145,8 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
 
   try {
     const auto response = action_trigger_cb_(request);
-    if (response != ActionServerRequestStatus::SUCCESSFUL) {
-      return { .status = response };
+    if (response != ActionServerTriggerStatus::SUCCESSFUL) {
+      return { .status = ActionServerRequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): request callback failed with exception: {}.",

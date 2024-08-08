@@ -20,20 +20,19 @@
 #include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/zenoh/action_server.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/types/action_server_types.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 [[nodiscard]] auto
-request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::ActionServerRequestStatus {
+request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::ActionServerTriggerStatus {
   LOG(INFO) << fmt::format("Request received: {}", sample);
   if (sample.iterations_count == 0) {
     LOG(ERROR) << "Invalid request, iterations must be greater than 0";
-    return heph::ipc::zenoh::ActionServerRequestStatus::REJECTED_USER;
+    return heph::ipc::zenoh::ActionServerTriggerStatus::REJECTED;
   }
 
-  return heph::ipc::zenoh::ActionServerRequestStatus::SUCCESSFUL;
+  return heph::ipc::zenoh::ActionServerTriggerStatus::SUCCESSFUL;
 }
 
 [[nodiscard]] auto execute(const heph::examples::types::SampleRequest& request,
