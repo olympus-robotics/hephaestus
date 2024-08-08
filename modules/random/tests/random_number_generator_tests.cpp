@@ -8,7 +8,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_generator.h"
+#include "hephaestus/random/random_number_generator.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;

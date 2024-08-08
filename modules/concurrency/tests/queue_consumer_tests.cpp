@@ -11,8 +11,8 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/random/random_generator.h"
-#include "hephaestus/random/random_type.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -45,11 +45,11 @@ TEST(MessageQueueConsumer, ProcessMessages) {
                                           }
                                         },
                                          MESSAGE_COUNT };
-
+  spinner.start();
   auto mt = random::createRNG();
   std::vector<Message> messages(MESSAGE_COUNT);
   std::for_each(messages.begin(), messages.end(),
-                [&mt](Message& message) { message.value = random::randomT<int>(mt); });
+                [&mt](Message& message) { message.value = random::random<int>(mt); });
   for (const auto& message : messages) {
     spinner.queue().forcePush(message);
   }
@@ -57,6 +57,8 @@ TEST(MessageQueueConsumer, ProcessMessages) {
   flag.wait(false);
 
   EXPECT_EQ(messages, processed_messages);
+
+  spinner.stop();
 }
 
 }  // namespace heph::concurrency::tests

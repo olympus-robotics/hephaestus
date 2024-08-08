@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "hephaestus/random/random_container.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "test.pb.h"
 
@@ -17,9 +17,9 @@ struct Robot {
 };
 
 inline auto Robot::random(std::mt19937_64& mt) -> Robot {
-  return { .name = random::randomT<std::string>(mt),
-           .version = random::randomT<int>(mt),
-           .scores = random::randomT<std::vector<float>>(mt) };
+  return { .name = random::random<std::string>(mt),
+           .version = random::random<int>(mt),
+           .scores = random::random<std::vector<float>>(mt) };
 }
 
 struct Fleet {
@@ -31,7 +31,7 @@ struct Fleet {
 };
 
 inline auto Fleet::random(std::mt19937_64& mt) -> Fleet {
-  return { .name = random::randomT<std::string>(mt), .robot_count = random::randomT<int>(mt) };
+  return { .name = random::random<std::string>(mt), .robot_count = random::random<int>(mt) };
 }
 }  // namespace heph::bag::tests
 

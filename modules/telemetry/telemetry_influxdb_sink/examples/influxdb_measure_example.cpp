@@ -15,9 +15,8 @@
 #include <fmt/core.h>
 #include <nlohmann/detail/macro_scope.hpp>
 
-#include "hephaestus/random/random_container.h"
-#include "hephaestus/random/random_generator.h"
-#include "hephaestus/random/random_type.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -43,9 +42,9 @@ void run() {
     std::this_thread::sleep_for(std::chrono::milliseconds(duration_dist(mt)));
     heph::telemetry::record("telemetry_example", "dummy", counter,
                             DummyMeasure{
-                                .error = heph::random::randomT<double>(mt),
+                                .error = heph::random::random<double>(mt),
                                 .counter = static_cast<int64_t>(counter),
-                                .message = heph::random::randomT<std::string>(mt, 4),
+                                .message = heph::random::random<std::string>(mt, 4),
                             });
   }
 }
