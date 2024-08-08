@@ -28,7 +28,7 @@ struct fmt::formatter<ValuePair> : fmt::formatter<std::string_view> {
 template <>
 struct fmt::formatter<ValueMap> : fmt::formatter<std::string_view> {
   static auto format(const ValueMap& value, fmt::format_context& ctx) {
-    return fmt::format_to(ctx.out(), "{}\n\t", fmt::join(value.begin(), value.end(), "\n\t"));
+    return fmt::format_to(ctx.out(), "\n\t{}", fmt::join(value.begin(), value.end(), "\n\t"));
   }
 };
 
