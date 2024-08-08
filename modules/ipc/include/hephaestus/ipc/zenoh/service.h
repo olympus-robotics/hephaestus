@@ -175,7 +175,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     auto buffer = serdes::serialize(request);
 
     DLOG(INFO) << fmt::format("Request: payload size: {}, content: {}", buffer.size(),
-                              fmt::join(buffer, ","));
+                              fmt::to_string(fmt::join(buffer, ",")));
     internal::addChangingBytes(buffer);
     auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
