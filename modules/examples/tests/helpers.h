@@ -2,9 +2,8 @@
 
 #include <random>
 
-#include <hephaestus/random/random_container.h>
-
 #include "hephaestus/examples/types/pose.h"
+#include "hephaestus/random/random_object_creator.h"
 
 namespace heph::examples::types::tests {
 
@@ -23,7 +22,7 @@ inline auto randomPose(std::mt19937_64& mt) -> Pose {
 
 inline auto randomFramedPose(std::mt19937_64& mt) -> FramedPose {
   FramedPose pose;
-  pose.frame = random::randomT<std::string>(mt, std::nullopt, false);
+  pose.frame = random::random<std::string>(mt, std::nullopt, false);
   pose.pose = randomPose(mt);
   return pose;
 }

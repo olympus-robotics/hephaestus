@@ -16,9 +16,8 @@
 #include <gtest/gtest.h>
 #include <nlohmann/detail/macro_scope.hpp>
 
-#include "hephaestus/random/random_container.h"
-#include "hephaestus/random/random_generator.h"
-#include "hephaestus/random/random_type.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry/metric_sink.h"
@@ -69,18 +68,18 @@ struct Dummy {
   [[nodiscard]] auto operator==(const Dummy&) const -> bool = default;
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> Dummy {
     return {
-      .boolean = random::randomT<bool>(mt),
-      .int32 = random::randomT<int32_t>(mt),
-      .int64 = random::randomT<int64_t>(mt),
-      .uint32 = random::randomT<uint32_t>(mt),
-      .uint64 = random::randomT<uint64_t>(mt),
-      .float32 = random::randomT<float>(mt),
-      .float64 = random::randomT<double>(mt),
-      .string = random::randomT<std::string>(mt),
-      .nested = { .vector = random::randomT<std::vector<int64_t>>(mt),
-                  .float64 = random::randomT<double>(mt),
-                  .nested = { .vector = random::randomT<std::vector<int64_t>>(mt),
-                              .boolean = random::randomT<bool>(mt) } },
+      .boolean = random::random<bool>(mt),
+      .int32 = random::random<int32_t>(mt),
+      .int64 = random::random<int64_t>(mt),
+      .uint32 = random::random<uint32_t>(mt),
+      .uint64 = random::random<uint64_t>(mt),
+      .float32 = random::random<float>(mt),
+      .float64 = random::random<double>(mt),
+      .string = random::random<std::string>(mt),
+      .nested = { .vector = random::random<std::vector<int64_t>>(mt),
+                  .float64 = random::random<double>(mt),
+                  .nested = { .vector = random::random<std::vector<int64_t>>(mt),
+                              .boolean = random::random<bool>(mt) } },
     };
   }
 
@@ -111,12 +110,11 @@ TEST(Measure, Metric) {
   const auto* mock_sink_ptr = mock_sink.get();
   registerMetricSink(std::move(mock_sink));
 
-  const auto entry =
-      Metric{ .component = random::randomT<std::string>(mt),
-              .tag = random::randomT<std::string>(mt),
-              .id = random::randomT<std::size_t>(mt),
-              .timestamp = random::randomT<ClockT::time_point>(mt),
-              .values = { { random::randomT<std::string>(mt), random::randomT<int64_t>(mt) } } };
+  const auto entry = Metric{ .component = random::random<std::string>(mt),
+                             .tag = random::random<std::string>(mt),
+                             .id = random::random<std::size_t>(mt),
+                             .timestamp = random::random<ClockT::time_point>(mt),
+                             .values = { { random::random<std::string>(mt), random::random<int64_t>(mt) } } };
   record(entry);
 
   mock_sink_ptr->wait();
