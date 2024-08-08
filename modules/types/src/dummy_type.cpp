@@ -5,6 +5,7 @@
 #include "hephaestus/types/dummy_type.h"
 
 #include <cstdint>
+#include <iostream>
 #include <random>
 
 #include <magic_enum.hpp>
