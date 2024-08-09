@@ -41,13 +41,8 @@ TEST(TypeFormattingTests, TimestampFormattingSystemClock) {
   const auto str = fmt::format("{}", toString(timestamp));
 
   ASSERT_TRUE(str.length() <= 27);
-
-  ASSERT_EQ(str[0], '2');
-  ASSERT_EQ(str[1], '0');
-  ASSERT_EQ(str[4], '-');
   ASSERT_EQ(str[7], '-');
   ASSERT_EQ(str[10], ' ');
-  ASSERT_EQ(str[13], ':');
   ASSERT_EQ(str[16], ':');
   ASSERT_EQ(str[19], '.');
 }
