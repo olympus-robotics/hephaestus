@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package heph.examples.types.proto;
+
+message SampleRequest {
+    uint64 initial_value = 1;
+    uint64 iterations_count = 2;
+}
+
+message SampleReply {
+    uint64 value = 1;
+    uint64 counter = 2;
+}

@@ -38,6 +38,20 @@ define_module_example(
         PUBLIC_LINK_LIBS hephaestus::ipc)
 
 define_module_example(
+        NAME zenoh_action_server
+        SOURCES zenoh_action_server.cpp zenoh_program_options.h
+        PUBLIC_INCLUDE_PATHS
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        PUBLIC_LINK_LIBS hephaestus::ipc)
+
+define_module_example(
+        NAME zenoh_action_server_client
+        SOURCES zenoh_action_server_client.cpp zenoh_program_options.h
+        PUBLIC_INCLUDE_PATHS
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        PUBLIC_LINK_LIBS hephaestus::ipc)
+
+define_module_example(
         NAME zenoh_sub
         SOURCES zenoh_sub.cpp zenoh_program_options.h
         PUBLIC_INCLUDE_PATHS
