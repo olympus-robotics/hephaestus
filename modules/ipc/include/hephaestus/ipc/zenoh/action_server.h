@@ -33,27 +33,30 @@ enum class ActionServerTriggerStatus : uint8_t {
 /// Action servers also provide functionalities for the user to send status updates to the client during
 /// execution of the action and are interruptible.
 /// To instantiate an ActionServer the user needs to provide two callbacks:
-/// - ActionTriggerCallback
-///   - Takes in input the request and need to decide if the request is valid and if it can be served.
-///   - The callback should not block and return immediately,
+/// - ActionServerTriggerCallback
+///   - Takes as input the request and need to decide if the request is valid and if it can be served.
+///   - No long running operations should be done in this callback.
 /// - ExecuteCallback
-///   - This is the function that does the actual work and eventually return the final response to the client.
-///   - The execute callback is executed in a dedicated thread.
-///   - The function begin execution as soon as the request is accepted.
+///   - This is the function that does the actual work and eventually returns the final response to the
+///   client.
+///   - The execute callback is run in a dedicated thread.
+///   - The function begins execution as soon as the request is accepted.
 ///   - The function has access to a Publisher to send status updates to the client.
 ///     - The frequency of the updates is decided by the user; updates are not mandatory
 ///   - The function can be interrupted by the client by setting the stop_requested flag to true.
 ///     - The function should check this flag periodically and return if it is set.
+///     - The ability to stop the server relies on the user correctly reading the value of `stop_requested`.
+///       If the user ignore the variable, the server cannot be stopped.
 /// NOTES:
 /// - If an action server is already serving a request it will not accept new ones.
 /// - RequestT needs to be copyable and one copy will be made of it.
 /// ---------------------------------------------------------------------------------------------------------
 /// Implementation details:
 /// - ActionServer contains a `Service` to receive the requests and a `MessageQueueConsumer` to execute them.
-/// - When a new request is accepted and started a new `Publisher` is created to send status updates.
-/// - The publisher is passed to `execute_cb`, which the user can use to publish status update of the
+/// - When a new request is accepted and started, a new `Publisher` is created to send status updates.
+/// - The status publisher is passed to `execute_cb`, which the user can use to publish status update of the
 ///   execution.
-///   - The client when calling the server will create a temporary `Subscriber` to receive the updates.
+///   - When calling the server, the client will create a temporary `Subscriber` to receive the updates.
 /// - When `execute_cb` finishes the final response is sent to the client via a `Service` created by the
 ///   caller.
 /// NOTE: The reason why we can only process one request at a time is that with the current implementation the
@@ -64,11 +67,11 @@ enum class ActionServerTriggerStatus : uint8_t {
 template <typename RequestT, typename StatusT, typename ReplyT>
 class ActionServer {
 public:
-  using ActionTriggerCallback = std::function<ActionServerTriggerStatus(const RequestT&)>;
+  using ActionServerTriggerCallback = std::function<ActionServerTriggerStatus(const RequestT&)>;
   using ExecuteCallback =
       std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool& stop_requested)>;
 
-  ActionServer(SessionPtr session, TopicConfig topic_config, ActionTriggerCallback&& action_trigger_cb,
+  ActionServer(SessionPtr session, TopicConfig topic_config, ActionServerTriggerCallback&& action_trigger_cb,
                ExecuteCallback&& execute_cb);
   ~ActionServer();
   ActionServer(const ActionServer&) = delete;
@@ -84,7 +87,7 @@ private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
-  ActionTriggerCallback action_trigger_cb_;
+  ActionServerTriggerCallback action_trigger_cb_;
   ExecuteCallback execute_cb_;
 
   std::unique_ptr<Service<RequestT, ActionServerRequestResponse>> request_service_;
@@ -101,7 +104,8 @@ using StatusUpdateCallback = std::function<void(const StatusT&)>;
 /// - Returns a future which will eventually contain the response from the server.
 template <typename RequestT, typename StatusT, typename ReplyT>
 [[nodiscard]] auto callActionServer(SessionPtr session, const TopicConfig& topic_config,
-                                    const RequestT& request, StatusUpdateCallback<StatusT>&& status_update_cb)
+                                    const RequestT& request, StatusUpdateCallback<StatusT>&& status_update_cb,
+                                    const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
     -> std::future<ActionServerResponse<ReplyT>>;
 
 /// Request the action server to stop.
@@ -116,7 +120,7 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicConfig topic_config,
-                                                      ActionTriggerCallback&& action_trigger_cb,
+                                                      ActionServerTriggerCallback&& action_trigger_cb,
                                                       ExecuteCallback&& execute_cb)
   : session_(std::move((session)))
   , topic_config_(std::move(topic_config))
@@ -214,11 +218,11 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
-                      StatusUpdateCallback<StatusT>&& status_update_cb)
+                      StatusUpdateCallback<StatusT>&& status_update_cb,
+                      const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
     -> std::future<ActionServerResponse<ReplyT>> {
-  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   const auto server_responses =
-      callService<RequestT, ActionServerRequestResponse>(*session, topic_config, request, TIMEOUT);
+      callService<RequestT, ActionServerRequestResponse>(*session, topic_config, request, timeout);
   if (server_responses.empty()) {
     return internal::handleFailure<ReplyT>(topic_config.name, "no response",
                                            ActionServerRequestStatus::INVALID);
