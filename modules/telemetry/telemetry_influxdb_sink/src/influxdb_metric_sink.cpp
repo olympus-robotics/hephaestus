@@ -9,6 +9,7 @@
 #include <exception>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -23,13 +24,29 @@
 namespace heph::telemetry_sink {
 namespace {
 
+[[nodiscard]] auto isNaN(const auto& value) -> bool {
+  if constexpr (std::is_same_v<std::decay_t<decltype(value)>, double>) {
+    return std::isnan(value);
+  }
+
+  return false;
+}
+
 [[nodiscard]] auto createInfluxdbPoint(const telemetry::Metric& entry) -> influxdb::Point {
   auto point = influxdb::Point{ entry.component }
                    .addTag("tag", entry.tag)
                    .addTag("id", std::to_string(entry.id))
                    .setTimestamp(entry.timestamp);
   for (const auto& [key, value] : entry.values) {
-    std::visit([&point, &key](auto&& arg) { point.addField(key, arg); }, value);
+    std::visit(
+        [&point, &key](auto&& arg) {
+          if (isNaN(arg)) {
+            return;
+          }
+
+          point.addField(key, arg);
+        },
+        value);
   }
 
   return point;

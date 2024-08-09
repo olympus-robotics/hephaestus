@@ -23,4 +23,6 @@ inline auto getTypeName() -> std::string {
   return (status == 0) ? res.get() : mangled_name;
 }
 
+[[nodiscard]] auto getHostName() -> std::string;
+
 }  // namespace heph::utils
