@@ -683,7 +683,7 @@ function(install_modules)
   foreach(_module IN LISTS _enabled_modules_list)
 
     # These variables are copied into module-config.cmake.in to set up dependencies
-    set(INSTALL_MODULE_NAME ${PROJECT_NAME}_${_module})
+    set(INSTALL_MODULE_NAME ${_module})
     set(INSTALL_MODULE_LIB_TARGETS ${MODULE_${_module}_LIB_TARGETS})
     set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON})
     set(INSTALL_MODULE_EXTERNAL_DEPENDENCIES ${MODULE_${_module}_EXTERNAL_PROJECT_DEPS})
