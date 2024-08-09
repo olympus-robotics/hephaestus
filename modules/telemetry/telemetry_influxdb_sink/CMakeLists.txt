@@ -5,7 +5,7 @@
 declare_module(
   NAME telemetry_influxdb_sink
   DEPENDS_ON_MODULES concurrency random serdes telemetry
-  DEPENDS_ON_EXTERNAL_PROJECTS influxdb fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS InfluxDB fmt
 )
 
 find_package(InfluxDB REQUIRED)

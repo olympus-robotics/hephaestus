@@ -68,7 +68,7 @@ function(enumerate_modules)
       ON
       CACHE INTERNAL "Enumeration of modules in progress"
   )
-  message(STATUS "Enumerating ${PROJID} modules")
+  message(STATUS "Enumerating ${PROJECT_NAME} modules")
   foreach(_module IN LISTS _module_paths)
     if(NOT ${_module} STREQUAL ${CMAKE_CURRENT_LIST_FILE}) # avoid recursion
       message(VERBOSE "  Parsing ${_module}")
@@ -120,6 +120,7 @@ macro(configure_modules)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
 
   # Add each marked module into the build
+  message("\n\n${_enabled_modules_list}\n\n")
   foreach(_module IN LISTS _enabled_modules_list)
     message(VERBOSE "Adding subdirectory ${MODULE_${_module}_PATH} for module ${_module}")
     add_subdirectory(${MODULE_${_module}_PATH})
@@ -168,6 +169,8 @@ macro(declare_module)
     message(FATAL_ERROR "NAME not specified")
   endif()
 
+  set(MODULE_ARG_NAME "${PROJECT_NAME}_${MODULE_ARG_NAME}")
+
   # Either have it always build, or allow user to choose at configuration-time
   if(("${MODULE_ARG_NAME}" IN_LIST BUILD_MODULES)
      OR (("all" IN_LIST BUILD_MODULES) AND NOT MODULE_ARG_EXCLUDE_FROM_ALL)
@@ -196,6 +199,13 @@ macro(declare_module)
         "${CMAKE_CURRENT_LIST_DIR}"
         CACHE INTERNAL "location of ${MODULE_ARG_NAME}"
     )
+
+    # Update the dependency list
+    set(NEW_LIST "")
+    foreach(module ${MODULE_ARG_DEPENDS_ON_MODULES})
+      list(APPEND NEW_LIST "${PROJECT_NAME}_${module}")
+    endforeach()
+    set(MODULE_ARG_DEPENDS_ON_MODULES ${NEW_LIST})
     set(MODULE_${MODULE_ARG_NAME}_DEPENDS_ON
         ${MODULE_ARG_DEPENDS_ON_MODULES}
         CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME}"
