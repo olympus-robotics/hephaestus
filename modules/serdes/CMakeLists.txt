@@ -24,6 +24,7 @@ set(SOURCES
     src/protobuf/protobuf_internal.cpp
     README.md
     include/hephaestus/serdes/dynamic_deserializer.h
+    include/hephaestus/serdes/json.h
     include/hephaestus/serdes/serdes.h
     include/hephaestus/serdes/type_info.h
     include/hephaestus/serdes/protobuf/concepts.h
