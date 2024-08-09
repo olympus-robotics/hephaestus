@@ -11,12 +11,12 @@ include(CTest)
 # Global list of all modules
 define_property(
   GLOBAL
-  PROPERTY DECLARED_MODULES_${PROJECT_NAME}
+  PROPERTY DECLARED_MODULES
   INHERITED
   BRIEF_DOCS "All the declared modules in the system"
   FULL_DOCS "All the declared modules in the system"
 )
-set_property(GLOBAL PROPERTY DECLARED_MODULES_${PROJECT_NAME} "")
+set_property(GLOBAL PROPERTY DECLARED_MODULES "")
 
 # Global list of all modules marked for build
 define_property(
@@ -84,7 +84,7 @@ function(enumerate_modules)
   mark_modules_to_build()
 
   # print a summary of modules
-  get_property(_declared_modules_list GLOBAL PROPERTY DECLARED_MODULES_${PROJECT_NAME})
+  get_property(_declared_modules_list GLOBAL PROPERTY DECLARED_MODULES)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
   message(STATUS "Modules")
   foreach(_module IN LISTS _declared_modules_list)
@@ -188,13 +188,13 @@ macro(declare_module)
   endif()
 
   # if we are just enumerating modules, then set module meta information and exit. create global variables:
-  # DECLARED_MODULES_${PROJECT_NAME} MODULE_<module>_PATH MODULE_<module>_DEPENDS_ON
+  # DECLARED_MODULES MODULE_<module>_PATH MODULE_<module>_DEPENDS_ON
   if(_MODULES_ENUMERATE_FLAG)
-    get_property(_declared_modules_list GLOBAL PROPERTY DECLARED_MODULES_${PROJECT_NAME})
+    get_property(_declared_modules_list GLOBAL PROPERTY DECLARED_MODULES)
     if(${MODULE_ARG_NAME} IN_LIST _declared_modules_list)
       message(FATAL_ERROR "Another module named \"${MODULE_ARG_NAME}\" exists in ${MODULE_${MODULE_ARG_NAME}_PATH}")
     endif()
-    set_property(GLOBAL APPEND PROPERTY DECLARED_MODULES_${PROJECT_NAME} ${MODULE_ARG_NAME})
+    set_property(GLOBAL APPEND PROPERTY DECLARED_MODULES ${MODULE_ARG_NAME})
     set(MODULE_${MODULE_ARG_NAME}_PATH
         "${CMAKE_CURRENT_LIST_DIR}"
         CACHE INTERNAL "location of ${MODULE_ARG_NAME}"
@@ -855,7 +855,7 @@ endfunction()
 # ==================================================================================================
 # (for internal use) Walk through all enabled modules and their dependencies and mark them for building
 function(mark_modules_to_build)
-  get_property(_declared_modules GLOBAL PROPERTY DECLARED_MODULES_${PROJECT_NAME})
+  get_property(_declared_modules GLOBAL PROPERTY DECLARED_MODULES)
   foreach(_module IN LISTS _declared_modules)
     if(${BUILD_MODULE_${_module}})
       mark_module_and_dependencies_to_build(MODULE_NAME ${_module})
