@@ -8,5 +8,5 @@
 
 foreach(component ${@PROJECT_NAME@_FIND_COMPONENTS})
   # For requested component, execute its "config" script
-  include(${CMAKE_CURRENT_LIST_DIR}/../@PROJECT_NAME@_${component}/@PROJECT_NAME@_${component}-config.cmake)`
+  include(${CMAKE_CURRENT_LIST_DIR}/../@PROJECT_NAME@_${component}/@PROJECT_NAME@_${component}-config.cmake)
 endforeach()

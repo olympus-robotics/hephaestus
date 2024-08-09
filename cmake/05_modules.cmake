@@ -200,7 +200,12 @@ macro(declare_module)
         CACHE INTERNAL "location of ${MODULE_ARG_NAME}"
     )
 
-    # Update the dependency list
+    set(MODULE_${MODULE_ARG_NAME}_DEPENDS_ON_NO_PREFIX
+        ${MODULE_ARG_DEPENDS_ON_MODULES}
+        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME} withot prefix"
+    )
+
+    # Add prefix
     set(NEW_LIST "")
     foreach(module ${MODULE_ARG_DEPENDS_ON_MODULES})
       list(APPEND NEW_LIST "${PROJECT_NAME}_${module}")
@@ -685,7 +690,7 @@ function(install_modules)
     # These variables are copied into module-config.cmake.in to set up dependencies
     set(INSTALL_MODULE_NAME ${_module})
     set(INSTALL_MODULE_LIB_TARGETS ${MODULE_${_module}_LIB_TARGETS})
-    set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON})
+    set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON_NO_PREFIX})
     set(INSTALL_MODULE_EXTERNAL_DEPENDENCIES ${MODULE_${_module}_EXTERNAL_PROJECT_DEPS})
 
     set(config_create_location ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${INSTALL_MODULE_NAME})
