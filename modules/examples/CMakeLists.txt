@@ -13,7 +13,9 @@ find_package(mcap REQUIRED)
 add_subdirectory(proto)
 
 # library sources
-set(TYPES_SOURCES src/types/pose.cpp README.md include/hephaestus/examples/types/pose.h)
+set(TYPES_SOURCES src/types/pose.cpp README.md include/hephaestus/examples/types/pose.h
+                  include/hephaestus/examples/types/sample.h
+)
 
 # library target
 define_module_library(
@@ -28,8 +30,9 @@ define_module_library(
 
 # library sources
 set(TYPES_PROTOBUF_SOURCES
-    src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp include/hephaestus/examples/types_protobuf/geometry.h
-    include/hephaestus/examples/types_protobuf/pose.h
+    src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp src/types_protobuf/sample.cpp
+    include/hephaestus/examples/types_protobuf/geometry.h include/hephaestus/examples/types_protobuf/pose.h
+    include/hephaestus/examples/types_protobuf/sample.h
 )
 
 # library target

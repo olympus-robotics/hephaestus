@@ -15,6 +15,8 @@ find_package(nlohmann_json REQUIRED)
 find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
 
+add_subdirectory(proto)
+
 # library sources
 set(SOURCES
     src/common.cpp
@@ -28,6 +30,10 @@ set(SOURCES
     src/zenoh/scout.cpp
     src/zenoh/subscriber.cpp
     src/zenoh/utils.cpp
+    src/zenoh/action_server/action_server.cpp
+    src/zenoh/action_server/client_helper.cpp
+    src/zenoh/action_server/types.cpp
+    src/zenoh/action_server/types_protobuf.cpp
     README.md
     include/hephaestus/ipc/common.h
     include/hephaestus/ipc/program_options.h
@@ -39,6 +45,10 @@ set(SOURCES
     include/hephaestus/ipc/zenoh/service.h
     include/hephaestus/ipc/zenoh/scout.h
     include/hephaestus/ipc/zenoh/subscriber.h
+    include/hephaestus/ipc/zenoh/action_server/action_server.h
+    include/hephaestus/ipc/zenoh/action_server/client_helper.h
+    include/hephaestus/ipc/zenoh/action_server/types.h
+    include/hephaestus/ipc/zenoh/action_server/types_protobuf.h
 )
 
 # library target
@@ -53,6 +63,7 @@ define_module_library(
     hephaestus::cli
     hephaestus::utils
     hephaestus::serdes
+    hephaestus::action_server_types_proto
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3
