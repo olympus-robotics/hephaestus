@@ -14,15 +14,15 @@
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/publisher.h"
-#include "hephaestus/ipc/zenoh/internal/action_server_client_helper.h"
+#include "hephaestus/ipc/zenoh/action_server/client_helper.h"
+#include "hephaestus/ipc/zenoh/action_server/types.h"
+#include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/types/action_server_types.h"
-#include "hephaestus/ipc/zenoh/types/action_server_types_protobuf.h"  // NOLINT(misc-include-cleaner)
 
-namespace heph::ipc::zenoh {
+namespace heph::ipc::zenoh::action_server {
 
-enum class ActionServerTriggerStatus : uint8_t {
+enum class TriggerStatus : uint8_t {
   SUCCESSFUL = 0,
   REJECTED = 1,
 };
@@ -33,7 +33,7 @@ enum class ActionServerTriggerStatus : uint8_t {
 /// Action servers also provide functionalities for the user to send status updates to the client during
 /// execution of the action and are interruptible.
 /// To instantiate an ActionServer the user needs to provide two callbacks:
-/// - ActionServerTriggerCallback
+/// - TriggerCallback
 ///   - Takes as input the request and need to decide if the request is valid and if it can be served.
 ///   - No long running operations should be done in this callback.
 /// - ExecuteCallback
@@ -67,11 +67,11 @@ enum class ActionServerTriggerStatus : uint8_t {
 template <typename RequestT, typename StatusT, typename ReplyT>
 class ActionServer {
 public:
-  using ActionServerTriggerCallback = std::function<ActionServerTriggerStatus(const RequestT&)>;
+  using TriggerCallback = std::function<TriggerStatus(const RequestT&)>;
   using ExecuteCallback =
       std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool& stop_requested)>;
 
-  ActionServer(SessionPtr session, TopicConfig topic_config, ActionServerTriggerCallback&& action_trigger_cb,
+  ActionServer(SessionPtr session, TopicConfig topic_config, TriggerCallback&& action_trigger_cb,
                ExecuteCallback&& execute_cb);
   ~ActionServer();
   ActionServer(const ActionServer&) = delete;
@@ -80,17 +80,17 @@ public:
   auto operator=(ActionServer&&) -> ActionServer& = delete;
 
 private:
-  [[nodiscard]] auto onRequest(const RequestT& request) -> ActionServerRequestResponse;
+  [[nodiscard]] auto onRequest(const RequestT& request) -> RequestResponse;
   void execute(const RequestT& request);
 
 private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
-  ActionServerTriggerCallback action_trigger_cb_;
+  TriggerCallback action_trigger_cb_;
   ExecuteCallback execute_cb_;
 
-  std::unique_ptr<Service<RequestT, ActionServerRequestResponse>> request_service_;
+  std::unique_ptr<Service<RequestT, RequestResponse>> request_service_;
   concurrency::MessageQueueConsumer<RequestT> request_consumer_;
   std::atomic_bool is_running_{ false };
 };
@@ -106,7 +106,7 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 [[nodiscard]] auto callActionServer(SessionPtr session, const TopicConfig& topic_config,
                                     const RequestT& request, StatusUpdateCallback<StatusT>&& status_update_cb,
                                     const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
-    -> std::future<ActionServerResponse<ReplyT>>;
+    -> std::future<Response<ReplyT>>;
 
 /// Request the action server to stop.
 [[nodiscard]] auto requestActionServerToStopExecution(Session& session,
@@ -120,13 +120,13 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicConfig topic_config,
-                                                      ActionServerTriggerCallback&& action_trigger_cb,
+                                                      TriggerCallback&& action_trigger_cb,
                                                       ExecuteCallback&& execute_cb)
   : session_(std::move((session)))
   , topic_config_(std::move(topic_config))
   , action_trigger_cb_(std::move(action_trigger_cb))
   , execute_cb_(std::move(execute_cb))
-  , request_service_(std::make_unique<Service<RequestT, ActionServerRequestResponse>>(
+  , request_service_(std::make_unique<Service<RequestT, RequestResponse>>(
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
@@ -138,36 +138,35 @@ ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
-auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
-    -> ActionServerRequestResponse {
+auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request) -> RequestResponse {
   if (is_running_) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): server is already serving one request.",
                               topic_config_.name);
 
-    return { .status = ActionServerRequestStatus::REJECTED_ALREADY_RUNNING };
+    return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
   try {
     const auto response = action_trigger_cb_(request);
-    if (response != ActionServerTriggerStatus::SUCCESSFUL) {
-      return { .status = ActionServerRequestStatus::REJECTED_USER };
+    if (response != TriggerStatus::SUCCESSFUL) {
+      return { .status = RequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): request callback failed with exception: {}.",
                               topic_config_.name, ex.what());
-    return { .status = ActionServerRequestStatus::INVALID };
+    return { .status = RequestStatus::INVALID };
   }
 
   if (!request_consumer_.queue().tryPush(request)) {
     // NOTE: this should never happen as the queue is unbound.
-    LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to push the job in the queue. THIS SHOULD "
-                              "NOT HAPPEN CHECK THE CODE.",
+    LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to push the job in the queue. NOTE: this "
+                              "should not happen, something is wrong in the code.",
                               topic_config_.name);
-    return { .status = ActionServerRequestStatus::REJECTED_ALREADY_RUNNING };
+    return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
   LOG(INFO) << fmt::format("ActionServer (topic: {}): request accepted.", topic_config_.name);
-  return { .status = ActionServerRequestStatus::SUCCESSFUL };
+  return { .status = RequestStatus::SUCCESSFUL };
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -190,21 +189,20 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
 
   const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
     try {
-      return ActionServerResponse<ReplyT>{
+      return Response<ReplyT>{
         .value = execute_cb_(request, status_update_publisher, stop_requested),
-        .status = stop_requested ? ActionServerRequestStatus::STOPPED : ActionServerRequestStatus::SUCCESSFUL,
+        .status = stop_requested ? RequestStatus::STOPPED : RequestStatus::SUCCESSFUL,
       };
     } catch (const std::exception& ex) {
       LOG(ERROR) << fmt::format("ActionServer (topic: {}): execute callback failed with exception: {}.",
                                 topic_config_.name, ex.what());
-      return ActionServerResponse<ReplyT>{};
+      return Response<ReplyT>{};
     }
   }();
   const auto response_topic = internal::getResponseServiceTopic(topic_config_);
-  const auto client_response = callService<ActionServerResponse<ReplyT>, ActionServerRequestResponse>(
-      *session_, response_topic, reply);
-  if (client_response.size() != 1 ||
-      client_response.front().value.status != ActionServerRequestStatus::SUCCESSFUL) {
+  const auto client_response =
+      callService<Response<ReplyT>, RequestResponse>(*session_, response_topic, reply);
+  if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
     LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to send final response to client.",
                               topic_config_.name);
   }
@@ -220,12 +218,11 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
                       StatusUpdateCallback<StatusT>&& status_update_cb,
                       const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
-    -> std::future<ActionServerResponse<ReplyT>> {
+    -> std::future<Response<ReplyT>> {
   const auto server_responses =
-      callService<RequestT, ActionServerRequestResponse>(*session, topic_config, request, timeout);
+      callService<RequestT, RequestResponse>(*session, topic_config, request, timeout);
   if (server_responses.empty()) {
-    return internal::handleFailure<ReplyT>(topic_config.name, "no response",
-                                           ActionServerRequestStatus::INVALID);
+    return internal::handleFailure<ReplyT>(topic_config.name, "no response", RequestStatus::INVALID);
   }
 
   if (server_responses.size() > 1) {
@@ -234,11 +231,11 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
         fmt::format(
             "received more than one response ({}), make sure the topic matches a single action server",
             server_responses.size()),
-        ActionServerRequestStatus::INVALID);
+        RequestStatus::INVALID);
   }
 
   const auto& server_response_status = server_responses.front().value.status;
-  if (server_response_status != ActionServerRequestStatus::SUCCESSFUL) {
+  if (server_response_status != RequestStatus::SUCCESSFUL) {
     return internal::handleFailure<ReplyT>(
         topic_config.name, fmt::format("request rejected {}", magic_enum::enum_name(server_response_status)),
         server_response_status);
@@ -247,12 +244,11 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
   return std::async(
       // NOLINTNEXTLINE(bugprone-exception-escape)
       std::launch::async, [session, topic_config, status_update_cb = std::move(status_update_cb)]() mutable {
-        auto client_helper =
-            internal::ActionServerClientHelper<RequestT, StatusT, ReplyT>{ session, topic_config,
-                                                                           std::move(status_update_cb) };
+        auto client_helper = internal::ClientHelper<RequestT, StatusT, ReplyT>{ session, topic_config,
+                                                                                std::move(status_update_cb) };
 
         return client_helper.getResponse().get();
       });
 }
 
-}  // namespace heph::ipc::zenoh
+}  // namespace heph::ipc::zenoh::action_server

@@ -23,7 +23,6 @@ set(SOURCES
     src/program_options.cpp
     src/topic_database.cpp
     src/topic_filter.cpp
-    src/zenoh/action_server.cpp
     src/zenoh/dynamic_subscriber.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
@@ -31,24 +30,25 @@ set(SOURCES
     src/zenoh/scout.cpp
     src/zenoh/subscriber.cpp
     src/zenoh/utils.cpp
-    src/zenoh/internal/action_server_client_helper.cpp
-    src/zenoh/types/action_server_types.cpp
-    src/zenoh/types/action_server_types_protobuf.cpp
+    src/zenoh/action_server/action_server.cpp
+    src/zenoh/action_server/client_helper.cpp
+    src/zenoh/action_server/types.cpp
+    src/zenoh/action_server/types_protobuf.cpp
     README.md
     include/hephaestus/ipc/common.h
     include/hephaestus/ipc/program_options.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/topic_filter.h
-    include/hephaestus/ipc/zenoh/action_server.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h
     include/hephaestus/ipc/zenoh/utils.h
     include/hephaestus/ipc/zenoh/publisher.h
     include/hephaestus/ipc/zenoh/service.h
     include/hephaestus/ipc/zenoh/scout.h
     include/hephaestus/ipc/zenoh/subscriber.h
-    include/hephaestus/ipc/zenoh/internal/action_server_client_helper.h
-    include/hephaestus/ipc/zenoh/types/action_server_types.h
-    include/hephaestus/ipc/zenoh/types/action_server_types_protobuf.h
+    include/hephaestus/ipc/zenoh/action_server/action_server.h
+    include/hephaestus/ipc/zenoh/action_server/client_helper.h
+    include/hephaestus/ipc/zenoh/action_server/types.h
+    include/hephaestus/ipc/zenoh/action_server/types_protobuf.h
 )
 
 # library target

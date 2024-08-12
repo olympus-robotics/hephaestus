@@ -10,13 +10,13 @@
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/zenoh/action_server/types.h"
+#include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/ipc/zenoh/types/action_server_types.h"
-#include "hephaestus/ipc/zenoh/types/action_server_types_protobuf.h"
 
-namespace heph::ipc::zenoh::internal {
+namespace heph::ipc::zenoh::action_server::internal {
 [[nodiscard]] auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig;
 
 [[nodiscard]] auto getResponseServiceTopic(const TopicConfig& topic_config) -> TopicConfig;
@@ -24,43 +24,41 @@ namespace heph::ipc::zenoh::internal {
 [[nodiscard]] auto getStopServiceTopic(const TopicConfig& topic_config) -> TopicConfig;
 
 template <typename ReplyT>
-[[nodiscard]] auto
-handleFailure(const std::string& topic_name, const std::string& error_message,
-              ActionServerRequestStatus error) -> std::future<ActionServerResponse<ReplyT>> {
+[[nodiscard]] auto handleFailure(const std::string& topic_name, const std::string& error_message,
+                                 RequestStatus error) -> std::future<Response<ReplyT>> {
   LOG(ERROR) << fmt::format("Failed to call action server (topic: {}): {}.", topic_name, error_message);
-  std::promise<ActionServerResponse<ReplyT>> promise;
+  std::promise<Response<ReplyT>> promise;
   promise.set_value({ ReplyT{}, error });
   return promise.get_future();
 }
 
 /// If an action server is already serving a request it will reject the new request.
 template <typename RequestT, typename StatusT, typename ReplyT>
-class ActionServerClientHelper {
+class ClientHelper {
 public:
   using StatusUpdateCallback = std::function<void(const StatusT&)>;
-  ActionServerClientHelper(
+  ClientHelper(
       SessionPtr session, TopicConfig topic_config,
       StatusUpdateCallback&& status_update_cb);  // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
 
-  [[nodiscard]] auto getResponse() -> std::future<ActionServerResponse<ReplyT>>;
+  [[nodiscard]] auto getResponse() -> std::future<Response<ReplyT>>;
 
 private:
-  [[nodiscard]] auto
-  serviceCallback(const ActionServerResponse<ReplyT>& reply) -> ActionServerRequestResponse;
+  [[nodiscard]] auto serviceCallback(const Response<ReplyT>& reply) -> RequestResponse;
 
 private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
   std::unique_ptr<Subscriber> status_subscriber_;
-  std::unique_ptr<Service<ActionServerResponse<ReplyT>, ActionServerRequestResponse>> response_service_;
+  std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
 
-  std::promise<ActionServerResponse<ReplyT>> reply_promise_;
+  std::promise<Response<ReplyT>> reply_promise_;
 };
 
 template <typename RequestT, typename StatusT, typename ReplyT>
-ActionServerClientHelper<RequestT, StatusT, ReplyT>::ActionServerClientHelper(
-    SessionPtr session, TopicConfig topic_config, StatusUpdateCallback&& status_update_cb)
+ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicConfig topic_config,
+                                                      StatusUpdateCallback&& status_update_cb)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , status_subscriber_(subscribe<Subscriber, StatusT>(
@@ -69,22 +67,21 @@ ActionServerClientHelper<RequestT, StatusT, ReplyT>::ActionServerClientHelper(
                                                          const std::shared_ptr<StatusT>& status) mutable {
           status_update_cb(*status);
         }))
-  , response_service_(std::make_unique<Service<ActionServerResponse<ReplyT>, ActionServerRequestResponse>>(
+  , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
-        [this](const ActionServerResponse<ReplyT>& reply) { return serviceCallback(reply); })) {
+        [this](const Response<ReplyT>& reply) { return serviceCallback(reply); })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
-auto ActionServerClientHelper<RequestT, StatusT, ReplyT>::getResponse()
-    -> std::future<ActionServerResponse<ReplyT>> {
+auto ClientHelper<RequestT, StatusT, ReplyT>::getResponse() -> std::future<Response<ReplyT>> {
   return reply_promise_.get_future();
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
-auto ActionServerClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(
-    const ActionServerResponse<ReplyT>& reply) -> ActionServerRequestResponse {
+auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
+    -> RequestResponse {
   reply_promise_.set_value(reply);
-  return { .status = ActionServerRequestStatus::SUCCESSFUL };
+  return { .status = RequestStatus::SUCCESSFUL };
 }
 
-}  // namespace heph::ipc::zenoh::internal
+}  // namespace heph::ipc::zenoh::action_server::internal

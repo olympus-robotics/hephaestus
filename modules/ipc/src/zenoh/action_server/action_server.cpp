@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/zenoh/action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/action_server.h"
 
 #include <string>
 
@@ -10,11 +10,11 @@
 #include <fmt/core.h>
 
 #include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/zenoh/internal/action_server_client_helper.h"
+#include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
-namespace heph::ipc::zenoh {
+namespace heph::ipc::zenoh::action_server {
 auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config) -> bool {
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   const auto stop_topic = internal::getStopServiceTopic(topic_config);
@@ -26,4 +26,4 @@ auto requestActionServerToStopExecution(Session& session, const TopicConfig& top
 
   return true;
 }
-}  // namespace heph::ipc::zenoh
+}  // namespace heph::ipc::zenoh::action_server

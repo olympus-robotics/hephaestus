@@ -15,7 +15,7 @@
 
 #include "hephaestus/examples/types/sample.h"
 #include "hephaestus/examples/types_protobuf/sample.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/zenoh/action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"

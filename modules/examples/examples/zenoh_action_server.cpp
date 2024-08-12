@@ -18,21 +18,21 @@
 #include "hephaestus/examples/types/sample.h"
 #include "hephaestus/examples/types_protobuf/sample.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/publisher.h"
-#include "hephaestus/ipc/zenoh/action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 [[nodiscard]] auto
-request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::ActionServerTriggerStatus {
+request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::TriggerStatus {
   LOG(INFO) << fmt::format("Request received: {}", sample);
   if (sample.iterations_count == 0) {
     LOG(ERROR) << "Invalid request, iterations must be greater than 0";
-    return heph::ipc::zenoh::ActionServerTriggerStatus::REJECTED;
+    return heph::ipc::zenoh::TriggerStatus::REJECTED;
   }
 
-  return heph::ipc::zenoh::ActionServerTriggerStatus::SUCCESSFUL;
+  return heph::ipc::zenoh::TriggerStatus::SUCCESSFUL;
 }
 
 [[nodiscard]] auto execute(const heph::examples::types::SampleRequest& request,
