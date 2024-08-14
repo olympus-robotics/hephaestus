@@ -4,15 +4,14 @@
 
 declare_module(
   NAME types_protobuf
-  DEPENDS_ON_MODULES random serdes types 
+  DEPENDS_ON_MODULES random serdes types
   DEPENDS_ON_EXTERNAL_PROJECTS ""
 )
 
 add_subdirectory(proto)
 
 # library sources
-set(SOURCES src/dummy_type.cpp README.md include/hephaestus/types_protobuf/dummy_type.h
-)
+set(SOURCES src/dummy_type.cpp README.md include/hephaestus/types_protobuf/dummy_type.h)
 
 # library target
 define_module_library(
