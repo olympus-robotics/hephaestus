@@ -4,11 +4,9 @@
 
 #pragma once
 
-#include <chrono>
 #include <ranges>
 #include <sstream>
 
-#include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <range/v3/view/zip.hpp>
 
@@ -24,11 +22,11 @@ template <IsVector T>
 [[nodiscard]] inline auto toString(const T& vec) -> std::string {
   std::stringstream ss;
 
-  auto indices = std::views::iota(0);
-  auto indexed_vec = ranges::views::zip(indices, vec);
+  const auto indices = std::views::iota(0);
+  const auto indexed_vec = ranges::views::zip(indices, vec);
 
-  for (auto [index, value] : indexed_vec) {
-    ss << "  Index: " << index << ", Value: " << value << '\n';
+  for (const auto& [index, value] : indexed_vec) {
+    ss << fmt::format("  Index: {}, Value: {}\n", index, value);
   }
 
   return ss.str();
