@@ -2,8 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <algorithm>
-#include <chrono>
 #include <string>
 #include <vector>
 
@@ -16,36 +14,6 @@
 using namespace ::testing;
 
 namespace heph::types::tests {
-
-// Test assumes sub-second precision of at most nanoseconds.
-TEST(TypeFormattingTests, TimestampFormattingSteadyClock) {
-  const auto timestamp = std::chrono::steady_clock::now();
-  const auto str = fmt::format("{}", toString(timestamp));
-
-  ASSERT_TRUE(str.length() <= 24);
-
-  const auto it = std::find(str.begin(), str.end(), 'd');
-  ASSERT_TRUE(it != str.end());
-  ASSERT_EQ(*(it + 1), ' ');
-  ASSERT_EQ(*(it + 4), 'h');
-  ASSERT_EQ(*(it + 5), ':');
-  ASSERT_EQ(*(it + 8), 'm');
-  ASSERT_EQ(*(it + 9), ':');
-  ASSERT_EQ(*(it + 12), '.');
-  ASSERT_EQ(str.back(), 's');
-}
-
-// Test assumes sub-second precision of at most nanoseconds.
-TEST(TypeFormattingTests, TimestampFormattingSystemClock) {
-  const auto timestamp = std::chrono::system_clock::now();
-  const auto str = fmt::format("{}", toString(timestamp));
-
-  ASSERT_TRUE(str.length() <= 27);
-  ASSERT_EQ(str[7], '-');
-  ASSERT_EQ(str[10], ' ');
-  ASSERT_EQ(str[16], ':');
-  ASSERT_EQ(str[19], '.');
-}
 
 TEST(TypeFormattingTests, ConvertEmptyVector) {
   const std::vector<int> vec;

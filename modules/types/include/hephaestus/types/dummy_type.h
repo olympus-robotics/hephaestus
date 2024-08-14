@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -53,9 +52,6 @@ struct DummyType {
   DummyPrimitivesType dummy_primitives_type{};
 
   DummyEnum dummy_enum{};
-
-  std::chrono::system_clock::time_point dummy_timestamp_system_clock;
-  std::chrono::steady_clock::time_point dummy_timestamp_steady_clock;
 
   std::string dummy_string;
   std::vector<int32_t> dummy_vector;

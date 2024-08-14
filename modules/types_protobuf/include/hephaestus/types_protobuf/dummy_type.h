@@ -10,13 +10,13 @@
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<heph::types::DummyPrimitivesType> {
-  using Type = heph::types::proto::DummyPrimitivesType;
+struct ProtoAssociation<types::DummyPrimitivesType> {
+  using Type = types::proto::DummyPrimitivesType;
 };
 
 template <>
-struct ProtoAssociation<heph::types::DummyType> {
-  using Type = heph::types::proto::DummyType;
+struct ProtoAssociation<types::DummyType> {
+  using Type = types::proto::DummyType;
 };
 }  // namespace heph::serdes::protobuf
 

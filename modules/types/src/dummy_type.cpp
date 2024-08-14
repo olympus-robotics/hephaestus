@@ -47,8 +47,6 @@ auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_ty
 auto DummyType::random(std::mt19937_64& mt) -> DummyType {
   return { .dummy_primitives_type = random::random<decltype(dummy_primitives_type)>(mt),
            .dummy_enum = random::random<decltype(dummy_enum)>(mt),
-           .dummy_timestamp_system_clock = random::random<decltype(dummy_timestamp_system_clock)>(mt),
-           .dummy_timestamp_steady_clock = random::random<decltype(dummy_timestamp_steady_clock)>(mt),
            .dummy_string = random::random<decltype(dummy_string)>(mt),
            .dummy_vector = random::random<decltype(dummy_vector)>(mt) };
 }
@@ -56,8 +54,6 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
 auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream& {
   return os << "DummyType{" << "  dummy_primitives_type={" << dummy_type.dummy_primitives_type << "}\n"
             << "  dummy_enum=" << magic_enum::enum_name(dummy_type.dummy_enum) << "\n"
-            << "  dummy_timestamp_system_clock=" << toString(dummy_type.dummy_timestamp_system_clock) << "\n"
-            << "  dummy_timestamp_steady_clock=" << toString(dummy_type.dummy_timestamp_steady_clock) << "\n"
             << "  dummy_string=" << dummy_type.dummy_string << "\n"
             << "  dummy_vector=" << toString(dummy_type.dummy_vector) << "\n"
             << "}";

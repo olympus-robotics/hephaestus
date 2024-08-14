@@ -6,8 +6,6 @@ syntax = "proto3";
 
 package heph.types.proto;
 
-import "google/protobuf/timestamp.proto";
-
 enum DummyTypeDummyEnum {
   A = 0;
   B = 1;
@@ -40,9 +38,6 @@ message DummyType {
 
   DummyTypeDummyEnum dummy_enum = 2;
 
-  google.protobuf.Timestamp dummy_timestamp_system_clock = 3;
-  google.protobuf.Timestamp dummy_timestamp_steady_clock = 4;
-
-  string dummy_string = 5;
-  repeated int32 dummy_vector = 6;
+  string dummy_string = 3;
+  repeated int32 dummy_vector = 4;
 }
