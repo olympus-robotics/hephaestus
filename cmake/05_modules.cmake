@@ -169,10 +169,11 @@ macro(declare_module)
     message(FATAL_ERROR "NAME not specified")
   endif()
 
+  set(MODULE_ARG_NAME_NO_PREFIX ${MODULE_ARG_NAME})
   set(MODULE_ARG_NAME "${PROJECT_NAME}_${MODULE_ARG_NAME}")
 
   # Either have it always build, or allow user to choose at configuration-time
-  if(("${MODULE_ARG_NAME}" IN_LIST BUILD_MODULES)
+  if(("${MODULE_ARG_NAME_NO_PREFIX}" IN_LIST BUILD_MODULES)
      OR (("all" IN_LIST BUILD_MODULES) AND NOT MODULE_ARG_EXCLUDE_FROM_ALL)
      OR MODULE_ARG_ALWAYS_BUILD
   )
@@ -200,7 +201,12 @@ macro(declare_module)
         CACHE INTERNAL "location of ${MODULE_ARG_NAME}"
     )
 
-    # Update the dependency list
+    set(MODULE_${MODULE_ARG_NAME}_DEPENDS_ON_NO_PREFIX
+        ${MODULE_ARG_DEPENDS_ON_MODULES}
+        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME} withot prefix"
+    )
+
+    # Add prefix
     set(NEW_LIST "")
     foreach(module ${MODULE_ARG_DEPENDS_ON_MODULES})
       list(APPEND NEW_LIST "${PROJECT_NAME}_${module}")
@@ -370,7 +376,7 @@ macro(define_module_example)
     message(FATAL_ERROR "Executable name not specified")
   endif()
 
-  set(TARGET_NAME ${PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
+  set(TARGET_NAME ${MODULE_NAME}_${TARGET_ARG_NAME})
 
   add_executable(${TARGET_NAME} EXCLUDE_FROM_ALL ${TARGET_ARG_SOURCES})
   add_clang_format(${TARGET_NAME})
@@ -635,7 +641,7 @@ macro(define_module_test)
     message(FATAL_ERROR "Executable name not specified")
   endif()
 
-  set(TARGET_NAME ${PROJECT_NAME}_${MODULE_NAME}_${TARGET_ARG_NAME})
+  set(TARGET_NAME ${MODULE_NAME}_${TARGET_ARG_NAME})
 
   add_executable(${TARGET_NAME} EXCLUDE_FROM_ALL ${TARGET_ARG_SOURCES}) # Don't build on `make`
   add_clang_format(${TARGET_NAME})
@@ -683,9 +689,9 @@ function(install_modules)
   foreach(_module IN LISTS _enabled_modules_list)
 
     # These variables are copied into module-config.cmake.in to set up dependencies
-    set(INSTALL_MODULE_NAME ${PROJECT_NAME}_${_module})
+    set(INSTALL_MODULE_NAME ${_module})
     set(INSTALL_MODULE_LIB_TARGETS ${MODULE_${_module}_LIB_TARGETS})
-    set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON})
+    set(INSTALL_MODULE_INTERNAL_DEPENDENCIES ${MODULE_${_module}_DEPENDS_ON_NO_PREFIX})
     set(INSTALL_MODULE_EXTERNAL_DEPENDENCIES ${MODULE_${_module}_EXTERNAL_PROJECT_DEPS})
 
     set(config_create_location ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${INSTALL_MODULE_NAME})
