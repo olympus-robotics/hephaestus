@@ -10,6 +10,7 @@
 #include <absl/log/log.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
+#include <fmt/ranges.h>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
