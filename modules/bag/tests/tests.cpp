@@ -3,14 +3,12 @@
 //=================================================================================================
 
 #include <cstddef>
-#include <exception>
 #include <memory>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <fmt/core.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <mcap/reader.hpp>
@@ -86,28 +84,20 @@ TEST(Bag, PlayAndRecord) {
     EXPECT_TRUE(status.ok());
 
     auto session = ipc::zenoh::createSession({});
+    auto bag_writer = createMcapWriter({ output_bag });
+    auto recorder = ZenohRecorder::create(
+        { .session = session, .bag_writer = std::move(bag_writer), .topics_filter_params = {} });
+    {
+      auto player = ZenohPlayer::create(
+          { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
+      recorder.start().get();
+      player.start().get();
+      player.wait();
 
-    try {
-      auto bag_writer = createMcapWriter({ output_bag });
-      auto recorder = ZenohRecorder::create(
-          { .session = session, .bag_writer = std::move(bag_writer), .topics_filter_params = {} });
-      {
-        auto player = ZenohPlayer::create(
-            { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
-        recorder.start().get();
-        player.start().get();
-        player.wait();
-
-        player.stop().get();
-      }
-
-      recorder.stop().get();
-    } catch (std::exception& e) {
-      fmt::println(
-          stderr,
-          "WARNING: this shouldn't happen, but we have no control over it; we are skipping the unit test");
-      return;
+      player.stop().get();
     }
+
+    recorder.stop().get();
   }
 
   auto reader = std::make_unique<mcap::McapReader>();
