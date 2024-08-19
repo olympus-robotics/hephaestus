@@ -37,11 +37,6 @@ namespace heph::utils::string {
 /// camelCase -> CAMEL_CASE
 [[nodiscard]] auto toScreamingSnakeCase(std::string_view camel_case) -> std::string;
 
-template <typename T>
-concept Int64OrDouble = std::is_same_v<T, int64_t> || std::is_same_v<T, double>;
-template <Int64OrDouble T>
-[[nodiscard]] auto stringTo(std::string_view str) -> std::optional<T>;
-
 //=================================================================================================
 // Implementation
 //=================================================================================================
@@ -56,18 +51,6 @@ constexpr auto truncate(std::string_view str, std::string_view start_token, std:
 
   return (start_pos != std::string_view::npos) ? str.substr(start_pos, end_pos - start_pos) :
                                                  str.substr(0, end_pos);
-}
-
-template <Int64OrDouble T>
-auto stringTo(std::string_view str) -> std::optional<T> {
-  std::istringstream iss(std::string{ str });  // From C++26 we would be able to pass a string_view directly.
-  T result = 0;
-
-  if (!(iss >> std::noskipws >> result) || iss.peek() != EOF) {
-    return std::nullopt;
-  }
-
-  return result;
 }
 
 }  // namespace heph::utils::string
