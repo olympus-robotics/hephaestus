@@ -14,12 +14,15 @@
 #ifdef __linux__
 #include <linux/limits.h>
 #endif
+#include <absl/log/log.h>
+#include <fmt/core.h>
 #include <unistd.h>
 
 namespace heph::utils::filesystem {
 auto readFile(const std::filesystem::path& path) -> std::optional<std::string> {
   std::ifstream infile{ path };
   if (!infile) {
+    LOG(WARNING) << fmt::format("Failed to open file for reading: {}", path.string());
     return {};
   }
 
@@ -33,6 +36,7 @@ auto readFile(const std::filesystem::path& path) -> std::optional<std::string> {
 auto readBinaryFile(const std::filesystem::path& path) -> std::optional<std::vector<std::byte>> {
   std::ifstream infile{ path, std::ios::binary };
   if (!infile) {
+    LOG(WARNING) << fmt::format("Failed to open binary file for reading: {}", path.string());
     return {};
   }
 
@@ -47,6 +51,7 @@ auto readBinaryFile(const std::filesystem::path& path) -> std::optional<std::vec
 auto writeStringToFile(const std::filesystem::path& path, std::string_view content) -> bool {
   std::ofstream outfile{ path, std::ios::out };
   if (!outfile) {
+    LOG(WARNING) << fmt::format("Failed to open file for writing: {}", path.string());
     return false;
   }
 
@@ -57,6 +62,7 @@ auto writeStringToFile(const std::filesystem::path& path, std::string_view conte
 auto writeBufferToFile(const std::filesystem::path& path, std::span<const std::byte> content) -> bool {
   std::ofstream outfile{ path, std::ios::out | std::ios::binary };
   if (!outfile) {
+    LOG(WARNING) << fmt::format("Failed to open file for writing: {}", path.string());
     return false;
   }
 
