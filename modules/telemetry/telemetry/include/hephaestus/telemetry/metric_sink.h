@@ -9,11 +9,14 @@
 #include <unordered_map>
 #include <variant>
 
+#include <fmt/format.h>
+
 namespace heph::telemetry {
 using ClockT = std::chrono::system_clock;
 
 struct Metric {
   [[nodiscard]] auto operator==(const Metric&) const -> bool = default;
+  [[nodiscard]] auto toString() const -> std::string;
 
   std::string component;  ///< The component that is logging the metric_record, e.g. SLAM, Navigation,
                           ///< etc.
@@ -34,3 +37,10 @@ public:
 };
 
 }  // namespace heph::telemetry
+
+template <>
+struct fmt::formatter<heph::telemetry::Metric> : fmt::formatter<std::string_view> {
+  static auto format(const heph::telemetry::Metric& metric, fmt::format_context& ctx) {
+    return fmt::format_to(ctx.out(), "{}", metric.toString());
+  }
+};
