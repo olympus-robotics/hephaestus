@@ -1,7 +1,9 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributor
 //=================================================================================================
-
+// TODO: clang-tidy reports lot's of false negatives, when we upgrade to new clang version check if we can
+// remove this.
+// NOLINTBEGIN(misc-include-cleaner)
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
@@ -30,7 +32,7 @@
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
-
+// NOLINTEND(misc-include-cleaner)
 namespace {
 constexpr auto DEFAULT_MAX_ARRAY_LENGTH = 100;
 
