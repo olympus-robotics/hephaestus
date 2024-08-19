@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 
+#include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh_macros.h>
 #include <zenohc.hxx>
@@ -33,7 +34,9 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   // Enable publishing of a liveliness token.
   liveliness_token_ = zc_liveliness_declare_token(session_->zenoh_session.loan(),
                                                   z_keyexpr(topic_config_.name.data()), nullptr);
-  throwExceptionIf<FailedZenohOperation>(!z_check(liveliness_token_), "failed to create livelines token");
+  throwExceptionIf<FailedZenohOperation>(
+      !z_check(liveliness_token_),
+      fmt::format("failed to create livelines token for topic: {}", topic_config_.name));
 
   if (session_->config.cache_size > 0) {
     enableCache();
