@@ -20,7 +20,7 @@ TEST(BitFlag, EnumValuesPowerOfTwo) {
   static_assert(!internal::checkEnumValuesArePowerOf2<InValidEnum>());
 }
 
-enum class TestEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u, D = 1u << 4u };
+enum class TestEnum : uint8_t { A = 1u << 0u, B = 1u << 1u, C = 1u << 2u, D = 1u << 3u };
 TEST(BitFlag, Default) {
   const BitFlag<TestEnum> flag{ TestEnum::A };
   EXPECT_TRUE(flag.has(TestEnum::A));
@@ -92,6 +92,12 @@ TEST(BitFlag, Empty) {
   BitFlag<TestEnum> flag{ TestEnum::A };
   flag.unset(TestEnum::A);
   EXPECT_FALSE(flag.has(TestEnum::A));
+}
+
+TEST(BitFlag, UnderlyingValue) {
+  static constexpr auto E = BitFlag{ TestEnum::A }.set(TestEnum::B).set(TestEnum::C);
+  const auto value = E.getUnderlyingValue();
+  EXPECT_EQ(static_cast<int>(value), 7);
 }
 
 }  // namespace heph::utils::tests
