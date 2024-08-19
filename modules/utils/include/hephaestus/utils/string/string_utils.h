@@ -28,6 +28,7 @@ namespace heph::utils::string {
 /// aNy_CaSe -> ANY_CASE
 [[nodiscard]] auto toUpperCase(std::string_view any_case) -> std::string;
 
+/// aNy_CaSe -> any_case
 [[nodiscard]] auto toLowerCase(std::string_view any_case) -> std::string;
 
 /// camelCase -> camel_case
@@ -37,9 +38,9 @@ namespace heph::utils::string {
 [[nodiscard]] auto toScreamingSnakeCase(std::string_view camel_case) -> std::string;
 
 template <typename T>
-concept IntOrDouble = std::is_same_v<T, int64_t> || std::is_same_v<T, double>;
-template <IntOrDouble T>
-[[nodiscard]] auto stringTo(const std::string& str) -> std::optional<T>;
+concept Int64OrDouble = std::is_same_v<T, int64_t> || std::is_same_v<T, double>;
+template <Int64OrDouble T>
+[[nodiscard]] auto stringTo(std::string_view str) -> std::optional<T>;
 
 //=================================================================================================
 // Implementation
@@ -57,9 +58,9 @@ constexpr auto truncate(std::string_view str, std::string_view start_token, std:
                                                  str.substr(0, end_pos);
 }
 
-template <IntOrDouble T>
-auto stringTo(const std::string& str) -> std::optional<T> {
-  std::istringstream iss(str);
+template <Int64OrDouble T>
+auto stringTo(std::string_view str) -> std::optional<T> {
+  std::istringstream iss(std::string{ str });  // From C++26 we would be able to pass a string_view directly.
   T result = 0;
 
   if (!(iss >> std::noskipws >> result) || iss.peek() != EOF) {
