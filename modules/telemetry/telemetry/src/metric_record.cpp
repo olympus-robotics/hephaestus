@@ -45,7 +45,7 @@ namespace {
     auto value_str = json_value.get<std::string>();
     // According to JSON specification integer bigger than 32bits are converted to string, so we need to check
     // if the string is actually a number.
-    if (const auto value_i = utils::string::stringToInt64(value_str); value_i.has_value()) {
+    if (const auto value_i = utils::string::stringTo<int64_t>(value_str); value_i.has_value()) {
       return value_i.value();
     }
 
