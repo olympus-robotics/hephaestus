@@ -5,6 +5,7 @@
 #pragma once
 
 #include <optional>
+#include <sstream>
 #include <string>
 
 namespace heph::utils::string {
@@ -25,15 +26,20 @@ namespace heph::utils::string {
                                       bool include_end_token = true) -> std::string_view;
 
 /// aNy_CaSe -> ANY_CASE
-[[nodiscard]] auto toUpperCase(const std::string_view& any_case) -> std::string;
+[[nodiscard]] auto toUpperCase(std::string_view any_case) -> std::string;
+
+[[nodiscard]] auto toLowerCase(std::string_view any_case) -> std::string;
 
 /// camelCase -> camel_case
-[[nodiscard]] auto toSnakeCase(const std::string_view& camel_case) -> std::string;
+[[nodiscard]] auto toSnakeCase(std::string_view camel_case) -> std::string;
 
 /// camelCase -> CAMEL_CASE
-[[nodiscard]] auto toScreamingSnakeCase(const std::string_view& camel_case) -> std::string;
+[[nodiscard]] auto toScreamingSnakeCase(std::string_view camel_case) -> std::string;
 
-[[nodiscard]] auto stringToInt64(const std::string& str) -> std::optional<int64_t>;
+template <typename T>
+concept IntOrDouble = std::is_same_v<T, int64_t> || std::is_same_v<T, double>;
+template <IntOrDouble T>
+[[nodiscard]] auto stringTo(const std::string& str) -> std::optional<T>;
 
 //=================================================================================================
 // Implementation
@@ -49,6 +55,18 @@ constexpr auto truncate(std::string_view str, std::string_view start_token, std:
 
   return (start_pos != std::string_view::npos) ? str.substr(start_pos, end_pos - start_pos) :
                                                  str.substr(0, end_pos);
+}
+
+template <IntOrDouble T>
+auto stringTo(const std::string& str) -> std::optional<T> {
+  std::istringstream iss(str);
+  T result = 0;
+
+  if (!(iss >> std::noskipws >> result) || iss.peek() != EOF) {
+    return std::nullopt;
+  }
+
+  return result;
 }
 
 }  // namespace heph::utils::string

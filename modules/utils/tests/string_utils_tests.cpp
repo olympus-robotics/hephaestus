@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <array>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -100,23 +101,45 @@ TEST(StringUtilsTests, toScreamingSnakeCase) {
 
 TEST(StringUtilsTests, stringToInt64) {
   const std::string int_str = "42";
-  auto int_value = stringToInt64(int_str);
+  auto int_value = stringTo<int64_t>(int_str);
   EXPECT_THAT(int_value, Optional(42));
 
   const std::string negative_int_str = "-42";
-  int_value = stringToInt64(negative_int_str);
+  int_value = stringTo<int64_t>(negative_int_str);
   EXPECT_THAT(int_value, Optional(-42));
 
   const std::string invalid_str = "42a";
-  auto invalid_value = stringToInt64(invalid_str);
+  auto invalid_value = stringTo<int64_t>(invalid_str);
   EXPECT_THAT(invalid_value, Eq(std::nullopt));
 
   const std::string double_str = "42.0";
-  invalid_value = stringToInt64(double_str);
+  invalid_value = stringTo<int64_t>(double_str);
   EXPECT_THAT(invalid_value, Eq(std::nullopt));
 
   const std::string empty_str;
-  invalid_value = stringToInt64(empty_str);
+  invalid_value = stringTo<int64_t>(empty_str);
+  EXPECT_THAT(invalid_value, Eq(std::nullopt));
+}
+
+TEST(StringUtilsTests, stringToDouble) {
+  const std::string int_str = "42";
+  auto double_value = stringTo<double>(int_str);
+  EXPECT_THAT(double_value, Optional(42));
+
+  const std::string negative_int_str = "-42";
+  double_value = stringTo<double>(negative_int_str);
+  EXPECT_THAT(double_value, Optional(-42));
+
+  const std::string invalid_str = "42a";
+  auto invalid_value = stringTo<double>(invalid_str);
+  EXPECT_THAT(invalid_value, Eq(std::nullopt));
+
+  const std::string double_str = "42.1";
+  invalid_value = stringTo<double>(double_str);
+  EXPECT_THAT(invalid_value, Optional(42.1));
+
+  const std::string empty_str;
+  invalid_value = stringTo<double>(empty_str);
   EXPECT_THAT(invalid_value, Eq(std::nullopt));
 }
 
