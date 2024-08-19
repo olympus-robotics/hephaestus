@@ -22,7 +22,7 @@ TEST(TypeFormattingTests, TimestampFormattingSteadyClock) {
   const auto timestamp = std::chrono::steady_clock::now();
   const auto str = fmt::format("{}", toString(timestamp));
 
-  ASSERT_TRUE(str.length() <= 24);
+  ASSERT_LE(str.length(), 24);
 
   const auto it = std::find(str.begin(), str.end(), 'd');
   ASSERT_TRUE(it != str.end());
