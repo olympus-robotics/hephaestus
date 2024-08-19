@@ -24,15 +24,15 @@
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
-[[nodiscard]] auto
-request(const heph::examples::types::SampleRequest& sample) -> heph::ipc::zenoh::TriggerStatus {
+[[nodiscard]] auto request(const heph::examples::types::SampleRequest& sample)
+    -> heph::ipc::zenoh::action_server::TriggerStatus {
   LOG(INFO) << fmt::format("Request received: {}", sample);
   if (sample.iterations_count == 0) {
     LOG(ERROR) << "Invalid request, iterations must be greater than 0";
-    return heph::ipc::zenoh::TriggerStatus::REJECTED;
+    return heph::ipc::zenoh::action_server::TriggerStatus::REJECTED;
   }
 
-  return heph::ipc::zenoh::TriggerStatus::SUCCESSFUL;
+  return heph::ipc::zenoh::action_server::TriggerStatus::SUCCESSFUL;
 }
 
 [[nodiscard]] auto execute(const heph::examples::types::SampleRequest& request,
@@ -84,16 +84,17 @@ auto main(int argc, const char* argv[]) -> int {
       return execute(sample, publisher, stop_requested);
     };
 
-    const heph::ipc::zenoh::ActionServer<heph::examples::types::SampleRequest,
-                                         heph::examples::types::SampleReply,
-                                         heph::examples::types::SampleReply>
+    const heph::ipc::zenoh::action_server::ActionServer<heph::examples::types::SampleRequest,
+                                                        heph::examples::types::SampleReply,
+                                                        heph::examples::types::SampleReply>
         action_server(session, topic_config, request_callback, execute_callback);
 
     LOG(INFO) << fmt::format("Action Server started. Wating for queries on '{}' topic", topic_config.name);
 
     heph::utils::TerminationBlocker::registerInterruptCallback(
         [stop_session = std::ref(*stop_session), &topic_config] {
-          std::ignore = heph::ipc::zenoh::requestActionServerToStopExecution(stop_session, topic_config);
+          std::ignore =
+              heph::ipc::zenoh::action_server::requestActionServerToStopExecution(stop_session, topic_config);
         });
 
     heph::utils::TerminationBlocker::waitForInterrupt();
