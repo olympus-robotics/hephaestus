@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include <absl/log/log.h>
+#include <fmt/ranges.h>
 #include <zenoh.h>
 #include <zenohc.hxx>
 
