@@ -3,12 +3,9 @@
 //=================================================================================================
 
 #include <array>
-#include <cstdint>
-#include <optional>
 #include <string>
 #include <string_view>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/string/string_utils.h"
