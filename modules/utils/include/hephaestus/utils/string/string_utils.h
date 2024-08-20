@@ -5,6 +5,7 @@
 #pragma once
 
 #include <optional>
+#include <sstream>
 #include <string>
 
 namespace heph::utils::string {
@@ -24,16 +25,11 @@ namespace heph::utils::string {
                                       std::string_view end_token = std::string_view(""),
                                       bool include_end_token = true) -> std::string_view;
 
-/// aNy_CaSe -> ANY_CASE
-[[nodiscard]] auto toUpperCase(const std::string_view& any_case) -> std::string;
-
 /// camelCase -> camel_case
-[[nodiscard]] auto toSnakeCase(const std::string_view& camel_case) -> std::string;
+[[nodiscard]] auto toSnakeCase(std::string_view camel_case) -> std::string;
 
 /// camelCase -> CAMEL_CASE
-[[nodiscard]] auto toScreamingSnakeCase(const std::string_view& camel_case) -> std::string;
-
-[[nodiscard]] auto stringToInt64(const std::string& str) -> std::optional<int64_t>;
+[[nodiscard]] auto toScreamingSnakeCase(std::string_view camel_case) -> std::string;
 
 //=================================================================================================
 // Implementation
