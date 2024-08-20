@@ -35,7 +35,7 @@ RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VE
 
 RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
 
-RUN export ZENOH_VERSION="0.11.0-rc.3" && \
+RUN export ZENOH_VERSION="1.0.0~alpha.6-1" && \
     echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
     (apt-get update && apt-get install --no-install-recommends -y --allow-downgrades zenohd=${ZENOH_VERSION} zenoh-plugin-rest=${ZENOH_VERSION} || true) && \
     sed -i 's/systemctl /# remove if fixed by zenoh: systemctl /' /var/lib/dpkg/info/zenohd.postinst && \

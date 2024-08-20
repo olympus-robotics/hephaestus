@@ -39,15 +39,13 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-# As soon as zenohcxx commit makes to a release, move back to the release. set(ZENOH_VERSION "1.0.0.4")
-set(ZENOH_VERSION "c75ce16e855e8b1f0562523cdf6be6c37f4ebb56")
+set(ZENOH_VERSION "1.0.0.6")
 add_cmake_dependency(
   NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
-# This should be equal to ${ZENOH_VERSION}, but we need to point to the fix coming from this commit.
-set(ZENOHCXX_VERSION "535b3629db7fc1e52aecba90238a8caec2f6c947")
+set(ZENOHCXX_VERSION ${ZENOH_VERSION})
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
