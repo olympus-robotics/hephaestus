@@ -57,6 +57,8 @@ template <class T>
 
   std::string json_string;
   google::protobuf::util::JsonPrintOptions options;
+  options.unquote_int64_if_possible = true;
+  options.preserve_proto_field_names = true;
   options.add_whitespace = true;
   options.always_print_fields_with_no_presence = true;
   auto status = google::protobuf::util::MessageToJsonString(proto, &json_string, options);
