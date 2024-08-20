@@ -4,7 +4,6 @@
 
 #include "hephaestus/bag/writer.h"
 
-#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +13,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <absl/strings/ascii.h>
 #include <fmt/core.h>
 #include <magic_enum.hpp>
 #include <mcap/types.hpp>
@@ -28,8 +28,7 @@ namespace {
 
 [[nodiscard]] auto serializationType(const serdes::TypeInfo::Serialization& serialization) -> std::string {
   auto schema_type = std::string{ magic_enum::enum_name(serialization) };
-  std::transform(schema_type.begin(), schema_type.end(), schema_type.begin(),
-                 [](char c) { return std::tolower(c); });
+  absl::AsciiStrToLower(&schema_type);
   return schema_type;
 }
 

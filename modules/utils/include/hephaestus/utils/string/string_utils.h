@@ -25,12 +25,6 @@ namespace heph::utils::string {
                                       std::string_view end_token = std::string_view(""),
                                       bool include_end_token = true) -> std::string_view;
 
-/// aNy_CaSe -> ANY_CASE
-[[nodiscard]] auto toUpperCase(std::string_view any_case) -> std::string;
-
-/// aNy_CaSe -> any_case
-[[nodiscard]] auto toLowerCase(std::string_view any_case) -> std::string;
-
 /// camelCase -> camel_case
 [[nodiscard]] auto toSnakeCase(std::string_view camel_case) -> std::string;
 

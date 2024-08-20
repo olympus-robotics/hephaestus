@@ -75,20 +75,6 @@ TEST(StringUtilsTests, Truncate) {
   static_assert(CONSTEXPR_TRUNCATED == CONSTEXPR_TEST_CASE.expected);
 }
 
-TEST(StringUtilsTests, toUpperCase) {
-  const std::string test_string = "aNy_TEST_CaSe_42!";
-  const auto upper_case = toUpperCase(test_string);
-
-  EXPECT_EQ(upper_case, "ANY_TEST_CASE_42!");
-}
-
-TEST(StringUtilsTests, toLowerCase) {
-  const std::string test_string = "aNy_TEST_CaSe_42!";
-  const auto upper_case = toLowerCase(test_string);
-
-  EXPECT_EQ(upper_case, "any_test_case_42!");
-}
-
 TEST(StringUtilsTests, toSnakeCase) {
   const std::string camel_case = "snakeCaseTest42!";
   const auto snake_case = toSnakeCase(camel_case);
