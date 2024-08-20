@@ -88,7 +88,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: build-folder-artifact
-        path: ${{github.workspace}}/build
+        path: ${{github.workspace}}/build/
   test:
     needs: build
     # TODO: use the docker image published at the step over
@@ -105,7 +105,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: build-folder-artifact
-        path: build
+        path: build/
     - name: Test
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
