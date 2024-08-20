@@ -18,10 +18,10 @@
 #include <InfluxDBFactory.h>
 #include <Point.h>
 #include <absl/log/log.h>
+#include <absl/strings/ascii.h>
 #include <fmt/core.h>
 
 #include "hephaestus/telemetry/metric_sink.h"
-#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::telemetry_sink {
 namespace {
@@ -31,7 +31,7 @@ namespace {
                 std::is_same_v<std::decay_t<decltype(value)>, int64_t>) {
     return std::isnan(value);
   } else if constexpr (std::is_same_v<std::decay_t<decltype(value)>, std::string>) {
-    return utils::string::toLowerCase(value) == "nan";
+    return absl::AsciiStrToLower(value) == "nan";
   }
 
   return false;
