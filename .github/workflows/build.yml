@@ -84,11 +84,31 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build -- all examples
-
+    - name: Upload build folder as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-folder-artifact
+        path: ${{github.workspace}}/build
+  test:
+    needs: build
+    # TODO: use the docker image published at the step over
+    runs-on: ubuntu-latest
+    permissions: read-all
+    container:
+      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev_deps:latest
+      credentials:
+        username: ${{ github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
+    steps:
+    - uses: actions/checkout@v4.1.1
+    - name: Download build folder artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-folder-artifact
+          path: build
     - name: Test
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-        cd ${{github.workspace}}/build
-        ninja tests_build
-        ninja test
+        cd build
+        ninja check
