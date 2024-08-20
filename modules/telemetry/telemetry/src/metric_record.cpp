@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -17,12 +18,12 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/log/log.h>
+#include <absl/strings/numbers.h>
 #include <fmt/core.h>
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/telemetry/metric_sink.h"
-#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::telemetry {
 
@@ -45,11 +46,16 @@ namespace {
     auto value_str = json_value.get<std::string>();
     // According to JSON specification integer bigger than 32bits are converted to string, so we need to check
     // if the string is actually a number.
-    if (const auto value_i = utils::string::stringToInt64(value_str); value_i.has_value()) {
-      return value_i.value();
+    int64_t value{};
+    if (const auto success = absl::SimpleAtoi(value_str, &value); success) {
+      return value;
     }
 
     return value_str;
+  }
+
+  if (json_value.is_null()) {
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   return {};
