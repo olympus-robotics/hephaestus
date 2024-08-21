@@ -80,7 +80,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: mkdir -p build && cmake -B build --preset CI
     - name: Check format
-      run: cd ${{github.workspace}}/build && ninja format
+      run: cd build && ninja format
     - name: Build
       # Build your program with the given configuration
       run: cmake --build build -- all examples
