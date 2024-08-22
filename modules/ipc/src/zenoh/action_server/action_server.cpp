@@ -9,8 +9,8 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 

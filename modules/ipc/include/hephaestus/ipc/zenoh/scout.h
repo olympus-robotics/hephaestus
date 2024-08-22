@@ -5,7 +5,7 @@
 #pragma once
 #include <vector>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 
 namespace heph::ipc::zenoh {
 

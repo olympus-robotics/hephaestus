@@ -49,7 +49,7 @@ set(ZENOHCXX_VERSION ${ZENOH_VERSION})
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
-  SOURCE_SUBDIR install
+  # SOURCE_SUBDIR install
 )
 
 # --------------------------------------------------------------------------------------------------

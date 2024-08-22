@@ -17,7 +17,7 @@
 #include <absl/synchronization/mutex.h>
 
 #include "hephaestus/bag/writer.h"
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 

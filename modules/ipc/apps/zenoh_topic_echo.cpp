@@ -20,9 +20,9 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"

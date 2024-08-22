@@ -13,9 +13,9 @@
 #include <fmt/core.h>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/program_options.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"

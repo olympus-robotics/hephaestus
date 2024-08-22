@@ -32,8 +32,9 @@ ProgramOptions::ProgramOptions(std::vector<Option>&& options) : options_(std::mo
 }
 
 auto ProgramOptions::hasOption(const std::string& option) const -> bool {
-  return (options_.end() != std::find_if(options_.begin(), options_.end(),
-                                         [&option](const auto& opt) { return option == opt.key; }));
+  const auto option_it = std::find_if(options_.begin(), options_.end(),
+                                      [&option](const auto& opt) { return option == opt.key; });
+  return (options_.end() != option_it) && option_it->is_specified;
 }
 
 ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(brief)) {

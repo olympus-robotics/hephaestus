@@ -17,9 +17,8 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
@@ -51,7 +50,7 @@ private:
 };
 
 [[nodiscard]] auto getRouterInfoJson(const std::string& router_id) -> std::string {
-  heph::ipc::Config config;
+  heph::ipc::zenoh::Config config;
   auto session = heph::ipc::zenoh::createSession(std::move(config));
 
   static constexpr auto ROUTER_TOPIC = "@/router/{}";

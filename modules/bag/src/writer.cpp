@@ -19,7 +19,7 @@
 #include <mcap/types.hpp>
 #include <mcap/writer.hpp>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 

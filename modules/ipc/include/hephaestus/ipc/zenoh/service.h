@@ -22,9 +22,9 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <zenoh.h>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/serdes/serdes.h"
@@ -72,7 +72,7 @@ constexpr void checkTemplatedTypes() {
                 "Reply needs to be serializable or std::string.");
 }
 
-template <class RequestT>
+template <typename RequestT>
 auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
@@ -95,7 +95,7 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
   }
 }
 
-template <class ReplyT>
+template <typename ReplyT>
 auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_messages, std::mutex& m,
              const std::string& topic_name) -> void {
   const auto result = std::move(reply).get();

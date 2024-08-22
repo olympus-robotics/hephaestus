@@ -14,10 +14,10 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"

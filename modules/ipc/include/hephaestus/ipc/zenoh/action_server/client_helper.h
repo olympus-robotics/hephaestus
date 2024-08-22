@@ -8,10 +8,10 @@
 
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/subscriber.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"

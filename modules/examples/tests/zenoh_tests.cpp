@@ -12,9 +12,9 @@
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/geometry.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/examples/types_protobuf/pose.h"      // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
@@ -28,7 +28,7 @@ constexpr auto kSeed = 42;  // NOLINT(readability-identifier-naming)
 
 void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   auto mt = random::createRNG();
-  ipc::Config config{};
+  ipc::zenoh::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
 
@@ -62,7 +62,7 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
 
 TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
   auto mt = random::createRNG();
-  ipc::Config config{};
+  ipc::zenoh::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
 
@@ -86,7 +86,7 @@ TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
 
 TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
   auto mt = random::createRNG();
-  ipc::Config config{};
+  ipc::zenoh::Config config{};
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
 
@@ -122,12 +122,12 @@ TEST(ZenohTests, ServiceCallExchange) {
 
   const auto service_topic = ipc::TopicConfig("test_service");
 
-  ipc::Config server_config{};
+  ipc::zenoh::Config server_config{};
   auto server_session = ipc::zenoh::createSession(std::move(server_config));
   auto service_server = ipc::zenoh::Service<Pose, Pose>(server_session, service_topic,
                                                         [](const Pose& request) { return request; });
 
-  ipc::Config client_config{};
+  ipc::zenoh::Config client_config{};
   auto client_session = ipc::zenoh::createSession(std::move(client_config));
   const auto reply = ipc::zenoh::callService<Pose, Pose>(*client_session, service_topic, request_message,
                                                          std::chrono::milliseconds(10));

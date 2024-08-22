@@ -14,7 +14,7 @@
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/serdes.h"
 
 auto main(int argc, const char* argv[]) -> int {

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 
 namespace heph::ipc {
 

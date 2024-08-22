@@ -3,7 +3,7 @@
 //=================================================================================================
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 
 enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };
@@ -38,29 +38,29 @@ enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };
   return desc;
 }
 
-[[nodiscard]] inline auto
-parseArgs(const heph::cli::ProgramOptions& args) -> std::pair<heph::ipc::Config, heph::ipc::TopicConfig> {
+[[nodiscard]] inline auto parseArgs(const heph::cli::ProgramOptions& args)
+    -> std::pair<heph::ipc::zenoh::Config, heph::ipc::TopicConfig> {
   heph::ipc::TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
 
-  heph::ipc::Config config;
+  heph::ipc::zenoh::Config config;
   config.cache_size = args.getOption<std::size_t>("cache");
 
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
-    config.mode = heph::ipc::Mode::PEER;
+    config.mode = heph::ipc::zenoh::Mode::PEER;
   } else if (mode == "client") {
-    config.mode = heph::ipc::Mode::CLIENT;
+    config.mode = heph::ipc::zenoh::Mode::CLIENT;
   } else {
     heph::throwException<heph::InvalidParameterException>(fmt::format("invalid mode value: {}", mode));
   }
 
   auto protocol = args.getOption<std::string>("protocol");
   if (protocol == "any") {
-    config.protocol = heph::ipc::Protocol::ANY;
+    config.protocol = heph::ipc::zenoh::Protocol::ANY;
   } else if (protocol == "udp") {
-    config.protocol = heph::ipc::Protocol::UDP;
+    config.protocol = heph::ipc::zenoh::Protocol::UDP;
   } else if (protocol == "tcp") {
-    config.protocol = heph::ipc::Protocol::TCP;
+    config.protocol = heph::ipc::zenoh::Protocol::TCP;
   } else {
     heph::throwException<heph::InvalidParameterException>(
         fmt::format("invalid value {} for option 'protocol'", protocol));

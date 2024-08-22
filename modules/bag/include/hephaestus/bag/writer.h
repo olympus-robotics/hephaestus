@@ -8,7 +8,7 @@
 #include <memory>
 #include <span>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {

@@ -11,10 +11,9 @@
 
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenoh.hxx>
 #include <zenoh_macros.h>
-#include <zenohc.hxx>
 
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 

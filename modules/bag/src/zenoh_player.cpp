@@ -22,8 +22,7 @@
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 
-#include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"

@@ -17,8 +17,8 @@
 
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/utils/signal_handler.h"
