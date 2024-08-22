@@ -11,8 +11,8 @@
 
 #include <fmt/core.h>
 #include <zenoh.h>
+#include <zenoh.hxx>
 #include <zenoh_macros.h>
-#include <zenohc.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -20,7 +20,7 @@
 
 namespace heph::ipc::zenoh {
 namespace {
-[[nodiscard]] auto toPublisherStatus(zenohc::SampleKind kind) -> PublisherStatus {
+[[nodiscard]] auto toPublisherStatus(::zenoh::SampleKind kind) -> PublisherStatus {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
       return PublisherStatus::ALIVE;
@@ -43,7 +43,7 @@ auto getListOfPublishers(const Session& session, std::string_view topic) -> std:
   std::vector<PublisherInfo> infos;
   for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
     if (z_reply_is_ok(&reply)) {
-      auto sample = static_cast<zenohc::Sample>(z_reply_ok(&reply));
+      auto sample = static_cast<::zenoh::Sample>(z_reply_ok(&reply));
       infos.emplace_back(std::string{ sample.get_keyexpr().as_string_view() }, PublisherStatus::ALIVE);
     } else {
       fmt::println("Received an error");
@@ -93,7 +93,7 @@ PublisherDiscovery::~PublisherDiscovery() {
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {
-  zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) {
+  ::zenoh::ClosureSample cb = [this](const ::zenoh::Sample& sample) {
     const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                               .status = toPublisherStatus(sample.get_kind()) };
     this->callback_(info);

@@ -7,7 +7,7 @@
 #include <span>
 
 #include <zenoh.h>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/common.h"
@@ -31,7 +31,7 @@ public:
   auto operator=(Subscriber&&) -> Subscriber& = delete;
 
 private:
-  void callback(const zenohc::Sample& sample);
+  void callback(const ::zenoh::Sample& sample);
 
 private:
   using Message = std::pair<MessageMetadata, std::vector<std::byte>>;
@@ -41,8 +41,9 @@ private:
 
   DataCallback callback_;
 
-  std::unique_ptr<zenohc::Subscriber> subscriber_;
+  std::unique_ptr<::zenoh::Subscriber<void>> subscriber_;
   ze_owned_querying_subscriber_t cache_subscriber_{};
+  z_owned_session_t zenoh_session_{};
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;

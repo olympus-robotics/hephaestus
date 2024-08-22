@@ -17,7 +17,7 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"
@@ -29,9 +29,20 @@ namespace heph::ipc::zenoh {
 
 namespace {
 
+[[nodiscard]] inline auto
+toStringVector(const std::vector<std::string_view>& str_vec) -> std::vector<std::string> {
+  std::vector<std::string> output_vec;
+  output_vec.reserve(str_vec.size());
+  for (const auto& str : str_vec) {
+    output_vec.emplace_back(str);
+  }
+
+  return output_vec;
+}
+
 class ScoutDataManager {
 public:
-  void onDiscovery(const zenohc::HelloView& hello) {
+  void onDiscovery(const ::zenoh::Hello& hello) {
     const std::unique_lock<std::mutex> lock{ mutex_ };
     const auto id = toString(hello.get_id());
     nodes_info_.emplace(id, NodeInfo{ .id = id,
@@ -87,10 +98,9 @@ private:
 auto getListOfNodes() -> std::vector<NodeInfo> {
   ScoutDataManager manager;
 
-  zenohc::ScoutingConfig config;
-  const auto success =
-      zenohc::scout(std::move(config), [&manager](const auto& hello) { manager.onDiscovery(hello); });
-  throwExceptionIf<FailedZenohOperation>(!success, "zenoh scouting failed to get list of nodes");
+  auto config = ::zenoh::Config::create_default();
+  ::zenoh::scout(std::move(config), [&manager](const auto& hello) { manager.onDiscovery(hello); }, []() {});
+
   auto nodes = manager.getNodesInfo();
 
   // Scout returns only peers and routers if we want the clients we need to query the router.

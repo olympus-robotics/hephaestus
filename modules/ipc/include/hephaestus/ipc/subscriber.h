@@ -7,7 +7,7 @@
 #include <span>
 
 #include <zenoh.h>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"

@@ -22,7 +22,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <zenoh.h>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -40,7 +40,7 @@ public:
 
 private:
   SessionPtr session_;
-  std::unique_ptr<zenohc::Queryable> queryable_;
+  std::unique_ptr<::zenoh::Queryable> queryable_;
 
   TopicConfig topic_config_;
   Callback callback_;
@@ -73,7 +73,7 @@ constexpr void checkTemplatedTypes() {
 }
 
 template <class RequestT>
-auto deserializeRequest(const zenohc::Query& query) -> RequestT {
+auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
         query.get_value().get_encoding() != Z_ENCODING_PREFIX_TEXT_PLAIN,
@@ -96,15 +96,15 @@ auto deserializeRequest(const zenohc::Query& query) -> RequestT {
 }
 
 template <class ReplyT>
-auto onReply(zenohc::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_messages, std::mutex& m,
+auto onReply(::zenoh::Reply&& reply, std::vector<ServiceResponse<ReplyT>>& reply_messages, std::mutex& m,
              const std::string& topic_name) -> void {
   const auto result = std::move(reply).get();
-  if (const auto& error = std::get_if<zenohc::ErrorMessage>(&result)) {
+  if (const auto& error = std::get_if<::zenoh::ErrorMessage>(&result)) {
     LOG(ERROR) << fmt::format("Error on service reply for '{}': '{}'", topic_name, error->as_string_view());
     return;
   }
 
-  const auto& sample = std::get_if<zenohc::Sample>(&result);
+  const auto& sample = std::get_if<::zenoh::Sample>(&result);
   const auto server_topic = static_cast<std::string>(sample->get_keyexpr().as_string_view());
   DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
   if constexpr (std::is_same_v<ReplyT, std::string>) {
@@ -135,16 +135,16 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  auto query_cb = [this](const zenohc::Query& query) mutable {
+  auto query_cb = [this](const ::zenoh::Query& query) mutable {
     LOG(INFO) << fmt::format("Received query from '{}'", query.get_keyexpr().as_string_view());
 
     auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
-    zenohc::QueryReplyOptions options;
+    ::zenoh::QueryReplyOptions options;
     if constexpr (std::is_same_v<ReplyT, std::string>) {
-      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
+      options.set_encoding(::zenoh::Encoding{ Z_ENCODING_PREFIX_TEXT_PLAIN });  // Update encoding.
       query.reply(this->topic_config_.name, reply, options);
     } else {
-      options.set_encoding(zenohc::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
+      options.set_encoding(::zenoh::Encoding{ Z_ENCODING_PREFIX_EMPTY });  // Update encoding.
       auto buffer = serdes::serialize(reply);
       DLOG(INFO) << fmt::format("Reply: payload size: {}", buffer.size());
       query.reply(this->topic_config_.name, std::move(buffer), options);
@@ -166,7 +166,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   std::condition_variable done_signal;
   std::vector<ServiceResponse<ReplyT>> reply_messages;
 
-  auto on_reply = [&reply_messages, &mutex, &topic_config](zenohc::Reply&& reply) {
+  auto on_reply = [&reply_messages, &mutex, &topic_config](::zenoh::Reply&& reply) {
     internal::onReply(std::move(reply), reply_messages, mutex, topic_config.name);
   };
 
@@ -175,23 +175,23 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     done_signal.notify_all();
   };
 
-  zenohc::GetOptions options{};
+  ::zenoh::GetOptions options{};
   if (timeout.has_value()) {
     options.timeout_ms = static_cast<uint64_t>(timeout->count());
   }
 
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    options.set_value(zenohc::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN));
+    options.set_value(::zenoh::Value(request, Z_ENCODING_PREFIX_TEXT_PLAIN));
   } else {
     auto buffer = serdes::serialize(request);
 
     DLOG(INFO) << fmt::format("Request: payload size: {}", buffer.size());
     internal::addChangingBytes(buffer);
-    auto value = zenohc::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
+    auto value = ::zenoh::Value(std::move(buffer), Z_ENCODING_PREFIX_EMPTY);
     options.set_value(value);
   }
 
-  zenohc::ErrNo error_code{};
+  ::zenoh::ErrNo error_code{};
   const auto success =
       session.zenoh_session.get(topic_config.name.c_str(), "", { on_reply, on_done }, options, error_code);
   throwExceptionIf<FailedZenohOperation>(!success,
