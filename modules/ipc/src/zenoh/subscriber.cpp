@@ -17,7 +17,15 @@
 #include <absl/strings/numbers.h>
 #include <fmt/std.h>
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/base.hxx>
+#include <zenoh/api/bytes.hxx>
+#include <zenoh/api/encoding.hxx>
+#include <zenoh/api/enums.hxx>
+#include <zenoh/api/keyexpr.hxx>
+#include <zenoh/api/liveliness.hxx>
+#include <zenoh/api/publisher.hxx>
+#include <zenoh/detail/closures.hxx>
+#include <zenoh/detail/closures_concrete.hxx>
 #include <zenoh_macros.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"

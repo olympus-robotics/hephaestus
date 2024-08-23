@@ -13,8 +13,14 @@
 
 #include <fmt/core.h>
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/base.hxx>
+#include <zenoh/api/bytes.hxx>
+#include <zenoh/api/encoding.hxx>
+#include <zenoh/api/enums.hxx>
 #include <zenoh/api/keyexpr.hxx>
+#include <zenoh/api/liveliness.hxx>
+#include <zenoh/api/publisher.hxx>
+#include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>
 #include <zenoh_macros.h>
 
@@ -119,7 +125,7 @@ void RawPublisher::enableCache() {
 
 auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
-  put_options.encoding = ::zenoh::Encoding(TEXT_PLAIN_ENCODING);
+  put_options.encoding = ::zenoh::Encoding{ TEXT_PLAIN_ENCODING };
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
   put_options.attachment = ::zenoh::Bytes::serialize(attachment_);
