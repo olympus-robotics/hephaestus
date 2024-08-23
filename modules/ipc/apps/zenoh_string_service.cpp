@@ -35,7 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto [config, topic_config] = heph::ipc::parseIPCProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(config));
     LOG(INFO) << fmt::format("Opening session: {}",
-                             heph::ipc::zenoh::toString(session->zenoh_session.info_zid()));
+                             heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
     auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value);
 

@@ -4,23 +4,29 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include <absl/log/log.h>
 #include <fmt/core.h>
 #include <zenoh.h>
-#include <zenoh_macros.h>
-#include <zenohc.hxx>
+#include <zenoh/api/channels.hxx>
+#include <zenoh/api/closures.hxx>
+#include <zenoh/api/enums.hxx>
+#include <zenoh/api/keyexpr.hxx>
+#include <zenoh/api/reply.hxx>
+#include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
-[[nodiscard]] auto toPublisherStatus(zenohc::SampleKind kind) -> PublisherStatus {
+[[nodiscard]] auto toPublisherStatus(::zenoh::SampleKind kind) -> PublisherStatus {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
       return PublisherStatus::ALIVE;
@@ -34,24 +40,19 @@ namespace {
 
 auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
   static constexpr auto FIFO_BOUND = 100;
-
-  z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
-  auto keyexpr = z_keyexpr(topic.data());
-  zc_liveliness_get(session.zenoh_session.loan(), keyexpr, z_move(channel.send), nullptr);
-  z_owned_reply_t reply = z_reply_null();
+  const ::zenoh::KeyExpr keyexpr(topic);
+  auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
   std::vector<PublisherInfo> infos;
-  for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-    if (z_reply_is_ok(&reply)) {
-      auto sample = static_cast<zenohc::Sample>(z_reply_ok(&reply));
+  for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
+    const auto& reply = std::get<::zenoh::Reply>(res);
+    if (reply.is_ok()) {
+      const auto& sample = reply.get_ok();
       infos.emplace_back(std::string{ sample.get_keyexpr().as_string_view() }, PublisherStatus::ALIVE);
     } else {
-      fmt::println("Received an error");
+      LOG(ERROR) << fmt::format("Invalid reply for liveliness on topic {}", topic);
     }
   }
-
-  z_drop(z_move(reply));
-  z_drop(z_move(channel));
 
   return infos;
 }
@@ -87,24 +88,17 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   }
 }
 
-PublisherDiscovery::~PublisherDiscovery() {
-  z_undeclare_subscriber(&liveliness_subscriber_);
-  z_drop(z_move(liveliness_subscriber_));
-}
-
 void PublisherDiscovery::createLivelinessSubscriber() {
-  zenohc::ClosureSample cb = [this](const zenohc::Sample& sample) {
+  const ::zenoh::KeyExpr keyexpr(topic_config_.name);
+  auto callback = [this](const ::zenoh::Sample& sample) {
     const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                               .status = toPublisherStatus(sample.get_kind()) };
     this->callback_(info);
   };
 
-  const auto keyexpr = z_keyexpr(topic_config_.name.data());
-  auto c = cb.take();
   liveliness_subscriber_ =
-      zc_liveliness_declare_subscriber(session_->zenoh_session.loan(), keyexpr, z_move(c), nullptr);
-  heph::throwExceptionIf<heph::FailedZenohOperation>(!z_check(liveliness_subscriber_),
-                                                     "failed to create zenoh liveliness subscriber");
+      std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
+          keyexpr, std::move(callback), ::zenoh::closures::none));
 }
 
 }  // namespace heph::ipc::zenoh
