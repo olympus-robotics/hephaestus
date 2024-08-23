@@ -44,10 +44,11 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Declaring RawPublisher on '{}' with id: '{}'", topic_config.name, publisher.id());
 
     static constexpr auto LOOP_WAIT = std::chrono::seconds(1);
-    double count = 0;
+    // double count = 0;
     while (!heph::utils::TerminationBlocker::stopRequested()) {
       heph::examples::types::Pose pose;
-      pose.position = Eigen::Vector3d{ 1, 2, count++ };
+      // pose.position = Eigen::Vector3d{ 1, 2, count++ };
+      pose.position = Eigen::Vector3d{ 1, 2, 3 };
       pose.orientation =
           Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 

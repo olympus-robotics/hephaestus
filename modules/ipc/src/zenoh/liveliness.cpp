@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include <absl/log/log.h>
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh.hxx>
@@ -34,24 +35,19 @@ namespace {
 
 auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
   static constexpr auto FIFO_BOUND = 100;
-
-  z_owned_reply_channel_t channel = zc_reply_fifo_new(FIFO_BOUND);
-  auto keyexpr = z_keyexpr(topic.data());
-  zc_liveliness_get(session.zenoh_session.loan(), keyexpr, z_move(channel.send), nullptr);
-  z_owned_reply_t reply = z_reply_null();
+  ::zenoh::KeyExpr keyexpr(topic);
+  auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
   std::vector<PublisherInfo> infos;
-  for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-    if (z_reply_is_ok(&reply)) {
-      auto sample = static_cast<::zenoh::Sample>(z_reply_ok(&reply));
+  for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
+    const auto& reply = std::get<::zenoh::Reply>(res);
+    if (reply.is_ok()) {
+      const auto& sample = reply.get_ok();
       infos.emplace_back(std::string{ sample.get_keyexpr().as_string_view() }, PublisherStatus::ALIVE);
     } else {
-      fmt::println("Received an error");
+      LOG(ERROR) << fmt::format("Invalid reply for liveliness on topic {}", topic);
     }
   }
-
-  z_drop(z_move(reply));
-  z_drop(z_move(channel));
 
   return infos;
 }
@@ -93,18 +89,14 @@ PublisherDiscovery::~PublisherDiscovery() {
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {
-  ::zenoh::ClosureSample cb = [this](const ::zenoh::Sample& sample) {
+  ::zenoh::KeyExpr keyexpr(topic_config_.name);
+  auto callback = [this](const ::zenoh::Sample& sample) {
     const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                               .status = toPublisherStatus(sample.get_kind()) };
     this->callback_(info);
   };
-
-  const auto keyexpr = z_keyexpr(topic_config_.name.data());
-  auto c = cb.take();
-  liveliness_subscriber_ =
-      zc_liveliness_declare_subscriber(session_->zenoh_session.loan(), keyexpr, z_move(c), nullptr);
-  heph::throwExceptionIf<heph::FailedZenohOperation>(!z_check(liveliness_subscriber_),
-                                                     "failed to create zenoh liveliness subscriber");
+  auto subscriber = session_->zenoh_session.liveliness_declare_subscriber(keyexpr, std::move(callback),
+                                                                          ::zenoh::closures::none);
 }
 
 }  // namespace heph::ipc::zenoh

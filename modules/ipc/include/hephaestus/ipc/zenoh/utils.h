@@ -24,6 +24,20 @@ namespace heph::ipc::zenoh {
   return "1";
 }
 
+static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
+
+[[nodiscard]] static inline auto toByteSpan(const std::vector<uint8_t>& vec) -> std::span<const std::byte> {
+  std::span<const std::byte> span(static_cast<const std::byte*>(static_cast<const void*>(vec.data())),
+                                  vec.size());
+  return span;
+}
+
+[[nodiscard]] static inline auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  std::string_view data_view{ reinterpret_cast<const char*>(buffer.data()), buffer.size() };
+  return ::zenoh::Bytes{ data_view };
+}
+
 inline auto toString(const ::zenoh::Id& id) -> std::string {
   return std::accumulate(std::begin(id.bytes()), std::end(id.bytes()), std::string(),
                          [](const std::string& s, uint8_t v) { return fmt::format("{:02x}", v) + s; });

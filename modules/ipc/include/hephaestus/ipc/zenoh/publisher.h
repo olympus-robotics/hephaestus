@@ -59,7 +59,7 @@ private:
   serdes::TypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_service_;
 
-  ::zenoh::LivelinessToken liveliness_token_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
   ze_owned_publication_cache_t pub_cache_{};
   z_owned_session_t zenoh_session_{};
 
@@ -67,7 +67,7 @@ private:
   std::unordered_map<std::string, std::string> attachment_;
 
   MatchCallback match_cb_{ nullptr };
-  zc_owned_matching_listener_t subscriers_listener_{};
+  // zc_owned_matching_listener_t subscriers_listener_{};
 };
 
 }  // namespace heph::ipc::zenoh

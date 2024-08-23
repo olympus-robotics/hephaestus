@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <fmt/core.h>
+
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/serdes/serdes.h"
 
