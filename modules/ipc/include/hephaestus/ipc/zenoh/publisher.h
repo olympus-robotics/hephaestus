@@ -69,7 +69,7 @@ private:
   std::unordered_map<std::string, std::string> attachment_;
 
   MatchCallback match_cb_{ nullptr };
-  // zc_owned_matching_listener_t subscriers_listener_{};
+  zc_owned_matching_listener_t subscriers_listener_{};
 };
 
 }  // namespace heph::ipc::zenoh

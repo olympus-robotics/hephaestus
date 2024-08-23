@@ -39,17 +39,20 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-set(ZENOH_VERSION "1.0.0.6")
+# set(ZENOH_VERSION "1.0.0.6")
+set(ZENOH_VERSION "5a82ecfd6154adf30ff96efe9b7838018134a528") # from zenohcxx dev/1.0.0
 add_cmake_dependency(
   NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
   CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
 )
 
-set(ZENOHCXX_VERSION ${ZENOH_VERSION})
+# set(ZENOHCXX_VERSION ${ZENOH_VERSION})
+set(ZENOHCXX_VERSION 5d8a4d6802b38bef4fe02d00d62fd96219eb3a06)
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
-  SOURCE_SUBDIR install
+  DEPENDS ${ZENOHCXX_DEPENDS}
+  # URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
+  URL https://github.com/filippobrizzi/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
 )
 
 # --------------------------------------------------------------------------------------------------

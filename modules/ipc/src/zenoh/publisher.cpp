@@ -111,6 +111,7 @@ void RawPublisher::enableCache() {
   z_view_keyexpr_t ke;
   z_view_keyexpr_from_str(&ke, topic_config_.name.data());
 
+  // TODO replace with loan
   zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
   const auto result = ze_declare_publication_cache(&cache_publisher_, z_loan(zenoh_cache_session_),
                                                    z_loan(ke), &cache_publisher_opts);
@@ -130,16 +131,14 @@ auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
 }
 
 void RawPublisher::enableMatchingListener() {
-  // auto closure = createZenohcClosureMatchingStatus(
-  //     [this](const zc_matching_status_t* matching_status) {
-  //       const MatchingStatus status{ .matching = matching_status->matching };
-  //       this->match_cb_(status);
-  //     },
-  //     []() {});
+  auto closure = createZenohcClosureMatchingStatus(
+      [this](const zc_matching_status_t* matching_status) {
+        const MatchingStatus status{ .matching = matching_status->matching };
+        this->match_cb_(status);
+      },
+      []() {});
 
-  // // TODO: this is a problem because we cannot loan the publisher to the listener.
-  // z_loaned_publisher_t pub{};
-  // zc_publisher_matching_listener_callback(&subscriers_listener_, &pub, z_move(closure));
+  zc_publisher_matching_listener_declare(&subscriers_listener_, publisher_->loan(), z_move(closure));
 }
 
 void RawPublisher::createTypeInfoService() {
