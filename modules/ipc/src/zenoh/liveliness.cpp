@@ -4,9 +4,11 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <absl/log/log.h>
@@ -17,7 +19,6 @@
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -35,7 +36,7 @@ namespace {
 
 auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
   static constexpr auto FIFO_BOUND = 100;
-  ::zenoh::KeyExpr keyexpr(topic);
+  const ::zenoh::KeyExpr keyexpr(topic);
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
   std::vector<PublisherInfo> infos;
@@ -84,7 +85,7 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {
-  ::zenoh::KeyExpr keyexpr(topic_config_.name);
+  const ::zenoh::KeyExpr keyexpr(topic_config_.name);
   auto callback = [this](const ::zenoh::Sample& sample) {
     const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                               .status = toPublisherStatus(sample.get_kind()) };

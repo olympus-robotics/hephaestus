@@ -5,10 +5,10 @@
 #include "hephaestus/ipc/zenoh/publisher.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include <fmt/core.h>
@@ -56,17 +56,14 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   , enable_cache_(session_->config.cache_size > 0)
   , match_cb_(std ::move(match_cb)) {
   // Enable publishing of a liveliness token.
-  ::zenoh::ZResult err{};
-  ::zenoh::KeyExpr keyexpr{ topic_config_.name, true, &err };
-  throwExceptionIf<FailedZenohOperation>(
-      err != Z_OK, fmt::format("[Publisher {}] failed to create keyexpr from topic name, err {}",
-                               topic_config_.name, err));
+  const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
+  ::zenoh::ZResult result{};
   liveliness_token_ =
       std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
-          keyexpr, ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &err));
+          keyexpr, ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
   throwExceptionIf<FailedZenohOperation>(
-      err != Z_OK,
-      fmt::format("[Publisher {}] failed to create livelines token, err {}", topic_config_.name, err));
+      result != Z_OK,
+      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
 
   if (enable_cache_) {
     enableCache();
@@ -95,12 +92,12 @@ RawPublisher::~RawPublisher() {
 }
 
 auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
-  ::zenoh::ZResult err{};
+  ::zenoh::ZResult result{};
   auto bytes = toZenohBytes(data);
 
   auto options = createPublisherOptions();
-  publisher_->put(std::move(bytes), std::move(options), &err);
-  return err == Z_OK;
+  publisher_->put(std::move(bytes), std::move(options), &result);
+  return result == Z_OK;
 }
 
 void RawPublisher::enableCache() {
@@ -117,14 +114,14 @@ void RawPublisher::enableCache() {
                                                    z_loan(ke), &cache_publisher_opts);
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
-      fmt::format("[Publisher {}] failed to enable cache, err {}", topic_config_.name, result));
+      fmt::format("[Publisher {}] failed to enable cache, result {}", topic_config_.name, result));
 }
 
 auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
   put_options.encoding = ::zenoh::Encoding(TEXT_PLAIN_ENCODING);
-  attachment_[messageCounterKey()] = std::to_string(pub_msg_count_++);
-  attachment_[sessionIdKey()] = toString(session_->zenoh_session.get_zid());
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
   put_options.attachment = ::zenoh::Bytes::serialize(attachment_);
 
   return put_options;

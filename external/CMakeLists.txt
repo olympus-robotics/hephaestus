@@ -39,6 +39,7 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
+# NOTE: There is a bug in the current release, so for now we are pointing to our fix.
 # set(ZENOH_VERSION "1.0.0.6")
 set(ZENOH_VERSION "5a82ecfd6154adf30ff96efe9b7838018134a528") # from zenohcxx dev/1.0.0
 add_cmake_dependency(
@@ -47,7 +48,7 @@ add_cmake_dependency(
 )
 
 # set(ZENOHCXX_VERSION ${ZENOH_VERSION})
-set(ZENOHCXX_VERSION 5d8a4d6802b38bef4fe02d00d62fd96219eb3a06)
+set(ZENOHCXX_VERSION "5d8a4d6802b38bef4fe02d00d62fd96219eb3a06")
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS}

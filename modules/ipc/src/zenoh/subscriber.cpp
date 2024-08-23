@@ -8,6 +8,8 @@
 #include <memory>
 #include <span>
 #include <string>
+#include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -49,28 +51,31 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
   , dedicated_callback_thread_(dedicated_callback_thread) {
   auto cb = [this](const ::zenoh::Sample& sample) { this->callback(sample); };
   if (!enable_cache_) {
-    ::zenoh::ZResult err{};
-    ::zenoh::KeyExpr keyexpr{ topic_config_.name, true, &err };
-    throwExceptionIf<FailedZenohOperation>(
-        err != Z_OK, fmt::format("[Subscriber {}] failed to create keyexpr from topic name, err {}",
-                                 topic_config_.name, err));
-    subscriber_ = std::make_unique<::zenoh::Subscriber<void>>(
-        session_->zenoh_session.declare_subscriber(keyexpr, std::move(cb), ::zenoh::closures::none));
+    ::zenoh::ZResult result{};
+    const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
+    subscriber_ = std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.declare_subscriber(
+        keyexpr, std::move(cb), ::zenoh::closures::none,
+        ::zenoh::Session::SubscriberOptions::create_default(), &result));
+    heph::throwExceptionIf<heph::FailedZenohOperation>(
+        result != Z_OK,
+        fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
   } else {
     // zenohcxx still doesn't support cache querying subscribers, so we have to use the C API.
     ze_querying_subscriber_options_t sub_opts;
     ze_querying_subscriber_options_default(&sub_opts);
 
-    z_view_keyexpr_t ke;
-    z_view_keyexpr_from_str(&ke, topic_config_.name.c_str());
+    z_view_keyexpr_t keyexpr;
+    z_view_keyexpr_from_str(&keyexpr, topic_config_.name.c_str());
 
     auto c_closure = createZenohcClosure(cb, ::zenoh::closures::none);
 
     zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
-    auto success = ze_declare_querying_subscriber(&cache_subscriber_, z_loan(zenoh_cache_session_),
-                                                  z_loan(ke), z_move(c_closure), &sub_opts);
+    const auto result = ze_declare_querying_subscriber(&cache_subscriber_, z_loan(zenoh_cache_session_),
+                                                       z_loan(keyexpr), z_move(c_closure), &sub_opts);
 
-    heph::throwExceptionIf<heph::FailedZenohOperation>(success != Z_OK, "failed to create zenoh sub");
+    heph::throwExceptionIf<heph::FailedZenohOperation>(
+        result != Z_OK,
+        fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
   }
 
   if (dedicated_callback_thread_) {
@@ -100,10 +105,11 @@ void Subscriber::callback(const ::zenoh::Sample& sample) {
   if (const auto attachment = sample.get_attachment(); attachment.has_value()) {
     auto attachment_data = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
 
-    auto res = absl::SimpleAtoi(attachment_data[messageCounterKey()], &metadata.sequence_id);
+    auto res =
+        absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &metadata.sequence_id);
     LOG_IF(ERROR, !res) << fmt::format("[Subscriber {}] failed to read message counter from attachment",
                                        topic_config_.name);
-    metadata.sender_id = attachment_data[sessionIdKey()];
+    metadata.sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
   }
 
   if (const auto timestamp = sample.get_timestamp(); timestamp.has_value()) {

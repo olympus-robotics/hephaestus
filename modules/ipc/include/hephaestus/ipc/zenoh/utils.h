@@ -15,16 +15,10 @@
 
 namespace heph::ipc::zenoh {
 
-/// We use single char key to reduce the overhead of the attachment.
-[[nodiscard]] static constexpr auto messageCounterKey() -> const char* {
-  return "0";
-}
-
-[[nodiscard]] static constexpr auto sessionIdKey() -> const char* {
-  return "1";
-}
-
 static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
+/// We use single char key to reduce the overhead of the attachment.
+static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY = "0";
+static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
 
 [[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<const std::byte> {
   auto reader = bytes.reader();
@@ -36,7 +30,7 @@ static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 
 [[nodiscard]] static inline auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  std::string_view data_view{ reinterpret_cast<const char*>(buffer.data()), buffer.size() };
+  const std::string_view data_view{ reinterpret_cast<const char*>(buffer.data()), buffer.size() };
   return ::zenoh::Bytes{ data_view };
 }
 
@@ -102,36 +96,6 @@ inline auto toChrono(uint64_t ts) -> std::chrono::nanoseconds {
 inline auto toChrono(const ::zenoh::Timestamp& ts) -> std::chrono::nanoseconds {
   return toChrono(ts.get_time());
 }
-
-// template <typename T>
-// constexpr auto expect(std::variant<T, ::zenoh::ErrorMessage>&& v) -> T {
-//   if (std::holds_alternative<::zenoh::ErrorMessage>(v)) {
-//     const auto msg = std::get<::zenoh::ErrorMessage>(v).as_string_view();
-//     throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
-//   }
-
-//   return std::get<T>(std::move(v));
-// }
-
-// template <typename T>
-// constexpr auto expectAsSharedPtr(std::variant<T, ::zenoh::ErrorMessage>&& v) -> std::shared_ptr<T> {
-//   if (std::holds_alternative<::zenoh::ErrorMessage>(v)) {
-//     const auto msg = std::get<::zenoh::ErrorMessage>(v).as_string_view();
-//     throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
-//   }
-
-//   return std::make_shared<T>(std::move(std::get<T>(std::move(v))));
-// }
-
-// template <typename T>
-// constexpr auto expectAsUniquePtr(std::variant<T, ::zenoh::ErrorMessage>&& v) -> std::unique_ptr<T> {
-//   if (std::holds_alternative<::zenoh::ErrorMessage>(v)) {
-//     const auto msg = std::get<::zenoh::ErrorMessage>(v).as_string_view();
-//     throwException<InvalidOperationException>(fmt::format("zenoh error: {}", msg));
-//   }
-
-//   return std::make_unique<T>(std::move(std::get<T>(std::move(v))));
-// }
 
 [[nodiscard]] auto createZenohConfig(const Config& config) -> ::zenoh::Config;
 
