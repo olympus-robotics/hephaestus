@@ -6,7 +6,7 @@
 
 #include <fmt/core.h>
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/config.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/utils/exception.h"

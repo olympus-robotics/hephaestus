@@ -14,15 +14,12 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 #include <zenoh.h>
-#include <zenoh/api/base.hxx>
-#include <zenoh/api/bytes.hxx>
-#include <zenoh/api/encoding.hxx>
+#include <zenoh/api/channels.hxx>
+#include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
 #include <zenoh/api/keyexpr.hxx>
-#include <zenoh/api/liveliness.hxx>
-#include <zenoh/api/publisher.hxx>
-#include <zenoh/detail/closures.hxx>
-#include <zenoh/detail/closures_concrete.hxx>
+#include <zenoh/api/reply.hxx>
+#include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"

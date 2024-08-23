@@ -18,7 +18,9 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <zenoh.hxx>
+#include <zenoh/api/config.hxx>
+#include <zenoh/api/hello.hxx>
+#include <zenoh/api/scout.hxx>
 
 #include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/service.h"

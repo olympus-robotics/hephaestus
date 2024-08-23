@@ -5,6 +5,7 @@
 #pragma once
 
 #include <fmt/core.h>
+#include <zenoh/api/liveliness.hxx>
 
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/serdes/serdes.h"

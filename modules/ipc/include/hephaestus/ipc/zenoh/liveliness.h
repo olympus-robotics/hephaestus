@@ -4,6 +4,13 @@
 
 #pragma once
 
+#include <functional>
+#include <string>
+#include <string_view>
+
+#include <zenoh/api/subscriber.hxx>
+
+#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::ipc::zenoh {

@@ -15,15 +15,13 @@
 
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
-#include <fmt/std.h>
+#include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
-#include <zenoh/api/bytes.hxx>
-#include <zenoh/api/encoding.hxx>
-#include <zenoh/api/enums.hxx>
+#include <zenoh/api/closures.hxx>
 #include <zenoh/api/keyexpr.hxx>
-#include <zenoh/api/liveliness.hxx>
-#include <zenoh/api/publisher.hxx>
+#include <zenoh/api/sample.hxx>
+#include <zenoh/api/subscriber.hxx>
 #include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>
 #include <zenoh_macros.h>
