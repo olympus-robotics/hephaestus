@@ -27,7 +27,7 @@ public:
   /// The callback needs to be thread safe as they may be called in parallel for different publishers
   /// discovered.
   explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
-  ~PublisherDiscovery();
+  ~PublisherDiscovery() = default;
 
   PublisherDiscovery(const PublisherDiscovery&) = delete;
   PublisherDiscovery(PublisherDiscovery&&) = delete;
@@ -42,7 +42,7 @@ private:
   TopicConfig topic_config_;
   Callback callback_;
 
-  z_owned_subscriber_t liveliness_subscriber_{};
+  std::unique_ptr<::zenoh::Subscriber<void>> liveliness_subscriber_;
 };
 
 }  // namespace heph::ipc::zenoh

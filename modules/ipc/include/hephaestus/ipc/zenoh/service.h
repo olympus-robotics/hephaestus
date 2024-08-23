@@ -95,8 +95,8 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
   if constexpr (std::is_same_v<RequestT, std::string>) {
     return payload->get().deserialize<std::string>();
   } else {
-    auto buffer = toByteSpan(payload->get());
-    buffer = internal::removeChangingBytes(buffer);
+    auto buffer = toByteVector(payload->get());
+    // buffer = internal::removeChangingBytes(buffer);
     DLOG(INFO) << fmt::format("Deserializing buffer of size: {}", buffer.size());
 
     RequestT request;
@@ -118,7 +118,7 @@ auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
     DLOG(INFO) << fmt::format("Serivce {}: payload is string: '{}'", server_topic, payload);
     return ServiceResponse<ReplyT>{ .topic = server_topic, .value = std::move(payload) };
   } else {
-    auto buffer = toByteSpan(sample.get_payload());
+    auto buffer = toByteVector(sample.get_payload());
     ReplyT reply{};
     serdes::deserialize(buffer, reply);
     return ServiceResponse<ReplyT>{ .topic = server_topic, .value = std::move(reply) };
@@ -144,7 +144,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
     } else {
       auto buffer = serdes::serialize(reply);
       DLOG(INFO) << fmt::format("[Service {}] reply payload size: {}", topic_config_.name, buffer.size());
-      query.reply(this->topic_config_.name, std::move(buffer), std::move(options), &err);
+      query.reply(this->topic_config_.name, toZenohBytes(buffer), std::move(options), &err);
     }
 
     throwExceptionIf<FailedZenohOperation>(
@@ -181,8 +181,9 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     auto buffer = serdes::serialize(request);
 
     DLOG(INFO) << fmt::format("Request: payload size: {}", buffer.size());
-    internal::addChangingBytes(buffer);
-    auto value = ::zenoh::Bytes::serialize(std::move(buffer));
+    fmt::println("Buffer: {}", fmt::join(buffer, ", "));
+    // internal::addChangingBytes(buffer);
+    auto value = toZenohBytes(std::move(buffer));
     options.payload = std::move(value);
   }
 

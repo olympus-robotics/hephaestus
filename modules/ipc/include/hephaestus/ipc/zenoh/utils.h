@@ -26,10 +26,12 @@ namespace heph::ipc::zenoh {
 
 static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 
-[[nodiscard]] static inline auto toByteSpan(const std::vector<uint8_t>& vec) -> std::span<const std::byte> {
-  std::span<const std::byte> span(static_cast<const std::byte*>(static_cast<const void*>(vec.data())),
-                                  vec.size());
-  return span;
+[[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<const std::byte> {
+  auto reader = bytes.reader();
+  std::vector<const std::byte> vec(bytes.size());
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+  reader.read(reinterpret_cast<uint8_t*>(const_cast<std::byte*>(vec.data())), vec.size());
+  return vec;
 }
 
 [[nodiscard]] static inline auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {

@@ -45,9 +45,10 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
+  , enable_cache_(session_->config.cache_size > 0)
   , dedicated_callback_thread_(dedicated_callback_thread) {
   auto cb = [this](const ::zenoh::Sample& sample) { this->callback(sample); };
-  if (session_->config.cache_size == 0) {
+  if (!enable_cache_) {
     ::zenoh::ZResult err{};
     ::zenoh::KeyExpr keyexpr{ topic_config_.name, true, &err };
     throwExceptionIf<FailedZenohOperation>(
@@ -65,9 +66,9 @@ Subscriber::Subscriber(SessionPtr session, TopicConfig topic_config, DataCallbac
 
     auto c_closure = createZenohcClosure(cb, ::zenoh::closures::none);
 
-    zenoh_session_ = std::move(session_->zenoh_session.clone()).take();
-    auto success = ze_declare_querying_subscriber(&cache_subscriber_, z_loan(zenoh_session_), z_loan(ke),
-                                                  z_move(c_closure), &sub_opts);
+    zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
+    auto success = ze_declare_querying_subscriber(&cache_subscriber_, z_loan(zenoh_cache_session_),
+                                                  z_loan(ke), z_move(c_closure), &sub_opts);
 
     heph::throwExceptionIf<heph::FailedZenohOperation>(success != Z_OK, "failed to create zenoh sub");
   }
@@ -88,8 +89,10 @@ Subscriber::~Subscriber() {
     callback_messages_consumer_->stop();
   }
 
-  z_drop(z_move(cache_subscriber_));
-  z_drop(z_move(zenoh_session_));
+  if (enable_cache_) {
+    z_drop(z_move(cache_subscriber_));
+    z_drop(z_move(zenoh_cache_session_));
+  }
 }
 
 void Subscriber::callback(const ::zenoh::Sample& sample) {
@@ -103,23 +106,18 @@ void Subscriber::callback(const ::zenoh::Sample& sample) {
     metadata.sender_id = attachment_data[sessionIdKey()];
   }
 
-  fmt::println("Attachment successful");
   if (const auto timestamp = sample.get_timestamp(); timestamp.has_value()) {
     metadata.timestamp = toChrono(timestamp.value());
   }
 
   metadata.topic = sample.get_keyexpr().as_string_view();
 
-  auto payload = sample.get_payload().deserialize<std::vector<uint8_t>>();
-  auto buffer = toByteSpan(payload);
+  auto payload = toByteVector(sample.get_payload());
 
   if (dedicated_callback_thread_) {
-    fmt::println("Calling callback in dedicated thread");
-    std::vector<const std::byte> buffer_vec(buffer.begin(), buffer.end());
-    callback_messages_consumer_->queue().forceEmplace(metadata, std::move(buffer_vec));
+    callback_messages_consumer_->queue().forceEmplace(metadata, std::move(payload));
   } else {
-    fmt::println("Calling callback with buffer: {}", buffer.size());
-    callback_(metadata, buffer);
+    callback_(metadata, { payload.data(), payload.size() });
   }
 }
 

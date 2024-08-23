@@ -83,11 +83,6 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   }
 }
 
-PublisherDiscovery::~PublisherDiscovery() {
-  z_undeclare_subscriber(&liveliness_subscriber_);
-  z_drop(z_move(liveliness_subscriber_));
-}
-
 void PublisherDiscovery::createLivelinessSubscriber() {
   ::zenoh::KeyExpr keyexpr(topic_config_.name);
   auto callback = [this](const ::zenoh::Sample& sample) {
@@ -95,8 +90,10 @@ void PublisherDiscovery::createLivelinessSubscriber() {
                               .status = toPublisherStatus(sample.get_kind()) };
     this->callback_(info);
   };
-  auto subscriber = session_->zenoh_session.liveliness_declare_subscriber(keyexpr, std::move(callback),
-                                                                          ::zenoh::closures::none);
+
+  liveliness_subscriber_ =
+      std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
+          keyexpr, std::move(callback), ::zenoh::closures::none));
 }
 
 }  // namespace heph::ipc::zenoh

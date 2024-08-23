@@ -53,6 +53,7 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , type_info_(std::move(type_info))
+  , enable_cache_(session_->config.cache_size > 0)
   , match_cb_(std ::move(match_cb)) {
   // Enable publishing of a liveliness token.
   ::zenoh::ZResult err{};
@@ -67,7 +68,7 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
       err != Z_OK,
       fmt::format("[Publisher {}] failed to create livelines token, err {}", topic_config_.name, err));
 
-  if (session_->config.cache_size > 0) {
+  if (enable_cache_) {
     enableCache();
   }
 
@@ -87,21 +88,15 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
 }
 
 RawPublisher::~RawPublisher() {
-  if (session_->config.cache_size > 0) {
-    z_drop(z_move(pub_cache_));
+  if (enable_cache_) {
+    z_drop(z_move(cache_publisher_));
+    z_drop(z_move(zenoh_cache_session_));
   }
 }
 
 auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
-  fmt::println("Publishing buffer size: {}", data.size());
-  fmt::println("{}", fmt::join(data, ", "));
-
   ::zenoh::ZResult err{};
   auto bytes = toZenohBytes(data);
-  std::vector<uint8_t> buffer(bytes.size());
-  auto reader = bytes.reader();
-  reader.read(buffer.data(), buffer.size());
-  fmt::println("Bytes: {}", fmt::join(buffer, ", "));
 
   auto options = createPublisherOptions();
   publisher_->put(std::move(bytes), std::move(options), &err);
@@ -109,16 +104,16 @@ auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
 }
 
 void RawPublisher::enableCache() {
-  ze_publication_cache_options_t pub_cache_opts;
-  ze_publication_cache_options_default(&pub_cache_opts);
-  pub_cache_opts.history = session_->config.cache_size;
+  ze_publication_cache_options_t cache_publisher_opts;
+  ze_publication_cache_options_default(&cache_publisher_opts);
+  cache_publisher_opts.history = session_->config.cache_size;
 
   z_view_keyexpr_t ke;
   z_view_keyexpr_from_str(&ke, topic_config_.name.data());
 
-  zenoh_session_ = std::move(session_->zenoh_session.clone()).take();
-  const auto result =
-      ze_declare_publication_cache(&pub_cache_, z_loan(zenoh_session_), z_loan(ke), &pub_cache_opts);
+  zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
+  const auto result = ze_declare_publication_cache(&cache_publisher_, z_loan(zenoh_cache_session_),
+                                                   z_loan(ke), &cache_publisher_opts);
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
       fmt::format("[Publisher {}] failed to enable cache, err {}", topic_config_.name, result));
