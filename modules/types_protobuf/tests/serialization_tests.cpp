@@ -7,6 +7,7 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_protobuf/dummy_type.h"
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 

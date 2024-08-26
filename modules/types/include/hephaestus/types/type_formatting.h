@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <chrono>
 #include <ranges>
 #include <sstream>
 
+#include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <range/v3/view/zip.hpp>
 
