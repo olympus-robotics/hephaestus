@@ -32,7 +32,8 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     heph::utils::TerminationBlocker::registerInterruptCallback([session = std::ref(*session), &topic_config] {
-      std::ignore = heph::ipc::zenoh::requestActionServerToStopExecution(session, topic_config);
+      std::ignore =
+          heph::ipc::zenoh::action_server::requestActionServerToStopExecution(session, topic_config);
     });
 
     auto status_update_cb = [](const heph::examples::types::SampleReply& sample) {
@@ -45,10 +46,11 @@ auto main(int argc, const char* argv[]) -> int {
       .initial_value = START,
       .iterations_count = ITERATIONS,
     };
-    auto result_future = heph::ipc::zenoh::callActionServer<heph::examples::types::SampleRequest,
-                                                            heph::examples::types::SampleReply,
-                                                            heph::examples::types::SampleReply>(
-        session, topic_config, target, status_update_cb);
+    auto result_future =
+        heph::ipc::zenoh::action_server::callActionServer<heph::examples::types::SampleRequest,
+                                                          heph::examples::types::SampleReply,
+                                                          heph::examples::types::SampleReply>(
+            session, topic_config, target, status_update_cb);
 
     LOG(INFO) << fmt::format("Call to Action Server (topic: '{}') started. Wating for result.",
                              topic_config.name);

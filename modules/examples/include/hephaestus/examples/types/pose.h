@@ -36,7 +36,7 @@ struct FramedPose {
 template <>
 struct fmt::formatter<heph::examples::types::Pose> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(const heph::examples::types::Pose& pose, FormatContext& ctx) {
+  auto format(const heph::examples::types::Pose& pose, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "{}", toString(pose));
   }
 };
@@ -44,7 +44,7 @@ struct fmt::formatter<heph::examples::types::Pose> : fmt::formatter<std::string_
 template <>
 struct fmt::formatter<heph::examples::types::FramedPose> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(const heph::examples::types::FramedPose& pose, FormatContext& ctx) {
+  auto format(const heph::examples::types::FramedPose& pose, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "{}", toString(pose));
   }
 };

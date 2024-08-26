@@ -7,7 +7,7 @@
 #include <span>
 
 #include <zenoh.h>
-#include <zenohc.hxx>
+#include <zenoh.hxx>
 
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -42,32 +42,34 @@ public:
   [[nodiscard]] auto publish(std::span<const std::byte> data) -> bool;
 
   [[nodiscard]] auto id() const -> std::string {
-    return toString(session_->zenoh_session.info_zid());
+    return toString(session_->zenoh_session.get_zid());
   }
 
 private:
   void enableCache();
-  void initAttachments();
+  [[nodiscard]] auto createPublisherOptions() -> ::zenoh::Publisher::PutOptions;
   void enableMatchingListener();
   void createTypeInfoService();
 
 private:
   SessionPtr session_;
   TopicConfig topic_config_;
-  std::unique_ptr<zenohc::Publisher> publisher_;
+  std::unique_ptr<::zenoh::Publisher> publisher_;
 
   serdes::TypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_service_;
 
-  zc_owned_liveliness_token_t liveliness_token_{};
-  ze_owned_publication_cache_t pub_cache_{};
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
-  zenohc::PublisherPutOptions put_options_;
+  bool enable_cache_ = false;
+  ze_owned_publication_cache_t cache_publisher_{};
+  z_owned_session_t zenoh_cache_session_{};
+
   std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;
 
   MatchCallback match_cb_{ nullptr };
-  zcu_owned_matching_listener_t subscriers_listener_{};
+  zc_owned_matching_listener_t subscriers_listener_{};
 };
 
 }  // namespace heph::ipc::zenoh

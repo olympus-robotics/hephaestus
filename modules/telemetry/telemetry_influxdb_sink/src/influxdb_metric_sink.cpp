@@ -5,10 +5,12 @@
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 
 #include <cerrno>
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -16,6 +18,7 @@
 #include <InfluxDBFactory.h>
 #include <Point.h>
 #include <absl/log/log.h>
+#include <absl/strings/ascii.h>
 #include <fmt/core.h>
 
 #include "hephaestus/telemetry/metric_sink.h"
@@ -23,13 +26,39 @@
 namespace heph::telemetry_sink {
 namespace {
 
+[[nodiscard]] auto isNaN(const auto& value) -> bool {
+  if constexpr (std::is_same_v<std::decay_t<decltype(value)>, double> ||
+                std::is_same_v<std::decay_t<decltype(value)>, int64_t>) {
+    return std::isnan(value);
+  } else if constexpr (std::is_same_v<std::decay_t<decltype(value)>, std::string>) {
+    return absl::AsciiStrToLower(value) == "nan";
+  }
+
+  return false;
+}
+
 [[nodiscard]] auto createInfluxdbPoint(const telemetry::Metric& entry) -> influxdb::Point {
   auto point = influxdb::Point{ entry.component }
                    .addTag("tag", entry.tag)
                    .addTag("id", std::to_string(entry.id))
                    .setTimestamp(entry.timestamp);
   for (const auto& [key, value] : entry.values) {
-    std::visit([&point, &key](auto&& arg) { point.addField(key, arg); }, value);
+    std::visit(
+        [&point, &key](auto&& arg) {
+          if (isNaN(arg)) {
+            return;
+          }
+
+          // When coming from JSON a value can be erronously first creted as int and then become double.
+          // Influxdb forbid mixing types in the same field, so we need to convert every int to double.
+          if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, int64_t>) {
+            point.addField(key, static_cast<double>(arg));
+            return;
+          }
+
+          point.addField(key, arg);
+        },
+        value);
   }
 
   return point;

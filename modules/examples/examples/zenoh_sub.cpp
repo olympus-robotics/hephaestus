@@ -47,7 +47,7 @@ auto main(int argc, const char* argv[]) -> int {
                    metadata.topic, metadata.sender_id, metadata.sequence_id, *pose);
     };
     auto subscriber = heph::ipc::subscribe<heph::ipc::zenoh::Subscriber, heph::examples::types::Pose>(
-        session, std::move(topic_config), std::move(cb));
+        session, std::move(topic_config), std::move(cb), true);
     (void)subscriber;
 
     heph::utils::TerminationBlocker::waitForInterrupt();

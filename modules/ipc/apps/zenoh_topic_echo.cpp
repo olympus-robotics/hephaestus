@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributor
 //=================================================================================================
 
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -25,6 +26,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/types/type_formatting.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
@@ -90,7 +92,11 @@ private:
     auto msg_json =
         dynamic_deserializer_.toJson(type_info->name, data);  // NOLINT(bugprone-unchecked-optional-access)
     truncateLongItems(msg_json, noarr_, max_array_length_);
-    fmt::println("From: {}. Topic: {}\n{}", metadata.sender_id, metadata.topic, msg_json);
+    fmt::println("From: {}. Topic: {}\nSequence: {} | Timestamp: {}\n{}", metadata.sender_id, metadata.topic,
+                 metadata.sequence_id,
+                 types::toString(std::chrono::time_point<std::chrono::system_clock>(
+                     std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp))),
+                 msg_json);
   }
 
 private:
