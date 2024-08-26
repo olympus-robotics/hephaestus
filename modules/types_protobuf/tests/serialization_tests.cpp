@@ -8,8 +8,7 @@
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/types/dummy_type.h"
 
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::testing;
+using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::types::tests {
 
