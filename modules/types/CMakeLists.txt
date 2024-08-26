@@ -4,8 +4,8 @@
 
 declare_module(
   NAME types
-  DEPENDS_ON_MODULES random utils
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum
+  DEPENDS_ON_MODULES random
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum range-v3 
 )
 
 find_package(fmt REQUIRED)
@@ -20,7 +20,7 @@ set(SOURCES src/dummy_type.cpp src/type_formatting.cpp README.md include/hephaes
 # library target
 define_module_library(
   NAME types
-  PUBLIC_LINK_LIBS fmt::fmt magic_enum::magic_enum range-v3::range-v3 hephaestus::random hephaestus::utils
+  PUBLIC_LINK_LIBS fmt::fmt magic_enum::magic_enum range-v3::range-v3 hephaestus::random
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

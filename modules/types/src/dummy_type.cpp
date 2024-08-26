@@ -30,7 +30,8 @@ auto DummyPrimitivesType::random(std::mt19937_64& mt) -> DummyPrimitivesType {
 }
 
 auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream& {
-  return os << "DummyPrimitivesType{" << "  dummy_bool=" << dummy_primitives_type.dummy_bool << "\n"
+  return os << "DummyPrimitivesType{" << "\n"
+            << "  dummy_bool=" << dummy_primitives_type.dummy_bool << "\n"
             << "  dummy_int8_t=" << static_cast<int>(dummy_primitives_type.dummy_int8_t) << "\n"
             << "  dummy_int16_t=" << dummy_primitives_type.dummy_int16_t << "\n"
             << "  dummy_int32_t=" << dummy_primitives_type.dummy_int32_t << "\n"
@@ -52,7 +53,8 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
 }
 
 auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream& {
-  return os << "DummyType{" << "  dummy_primitives_type={" << dummy_type.dummy_primitives_type << "}\n"
+  return os << "DummyType{" << "\n"
+            << "  dummy_primitives_type={" << dummy_type.dummy_primitives_type << "}\n"
             << "  dummy_enum=" << magic_enum::enum_name(dummy_type.dummy_enum) << "\n"
             << "  dummy_string=" << dummy_type.dummy_string << "\n"
             << "  dummy_vector=" << toString(dummy_type.dummy_vector) << "\n"

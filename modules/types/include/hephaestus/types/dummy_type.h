@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <string>
+#include <vector>
 
 #include <fmt/ostream.h>
 #include <magic_enum.hpp>
