@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/types/type_formatting.h"
