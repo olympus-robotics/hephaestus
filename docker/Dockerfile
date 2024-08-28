@@ -19,7 +19,7 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
     apt install -y kitware-archive-keyring cmake && \
     rm -rf /var/lib/apt/lists/*
 
-ENV CLANG_VERSION=17
+ENV CLANG_VERSION=19
 RUN wget https://apt.llvm.org/llvm.sh && \
     sed -i "s/add-apt-repository \"${REPO_NAME}\"/add-apt-repository \"${REPO_NAME}\" -y/g" llvm.sh && \
     chmod +x llvm.sh && \
