@@ -67,10 +67,6 @@ macro(add_cmake_dependency)
     set(TARGET_ARG_VERSION "")
   endif()
 
-  if(DEPENDENCIES_ANY_VERSION)
-    set(TARGET_ARG_VERSION "")
-  endif()
-
   if(NOT TARGET_ARG_CMAKE_ARGS)
     set(TARGET_ARG_CMAKE_ARGS "")
   endif()
