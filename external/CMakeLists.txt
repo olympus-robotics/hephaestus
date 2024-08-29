@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
-
+message(STATUS "Dependencies - using any available version: ${DEPENDENCIES_ANY_VERSION}")
 # --------------------------------------------------------------------------------------------------
 # For each target add the list of dependencies. This needs to be done at the beginning to make sure that the macro
 # correctly includes them.
