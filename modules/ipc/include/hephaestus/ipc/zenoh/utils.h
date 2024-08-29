@@ -20,9 +20,9 @@ static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY = "0";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
 
-[[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<const std::byte> {
+[[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte> {
   auto reader = bytes.reader();
-  std::vector<const std::byte> vec(bytes.size());
+  std::vector<std::byte> vec(bytes.size());
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
   reader.read(reinterpret_cast<uint8_t*>(const_cast<std::byte*>(vec.data())), vec.size());
   return vec;
