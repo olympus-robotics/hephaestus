@@ -3,9 +3,7 @@
 //=================================================================================================
 #include "hephaestus/telemetry/metric_record.h"
 
-#include <cerrno>
 #include <cstdint>
-#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <mutex>

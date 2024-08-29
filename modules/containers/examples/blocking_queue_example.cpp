@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <cstdlib>
 #include <exception>
 #include <string>
 #include <utility>
