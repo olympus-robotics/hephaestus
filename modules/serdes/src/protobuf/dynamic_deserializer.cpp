@@ -53,9 +53,9 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
 
   std::string msg_json;
   google::protobuf::util::JsonPrintOptions options;
-  options.always_print_fields_with_no_presence = true;
+  // options.always_print_fields_with_no_presence = true;
   options.add_whitespace = true;
-  options.unquote_int64_if_possible = true;
+  // options.unquote_int64_if_possible = true;
   const auto status = google::protobuf::util::MessageToJsonString(*message, &msg_json, options);
   throwExceptionIf<InvalidDataException>(
       !status.ok(),
