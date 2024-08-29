@@ -35,7 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
       LOG(INFO) << fmt::format("Received query: {}", sample);
       heph::examples::types::Pose sample_reply{
         .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
-        .position = Eigen::Vector3d{ 1, 2, 3 },
+        .position = Eigen::Vector3d{ 1, 2, 3 },                  // NOLINT
       };
       return sample_reply;
     };
