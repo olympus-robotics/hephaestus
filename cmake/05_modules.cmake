@@ -563,30 +563,30 @@ endmacro()
 
 # ==================================================================================================
 # Setup tests target
+if (BUILD_TESTING)
+  FetchContent_Declare(
+    googletest URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  )
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt
+      ON
+      CACHE BOOL "" FORCE
+  )
+  FetchContent_MakeAvailable(googletest)
+  FetchContent_GetProperties(googletest)
+  if(NOT googletest_POPULATED)
+    FetchContent_Populate(googletest)
+    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+  endif()
 
-FetchContent_Declare(
-  googletest URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt
-    ON
-    CACHE BOOL "" FORCE
-)
-FetchContent_MakeAvailable(googletest)
-FetchContent_GetProperties(googletest)
-if(NOT googletest_POPULATED)
-  FetchContent_Populate(googletest)
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+  # use leaner set of compiler warnings for sources we have no control over
+  set_target_properties(gtest PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+  set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
+  set_target_properties(gtest_main PROPERTIES CXX_CLANG_TIDY "")
+  set_target_properties(gmock PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
+  set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
+  set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
 endif()
-
-# use leaner set of compiler warnings for sources we have no control over
-set_target_properties(gtest PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
-set_target_properties(gtest_main PROPERTIES CXX_CLANG_TIDY "")
-set_target_properties(gmock PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
-set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
-set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
-
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
 set(TESTS_BUILD_TARGET tests_build)
@@ -632,6 +632,9 @@ macro(define_module_test)
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
+  if (NOT BUILD_TESTING)
+    return()
+  endif()
 
   if(TARGET_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${TARGET_ARG_UNPARSED_ARGUMENTS}")
