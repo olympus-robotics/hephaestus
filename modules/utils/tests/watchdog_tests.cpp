@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 #include <atomic>
+#include <chrono>
 #include <thread>
 
 #include <gtest/gtest.h>

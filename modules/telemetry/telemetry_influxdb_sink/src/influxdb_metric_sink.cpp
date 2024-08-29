@@ -4,9 +4,7 @@
 
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 
-#include <cerrno>
 #include <cstdint>
-#include <cstdlib>
 #include <exception>
 #include <memory>
 #include <string>

@@ -17,9 +17,8 @@ auto main(int argc, const char* argv[]) -> int {
   (void)argv;
   try {
     heph::examples::types::Pose pose;
-    pose.position = Eigen::Vector3d{ 1, 2, 3 };
-    pose.orientation =
-        Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+    pose.position = Eigen::Vector3d{ 1, 2, 3 };                  // NOLINT
+    pose.orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT
 
     const auto json_string = heph::serdes::serializeToJSON(pose);
     fmt::print("Pose serialized to JSON:\n{}\n", json_string);

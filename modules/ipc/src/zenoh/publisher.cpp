@@ -41,8 +41,8 @@ inline void zenohOnMatchingStatus(const ::zc_matching_status_t* matching_status,
 }
 
 template <typename C, typename D>
-[[nodiscard]] auto createZenohcClosureMatchingStatus(C&& on_matching_status,
-                                                     D&& on_drop) -> zc_owned_closure_matching_status_t {
+[[nodiscard]] auto createZenohcClosureMatchingStatus(C&& on_matching_status, D&& on_drop)
+    -> zc_owned_closure_matching_status_t {
   zc_owned_closure_matching_status_t c_closure;
   using Cval = std::remove_reference_t<C>;
   using Dval = std::remove_reference_t<D>;

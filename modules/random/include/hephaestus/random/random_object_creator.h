@@ -134,8 +134,8 @@ concept IsRandomCreatable = requires(std::mt19937_64& mt) {
 // Internal helper functions for container types
 //=================================================================================================
 namespace internal {
-[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size,
-                                  bool allow_empty) -> size_t {
+[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size, bool allow_empty)
+    -> size_t {
   if (fixed_size.has_value()) {
     throwExceptionIf<InvalidParameterException>(
         allow_empty == false && fixed_size.value() == 0,

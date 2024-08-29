@@ -109,8 +109,8 @@ template <typename RequestT, typename StatusT, typename ReplyT>
     -> std::future<Response<ReplyT>>;
 
 /// Request the action server to stop.
-[[nodiscard]] auto requestActionServerToStopExecution(Session& session,
-                                                      const TopicConfig& topic_config) -> bool;
+[[nodiscard]] auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config)
+    -> bool;
 
 // TODO: add a function to get notified when the server is idle again.
 

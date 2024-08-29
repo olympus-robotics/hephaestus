@@ -3,7 +3,6 @@
 //=================================================================================================
 
 #include <chrono>
-#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
@@ -47,9 +46,8 @@ auto main(int argc, const char* argv[]) -> int {
     double count = 0;
     while (!heph::utils::TerminationBlocker::stopRequested()) {
       heph::examples::types::Pose pose;
-      pose.position = Eigen::Vector3d{ 1, 2, count++ };
-      pose.orientation =
-          Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+      pose.position = Eigen::Vector3d{ 1, 2, count++ };            // NOLINT
+      pose.orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 };  // NOLINT
 
       fmt::println("Publishing Data ('{} : {})", topic_config.name, pose);
       auto res = publisher.publish(pose);
