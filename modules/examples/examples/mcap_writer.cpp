@@ -40,7 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
       auto frame_time = start_time + i * INTERVAL;
 
       heph::examples::types::Pose pose;
-      pose.position = Eigen::Vector3d{ static_cast<double>(i), 2, 3 };
+      pose.position = Eigen::Vector3d{ static_cast<double>(i), 2, 3 };  // NOLINT
       const auto data = heph::serdes::serialize(pose);
       const heph::ipc::MessageMetadata metadata{
         .sender_id = "myself", .topic = "pose", .timestamp = frame_time, .sequence_id = i
