@@ -66,7 +66,7 @@ macro(build_external_dependencies)
   list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)
 
   option(INSTALL_EXTERNAL_DEPENDENCIES "Install external dependencies" ON)
-  if (INSTALL_EXTERNAL_DEPENDENCIES)
+  if(INSTALL_EXTERNAL_DEPENDENCIES)
     install(
       DIRECTORY ${EP_DEPLOY_DIR}/
       DESTINATION ${CMAKE_INSTALL_PREFIX}
