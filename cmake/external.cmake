@@ -28,8 +28,6 @@ make_directory(${CMAKE_INSTALL_PREFIX}/bin)
 make_directory(${CMAKE_INSTALL_PREFIX}/lib)
 make_directory(${CMAKE_INSTALL_PREFIX}/include)
 
-option(DEPENDENCIES_ANY_VERSION "Do not enforce exact version" OFF)
-
 message(STATUS "Dependencies")
 
 # helper macro useful for dependency handling

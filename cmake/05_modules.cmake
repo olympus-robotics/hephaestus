@@ -586,6 +586,8 @@ if (BUILD_TESTING)
   set_target_properties(gmock PROPERTIES COMPILE_OPTIONS "${THIRD_PARTY_COMPILER_WARNINGS}")
   set_target_properties(gmock PROPERTIES CXX_CLANG_TIDY "")
   set_target_properties(gmock_main PROPERTIES CXX_CLANG_TIDY "")
+else()
+  message(STATUS "Testing is disabled")
 endif()
 # ==================================================================================================
 # Adds a custom target to group all test programs built on call to `make tests`
