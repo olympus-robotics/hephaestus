@@ -24,7 +24,7 @@ static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
   auto reader = bytes.reader();
   std::vector<std::byte> vec(bytes.size());
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
-  reader.read(reinterpret_cast<uint8_t*>(const_cast<std::byte*>(vec.data())), vec.size());
+  reader.read(reinterpret_cast<uint8_t*>(vec.data()), vec.size());
   return vec;
 }
 

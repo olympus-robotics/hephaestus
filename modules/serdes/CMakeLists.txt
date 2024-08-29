@@ -39,7 +39,9 @@ define_module_library(
   NAME serdes
   PUBLIC_LINK_LIBS
     absl::log_internal_check_op
+    absl::raw_hash_set
     absl::status
+    absl::statusor
     hephaestus::utils
     magic_enum::magic_enum
     protobuf::libprotobuf
