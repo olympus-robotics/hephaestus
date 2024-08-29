@@ -8,6 +8,8 @@
 #include <tuple>
 #include <utility>
 
+#include <Eigen/Dense>
+
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
