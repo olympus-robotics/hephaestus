@@ -56,7 +56,9 @@ define_module_library(
   NAME ipc
   PUBLIC_LINK_LIBS
     absl::base
+    absl::raw_hash_set
     absl::status
+    absl::statusor
     absl::log
     hephaestus::concurrency
     hephaestus::containers

@@ -563,7 +563,7 @@ endmacro()
 
 # ==================================================================================================
 # Setup tests target
-if (BUILD_TESTING)
+if(BUILD_TESTING)
   FetchContent_Declare(
     googletest URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
   )
@@ -634,7 +634,7 @@ macro(define_module_test)
 
   include(CMakeParseArguments)
   cmake_parse_arguments(TARGET_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
-  if (NOT BUILD_TESTING)
+  if(NOT BUILD_TESTING)
     return()
   endif()
 

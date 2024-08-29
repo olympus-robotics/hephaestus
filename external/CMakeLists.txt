@@ -74,8 +74,8 @@ add_cmake_dependency(
 # protobuf
 set(PROTOBUF_TAG v27.2)
 set(PROTOBUF_VERSION 5.27.2)
-set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
-                        -Dprotobuf_BUILD_CONFORMANCE=OFF
+set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_CONFORMANCE=OFF
+                        -Dprotobuf_ABSL_PROVIDER=package
 )
 add_cmake_dependency(
   NAME Protobuf
