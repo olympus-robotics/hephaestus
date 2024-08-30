@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -34,7 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
-                                     .position = Eigen::Vector3d{ 3, 2, 1 } };
+                                     .position = Eigen::Vector3d{ 3, 2, 1 } };                // NOLINT
     LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name, query);
     const auto replies =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(

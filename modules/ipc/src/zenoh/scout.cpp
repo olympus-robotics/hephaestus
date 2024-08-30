@@ -32,8 +32,8 @@ namespace heph::ipc::zenoh {
 
 namespace {
 
-[[nodiscard]] inline auto
-toStringVector(const std::vector<std::string_view>& str_vec) -> std::vector<std::string> {
+[[nodiscard]] inline auto toStringVector(const std::vector<std::string_view>& str_vec)
+    -> std::vector<std::string> {
   std::vector<std::string> output_vec;
   output_vec.reserve(str_vec.size());
   for (const auto& str : str_vec) {
@@ -102,7 +102,8 @@ auto getListOfNodes() -> std::vector<NodeInfo> {
   ScoutDataManager manager;
 
   auto config = ::zenoh::Config::create_default();
-  ::zenoh::scout(std::move(config), [&manager](const auto& hello) { manager.onDiscovery(hello); }, []() {});
+  ::zenoh::scout(
+      std::move(config), [&manager](const auto& hello) { manager.onDiscovery(hello); }, []() {});
 
   auto nodes = manager.getNodesInfo();
 

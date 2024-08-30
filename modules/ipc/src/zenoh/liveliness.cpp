@@ -19,6 +19,7 @@
 #include <zenoh/api/enums.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/reply.hxx>
+#include <zenoh/api/sample.hxx>
 #include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/ipc/common.h"

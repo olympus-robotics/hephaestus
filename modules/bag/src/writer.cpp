@@ -4,7 +4,6 @@
 
 #include "hephaestus/bag/writer.h"
 
-#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
-    apt install -y --no-install-recommends x11-apps g++ mesa-utils make cmake-curses-gui ninja-build git gdb vim htop \
+    apt install -y --no-install-recommends x11-apps g++ mesa-utils make cmake-curses-gui ninja-build git gdb vim htop ssh \
     curl zlib1g-dev libffi-dev libssl-dev libbz2-dev libsqlite3-dev iproute2 tk-dev texlive-latex-extra texlive-fonts-recommended dvipng cm-super libnotify-bin \
     pkg-config gpg wget ca-certificates git-lfs curl ccache ninja-build doxygen graphviz linux-generic python3-dev python3-pip iproute2 python-is-python3 \
     net-tools iftop htop lsb-release software-properties-common gnupg bash-completion psmisc less tree && \
@@ -19,7 +19,7 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
     apt install -y kitware-archive-keyring cmake && \
     rm -rf /var/lib/apt/lists/*
 
-ENV CLANG_VERSION=18
+ENV CLANG_VERSION=17
 RUN wget https://apt.llvm.org/llvm.sh && \
     sed -i "s/add-apt-repository \"${REPO_NAME}\"/add-apt-repository \"${REPO_NAME}\" -y/g" llvm.sh && \
     chmod +x llvm.sh && \
