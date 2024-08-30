@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
-message(STATUS "Dependencies - using any available version: ${DEPENDENCIES_ANY_VERSION}")
+
 # --------------------------------------------------------------------------------------------------
 # For each target add the list of dependencies. This needs to be done at the beginning to make sure that the macro
 # correctly includes them.
@@ -77,8 +77,8 @@ add_cmake_dependency(
 # protobuf
 set(PROTOBUF_TAG v27.2)
 set(PROTOBUF_VERSION 5.27.2)
-set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_CONFORMANCE=OFF
-                        -Dprotobuf_ABSL_PROVIDER=package
+set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
+                        -Dprotobuf_BUILD_CONFORMANCE=OFF
 )
 add_cmake_dependency(
   NAME Protobuf
