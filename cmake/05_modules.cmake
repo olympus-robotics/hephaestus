@@ -120,7 +120,6 @@ macro(configure_modules)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
 
   # Add each marked module into the build
-  message("\n\n${_enabled_modules_list}\n\n")
   foreach(_module IN LISTS _enabled_modules_list)
     message(VERBOSE "Adding subdirectory ${MODULE_${_module}_PATH} for module ${_module}")
     add_subdirectory(${MODULE_${_module}_PATH})
@@ -141,7 +140,10 @@ macro(configure_modules)
   configure_file(${CMAKE_TEMPLATES_DIR}/doxyfile.in ${CMAKE_BINARY_DIR}/doxyfile @ONLY)
 
   # Define installation rules for module targets
-  install_modules()
+  option(DISABLE_MODULES_INSTALL "Disable installtion of modules, this is usefull when building statically" OFF)
+  if (NOT DISABLE_MODULES_INSTALL)
+    install_modules()
+  endif()
 endmacro()
 
 # ==================================================================================================
@@ -612,20 +614,30 @@ add_custom_target(
 add_dependencies(${CHECK_TARGET} ${TESTS_BUILD_TARGET}) # `check` depends on `tests` target
 
 # ==================================================================================================
+# ~~~
 # macro: define_module_test
 #
-# Description: Macro to define a 'test' program Note: - A test program belongs to the enclosing module - A module can
-# have multiple tests - Executables are not installed on call to `make install`
+# Description: Macro to define a 'test' program
+# Note:
+# - A test program belongs to the enclosing module
+# - A module can have multiple tests
+# - Examples are not installed on call to `make install`
 #
-# Parameters: SOURCES     : (list) Source files to compile [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included
-# directories. See cmake documentation for 'PUBLIC' keyword in `target_include_directories` [PRIVATE_INCLUDE_PATHS] :
-# (list, optional) Privately included directories. See cmake documentation for 'PRIVATE' keyword in
-# `target_include_directories` [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on
-# some platforms. See 'SYSTEM' keyword in `target_include_directories` [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional)
-# Privately included system directories on some platforms. See 'SYSTEM' keyword in `target_include_directories`
-# [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies. See 'PUBLIC' keyword in `target_link_libraries`
-# [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies. See 'PRIVATE' keyword in `target_link_libraries`
-#
+# Parameters:
+# SOURCES     : (list) Source files to compile
+# [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included directories.
+#     See cmake documentation for 'PUBLIC' keyword in `target_include_directories`
+# [PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included directories.
+#     See cmake documentation for 'PRIVATE' keyword in `target_include_directories`
+# [SYSTEM_PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included system directories on some platforms.
+#     See 'SYSTEM' keyword in `target_include_directories`
+# [SYSTEM_PRIVATE_INCLUDE_PATHS] : (list, optional) Privately included system directories on some platforms.
+#     See 'SYSTEM' keyword in `target_include_directories`
+# [PUBLIC_LINK_LIBS] : (list, optional) Public link dependencies.
+#     See 'PUBLIC' keyword in `target_link_libraries`
+# [PRIVATE_LINK_LIBS]: (list, optional) Private link dependencies.
+#     See 'PRIVATE' keyword in `target_link_libraries`
+# ~~~
 include(GoogleTest)
 macro(define_module_test)
   set(flags "")
@@ -685,10 +697,15 @@ macro(define_module_test)
 endmacro()
 
 # ==================================================================================================
-# (for internal use) Create installation rules for library and executable targets in enabled modules Description:
-# Installs CMake config files to support calling find_package() in downstream projects. The following files are
-# configured and installed in <installdir>/lib/cmake/<project>_<module>: - <project>_<module>-config.cmake -
-# <project>_<module>-config-version.cmake - <project>_<module>-targets.cmake
+# ~~~
+# (for internal use) Create installation rules for library and executable targets in enabled modules
+# Description:
+# Installs CMake config files to support calling find_package() in downstream projects.
+# The following files are configured and installed in <installdir>/lib/cmake/<project>_<module>:
+# - <project>_<module>-config.cmake
+# - <project>_<module>-config-version.cmake
+# - <project>_<module>-targets.cmake
+# ~~~
 function(install_modules)
   get_property(_enabled_modules_list GLOBAL PROPERTY ENABLED_MODULES)
   foreach(_module IN LISTS _enabled_modules_list)
