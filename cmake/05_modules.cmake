@@ -141,7 +141,7 @@ macro(configure_modules)
 
   # Define installation rules for module targets
   option(DISABLE_MODULES_INSTALL "Disable installtion of modules, this is usefull when building statically" OFF)
-  if (NOT DISABLE_MODULES_INSTALL)
+  if(NOT DISABLE_MODULES_INSTALL)
     install_modules()
   endif()
 endmacro()
