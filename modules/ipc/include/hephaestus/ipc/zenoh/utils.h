@@ -20,11 +20,11 @@ static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY = "0";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
 
-[[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<const std::byte> {
+[[nodiscard]] static inline auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte> {
   auto reader = bytes.reader();
-  std::vector<const std::byte> vec(bytes.size());
+  std::vector<std::byte> vec(bytes.size());
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
-  reader.read(reinterpret_cast<uint8_t*>(const_cast<std::byte*>(vec.data())), vec.size());
+  reader.read(reinterpret_cast<uint8_t*>(vec.data()), vec.size());
   return vec;
 }
 
@@ -86,15 +86,21 @@ inline auto toString(const std::vector<std::string>& vec) -> std::string {
   return str;
 }
 
-inline auto toChrono(uint64_t ts) -> std::chrono::nanoseconds {
-  const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(ts >> 32U) };
-  const auto fraction = std::chrono::nanoseconds{ static_cast<std::uint32_t>(ts & 0xFFFFFFFF) };
+inline auto toChrono(uint64_t timestamp) -> std::chrono::nanoseconds {
+  // For details see https://zenoh.io/docs/manual/abstractions/#timestamp
+  const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(timestamp >> 32U) };
+  static constexpr auto FRACTION_MASK = 0xFFFFFFF0;
+  auto fraction = static_cast<uint32_t>(timestamp & FRACTION_MASK);  //
+  // Convert fraction to nanoseconds
+  // The fraction is in units of 2^-32 seconds, so we multiply by 10^9 / 2^32
+  auto nanoseconds =
+      std::chrono::nanoseconds{ static_cast<uint64_t>(fraction) * 1'000'000'000 / 0x100000000 };  // NOLINT
 
-  return seconds + fraction;
+  return seconds + nanoseconds;
 }
 
-inline auto toChrono(const ::zenoh::Timestamp& ts) -> std::chrono::nanoseconds {
-  return toChrono(ts.get_time());
+inline auto toChrono(const ::zenoh::Timestamp& timestamp) -> std::chrono::nanoseconds {
+  return toChrono(timestamp.get_time());
 }
 
 [[nodiscard]] auto createZenohConfig(const Config& config) -> ::zenoh::Config;

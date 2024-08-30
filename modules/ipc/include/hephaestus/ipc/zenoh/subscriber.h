@@ -34,7 +34,7 @@ private:
   void callback(const ::zenoh::Sample& sample);
 
 private:
-  using Message = std::pair<MessageMetadata, std::vector<const std::byte>>;
+  using Message = std::pair<MessageMetadata, std::vector<std::byte>>;
 
   SessionPtr session_;
   TopicConfig topic_config_;

@@ -39,11 +39,14 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
+set(ZENOHC_CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable -DZENOHC_BUILD_WITH_SHARED_MEMORY=TRUE)
+if(NOT BUILD_SHARED_LIBS)
+  list(APPEND ZENOHC_CMAKE_ARGS "-DZENOHC_LIB_STATIC=TRUE" "-DZENOHC_INSTALL_STATIC_LIBRARY=TRUE")
+endif()
 # NOTE: There is a bug in the current release, so for now we are pointing to our fix. set(ZENOH_VERSION "1.0.0.6")
 set(ZENOH_VERSION "5a82ecfd6154adf30ff96efe9b7838018134a528") # from zenohcxx dev/1.0.0
 add_cmake_dependency(
-  NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip
-  CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable
+  NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip CMAKE_ARGS ${ZENOHC_CMAKE_ARGS}
 )
 
 # set(ZENOHCXX_VERSION ${ZENOH_VERSION})

@@ -64,11 +64,16 @@ macro(build_external_dependencies)
   endif()
 
   list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)
-  install(
-    DIRECTORY ${EP_DEPLOY_DIR}/
-    DESTINATION ${CMAKE_INSTALL_PREFIX}
-    USE_SOURCE_PERMISSIONS
-  )
+
+  option(INSTALL_EXTERNAL_DEPENDENCIES "Install external dependencies" ON)
+  if(INSTALL_EXTERNAL_DEPENDENCIES)
+    install(
+      DIRECTORY ${EP_DEPLOY_DIR}/
+      DESTINATION ${CMAKE_INSTALL_PREFIX}
+      USE_SOURCE_PERMISSIONS
+    )
+  endif()
+
   if(CMAKE_CROSSCOMPILING)
     list(APPEND CMAKE_FIND_ROOT_PATH ${EP_DEPLOY_DIR})
   endif()
