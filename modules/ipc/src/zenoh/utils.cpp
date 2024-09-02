@@ -14,8 +14,9 @@
 #include <vector>
 
 #include <fmt/core.h>
-#include <zenoh.h>
-#include <zenoh/api/config.hxx>
+#include <zenoh/api/bytes.hxx>
+#include <zenoh/api/id.hxx>
+#include <zenoh/api/timestamp.hxx>
 
 namespace heph::ipc::zenoh {
 namespace {

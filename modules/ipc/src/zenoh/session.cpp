@@ -6,6 +6,10 @@
 #include <memory>
 #include <utility>
 
+#include <fmt/core.h>
+#include <zenoh/api/config.hxx>
+#include <zenoh/api/session.hxx>
+
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
