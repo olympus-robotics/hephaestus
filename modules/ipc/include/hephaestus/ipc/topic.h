@@ -2,4 +2,14 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/common.h"  // NOLINT(misc-include-cleaner)
+#pragma once
+
+#include <string>
+
+namespace heph::ipc {
+
+struct TopicConfig {
+  std::string name;
+};
+
+}  // namespace heph::ipc

@@ -9,8 +9,8 @@
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::ipc::zenoh {
@@ -54,7 +54,7 @@ private:
   SessionPtr topic_info_query_session_;  // Session used to query topic service.
   std::unique_ptr<ITopicDatabase> topic_db_;
 
-  std::unordered_map<std::string, std::unique_ptr<Subscriber>> subscribers_;
+  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>> subscribers_;
   TopicWithTypeInfoCallback init_subscriber_cb_;
   SubscriberWithTypeCallback subscriber_cb_;
 };

@@ -4,55 +4,66 @@
 
 #include "hephaestus/ipc/zenoh/utils.h"
 
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <numeric>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh/api/config.hxx>
 
-#include "hephaestus/ipc/common.h"
-#include "hephaestus/utils/exception.h"
-
 namespace heph::ipc::zenoh {
+namespace {
+[[nodiscard]] auto toChrono(uint64_t timestamp) -> std::chrono::nanoseconds {
+  // For details see https://zenoh.io/docs/manual/abstractions/#timestamp
+  const auto seconds = std::chrono::seconds{ static_cast<std::uint32_t>(timestamp >> 32U) };
+  static constexpr auto FRACTION_MASK = 0xFFFFFFF0;
+  auto fraction = static_cast<uint32_t>(timestamp & FRACTION_MASK);  //
+  // Convert fraction to nanoseconds
+  // The fraction is in units of 2^-32 seconds, so we multiply by 10^9 / 2^32
+  auto nanoseconds =
+      std::chrono::nanoseconds{ static_cast<uint64_t>(fraction) * 1'000'000'000 / 0x100000000 };  // NOLINT
 
-// Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
-auto createZenohConfig(const Config& config) -> ::zenoh::Config {
-  throwExceptionIf<InvalidParameterException>(config.qos && config.real_time,
-                                              "cannot specify both QoS and Real-Time options");
-  throwExceptionIf<InvalidParameterException>(config.protocol != Protocol::ANY && !config.router.empty(),
-                                              "cannot specify both protocol and the router endpoint");
-
-  auto zconfig = ::zenoh::Config::create_default();
-  // A timestamp is add to every published message.
-  zconfig.insert_json(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
-
-  // Enable shared memory support.
-  if (config.enable_shared_memory) {
-    zconfig.insert_json("transport/shared_memory/enabled", "true");
-  }
-
-  // Set node in client mode.
-  if (config.mode == Mode::CLIENT) {
-    zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");
-  }
-
-  // Set the transport to UDP, but I am not sure it is the right way.
-  // zconfig.insert_json(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
-  if (config.protocol == Protocol::UDP) {
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");
-  } else if (config.protocol == Protocol::TCP) {
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");
-  }
-
-  // Add router endpoint.
-  if (!config.router.empty()) {
-    const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint);
-  }
-  { zconfig.insert_json("transport/unicast/qos/enabled", config.qos ? "true" : "false"); }
-  if (config.real_time) {
-    zconfig.insert_json("transport/unicast/qos/enabled", "false");
-    zconfig.insert_json("transport/unicast/lowlatency", "true");
-  }
-
-  return zconfig;
+  return seconds + nanoseconds;
 }
+}  // namespace
+
+auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte> {
+  auto reader = bytes.reader();
+  std::vector<std::byte> vec(bytes.size());
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+  reader.read(reinterpret_cast<uint8_t*>(vec.data()), vec.size());
+  return vec;
+}
+
+auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string_view data_view{ reinterpret_cast<const char*>(buffer.data()), buffer.size() };
+  return ::zenoh::Bytes{ data_view };
+}
+
+auto toString(const ::zenoh::Id& id) -> std::string {
+  return std::accumulate(std::begin(id.bytes()), std::end(id.bytes()), std::string(),
+                         [](const std::string& s, uint8_t v) { return fmt::format("{:02x}", v) + s; });
+}
+
+auto toString(const std::vector<std::string>& vec) -> std::string {
+  std::string str = "[";
+  for (const auto& value : vec) {
+    str += fmt::format("\"{:s}\", ", value);
+  }
+
+  str += "]";
+  return str;
+}
+
+auto toChrono(const ::zenoh::Timestamp& timestamp) -> std::chrono::nanoseconds {
+  return toChrono(timestamp.get_time());
+}
+
 }  // namespace heph::ipc::zenoh

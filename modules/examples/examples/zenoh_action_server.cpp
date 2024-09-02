@@ -16,10 +16,12 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/sample.h"
 #include "hephaestus/examples/types_protobuf/sample.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/publisher.h"
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
@@ -36,9 +38,10 @@
   return heph::ipc::zenoh::action_server::TriggerStatus::SUCCESSFUL;
 }
 
-[[nodiscard]] auto execute(const heph::examples::types::SampleRequest& request,
-                           heph::ipc::Publisher<heph::examples::types::SampleReply>& status_update_publisher,
-                           std::atomic_bool& stop_requested) -> heph::examples::types::SampleReply {
+[[nodiscard]] auto
+execute(const heph::examples::types::SampleRequest& request,
+        heph::ipc::zenoh::Publisher<heph::examples::types::SampleReply>& status_update_publisher,
+        std::atomic_bool& stop_requested) -> heph::examples::types::SampleReply {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 500 };
   LOG(INFO) << fmt::format("Start execution, iterations: {}", request.iterations_count);
   std::size_t accumulated = request.initial_value;
@@ -67,10 +70,11 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("ActionServer example", ExampleType::ACTION_SERVER);
+    auto desc = heph::cli::ProgramDescription("Action server example");
+    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::ACTION_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
+    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    auto [session_config, topic_config] = parseArgs(args);
     auto stop_session_config = session_config;
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
     auto stop_session = heph::ipc::zenoh::createSession(std::move(stop_session_config));
@@ -80,7 +84,7 @@ auto main(int argc, const char* argv[]) -> int {
     };
 
     auto execute_callback = [](const heph::examples::types::SampleRequest& sample,
-                               heph::ipc::Publisher<heph::examples::types::SampleReply>& publisher,
+                               heph::ipc::zenoh::Publisher<heph::examples::types::SampleReply>& publisher,
                                std::atomic_bool& stop_requested) {
       return execute(sample, publisher, stop_requested);
     };

@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/zenoh/publisher.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/topic.h"  // NOLINT(misc-include-cleaner)

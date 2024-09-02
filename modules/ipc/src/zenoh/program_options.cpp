@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
 
 #include <cstddef>
 #include <string>
@@ -10,16 +10,16 @@
 
 #include <fmt/core.h>
 
-#include "hephaestus//ipc/common.h"
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph::ipc {
+namespace heph::ipc::zenoh {
 
-void appendIPCProgramOption(cli::ProgramDescription& program_description) {
-  static constexpr auto DEFAULT_KEY = "**";
-
-  program_description.defineOption<std::string>("topic", 't', "Key expression", DEFAULT_KEY)
+void appendProgramOption(cli::ProgramDescription& program_description,
+                         const std::string& default_topic /*= DEFAULT_TOPIC*/) {
+  program_description.defineOption<std::string>("topic", 't', "Key expression", default_topic)
       .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
       .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", 'r', "Router endpoint", "")
@@ -29,7 +29,7 @@ void appendIPCProgramOption(cli::ProgramDescription& program_description) {
       .defineFlag("realtime", "Enable real-time communication");
 }
 
-auto parseIPCProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
+auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
   TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
 
   Config config;
@@ -64,4 +64,4 @@ auto parseIPCProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<
   return { std::move(config), std::move(topic_config) };
 }
 
-}  // namespace heph::ipc
+}  // namespace heph::ipc::zenoh

@@ -12,11 +12,11 @@
 #include <magic_enum.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/publisher.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 

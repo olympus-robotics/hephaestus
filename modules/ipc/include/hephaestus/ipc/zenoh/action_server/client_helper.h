@@ -8,10 +8,9 @@
 
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/subscriber.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
-#include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"
+#include "hephaestus/ipc/zenoh/action_server/types_protobuf.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
@@ -50,7 +49,7 @@ private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
-  std::unique_ptr<Subscriber> status_subscriber_;
+  std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
   std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
 
   std::promise<Response<ReplyT>> reply_promise_;
@@ -61,7 +60,7 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
                                                       StatusUpdateCallback&& status_update_cb)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
-  , status_subscriber_(subscribe<Subscriber, StatusT>(
+  , status_subscriber_(createSubscriber<StatusT>(
         session_, internal::getStatusPublisherTopic(topic_config_),
         [status_update_cb = std::move(status_update_cb)](const MessageMetadata&,
                                                          const std::shared_ptr<StatusT>& status) mutable {

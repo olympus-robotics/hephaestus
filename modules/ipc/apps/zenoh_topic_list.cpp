@@ -13,9 +13,9 @@
 #include <fmt/core.h>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/common.h"
-#include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
@@ -40,11 +40,11 @@ auto main(int argc, const char* argv[]) -> int {
 
   try {
     auto desc = heph::cli::ProgramDescription("List all the publishers of a topic.");
-    heph::ipc::appendIPCProgramOption(desc);
+    heph::ipc::zenoh::appendProgramOption(desc);
     desc.defineFlag("live", 'l', "if set the app will keep running waiting for new publisher to advertise");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = heph::ipc::parseIPCProgramOptions(args);
+    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
     fmt::println("Opening session...");
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
