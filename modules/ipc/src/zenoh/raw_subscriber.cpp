@@ -28,8 +28,8 @@
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {

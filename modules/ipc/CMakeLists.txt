@@ -22,6 +22,7 @@ set(SOURCES
     src/topic.cpp
     src/topic_database.cpp
     src/topic_filter.cpp
+    src/zenoh/conversions.cpp
     src/zenoh/dynamic_subscriber.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
@@ -32,7 +33,6 @@ set(SOURCES
     src/zenoh/service.cpp
     src/zenoh/session.cpp
     src/zenoh/subscriber.cpp
-    src/zenoh/utils.cpp
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
     src/zenoh/action_server/types.cpp
@@ -41,6 +41,7 @@ set(SOURCES
     include/hephaestus/ipc/topic.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/topic_filter.h
+    include/hephaestus/ipc/zenoh/conversions.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h
     include/hephaestus/ipc/zenoh/program_options.h
     include/hephaestus/ipc/zenoh/publisher.h
@@ -49,7 +50,6 @@ set(SOURCES
     include/hephaestus/ipc/zenoh/service.h
     include/hephaestus/ipc/zenoh/scout.h
     include/hephaestus/ipc/zenoh/subscriber.h
-    include/hephaestus/ipc/zenoh/utils.h
     include/hephaestus/ipc/zenoh/action_server/action_server.h
     include/hephaestus/ipc/zenoh/action_server/client_helper.h
     include/hephaestus/ipc/zenoh/action_server/types.h

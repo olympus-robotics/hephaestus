@@ -26,8 +26,8 @@
 #include <zenoh/api/queryable.hxx>
 
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/utils/exception.h"
 

@@ -24,9 +24,9 @@
 #include <zenoh/api/scout.hxx>
 
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {

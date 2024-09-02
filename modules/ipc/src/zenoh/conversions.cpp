@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/zenoh/utils.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 
 #include <chrono>
 #include <cstddef>

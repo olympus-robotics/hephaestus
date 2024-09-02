@@ -9,9 +9,9 @@
 #include <zenoh.h>
 #include <zenoh.hxx>
 
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/utils.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::ipc::zenoh {
