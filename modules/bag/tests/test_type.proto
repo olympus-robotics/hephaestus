@@ -3,9 +3,9 @@ syntax = "proto3";
 package heph.bag.tests.proto;
 
 message Robot {
-    string name = 1;
-    int32 version = 2;
-    repeated float scores = 3;
+  string name = 1;
+  int32 version = 2;
+  repeated float scores = 3;
 }
 
 message Fleet {
