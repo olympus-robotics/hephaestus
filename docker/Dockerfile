@@ -10,7 +10,7 @@ RUN apt update && \
     pkg-config gpg wget ca-certificates git-lfs curl ccache ninja-build doxygen graphviz linux-generic python3-dev python3-pip iproute2 python-is-python3 \
     net-tools iftop htop lsb-release software-properties-common gnupg bash-completion psmisc less tree && \
     rm -rf /var/lib/apt/lists/*
-RUN python3 -m pip install cmakelang six
+RUN python3 -m pip install cmakelang
 
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
     echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null && \

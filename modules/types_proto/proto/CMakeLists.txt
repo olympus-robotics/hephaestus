@@ -6,4 +6,4 @@ set(SOURCES
     hephaestus/types/proto/dummy_type.proto
 )
 
-define_module_proto_library(NAME types_proto SOURCES ${SOURCES})
+define_module_proto_library(NAME types_gen_proto SOURCES ${SOURCES})

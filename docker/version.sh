@@ -1,5 +1,5 @@
 HOST=ghcr.io/olympus-robotics
-VERSION=1.0.9
+VERSION=1.0.11
 IMAGE=hephaestus-dev
 
 # This is the version of the dep image. Increase this number everytime you change `external/CMakeLists.txt`

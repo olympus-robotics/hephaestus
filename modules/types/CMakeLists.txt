@@ -5,7 +5,7 @@
 declare_module(
   NAME types
   DEPENDS_ON_MODULES random
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum range-v3 
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum range-v3
 )
 
 find_package(fmt REQUIRED)

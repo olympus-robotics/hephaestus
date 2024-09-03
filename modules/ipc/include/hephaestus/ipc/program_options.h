@@ -10,7 +10,7 @@ namespace heph::ipc {
 
 void appendIPCProgramOption(cli::ProgramDescription& program_description);
 
-[[nodiscard]] auto parseIPCProgramOptions(const heph::cli::ProgramOptions& args)
-    -> std::pair<Config, TopicConfig>;
+[[nodiscard]] auto
+parseIPCProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig>;
 
 }  // namespace heph::ipc
