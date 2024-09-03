@@ -58,11 +58,12 @@ template <IsVector T>
 [[nodiscard]] inline auto toString(const T& vec) -> std::string {
   std::stringstream ss;
 
-  auto indices = std::views::iota(0);
-  auto indexed_vec = ranges::views::zip(indices, vec);
+  const auto indices = std::views::iota(0);
+  const auto indexed_vec = ranges::views::zip(indices, vec);
 
-  for (auto [index, value] : indexed_vec) {
-    ss << "  Index: " << index << ", Value: " << value << '\n';
+  for (const auto& [index, value] : indexed_vec) {
+    const std::string str = fmt::format("  Index: {}, Value: {}\n", index, value);
+    ss << str;
   }
 
   return ss.str();
