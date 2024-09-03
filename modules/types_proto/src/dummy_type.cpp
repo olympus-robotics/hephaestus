@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/types_protobuf/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"
 
 #include <cstddef>
 #include <vector>
