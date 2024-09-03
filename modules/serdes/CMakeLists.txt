@@ -11,6 +11,7 @@ declare_module(
 find_package(absl REQUIRED)
 find_package(magic_enum REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(utf8_range REQUIRED)
 find_package(range-v3 REQUIRED)
 
 # library sources
@@ -36,8 +37,16 @@ set(SOURCES
 # library target
 define_module_library(
   NAME serdes
-  PUBLIC_LINK_LIBS absl::log_internal_check_op absl::status hephaestus::utils magic_enum::magic_enum
-                   protobuf::libprotobuf range-v3::range-v3
+  PUBLIC_LINK_LIBS
+    absl::log_internal_check_op
+    absl::raw_hash_set
+    absl::status
+    absl::statusor
+    hephaestus::utils
+    magic_enum::magic_enum
+    protobuf::libprotobuf
+    range-v3::range-v3
+    utf8_range::utf8_validity
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

@@ -26,6 +26,8 @@ enumerate_modules(ROOT_PATH ${PROJECT_SOURCE_DIR}/modules)
 build_external_dependencies(FOLDER ${PROJECT_SOURCE_DIR}/external)
 
 # -------------------------------------------------------------------------------------------------
-# Configure modules enabled with -DBUILD_MODULES="semi-colon;separated;list". - Special value "all" will build all
-# modules found
+# ~~~
+# Configure modules enabled with -DBUILD_MODULES="semi-colon;separated;list".
+# - Special value "all" will build all modules found
+# ~~~
 configure_modules()
