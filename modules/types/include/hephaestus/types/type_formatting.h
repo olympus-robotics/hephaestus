@@ -56,7 +56,7 @@ concept IsVector = requires(T t) { std::is_same_v<T, std::vector<typename T::val
 
 template <IsVector T>
 [[nodiscard]] inline auto toString(const T& vec) -> std::string {
-  std::stringstream ss;
+  const std::stringstream ss;
 
   const auto indices = std::views::iota(0);
   const auto indexed_vec = ranges::views::zip(indices, vec);
