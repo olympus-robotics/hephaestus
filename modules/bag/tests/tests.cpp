@@ -38,8 +38,8 @@ constexpr auto SENDER_ID = "bag_tester";
 constexpr auto ROBOT_TOPIC = "robot";
 constexpr auto FLEET_TOPIC = "fleet";
 
-[[nodiscard]] auto
-createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
+[[nodiscard]] auto createBag()
+    -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
   auto mcap_writer = createMcapWriter({ scoped_path });
 
