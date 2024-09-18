@@ -11,7 +11,15 @@ declare_module(
 add_subdirectory(proto)
 
 # library sources
-set(SOURCES src/dummy_type.cpp README.md include/hephaestus/types_proto/dummy_type.h)
+set(SOURCES
+    src/bounds.cpp
+    src/dummy_type.cpp
+    src/numeric_value.cpp
+    README.md
+    include/hephaestus/types_proto/bounds.h
+    include/hephaestus/types_proto/dummy_type.h
+    include/hephaestus/types_proto/numeric_value.h
+)
 
 # library target
 define_module_library(
