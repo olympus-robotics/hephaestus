@@ -29,7 +29,7 @@ concept IsNumeric = std::integral<T> || std::floating_point<T>;
 /// @brief A class representing range bounds.
 template <IsNumeric T>
 struct Bounds {
-  [[nodiscard]] auto operator==(const Bounds&) const -> bool = default;
+  [[nodiscard]] inline constexpr auto operator==(const Bounds&) const -> bool = default;
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> Bounds;
 
