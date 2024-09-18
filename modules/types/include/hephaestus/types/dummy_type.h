@@ -40,11 +40,11 @@ struct DummyPrimitivesType {
   double dummy_double{};
 };
 
+auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream&;
+
 /// @brief Collection of non-primitive types for testing purposes.
 /// NOTE: the data needs to be Protobuf serializable
 /// NOTE: missing generic non-primitive types can be added to increase the test coverage
-auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream&;
-
 struct DummyType {
   enum class DummyEnum : int8_t { A, B, C, D, E, F, G };
 
