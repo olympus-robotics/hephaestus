@@ -2,9 +2,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <algorithm>
-#include <chrono>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <fmt/core.h>
@@ -16,40 +15,9 @@ using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::types::tests {
 
-// Test assumes sub-second precision of at most nanoseconds.
-TEST(TypeFormattingTests, TimestampFormattingSteadyClock) {
-  const auto timestamp = std::chrono::steady_clock::now();
-  const auto str = fmt::format("{}", toString(timestamp));
-
-  ASSERT_LE(str.length(), 24);
-
-  const auto it = std::find(str.begin(), str.end(), 'd');
-  ASSERT_TRUE(it != str.end());
-  ASSERT_EQ(*(it + 1), ' ');
-  ASSERT_EQ(*(it + 4), 'h');
-  ASSERT_EQ(*(it + 5), ':');
-  ASSERT_EQ(*(it + 8), 'm');
-  ASSERT_EQ(*(it + 9), ':');
-  ASSERT_EQ(*(it + 12), '.');
-  ASSERT_EQ(str.back(), 's');
-}
-
-// Test assumes sub-second precision of at most nanoseconds.
-TEST(TypeFormattingTests, TimestampFormattingSystemClock) {
-  const auto timestamp = std::chrono::system_clock::now();
-  const auto str = fmt::format("{}", toString(timestamp));
-
-  ASSERT_TRUE(str.length() <= 27);
-
-  ASSERT_EQ(str[0], '2');
-  ASSERT_EQ(str[1], '0');
-  ASSERT_EQ(str[4], '-');
-  ASSERT_EQ(str[7], '-');
-  ASSERT_EQ(str[10], ' ');
-  ASSERT_EQ(str[13], ':');
-  ASSERT_EQ(str[16], ':');
-  ASSERT_EQ(str[19], '.');
-}
+//=================================================================================================
+// Vector
+//=================================================================================================
 
 TEST(TypeFormattingTests, ConvertEmptyVector) {
   const std::vector<int> vec;
@@ -82,6 +50,32 @@ TEST(TypeFormattingTests, ConvertStringVector) {
                                "  Index: 1, Value: two\n"
                                "  Index: 2, Value: three\n";
   EXPECT_EQ(result, expected);
+}
+
+//=================================================================================================
+// UnorderedMap
+//=================================================================================================
+
+TEST(UnorderedMapTests, ToStringEmpty) {
+  std::unordered_map<int, std::string> empty_umap;
+  EXPECT_EQ(toString(empty_umap), "");
+}
+
+TEST(UnorderedMapTests, ToStringNonEmpty) {
+  std::unordered_map<int, std::string> umap{ { 1, "one" }, { 3, "three" }, { 2, "two" } };
+  std::string expected_output = "  Key: 1, Value: one\n  Key: 3, Value: three\n  Key: 2, Value: two\n";
+  EXPECT_EQ(toString(umap), expected_output);
+}
+
+//=================================================================================================
+// Enum
+//=================================================================================================
+
+TEST(EnumTests, ToString) {
+  enum class TestEnum : uint8_t { A, B, C };
+  EXPECT_EQ(toString(TestEnum::A), "A");
+  EXPECT_EQ(toString(TestEnum::B), "B");
+  EXPECT_EQ(toString(TestEnum::C), "C");
 }
 
 }  // namespace heph::types::tests

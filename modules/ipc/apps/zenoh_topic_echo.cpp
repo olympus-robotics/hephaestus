@@ -94,7 +94,7 @@ private:
     truncateLongItems(msg_json, noarr_, max_array_length_);
     fmt::println("From: {}. Topic: {}\nSequence: {} | Timestamp: {}\n{}", metadata.sender_id, metadata.topic,
                  metadata.sequence_id,
-                 types::toString(std::chrono::time_point<std::chrono::system_clock>(
+                 heph::types::toString(std::chrono::time_point<std::chrono::system_clock>(
                      std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp))),
                  msg_json);
   }
