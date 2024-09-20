@@ -12,6 +12,7 @@
 #include <fmt/ostream.h>
 
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::types {
@@ -23,11 +24,8 @@ enum class BoundsType : uint8_t {
   OPEN         // ()
 };
 
-template <typename T>
-concept IsNumeric = std::integral<T> || std::floating_point<T>;
-
 /// @brief A class representing range bounds.
-template <IsNumeric T>
+template <NumericType T>
 struct Bounds {
   [[nodiscard]] inline constexpr auto operator==(const Bounds&) const -> bool = default;
 
@@ -40,21 +38,21 @@ struct Bounds {
   BoundsType bounds_type{ BoundsType::INCLUSIVE };
 };
 
-template <IsNumeric T>
+template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
 
 //=================================================================================================
 // IMPLEMENTATION
 //=================================================================================================
 
-template <IsNumeric T>
+template <NumericType T>
 auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
   return { .lower_bound = random::random<T>(mt),
            .upper_bound = random::random<T>(mt),
            .bounds_type = random::random<BoundsType>(mt) };
 }
 
-template <IsNumeric T>
+template <NumericType T>
 inline constexpr auto Bounds<T>::isWithinBounds(T value) const -> bool {
   switch (bounds_type) {
     case BoundsType::INCLUSIVE:
@@ -70,7 +68,7 @@ inline constexpr auto Bounds<T>::isWithinBounds(T value) const -> bool {
   }
 }
 
-template <IsNumeric T>
+template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
   std::string bounds_type_str;
   switch (bounds.bounds_type) {
@@ -97,6 +95,6 @@ auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
 }  // namespace heph::types
 
 namespace fmt {
-template <heph::types::IsNumeric T>
+template <heph::NumericType T>
 struct formatter<heph::types::Bounds<T>> : ostream_formatter {};
 }  // namespace fmt

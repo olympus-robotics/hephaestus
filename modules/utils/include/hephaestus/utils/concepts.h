@@ -13,6 +13,9 @@ namespace heph {
 template <typename T>
 concept ScalarType = requires(T a) { std::is_scalar_v<T>; };
 
+template <typename T>
+concept NumericType = std::integral<T> || std::floating_point<T>;
+
 /// Types that are convertable to and from a string
 template <typename T>
 concept StringStreamable = requires(std::string str, T value) {

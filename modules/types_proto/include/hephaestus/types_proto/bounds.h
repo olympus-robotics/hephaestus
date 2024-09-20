@@ -10,7 +10,7 @@
 #include "hephaestus/types_proto/numeric_value.h"
 
 namespace heph::serdes::protobuf {
-template <heph::types::IsNumeric T>
+template <NumericType T>
 struct ProtoAssociation<types::Bounds<T>> {
   using Type = types::proto::Bounds;
 };
@@ -18,9 +18,9 @@ struct ProtoAssociation<types::Bounds<T>> {
 
 namespace heph::types {
 
-template <IsNumeric T>
+template <NumericType T>
 auto toProto(proto::Bounds& proto_bounds, const Bounds<T>& bounds) -> void;
-template <IsNumeric T>
+template <NumericType T>
 auto fromProto(const proto::Bounds& proto_bounds, Bounds<T>& bounds) -> void;
 
 //=================================================================================================
@@ -32,14 +32,14 @@ namespace internal {
 [[nodiscard]] auto getFromProto(const proto::BoundsType& proto_bounds_type) -> BoundsType;
 }  // namespace internal
 
-template <IsNumeric T>
+template <NumericType T>
 auto toProto(proto::Bounds& proto_bounds, const Bounds<T>& bounds) -> void {
   toProto(*proto_bounds.mutable_lower_bound(), bounds.lower_bound);
   toProto(*proto_bounds.mutable_upper_bound(), bounds.upper_bound);
   proto_bounds.set_bounds_type(internal::getAsProto(bounds.bounds_type));
 }
 
-template <IsNumeric T>
+template <NumericType T>
 auto fromProto(const proto::Bounds& proto_bounds, Bounds<T>& bounds) -> void {
   fromProto(proto_bounds.lower_bound(), bounds.lower_bound);
   fromProto(proto_bounds.upper_bound(), bounds.upper_bound);

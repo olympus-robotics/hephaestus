@@ -6,12 +6,10 @@
 
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/types/proto/numeric_value.pb.h"
-
-template <typename T>
-concept IsNumeric = std::integral<T> || std::floating_point<T>;
+#include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes::protobuf {
-template <IsNumeric T>
+template <NumericType T>
 struct ProtoAssociation<T> {
   using Type = types::proto::NumericValue;
 };
@@ -21,9 +19,9 @@ namespace heph::types::proto {
 
 /// \brief Convert a numeric value to a protobuf message. These functions are specialized for each numeric
 /// type. The main usage is to allow for serialization of templated numeric types.
-template <IsNumeric T>
+template <NumericType T>
 auto toProto(NumericValue& proto_value, const T value) -> void;
-template <IsNumeric T>
+template <NumericType T>
 auto fromProto(const NumericValue& proto_value, T& value) -> void;
 
 }  // namespace heph::types::proto
