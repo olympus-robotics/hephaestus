@@ -2,44 +2,47 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/types_proto/numeric_value.h"
+#include "hephaestus/types_proto/numeric_value.h"  //NOLINT(misc-include-cleaner)
 
+#include <cstdint>
+
+#include "hephaestus/types/proto/numeric_value.pb.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::types::proto {
 
 template <>
-auto toProto(NumericValue& proto_value, const int32_t value) -> void {
+auto toProto(NumericValue& proto_value, int32_t value) -> void {
   proto_value.set_int32_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const int64_t value) -> void {
+auto toProto(NumericValue& proto_value, int64_t value) -> void {
   proto_value.set_int64_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const uint32_t value) -> void {
+auto toProto(NumericValue& proto_value, uint32_t value) -> void {
   proto_value.set_uint32_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const uint64_t value) -> void {
+auto toProto(NumericValue& proto_value, uint64_t value) -> void {
   proto_value.set_uint64_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const float value) -> void {
+auto toProto(NumericValue& proto_value, float value) -> void {
   proto_value.set_float_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const double value) -> void {
+auto toProto(NumericValue& proto_value, double value) -> void {
   proto_value.set_double_value(value);
 }
 
 template <>
-auto toProto(NumericValue& proto_value, const bool value) -> void {
+auto toProto(NumericValue& proto_value, bool value) -> void {
   proto_value.set_bool_value(value);
 }
 

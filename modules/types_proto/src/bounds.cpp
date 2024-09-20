@@ -4,6 +4,10 @@
 
 #include "hephaestus/types_proto/bounds.h"
 
+#include "hephaestus/types//bounds.h"
+#include "hephaestus/types/proto/bounds.pb.h"
+#include "hephaestus/utils/exception.h"
+
 namespace heph::types::internal {
 
 auto getAsProto(const BoundsType& bounds_type) -> proto::BoundsType {

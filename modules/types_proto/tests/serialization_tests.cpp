@@ -2,14 +2,18 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstdint>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/types_proto/bounds.h"
-#include "hephaestus/types_proto/dummy_type.h"
-#include "hephaestus/types_proto/numeric_value.h"
+#include "hephaestus/types/bounds.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/bounds.h"         // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
