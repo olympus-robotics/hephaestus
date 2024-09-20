@@ -32,6 +32,12 @@ concept UnorderedMapType = requires(T t) {
                                        typename T::key_equal>>;
 };
 
+template <typename T>
+concept ChronoSystemClockType = std::is_same_v<T, std::chrono::system_clock>;
+
+template <typename T>
+concept ChronoSteadyClockType = std::is_same_v<T, std::chrono::steady_clock>;
+
 /// Types that are convertable to and from a string
 template <typename T>
 concept StringStreamable = requires(std::string str, T value) {
