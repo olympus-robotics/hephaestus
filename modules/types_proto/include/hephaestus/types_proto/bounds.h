@@ -17,10 +17,6 @@ struct ProtoAssociation<types::Bounds<T>> {
 }  // namespace heph::serdes::protobuf
 
 namespace heph::types {
-namespace internal {
-[[nodiscard]] auto getAsProto(const BoundsType& bounds_type) -> proto::BoundsType;
-[[nodiscard]] auto getFromProto(const proto::BoundsType& proto_bounds_type) -> BoundsType;
-}  // namespace internal
 
 template <IsNumeric T>
 auto toProto(proto::Bounds& proto_bounds, const Bounds<T>& bounds) -> void;
@@ -30,6 +26,11 @@ auto fromProto(const proto::Bounds& proto_bounds, Bounds<T>& bounds) -> void;
 //=================================================================================================
 // Implementation
 //=================================================================================================
+
+namespace internal {
+[[nodiscard]] auto getAsProto(const BoundsType& bounds_type) -> proto::BoundsType;
+[[nodiscard]] auto getFromProto(const proto::BoundsType& proto_bounds_type) -> BoundsType;
+}  // namespace internal
 
 template <IsNumeric T>
 auto toProto(proto::Bounds& proto_bounds, const Bounds<T>& bounds) -> void {

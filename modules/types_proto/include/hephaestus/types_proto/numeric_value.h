@@ -19,6 +19,8 @@ struct ProtoAssociation<T> {
 
 namespace heph::types::proto {
 
+/// \brief Convert a numeric value to a protobuf message. These functions are specialized for each numeric
+/// type. The main usage is to allow for serialization of templated numeric types.
 template <IsNumeric T>
 auto toProto(NumericValue& proto_value, const T value) -> void;
 template <IsNumeric T>

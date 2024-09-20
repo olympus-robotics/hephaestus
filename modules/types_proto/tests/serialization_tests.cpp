@@ -42,7 +42,6 @@ TYPED_TEST(SerializationTests, TestSerialization) {
   const auto value = random::random<TypeParam>(mt);
 
   TypeParam value_des{};
-  value_des = value;
   if constexpr (!std::is_same_v<TypeParam, bool>) {  // sample space of bool is too small
     EXPECT_NE(value, value_des);
   }
