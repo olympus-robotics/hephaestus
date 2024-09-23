@@ -12,8 +12,7 @@
 
 #include "hephaestus/types/type_formatting.h"
 
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::testing;
+using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::types::tests {
 

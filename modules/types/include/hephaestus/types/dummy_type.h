@@ -4,10 +4,12 @@
 
 #pragma once
 
-#include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <string>
+#include <vector>
 
 #include <fmt/ostream.h>
 #include <magic_enum.hpp>
@@ -54,11 +56,8 @@ struct DummyType {
 
   DummyEnum dummy_enum{};
 
-  std::chrono::system_clock::time_point dummy_timestamp_system_clock;
-  std::chrono::steady_clock::time_point dummy_timestamp_steady_clock;
-
-  std::string dummy_string;
-  std::vector<int32_t> dummy_vector;
+  std::string dummy_string{};
+  std::vector<int32_t> dummy_vector{};
 };
 
 auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream&;
