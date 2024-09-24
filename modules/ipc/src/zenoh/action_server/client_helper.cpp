@@ -6,7 +6,7 @@
 
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic.h"
 
 namespace heph::ipc::zenoh::action_server::internal {
 auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig {

@@ -10,7 +10,7 @@
 
 #include <zenoh/api/subscriber.hxx>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::ipc::zenoh {
@@ -21,8 +21,8 @@ struct PublisherInfo {
   PublisherStatus status;
 };
 
-[[nodiscard]] auto getListOfPublishers(const Session& session,
-                                       std::string_view topic = "**") -> std::vector<PublisherInfo>;
+[[nodiscard]] auto getListOfPublishers(const Session& session, std::string_view topic = "**")
+    -> std::vector<PublisherInfo>;
 
 void printPublisherInfo(const PublisherInfo& info);
 
