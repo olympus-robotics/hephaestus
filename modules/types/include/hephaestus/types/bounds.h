@@ -40,6 +40,9 @@ template <NumericType T>
 [[nodiscard]] static inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
 
 template <NumericType T>
+[[nodiscard]] static inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T;
+
+template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
 
 //=================================================================================================
@@ -67,6 +70,11 @@ inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
     default:
       throwException<InvalidParameterException>("Incorrect Type");
   }
+}
+
+template <NumericType T>
+inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
+  return std::clamp(value, bounds.lower, bounds.upper);
 }
 
 template <NumericType T>

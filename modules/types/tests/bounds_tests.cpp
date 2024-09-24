@@ -12,39 +12,63 @@ using namespace ::testing;
 namespace heph::types::tests {
 
 TEST(BoundsTest, InclusiveBounds) {
-  const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::INCLUSIVE };
-  EXPECT_TRUE(isWithinBounds(-5, bounds));
-  EXPECT_TRUE(isWithinBounds(0, bounds));
-  EXPECT_TRUE(isWithinBounds(10, bounds));
-  EXPECT_FALSE(isWithinBounds(-6, bounds));
-  EXPECT_FALSE(isWithinBounds(11, bounds));
+  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::INCLUSIVE };
+  EXPECT_TRUE(isWithinBounds(-5.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(0.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(10.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(-6.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(11.0f, bounds));
+
+  EXPECT_EQ(clampValue(-6.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-5.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-1.0f, bounds), -1.0f);
+  EXPECT_EQ(clampValue(10.0f, bounds), 10.0f);
+  EXPECT_EQ(clampValue(11.0f, bounds), 10.0f);
 }
 
 TEST(BoundsTest, LeftOpenBounds) {
-  const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::LEFT_OPEN };
-  EXPECT_FALSE(isWithinBounds(-5, bounds));
-  EXPECT_TRUE(isWithinBounds(0, bounds));
-  EXPECT_TRUE(isWithinBounds(10, bounds));
-  EXPECT_FALSE(isWithinBounds(-6, bounds));
-  EXPECT_FALSE(isWithinBounds(11, bounds));
+  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::LEFT_OPEN };
+  EXPECT_FALSE(isWithinBounds(-5.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(0.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(10.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(-6.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(11.0f, bounds));
+
+  EXPECT_EQ(clampValue(-6.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-5.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-1.0f, bounds), -1.0f);
+  EXPECT_EQ(clampValue(10.0f, bounds), 10.0f);
+  EXPECT_EQ(clampValue(11.0f, bounds), 10.0f);
 }
 
 TEST(BoundsTest, RightOpenBounds) {
-  const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::RIGHT_OPEN };
-  EXPECT_TRUE(isWithinBounds(-5, bounds));
-  EXPECT_TRUE(isWithinBounds(0, bounds));
-  EXPECT_FALSE(isWithinBounds(10, bounds));
-  EXPECT_FALSE(isWithinBounds(-6, bounds));
-  EXPECT_FALSE(isWithinBounds(11, bounds));
+  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::RIGHT_OPEN };
+  EXPECT_TRUE(isWithinBounds(-5.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(0.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(10.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(-6.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(11.0f, bounds));
+
+  EXPECT_EQ(clampValue(-6.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-5.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-1.0f, bounds), -1.0f);
+  EXPECT_EQ(clampValue(10.0f, bounds), 10.0f);
+  EXPECT_EQ(clampValue(11.0f, bounds), 10.0f);
 }
 
 TEST(BoundsTest, OpenBounds) {
-  const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::OPEN };
-  EXPECT_FALSE(isWithinBounds(-5, bounds));
-  EXPECT_TRUE(isWithinBounds(0, bounds));
-  EXPECT_FALSE(isWithinBounds(10, bounds));
-  EXPECT_FALSE(isWithinBounds(-6, bounds));
-  EXPECT_FALSE(isWithinBounds(11, bounds));
+  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::OPEN };
+  EXPECT_FALSE(isWithinBounds(-5.0f, bounds));
+  EXPECT_TRUE(isWithinBounds(0.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(10.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(-6.0f, bounds));
+  EXPECT_FALSE(isWithinBounds(11.0f, bounds));
+
+  EXPECT_EQ(clampValue(-6.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-5.0f, bounds), -5.0f);
+  EXPECT_EQ(clampValue(-1.0f, bounds), -1.0f);
+  EXPECT_EQ(clampValue(10.0f, bounds), 10.0f);
+  EXPECT_EQ(clampValue(11.0f, bounds), 10.0f);
 }
 
 }  // namespace heph::types::tests
