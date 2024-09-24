@@ -16,7 +16,7 @@ enum BoundsType {
 }
 
 message Bounds {
-  NumericValue lower_bound = 1;
-  NumericValue upper_bound = 2;
-  BoundsType bounds_type = 3;
+  NumericValue lower = 1;
+  NumericValue upper = 2;
+  BoundsType type = 3;
 }

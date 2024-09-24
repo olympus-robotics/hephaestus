@@ -34,16 +34,16 @@ namespace internal {
 
 template <NumericType T>
 auto toProto(proto::Bounds& proto_bounds, const Bounds<T>& bounds) -> void {
-  toProto(*proto_bounds.mutable_lower_bound(), bounds.lower_bound);
-  toProto(*proto_bounds.mutable_upper_bound(), bounds.upper_bound);
-  proto_bounds.set_bounds_type(internal::getAsProto(bounds.bounds_type));
+  toProto(*proto_bounds.mutable_lower(), bounds.lower);
+  toProto(*proto_bounds.mutable_upper(), bounds.upper);
+  proto_bounds.set_type(internal::getAsProto(bounds.type));
 }
 
 template <NumericType T>
 auto fromProto(const proto::Bounds& proto_bounds, Bounds<T>& bounds) -> void {
-  fromProto(proto_bounds.lower_bound(), bounds.lower_bound);
-  fromProto(proto_bounds.upper_bound(), bounds.upper_bound);
-  bounds.bounds_type = internal::getFromProto(proto_bounds.bounds_type());
+  fromProto(proto_bounds.lower(), bounds.lower);
+  fromProto(proto_bounds.upper(), bounds.upper);
+  bounds.type = internal::getFromProto(proto_bounds.type());
 }
 
 }  // namespace heph::types

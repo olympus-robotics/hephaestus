@@ -33,9 +33,9 @@ struct Bounds {
 
   [[nodiscard]] inline constexpr auto isWithinBounds(T value) const -> bool;
 
-  T lower_bound{};
-  T upper_bound{};
-  BoundsType bounds_type{ BoundsType::INCLUSIVE };
+  T lower{};
+  T upper{};
+  BoundsType type{ BoundsType::INCLUSIVE };
 };
 
 template <NumericType T>
@@ -47,31 +47,31 @@ auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
 
 template <NumericType T>
 auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
-  return { .lower_bound = random::random<T>(mt),
-           .upper_bound = random::random<T>(mt),
-           .bounds_type = random::random<BoundsType>(mt) };
+  return { .lower = random::random<T>(mt),
+           .upper = random::random<T>(mt),
+           .type = random::random<BoundsType>(mt) };
 }
 
 template <NumericType T>
 inline constexpr auto Bounds<T>::isWithinBounds(T value) const -> bool {
-  switch (bounds_type) {
+  switch (type) {
     case BoundsType::INCLUSIVE:
-      return value >= lower_bound && value <= upper_bound;
+      return value >= lower && value <= upper;
     case BoundsType::LEFT_OPEN:
-      return value > lower_bound && value <= upper_bound;
+      return value > lower && value <= upper;
     case BoundsType::RIGHT_OPEN:
-      return value >= lower_bound && value < upper_bound;
+      return value >= lower && value < upper;
     case BoundsType::OPEN:
-      return value > lower_bound && value < upper_bound;
+      return value > lower && value < upper;
     default:
-      throwException<InvalidParameterException>("Incorrect BoundsType");
+      throwException<InvalidParameterException>("Incorrect Type");
   }
 }
 
 template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
   std::string bounds_type_str;
-  switch (bounds.bounds_type) {
+  switch (bounds.type) {
     case BoundsType::INCLUSIVE:
       bounds_type_str = "[]";
       break;
@@ -88,8 +88,8 @@ auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
       throwException<InvalidParameterException>("Incorrect BoundsType");
   }
 
-  return os << "Bounds: " << bounds_type_str[0] << bounds.lower_bound << " - " << bounds.upper_bound
-            << bounds_type_str[1] << "\n";
+  return os << "Bounds: " << bounds_type_str[0] << bounds.lower << " - " << bounds.upper << bounds_type_str[1]
+            << "\n";
 }
 
 }  // namespace heph::types
