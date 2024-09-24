@@ -10,28 +10,66 @@
 
 #include <fmt/chrono.h>
 #include <fmt/format.h>
+#include <magic_enum.hpp>
 #include <range/v3/view/zip.hpp>
+
+#include "hephaestus/utils/concepts.h"
 
 namespace heph::types {
 
 //=================================================================================================
-// Timepoint
+// Array and Vector
 //=================================================================================================
-// A system clock provides access to time and date.
 template <typename T>
-concept IsSystemClock = std::is_same_v<T, std::chrono::system_clock>;
+concept ArrayOrVectorType = ArrayType<T> || VectorType<T>;
 
-template <IsSystemClock T>
+template <ArrayOrVectorType T>
+[[nodiscard]] inline auto toString(const T& vec) -> std::string {
+  std::stringstream ss;
+
+  const auto indices = std::views::iota(0);
+  const auto indexed_vec = ranges::views::zip(indices, vec);
+
+  for (const auto& [index, value] : indexed_vec) {
+    const std::string str = fmt::format("  Index: {}, Value: {}\n", index, value);
+    ss << str;
+  }
+
+  return ss.str();
+}
+
+//=================================================================================================
+// UnorderedMap
+//=================================================================================================
+template <UnorderedMapType T>
+[[nodiscard]] inline auto toString(const T& umap) -> std::string {
+  std::stringstream ss;
+
+  for (const auto& [key, value] : umap) {
+    ss << "  Key: " << key << ", Value: " << value << '\n';
+  }
+
+  return ss.str();
+}
+
+//=================================================================================================
+// Enum
+//=================================================================================================
+template <EnumType T>
+[[nodiscard]] inline auto toString(T value) -> std::string_view {
+  return magic_enum::enum_name(value);
+}
+
+//=================================================================================================
+// ChronoTimePoint
+//=================================================================================================
+
+template <ChronoSystemClockType T>
 [[nodiscard]] inline auto toString(const std::chrono::time_point<T>& timestamp) -> std::string {
   return fmt::format("{:%Y-%m-%d %H:%M:%S}", timestamp);
 }
 
-// A steady clock does not have an anchor point in calendar time. It is only useful for measuring relative
-// time intervals.
-template <typename T>
-concept IsSteadyClock = std::is_same_v<T, std::chrono::steady_clock>;
-
-template <IsSteadyClock T>
+template <ChronoSteadyClockType T>
 [[nodiscard]] inline auto toString(const std::chrono::time_point<T>& timestamp) -> std::string {
   auto duration_since_epoch = timestamp.time_since_epoch();
   auto total_seconds = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch).count();
@@ -48,24 +86,4 @@ template <IsSteadyClock T>
   return fmt::format("{}d {:02}h:{:02}m:{:02}.{:09}s", days, hours, minutes, seconds, sub_seconds * SCALER);
 }
 
-//=================================================================================================
-// Vector
-//=================================================================================================
-template <typename T>
-concept IsVector = requires(T t) { std::is_same_v<T, std::vector<typename T::value_type>>; };
-
-template <IsVector T>
-[[nodiscard]] inline auto toString(const T& vec) -> std::string {
-  std::stringstream ss;
-
-  const auto indices = std::views::iota(0);
-  const auto indexed_vec = ranges::views::zip(indices, vec);
-
-  for (const auto& [index, value] : indexed_vec) {
-    const std::string str = fmt::format("  Index: {}, Value: {}\n", index, value);
-    ss << str;
-  }
-
-  return ss.str();
-}
 };  // namespace heph::types
