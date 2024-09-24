@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -18,6 +19,42 @@ using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::types::tests {
 
+//=================================================================================================
+// Array
+//=================================================================================================
+
+TEST(TypeFormattingTests, ConvertEmptyArray) {
+  const std::array<int, 0> arr = {};
+  const std::string result = toString(arr);
+  EXPECT_EQ(result, "");
+}
+
+TEST(TypeFormattingTests, ConvertIntArray) {
+  const std::array<int, 3> arr = { 1, 2, 3 };
+  const std::string result = toString(arr);
+  const std::string expected = "  Index: 0, Value: 1\n"
+                               "  Index: 1, Value: 2\n"
+                               "  Index: 2, Value: 3\n";
+  EXPECT_EQ(result, expected);
+}
+
+TEST(TypeFormattingTests, ConvertDoubleArray) {
+  const std::array<double, 3> arr = { 1.1, 2.2, 3.3 };  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+  const std::string result = toString(arr);
+  const std::string expected = "  Index: 0, Value: 1.1\n"
+                               "  Index: 1, Value: 2.2\n"
+                               "  Index: 2, Value: 3.3\n";
+  EXPECT_EQ(result, expected);
+}
+
+TEST(TypeFormattingTests, ConvertStringArray) {
+  const std::array<std::string, 3> arr = { "one", "two", "three" };
+  const std::string result = toString(arr);
+  const std::string expected = "  Index: 0, Value: one\n"
+                               "  Index: 1, Value: two\n"
+                               "  Index: 2, Value: three\n";
+  EXPECT_EQ(result, expected);
+}
 //=================================================================================================
 // Vector
 //=================================================================================================

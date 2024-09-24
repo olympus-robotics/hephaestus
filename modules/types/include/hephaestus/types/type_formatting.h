@@ -18,9 +18,12 @@
 namespace heph::types {
 
 //=================================================================================================
-// Vector
+// Array and Vector
 //=================================================================================================
-template <VectorType T>
+template <typename T>
+concept ArrayOrVectorType = ArrayType<T> || VectorType<T>;
+
+template <ArrayOrVectorType T>
 [[nodiscard]] inline auto toString(const T& vec) -> std::string {
   std::stringstream ss;
 
