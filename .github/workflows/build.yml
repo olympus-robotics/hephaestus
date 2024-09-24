@@ -92,3 +92,16 @@ jobs:
         cd ${{github.workspace}}/build
         ninja tests_build
         ninja test
+
+  protobuf:
+    needs: docker_build_and_publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Protobuf
+        run: |
+          buf format
+          buf lint

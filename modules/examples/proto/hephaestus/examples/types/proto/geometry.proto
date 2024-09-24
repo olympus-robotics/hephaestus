@@ -22,16 +22,16 @@ message MatrixXd {
 }
 
 message MatrixXf {
-    uint32 rows = 1;
-    uint32 cols = 2;
-    repeated float data = 3;
+  uint32 rows = 1;
+  uint32 cols = 2;
+  repeated float data = 3;
 }
 
 message VectorXf {
-    repeated float data = 1;
+  repeated float data = 1;
 }
 
 message Vector2f {
-    float x = 1;
-    float y = 2;
+  float x = 1;
+  float y = 2;
 }

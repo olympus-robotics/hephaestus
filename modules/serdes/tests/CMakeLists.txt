@@ -3,7 +3,7 @@
 #=================================================================================================
 
 
-define_module_proto_library(NAME tests_proto SOURCES test.proto NOINSTALL)
+define_module_proto_library(NAME tests_proto SOURCES test_user_type.proto NOINSTALL)
 
 define_module_test(
         NAME tests
