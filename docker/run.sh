@@ -62,7 +62,7 @@ while [ "$1" != "" ]; do
 done
 
 
-
+XSOCK=/tmp/.X11-unix
 GPUOPT="--device=/dev/dri/card0:/dev/dri/card0"
 
 if [ -f /usr/bin/nvidia-smi ]; then
