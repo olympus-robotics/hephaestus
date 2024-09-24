@@ -104,3 +104,4 @@ docker run --privileged --shm-size=512m --cap-add=SYS_PTRACE --security-opt secc
        ${DEVICES} \
        ${DOCKER_EXTRA_FLAGS} \
        --entrypoint ${ENTRYPOINT}  \
+       -e DISPLAY=${DISPLAY} ${DEVIMAGE}
