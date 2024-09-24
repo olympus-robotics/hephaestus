@@ -11,15 +11,22 @@
 namespace heph {
 
 template <typename T>
-concept ScalarType = requires(T a) { std::is_scalar_v<T>; };
+concept ScalarType = std::is_scalar_v<T>;
 
 template <typename T>
 concept EnumType = std::is_enum_v<T>;
 
 template <typename T>
+concept ArrayType = requires {
+  typename T::value_type;
+  requires std::same_as<T, std::array<typename T::value_type, T().size()>>;
+};
+
+template <typename T>
 concept VectorType = requires {
   typename T::value_type;
-  requires std::same_as<T, std::vector<typename T::value_type>>;
+  typename T::allocator_type;
+  requires std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 };
 
 template <typename T>

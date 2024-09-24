@@ -94,7 +94,7 @@ private:
     truncateLongItems(msg_json, noarr_, max_array_length_);
     fmt::println("From: {}. Topic: {}\nSequence: {} | Timestamp: {}\n{}", metadata.sender_id, metadata.topic,
                  metadata.sequence_id,
-                 heph::types::toString(std::chrono::time_point<std::chrono::system_clock>(
+                 types::toString(std::chrono::time_point<std::chrono::system_clock>(
                      std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp))),
                  msg_json);
   }
@@ -103,7 +103,7 @@ private:
   bool noarr_;
   std::size_t max_array_length_;
   TopicConfig topic_config_;
-  heph::serdes::DynamicDeserializer dynamic_deserializer_;
+  serdes::DynamicDeserializer dynamic_deserializer_;
   std::unique_ptr<zenoh::DynamicSubscriber> dynamic_subscriber_;
 };
 }  // namespace heph::ipc::apps
