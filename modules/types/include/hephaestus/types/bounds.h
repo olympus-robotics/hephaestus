@@ -31,12 +31,13 @@ struct Bounds {
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> Bounds;
 
-  [[nodiscard]] inline constexpr auto isWithinBounds(T value) const -> bool;
-
   T lower{};
   T upper{};
   BoundsType type{ BoundsType::INCLUSIVE };
 };
+
+template <NumericType T>
+[[nodiscard]] static inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
 
 template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
@@ -53,16 +54,16 @@ auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
 }
 
 template <NumericType T>
-inline constexpr auto Bounds<T>::isWithinBounds(T value) const -> bool {
-  switch (type) {
+inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
+  switch (bounds.type) {
     case BoundsType::INCLUSIVE:
-      return value >= lower && value <= upper;
+      return value >= bounds.lower && value <= bounds.upper;
     case BoundsType::LEFT_OPEN:
-      return value > lower && value <= upper;
+      return value > bounds.lower && value <= bounds.upper;
     case BoundsType::RIGHT_OPEN:
-      return value >= lower && value < upper;
+      return value >= bounds.lower && value < bounds.upper;
     case BoundsType::OPEN:
-      return value > lower && value < upper;
+      return value > bounds.lower && value < bounds.upper;
     default:
       throwException<InvalidParameterException>("Incorrect Type");
   }

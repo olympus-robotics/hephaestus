@@ -25,10 +25,10 @@ using FloatingPointBoundsT = Bounds<float>;
 
 template <class T>
 class SerializationTests : public ::testing::Test {};
-using SerializationImplementations =
-    ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType,           //
-                     int32_t, int64_t, uint32_t, uint64_t, float, double, bool  // NumericValue types
-                     >;
+using SerializationImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType,  //
+                                                      int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t,
+                                                      uint32_t, uint64_t, float, double  // NumericValue types
+                                                      >;
 TYPED_TEST_SUITE(SerializationTests, SerializationImplementations);
 
 TYPED_TEST(SerializationTests, TestEmptySerialization) {

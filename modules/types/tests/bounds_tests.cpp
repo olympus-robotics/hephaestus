@@ -13,38 +13,38 @@ namespace heph::types::tests {
 
 TEST(BoundsTest, InclusiveBounds) {
   const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::INCLUSIVE };
-  EXPECT_TRUE(bounds.isWithinBounds(-5));
-  EXPECT_TRUE(bounds.isWithinBounds(0));
-  EXPECT_TRUE(bounds.isWithinBounds(10));
-  EXPECT_FALSE(bounds.isWithinBounds(-6));
-  EXPECT_FALSE(bounds.isWithinBounds(11));
+  EXPECT_TRUE(isWithinBounds(-5, bounds));
+  EXPECT_TRUE(isWithinBounds(0, bounds));
+  EXPECT_TRUE(isWithinBounds(10, bounds));
+  EXPECT_FALSE(isWithinBounds(-6, bounds));
+  EXPECT_FALSE(isWithinBounds(11, bounds));
 }
 
 TEST(BoundsTest, LeftOpenBounds) {
   const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::LEFT_OPEN };
-  EXPECT_FALSE(bounds.isWithinBounds(-5));
-  EXPECT_TRUE(bounds.isWithinBounds(0));
-  EXPECT_TRUE(bounds.isWithinBounds(10));
-  EXPECT_FALSE(bounds.isWithinBounds(-6));
-  EXPECT_FALSE(bounds.isWithinBounds(11));
+  EXPECT_FALSE(isWithinBounds(-5, bounds));
+  EXPECT_TRUE(isWithinBounds(0, bounds));
+  EXPECT_TRUE(isWithinBounds(10, bounds));
+  EXPECT_FALSE(isWithinBounds(-6, bounds));
+  EXPECT_FALSE(isWithinBounds(11, bounds));
 }
 
 TEST(BoundsTest, RightOpenBounds) {
   const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::RIGHT_OPEN };
-  EXPECT_TRUE(bounds.isWithinBounds(-5));
-  EXPECT_TRUE(bounds.isWithinBounds(0));
-  EXPECT_FALSE(bounds.isWithinBounds(10));
-  EXPECT_FALSE(bounds.isWithinBounds(-6));
-  EXPECT_FALSE(bounds.isWithinBounds(11));
+  EXPECT_TRUE(isWithinBounds(-5, bounds));
+  EXPECT_TRUE(isWithinBounds(0, bounds));
+  EXPECT_FALSE(isWithinBounds(10, bounds));
+  EXPECT_FALSE(isWithinBounds(-6, bounds));
+  EXPECT_FALSE(isWithinBounds(11, bounds));
 }
 
 TEST(BoundsTest, OpenBounds) {
   const Bounds<int> bounds{ .lower = -5, .upper = 10, .type = BoundsType::OPEN };
-  EXPECT_FALSE(bounds.isWithinBounds(-5));
-  EXPECT_TRUE(bounds.isWithinBounds(0));
-  EXPECT_FALSE(bounds.isWithinBounds(10));
-  EXPECT_FALSE(bounds.isWithinBounds(-6));
-  EXPECT_FALSE(bounds.isWithinBounds(11));
+  EXPECT_FALSE(isWithinBounds(-5, bounds));
+  EXPECT_TRUE(isWithinBounds(0, bounds));
+  EXPECT_FALSE(isWithinBounds(10, bounds));
+  EXPECT_FALSE(isWithinBounds(-6, bounds));
+  EXPECT_FALSE(isWithinBounds(11, bounds));
 }
 
 }  // namespace heph::types::tests

@@ -14,7 +14,7 @@ template <typename T>
 concept ScalarType = requires(T a) { std::is_scalar_v<T>; };
 
 template <typename T>
-concept NumericType = std::integral<T> || std::floating_point<T>;
+concept NumericType = (std::integral<T> || std::floating_point<T>)&&!std::same_as<T, bool>;
 
 /// Types that are convertable to and from a string
 template <typename T>
