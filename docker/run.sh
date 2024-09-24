@@ -62,22 +62,7 @@ while [ "$1" != "" ]; do
 done
 
 
-
 XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.docker.xauth
-
-# A fix for the weird xauth issues
-if [ -d $XAUTH ]; then
-   rm -rf $XAUTH
-   touch $XAUTH
-fi
-
-if [ ! -f $XAUTH ]; then
-    touch $XAUTH
-fi
-
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-sudo chown -R "$(whoami)" $XSOCK  $XAUTH
 GPUOPT="--device=/dev/dri/card0:/dev/dri/card0"
 
 if [ -f /usr/bin/nvidia-smi ]; then
@@ -114,10 +99,9 @@ docker run --privileged --shm-size=512m --cap-add=SYS_PTRACE --security-opt secc
        -d \
        --network host  -ti \
        -v $XSOCK:$XSOCK \
-       -v $XAUTH:$XAUTH \
        -v ${PWD}/..:/workdir/hephaestus \
        ${EXTRA_MOUNTS} \
        ${DEVICES} \
        ${DOCKER_EXTRA_FLAGS} \
        --entrypoint ${ENTRYPOINT}  \
-       -e XAUTHORITY=$XAUTH -e DISPLAY=${DISPLAY} ${DEVIMAGE}
+       -e DISPLAY=${DISPLAY} ${DEVIMAGE}
