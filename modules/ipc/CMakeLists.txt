@@ -19,29 +19,34 @@ add_subdirectory(proto)
 
 # library sources
 set(SOURCES
-    src/common.cpp
-    src/program_options.cpp
+    src/topic.cpp
     src/topic_database.cpp
     src/topic_filter.cpp
+    src/zenoh/conversions.cpp
     src/zenoh/dynamic_subscriber.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
-    src/zenoh/service.cpp
+    src/zenoh/program_options.cpp
+    src/zenoh/raw_publisher.cpp
+    src/zenoh/raw_subscriber.cpp
     src/zenoh/scout.cpp
+    src/zenoh/service.cpp
+    src/zenoh/session.cpp
     src/zenoh/subscriber.cpp
-    src/zenoh/utils.cpp
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
     src/zenoh/action_server/types.cpp
     src/zenoh/action_server/types_protobuf.cpp
     README.md
-    include/hephaestus/ipc/common.h
-    include/hephaestus/ipc/program_options.h
+    include/hephaestus/ipc/topic.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/topic_filter.h
+    include/hephaestus/ipc/zenoh/conversions.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h
-    include/hephaestus/ipc/zenoh/utils.h
+    include/hephaestus/ipc/zenoh/program_options.h
     include/hephaestus/ipc/zenoh/publisher.h
+    include/hephaestus/ipc/zenoh/raw_publisher.h
+    include/hephaestus/ipc/zenoh/raw_subscriber.h
     include/hephaestus/ipc/zenoh/service.h
     include/hephaestus/ipc/zenoh/scout.h
     include/hephaestus/ipc/zenoh/subscriber.h

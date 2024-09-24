@@ -22,7 +22,7 @@
 #include <zenoh/api/sample.hxx>
 #include <zenoh/api/subscriber.hxx>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::ipc::zenoh {

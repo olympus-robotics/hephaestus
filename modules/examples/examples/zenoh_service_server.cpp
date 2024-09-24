@@ -11,8 +11,10 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -23,10 +25,10 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Binary service server example", ExampleType::SERVICE);
+    auto desc = heph::cli::ProgramDescription("Binary service example");
+    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE));
     const auto args = std::move(desc).parse(argc, argv);
-
-    auto [session_config, topic_config] = parseArgs(args);
+    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto callback = [](const heph::examples::types::Pose& sample) {

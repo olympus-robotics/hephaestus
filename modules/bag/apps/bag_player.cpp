@@ -17,7 +17,7 @@
 
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/program_options.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -28,14 +28,14 @@ auto main(int argc, const char* argv[]) -> int {
 
   try {
     auto desc = heph::cli::ProgramDescription("Playback a bag to zenoh topics");
-    heph::ipc::appendIPCProgramOption(desc);
+    heph::ipc::zenoh::appendProgramOption(desc);
     desc.defineOption<std::filesystem::path>("input_bag", 'i', "output file where to write the bag")
         .defineFlag("wait_for_readers_to_connect", 'w',
                     "Wait for readers to connect before starting playback");
     const auto args = std::move(desc).parse(argc, argv);
     auto input_file = args.getOption<std::filesystem::path>("input_bag");
     auto wait_for_readers_to_connect = args.getOption<bool>("wait_for_readers_to_connect");
-    auto [config, _] = heph::ipc::parseIPCProgramOptions(args);
+    auto [config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
     LOG(INFO) << fmt::format("Reading bag file: {}", input_file.string());
 

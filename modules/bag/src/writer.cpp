@@ -18,7 +18,7 @@
 #include <mcap/types.hpp>
 #include <mcap/writer.hpp>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
@@ -36,7 +36,7 @@ public:
   explicit McapWriter(McapWriterParams params);
   ~McapWriter() override = default;
 
-  void writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) override;
+  void writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) override;
   void registerSchema(const serdes::TypeInfo& type_info) override;
   void registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) override;
 
@@ -69,7 +69,7 @@ void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
   schema_db_[type_info.name] = schema;
 }
 
-void McapWriter::writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) {
+void McapWriter::writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) {
   throwExceptionIf<InvalidDataException>(!channel_db_.contains(metadata.topic),
                                          fmt::format("no channel registered for topic {}", metadata.topic));
 
