@@ -8,7 +8,7 @@
 #include <memory>
 #include <span>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {
@@ -19,7 +19,7 @@ public:
 
   virtual void registerSchema(const serdes::TypeInfo& type_info) = 0;
   virtual void registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) = 0;
-  virtual void writeRecord(const ipc::MessageMetadata& metadata, std::span<const std::byte> data) = 0;
+  virtual void writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) = 0;
 };
 
 struct McapWriterParams {

@@ -17,13 +17,13 @@
 #include <absl/synchronization/mutex.h>
 
 #include "hephaestus/bag/writer.h"
-#include "hephaestus/ipc/common.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {
 
-using BagRecord = std::pair<ipc::MessageMetadata, std::vector<std::byte>>;
+using BagRecord = std::pair<ipc::zenoh::MessageMetadata, std::vector<std::byte>>;
 
 /// This class does the following:
 /// - constantly checks for new topics
@@ -63,7 +63,7 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
               bag_writer_->registerChannel(topic, type_info);
             },
         .subscriber_cb =
-            [this](const ipc::MessageMetadata& metadata, std::span<const std::byte> data,
+            [this](const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data,
                    const std::optional<serdes::TypeInfo>& type_info) {
               (void)type_info;
               const absl::MutexLock lock{ &writer_mutex_ };

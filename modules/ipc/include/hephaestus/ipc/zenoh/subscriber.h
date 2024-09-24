@@ -9,47 +9,40 @@
 #include <zenoh.h>
 #include <zenoh.hxx>
 
-#include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/serdes.h"
 
 namespace heph::ipc::zenoh {
 
+template <typename T>
 class Subscriber {
 public:
-  using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
-
-  /// Note: setting dedicated_callback_thread to true will consume the messages in a dedicated thread.
-  /// While this avoid blocking the Zenoh session thread to process other messages,
-  /// it also introduce an overhead due to the message data being copied.
-  Subscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-             bool dedicated_callback_thread = false);
-  ~Subscriber();
-  Subscriber(const Subscriber&) = delete;
-  Subscriber(Subscriber&&) = delete;
-  auto operator=(const Subscriber&) -> Subscriber& = delete;
-  auto operator=(Subscriber&&) -> Subscriber& = delete;
-
-private:
-  void callback(const ::zenoh::Sample& sample);
+  using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<T>&)>;
+  Subscriber(zenoh::SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+             bool dedicated_callback_thread = false)
+    : subscriber_(
+          std::move(session), std::move(topic_config),
+          [callback = std::move(callback)](const MessageMetadata& metadata,
+                                           std::span<const std::byte> buffer) mutable {
+            auto data = std::make_shared<T>();
+            heph::serdes::deserialize(buffer, *data);
+            callback(metadata, std::move(data));
+          },
+          dedicated_callback_thread) {
+  }
 
 private:
-  using Message = std::pair<MessageMetadata, std::vector<std::byte>>;
-
-  SessionPtr session_;
-  TopicConfig topic_config_;
-
-  DataCallback callback_;
-
-  std::unique_ptr<::zenoh::Subscriber<void>> subscriber_;
-
-  bool enable_cache_ = false;
-  ze_owned_querying_subscriber_t cache_subscriber_{};
-  z_owned_session_t zenoh_cache_session_{};
-
-  bool dedicated_callback_thread_;
-  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
-  std::unique_ptr<concurrency::MessageQueueConsumer<Message>> callback_messages_consumer_;
+  RawSubscriber subscriber_;
 };
+
+template <typename T>
+[[nodiscard]] auto createSubscriber(zenoh::SessionPtr session, TopicConfig topic_config,
+                                    typename Subscriber<T>::DataCallback&& callback,
+                                    bool dedicated_callback_thread = false)
+    -> std::unique_ptr<Subscriber<T>> {
+  return std::make_unique<Subscriber<T>>(std::move(session), std::move(topic_config), std::move(callback),
+                                         dedicated_callback_thread);
+}
 
 }  // namespace heph::ipc::zenoh

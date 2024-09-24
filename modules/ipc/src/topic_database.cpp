@@ -14,7 +14,8 @@
 #include <absl/base/thread_annotations.h>
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
@@ -46,7 +47,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
     }
   }  // Unlock while querying the service.
 
-  auto query_topic = getTypeInfoServiceTopic(topic);
+  auto query_topic = zenoh::getTypeInfoServiceTopic(topic);
 
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 5000 };
   const auto response = zenoh::callService<std::string, std::string>(

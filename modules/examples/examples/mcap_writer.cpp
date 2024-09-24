@@ -15,7 +15,7 @@
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/serdes.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -42,7 +42,7 @@ auto main(int argc, const char* argv[]) -> int {
       heph::examples::types::Pose pose;
       pose.position = Eigen::Vector3d{ static_cast<double>(i), 2, 3 };  // NOLINT
       const auto data = heph::serdes::serialize(pose);
-      const heph::ipc::MessageMetadata metadata{
+      const heph::ipc::zenoh::MessageMetadata metadata{
         .sender_id = "myself", .topic = "pose", .timestamp = frame_time, .sequence_id = i
       };
 

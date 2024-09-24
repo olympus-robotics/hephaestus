@@ -14,12 +14,12 @@
 #include <absl/log/log.h>
 #include <fmt/core.h>
 
-#include "hephaestus/ipc/common.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
 
@@ -82,7 +82,7 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
       fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic));
 
   LOG(INFO) << fmt::format("Create subscriber for topic: {}", info.topic);
-  subscribers_[info.topic] = std::make_unique<ipc::zenoh::Subscriber>(
+  subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ .name = info.topic },
       [this, optional_type_info = std::move(optional_type_info)](const MessageMetadata& metadata,
                                                                  std::span<const std::byte> data) {

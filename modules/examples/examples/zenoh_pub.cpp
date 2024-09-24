@@ -12,9 +12,11 @@
 
 #include <fmt/core.h>
 
+#include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/ipc/publisher.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -25,20 +27,22 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    auto desc = getProgramDescription("Periodic publisher example", ExampleType::PUBSUB);
+    auto desc = heph::cli::ProgramDescription("Periodic publisher example");
+    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::PUBSUB));
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = parseArgs(args);
+    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
-    heph::ipc::Publisher<heph::examples::types::Pose> publisher{ session, topic_config,
-                                                                 [](const auto& status) {
-                                                                   if (status.matching) {
-                                                                     fmt::println("Subscriber match");
-                                                                   } else {
-                                                                     fmt::println("NO subscriber matching");
-                                                                   }
-                                                                 } };
+    heph::ipc::zenoh::Publisher<heph::examples::types::Pose> publisher{ session, topic_config,
+                                                                        [](const auto& status) {
+                                                                          if (status.matching) {
+                                                                            fmt::println("Subscriber match");
+                                                                          } else {
+                                                                            fmt::println(
+                                                                                "NO subscriber matching");
+                                                                          }
+                                                                        } };
 
     fmt::println("Declaring RawPublisher on '{}' with id: '{}'", topic_config.name, publisher.id());
 
