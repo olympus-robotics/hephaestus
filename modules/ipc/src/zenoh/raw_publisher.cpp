@@ -63,6 +63,8 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   , type_info_(std::move(type_info))
   , enable_cache_(session_->config.cache_size > 0)
   , match_cb_(std ::move(match_cb)) {
+  createTypeInfoService();
+
   // Enable publishing of a liveliness token.
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   ::zenoh::ZResult result{};
@@ -88,8 +90,6 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   if (match_cb_ != nullptr) {
     enableMatchingListener();
   }
-
-  createTypeInfoService();
 }
 
 RawPublisher::~RawPublisher() {

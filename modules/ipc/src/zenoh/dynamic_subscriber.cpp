@@ -29,17 +29,15 @@ namespace heph::ipc::zenoh {
 DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
   : session_(std::move(params.session))
   , topic_filter_(ipc::TopicFilter::create(params.topics_filter_params))
-  , publisher_discovery_session_(zenoh::createSession(Config{ session_->config }))
-  , topic_info_query_session_(ipc::zenoh::createSession({ Config{ session_->config } }))
-  , topic_db_(createZenohTopicDatabase(topic_info_query_session_))
+  , topic_db_(createZenohTopicDatabase(session_))
   , init_subscriber_cb_(std::move(params.init_subscriber_cb))
   , subscriber_cb_(std::move(params.subscriber_cb)) {
 }
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
-  discover_publishers_ =
-      std::make_unique<PublisherDiscovery>(publisher_discovery_session_, TopicConfig{ .name = "**" },
-                                           [this](const PublisherInfo& info) { onPublisher(info); });
+  discover_publishers_ = std::make_unique<PublisherDiscovery>(
+      zenoh::createSession(Config{ session_->config }), TopicConfig{ .name = "**" },
+      [this](const PublisherInfo& info) { onPublisher(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -48,10 +46,8 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 
 [[nodiscard]] auto DynamicSubscriber::stop() -> std::future<void> {
   discover_publishers_ = nullptr;
-  {
-    const std::scoped_lock lock(subscribers_mutex_);
-    subscribers_.erase(subscribers_.begin(), subscribers_.end());
-  }
+  subscribers_.erase(subscribers_.begin(), subscribers_.end());
+
   std::promise<void> promise;
   promise.set_value();
   return promise.get_future();
@@ -80,7 +76,6 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
     optional_type_info = std::move(type_info);
   }
 
-  const std::scoped_lock lock(subscribers_mutex_);
   if (subscribers_.contains(info.topic)) {
     LOG(ERROR) << fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic);
     return;
@@ -96,7 +91,6 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
 }
 
 void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
-  const std::scoped_lock lock(subscribers_mutex_);
   if (!subscribers_.contains(info.topic)) {
     LOG(ERROR) << fmt::format("Dropping subscriber for topic: {}, but one doesn't exist", info.topic);
     return;

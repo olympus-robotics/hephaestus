@@ -37,6 +37,7 @@ namespace {
 
   __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
+
 }  // namespace
 
 auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
@@ -44,17 +45,22 @@ auto getListOfPublishers(const Session& session, std::string_view topic) -> std:
   const ::zenoh::KeyExpr keyexpr(topic);
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
-  std::vector<PublisherInfo> infos;
+  std::set<std::string> topics;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (reply.is_ok()) {
       const auto& sample = reply.get_ok();
-      infos.emplace_back(std::string{ sample.get_keyexpr().as_string_view() }, PublisherStatus::ALIVE);
+      topics.emplace(sample.get_keyexpr().as_string_view());
     } else {
       LOG(ERROR) << fmt::format("Invalid reply for liveliness on topic {}", topic);
     }
   }
 
+  std::vector<PublisherInfo> infos;
+  infos.reserve(topics.size());
+  std::transform(topics.begin(), topics.end(), std::back_inserter(infos), [](const std::string& topic) {
+    return PublisherInfo{ .topic = topic, .status = PublisherStatus::ALIVE };
+  });
   return infos;
 }
 
@@ -69,11 +75,20 @@ void printPublisherInfo(const PublisherInfo& info) {
 
 PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
                                        Callback&& callback)
-  : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
+  : session_(std::move(session))
+  , topic_config_(std::move(topic_config))
+  , callback_(std::move(callback))
+  , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<PublisherInfo>>(
+        [this](const PublisherInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
+  infos_consumer_->start();
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
   auto publishers_info = getListOfPublishers(*session_, topic_config_.name);
+  // We call the user callback after we setup the subscriber to minimize the chances of missing publishers.
+  for (const auto& info : publishers_info) {
+    infos_consumer_->queue().forcePush(info);
+  }
 
   // Here we create the subscriber for the liveliness tokens.
   // NOTE: If a publisher start publishing between the previous call and the time needed to start the
@@ -82,24 +97,27 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   // track of what we already advertised so not to call the user callback twice on the same event.
   // TODO: implement the optimization described above.
   createLivelinessSubscriber();
+}
 
-  // We call the user callback after we setup the subscriber to minimize the chances of missing publishers.
-  for (const auto& info : publishers_info) {
-    this->callback_(info);
-  }
+PublisherDiscovery::~PublisherDiscovery() {
+  infos_consumer_->stop();
+  session_.reset();
+  liveliness_subscriber_.reset();
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {
   const ::zenoh::KeyExpr keyexpr(topic_config_.name);
-  auto callback = [this](const ::zenoh::Sample& sample) {
+
+  auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
     const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
                               .status = toPublisherStatus(sample.get_kind()) };
-    this->callback_(info);
+
+    infos_consumer_->queue().forcePush(info);
   };
 
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
-          keyexpr, std::move(callback), ::zenoh::closures::none));
+          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none));
 }
 
 }  // namespace heph::ipc::zenoh

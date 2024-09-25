@@ -50,15 +50,11 @@ private:
   SessionPtr session_;
   TopicFilter topic_filter_;
 
-  zenoh::SessionPtr publisher_discovery_session_;
   std::unique_ptr<PublisherDiscovery> discover_publishers_;
 
-  SessionPtr topic_info_query_session_;  // Session used to query topic service.
   std::unique_ptr<ITopicDatabase> topic_db_;
 
-  std::mutex subscribers_mutex_;
-  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>>
-      subscribers_ ABSL_GUARDED_BY(subscribers_mutex_);
+  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>> subscribers_;
   TopicWithTypeInfoCallback init_subscriber_cb_;
   SubscriberWithTypeCallback subscriber_cb_;
 };
