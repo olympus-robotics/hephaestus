@@ -6,6 +6,8 @@
 
 #include <future>
 
+#include <absl/base/thread_annotations.h>
+
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
@@ -54,7 +56,9 @@ private:
   SessionPtr topic_info_query_session_;  // Session used to query topic service.
   std::unique_ptr<ITopicDatabase> topic_db_;
 
-  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>> subscribers_;
+  std::mutex subscribers_mutex_;
+  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>>
+      subscribers_ ABSL_GUARDED_BY(subscribers_mutex_);
   TopicWithTypeInfoCallback init_subscriber_cb_;
   SubscriberWithTypeCallback subscriber_cb_;
 };

@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <utility>
@@ -47,8 +48,10 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 
 [[nodiscard]] auto DynamicSubscriber::stop() -> std::future<void> {
   discover_publishers_ = nullptr;
-  subscribers_.erase(subscribers_.begin(), subscribers_.end());
-
+  {
+    const std::scoped_lock lock(subscribers_mutex_);
+    subscribers_.erase(subscribers_.begin(), subscribers_.end());
+  }
   std::promise<void> promise;
   promise.set_value();
   return promise.get_future();
@@ -77,9 +80,11 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
     optional_type_info = std::move(type_info);
   }
 
-  throwExceptionIf<InvalidOperationException>(
-      subscribers_.contains(info.topic),
-      fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic));
+  const std::scoped_lock lock(subscribers_mutex_);
+  if (subscribers_.contains(info.topic)) {
+    LOG(ERROR) << fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic);
+    return;
+  }
 
   LOG(INFO) << fmt::format("Create subscriber for topic: {}", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
@@ -91,12 +96,15 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
 }
 
 void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
-  throwExceptionIf<InvalidOperationException>(
-      !subscribers_.contains(info.topic),
-      fmt::format("Trying to drop topic {}, but subscriber doesn't exist", info.topic));
+  const std::scoped_lock lock(subscribers_mutex_);
+  if (!subscribers_.contains(info.topic)) {
+    LOG(ERROR) << fmt::format("Dropping subscriber for topic: {}, but one doesn't exist", info.topic);
+    return;
+  }
+
+  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
-  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
 }
 
 }  // namespace heph::ipc::zenoh

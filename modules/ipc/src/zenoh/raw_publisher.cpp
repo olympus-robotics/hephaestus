@@ -17,9 +17,11 @@
 #include <zenoh/api/bytes.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/enums.hxx>
+#include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/publisher.hxx>
+#include <zenoh/api/queryable.hxx>
 #include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>
 #include <zenoh_macros.h>
@@ -93,7 +95,6 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
 RawPublisher::~RawPublisher() {
   if (enable_cache_) {
     z_drop(z_move(cache_publisher_));
-    z_drop(z_move(zenoh_cache_session_));
   }
 }
 
@@ -111,13 +112,12 @@ void RawPublisher::enableCache() {
   ze_publication_cache_options_default(&cache_publisher_opts);
   cache_publisher_opts.history = session_->config.cache_size;
 
-  z_view_keyexpr_t ke;
-  z_view_keyexpr_from_str(&ke, topic_config_.name.data());
+  z_view_keyexpr_t keyexpr;
+  z_view_keyexpr_from_str(&keyexpr, topic_config_.name.data());
 
-  // TODO replace with loan
-  zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
-  const auto result = ze_declare_publication_cache(&cache_publisher_, z_loan(zenoh_cache_session_),
-                                                   z_loan(ke), &cache_publisher_opts);
+  const auto result = ze_declare_publication_cache(&cache_publisher_,
+                                                   ::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
+                                                   z_loan(keyexpr), &cache_publisher_opts);
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
       fmt::format("[Publisher {}] failed to enable cache, result {}", topic_config_.name, result));
@@ -141,7 +141,8 @@ void RawPublisher::enableMatchingListener() {
       },
       []() {});
 
-  zc_publisher_matching_listener_declare(&subscriers_listener_, publisher_->loan(), z_move(closure));
+  zc_publisher_matching_listener_declare(&subscriers_listener_,
+                                         ::zenoh::interop::as_loaned_c_ptr(*publisher_), z_move(closure));
 }
 
 void RawPublisher::createTypeInfoService() {
