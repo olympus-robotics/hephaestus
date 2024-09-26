@@ -89,7 +89,7 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
 
 void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
   if (!subscribers_.contains(info.topic)) {
-    LOG(ERROR) << fmt::format("Dropping subscriber for topic: {}, but one doesn't exist", info.topic);
+    LOG(ERROR) << fmt::format("Trying to drop subscriber for topic: {}, but one doesn't exist", info.topic);
     return;
   }
 

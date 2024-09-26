@@ -6,8 +6,6 @@
 
 #include <future>
 
-#include <absl/base/thread_annotations.h>
-
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
