@@ -63,7 +63,6 @@ private:
 
   bool enable_cache_ = false;
   ze_owned_publication_cache_t cache_publisher_{};
-  z_owned_session_t zenoh_cache_session_{};
 
   std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;

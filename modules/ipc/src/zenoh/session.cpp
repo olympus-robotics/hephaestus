@@ -23,35 +23,35 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
 
   auto zconfig = ::zenoh::Config::create_default();
   // A timestamp is add to every published message.
-  zconfig.insert_json(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
+  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
 
   // Enable shared memory support.
   if (config.enable_shared_memory) {
-    zconfig.insert_json("transport/shared_memory/enabled", "true");
+    zconfig.insert_json5("transport/shared_memory/enabled", "true");
   }
 
   // Set node in client mode.
   if (config.mode == Mode::CLIENT) {
-    zconfig.insert_json(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
+    zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
   }
 
   // Set the transport to UDP, but I am not sure it is the right way.
-  // zconfig.insert_json(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
+  // zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
   if (config.protocol == Protocol::UDP) {
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
+    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
   } else if (config.protocol == Protocol::TCP) {
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
+    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
   }
 
   // Add router endpoint.
   if (!config.router.empty()) {
     const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
-    zconfig.insert_json(Z_CONFIG_CONNECT_KEY, router_endpoint);  // NOLINT(misc-include-cleaner)
+    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, router_endpoint);  // NOLINT(misc-include-cleaner)
   }
-  { zconfig.insert_json("transport/unicast/qos/enabled", config.qos ? "true" : "false"); }
+  { zconfig.insert_json5("transport/unicast/qos/enabled", config.qos ? "true" : "false"); }
   if (config.real_time) {
-    zconfig.insert_json("transport/unicast/qos/enabled", "false");
-    zconfig.insert_json("transport/unicast/lowlatency", "true");
+    zconfig.insert_json5("transport/unicast/qos/enabled", "false");
+    zconfig.insert_json5("transport/unicast/lowlatency", "true");
   }
 
   return zconfig;

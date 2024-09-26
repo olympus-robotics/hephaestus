@@ -20,7 +20,6 @@ add_subdirectory(proto)
 # library sources
 set(SOURCES
     src/topic.cpp
-    src/topic_database.cpp
     src/topic_filter.cpp
     src/zenoh/conversions.cpp
     src/zenoh/dynamic_subscriber.cpp
@@ -33,6 +32,7 @@ set(SOURCES
     src/zenoh/service.cpp
     src/zenoh/session.cpp
     src/zenoh/subscriber.cpp
+    src/zenoh/topic_database.cpp
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
     src/zenoh/action_server/types.cpp

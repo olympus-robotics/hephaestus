@@ -5,6 +5,7 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 
 #include <cstddef>
+#include <exception>
 #include <memory>
 #include <span>
 #include <string>
@@ -19,6 +20,7 @@
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/closures.hxx>
+#include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/sample.hxx>
 #include <zenoh/api/subscriber.hxx>
@@ -75,9 +77,9 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
 
     auto c_closure = createZenohcClosure(cb, ::zenoh::closures::none);
 
-    zenoh_cache_session_ = std::move(session_->zenoh_session.clone()).take();
-    const auto result = ze_declare_querying_subscriber(&cache_subscriber_, z_loan(zenoh_cache_session_),
-                                                       z_loan(keyexpr), z_move(c_closure), &sub_opts);
+    const auto result = ze_declare_querying_subscriber(
+        &cache_subscriber_, ::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session), z_loan(keyexpr),
+        z_move(c_closure), &sub_opts);
 
     heph::throwExceptionIf<heph::FailedZenohOperation>(
         result != Z_OK,
@@ -102,7 +104,13 @@ RawSubscriber::~RawSubscriber() {
 
   if (enable_cache_) {
     z_drop(z_move(cache_subscriber_));
-    z_drop(z_move(zenoh_cache_session_));
+  } else {
+    try {
+      std::move(*subscriber_).undeclare();
+    } catch (std::exception& e) {
+      LOG(ERROR) << fmt::format("Failed to undeclare subscriber for: {}. Exception: {}", topic_config_.name,
+                                e.what());
+    }
   }
 }
 
