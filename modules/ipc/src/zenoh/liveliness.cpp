@@ -4,7 +4,11 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <algorithm>
+#include <exception>
+#include <iterator>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -22,6 +26,7 @@
 #include <zenoh/api/sample.hxx>
 #include <zenoh/api/subscriber.hxx>
 
+#include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
@@ -85,7 +90,6 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
   auto publishers_info = getListOfPublishers(*session_, topic_config_.name);
-  // We call the user callback after we setup the subscriber to minimize the chances of missing publishers.
   for (const auto& info : publishers_info) {
     infos_consumer_->queue().forcePush(info);
   }
@@ -101,8 +105,12 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
 
 PublisherDiscovery::~PublisherDiscovery() {
   infos_consumer_->stop();
-  session_.reset();
-  liveliness_subscriber_.reset();
+  try {
+    std::move(*liveliness_subscriber_).undeclare();
+  } catch (std::exception& e) {
+    LOG(ERROR) << fmt::format("Failed to undeclare liveliness subscriber for: {}. Exception: {}",
+                              topic_config_.name, e.what());
+  }
 }
 
 void PublisherDiscovery::createLivelinessSubscriber() {

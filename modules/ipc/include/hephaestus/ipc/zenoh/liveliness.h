@@ -33,9 +33,6 @@ void printPublisherInfo(const PublisherInfo& info);
 class PublisherDiscovery {
 public:
   using Callback = std::function<void(const PublisherInfo& info)>;
-  // TODO: figure out why even if we kill the liveliness subscriber we still get messages.
-  /// The callback needs to be thread safe as they may be called in parallel for different publishers
-  /// discovered.
   explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
   ~PublisherDiscovery();
 

@@ -5,6 +5,7 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 
 #include <cstddef>
+#include <exception>
 #include <memory>
 #include <span>
 #include <string>
@@ -103,6 +104,13 @@ RawSubscriber::~RawSubscriber() {
 
   if (enable_cache_) {
     z_drop(z_move(cache_subscriber_));
+  } else {
+    try {
+      std::move(*subscriber_).undeclare();
+    } catch (std::exception& e) {
+      LOG(ERROR) << fmt::format("Failed to undeclare subscriber for: {}. Exception: {}", topic_config_.name,
+                                e.what());
+    }
   }
 }
 

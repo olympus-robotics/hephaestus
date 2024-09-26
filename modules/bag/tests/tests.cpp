@@ -35,8 +35,8 @@ constexpr auto ROBOT_MSG_PERIOD = std::chrono::milliseconds{ 1 };
 constexpr std::size_t FLEET_MSG_COUNT = 5;
 constexpr auto FLEET_MSG_PERIOD = std::chrono::milliseconds{ 2 };
 constexpr auto SENDER_ID = "bag_tester";
-constexpr auto ROBOT_TOPIC = "robot";
-constexpr auto FLEET_TOPIC = "fleet";
+constexpr auto ROBOT_TOPIC = "bag_test/robot";
+constexpr auto FLEET_TOPIC = "bag_test/fleet";
 
 [[nodiscard]] auto createBag()
     -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
@@ -77,6 +77,7 @@ constexpr auto FLEET_TOPIC = "fleet";
   return { std::move(scoped_path), std::move(robots), std::move(fleet) };
 }
 
+// TODO: figure out how to isolate the network to make sure that only the two topics here are visible.
 TEST(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
   auto [bag_path, robots, companies] = createBag();
@@ -84,7 +85,7 @@ TEST(Bag, PlayAndRecord) {
     auto bag_writer = createMcapWriter({ output_bag });
     auto recorder = ZenohRecorder::create({ .session = ipc::zenoh::createSession({}),
                                             .bag_writer = std::move(bag_writer),
-                                            .topics_filter_params = {} });
+                                            .topics_filter_params = { .prefix = "bag_test/" } });
     {
       auto reader = std::make_unique<mcap::McapReader>();
       const auto status = reader->open(bag_path);

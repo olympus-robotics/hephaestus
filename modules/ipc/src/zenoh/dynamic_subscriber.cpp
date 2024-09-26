@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <future>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <span>
 #include <utility>
@@ -22,7 +21,6 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)
@@ -36,8 +34,7 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
   discover_publishers_ = std::make_unique<PublisherDiscovery>(
-      zenoh::createSession(Config{ session_->config }), TopicConfig{ .name = "**" },
-      [this](const PublisherInfo& info) { onPublisher(info); });
+      session_, TopicConfig{ .name = "**" }, [this](const PublisherInfo& info) { onPublisher(info); });
 
   std::promise<void> promise;
   promise.set_value();

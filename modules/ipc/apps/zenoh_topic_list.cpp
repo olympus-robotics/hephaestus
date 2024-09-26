@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <exception>
 #include <string_view>
-#include <thread>
 #include <tuple>
 #include <utility>
 
@@ -50,7 +49,7 @@ auto main(int argc, const char* argv[]) -> int {
     if (!args.getOption<bool>("live")) {
       getListOfPublisher(*session, topic_config.name);
     } else {
-      getLiveListOfPublisher(std::move(session), std::move(topic_config));
+      getLiveListOfPublisher(session, std::move(topic_config));
     }
 
     return EXIT_SUCCESS;
