@@ -97,12 +97,9 @@ template <EnumType T, EnumType ProtoT>
 template <EnumType T, EnumType ProtoT>
 auto toProtoEnum(const T& enum_value) -> ProtoT {
   static const auto enum_to_proto_enum = internal::createEnumLookupTable<T, ProtoT>();
-  try {
-    return enum_to_proto_enum.at(enum_value);
-  } catch (const std::out_of_range&) {
-    throw std::out_of_range(
-        fmt::format("Enum {} not found in the lookup table", magic_enum::enum_name(enum_value)));
-  }
+  auto enum_it = enum_to_proto_enum.find(enum_value);
+  throwExceptionIf<InvalidData>(enum_it == enum_to_proto_enum.end(), "....");
+  return enum_it->second;
 }
 
 template <EnumType T, EnumType ProtoT>
