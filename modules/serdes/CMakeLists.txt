@@ -19,6 +19,7 @@ set(SOURCES
     src/serdes.cpp
     src/type_info.cpp
     src/dynamic_deserializer.cpp
+    src/protobuf/buffers.cpp
     src/protobuf/dynamic_deserializer.cpp
     src/protobuf/buffers.cpp
     src/protobuf/protobuf.cpp
@@ -27,6 +28,7 @@ set(SOURCES
     include/hephaestus/serdes/dynamic_deserializer.h
     include/hephaestus/serdes/serdes.h
     include/hephaestus/serdes/type_info.h
+    include/hephaestus/serdes/protobuf/buffers.h
     include/hephaestus/serdes/protobuf/concepts.h
     include/hephaestus/serdes/protobuf/buffers.h
     include/hephaestus/serdes/protobuf/dynamic_deserializer.h

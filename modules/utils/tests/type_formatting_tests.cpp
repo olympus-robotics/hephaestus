@@ -13,11 +13,11 @@
 #include <fmt/core.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/types/type_formatting.h"
+#include "hephaestus/utils/string/type_formatting.h"
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
-namespace heph::types::tests {
+namespace heph::utils::string::tests {
 
 //=================================================================================================
 // Array
@@ -175,4 +175,4 @@ TEST(TypeFormattingTests, ChronoTimestampFormattingSystemClock) {
   ASSERT_EQ(str[19], '.');
 }
 
-}  // namespace heph::types::tests
+}  // namespace heph::utils::string::tests
