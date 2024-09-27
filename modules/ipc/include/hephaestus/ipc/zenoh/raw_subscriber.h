@@ -53,7 +53,6 @@ private:
 
   bool enable_cache_ = false;
   ze_owned_querying_subscriber_t cache_subscriber_{};
-  z_owned_session_t zenoh_cache_session_{};
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;

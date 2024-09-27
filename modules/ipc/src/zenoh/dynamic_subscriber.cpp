@@ -21,24 +21,20 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)
 DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
   : session_(std::move(params.session))
   , topic_filter_(ipc::TopicFilter::create(params.topics_filter_params))
-  , publisher_discovery_session_(zenoh::createSession(Config{ session_->config }))
-  , topic_info_query_session_(ipc::zenoh::createSession({ Config{ session_->config } }))
-  , topic_db_(createZenohTopicDatabase(topic_info_query_session_))
+  , topic_db_(createZenohTopicDatabase(session_))
   , init_subscriber_cb_(std::move(params.init_subscriber_cb))
   , subscriber_cb_(std::move(params.subscriber_cb)) {
 }
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
-  discover_publishers_ =
-      std::make_unique<PublisherDiscovery>(publisher_discovery_session_, TopicConfig{ .name = "**" },
-                                           [this](const PublisherInfo& info) { onPublisher(info); });
+  discover_publishers_ = std::make_unique<PublisherDiscovery>(
+      session_, TopicConfig{ .name = "**" }, [this](const PublisherInfo& info) { onPublisher(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -77,9 +73,10 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
     optional_type_info = std::move(type_info);
   }
 
-  throwExceptionIf<InvalidOperationException>(
-      subscribers_.contains(info.topic),
-      fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic));
+  if (subscribers_.contains(info.topic)) {
+    LOG(ERROR) << fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic);
+    return;
+  }
 
   LOG(INFO) << fmt::format("Create subscriber for topic: {}", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
@@ -91,12 +88,14 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
 }
 
 void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
-  throwExceptionIf<InvalidOperationException>(
-      !subscribers_.contains(info.topic),
-      fmt::format("Trying to drop topic {}, but subscriber doesn't exist", info.topic));
+  if (!subscribers_.contains(info.topic)) {
+    LOG(ERROR) << fmt::format("Trying to drop subscriber for topic: {}, but one doesn't exist", info.topic);
+    return;
+  }
+
+  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
-  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
 }
 
 }  // namespace heph::ipc::zenoh

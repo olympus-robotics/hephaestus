@@ -48,10 +48,8 @@ private:
   SessionPtr session_;
   TopicFilter topic_filter_;
 
-  zenoh::SessionPtr publisher_discovery_session_;
   std::unique_ptr<PublisherDiscovery> discover_publishers_;
 
-  SessionPtr topic_info_query_session_;  // Session used to query topic service.
   std::unique_ptr<ITopicDatabase> topic_db_;
 
   std::unordered_map<std::string, std::unique_ptr<RawSubscriber>> subscribers_;
