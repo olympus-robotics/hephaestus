@@ -20,6 +20,7 @@ configure_file(src/version.in ${CMAKE_CURRENT_SOURCE_DIR}/src/version_impl.h @ON
 set(SOURCES
     src/filesystem/file.cpp
     src/filesystem/scoped_path.cpp
+    src/format/format.cpp
     src/string/string_literal.cpp
     src/string/string_utils.cpp
     src/timing/watchdog.cpp
@@ -33,6 +34,7 @@ set(SOURCES
     README.md
     include/hephaestus/utils/filesystem/file.h
     include/hephaestus/utils/filesystem/scoped_path.h
+    include/hephaestus/utils/format/format.h
     include/hephaestus/utils/string/string_literal.h
     include/hephaestus/utils/string/string_utils.h
     include/hephaestus/utils/timing/watchdog.h
