@@ -7,6 +7,8 @@
 #include <future>
 #include <sstream>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace heph {
 
