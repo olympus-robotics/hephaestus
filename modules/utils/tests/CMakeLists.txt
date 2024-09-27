@@ -31,6 +31,13 @@ define_module_test(
 )
 
 define_module_test(
+  NAME format_tests
+  SOURCES format_tests.cpp
+  PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+  PUBLIC_LINK_LIBS ""
+)
+
+define_module_test(
   NAME string_utils_tests
   SOURCES string_utils_tests.cpp
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
@@ -42,11 +49,6 @@ define_module_test(
   SOURCES string_literal_tests.cpp
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
   PUBLIC_LINK_LIBS ""
-)
-
-define_module_test(
-  NAME type_formatting_tests
-  SOURCES type_formatting_tests.cpp
 )
 
 define_module_test(

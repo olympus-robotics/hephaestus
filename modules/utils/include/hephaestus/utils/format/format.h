@@ -15,7 +15,7 @@
 
 #include "hephaestus/utils/concepts.h"
 
-namespace heph::utils::string {
+namespace heph::utils::format {
 
 //=================================================================================================
 // Array and Vector
@@ -87,4 +87,4 @@ template <ChronoSteadyClockType T>
   return fmt::format("{}d {:02}h:{:02}m:{:02}.{:09}s", days, hours, minutes, seconds, sub_seconds * SCALER);
 }
 
-};  // namespace heph::utils::string
+}  // namespace heph::utils::format

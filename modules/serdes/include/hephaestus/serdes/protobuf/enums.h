@@ -13,9 +13,9 @@
 
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/format/format.h"
 #include "hephaestus/utils/string/string_literal.h"
 #include "hephaestus/utils/string/string_utils.h"
-#include "hephaestus/utils/string/type_formatting.h"
 
 namespace heph::serdes::protobuf {
 
@@ -64,7 +64,7 @@ template <EnumType T, EnumType ProtoT>
   heph::throwExceptionIf<heph::InvalidParameterException>(
       !proto_enum.has_value(),
       fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
-                  proto_enum_name, utils::string::toString(magic_enum::enum_names<ProtoT>())));
+                  proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
 
   return proto_enum.value();
 }

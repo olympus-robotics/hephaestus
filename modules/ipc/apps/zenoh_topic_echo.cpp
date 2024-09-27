@@ -28,9 +28,9 @@
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/format/format.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
-#include "hephaestus/utils/string/type_formatting.h"
 
 namespace {
 constexpr auto DEFAULT_MAX_ARRAY_LENGTH = 100;
@@ -95,7 +95,7 @@ private:
     truncateLongItems(msg_json, noarr_, max_array_length_);
     fmt::println("From: {}. Topic: {}\nSequence: {} | Timestamp: {}\n{}", metadata.sender_id, metadata.topic,
                  metadata.sequence_id,
-                 utils::string::toString(std::chrono::time_point<std::chrono::system_clock>(
+                 utils::format::toString(std::chrono::time_point<std::chrono::system_clock>(
                      std::chrono::duration_cast<std::chrono::system_clock::duration>(metadata.timestamp))),
                  msg_json);
   }

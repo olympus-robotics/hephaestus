@@ -21,6 +21,8 @@ set(SOURCES
     src/dynamic_deserializer.cpp
     src/protobuf/buffers.cpp
     src/protobuf/dynamic_deserializer.cpp
+    src/protobuf/buffers.cpp
+    src/protobuf/dynamic_deserializer.cpp
     src/protobuf/enums.cpp
     src/protobuf/protobuf.cpp
     src/protobuf/protobuf_internal.cpp
@@ -28,6 +30,8 @@ set(SOURCES
     include/hephaestus/serdes/dynamic_deserializer.h
     include/hephaestus/serdes/serdes.h
     include/hephaestus/serdes/type_info.h
+    include/hephaestus/serdes/protobuf/buffers.h
+    include/hephaestus/serdes/protobuf/concepts.h
     include/hephaestus/serdes/protobuf/buffers.h
     include/hephaestus/serdes/protobuf/concepts.h
     include/hephaestus/serdes/protobuf/enums.h

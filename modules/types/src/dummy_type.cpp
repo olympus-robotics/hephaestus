@@ -11,7 +11,7 @@
 #include <magic_enum.hpp>
 
 #include "hephaestus/random/random_object_creator.h"
-#include "hephaestus/utils/string/type_formatting.h"
+#include "hephaestus/utils/format/format.h"
 
 namespace heph::types {
 
@@ -60,7 +60,7 @@ auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream& 
             << "  internal_dummy_enum=" << magic_enum::enum_name(dummy_type.internal_dummy_enum) << "\n"
             << "  external_dummy_enum=" << magic_enum::enum_name(dummy_type.external_dummy_enum) << "\n"
             << "  dummy_string=" << dummy_type.dummy_string << "\n"
-            << "  dummy_vector=" << utils::string::toString(dummy_type.dummy_vector) << "\n"
+            << "  dummy_vector=" << utils::format::toString(dummy_type.dummy_vector) << "\n"
             << "}";
 }
 

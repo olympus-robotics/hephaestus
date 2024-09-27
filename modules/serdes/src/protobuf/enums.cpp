@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/serdes/protobuf/enums.h"
+#include "hephaestus/serdes/protobuf/enums.h"  // NOLINT(misc-include-cleaner)
