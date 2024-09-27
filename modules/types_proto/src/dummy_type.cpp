@@ -90,11 +90,9 @@ auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) ->
   toProto(*proto_dummy_type.mutable_dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
   proto_dummy_type.set_internal_dummy_enum(
-      serdes::protobuf::toProtoEnum<DummyType::InternalDummyEnum, proto::DummyType::InternalDummyEnum>(
-          dummy_type.internal_dummy_enum));
+      serdes::protobuf::toProtoEnum<proto::DummyType::InternalDummyEnum>(dummy_type.internal_dummy_enum));
   proto_dummy_type.set_external_dummy_enum(
-      serdes::protobuf::toProtoEnum<ExternalDummyEnum, proto::DummyTypeExternalDummyEnum>(
-          dummy_type.external_dummy_enum));
+      serdes::protobuf::toProtoEnum<proto::DummyTypeExternalDummyEnum>(dummy_type.external_dummy_enum));
 
   proto_dummy_type.set_dummy_string(dummy_type.dummy_string);
 

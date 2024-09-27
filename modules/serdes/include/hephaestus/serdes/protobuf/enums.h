@@ -19,10 +19,10 @@
 
 namespace heph::serdes::protobuf {
 
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto toProtoEnum(const T& enum_value) -> ProtoT;
 
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void;
 
 //=================================================================================================
@@ -54,7 +54,7 @@ template <EnumType ProtoT>
 /// will have a protobuf counterpart
 /// enum FooExternalEnum : { BAR1,  BAR2 };
 /// enum Foo_InternalEnum : { Foo_InternalEnum_BAR1, Foo_InternalEnum_BAR2 };
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto getAsProtoEnum(T e) -> ProtoT {
   const auto proto_prefix = getProtoPrefix<ProtoT>();
   auto proto_enum_name =
@@ -69,19 +69,19 @@ template <EnumType T, EnumType ProtoT>
   return proto_enum.value();
 }
 
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto createEnumLookupTable() -> std::unordered_map<T, ProtoT> {
   std::unordered_map<T, ProtoT> lookup_table;
 
   for (const auto& e : magic_enum::enum_values<T>()) {
-    lookup_table[e] = getAsProtoEnum<T, ProtoT>(e);
+    lookup_table[e] = getAsProtoEnum<ProtoT, T>(e);
   }
 
   return lookup_table;
 }
 
 /// @brief Create inverse lookup table. Unique values are guaranteed by the enum layout.
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto createInverseLookupTable(const std::unordered_map<T, ProtoT>& enum_to_proto_enum)
     -> std::unordered_map<ProtoT, T> {
   std::unordered_map<ProtoT, T> proto_enum_to_enum;
@@ -94,24 +94,17 @@ template <EnumType T, EnumType ProtoT>
 }
 }  // namespace internal
 
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 auto toProtoEnum(const T& enum_value) -> ProtoT {
-  static const auto enum_to_proto_enum = internal::createEnumLookupTable<T, ProtoT>();
-  auto enum_it = enum_to_proto_enum.find(enum_value);
-  throwExceptionIf<InvalidData>(enum_it == enum_to_proto_enum.end(), "....");
-  return enum_it->second;
+  static const auto enum_to_proto_enum = internal::createEnumLookupTable<ProtoT, T>();
+  return enum_to_proto_enum.at(enum_value);
 }
 
-template <EnumType T, EnumType ProtoT>
+template <EnumType ProtoT, EnumType T>
 auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void {
   static const auto proto_enum_value_to_enum =
-      internal::createInverseLookupTable(internal::createEnumLookupTable<T, ProtoT>());
-  try {
-    enum_value = proto_enum_value_to_enum.at(proto_enum_value);
-  } catch (const std::out_of_range&) {
-    throw std::out_of_range(
-        fmt::format("Proto enum {} not found in the lookup table", magic_enum::enum_name(proto_enum_value)));
-  }
+      internal::createInverseLookupTable(internal::createEnumLookupTable<ProtoT, T>());
+  enum_value = proto_enum_value_to_enum.at(proto_enum_value);
 }
 
 }  // namespace heph::serdes::protobuf
