@@ -63,8 +63,8 @@ auto getListOfPublishers(const Session& session, std::string_view topic) -> std:
 
   std::vector<PublisherInfo> infos;
   infos.reserve(topics.size());
-  std::transform(topics.begin(), topics.end(), std::back_inserter(infos), [](const std::string& topic) {
-    return PublisherInfo{ .topic = topic, .status = PublisherStatus::ALIVE };
+  std::transform(topics.begin(), topics.end(), std::back_inserter(infos), [](const std::string& topic_name) {
+    return PublisherInfo{ .topic = topic_name, .status = PublisherStatus::ALIVE };
   });
   return infos;
 }
