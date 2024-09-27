@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package heph.types.proto;
 
-enum DummyTypeDummyEnum {
+enum DummyTypeExternalDummyEnum {
   A = 0;
   B = 1;
   C = 2;
@@ -34,10 +34,15 @@ message DummyPrimitivesType {
 }
 
 message DummyType {
+  enum InternalDummyEnum {
+    ALPHA = 0;
+  }
+
   DummyPrimitivesType dummy_primitives_type = 1;
 
-  DummyTypeDummyEnum dummy_enum = 2;
+  InternalDummyEnum internal_dummy_enum = 2;
+  DummyTypeExternalDummyEnum external_dummy_enum = 3;
 
-  string dummy_string = 3;
-  repeated int32 dummy_vector = 4;
+  string dummy_string = 4;
+  repeated int32 dummy_vector = 5;
 }

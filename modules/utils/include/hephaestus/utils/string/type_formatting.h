@@ -15,7 +15,7 @@
 
 #include "hephaestus/utils/concepts.h"
 
-namespace heph::types {
+namespace heph::utils::string {
 
 //=================================================================================================
 // Array and Vector
@@ -46,7 +46,8 @@ template <UnorderedMapType T>
   std::stringstream ss;
 
   for (const auto& [key, value] : umap) {
-    ss << "  Key: " << key << ", Value: " << value << '\n';
+    const std::string str = fmt::format("  Key: {}, Value: {}\n", key, value);
+    ss << str;
   }
 
   return ss.str();
@@ -86,4 +87,4 @@ template <ChronoSteadyClockType T>
   return fmt::format("{}d {:02}h:{:02}m:{:02}.{:09}s", days, hours, minutes, seconds, sub_seconds * SCALER);
 }
 
-};  // namespace heph::types
+};  // namespace heph::utils::string

@@ -22,6 +22,7 @@ set(SOURCES
     src/filesystem/scoped_path.cpp
     src/string/string_literal.cpp
     src/string/string_utils.cpp
+    src/string/type_formatting.cpp
     src/timing/watchdog.cpp
     src/bit_flag.cpp
     src/concepts.cpp
@@ -35,6 +36,7 @@ set(SOURCES
     include/hephaestus/utils/filesystem/scoped_path.h
     include/hephaestus/utils/string/string_literal.h
     include/hephaestus/utils/string/string_utils.h
+    include/hephaestus/utils/string/type_formatting.h
     include/hephaestus/utils/timing/watchdog.h
     include/hephaestus/utils/bit_flag.h
     include/hephaestus/utils/concepts.h

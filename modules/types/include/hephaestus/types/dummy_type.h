@@ -42,11 +42,13 @@ struct DummyPrimitivesType {
 
 auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream&;
 
+enum class ExternalDummyEnum : int8_t { A, B, C, D, E, F, G };
+
 /// @brief Collection of non-primitive types for testing purposes.
 /// NOTE: the data needs to be Protobuf serializable
 /// NOTE: missing generic non-primitive types can be added to increase the test coverage
 struct DummyType {
-  enum class DummyEnum : int8_t { A, B, C, D, E, F, G };
+  enum class InternalDummyEnum : int8_t { ALPHA };
 
   [[nodiscard]] auto operator==(const DummyType&) const -> bool = default;
 
@@ -54,7 +56,8 @@ struct DummyType {
 
   DummyPrimitivesType dummy_primitives_type{};
 
-  DummyEnum dummy_enum{};
+  InternalDummyEnum internal_dummy_enum{ InternalDummyEnum::ALPHA };
+  ExternalDummyEnum external_dummy_enum{ ExternalDummyEnum::A };
 
   std::string dummy_string{};
   std::vector<int32_t> dummy_vector{};

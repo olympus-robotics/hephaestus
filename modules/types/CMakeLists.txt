@@ -16,11 +16,9 @@ find_package(range-v3 REQUIRED)
 set(SOURCES
     src/bounds.cpp
     src/dummy_type.cpp
-    src/type_formatting.cpp
     README.md
     include/hephaestus/types/bounds.h
     include/hephaestus/types/dummy_type.h
-    include/hephaestus/types/type_formatting.h
 )
 
 # library target
