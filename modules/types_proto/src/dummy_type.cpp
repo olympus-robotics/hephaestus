@@ -7,6 +7,9 @@
 #include <cstddef>
 #include <vector>
 
+#include <fmt/core.h>
+#include <magic_enum.hpp>
+
 #include "hephaestus/serdes/protobuf/enums.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/proto/dummy_type.pb.h"
@@ -82,19 +85,16 @@ auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
 //=================================================================================================
 // DummyType
 //=================================================================================================
-using InternalDummyEnumConverterT =
-    serdes::protobuf::EnumProtoConverter<DummyType::InternalDummyEnum, proto::DummyType::InternalDummyEnum,
-                                         "DummyType_InternalDummyEnum">;
-using ExternalDummyEnumConverterT =
-    serdes::protobuf::EnumProtoConverter<ExternalDummyEnum, proto::DummyTypeExternalDummyEnum, "">;
 
 auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) -> void {
   toProto(*proto_dummy_type.mutable_dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
   proto_dummy_type.set_internal_dummy_enum(
-      InternalDummyEnumConverterT::toProtoEnum(dummy_type.internal_dummy_enum));
+      serdes::protobuf::toProtoEnum<DummyType::InternalDummyEnum, proto::DummyType::InternalDummyEnum>(
+          dummy_type.internal_dummy_enum));
   proto_dummy_type.set_external_dummy_enum(
-      ExternalDummyEnumConverterT::toProtoEnum(dummy_type.external_dummy_enum));
+      serdes::protobuf::toProtoEnum<ExternalDummyEnum, proto::DummyTypeExternalDummyEnum>(
+          dummy_type.external_dummy_enum));
 
   proto_dummy_type.set_dummy_string(dummy_type.dummy_string);
 
@@ -104,10 +104,8 @@ auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) ->
 auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) -> void {
   fromProto(proto_dummy_type.dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
-  dummy_type.internal_dummy_enum =
-      InternalDummyEnumConverterT::fromProtoEnum(proto_dummy_type.internal_dummy_enum());
-  dummy_type.external_dummy_enum =
-      ExternalDummyEnumConverterT::fromProtoEnum(proto_dummy_type.external_dummy_enum());
+  serdes::protobuf::fromProto(proto_dummy_type.internal_dummy_enum(), dummy_type.internal_dummy_enum);
+  serdes::protobuf::fromProto(proto_dummy_type.external_dummy_enum(), dummy_type.external_dummy_enum);
 
   dummy_type.dummy_string = proto_dummy_type.dummy_string();
 

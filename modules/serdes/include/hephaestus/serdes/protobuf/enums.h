@@ -19,47 +19,31 @@
 
 namespace heph::serdes::protobuf {
 
-/// Convert between enums and their protobuf counterparts using a lookup table. A singleton pattern with lazy
-/// evaluation of the lookup table is used. For a given pair of enums and proto enums, the converter is unique
-/// and only created once. If you need a challenge, convert the class to constexpr and evaluate at compile
-/// time.
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-class EnumProtoConverter {
-public:
-  EnumProtoConverter(const EnumProtoConverter&) = delete;
-  auto operator=(const EnumProtoConverter&) -> EnumProtoConverter& = delete;
-  EnumProtoConverter(EnumProtoConverter&&) = delete;
-  auto operator=(EnumProtoConverter&&) -> EnumProtoConverter& = delete;
+template <EnumType T, EnumType ProtoT>
+[[nodiscard]] auto toProtoEnum(const T& enum_value) -> ProtoT;
 
-  [[nodiscard]] static auto toProtoEnum(const T& e) -> ProtoT;
-  [[nodiscard]] static auto fromProtoEnum(const ProtoT& proto_enum) -> T;
-
-private:
-  EnumProtoConverter();
-  ~EnumProtoConverter() = default;
-
-  [[nodiscard]] static auto instance() -> const EnumProtoConverter<T, ProtoT, ProtoPrefix>&;
-  [[nodiscard]] static auto getAsProtoEnum(T e) -> ProtoT;
-  [[nodiscard]] static auto createEnumLookupTable() -> std::unordered_map<T, ProtoT>;
-
-  std::unordered_map<T, ProtoT> enum_to_proto_enum_;  // Lookup table.
-  std::unordered_map<ProtoT, T> proto_enum_to_enum_;  // Invese lookup table.
-};
+template <EnumType T, EnumType ProtoT>
+auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void;
 
 //=================================================================================================
 // Implementation
 //=================================================================================================
 
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::toProtoEnum(const T& e) -> ProtoT {
-  static const auto& converter = instance();
-  return converter.enum_to_proto_enum_.at(e);
-}
+namespace internal {
+template <EnumType ProtoT>
+[[nodiscard]] auto getProtoPrefix() -> std::string {
+  const auto enum_type_name = magic_enum::enum_type_name<ProtoT>();
 
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::fromProtoEnum(const ProtoT& proto_enum) -> T {
-  static const auto& converter = instance();
-  return converter.proto_enum_to_enum_.at(proto_enum);
+  // Underscores indicate nested proto enums, no underscore means it's a top-level proto enum. Top level enums
+  // do not have a prefix.
+  if (const auto underscore_pos = std::find(enum_type_name.begin(), enum_type_name.end(), '_');
+      underscore_pos == enum_type_name.end()) {
+    return "";
+  }
+
+  // Nested enums have a prefix, and enum values are separated by an underscore:
+  // ClassName_EnumName_ENUM_VALUE.
+  return fmt::format("{}_", enum_type_name);
 }
 
 /// Convert between enums and their protobuf counterparts. The following convention is used:
@@ -68,51 +52,69 @@ auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::fromProtoEnum(const ProtoT& pro
 ///   enum class InternalEnum : { BAR1, BAR2 };
 /// };
 /// will have a protobuf counterpart
-/// enum FOO_EXTERNAL_ENUM : {  FOO_EXTERNAL_ENUM_BAR1,  FOO_INTERNAL_ENUM_BAR2 };
-/// enum FOO_INTERNAL_ENUM : {  FOO_INTERNAL_ENUM_BAR1,  FOO_INTERNAL_ENUM_BAR2 };
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::getAsProtoEnum(T e) -> ProtoT {
-  const auto& enum_name = magic_enum::enum_name(e);
-  auto proto_prefix = static_cast<std::string_view>(ProtoPrefix);
-  auto proto_enum_name = fmt::format("{}{}{}", proto_prefix, proto_prefix.empty() ? "" : "_", enum_name);
+/// enum FooExternalEnum : { BAR1,  BAR2 };
+/// enum Foo_InternalEnum : { Foo_InternalEnum_BAR1, Foo_InternalEnum_BAR2 };
+template <EnumType T, EnumType ProtoT>
+[[nodiscard]] auto getAsProtoEnum(T e) -> ProtoT {
+  const auto proto_prefix = getProtoPrefix<ProtoT>();
+  auto proto_enum_name =
+      fmt::format("{}{}", proto_prefix, magic_enum::enum_name(e));  // ClassName_EnumName_ENUM_VALUE
 
   auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
   heph::throwExceptionIf<heph::InvalidParameterException>(
       !proto_enum.has_value(),
-      fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are {}",
+      fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
                   proto_enum_name, utils::string::toString(magic_enum::enum_names<ProtoT>())));
 
   return proto_enum.value();
 }
 
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::createEnumLookupTable() -> std::unordered_map<T, ProtoT> {
+template <EnumType T, EnumType ProtoT>
+[[nodiscard]] auto createEnumLookupTable() -> std::unordered_map<T, ProtoT> {
   std::unordered_map<T, ProtoT> lookup_table;
 
   for (const auto& e : magic_enum::enum_values<T>()) {
-    lookup_table[e] = EnumProtoConverter<T, ProtoT, ProtoPrefix>::getAsProtoEnum(e);
+    lookup_table[e] = getAsProtoEnum<T, ProtoT>(e);
   }
 
   return lookup_table;
 }
 
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-EnumProtoConverter<T, ProtoT, ProtoPrefix>::EnumProtoConverter()
-  : enum_to_proto_enum_{ createEnumLookupTable() } {
-  // Create inverse lookup table. Unique values are guaranteed by the enum.
-  for (const auto& kvp : enum_to_proto_enum_) {
-    proto_enum_to_enum_.insert({ kvp.second, kvp.first });
+/// @brief Create inverse lookup table. Unique values are guaranteed by the enum layout.
+template <EnumType T, EnumType ProtoT>
+[[nodiscard]] auto createInverseLookupTable(const std::unordered_map<T, ProtoT>& enum_to_proto_enum)
+    -> std::unordered_map<ProtoT, T> {
+  std::unordered_map<ProtoT, T> proto_enum_to_enum;
+
+  for (const auto& kvp : enum_to_proto_enum) {
+    proto_enum_to_enum.insert({ kvp.second, kvp.first });
   }
-  for (const auto& kvp : enum_to_proto_enum_) {
-    fmt::println("{} : {}", magic_enum::enum_name(kvp.first), magic_enum::enum_name(kvp.second));
+
+  return proto_enum_to_enum;
+}
+}  // namespace internal
+
+template <EnumType T, EnumType ProtoT>
+auto toProtoEnum(const T& enum_value) -> ProtoT {
+  static const auto enum_to_proto_enum = internal::createEnumLookupTable<T, ProtoT>();
+  try {
+    return enum_to_proto_enum.at(enum_value);
+  } catch (const std::out_of_range&) {
+    throw std::out_of_range(
+        fmt::format("Enum {} not found in the lookup table", magic_enum::enum_name(enum_value)));
   }
 }
 
-template <EnumType T, EnumType ProtoT, utils::string::StringLiteral ProtoPrefix>
-auto EnumProtoConverter<T, ProtoT, ProtoPrefix>::instance()
-    -> const EnumProtoConverter<T, ProtoT, ProtoPrefix>& {
-  static EnumProtoConverter<T, ProtoT, ProtoPrefix> instance;
-  return instance;
+template <EnumType T, EnumType ProtoT>
+auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void {
+  static const auto proto_enum_value_to_enum =
+      internal::createInverseLookupTable(internal::createEnumLookupTable<T, ProtoT>());
+  try {
+    enum_value = proto_enum_value_to_enum.at(proto_enum_value);
+  } catch (const std::out_of_range&) {
+    throw std::out_of_range(
+        fmt::format("Proto enum {} not found in the lookup table", magic_enum::enum_name(proto_enum_value)));
+  }
 }
 
 }  // namespace heph::serdes::protobuf
