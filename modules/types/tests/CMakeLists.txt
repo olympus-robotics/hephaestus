@@ -11,8 +11,3 @@ define_module_test(
   NAME tests
   SOURCES tests.cpp
 )
-
-define_module_test(
-  NAME type_formatting_tests
-  SOURCES type_formatting_tests.cpp
-)

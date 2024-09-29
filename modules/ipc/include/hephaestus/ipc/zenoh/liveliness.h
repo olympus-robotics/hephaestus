@@ -8,8 +8,10 @@
 #include <string>
 #include <string_view>
 
+#include <fmt/core.h>
 #include <zenoh/api/subscriber.hxx>
 
+#include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
@@ -31,10 +33,8 @@ void printPublisherInfo(const PublisherInfo& info);
 class PublisherDiscovery {
 public:
   using Callback = std::function<void(const PublisherInfo& info)>;
-  /// The callback needs to be thread safe as they may be called in parallel for different publishers
-  /// discovered.
   explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
-  ~PublisherDiscovery() = default;
+  ~PublisherDiscovery();
 
   PublisherDiscovery(const PublisherDiscovery&) = delete;
   PublisherDiscovery(PublisherDiscovery&&) = delete;
@@ -50,6 +50,9 @@ private:
   Callback callback_;
 
   std::unique_ptr<::zenoh::Subscriber<void>> liveliness_subscriber_;
+
+  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
+  std::unique_ptr<concurrency::MessageQueueConsumer<PublisherInfo>> infos_consumer_;
 };
 
 }  // namespace heph::ipc::zenoh

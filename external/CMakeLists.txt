@@ -39,23 +39,22 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
-set(ZENOHC_CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable -DZENOHC_BUILD_WITH_SHARED_MEMORY=TRUE)
+set(ZENOHC_CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable -DZENOHC_BUILD_WITH_SHARED_MEMORY=TRUE
+                      -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE
+)
 if(NOT BUILD_SHARED_LIBS)
   list(APPEND ZENOHC_CMAKE_ARGS "-DZENOHC_LIB_STATIC=TRUE" "-DZENOHC_INSTALL_STATIC_LIBRARY=TRUE")
 endif()
-# NOTE: There is a bug in the current release, so for now we are pointing to our fix. set(ZENOH_VERSION "1.0.0.6")
-set(ZENOH_VERSION "5a82ecfd6154adf30ff96efe9b7838018134a528") # from zenohcxx dev/1.0.0
+set(ZENOH_VERSION "1.0.0.9")
 add_cmake_dependency(
   NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip CMAKE_ARGS ${ZENOHC_CMAKE_ARGS}
 )
 
-# set(ZENOHCXX_VERSION ${ZENOH_VERSION})
-set(ZENOHCXX_VERSION "5d8a4d6802b38bef4fe02d00d62fd96219eb3a06")
+set(ZENOHCXX_VERSION ${ZENOH_VERSION})
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS}
-          # URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
-          URL https://github.com/filippobrizzi/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
+  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
+  CMAKE_ARGS "-DZ_FEATURE_UNSTABLE_API=1"
 )
 
 # --------------------------------------------------------------------------------------------------

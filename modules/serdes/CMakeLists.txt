@@ -28,6 +28,7 @@ set(SOURCES
     include/hephaestus/serdes/dynamic_deserializer.h
     include/hephaestus/serdes/serdes.h
     include/hephaestus/serdes/type_info.h
+    include/hephaestus/serdes/protobuf/buffers.h
     include/hephaestus/serdes/protobuf/concepts.h
     include/hephaestus/serdes/protobuf/containers.h
     include/hephaestus/serdes/protobuf/buffers.h

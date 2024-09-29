@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/types/type_formatting.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/utils/format/format.h"  // NOLINT(misc-include-cleaner)

@@ -10,6 +10,7 @@
 
 #include <zenoh.hxx>
 #include <zenoh/api/bytes.hxx>
+#include <zenoh/api/id.hxx>
 
 #include "hephaestus/ipc/zenoh/session.h"
 
