@@ -87,4 +87,4 @@ template <ChronoSteadyClockType T>
   return fmt::format("{}d {:02}h:{:02}m:{:02}.{:09}s", days, hours, minutes, seconds, sub_seconds * SCALER);
 }
 
-}  // namespace heph::utils::format
+};  // namespace heph::utils::format
