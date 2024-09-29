@@ -56,8 +56,8 @@ struct DummyType {
 
   DummyPrimitivesType dummy_primitives_type{};
 
-  InternalDummyEnum internal_dummy_enum{ InternalDummyEnum::ALPHA };
-  ExternalDummyEnum external_dummy_enum{ ExternalDummyEnum::A };
+  InternalDummyEnum internal_dummy_enum{};
+  ExternalDummyEnum external_dummy_enum{};
 
   std::string dummy_string{};
   std::vector<int32_t> dummy_vector{};
