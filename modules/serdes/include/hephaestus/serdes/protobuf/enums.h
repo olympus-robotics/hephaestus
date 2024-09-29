@@ -97,14 +97,23 @@ template <EnumType ProtoT, EnumType T>
 template <EnumType ProtoT, EnumType T>
 auto toProtoEnum(const T& enum_value) -> ProtoT {
   static const auto enum_to_proto_enum = internal::createEnumLookupTable<ProtoT, T>();
-  return enum_to_proto_enum.at(enum_value);
+  const auto it = enum_to_proto_enum.find(enum_value);
+  throwExceptionIf<InvalidDataException>(it == enum_to_proto_enum.end(),
+                                         "Enum {} not found in the lookup table",
+                                         utils::format::toString(enum_value));
+  return it->second;
 }
 
 template <EnumType ProtoT, EnumType T>
 auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void {
   static const auto proto_enum_value_to_enum =
       internal::createInverseLookupTable(internal::createEnumLookupTable<ProtoT, T>());
-  enum_value = proto_enum_value_to_enum.at(proto_enum_value);
+  const auto it = proto_enum_value_to_enum.find(proto_enum_value);
+  throwExceptionIf<InvalidDataException>(it == proto_enum_value_to_enum.end(),
+                                         "Enum {} not found in the lookup table",
+                                         utils::format::toString(proto_enum_value));
+  enum_value = it->second;
+  ;
 }
 
 }  // namespace heph::serdes::protobuf
