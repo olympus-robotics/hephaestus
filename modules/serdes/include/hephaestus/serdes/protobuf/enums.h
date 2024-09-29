@@ -34,16 +34,16 @@ template <EnumType ProtoT>
 [[nodiscard]] auto getProtoPrefix() -> std::string {
   const auto enum_type_name = magic_enum::enum_type_name<ProtoT>();
 
-  // Underscores indicate nested proto enums, no underscore means it's a top-level proto enum. Top level enums
-  // do not have a prefix.
+  // Underscores indicate nested proto enums, no underscore indicates a top-level proto enum.
   if (const auto underscore_pos = std::find(enum_type_name.begin(), enum_type_name.end(), '_');
       underscore_pos == enum_type_name.end()) {
-    return "";
+    // Top-level enums use the enum name as a prefix: ENUM_NAME_ENUM_VALUE.
+    return utils::string::toScreamingSnakeCase(enum_type_name);
   }
 
   // Nested enums have a prefix, and enum values are separated by an underscore:
   // ClassName_EnumName_ENUM_VALUE.
-  return fmt::format("{}_", enum_type_name);
+  return fmt::format("{}", enum_type_name);
 }
 
 /// Convert between enums and their protobuf counterparts. The following convention is used:
@@ -52,13 +52,13 @@ template <EnumType ProtoT>
 ///   enum class InternalEnum : { BAR1, BAR2 };
 /// };
 /// will have a protobuf counterpart
-/// enum FooExternalEnum : { BAR1,  BAR2 };
+/// enum FooExternalEnum : { FOO_EXTERNAL_ENUM_BAR1,  FOO_EXTERNAL_ENUM_BAR2 };
 /// enum Foo_InternalEnum : { Foo_InternalEnum_BAR1, Foo_InternalEnum_BAR2 };
 template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto getAsProtoEnum(T e) -> ProtoT {
   const auto proto_prefix = getProtoPrefix<ProtoT>();
   auto proto_enum_name =
-      fmt::format("{}{}", proto_prefix, magic_enum::enum_name(e));  // ClassName_EnumName_ENUM_VALUE
+      fmt::format("{}_{}", proto_prefix, magic_enum::enum_name(e));  // ClassName_EnumName_ENUM_VALUE
 
   auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
   heph::throwExceptionIf<heph::InvalidParameterException>(

@@ -7,13 +7,13 @@ syntax = "proto3";
 package heph.types.proto;
 
 enum DummyTypeExternalDummyEnum {
-  A = 0;
-  B = 1;
-  C = 2;
-  D = 3;
-  E = 4;
-  F = 5;
-  G = 6;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_A = 0;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_B = 1;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_C = 2;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_D = 3;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_E = 4;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_F = 5;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_G = 6;
 }
 
 message DummyPrimitivesType {
