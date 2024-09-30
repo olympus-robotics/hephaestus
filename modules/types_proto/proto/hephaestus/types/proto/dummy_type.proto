@@ -40,4 +40,5 @@ message DummyType {
 
   string dummy_string = 3;
   repeated int32 dummy_vector = 4;
+  repeated DummyPrimitivesType dummy_vector_encapsulated = 5;
 }
