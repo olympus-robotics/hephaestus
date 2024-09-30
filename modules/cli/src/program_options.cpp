@@ -5,6 +5,7 @@
 #include "hephaestus/cli/program_options.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>  // NOLINT(misc-include-cleaner)
 #include <cstdlib>
 #include <sstream>
@@ -96,10 +97,10 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
     ++arg_it;
     throwExceptionIf<InvalidParameterException>(
         arg_it == args.end(), fmt::format("After option --{} there is supposed to be a value", option.key));
+    const auto is_option = arg_it->starts_with('-') && arg_it->size() > 1 && std::isdigit((*arg_it)[1]) == 0;
     throwExceptionIf<InvalidParameterException>(
-        arg_it->starts_with('-'),
-        fmt::format("Option --{} is supposed to be followed by a value, not another option {}", option.key,
-                    *arg_it));
+        is_option, fmt::format("Option --{} is supposed to be followed by a value, not another option {}",
+                               option.key, *arg_it));
 
     option.value = *arg_it;
     option.is_specified = true;
