@@ -61,10 +61,11 @@ template <EnumType ProtoT, EnumType T>
       fmt::format("{}_{}", proto_prefix, magic_enum::enum_name(e));  // ClassName_EnumName_ENUM_VALUE
 
   auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
-  heph::throwExceptionIf<heph::InvalidParameterException>(
-      !proto_enum.has_value(),
-      fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
-                  proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
+  if (!proto_enum.has_value()) {
+    heph::throwException<heph::InvalidParameterException>(
+        fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
+                    proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
+  }
 
   return proto_enum.value();
 }

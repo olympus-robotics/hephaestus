@@ -7,9 +7,6 @@
 #include <cstddef>
 #include <vector>
 
-#include <fmt/core.h>
-#include <magic_enum.hpp>
-
 #include "hephaestus/serdes/protobuf/enums.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/proto/dummy_type.pb.h"
