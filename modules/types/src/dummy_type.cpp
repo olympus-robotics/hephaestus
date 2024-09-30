@@ -8,8 +8,6 @@
 #include <iostream>
 #include <random>
 
-#include <magic_enum.hpp>
-
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/utils/format/format.h"
 
@@ -48,7 +46,8 @@ auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_ty
 
 auto DummyType::random(std::mt19937_64& mt) -> DummyType {
   return { .dummy_primitives_type = random::random<decltype(dummy_primitives_type)>(mt),
-           .dummy_enum = random::random<decltype(dummy_enum)>(mt),
+           .internal_dummy_enum = random::random<decltype(internal_dummy_enum)>(mt),
+           .external_dummy_enum = random::random<decltype(external_dummy_enum)>(mt),
            .dummy_string = random::random<decltype(dummy_string)>(mt),
            .dummy_vector = random::random<decltype(dummy_vector)>(mt) };
 }
@@ -56,7 +55,8 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
 auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream& {
   return os << "DummyType{\n"
             << "  dummy_primitives_type={" << dummy_type.dummy_primitives_type << "}\n"
-            << "  dummy_enum=" << magic_enum::enum_name(dummy_type.dummy_enum) << "\n"
+            << "  internal_dummy_enum=" << utils::format::toString(dummy_type.internal_dummy_enum) << "\n"
+            << "  external_dummy_enum=" << utils::format::toString(dummy_type.external_dummy_enum) << "\n"
             << "  dummy_string=" << dummy_type.dummy_string << "\n"
             << "  dummy_vector=" << utils::format::toString(dummy_type.dummy_vector) << "\n"
             << "}";

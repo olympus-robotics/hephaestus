@@ -6,14 +6,14 @@ syntax = "proto3";
 
 package heph.types.proto;
 
-enum DummyTypeDummyEnum {
-  A = 0;
-  B = 1;
-  C = 2;
-  D = 3;
-  E = 4;
-  F = 5;
-  G = 6;
+enum DummyTypeExternalDummyEnum {
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_A = 0;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_B = 1;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_C = 2;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_D = 3;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_E = 4;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_F = 5;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_G = 6;
 }
 
 message DummyPrimitivesType {
@@ -34,10 +34,15 @@ message DummyPrimitivesType {
 }
 
 message DummyType {
+  enum InternalDummyEnum {
+    ALPHA = 0;
+  }
+
   DummyPrimitivesType dummy_primitives_type = 1;
 
-  DummyTypeDummyEnum dummy_enum = 2;
+  InternalDummyEnum internal_dummy_enum = 2;
+  DummyTypeExternalDummyEnum external_dummy_enum = 3;
 
-  string dummy_string = 3;
-  repeated int32 dummy_vector = 4;
+  string dummy_string = 4;
+  repeated int32 dummy_vector = 5;
 }
