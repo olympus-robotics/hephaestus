@@ -57,14 +57,14 @@ template <EnumType ProtoT>
 template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto getAsProtoEnum(T e) -> ProtoT {
   const auto proto_enum_name = fmt::format("{}_{}", getProtoPrefix<ProtoT>(), magic_enum::enum_name(e));
+  const auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
 
-  if (const auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name); proto_enum.has_value()) {
-    return proto_enum.value();
-  }
-
-  heph::throwException<heph::InvalidParameterException>(
+  heph::throwExceptionIf<heph::InvalidParameterException>(
+      !proto_enum.has_value(),
       fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
                   proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
+
+  return proto_enum.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 template <EnumType ProtoT, EnumType T>
