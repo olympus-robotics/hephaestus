@@ -112,6 +112,8 @@ auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) ->
   proto_dummy_type.set_dummy_string(dummy_type.dummy_string);
 
   serdes::protobuf::toProto(*proto_dummy_type.mutable_dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::toProto(*proto_dummy_type.mutable_dummy_vector_encapsulated(),
+                            dummy_type.dummy_vector_encapsulated);
 }
 
 auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) -> void {
@@ -122,6 +124,8 @@ auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) 
   dummy_type.dummy_string = proto_dummy_type.dummy_string();
 
   serdes::protobuf::fromProto(proto_dummy_type.dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::fromProto(proto_dummy_type.dummy_vector_encapsulated(),
+                              dummy_type.dummy_vector_encapsulated);
 }
 
 }  // namespace heph::types
