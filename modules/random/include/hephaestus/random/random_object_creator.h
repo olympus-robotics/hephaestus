@@ -36,9 +36,8 @@ template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
 
 template <NonBooleanIntegralType T>
-[[nodiscard]] auto random(std::mt19937_64& mt, std::optional < Bounds<T>> bounds) -> T {
-  auto bounds = bounds.value_or(Bounds<T>{ std::numeric_limits<T>::min(), std::numeric_limits<T>::max() });
-  std::uniform_int_distribution<T> dist(bounds.min, bounds.max);
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::uniform_int_distribution<T> dist;
   return dist(mt);
 }
 

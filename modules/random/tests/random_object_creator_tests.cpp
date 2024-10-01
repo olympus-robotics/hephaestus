@@ -89,7 +89,7 @@ concept ContainerWithSizeMethod = requires(TypeParam t) {
 // case, as it is already included in testing for randomness. Repeadedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
-  if constexpr (ContainerWithSizeMethod<TypeParam>) {
+  if constexpr (RandomCreatableVector<TypeParam> || StringType<TypeParam>) {
     auto mt = createRNG();
 
     static constexpr std::size_t SIZE_ZERO = 0;
