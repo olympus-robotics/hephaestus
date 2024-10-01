@@ -19,6 +19,12 @@ template <typename T>
 concept EnumType = std::is_enum_v<T>;
 
 template <typename T>
+concept BooleanType = std::is_same_v<T, bool>;
+
+template <typename T>
+concept StringType = std::is_same_v<T, std::string>;
+
+template <typename T>
 concept ArrayType = requires {
   typename T::value_type;
   requires std::same_as<T, std::array<typename T::value_type, T().size()>>;
@@ -46,6 +52,28 @@ concept ChronoSystemClockType = std::is_same_v<T, std::chrono::system_clock>;
 
 template <typename T>
 concept ChronoSteadyClockType = std::is_same_v<T, std::chrono::steady_clock>;
+
+template <typename T>
+concept ChronoClock = ChronoSystemClockType<T> || ChronoSteadyClockType<T>;
+
+template <typename T>
+concept ChronoSystemClockTimestampType = requires {
+  typename T::clock;
+  typename T::duration;
+  requires std::is_same_v<typename T::clock, std::chrono::system_clock>;
+  requires std::is_same_v<T, typename std::chrono::time_point<typename T::clock, typename T::duration>>;
+};
+
+template <typename T>
+concept ChronoSteadyClockTimestampType = requires {
+  typename T::clock;
+  typename T::duration;
+  requires std::is_same_v<typename T::clock, std::chrono::steady_clock>;
+  requires std::is_same_v<T, typename std::chrono::time_point<typename T::clock, typename T::duration>>;
+};
+
+template <typename T>
+concept ChronoTimestampType = ChronoSystemClockTimestampType<T> || ChronoSteadyClockTimestampType<T>;
 
 template <typename T>
 concept NumericType = (std::integral<T> || std::floating_point<T>)&&!std::same_as<T, bool>;
