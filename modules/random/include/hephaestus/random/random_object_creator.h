@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
+#include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::random {
@@ -21,10 +22,7 @@ namespace heph::random {
 //=================================================================================================
 // Random boolean creation
 //=================================================================================================
-template <typename T>
-concept IsBoolean = std::is_same_v<T, bool>;
-
-template <IsBoolean T>
+template <BooleanType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   std::bernoulli_distribution dist;
   return dist(mt);
@@ -34,9 +32,9 @@ template <IsBoolean T>
 // Random integer value creation
 //=================================================================================================
 template <typename T>
-concept IsNonBooleanIntegral = std::integral<T> && !std::same_as<T, bool>;
+concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
 
-template <IsNonBooleanIntegral T>
+template <NonBooleanIntegralType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   std::uniform_int_distribution<T> dist;
   return dist(mt);
@@ -54,10 +52,7 @@ template <std::floating_point T>
 //=================================================================================================
 // Random enum creation
 //=================================================================================================
-template <typename T>
-concept IsEnum = std::is_enum_v<T>;
-
-template <IsEnum T>
+template <EnumType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   static const auto enum_values = magic_enum::enum_values<T>();
   std::uniform_int_distribution<size_t> dist(0, enum_values.size() - 1);
@@ -67,17 +62,8 @@ template <IsEnum T>
 //=================================================================================================
 // Random timestamp creation
 //=================================================================================================
-template <typename T>
-concept IsTimestamp = requires {
-  typename T::clock;
-  typename T::duration;
-  requires std::is_same_v<typename T::clock, std::chrono::system_clock> ||
-               std::is_same_v<typename T::clock, std::chrono::steady_clock>;
-  requires std::is_same_v<T, typename std::chrono::time_point<typename T::clock, typename T::duration>>;
-};
-
 namespace internal {
-template <IsTimestamp T, size_t Year>
+template <ChronoTimestampType T, size_t Year>
 [[nodiscard]] constexpr auto createFinalTimestampOfTheYear() -> T {
   // The final date of the year is YYYY-12-31.
   constexpr auto YEAR = std::chrono::year{ Year };
@@ -95,7 +81,7 @@ template <IsTimestamp T, size_t Year>
 }  // namespace internal
 
 /// Create a random timestamp between year 1970 and the year 2100.
-template <IsTimestamp T>
+template <ChronoTimestampType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   static constexpr auto MIN_DURATION = 0;  // Start of UNIX epoch time == year 1970.
   static constexpr auto MAX_YEAR = 2100;
@@ -113,11 +99,11 @@ template <IsTimestamp T>
 // Random struct/class creation
 //=================================================================================================
 template <class T>
-concept HasrandomMethod = requires(std::mt19937_64& mt) {
+concept HasRandomMethod = requires(std::mt19937_64& mt) {
   { T::random(mt) } -> std::convertible_to<T>;
 };
 
-template <HasrandomMethod T>
+template <HasRandomMethod T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   return T::random(mt);
 }
@@ -126,7 +112,7 @@ template <HasrandomMethod T>
 // Concept for random creatable types
 //=================================================================================================
 template <class T>
-concept IsRandomCreatable = requires(std::mt19937_64& mt) {
+concept RandomCreatable = requires(std::mt19937_64& mt) {
   { random<T>(mt) } -> std::convertible_to<T>;
 };
 
@@ -154,11 +140,8 @@ namespace internal {
 //=================================================================================================
 // Random string creation
 //=================================================================================================
-template <typename T>
-concept IsString = std::same_as<T, std::string>;
-
 /// Generate a random string of characters, including special case characters and numbers.
-template <IsString T>
+template <StringType T>
 [[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
                           bool allow_empty = true) -> T {
   const auto size = internal::getSize(mt, fixed_size, allow_empty);
@@ -179,17 +162,11 @@ template <IsString T>
 //=================================================================================================
 // Random vector creation
 //=================================================================================================
-namespace internal {
 template <typename T>
-concept IsVector =
-    requires { typename T::value_type; } && (std::is_same_v<T, std::vector<typename T::value_type>>);
-}  // namespace internal
-
-template <typename T>
-concept IsRandomCreatableVector = internal::IsVector<T> && IsRandomCreatable<typename T::value_type>;
+concept RandomCreatableVector = VectorType<T> && RandomCreatable<typename T::value_type>;
 
 /// Fill a vector with randomly generated values of type T.
-template <IsRandomCreatableVector T>
+template <RandomCreatableVector T>
 [[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
                           bool allow_empty = true) -> T {
   const auto size = internal::getSize(mt, fixed_size, allow_empty);

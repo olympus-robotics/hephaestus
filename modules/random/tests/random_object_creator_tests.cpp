@@ -84,7 +84,7 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
 // case, as it is already included in testing for randomness. Repeadedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
-  if constexpr (IsRandomCreatableVector<TypeParam> || IsString<TypeParam>) {
+  if constexpr (RandomCreatableVector<TypeParam> || StringType<TypeParam>) {
     auto mt = createRNG();
 
     static constexpr std::size_t SIZE_ZERO = 0;
