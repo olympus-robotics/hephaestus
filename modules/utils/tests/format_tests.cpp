@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <fmt/core.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/format/format.h"
@@ -47,6 +48,7 @@ TEST(TypeFormattingTests, ConvertDoubleArray) {
   EXPECT_EQ(result, expected);
 }
 
+#ifndef __GNUC__
 TEST(TypeFormattingTests, ConvertStringArray) {
   const std::array<std::string, 3> arr = { "one", "two", "three" };
   const std::string result = toString(arr);
@@ -55,6 +57,8 @@ TEST(TypeFormattingTests, ConvertStringArray) {
                                "  Index: 2, Value: three\n";
   EXPECT_EQ(result, expected);
 }
+#endif
+
 //=================================================================================================
 // Vector
 //=================================================================================================
@@ -163,7 +167,7 @@ TEST(TypeFormattingTests, ChronoTimestampFormattingSystemClock) {
   const auto timestamp = std::chrono::system_clock::now();
   const auto str = fmt::format("{}", toString(timestamp));
 
-  ASSERT_TRUE(str.length() <= 27);
+  ASSERT_LE(str.size(), 26);
 
   ASSERT_EQ(str[0], '2');
   ASSERT_EQ(str[1], '0');

@@ -70,6 +70,8 @@ constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
     default:
       throwException<InvalidParameterException>("Incorrect Type");
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 template <NumericType T>

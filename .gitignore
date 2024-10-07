@@ -3,6 +3,7 @@ modules/utils/src/version_impl.h
 .cache/
 .vscode/
 build/
+build-gcc/
 
 # Prerequisites
 *.d

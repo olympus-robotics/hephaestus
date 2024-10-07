@@ -13,6 +13,17 @@
    }
   },
   {
+    "name": "gcc",
+    "description": "Configuration setting for all modules with preferred toolchain",
+    "generator": "Ninja",
+    "binaryDir": "${sourceDir}/build-gcc",
+    "installDir": "/install",
+    "cacheVariables": {
+     "BUILD_MODULES": "all;examples",
+     "ENABLE_LINTER": "OFF"
+    }
+   },
+  {
     "name": "fast",
     "description": "Configuration setting for all modules with preferred toolchain",
     "generator": "Ninja",

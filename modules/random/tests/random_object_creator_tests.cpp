@@ -79,8 +79,8 @@ TYPED_TEST(RandomTypeTests, DeterminismTest) {
 
 TYPED_TEST(RandomTypeTests, RandomnessTest) {
   auto mt = createRNG();
-  auto gen = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
-  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen, mt));
+  auto gen_fn = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
+  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen_fn, mt));
 }
 
 // Note: If the size of the container is not specified, the size is randomly generated. No need to test this
