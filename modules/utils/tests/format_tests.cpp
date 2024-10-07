@@ -11,7 +11,6 @@
 #include <vector>
 
 #include <fmt/core.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/format/format.h"
