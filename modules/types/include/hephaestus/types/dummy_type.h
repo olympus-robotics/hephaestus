@@ -59,8 +59,8 @@ struct DummyType {
   InternalDummyEnum internal_dummy_enum{};
   ExternalDummyEnum external_dummy_enum{};
 
-  std::string dummy_string{};
-  std::vector<int32_t> dummy_vector{};
+  std::string dummy_string;
+  std::vector<int32_t> dummy_vector;
 };
 
 auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream&;

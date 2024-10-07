@@ -76,7 +76,7 @@ template <typename T>
 concept ChronoTimestampType = ChronoSystemClockTimestampType<T> || ChronoSteadyClockTimestampType<T>;
 
 template <typename T>
-concept NumericType = (std::integral<T> || std::floating_point<T>)&&!std::same_as<T, bool>;
+concept NumericType = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
 
 /// Types that are convertable to and from a string
 template <typename T>

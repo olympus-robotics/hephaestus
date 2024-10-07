@@ -147,7 +147,7 @@ TEST(TypeFormattingTests, ChronoTimestampFormattingSteadyClock) {
 
   ASSERT_LE(str.length(), 24);
 
-  const auto it = std::find(str.begin(), str.end(), 'd');
+  const auto it = std::ranges::find(str, 'd');
   ASSERT_TRUE(it != str.end());
   ASSERT_EQ(*(it + 1), ' ');
   ASSERT_EQ(*(it + 4), 'h');

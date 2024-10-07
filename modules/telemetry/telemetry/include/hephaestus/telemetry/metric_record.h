@@ -10,8 +10,8 @@
 
 namespace heph::telemetry {
 namespace internal {
-[[nodiscard]] auto jsonToValuesMap(std::string_view json)
-    -> std::unordered_map<std::string, Metric::ValueType>;
+[[nodiscard]] auto
+jsonToValuesMap(std::string_view json) -> std::unordered_map<std::string, Metric::ValueType>;
 }
 
 /// @brief Register a new metric sink.

@@ -109,8 +109,8 @@ template <typename RequestT, typename StatusT, typename ReplyT>
     -> std::future<Response<ReplyT>>;
 
 /// Request the action server to stop.
-[[nodiscard]] auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config)
-    -> bool;
+[[nodiscard]] auto requestActionServerToStopExecution(Session& session,
+                                                      const TopicConfig& topic_config) -> bool;
 
 // TODO: add a function to get notified when the server is idle again.
 
@@ -242,8 +242,9 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
   }
 
   return std::async(
+      std::launch::async,
       // NOLINTNEXTLINE(bugprone-exception-escape)
-      std::launch::async, [session, topic_config, status_update_cb = std::move(status_update_cb)]() mutable {
+      [session = std::move(session), topic_config, status_update_cb = std::move(status_update_cb)]() mutable {
         auto client_helper = internal::ClientHelper<RequestT, StatusT, ReplyT>{ session, topic_config,
                                                                                 std::move(status_update_cb) };
 

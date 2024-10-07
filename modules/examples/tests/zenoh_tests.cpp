@@ -24,7 +24,6 @@ namespace heph::examples::types::tests {
 
 namespace {
 constexpr auto kSeed = 42;  // NOLINT(readability-identifier-naming)
-}  // namespace
 
 void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   auto mt = random::createRNG();
@@ -137,4 +136,5 @@ TEST(ZenohTests, ServiceCallExchange) {
   EXPECT_EQ(reply.front().value, request_message);
 }
 
+}  // namespace
 }  // namespace heph::examples::types::tests
