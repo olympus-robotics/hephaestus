@@ -107,10 +107,11 @@ jobs:
     - name: Check cargo
       run: |
         export PATH=/root/.cargo/bin:$PATH
-        cargo --version
-        rustup toolchain install stable
-        rustup default stable
-        rustup show
+        echo "Rustup version"
+        echo $(cargo --version)
+        echo $(rustup toolchain install stable)
+        echo $(rustup default stable)
+        echo $(rustup show)
     - name: Configure CMake
       run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
     - name: Build
