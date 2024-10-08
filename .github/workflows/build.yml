@@ -104,11 +104,9 @@ jobs:
         password: ${{secrets.GITHUB_TOKEN}}
     steps:
     - uses: actions/checkout@v4.1.1
-    - name: Check cargo
+    - name: Install Rust
       run: |
         export PATH=/root/.cargo/bin:$PATH
-        echo "Rustup version"
-        echo $(cargo --version)
         echo $(rustup toolchain install stable)
         echo $(rustup default stable)
         echo $(rustup show)
