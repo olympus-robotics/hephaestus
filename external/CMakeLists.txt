@@ -45,16 +45,17 @@ set(ZENOHC_CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable -DZENOHC_BUILD_WITH_SHARED_
 if(NOT BUILD_SHARED_LIBS)
   list(APPEND ZENOHC_CMAKE_ARGS "-DZENOHC_LIB_STATIC=TRUE" "-DZENOHC_INSTALL_STATIC_LIBRARY=TRUE")
 endif()
-set(ZENOH_VERSION "1.0.0.9")
+set(ZENOH_VERSION "1.0.0.10")
 add_cmake_dependency(
   NAME zenohc URL https://github.com/eclipse-zenoh/zenoh-c/archive/${ZENOH_VERSION}.zip CMAKE_ARGS ${ZENOHC_CMAKE_ARGS}
 )
 
 set(ZENOHCXX_VERSION ${ZENOH_VERSION})
+set(ZENOHCXX_CMAKE_ARGS -DZ_FEATURE_UNSTABLE_API=1 -DZENOHCXX_EXAMPLES_PROTOBUF=OFF)
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
-  CMAKE_ARGS "-DZ_FEATURE_UNSTABLE_API=1"
+  CMAKE_ARGS ${ZENOHCXX_CMAKE_ARGS}
 )
 
 # --------------------------------------------------------------------------------------------------

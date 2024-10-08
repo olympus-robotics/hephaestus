@@ -125,10 +125,10 @@ void RawPublisher::enableCache() {
 
 auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
-  put_options.encoding = ::zenoh::Encoding{ TEXT_PLAIN_ENCODING };
+  put_options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
-  put_options.attachment = ::zenoh::Bytes::serialize(attachment_);
+  put_options.attachment = ::zenoh::ext::serialize(attachment_);
 
   return put_options;
 }
