@@ -12,7 +12,7 @@
 using namespace ::testing;
 
 namespace heph::bag::tests {
-
+namespace {
 using TestCasesT = std::vector<std::pair<std::string, bool>>;
 
 auto runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) -> void {
@@ -132,5 +132,5 @@ TEST(TopicFilter, IncludeOnly) {
     runTestCases(filter, test_cases);
   }
 }
-
+}  // namespace
 }  // namespace heph::bag::tests

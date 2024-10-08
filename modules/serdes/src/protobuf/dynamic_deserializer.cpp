@@ -76,8 +76,8 @@ auto DynamicDeserializer::toText(const std::string& type, std::span<const std::b
   return msg_text;
 }
 
-auto DynamicDeserializer::getMessage(const std::string& type, std::span<const std::byte> data)
-    -> google::protobuf::Message* {
+auto DynamicDeserializer::getMessage(const std::string& type,
+                                     std::span<const std::byte> data) -> google::protobuf::Message* {
   const auto* descriptor = proto_pool_.FindMessageTypeByName(type);
   throwExceptionIf<InvalidDataException>(
       descriptor == nullptr,

@@ -27,7 +27,6 @@ When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 
 ### Env
 The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
-If you add or update a dependency, bump `DEPS_VERSION`.
 
 ### Compilation
 

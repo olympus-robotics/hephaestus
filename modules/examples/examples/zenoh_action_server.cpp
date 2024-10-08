@@ -27,6 +27,7 @@
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
+namespace {
 [[nodiscard]] auto request(const heph::examples::types::SampleRequest& sample)
     -> heph::ipc::zenoh::action_server::TriggerStatus {
   LOG(INFO) << fmt::format("Request received: {}", sample);
@@ -53,15 +54,16 @@ execute(const heph::examples::types::SampleRequest& request,
     }
 
     accumulated += 1;
-    const auto result =
-        status_update_publisher.publish(heph::examples::types::SampleReply{ accumulated, counter });
+    const auto result = status_update_publisher.publish(
+        heph::examples::types::SampleReply{ .value = accumulated, .counter = counter });
     LOG_IF(ERROR, !result) << "Failed to publish status update";
     fmt::println("- Update {}: {} ", counter, accumulated);
     std::this_thread::sleep_for(WAIT_FOR);
   }
 
-  return { accumulated, counter };
+  return { .value = accumulated, .counter = counter };
 }
+}  // namespace
 
 // We create a simple action server that accumulates a value for a given number of iterations.
 // See VectorAccumulator class for more details.

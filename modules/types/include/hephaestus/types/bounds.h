@@ -27,7 +27,7 @@ enum class BoundsType : uint8_t {
 /// @brief A class representing range bounds.
 template <NumericType T>
 struct Bounds {
-  [[nodiscard]] inline constexpr auto operator==(const Bounds&) const -> bool = default;
+  [[nodiscard]] constexpr auto operator==(const Bounds&) const -> bool = default;
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> Bounds;
 
@@ -37,10 +37,10 @@ struct Bounds {
 };
 
 template <NumericType T>
-[[nodiscard]] static inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
+[[nodiscard]] static constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
 
 template <NumericType T>
-[[nodiscard]] static inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T;
+[[nodiscard]] static constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T;
 
 template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
@@ -57,7 +57,7 @@ auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
 }
 
 template <NumericType T>
-inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
+constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
   switch (bounds.type) {
     case BoundsType::INCLUSIVE:
       return value >= bounds.lower && value <= bounds.upper;
@@ -70,10 +70,12 @@ inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
     default:
       throwException<InvalidParameterException>("Incorrect Type");
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 template <NumericType T>
-inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
+constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
   return std::clamp(value, bounds.lower, bounds.upper);
 }
 

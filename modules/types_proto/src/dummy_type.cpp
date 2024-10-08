@@ -12,13 +12,13 @@
 #include "hephaestus/types/proto/dummy_type.pb.h"
 
 namespace heph::types {
-
+namespace {
 //=================================================================================================
 // Vector
 //=================================================================================================
 template <typename T, typename ProtoT>
-auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec)
-    -> void {
+auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field,
+             const std::vector<T>& vec) -> void {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
   proto_repeated_field.Reserve(static_cast<int>(vec.size()));
   for (const auto& value : vec) {
@@ -27,15 +27,15 @@ auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, cons
 }
 
 template <typename T, typename ProtoT>
-auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec)
-    -> void {
+auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field,
+               std::vector<T>& vec) -> void {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
   for (const auto& proto_value : proto_repeated_field) {
     vec.push_back(proto_value);
   }
 }
-
+}  // namespace
 //=================================================================================================
 // DummyPrimitivesType
 //=================================================================================================

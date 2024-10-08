@@ -14,16 +14,17 @@
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::random {
-
+namespace {
 /// Compare the results of a randomly generated type multiple times to ensure that it is not equal by chance.
 template <class T>
-[[nodiscard]] auto compareRandomEqualMultipleTimes(std::function<T(std::mt19937_64&)> gen,
+[[nodiscard]] auto compareRandomEqualMultipleTimes(const std::function<T(std::mt19937_64&)>& gen,
                                                    std::mt19937_64& mt) -> bool {
   static constexpr std::size_t MAX_COMPARISON_COUNT = 10;
 
@@ -50,8 +51,10 @@ struct TestStruct {
   [[nodiscard]] auto operator==(const TestStruct&) const -> bool = default;
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> TestStruct {
-    return { random::random<int>(mt), random::random<double>(mt), random::random<std::string>(mt),
-             random::random<std::vector<int>>(mt) };
+    return { .a = random::random<int>(mt),
+             .b = random::random<double>(mt),
+             .c = random::random<std::string>(mt),
+             .d = random::random<std::vector<int>>(mt) };
   }
 };
 
@@ -76,8 +79,8 @@ TYPED_TEST(RandomTypeTests, DeterminismTest) {
 
 TYPED_TEST(RandomTypeTests, RandomnessTest) {
   auto mt = createRNG();
-  auto gen = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
-  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen, mt));
+  auto gen_fn = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
+  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen_fn, mt));
 }
 
 // Note: If the size of the container is not specified, the size is randomly generated. No need to test this
@@ -104,4 +107,5 @@ TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
   }
 }
 
+}  // namespace
 }  // namespace heph::random

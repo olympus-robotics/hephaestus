@@ -86,8 +86,8 @@ public:
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  auto defineOption(const std::string& key, char short_key, const std::string& description)
-      -> ProgramDescription&;
+  auto defineOption(const std::string& key, char short_key,
+                    const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a command line option (--key=value) that is optional
   /// @tparam T Value type
@@ -96,8 +96,8 @@ public:
   /// @param default_value Default value to use if the option is not specified on the command line
   /// @return Reference to the object. Enables daisy-chained calls
   template <StringStreamable T>
-  auto defineOption(const std::string& key, const std::string& description, const T& default_value)
-      -> ProgramDescription&;
+  auto defineOption(const std::string& key, const std::string& description,
+                    const T& default_value) -> ProgramDescription&;
 
   /// @brief Defines a command line option (--key=value) that is optional
   /// @tparam T Value type
@@ -116,8 +116,8 @@ public:
   /// @param short_key Single char (can be used as alias for --key)
   /// @param description A brief text describing the option
   /// @return Reference to the object. Enables daisy-chained calls
-  auto defineFlag(const std::string& key, char short_key, const std::string& description)
-      -> ProgramDescription&;
+  auto defineFlag(const std::string& key, char short_key,
+                  const std::string& description) -> ProgramDescription&;
 
   /// @brief Defines a boolean option (flag) (--key=value) on the command line. If the flag is
   /// passed the value of the option is true, false otherwise.
@@ -156,14 +156,14 @@ private:
 };
 
 template <StringStreamable T>
-auto ProgramDescription::defineOption(const std::string& key, const std::string& description)
-    -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key,
+                                      const std::string& description) -> ProgramDescription& {
   return defineOption<T>(key, '\0', description);
 }
 
 template <StringStreamable T>
-auto ProgramDescription::defineOption(const std::string& key, char short_key, const std::string& description)
-    -> ProgramDescription& {
+auto ProgramDescription::defineOption(const std::string& key, char short_key,
+                                      const std::string& description) -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<T>(), "", true, false);
