@@ -104,6 +104,10 @@ jobs:
         password: ${{secrets.GITHUB_TOKEN}}
     steps:
     - uses: actions/checkout@v4.1.1
+    - name: Check cargo
+      run: |
+        cargo --version
+        rustup show
     - name: Configure CMake
       run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
     - name: Build
