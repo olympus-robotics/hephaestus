@@ -105,7 +105,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4.1.1
     - name: Configure CMake
-      run: . "$HOME/.cargo/env" && cmake -B ${{github.workspace}}/build --preset gcc
+      run: . "/root/.cargo/env" && cmake -B ${{github.workspace}}/build --preset gcc
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build -- all examples
