@@ -108,6 +108,7 @@ jobs:
       run: |
         export PATH=/root/.cargo/bin:$PATH
         cargo --version
+        rustup default stable
         rustup show
     - name: Configure CMake
       run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
