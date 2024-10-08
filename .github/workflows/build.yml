@@ -92,7 +92,7 @@ jobs:
         cd ${{github.workspace}}/build
         ninja tests_build
         ninja test
-  build:
+  build-gcc:
     needs: docker_deps_build_and_publish
     # TODO: use the docker image published at the step over
     runs-on: ubuntu-latest
