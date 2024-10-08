@@ -59,7 +59,7 @@
     "description": "Configuration setting for all modules with preferred toolchain",
     "generator": "Ninja",
     "binaryDir": "${sourceDir}/build-gcc",
-    "installDir": "/install",
+    "installDir": "/install-gcc",
     "cacheVariables": {
      "BUILD_MODULES": "all;examples",
      "ENABLE_LINTER": "OFF",
