@@ -22,7 +22,7 @@ namespace zenoh {
 struct Session;
 }
 
-[[nodiscard]] auto createZenohTopicDatabase(std::shared_ptr<zenoh::Session> session)
-    -> std::unique_ptr<ITopicDatabase>;
+[[nodiscard]] auto
+createZenohTopicDatabase(std::shared_ptr<zenoh::Session> session) -> std::unique_ptr<ITopicDatabase>;
 
 }  // namespace heph::ipc

@@ -19,4 +19,6 @@ enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };
     case ExampleType::ACTION_SERVER:
       return DEFAULT_ACTION_SERVER_KEY;
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }

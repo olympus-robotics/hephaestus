@@ -20,9 +20,11 @@
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
+namespace {
 void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
   const auto publishers_info = heph::ipc::zenoh::getListOfPublishers(session, topic);
-  std::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printPublisherInfo);
+  std::ranges::for_each(publishers_info.begin(), publishers_info.end(),
+                        &heph::ipc::zenoh::printPublisherInfo);
 }
 
 void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
@@ -31,6 +33,7 @@ void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::Top
 
   heph::utils::TerminationBlocker::waitForInterrupt();
 }
+}  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;

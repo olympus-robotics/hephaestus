@@ -41,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
         heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
       std::string reply_str;
-      std::for_each(replies.begin(), replies.end(), [&reply_str](const auto& reply) {
+      std::ranges::for_each(replies, [&reply_str](const auto& reply) {
         reply_str = fmt::format("{}\n-\t{}: {}", reply_str, reply.topic, reply.value);
       });
       LOG(INFO) << "Received: " << reply_str;

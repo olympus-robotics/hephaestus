@@ -75,8 +75,8 @@ TEST(BlockingQueue, WaitPush) {
   const std::string message = "hello";
   block_queue.waitAndPush(message);
   auto future = std::async([&block_queue]() {
-    std::string message = "hello again";
-    block_queue.waitAndPush(std::move(message));
+    std::string msg = "hello again";
+    block_queue.waitAndPush(std::move(msg));
   });
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);

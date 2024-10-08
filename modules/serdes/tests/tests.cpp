@@ -22,18 +22,19 @@
 using namespace ::testing;
 
 namespace heph::serdes::tests {
+namespace {
 
-static constexpr int NUMBER = 42;
+constexpr int NUMBER = 42;
 
 class MockProtoMessage {
 public:
-  // NOLINTNEXTLINE(modernize-use-trailing-return-type,bugprone-exception-escape)
+  // NOLINTNEXTLINE(modernize-use-trailing-return-type,readability-identifier-naming,bugprone-exception-escape)
   MOCK_METHOD(std::size_t, ByteSizeLong, (), (const));
 
-  // NOLINTNEXTLINE(modernize-use-trailing-return-type,bugprone-exception-escape)
+  // NOLINTNEXTLINE(modernize-use-trailing-return-type,readability-identifier-naming,bugprone-exception-escape)
   MOCK_METHOD(bool, SerializeToArray, (void*, int), (const));
 
-  // NOLINTNEXTLINE(modernize-use-trailing-return-type,bugprone-exception-escape)
+  // NOLINTNEXTLINE(modernize-use-trailing-return-type,readability-identifier-naming,bugprone-exception-escape)
   MOCK_METHOD(bool, ParseFromArray, (const void*, int), (const));
 };
 
@@ -51,7 +52,7 @@ struct DummyJSONSerializable {
 }
 
 void fromJSON(std::string_view json, DummyJSONSerializable& data) {
-  data.dummy = std::stoi(json.data());
+  data.dummy = std::stoi(json.data());  // NOLINT(bugprone-suspicious-stringview-data-usage)
 }
 
 struct DummyNlohmannJSONSerializable {
@@ -60,16 +61,18 @@ struct DummyNlohmannJSONSerializable {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DummyNlohmannJSONSerializable, dummy)
 
+}  // namespace
 }  // namespace heph::serdes::tests
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<heph::serdes::tests::Data> {
+struct ProtoAssociation<tests::Data> {
   using Type = heph::serdes::tests::MockProtoMessage;
 };
 }  // namespace heph::serdes::protobuf
 
 namespace heph::serdes::tests {
+namespace {
 
 TEST(Protobuf, SerializerBuffers) {
   protobuf::SerializerBuffer buffer;
@@ -169,4 +172,5 @@ TEST(SerDesText, Protobuf) {
   EXPECT_EQ(user, user_des);
 }
 
+}  // namespace
 }  // namespace heph::serdes::tests

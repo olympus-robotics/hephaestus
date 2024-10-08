@@ -9,11 +9,11 @@
 
 namespace heph::utils {
 auto getBuildInfo() -> BuildInfo {
-  return { REPO_BRANCH, BUILD_PROFILE, REPO_HASH };
+  return { .branch = REPO_BRANCH, .profile = BUILD_PROFILE, .hash = REPO_HASH };
 }
 
 auto getVersion() -> Version {
-  return { VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH };
+  return { .major = VERSION_MAJOR, .minor = VERSION_MINOR, .patch = VERSION_PATCH };
 }
 
 }  // namespace heph::utils

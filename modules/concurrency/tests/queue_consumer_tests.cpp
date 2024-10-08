@@ -48,8 +48,7 @@ TEST(MessageQueueConsumer, ProcessMessages) {
   spinner.start();
   auto mt = random::createRNG();
   std::vector<Message> messages(MESSAGE_COUNT);
-  std::for_each(messages.begin(), messages.end(),
-                [&mt](Message& message) { message.value = random::random<int>(mt); });
+  std::ranges::for_each(messages, [&mt](Message& message) { message.value = random::random<int>(mt); });
   for (const auto& message : messages) {
     spinner.queue().forcePush(message);
   }

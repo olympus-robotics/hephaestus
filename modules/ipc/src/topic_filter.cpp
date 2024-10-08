@@ -64,7 +64,7 @@ auto TopicFilter::anyExcluding(const std::vector<std::string>& topic_names) && -
 
 /// Return true if the input topic passes the concatenated list of filters.
 auto TopicFilter::isAcceptable(const std::string& topic) const -> bool {
-  return std::all_of(match_cb_.begin(), match_cb_.end(), [&topic](const auto& cb) { return cb(topic); });
+  return std::ranges::all_of(match_cb_, [&topic](const auto& cb) { return cb(topic); });
 }
 
 }  // namespace heph::ipc
