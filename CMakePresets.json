@@ -65,8 +65,7 @@
      "ENABLE_LINTER": "OFF",
      "ENABLE_FORMATTER": "OFF",
      "ENABLE_CACHE": "OFF",
-     "CMAKE_BUILD_TYPE": "Release",
-     "CMAKE_PREFIX_PATH": "/install"
+     "CMAKE_BUILD_TYPE": "Release"
     }
    }
  ],
