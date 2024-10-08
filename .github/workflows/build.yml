@@ -106,6 +106,7 @@ jobs:
     - uses: actions/checkout@v4.1.1
     - name: Check cargo
       run: |
+        export PATH=/root/.cargo/bin:$PATH
         cargo --version
         rustup show
     - name: Configure CMake
