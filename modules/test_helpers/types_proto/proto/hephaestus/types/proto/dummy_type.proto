@@ -1,0 +1,48 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
+syntax = "proto3";
+
+package heph.types.proto;
+
+enum DummyTypeExternalDummyEnum {
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_A = 0;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_B = 1;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_C = 2;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_D = 3;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_E = 4;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_F = 5;
+  DUMMY_TYPE_EXTERNAL_DUMMY_ENUM_G = 6;
+}
+
+message DummyPrimitivesType {
+  bool dummy_bool = 1;
+
+  int32 dummy_int8_t = 2;
+  int32 dummy_int16_t = 3;
+  int32 dummy_int32_t = 4;
+  int64 dummy_int64_t = 5;
+
+  uint32 dummy_uint8_t = 6;
+  uint32 dummy_uint16_t = 7;
+  uint32 dummy_uint32_t = 8;
+  uint64 dummy_uint64_t = 9;
+
+  float dummy_float = 10;
+  double dummy_double = 11;
+}
+
+message DummyType {
+  enum InternalDummyEnum {
+    ALPHA = 0;
+  }
+
+  DummyPrimitivesType dummy_primitives_type = 1;
+
+  InternalDummyEnum internal_dummy_enum = 2;
+  DummyTypeExternalDummyEnum external_dummy_enum = 3;
+
+  string dummy_string = 4;
+  repeated int32 dummy_vector = 5;
+}

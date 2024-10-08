@@ -1,0 +1,22 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
+syntax = "proto3";
+
+package heph.types.proto;
+
+import "hephaestus/types/proto/numeric_value.proto";
+
+enum BoundsType {
+  INCLUSIVE = 0;
+  LEFT_OPEN = 1;   
+  RIGHT_OPEN = 2;  
+  OPEN = 3;         
+}
+
+message Bounds {
+  NumericValue lower = 1;
+  NumericValue upper = 2;
+  BoundsType type = 3;
+}
