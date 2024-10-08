@@ -38,8 +38,8 @@ constexpr auto SENDER_ID = "bag_tester";
 constexpr auto ROBOT_TOPIC = "bag_test/robot";
 constexpr auto FLEET_TOPIC = "bag_test/fleet";
 
-[[nodiscard]] auto createBag()
-    -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
+[[nodiscard]] auto
+createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
   auto mcap_writer = createMcapWriter({ scoped_path });
 
@@ -85,7 +85,11 @@ TEST(Bag, PlayAndRecord) {
     auto bag_writer = createMcapWriter({ output_bag });
     auto recorder = ZenohRecorder::create({ .session = ipc::zenoh::createSession({}),
                                             .bag_writer = std::move(bag_writer),
-                                            .topics_filter_params = { .prefix = "bag_test/" } });
+                                            .topics_filter_params = {
+                                                .include_topics_only = {},
+                                                .prefix = "bag_test/",
+                                                .exclude_topics = {},
+                                            } });
     {
       auto reader = std::make_unique<mcap::McapReader>();
       const auto status = reader->open(bag_path);

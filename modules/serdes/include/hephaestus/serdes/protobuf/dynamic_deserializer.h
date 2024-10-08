@@ -23,8 +23,8 @@ public:
   [[nodiscard]] auto toText(const std::string& type, std::span<const std::byte> data) -> std::string;
 
 private:
-  [[nodiscard]] auto getMessage(const std::string& type, std::span<const std::byte> data)
-      -> google::protobuf::Message*;
+  [[nodiscard]] auto getMessage(const std::string& type,
+                                std::span<const std::byte> data) -> google::protobuf::Message*;
 
 private:
   google::protobuf::SimpleDescriptorDatabase proto_db_;

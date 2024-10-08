@@ -24,6 +24,7 @@
 #include "hephaestus/utils/stack_trace.h"
 
 namespace telemetry_example {
+namespace {
 constexpr auto MIN_DURATION = std::chrono::milliseconds{ 1000 }.count();
 constexpr auto MAX_DURATION = std::chrono::milliseconds{ 5000 }.count();
 
@@ -32,8 +33,7 @@ struct DummyMeasure {
   int64_t counter;
   std::string message;
 };
-// NOLINTNEXTLINE
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DummyMeasure, error, counter, message)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(DummyMeasure, error, counter, message)
 
 void run() {
   auto mt = heph::random::createRNG();
@@ -49,7 +49,7 @@ void run() {
                             });
   }
 }
-
+}  // namespace
 }  // namespace telemetry_example
 
 auto main(int argc, const char* argv[]) -> int {

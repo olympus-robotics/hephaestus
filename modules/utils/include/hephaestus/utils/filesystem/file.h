@@ -19,8 +19,8 @@ namespace heph::utils::filesystem {
 [[nodiscard]] auto readBinaryFile(const std::filesystem::path& path) -> std::optional<std::vector<std::byte>>;
 
 [[nodiscard]] auto writeStringToFile(const std::filesystem::path& path, std::string_view content) -> bool;
-[[nodiscard]] auto writeBufferToFile(const std::filesystem::path& path, std::span<const std::byte> content)
-    -> bool;
+[[nodiscard]] auto writeBufferToFile(const std::filesystem::path& path,
+                                     std::span<const std::byte> content) -> bool;
 
 [[nodiscard]] auto searchFilenameInPaths(const std::string& filename,
                                          const std::vector<std::filesystem::path>& paths)

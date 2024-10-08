@@ -29,7 +29,7 @@ private:
 };
 
 StackTrace::Impl::Impl() {
-  struct sigaction sa {};
+  struct sigaction sa{};
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = StackTrace::Impl::abort;  // NOLINT(cppcoreguidelines-pro-type-union-access)
   sigemptyset(&sa.sa_mask);

@@ -67,7 +67,8 @@ template <EnumType T>
 
 template <ChronoSystemClockType T>
 [[nodiscard]] inline auto toString(const std::chrono::time_point<T>& timestamp) -> std::string {
-  return fmt::format("{:%Y-%m-%d %H:%M:%S}", timestamp);
+  return fmt::format("{:%Y-%m-%d %H:%M:%S}",
+                     std::chrono::time_point_cast<std::chrono::microseconds, T>(timestamp));
 }
 
 template <ChronoSteadyClockType T>

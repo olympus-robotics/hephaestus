@@ -9,6 +9,9 @@
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 
 namespace heph::ipc::zenoh::action_server {
+// TODO(@fbrizzi): for some reason clang-tidy doesn't understand that this are public function declared in the
+// header.
+// NOLINTBEGIN(misc-use-internal-linkage)
 void toProto(proto::RequestStatus& proto_status, const RequestStatus& status) {
   switch (status) {
     case RequestStatus::SUCCESSFUL:
@@ -61,4 +64,5 @@ void toProto(proto::RequestResponse& proto_response, const RequestResponse& resp
 void fromProto(const proto::RequestResponse& proto_response, RequestResponse& response) {
   fromProto(proto_response.status(), response.status);
 }
+// NOLINTEND(misc-use-internal-linkage)
 }  // namespace heph::ipc::zenoh::action_server

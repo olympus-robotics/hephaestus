@@ -39,8 +39,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value);
 
-    std::for_each(results.begin(), results.end(),
-                  [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });
+    std::ranges::for_each(
+        results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

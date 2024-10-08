@@ -45,8 +45,8 @@ auto main(int argc, const char* argv[]) -> int {
             *session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
       std::string reply_str;
-      std::for_each(replies.begin(), replies.end(),
-                    [&reply_str](const auto& reply) { reply_str += fmt::format("-\t {}\n", reply.value); });
+      std::ranges::for_each(
+          replies, [&reply_str](const auto& reply) { reply_str += fmt::format("-\t {}\n", reply.value); });
       fmt::println("Received: \n{}\n", reply_str);
     } else {
       LOG(ERROR) << "Error or no messages received after " << fmt::format("{}", K_TIMEOUT);

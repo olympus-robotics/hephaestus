@@ -48,7 +48,9 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
     const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
     zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, router_endpoint);  // NOLINT(misc-include-cleaner)
   }
-  { zconfig.insert_json5("transport/unicast/qos/enabled", config.qos ? "true" : "false"); }
+  {
+    zconfig.insert_json5("transport/unicast/qos/enabled", config.qos ? "true" : "false");
+  }
   if (config.real_time) {
     zconfig.insert_json5("transport/unicast/qos/enabled", "false");
     zconfig.insert_json5("transport/unicast/lowlatency", "true");
