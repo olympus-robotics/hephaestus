@@ -108,6 +108,7 @@ jobs:
       run: |
         export PATH=/root/.cargo/bin:$PATH
         cargo --version
+        rustup toolchain install stable
         rustup default stable
         rustup show
     - name: Configure CMake
