@@ -13,17 +13,6 @@
    }
   },
   {
-    "name": "gcc",
-    "description": "Configuration setting for all modules with preferred toolchain",
-    "generator": "Ninja",
-    "binaryDir": "${sourceDir}/build-gcc",
-    "installDir": "/install",
-    "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "OFF"
-    }
-   },
-  {
     "name": "fast",
     "description": "Configuration setting for all modules with preferred toolchain",
     "generator": "Ninja",
@@ -61,6 +50,21 @@
      "ENABLE_LINTER": "ON",
      "ENABLE_LINTER_CACHE": "OFF",
      "FORMAT_FAIL_ON_CHANGE": "ON",
+     "CMAKE_BUILD_TYPE": "Release",
+     "CMAKE_PREFIX_PATH": "/install"
+    }
+   },
+   {
+    "name": "gcc",
+    "description": "Configuration setting for all modules with preferred toolchain",
+    "generator": "Ninja",
+    "binaryDir": "${sourceDir}/build-gcc",
+    "installDir": "/install",
+    "cacheVariables": {
+     "BUILD_MODULES": "all;examples",
+     "ENABLE_LINTER": "OFF",
+     "ENABLE_FORMATTER": "OFF",
+     "ENABLE_CACHE": "OFF",
      "CMAKE_BUILD_TYPE": "Release",
      "CMAKE_PREFIX_PATH": "/install"
     }

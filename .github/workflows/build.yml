@@ -92,3 +92,20 @@ jobs:
         cd ${{github.workspace}}/build
         ninja tests_build
         ninja test
+  build:
+    needs: docker_deps_build_and_publish
+    # TODO: use the docker image published at the step over
+    runs-on: ubuntu-latest
+    permissions: read-all
+    container:
+      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev_deps:latest
+      credentials:
+        username: ${{ github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
+    steps:
+    - uses: actions/checkout@v4.1.1
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build --preset gcc
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build -- all examples
