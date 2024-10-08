@@ -16,9 +16,17 @@
 
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
-#include "hephaestus/types/bounds.h"
 
 namespace heph::random {
+
+template <NumericType T>
+struct Limits {
+  T min;
+  T max;
+};
+
+template <NumericType T>
+constexpr Limits<T> NO_LIMITS{ .min = std::numeric_limits<T>::min(), .max = std::numeric_limits<T>::max() };
 
 //=================================================================================================
 // Random boolean creation
@@ -36,8 +44,8 @@ template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
 
 template <NonBooleanIntegralType T>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  std::uniform_int_distribution<T> dist;
+[[nodiscard]] auto random(std::mt19937_64& mt, Limits<T> limits = NO_LIMITS<T>) -> T {
+  std::uniform_int_distribution<T> dist(limits.min, limits.max);
   return dist(mt);
 }
 
@@ -45,9 +53,8 @@ template <NonBooleanIntegralType T>
 // Random floating point value creation
 //=================================================================================================
 template <std::floating_point T>
-[[nodiscard]] auto random(std::mt19937_64& mt, std::optional < Bounds<T>> bounds) -> T {
-  auto bounds = bounds.value_or(Bounds<T>{ std::numeric_limits<T>::min(), std::numeric_limits<T>::max() });
-  std::uniform_real_distribution<T> dist(bounds.min, bounds.max);
+[[nodiscard]] auto random(std::mt19937_64& mt, Limits<T> limits = NO_LIMITS<T>) -> T {
+  std::uniform_real_distribution<T> dist(limits.min, limits.max);
   return dist(mt);
 }
 

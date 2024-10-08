@@ -84,7 +84,21 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
 }
 
 template <typename T>
-concept ContainerWithSizeMethod = requires(TypeParam t) {
+concept HasLimitsMethod = requires(T t, Limits<T> limits) { random::random<T>(t, limits); };
+
+TYPED_TEST(RandomTypeTests, LimitsTest) {
+  if constexpr (HasLimitsMethod<TypeParam>) {
+    constexpr auto limit_min = std::is_signed<TypeParam>::value ? -42 : 0;
+    auto mt = createRNG();
+    auto limits = random::Limits<TypeParam>{ .min = 0, .max = 42 };
+    auto val = random::random<TypeParam>(mt, limits);
+    EXPECT_GE(val, limits.min);
+    EXPECT_LE(val, limits.max);
+  }
+}
+
+template <typename T>
+concept ContainerWithSizeMethod = requires(T t) {
   { t.size() } -> std::convertible_to<std::size_t>;
 };
 
