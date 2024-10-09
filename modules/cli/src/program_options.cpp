@@ -56,16 +56,16 @@ void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k
       fmt::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
 }
 
-auto ProgramDescription::defineFlag(const std::string& key, char short_key,
-                                    const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineFlag(const std::string& key, char short_key, const std::string& description)
+    -> ProgramDescription& {
   checkOptionAlreadyExists(key, short_key);
 
   options_.emplace_back(key, short_key, description, utils::getTypeName<bool>(), "false", false, false);
   return *this;
 }
 
-auto ProgramDescription::defineFlag(const std::string& key,
-                                    const std::string& description) -> ProgramDescription& {
+auto ProgramDescription::defineFlag(const std::string& key, const std::string& description)
+    -> ProgramDescription& {
   return defineFlag(key, '\0', description);
 }
 

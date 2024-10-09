@@ -23,6 +23,7 @@
 #include <fmt/ranges.h>
 #include <zenoh.h>
 #include <zenoh.hxx>
+#include <zenoh/api/encoding.hxx>
 #include <zenoh/api/queryable.hxx>
 
 #include "hephaestus/ipc/topic.h"
@@ -77,18 +78,26 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
   const auto encoding = query.get_encoding();
   throwExceptionIf<InvalidParameterException>(
       !encoding.has_value(), fmt::format("Serivce {}: encoding is missing in query.", keyexpr));
-  throwExceptionIf<InvalidParameterException>(
-      encoding.value().get().as_string() !=  // NOLINT(bugprone-unchecked-optional-access)
-          TEXT_PLAIN_ENCODING,
-      fmt::format("Encoding for std::string should be '{}'", TEXT_PLAIN_ENCODING));
 
   auto payload = query.get_payload();
   throwExceptionIf<InvalidParameterException>(
       !payload.has_value(), fmt::format("Serivce {}: payload is missing in query.", keyexpr));
 
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    return payload->get().deserialize<std::string>();  // NOLINT(bugprone-unchecked-optional-access)
+    throwExceptionIf<InvalidParameterException>(
+        encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
+            ::zenoh::Encoding::Predefined::zenoh_string(),
+        fmt::format("Encoding for std::string should be '{}'",
+                    ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
+
+    return payload->get().as_string();  // NOLINT(bugprone-unchecked-optional-access)
   } else {
+    throwExceptionIf<InvalidParameterException>(
+        encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
+            ::zenoh::Encoding::Predefined::zenoh_bytes(),
+        fmt::format("Encoding for std::string should be '{}'",
+                    ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
+
     auto buffer = toByteVector(payload->get());  // NOLINT(bugprone-unchecked-optional-access)
 
     DLOG(INFO) << fmt::format("Deserializing buffer of size: {}", buffer.size());
@@ -102,15 +111,20 @@ template <class ReplyT>
 auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
   const auto server_topic = static_cast<std::string>(sample.get_keyexpr().as_string_view());
   DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
-  throwExceptionIf<InvalidParameterException>(
-      sample.get_encoding().as_string() != TEXT_PLAIN_ENCODING,
-      fmt::format("Encoding for Service {} should be '{}'", server_topic, TEXT_PLAIN_ENCODING));
 
   if constexpr (std::is_same_v<ReplyT, std::string>) {
-    auto payload = sample.get_payload().deserialize<std::string>();
+    throwExceptionIf<InvalidParameterException>(
+        sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_string(),
+        fmt::format("Encoding for Service {} should be '{}'", server_topic,
+                    ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
+    auto payload = sample.get_payload().as_string();
     DLOG(INFO) << fmt::format("Serivce {}: payload is string: '{}'", server_topic, payload);
     return ServiceResponse<ReplyT>{ .topic = server_topic, .value = std::move(payload) };
   } else {
+    throwExceptionIf<InvalidParameterException>(
+        sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_bytes(),
+        fmt::format("Encoding for Service {} should be '{}'", server_topic,
+                    ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
     auto buffer = toByteVector(sample.get_payload());
     ReplyT reply{};
     serdes::deserialize(buffer, reply);
@@ -130,11 +144,12 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
 
     auto reply = this->callback_(internal::deserializeRequest<RequestT>(query));
     ::zenoh::Query::ReplyOptions options;
-    options.encoding = ::zenoh::Encoding{ TEXT_PLAIN_ENCODING };  // Update encoding.
     ::zenoh::ZResult result{};
     if constexpr (std::is_same_v<ReplyT, std::string>) {
+      options.encoding = ::zenoh::Encoding::Predefined::zenoh_string();
       query.reply(this->topic_config_.name, reply, std::move(options), &result);
     } else {
+      options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
       auto buffer = serdes::serialize(reply);
       DLOG(INFO) << fmt::format("[Service {}] reply payload size: {}", topic_config_.name, buffer.size());
       query.reply(this->topic_config_.name, toZenohBytes(buffer), std::move(options), &result);
@@ -168,11 +183,11 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
     options.timeout_ms = static_cast<uint64_t>(timeout->count());
   }
 
-  options.encoding = ::zenoh::Encoding{ TEXT_PLAIN_ENCODING };
-
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    options.payload = ::zenoh::Bytes::serialize(request);
+    options.encoding = ::zenoh::Encoding::Predefined::zenoh_string();
+    options.payload = ::zenoh::ext::serialize(request);
   } else {
+    options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
     auto buffer = serdes::serialize(request);
 
     DLOG(INFO) << fmt::format("Request: payload size: {}", buffer.size());

@@ -14,7 +14,6 @@
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
-#include <zenoh/api/bytes.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/enums.hxx>
 #include <zenoh/api/interop.hxx>
@@ -43,8 +42,8 @@ inline void zenohOnMatchingStatus(const ::zc_matching_status_t* matching_status,
 }
 
 template <typename C, typename D>
-[[nodiscard]] auto createZenohcClosureMatchingStatus(C&& on_matching_status,
-                                                     D&& on_drop) -> zc_owned_closure_matching_status_t {
+[[nodiscard]] auto createZenohcClosureMatchingStatus(C&& on_matching_status, D&& on_drop)
+    -> zc_owned_closure_matching_status_t {
   zc_owned_closure_matching_status_t c_closure;
   using Cval = std::remove_reference_t<C>;
   using Dval = std::remove_reference_t<D>;
@@ -125,10 +124,11 @@ void RawPublisher::enableCache() {
 
 auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
-  put_options.encoding = ::zenoh::Encoding{ TEXT_PLAIN_ENCODING };
+  put_options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
-  put_options.attachment = ::zenoh::Bytes::serialize(attachment_);
+  // TODO(@filippobrizzi): remove the NOLINT once they fix https://github.com/eclipse-zenoh/zenoh-cpp/pull/244
+  put_options.attachment = ::zenoh::ext::serialize(attachment_);  // NOLINT(misc-include-cleaner)
 
   return put_options;
 }
