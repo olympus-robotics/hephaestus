@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <chrono>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -81,6 +82,18 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
   auto mt = createRNG();
   auto gen_fn = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
   EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen_fn, mt));
+}
+
+TYPED_TEST(RandomTypeTests, LimitsTest) {
+  if constexpr (NonBooleanIntegralType<TypeParam> || std::floating_point<TypeParam>) {
+    constexpr auto LIM_MIN = std::is_signed_v<TypeParam> ? -42 : 0;
+    constexpr auto LIM_MAX = 42;
+    auto mt = createRNG();
+    auto limits = random::Limits<TypeParam>{ .min = LIM_MIN, .max = LIM_MAX };
+    auto val = random::random<TypeParam>(mt, limits);
+    EXPECT_GE(val, limits.min);
+    EXPECT_LE(val, limits.max);
+  }
 }
 
 // Note: If the size of the container is not specified, the size is randomly generated. No need to test this
