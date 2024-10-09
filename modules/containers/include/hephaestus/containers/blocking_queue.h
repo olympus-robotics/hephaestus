@@ -31,6 +31,8 @@ public:
                                                 "Cannot create a queue with max size 0");
   }
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   /// Attempt to enqueue the data if there is space in the queue.
   /// \note This is safe to call from multiple threads.
   /// \return true if the new data is added to the queue, false otherwise.
@@ -48,7 +50,10 @@ public:
     reader_signal_.notify_one();
     return true;
   }
+  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   /// Write the data to the queue. If no space is left in the queue, the oldest element is dropped.
   /// \note This is safe to call from multiple threads.
   /// \param obj The value to push into the queue.
@@ -69,7 +74,10 @@ public:
     reader_signal_.notify_one();
     return element_dropped;
   }
+  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
   /// Write the data to the queue. If no space is left in the queue,
   /// the function blocks until either space is freed or stop is called.
   /// \note This is safe to call from multiple threads.
@@ -88,7 +96,10 @@ public:
 
     reader_signal_.notify_one();
   }
+  // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   /// Attempt to enqueue the data if there is space in the queue. Support constructing a new element
   /// in-place.
   /// \note This is safe to call from multiple threads.
@@ -107,7 +118,10 @@ public:
     reader_signal_.notify_one();
     return true;
   }
+  // NOLINTEND(cppcoreguidelines-missing-std-forward)
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   /// Write the data to the queue. If no space is left in the queue, the oldest element is dropped.
   /// Support constructing a new element in-place.
   /// \note This is safe to call from multiple threads.
@@ -128,7 +142,10 @@ public:
     reader_signal_.notify_one();
     return element_dropped;
   }
+  // NOLINTEND(cppcoreguidelines-missing-std-forward)
 
+  // TODO(filippo) Please check if that is a dalse positive.
+  // NOLINTBEGIN(cppcoreguidelines-missing-std-forward)
   /// Write the data to the queue. If no space is left in the queue,
   /// the function blocks until either space is freed or stop is called.
   /// Support constructing a new element in-place.
@@ -148,6 +165,7 @@ public:
 
     reader_signal_.notify_one();
   }
+  // NOLINTEND(cppcoreguidelines-missing-std-forward)
 
   /// Pop data from the queue, if data is present the function returns immediately,
   /// otherwise it blocks waiting for new data, or the stop signal is set.
