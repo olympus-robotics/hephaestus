@@ -37,10 +37,10 @@ private:
 };
 
 template <typename T>
-[[nodiscard]] auto
-createSubscriber(zenoh::SessionPtr session, TopicConfig topic_config,
-                 typename Subscriber<T>::DataCallback&& callback,
-                 bool dedicated_callback_thread = false) -> std::unique_ptr<Subscriber<T>> {
+[[nodiscard]] auto createSubscriber(zenoh::SessionPtr session, TopicConfig topic_config,
+                                    typename Subscriber<T>::DataCallback&& callback,
+                                    bool dedicated_callback_thread = false)
+    -> std::unique_ptr<Subscriber<T>> {
   return std::make_unique<Subscriber<T>>(std::move(session), std::move(topic_config), std::move(callback),
                                          dedicated_callback_thread);
 }

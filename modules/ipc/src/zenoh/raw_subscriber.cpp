@@ -12,7 +12,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
@@ -117,7 +116,10 @@ RawSubscriber::~RawSubscriber() {
 void RawSubscriber::callback(const ::zenoh::Sample& sample) {
   MessageMetadata metadata;
   if (const auto attachment = sample.get_attachment(); attachment.has_value()) {
-    auto attachment_data = attachment->get().deserialize<std::unordered_map<std::string, std::string>>();
+    // TODO(@filippobrizzi): remove the NOLINT once they fix
+    // https://github.com/eclipse-zenoh/zenoh-cpp/pull/244
+    auto attachment_data = ::zenoh::ext::deserialize<  // NOLINT(misc-include-cleaner)
+        std::unordered_map<std::string, std::string>>(attachment->get());
 
     auto res =
         absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &metadata.sequence_id);
