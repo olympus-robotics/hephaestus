@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <chrono>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -85,9 +86,10 @@ TYPED_TEST(RandomTypeTests, RandomnessTest) {
 
 TYPED_TEST(RandomTypeTests, LimitsTest) {
   if constexpr (NonBooleanIntegralType<TypeParam> || std::floating_point<TypeParam>) {
-    constexpr auto limit_min = std::is_signed<TypeParam>::value ? -42 : 0;
+    constexpr auto LIM_MIN = std::is_signed_v<TypeParam> ? -42 : 0;
+    constexpr auto LIM_MAX = 42;
     auto mt = createRNG();
-    auto limits = random::Limits<TypeParam>{ .min = limit_min, .max = 42 };
+    auto limits = random::Limits<TypeParam>{ .min = LIM_MIN, .max = LIM_MAX };
     auto val = random::random<TypeParam>(mt, limits);
     EXPECT_GE(val, limits.min);
     EXPECT_LE(val, limits.max);
