@@ -14,7 +14,7 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::serdes {
-// TODO(filippo): add tests.
+// TODO(@filippobrizzi): add tests.
 
 auto TypeInfo::toJson() const -> std::string {
   nlohmann::json data;

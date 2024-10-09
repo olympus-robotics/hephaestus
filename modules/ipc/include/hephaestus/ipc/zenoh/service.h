@@ -90,7 +90,7 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
         fmt::format("Encoding for std::string should be '{}'",
                     ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
 
-    return payload->get().as_string();
+    return payload->get().as_string();  // NOLINT(bugprone-unchecked-optional-access)
   } else {
     throwExceptionIf<InvalidParameterException>(
         encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)

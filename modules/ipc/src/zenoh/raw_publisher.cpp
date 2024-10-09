@@ -14,7 +14,6 @@
 #include <fmt/core.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
-#include <zenoh/api/bytes.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/enums.hxx>
 #include <zenoh/api/interop.hxx>
@@ -128,7 +127,8 @@ auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   put_options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
-  put_options.attachment = ::zenoh::ext::serialize(attachment_);
+  // TODO(@filippobrizzi): remove the NOLINT once they fix https://github.com/eclipse-zenoh/zenoh-cpp/pull/244
+  put_options.attachment = ::zenoh::ext::serialize(attachment_);  // NOLINT(misc-include-cleaner)
 
   return put_options;
 }
