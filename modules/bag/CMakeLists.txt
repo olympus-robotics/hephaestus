@@ -5,7 +5,7 @@
 declare_module(
   NAME bag
   DEPENDS_ON_MODULES containers ipc random
-  DEPENDS_ON_EXTERNAL_PROJECTS absl zstd mcap
+  DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
 )
 
 find_package(absl REQUIRED)
