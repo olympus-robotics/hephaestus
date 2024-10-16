@@ -165,7 +165,6 @@ add_cmake_dependency(
 # curl
 set(CURL_VERSION 8.7.0)
 set(CURL_TAG curl-8_7_1)
-# find_package(CURL ${CURL_VERSION} REQUIRED)
 add_cmake_dependency(
   NAME CURL
   VERSION ${CURL_VERSION}
