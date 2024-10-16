@@ -166,7 +166,7 @@ add_cmake_dependency(
 set(CURL_VERSION 8.7.1)
 set(CURL_TAG curl-8_7_1)
 add_cmake_dependency(
-  NAME curl
+  NAME CURL
   VERSION ${CURL_VERSION}
   GIT_REPOSITORY https://github.com/curl/curl.git
   GIT_TAG ${CURL_TAG}
