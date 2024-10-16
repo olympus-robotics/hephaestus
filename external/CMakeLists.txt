@@ -27,12 +27,12 @@ if(Protobuf IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 if(InfluxDB IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(INFLUXDB_DEPENDS cpr curl)
+  set(INFLUXDB_DEPENDS cpr CURL)
   list(APPEND EXTERNAL_PROJECTS_LIST ${INFLUXDB_DEPENDS})
 endif()
 
 if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(CPR_DEPENDS curl)
+  set(CPR_DEPENDS CURL)
   list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
 endif()
 
@@ -156,17 +156,17 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # mcap
-set(MCAP_TAG cb34e058cfd529f694a4ff1747517478339fc866)
+set(MCAP_TAG ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee)
 add_cmake_dependency(
   NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
 )
 
 # --------------------------------------------------------------------------------------------------
 # curl
-set(CURL_VERSION 8.7.1)
+set(CURL_VERSION 8.7.0)
 set(CURL_TAG curl-8_7_1)
 add_cmake_dependency(
-  NAME curl
+  NAME CURL
   VERSION ${CURL_VERSION}
   GIT_REPOSITORY https://github.com/curl/curl.git
   GIT_TAG ${CURL_TAG}
