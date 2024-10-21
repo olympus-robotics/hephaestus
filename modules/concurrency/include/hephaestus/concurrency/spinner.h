@@ -42,7 +42,7 @@ private:
 
   std::atomic_bool is_started_ = false;
   std::atomic_bool stop_requested_ = false;
-  std::thread spinner_thread_;
+  std::future<void> async_spinner_handle_;
 
   std::chrono::microseconds spin_period_;
   std::chrono::system_clock::time_point start_timestamp_;

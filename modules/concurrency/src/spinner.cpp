@@ -39,9 +39,17 @@ Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
 }
 
 Spinner::~Spinner() {
-  if (is_started_.load() || spinner_thread_.joinable()) {
+  if (is_started_.load()) {
     LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
     std::terminate();
+  }
+
+  if (async_spinner_handle_.valid()) {
+    try {
+      async_spinner_handle_.get();
+    } catch (const std::exception& e) {
+      throw e;  // Re-throw the exception to be handled by the caller.
+    }
   }
 }
 
@@ -49,8 +57,7 @@ void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
 
   std::promise<void> promise;
-  auto future = promise.get_future();
-  spinner_thread_ = std::async(std::launch::async, [this, &promise]() {
+  async_spinner_handle_ = std::async(std::launch::async, [this, promise = std::move(promise)]() mutable {
     try {
       spin();
       promise.set_value();
@@ -95,8 +102,6 @@ auto Spinner::stop() -> std::future<void> {
 }
 
 void Spinner::stopImpl() {
-  spinner_thread_.join();
-
   is_started_.store(false);
 }
 

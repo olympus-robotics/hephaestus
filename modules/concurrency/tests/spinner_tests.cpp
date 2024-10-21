@@ -15,21 +15,27 @@
 namespace heph::concurrency::tests {
 
 struct TestFixture : public ::testing::Test {
-  static auto TrivialCallback() -> std::function<void()> {
-    return []() {};
+  static auto TrivialCallback() -> std::function<Spinner::SpinResult()> {
+    return []() { return Spinner::SpinResult::Continue; };
   }
 
-  static auto NonThrowingCallback(size_t& callback_called_counter) -> std::function<void()> {
-    return [&callback_called_counter]() { ++callback_called_counter; };
+  static auto NonThrowingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
+    return [&callback_called_counter]() {
+      ++callback_called_counter;
+      return Spinner::SpinResult::Continue;
+    };
   }
 
-  static auto ThrowingCallback() -> std::function<void()> {
-    return []() { throwException<InvalidOperationException>("This is a test exception."); };
+  static auto ThrowingCallback() -> std::function<Spinner::SpinResult()> {
+    return []() {
+      throwException<InvalidOperationException>("This is a test exception.");
+      return Spinner::SpinResult::Continue;
+    };
   }
 };
 
 TEST(SpinnerTest, StartStopTest) {
-  Spinner spinner{ []() {} };
+  Spinner spinner{ TestFixture::TrivialCallback() };
 
   EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
   spinner.start();

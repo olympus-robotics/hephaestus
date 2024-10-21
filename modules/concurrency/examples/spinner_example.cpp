@@ -15,7 +15,7 @@ static constexpr auto RATE_HZ = 10;
 
 class Worker {
 public:
-  Worker() : spinner_([this] { doWork(); }, RATE_HZ) {
+  Worker() : spinner_([this] { return doWork(); }, RATE_HZ) {
   }
 
   void start() {
