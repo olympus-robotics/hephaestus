@@ -43,26 +43,17 @@ Spinner::~Spinner() {
     LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
     std::terminate();
   }
-
-  if (async_spinner_handle_.valid()) {
-    try {
-      async_spinner_handle_.get();
-    } catch (const std::exception& e) {
-      throw e;  // Re-throw the exception to be handled by the caller.
-    }
-  }
 }
 
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
 
-  std::promise<void> promise;
-  async_spinner_handle_ = std::async(std::launch::async, [this, promise = std::move(promise)]() mutable {
+  async_spinner_handle_ = std::async(std::launch::async, [this]() mutable {
     try {
       spin();
-      promise.set_value();
+      this->exception_thrown_in_spin_promise_.set_value();
     } catch (const std::exception& e) {
-      promise.set_exception(std::current_exception());
+      this->exception_thrown_in_spin_promise_.set_exception(std::current_exception());
     }
   });
 
@@ -98,7 +89,17 @@ auto Spinner::stop() -> std::future<void> {
   stop_requested_.store(true);
   condition_.notify_all();
 
-  return std::async(std::launch::async, [this]() { stopImpl(); });
+  auto stop_future = std::async(std::launch::async, [this]() { stopImpl(); });
+
+  if (async_spinner_handle_.valid()) {
+    try {
+      exception_thrown_in_spin_promise_.get_future().get();  // Check for any exception thrown during spin().
+    } catch (const std::exception& e) {
+      throw e;  // Re-throw the exception to be handled by the caller.
+    }
+  }
+
+  return stop_future;
 }
 
 void Spinner::stopImpl() {

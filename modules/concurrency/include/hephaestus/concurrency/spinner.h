@@ -43,6 +43,7 @@ private:
   std::atomic_bool is_started_ = false;
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;
+  std::promise<void> exception_thrown_in_spin_promise_;
 
   std::chrono::microseconds spin_period_;
   std::chrono::system_clock::time_point start_timestamp_;
