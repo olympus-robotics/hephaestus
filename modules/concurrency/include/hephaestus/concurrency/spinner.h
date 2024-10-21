@@ -18,7 +18,8 @@ namespace heph::concurrency {
 /// the given fixed rate.
 class Spinner {
 public:
-  using Callback = std::function<void()>;
+  enum class SpinResult : bool { Continue, Stop };
+  using Callback = std::function<SpinResult()>;
 
   explicit Spinner(Callback&& callback, double rate_hz = 0);
   ~Spinner();

@@ -27,8 +27,9 @@ public:
   }
 
 private:
-  void doWork() {
+  [[nodiscard]] auto doWork() -> heph::concurrency::Spinner::SpinResult {
     fmt::println("Spinning once. Counter: {}", counter_++);
+    return heph::concurrency::Spinner::SpinResult::Continue;
   }
 
 private:

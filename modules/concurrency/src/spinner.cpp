@@ -48,8 +48,16 @@ Spinner::~Spinner() {
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
 
-  // NOTE: Replace with std::stop_token and std::jthread when clang supports it.
-  spinner_thread_ = std::thread([this]() { spin(); });
+  std::promise<void> promise;
+  auto future = promise.get_future();
+  spinner_thread_ = std::async(std::launch::async, [this, &promise]() {
+    try {
+      spin();
+      promise.set_value();
+    } catch (const std::exception& e) {
+      promise.set_exception(std::current_exception());
+    }
+  });
 
   is_started_.store(true);
 }
@@ -60,9 +68,13 @@ void Spinner::spin() {
   start_timestamp_ = std::chrono::system_clock::now();
 
   while (!stop_requested_.load()) {
-    callback_();
+    const auto spin_result = callback_();
 
     ++spin_count_;
+
+    if (spin_result == SpinResult::Stop) {
+      break;
+    }
 
     if (spin_period_.count() == 0) {
       continue;
