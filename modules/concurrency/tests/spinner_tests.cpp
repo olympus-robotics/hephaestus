@@ -1,8 +1,10 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -11,6 +13,20 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::tests {
+
+struct TestFixture : public ::testing::Test {
+  static auto TrivialCallback() -> std::function<void()> {
+    return []() {};
+  }
+
+  static auto NonThrowingCallback(size_t& callback_called_counter) -> std::function<void()> {
+    return [&callback_called_counter]() { ++callback_called_counter; };
+  }
+
+  static auto ThrowingCallback() -> std::function<void()> {
+    return []() { throwException<InvalidOperationException>("This is a test exception."); };
+  }
+};
 
 TEST(SpinnerTest, StartStopTest) {
   Spinner spinner{ []() {} };
@@ -27,7 +43,7 @@ TEST(SpinnerTest, StartStopTest) {
 
 TEST(SpinnerTest, SpinTest) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
-  Spinner spinner{ []() {} };
+  Spinner spinner{ TestFixture::TrivialCallback() };
 
   spinner.start();
 
@@ -43,8 +59,8 @@ TEST(SpinnerTest, SpinTest) {
 TEST(SpinnerTest, StopCallback) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
-  std::size_t callback_called_counter = 0;
-  Spinner spinner([&callback_called_counter]() { ++callback_called_counter; });
+  size_t callback_called_counter = 0;
+  Spinner spinner(TestFixture::NonThrowingCallback(callback_called_counter));
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
@@ -60,14 +76,33 @@ TEST(SpinnerTest, SpinWithPeriod) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   std::size_t callback_called_counter = 0;
-  Spinner spinner([&callback_called_counter] { ++callback_called_counter; }, RATE_HZ);
+  Spinner spinner(TestFixture::NonThrowingCallback(callback_called_counter), RATE_HZ);
 
-  spinner.start();
-  std::this_thread::sleep_for(WAIT_FOR);
-  spinner.stop().get();
+  try {
+    spinner.start();
+    std::this_thread::sleep_for(WAIT_FOR);
+    spinner.stop().get();
 
-  EXPECT_GT(callback_called_counter, 8);
-  EXPECT_LT(callback_called_counter, 12);
+    EXPECT_GT(callback_called_counter, 8);
+    EXPECT_LT(callback_called_counter, 12);
+  } catch (const std::exception& e) {
+    ASSERT_TRUE(false) << "Spinner must not throw when passed a NonThrowingCallback" << e.what();
+  }
+}
+
+TEST(SpinnerTest, ExceptionHandling) {
+  static constexpr auto RATE_HZ = 1e3;
+  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 5 };
+
+  Spinner spinner(TestFixture::ThrowingCallback(), RATE_HZ);
+  try {
+    spinner.start();
+    std::this_thread::sleep_for(WAIT_FOR);
+    spinner.stop().get();
+    ASSERT_TRUE(false) << "Spinner must throw when passed a ThrowingCallback";
+  } catch (const std::exception& e) {
+    ASSERT_TRUE(true) << "Spinner must throw when passed a ThrowingCallback" << e.what();
+  }
 }
 
 }  // namespace heph::concurrency::tests
