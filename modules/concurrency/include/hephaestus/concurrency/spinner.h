@@ -30,6 +30,7 @@ public:
 
   void start();
   auto stop() -> std::future<void>;
+  void waitForCompletion();
 
   [[nodiscard]] auto spinCount() const -> uint64_t;
 

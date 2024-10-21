@@ -15,18 +15,30 @@
 namespace heph::concurrency::tests {
 
 struct TestFixture : public ::testing::Test {
-  static auto TrivialCallback() -> std::function<Spinner::SpinResult()> {
+  static auto trivialCallback() -> std::function<Spinner::SpinResult()> {
     return []() { return Spinner::SpinResult::Continue; };
   }
 
-  static auto NonThrowingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
+  static auto stoppingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
+    return [&callback_called_counter]() {
+      static constexpr auto STOP_AFTER = 10;
+      if (callback_called_counter < STOP_AFTER) {
+        ++callback_called_counter;
+        return Spinner::SpinResult::Continue;
+      }
+
+      return Spinner::SpinResult::Stop;
+    };
+  }
+
+  static auto nonThrowingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
     return [&callback_called_counter]() {
       ++callback_called_counter;
       return Spinner::SpinResult::Continue;
     };
   }
 
-  static auto ThrowingCallback() -> std::function<Spinner::SpinResult()> {
+  static auto throwingCallback() -> std::function<Spinner::SpinResult()> {
     return []() {
       throwException<InvalidOperationException>("This is a test exception.");
       return Spinner::SpinResult::Continue;
@@ -35,7 +47,7 @@ struct TestFixture : public ::testing::Test {
 };
 
 TEST(SpinnerTest, StartStopTest) {
-  Spinner spinner{ TestFixture::TrivialCallback() };
+  Spinner spinner{ TestFixture::trivialCallback() };
 
   EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
   spinner.start();
@@ -49,7 +61,7 @@ TEST(SpinnerTest, StartStopTest) {
 
 TEST(SpinnerTest, SpinTest) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
-  Spinner spinner{ TestFixture::TrivialCallback() };
+  Spinner spinner{ TestFixture::trivialCallback() };
 
   spinner.start();
 
@@ -66,7 +78,7 @@ TEST(SpinnerTest, StopCallback) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::NonThrowingCallback(callback_called_counter));
+  Spinner spinner(TestFixture::nonThrowingCallback(callback_called_counter));
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
@@ -81,8 +93,8 @@ TEST(SpinnerTest, SpinWithPeriod) {
   static constexpr auto RATE_HZ = 1e3;
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
-  std::size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::NonThrowingCallback(callback_called_counter), RATE_HZ);
+  size_t callback_called_counter = 0;
+  Spinner spinner(TestFixture::nonThrowingCallback(callback_called_counter), RATE_HZ);
 
   try {
     spinner.start();
@@ -92,22 +104,34 @@ TEST(SpinnerTest, SpinWithPeriod) {
     EXPECT_GT(callback_called_counter, 8);
     EXPECT_LT(callback_called_counter, 12);
   } catch (const std::exception& e) {
-    ASSERT_TRUE(false) << "Spinner must not throw when passed a NonThrowingCallback" << e.what();
+    EXPECT_TRUE(false) << "Spinner must not throw when passed a nonThrowingCallback" << e.what();
   }
+}
+
+TEST(SpinnerTest, SpinStopsOnStop) {
+  static constexpr auto RATE_HZ = 1e3;
+
+  size_t callback_called_counter = 0;
+  Spinner spinner(TestFixture::stoppingCallback(callback_called_counter), RATE_HZ);
+
+  spinner.start();
+  spinner.waitForCompletion();
+
+  EXPECT_EQ(callback_called_counter, 10);
 }
 
 TEST(SpinnerTest, ExceptionHandling) {
   static constexpr auto RATE_HZ = 1e3;
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 5 };
 
-  Spinner spinner(TestFixture::ThrowingCallback(), RATE_HZ);
+  Spinner spinner(TestFixture::throwingCallback(), RATE_HZ);
   try {
     spinner.start();
     std::this_thread::sleep_for(WAIT_FOR);
     spinner.stop().get();
-    ASSERT_TRUE(false) << "Spinner must throw when passed a ThrowingCallback";
+    EXPECT_TRUE(false) << "Spinner must throw when passed a ThrowingCallback";
   } catch (const std::exception& e) {
-    ASSERT_TRUE(true) << "Spinner must throw when passed a ThrowingCallback" << e.what();
+    EXPECT_TRUE(true) << "Spinner must throw when passed a ThrowingCallback" << e.what();
   }
 }
 

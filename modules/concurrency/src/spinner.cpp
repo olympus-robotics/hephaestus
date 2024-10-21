@@ -102,6 +102,11 @@ auto Spinner::stop() -> std::future<void> {
   return stop_future;
 }
 
+void Spinner::waitForCompletion() {
+  async_spinner_handle_.wait();
+  stop().get();
+}
+
 void Spinner::stopImpl() {
   is_started_.store(false);
 }
