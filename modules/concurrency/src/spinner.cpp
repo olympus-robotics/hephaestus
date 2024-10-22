@@ -51,9 +51,9 @@ void Spinner::start() {
   async_spinner_handle_ = std::async(std::launch::async, [this]() mutable {
     try {
       spin();
-      this->exception_thrown_in_spin_promise_.set_value();
+      this->spin_result_promise_.set_value(SpinResult::Stop);
     } catch (const std::exception& e) {
-      this->exception_thrown_in_spin_promise_.set_exception(std::current_exception());
+      this->spin_result_promise_.set_exception(std::current_exception());
     }
   });
 
@@ -93,16 +93,16 @@ auto Spinner::stop() -> std::future<void> {
 
   if (async_spinner_handle_.valid()) {
     try {
-      exception_thrown_in_spin_promise_.get_future().get();  // Check for any exception thrown during spin().
+      spin_result_promise_.get_future().get();  // Check for any exception thrown during spin().
     } catch (const std::exception& e) {
       throw e;  // Re-throw the exception to be handled by the caller.
     }
   }
 
-  return stop_future;
+  return std::move(async_spinner_handle_);
 }
 
-void Spinner::waitForCompletion() {
+void Spinner::wait() {
   async_spinner_handle_.wait();
   stop().get();
 }

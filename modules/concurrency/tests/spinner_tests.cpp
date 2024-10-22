@@ -115,7 +115,7 @@ TEST(SpinnerTest, SpinStopsOnStop) {
   Spinner spinner(TestFixture::stoppingCallback(callback_called_counter), RATE_HZ);
 
   spinner.start();
-  spinner.waitForCompletion();
+  spinner.wait();
 
   EXPECT_EQ(callback_called_counter, 10);
 }
