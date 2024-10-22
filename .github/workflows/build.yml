@@ -122,6 +122,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+    container:
+      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev:latest
+      credentials:
+        username: ${{ github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Protobuf
