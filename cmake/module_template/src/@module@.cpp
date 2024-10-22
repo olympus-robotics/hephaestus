@@ -4,6 +4,6 @@
 
 #include "hephaestus/@module@/@module@.h"
 
-namespace heph@module@{
+namespace @module@{
 
 }

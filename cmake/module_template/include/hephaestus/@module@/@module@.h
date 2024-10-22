@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace heph@module@{
+namespace @module@{
   /// \addtogroup @module@ @module@ module
   /// @{
 
