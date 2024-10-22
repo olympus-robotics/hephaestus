@@ -19,9 +19,18 @@ namespace heph::concurrency {
 class Spinner {
 public:
   enum class SpinResult : bool { Continue, Stop };
-  using Callback = std::function<SpinResult()>;
+  using StoppableCallback = std::function<SpinResult()>;
+  using Callback = std::function<void()>;
 
+  /// @brief Create a spinner with a stoppable callback. A stoppable callback is a function that returns
+  /// SpinResult::Stop to indicate that the spinner should stop.
+  /// Example: a callback that stops after 10 iterations.
+  explicit Spinner(StoppableCallback&& stoppable_callback, double rate_hz = 0);
+
+  /// @brief Create a continuous spinner which cannot be stopped by the callback.
+  /// Example: a callback which reads data from a sensor, until the spinner is stopped.
   explicit Spinner(Callback&& callback, double rate_hz = 0);
+
   ~Spinner();
   Spinner(const Spinner&) = delete;
   auto operator=(const Spinner&) -> Spinner& = delete;
@@ -39,11 +48,10 @@ private:
   void stopImpl();
 
 private:
-  Callback callback_;
+  StoppableCallback stoppable_callback_;
 
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;
-  std::promise<SpinResult> spin_result_promise_;
 
   std::chrono::microseconds spin_period_;
   std::chrono::system_clock::time_point start_timestamp_;

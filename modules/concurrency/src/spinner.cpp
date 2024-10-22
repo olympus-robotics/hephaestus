@@ -31,8 +31,18 @@ namespace {
 }
 }  // namespace
 
+Spinner::Spinner(StoppableCallback&& stoppable_callback, double rate_hz /*= 0*/)
+  : stoppable_callback_(std::move(stoppable_callback))
+  , stop_requested_(false)
+  , spin_period_(rateToPeriod(rate_hz)) {
+}
+
 Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
-  : callback_(std::move(callback)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
+  : Spinner(StoppableCallback([cb = std::move(callback)]() -> SpinResult {
+              cb();
+              return SpinResult::Continue;
+            }),
+            rate_hz) {
 }
 
 Spinner::~Spinner() {
@@ -54,7 +64,7 @@ void Spinner::spin() {
   start_timestamp_ = std::chrono::system_clock::now();
 
   while (!stop_requested_.load()) {
-    const auto spin_result = callback_();
+    const auto spin_result = stoppable_callback_();
 
     ++spin_count_;
 

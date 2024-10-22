@@ -33,7 +33,7 @@ public:
   [[nodiscard]] auto queue() -> containers::BlockingQueue<T>&;
 
 private:
-  [[nodiscard]] auto consume() -> Spinner::SpinResult;
+  void consume();
 
 private:
   Callback callback_;
@@ -44,7 +44,7 @@ private:
 
 template <typename T>
 MessageQueueConsumer<T>::MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size)
-  : callback_(std::move(callback)), message_queue_(max_queue_size), spinner_([this] { return consume(); }) {
+  : callback_(std::move(callback)), message_queue_(max_queue_size), spinner_([this] { consume(); }) {
 }
 
 template <typename T>
@@ -64,13 +64,13 @@ auto MessageQueueConsumer<T>::queue() -> containers::BlockingQueue<T>& {
 }
 
 template <typename T>
-auto MessageQueueConsumer<T>::consume() -> Spinner::SpinResult {
+void MessageQueueConsumer<T>::consume() {
   auto message = message_queue_.waitAndPop();
-  if (message.has_value()) {
-    callback_(message.value());
+  if (!message.has_value()) {
+    return;
   }
 
-  return Spinner::SpinResult::Continue;
+  callback_(message.value());
 }
 
 }  // namespace heph::concurrency
