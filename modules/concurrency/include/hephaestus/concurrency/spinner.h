@@ -18,12 +18,12 @@ namespace heph::concurrency {
 /// the given fixed rate.
 class Spinner {
 public:
-  enum class SpinResult : bool { Continue, Stop };
+  enum class SpinResult : bool { CONTINUE, STOP };
   using StoppableCallback = std::function<SpinResult()>;
   using Callback = std::function<void()>;
 
   /// @brief Create a spinner with a stoppable callback. A stoppable callback is a function that returns
-  /// SpinResult::Stop to indicate that the spinner should stop.
+  /// SpinResult::STOP to indicate that the spinner should stop.
   /// Example: a callback that stops after 10 iterations.
   explicit Spinner(StoppableCallback&& stoppable_callback, double rate_hz = 0);
 

@@ -4,7 +4,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <functional>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -24,10 +23,10 @@ struct TestFixture : public ::testing::Test {
       static constexpr auto STOP_AFTER = 10;
       if (callback_called_counter < STOP_AFTER) {
         ++callback_called_counter;
-        return Spinner::SpinResult::Continue;
+        return Spinner::SpinResult::CONTINUE;
       }
 
-      return Spinner::SpinResult::Stop;
+      return Spinner::SpinResult::STOP;
     };
   }
 

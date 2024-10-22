@@ -10,7 +10,6 @@
 #include <functional>
 #include <future>
 #include <mutex>
-#include <thread>
 #include <utility>
 
 #include <absl/log/log.h>
@@ -40,7 +39,7 @@ Spinner::Spinner(StoppableCallback&& stoppable_callback, double rate_hz /*= 0*/)
 Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
   : Spinner(StoppableCallback([cb = std::move(callback)]() -> SpinResult {
               cb();
-              return SpinResult::Continue;
+              return SpinResult::CONTINUE;
             }),
             rate_hz) {
 }
@@ -68,7 +67,7 @@ void Spinner::spin() {
 
     ++spin_count_;
 
-    if (spin_result == SpinResult::Stop) {
+    if (spin_result == SpinResult::STOP) {
       break;
     }
 
