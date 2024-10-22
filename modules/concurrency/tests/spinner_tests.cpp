@@ -53,8 +53,7 @@ TEST(SpinnerTest, StartStopTest) {
   spinner.start();
 
   EXPECT_THROW(spinner.start(), heph::InvalidOperationException);
-  auto future = spinner.stop();
-  future.get();
+  spinner.stop().get();
 
   EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
 }
@@ -67,8 +66,7 @@ TEST(SpinnerTest, SpinTest) {
 
   // Wait for a while to let the spinner do some work.
   std::this_thread::sleep_for(WAIT_FOR);
-  auto future = spinner.stop();
-  future.get();
+  spinner.stop().get();
 
   // The counter should have been incremented.
   EXPECT_GT(spinner.spinCount(), 0);
@@ -82,8 +80,7 @@ TEST(SpinnerTest, StopCallback) {
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
-  auto future = spinner.stop();
-  future.get();
+  spinner.stop().get();
 
   EXPECT_GT(callback_called_counter, 0);
   EXPECT_EQ(callback_called_counter, spinner.spinCount());
@@ -96,16 +93,12 @@ TEST(SpinnerTest, SpinWithPeriod) {
   size_t callback_called_counter = 0;
   Spinner spinner(TestFixture::nonThrowingCallback(callback_called_counter), RATE_HZ);
 
-  try {
-    spinner.start();
-    std::this_thread::sleep_for(WAIT_FOR);
-    spinner.stop().get();
+  spinner.start();
+  std::this_thread::sleep_for(WAIT_FOR);
+  spinner.stop().get();
 
-    EXPECT_GT(callback_called_counter, 8);
-    EXPECT_LT(callback_called_counter, 12);
-  } catch (const std::exception& e) {
-    EXPECT_TRUE(false) << "Spinner must not throw when passed a nonThrowingCallback" << e.what();
-  }
+  EXPECT_GT(callback_called_counter, 8);
+  EXPECT_LT(callback_called_counter, 12);
 }
 
 TEST(SpinnerTest, SpinStopsOnStop) {
@@ -116,23 +109,18 @@ TEST(SpinnerTest, SpinStopsOnStop) {
 
   spinner.start();
   spinner.wait();
+  spinner.stop().get();
 
   EXPECT_EQ(callback_called_counter, 10);
 }
 
 TEST(SpinnerTest, ExceptionHandling) {
   static constexpr auto RATE_HZ = 1e3;
-  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 5 };
 
   Spinner spinner(TestFixture::throwingCallback(), RATE_HZ);
-  try {
-    spinner.start();
-    std::this_thread::sleep_for(WAIT_FOR);
-    spinner.stop().get();
-    EXPECT_TRUE(false) << "Spinner must throw when passed a ThrowingCallback";
-  } catch (const std::exception& e) {
-    EXPECT_TRUE(true) << "Spinner must throw when passed a ThrowingCallback" << e.what();
-  }
+  spinner.start();
+  spinner.wait();
+  EXPECT_THROW(spinner.stop().get(), heph::InvalidOperationException);
 }
 
 }  // namespace heph::concurrency::tests

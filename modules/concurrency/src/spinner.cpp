@@ -32,32 +32,20 @@ namespace {
 }  // namespace
 
 Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
-  : callback_(std::move(callback))
-  , is_started_(false)
-  , stop_requested_(false)
-  , spin_period_(rateToPeriod(rate_hz)) {
+  : callback_(std::move(callback)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
-  if (is_started_.load()) {
+  if (async_spinner_handle_.valid()) {
     LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
     std::terminate();
   }
 }
 
 void Spinner::start() {
-  throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
+  throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
 
-  async_spinner_handle_ = std::async(std::launch::async, [this]() mutable {
-    try {
-      spin();
-      this->spin_result_promise_.set_value(SpinResult::Stop);
-    } catch (const std::exception& e) {
-      this->spin_result_promise_.set_exception(std::current_exception());
-    }
-  });
-
-  is_started_.store(true);
+  async_spinner_handle_ = std::async(std::launch::async, [this]() mutable { spin(); });
 }
 
 void Spinner::spin() {
@@ -85,30 +73,16 @@ void Spinner::spin() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(!is_started_.load(), "Spinner not yet started, cannot stop.");
+  throwExceptionIf<InvalidOperationException>(!async_spinner_handle_.valid(),
+                                              "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
-
-  auto stop_future = std::async(std::launch::async, [this]() { stopImpl(); });
-
-  if (async_spinner_handle_.valid()) {
-    try {
-      spin_result_promise_.get_future().get();  // Check for any exception thrown during spin().
-    } catch (const std::exception& e) {
-      throw e;  // Re-throw the exception to be handled by the caller.
-    }
-  }
 
   return std::move(async_spinner_handle_);
 }
 
 void Spinner::wait() {
   async_spinner_handle_.wait();
-  stop().get();
-}
-
-void Spinner::stopImpl() {
-  is_started_.store(false);
 }
 
 auto Spinner::spinCount() const -> uint64_t {

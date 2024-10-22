@@ -41,7 +41,6 @@ private:
 private:
   Callback callback_;
 
-  std::atomic_bool is_started_ = false;
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;
   std::promise<SpinResult> spin_result_promise_;
