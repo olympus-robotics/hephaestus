@@ -15,7 +15,7 @@
 namespace heph::concurrency::tests {
 
 struct TestFixture : public ::testing::Test {
-  static auto trivialCallback() -> std::function<Spinner::SpinResult()> {
+  static auto trivialCallback() -> Spinner::Callback {
     return []() { return Spinner::SpinResult::Continue; };
   }
 
