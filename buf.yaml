@@ -4,12 +4,11 @@ modules:
   - path: modules/examples/proto
   - path: modules/ipc/proto
   - path: modules/serdes
+  - path: modules/types_proto/proto
 lint:
   use:
     - DEFAULT
   except:
-    - FIELD_NOT_REQUIRED
-    - PACKAGE_NO_IMPORT_CYCLE
     - PACKAGE_VERSION_SUFFIX
     - PACKAGE_DIRECTORY_MATCH
     - ENUM_ZERO_VALUE_SUFFIX
