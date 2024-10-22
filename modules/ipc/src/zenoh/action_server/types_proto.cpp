@@ -14,38 +14,38 @@ namespace heph::ipc::zenoh::action_server {
 void toProto(proto::RequestStatus& proto_status, const RequestStatus& status) {
   switch (status) {
     case RequestStatus::SUCCESSFUL:
-      proto_status = proto::RequestStatus::SUCCESSFUL;
+      proto_status = proto::REQUEST_STATUS_SUCCESSFUL;
       break;
     case RequestStatus::REJECTED_USER:
-      proto_status = proto::RequestStatus::REJECTED_USER;
+      proto_status = proto::REQUEST_STATUS_REJECTED_USER;
       break;
     case RequestStatus::REJECTED_ALREADY_RUNNING:
-      proto_status = proto::RequestStatus::REJECTED_ALREADY_RUNNING;
+      proto_status = proto::REQUEST_STATUS_REJECTED_ALREADY_RUNNING;
       break;
     case RequestStatus::INVALID:
-      proto_status = proto::RequestStatus::INVALID;
+      proto_status = proto::REQUEST_STATUS_INVALID;
       break;
     case RequestStatus::STOPPED:
-      proto_status = proto::RequestStatus::STOPPED;
+      proto_status = proto::REQUEST_STATUS_STOPPED;
       break;
   }
 }
 
 void fromProto(const proto::RequestStatus& proto_status, RequestStatus& status) {
   switch (proto_status) {
-    case proto::RequestStatus::SUCCESSFUL:
+    case proto::REQUEST_STATUS_SUCCESSFUL:
       status = RequestStatus::SUCCESSFUL;
       break;
-    case proto::RequestStatus::REJECTED_USER:
+    case proto::REQUEST_STATUS_REJECTED_USER:
       status = RequestStatus::REJECTED_USER;
       break;
-    case proto::RequestStatus::REJECTED_ALREADY_RUNNING:
+    case proto::REQUEST_STATUS_REJECTED_ALREADY_RUNNING:
       status = RequestStatus::REJECTED_ALREADY_RUNNING;
       break;
-    case proto::RequestStatus::INVALID:
+    case proto::REQUEST_STATUS_INVALID:
       status = RequestStatus::INVALID;
       break;
-    case proto::RequestStatus::STOPPED:
+    case proto::REQUEST_STATUS_STOPPED:
       status = RequestStatus::STOPPED;
       break;
     default:
