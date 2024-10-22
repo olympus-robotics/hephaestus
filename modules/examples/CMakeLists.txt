@@ -29,19 +29,19 @@ define_module_library(
 )
 
 # library sources
-set(TYPES_PROTOBUF_SOURCES
-    src/types_protobuf/geometry.cpp src/types_protobuf/pose.cpp src/types_protobuf/sample.cpp
-    include/hephaestus/examples/types_protobuf/geometry.h include/hephaestus/examples/types_protobuf/pose.h
-    include/hephaestus/examples/types_protobuf/sample.h
+set(types_proto_SOURCES
+    src/types_proto/geometry.cpp src/types_proto/pose.cpp src/types_proto/sample.cpp
+    include/hephaestus/examples/types_proto/geometry.h include/hephaestus/examples/types_proto/pose.h
+    include/hephaestus/examples/types_proto/sample.h
 )
 
 # library target
 define_module_library(
-  NAME examples_types_protobuf
+  NAME examples_types_proto
   PUBLIC_LINK_LIBS hephaestus::utils hephaestus::serdes hephaestus::random hephaestus::examples_types
-                   hephaestus::examples_types_proto Eigen3::Eigen
+                   hephaestus::examples_types_gen_proto Eigen3::Eigen
   PRIVATE_LINK_LIBS ""
-  SOURCES ${TYPES_PROTOBUF_SOURCES}
+  SOURCES ${types_proto_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
   PRIVATE_INCLUDE_PATHS ""
   SYSTEM_PRIVATE_INCLUDE_PATHS ""

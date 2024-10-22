@@ -8,4 +8,4 @@ set(SOURCES
     hephaestus/examples/types/proto/pose.proto
 )
 
-define_module_proto_library(NAME examples_types_proto SOURCES ${SOURCES})
+define_module_proto_library(NAME examples_types_gen_proto  SOURCES ${SOURCES})

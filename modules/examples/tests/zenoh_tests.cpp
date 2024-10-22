@@ -10,8 +10,8 @@
 
 #include "helpers.h"
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/geometry.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/examples/types_protobuf/pose.h"      // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types_proto/geometry.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types_proto/pose.h"      // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
