@@ -19,7 +19,7 @@ struct TestFixture : public ::testing::Test {
     return []() { return Spinner::SpinResult::Continue; };
   }
 
-  static auto stoppingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
+  static auto stoppingCallback(size_t& callback_called_counter) -> Spinner::Callback {
     return [&callback_called_counter]() {
       static constexpr auto STOP_AFTER = 10;
       if (callback_called_counter < STOP_AFTER) {
@@ -31,14 +31,14 @@ struct TestFixture : public ::testing::Test {
     };
   }
 
-  static auto nonThrowingCallback(size_t& callback_called_counter) -> std::function<Spinner::SpinResult()> {
+  static auto nonThrowingCallback(size_t& callback_called_counter) -> Spinner::Callback {
     return [&callback_called_counter]() {
       ++callback_called_counter;
       return Spinner::SpinResult::Continue;
     };
   }
 
-  static auto throwingCallback() -> std::function<Spinner::SpinResult()> {
+  static auto throwingCallback() -> Spinner::Callback {
     return []() {
       throwException<InvalidOperationException>("This is a test exception.");
       return Spinner::SpinResult::Continue;
