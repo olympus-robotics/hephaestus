@@ -10,7 +10,6 @@
 #include <functional>
 #include <future>
 #include <mutex>
-#include <thread>
 #include <utility>
 
 #include <absl/log/log.h>
@@ -31,27 +30,31 @@ namespace {
 }
 }  // namespace
 
-Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
-  : callback_(std::move(callback))
-  , is_started_(false)
+Spinner::Spinner(StoppableCallback&& stoppable_callback, double rate_hz /*= 0*/)
+  : stoppable_callback_(std::move(stoppable_callback))
   , stop_requested_(false)
   , spin_period_(rateToPeriod(rate_hz)) {
 }
 
+Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
+  : Spinner(StoppableCallback([cb = std::move(callback)]() -> SpinResult {
+              cb();
+              return SpinResult::CONTINUE;
+            }),
+            rate_hz) {
+}
+
 Spinner::~Spinner() {
-  if (is_started_.load() || spinner_thread_.joinable()) {
+  if (async_spinner_handle_.valid()) {
     LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
     std::terminate();
   }
 }
 
 void Spinner::start() {
-  throwExceptionIf<InvalidOperationException>(is_started_.load(), "Spinner is already started.");
+  throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
 
-  // NOTE: Replace with std::stop_token and std::jthread when clang supports it.
-  spinner_thread_ = std::thread([this]() { spin(); });
-
-  is_started_.store(true);
+  async_spinner_handle_ = std::async(std::launch::async, [this]() mutable { spin(); });
 }
 
 void Spinner::spin() {
@@ -60,9 +63,13 @@ void Spinner::spin() {
   start_timestamp_ = std::chrono::system_clock::now();
 
   while (!stop_requested_.load()) {
-    callback_();
+    const auto spin_result = stoppable_callback_();
 
     ++spin_count_;
+
+    if (spin_result == SpinResult::STOP) {
+      break;
+    }
 
     if (spin_period_.count() == 0) {
       continue;
@@ -75,17 +82,16 @@ void Spinner::spin() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(!is_started_.load(), "Spinner not yet started, cannot stop.");
+  throwExceptionIf<InvalidOperationException>(!async_spinner_handle_.valid(),
+                                              "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
 
-  return std::async(std::launch::async, [this]() { stopImpl(); });
+  return std::move(async_spinner_handle_);
 }
 
-void Spinner::stopImpl() {
-  spinner_thread_.join();
-
-  is_started_.store(false);
+void Spinner::wait() {
+  async_spinner_handle_.wait();
 }
 
 auto Spinner::spinCount() const -> uint64_t {
