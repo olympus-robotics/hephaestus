@@ -486,11 +486,6 @@ macro(define_module_proto_library)
     message(FATAL_ERROR "Protobuf library should end with '_proto' suffix")
   endif()
 
-  # Check that linter config file is present.
-  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/buf.yaml)
-    message(FATAL_ERROR "Protobuf library directory must contain buf.yaml file")
-  endif()
-
   find_package(absl REQUIRED)
   find_package(Protobuf REQUIRED)
 

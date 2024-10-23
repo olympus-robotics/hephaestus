@@ -115,3 +115,21 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build -- all examples
+
+  protobuf:
+    needs: docker_build_and_publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    container:
+      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev:latest
+      credentials:
+        username: ${{ github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Protobuf
+        run: |
+          buf format -d --exit-code
+          buf lint

@@ -7,6 +7,7 @@
 #include "hephaestus/ipc/zenoh/action_server/proto/types.pb.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
+#include "hephaestus/serdes/protobuf/enums.h"
 
 namespace heph::serdes::protobuf {
 template <>
@@ -24,19 +25,13 @@ struct ProtoAssociation<heph::ipc::zenoh::action_server::Response<ReplyT>> {
 
 namespace heph::ipc::zenoh::action_server {
 
-void toProto(proto::RequestStatus& proto_status, const RequestStatus& status);
-
-void fromProto(const proto::RequestStatus& proto_status, RequestStatus& status);
-
 void toProto(proto::RequestResponse& proto_response, const RequestResponse& response);
 
 void fromProto(const proto::RequestResponse& proto_response, RequestResponse& response);
 
 template <typename ReplyT>
 void toProto(proto::Response& proto_response, const Response<ReplyT>& response) {
-  proto::RequestStatus proto_status{};
-  toProto(proto_status, response.status);
-  proto_response.set_status(proto_status);
+  proto_response.set_status(serdes::protobuf::toProtoEnum<proto::RequestStatus>(response.status));
 
   using ProtoT = heph::serdes::protobuf::ProtoAssociation<ReplyT>::Type;
   ProtoT proto_value{};
@@ -46,7 +41,7 @@ void toProto(proto::Response& proto_response, const Response<ReplyT>& response) 
 
 template <typename ReplyT>
 void fromProto(const proto::Response& proto_response, Response<ReplyT>& response) {
-  fromProto(proto_response.status(), response.status);
+  serdes::protobuf::fromProto(proto_response.status(), response.status);
 
   using ProtoT = heph::serdes::protobuf::ProtoAssociation<ReplyT>::Type;
   ProtoT proto_value{};

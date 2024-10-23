@@ -35,15 +35,16 @@ template <EnumType ProtoT>
   const auto enum_type_name = magic_enum::enum_type_name<ProtoT>();
 
   // Underscores indicate nested proto enums, no underscore indicates a top-level proto enum.
-  if (const auto underscore_pos = std::find(enum_type_name.begin(), enum_type_name.end(), '_');
-      underscore_pos == enum_type_name.end()) {
+  auto underscore_pos = std::find(enum_type_name.begin(), enum_type_name.end(), '_');
+  if (underscore_pos == enum_type_name.end()) {
     // Top-level enums use the enum name as a prefix: ENUM_NAME_ENUM_VALUE.
     return utils::string::toScreamingSnakeCase(enum_type_name);
   }
 
   // Nested enums have a prefix, and enum values are separated by an underscore:
-  // ClassName_EnumName_ENUM_VALUE.
-  return fmt::format("{}", enum_type_name);
+  // ClassName_EnumName_ENUM_NAME_ENUM_VALUE.
+  const auto internal_enum_type_name = std::string_view{ ++underscore_pos, enum_type_name.end() };
+  return fmt::format("{}_{}", enum_type_name, utils::string::toScreamingSnakeCase(internal_enum_type_name));
 }
 
 /// Convert between enums and their protobuf counterparts. The following convention is used:

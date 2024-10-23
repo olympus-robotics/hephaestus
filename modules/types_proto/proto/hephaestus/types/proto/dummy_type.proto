@@ -35,7 +35,7 @@ message DummyPrimitivesType {
 
 message DummyType {
   enum InternalDummyEnum {
-    ALPHA = 0;
+    INTERNAL_DUMMY_ENUM_ALPHA = 0;
   }
 
   DummyPrimitivesType dummy_primitives_type = 1;

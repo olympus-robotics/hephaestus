@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "test.pb.h"
+#include "test_user_type.pb.h"
 
 namespace heph::serdes {
 namespace tests {

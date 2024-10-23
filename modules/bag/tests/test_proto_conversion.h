@@ -4,7 +4,7 @@
 
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "test.pb.h"
+#include "test_robot_type.pb.h"
 
 namespace heph::bag::tests {
 struct Robot {
