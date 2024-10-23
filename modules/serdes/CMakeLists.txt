@@ -32,6 +32,7 @@ set(SOURCES
     include/hephaestus/serdes/protobuf/protobuf_internal.h
     include/hephaestus/serdes/protobuf/protobuf.h
     include/hephaestus/serdes/dynamic_deserializer.h
+    include/hephaestus/serdes/json.h
     include/hephaestus/serdes/serdes.h
     include/hephaestus/serdes/type_info.h
 )
