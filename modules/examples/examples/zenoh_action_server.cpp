@@ -18,7 +18,7 @@
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/sample.h"
-#include "hephaestus/examples/types_protobuf/sample.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types_proto/sample.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/publisher.h"

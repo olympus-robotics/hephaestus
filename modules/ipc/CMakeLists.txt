@@ -36,7 +36,7 @@ set(SOURCES
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
     src/zenoh/action_server/types.cpp
-    src/zenoh/action_server/types_protobuf.cpp
+    src/zenoh/action_server/types_proto.cpp
     README.md
     include/hephaestus/ipc/topic.h
     include/hephaestus/ipc/topic_database.h
@@ -53,7 +53,7 @@ set(SOURCES
     include/hephaestus/ipc/zenoh/action_server/action_server.h
     include/hephaestus/ipc/zenoh/action_server/client_helper.h
     include/hephaestus/ipc/zenoh/action_server/types.h
-    include/hephaestus/ipc/zenoh/action_server/types_protobuf.h
+    include/hephaestus/ipc/zenoh/action_server/types_proto.h
 )
 
 # library target

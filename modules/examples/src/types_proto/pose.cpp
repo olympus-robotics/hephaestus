@@ -2,11 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_proto/pose.h"
 
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types/proto/pose.pb.h"
-#include "hephaestus/examples/types_protobuf/geometry.h"
+#include "hephaestus/examples/types_proto/geometry.h"
 
 namespace heph::examples::types {
 void toProto(proto::Pose& proto_pose, const Pose& pose) {

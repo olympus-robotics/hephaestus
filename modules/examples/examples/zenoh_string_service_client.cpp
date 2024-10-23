@@ -16,7 +16,7 @@
 #include <fmt/core.h>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types_proto/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
