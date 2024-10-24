@@ -76,9 +76,9 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
 
     auto c_closure = createZenohcClosure(cb, ::zenoh::closures::none);
 
-    const auto result = ze_declare_querying_subscriber(
-        &cache_subscriber_, ::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session), z_loan(keyexpr),
-        z_move(c_closure), &sub_opts);
+    const auto result =
+        ze_declare_querying_subscriber(::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
+                                       &cache_subscriber_, z_loan(keyexpr), z_move(c_closure), &sub_opts);
 
     heph::throwExceptionIf<heph::FailedZenohOperation>(
         result != Z_OK,
