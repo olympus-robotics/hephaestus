@@ -114,9 +114,8 @@ void RawPublisher::enableCache() {
   z_view_keyexpr_t keyexpr;
   z_view_keyexpr_from_str(&keyexpr, topic_config_.name.data());
 
-  const auto result = ze_declare_publication_cache(&cache_publisher_,
-                                                   ::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
-                                                   z_loan(keyexpr), &cache_publisher_opts);
+  const auto result = ze_declare_publication_cache(::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
+                                                   &cache_publisher_, z_loan(keyexpr), &cache_publisher_opts);
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
       fmt::format("[Publisher {}] failed to enable cache, result {}", topic_config_.name, result));
@@ -140,9 +139,8 @@ void RawPublisher::enableMatchingListener() {
         this->match_cb_(status);
       },
       []() {});
-
-  zc_publisher_matching_listener_declare(&subscriers_listener_,
-                                         ::zenoh::interop::as_loaned_c_ptr(*publisher_), z_move(closure));
+  zc_publisher_declare_matching_listener(::zenoh::interop::as_loaned_c_ptr(*publisher_),
+                                         &subscriers_listener_, z_move(closure));
 }
 
 void RawPublisher::createTypeInfoService() {
