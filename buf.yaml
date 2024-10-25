@@ -1,6 +1,5 @@
 version: v2
 modules:
-  - path: modules/bag
   - path: modules/examples/proto
   - path: modules/ipc/proto
   - path: modules/serdes
