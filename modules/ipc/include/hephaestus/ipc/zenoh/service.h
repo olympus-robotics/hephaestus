@@ -137,6 +137,7 @@ template <typename RequestT, typename ReplyT>
 Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback)
   : session_(std::move(session)), topic_config_(std::move(topic_config)), callback_(std::move(callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
+  LOG(INFO) << fmt::format("[Service {}] Started service", topic_config_.name);
 
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable {
     LOG(INFO) << fmt::format("[Service {}] received query from '{}'", topic_config_.name,

@@ -68,8 +68,7 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 class ActionServer {
 public:
   using TriggerCallback = std::function<TriggerStatus(const RequestT&)>;
-  using ExecuteCallback =
-      std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool& stop_requested)>;
+  using ExecuteCallback = std::function<ReplyT(const RequestT&, Publisher<StatusT>&, std::atomic_bool&)>;
 
   ActionServer(SessionPtr session, TopicConfig topic_config, TriggerCallback&& action_trigger_cb,
                ExecuteCallback&& execute_cb);
@@ -130,6 +129,7 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
+  LOG(ERROR) << fmt::format("[ActionServer {}] Started Action Server.", topic_config_.name);
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -140,8 +140,7 @@ ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request) -> RequestResponse {
   if (is_running_) {
-    LOG(ERROR) << fmt::format("ActionServer (topic: {}): server is already serving one request.",
-                              topic_config_.name);
+    LOG(ERROR) << fmt::format("[ActionServer {}] server is already serving one request.", topic_config_.name);
 
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
@@ -152,20 +151,20 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
       return { .status = RequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
-    LOG(ERROR) << fmt::format("ActionServer (topic: {}): request callback failed with exception: {}.",
+    LOG(ERROR) << fmt::format("[ActionServer {}] request callback failed with exception: {}.",
                               topic_config_.name, ex.what());
     return { .status = RequestStatus::INVALID };
   }
 
   if (!request_consumer_.queue().tryPush(request)) {
     // NOTE: this should never happen as the queue is unbound.
-    LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to push the job in the queue. NOTE: this "
+    LOG(ERROR) << fmt::format("[ActionServer {}] failed to push the job in the queue. NOTE: this "
                               "should not happen, something is wrong in the code.",
                               topic_config_.name);
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
-  LOG(INFO) << fmt::format("ActionServer (topic: {}): request accepted.", topic_config_.name);
+  LOG(INFO) << fmt::format("[ActionServer {}] request accepted.", topic_config_.name);
   return { .status = RequestStatus::SUCCESSFUL };
 }
 
@@ -194,7 +193,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
         .status = stop_requested ? RequestStatus::STOPPED : RequestStatus::SUCCESSFUL,
       };
     } catch (const std::exception& ex) {
-      LOG(ERROR) << fmt::format("ActionServer (topic: {}): execute callback failed with exception: {}.",
+      LOG(ERROR) << fmt::format("[ActionServer {}] execute callback failed with exception: {}.",
                                 topic_config_.name, ex.what());
       return Response<ReplyT>{};
     }
@@ -203,7 +202,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   const auto client_response =
       callService<Response<ReplyT>, RequestResponse>(*session_, response_topic, reply);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
-    LOG(ERROR) << fmt::format("ActionServer (topic: {}): failed to send final response to client.",
+    LOG(ERROR) << fmt::format("[ActionServer {}] failed to send final response to client.",
                               topic_config_.name);
   }
 
