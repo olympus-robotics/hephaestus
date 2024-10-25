@@ -129,7 +129,7 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
-  LOG(ERROR) << fmt::format("[ActionServer {}] Started Action Server.", topic_config_.name);
+  LOG(INFO) << fmt::format("[ActionServer {}] Started Action Server.", topic_config_.name);
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
