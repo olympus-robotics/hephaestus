@@ -4,7 +4,7 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES cli concurrency containers utils serdes types
+  DEPENDS_ON_MODULES cli concurrency containers utils serdes
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
 
@@ -70,7 +70,6 @@ define_module_library(
     hephaestus::cli
     hephaestus::utils
     hephaestus::serdes
-    hephaestus::types
     hephaestus::action_server_types_proto
     fmt::fmt
     nlohmann_json::nlohmann_json
