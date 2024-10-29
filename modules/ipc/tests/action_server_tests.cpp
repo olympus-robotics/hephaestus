@@ -2,10 +2,19 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
+#include <random>
+#include <string>
+#include <thread>
+#include <utility>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/types.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/types/dummy_type.h"
@@ -49,15 +58,8 @@ TEST(ActionServer, RejectedCall) {
   auto mt = random::createRNG();
 
   auto action_server_data = createDummyActionServer(
-      mt,
-      [](const types::DummyType& request) {
-        (void)request;
-        return TriggerStatus::REJECTED;
-      },
-      [&](const types::DummyType& request, Publisher<types::DummyPrimitivesType>& status_publisher,
-          std::atomic_bool& stop_requested) {
-        (void)status_publisher;
-        (void)stop_requested;
+      mt, [](const types::DummyType&) { return TriggerStatus::REJECTED; },
+      [&](const types::DummyType& request, Publisher<types::DummyPrimitivesType>&, std::atomic_bool&) {
         return request;
       });
 
@@ -75,16 +77,11 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
 
   auto status = types::DummyPrimitivesType::random(mt);
   auto action_server_data = createDummyActionServer(
-      mt,
-      [](const types::DummyType& request) {
-        (void)request;
-        return TriggerStatus::SUCCESSFUL;
-      },
+      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
       [&status](const types::DummyType& request, Publisher<types::DummyPrimitivesType>& status_publisher,
-                std::atomic_bool& stop_requested) {
+                std::atomic_bool&) {
         auto success = status_publisher.publish(status);
         EXPECT_TRUE(success);
-        (void)stop_requested;
         return request;
       });
 
@@ -106,15 +103,10 @@ TEST(ActionServer, ActionServerStopRequest) {
 
   std::atomic_flag requested_started = ATOMIC_FLAG_INIT;
   auto action_server_data = createDummyActionServer(
-      mt,
-      [](const types::DummyType& request) {
-        (void)request;
-        return TriggerStatus::SUCCESSFUL;
-      },
+      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
       [&requested_started](const types::DummyType& request,
-                           Publisher<types::DummyPrimitivesType>& status_publisher,
+                           [[maybe_unused]] Publisher<types::DummyPrimitivesType>& status_publisher,
                            std::atomic_bool& stop_requested) {
-        (void)status_publisher;
         requested_started.test_and_set();
         requested_started.notify_all();
 
@@ -128,7 +120,7 @@ TEST(ActionServer, ActionServerStopRequest) {
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType& status) { (void)status; }, SERVICE_CALL_TIMEOUT);
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
   requested_started.wait(false);
   auto success =
@@ -147,16 +139,9 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   std::atomic_flag requested_started = ATOMIC_FLAG_INIT;
   std::atomic_flag stop = ATOMIC_FLAG_INIT;
   auto action_server_data = createDummyActionServer(
-      mt,
-      [](const types::DummyType& request) {
-        (void)request;
-        return TriggerStatus::SUCCESSFUL;
-      },
-      [&requested_started, &stop](const types::DummyType& request,
-                                  Publisher<types::DummyPrimitivesType>& status_publisher,
-                                  std::atomic_bool& stop_requested) {
-        (void)status_publisher;
-        (void)stop_requested;
+      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      [&requested_started, &stop](const types::DummyType& request, Publisher<types::DummyPrimitivesType>&,
+                                  std::atomic_bool&) {
         requested_started.test_and_set();
         requested_started.notify_all();
 
@@ -168,11 +153,11 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType& status) { (void)status; }, SERVICE_CALL_TIMEOUT);
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
   auto other_reply = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
                          action_server_data.session, action_server_data.topic_config, request,
-                         [](const types::DummyPrimitivesType& status) { (void)status; }, SERVICE_CALL_TIMEOUT)
+                         [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT)
                          .get();
   EXPECT_EQ(other_reply.status, RequestStatus::REJECTED_ALREADY_RUNNING);
 
