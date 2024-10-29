@@ -5,6 +5,7 @@
 declare_module(
   NAME ipc
   DEPENDS_ON_MODULES cli concurrency containers utils serdes
+  DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
 

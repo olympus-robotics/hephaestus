@@ -153,12 +153,19 @@ namespace internal {
 /// Generate a random string of characters, including special case characters and numbers.
 template <StringType T>
 [[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
-                          bool allow_empty = true) -> T {
+                          bool allow_empty = true, bool lower_characters_only = false) -> T {
+  static constexpr auto PRINTABLE_ASCII_START = 32;         // Space
+  static constexpr auto PRINTABLE_ASCII_END = 126;          // Equivalency sign - tilde
+  static constexpr auto LOWER_CHARACTERS_ASCII_START = 97;  // a
+  static constexpr auto LOWER_CHARACTERS_ASCII_END = 122;   // z
+
   const auto size = internal::getSize(mt, fixed_size, allow_empty);
 
-  static constexpr auto PRINTABLE_ASCII_START = 32;  // Space
-  static constexpr auto PRINTABLE_ASCII_END = 126;   // Equivalency sign - tilde
-  std::uniform_int_distribution<unsigned char> char_dist(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
+  auto char_dist =
+      lower_characters_only ?
+          std::uniform_int_distribution<unsigned char>(LOWER_CHARACTERS_ASCII_START,
+                                                       LOWER_CHARACTERS_ASCII_END) :
+          std::uniform_int_distribution<unsigned char>(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
 
   std::string random_string;
   random_string.reserve(size);
