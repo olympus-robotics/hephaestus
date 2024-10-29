@@ -35,7 +35,7 @@ RUN  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VE
 
 RUN ln -s /usr/bin/clangd-${CLANG_VERSION} /usr/bin/clangd
 
-RUN export ZENOH_VERSION="1.0.0~beta.4-1" && \
+RUN export ZENOH_VERSION="1.0.0" && \
     echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
     (apt-get update && apt-get install --no-install-recommends -y --allow-downgrades zenohd=${ZENOH_VERSION} zenoh-plugin-rest=${ZENOH_VERSION} || true) && \
     sed -i 's/systemctl /# remove if fixed by zenoh: systemctl /' /var/lib/dpkg/info/zenohd.postinst && \
@@ -48,3 +48,10 @@ RUN echo "export RUSTC_WRAPPER=sccache" >> $HOME/.bashrc
 RUN curl https://raw.githubusercontent.com/ninja-build/ninja/master/misc/bash-completion > $HOME/.ninja-autocomplete && echo "source $HOME/.ninja-autocomplete" >> $HOME/.bashrc
 RUN sed -i "s/#force_color_prompt=yes/force_color_prompt=yes/g" $HOME/.bashrc
 RUN curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o $HOME/.git-completion.bash && echo "source ~/.git-completion.bash" >> $HOME/.bashrc
+
+RUN BIN="/usr/local/bin" && \
+    VERSION="1.39.0" && \
+    curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-$(uname -s)-$(uname -m)" \
+    -o "${BIN}/buf" && \
+    chmod +x "${BIN}/buf"

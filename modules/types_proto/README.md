@@ -1,8 +1,8 @@
-# README: types_protobuf
+# README: types_proto
 
 ## Brief
 
-Module **types_protobuf** provides mapping of **types** data structures to proto IDL.
+Module **types_proto** provides mapping of **types** data structures to proto IDL.
 
 ## Detailed description
 
@@ -18,7 +18,7 @@ define_module_proto_library(NAME types_proto SOURCES ${SOURCES} PUBLIC_LINK_LIBS
 * provide generic helper functions for serialization (e.g for `std::chrono::time_point`)
 
 ### Non-goals
-* similar to module **types**, **types_protobuf** is meant to be generic, and project specific (non-generalizable) methods shall not be added
+* similar to module **types**, **types_proto** is meant to be generic, and project specific (non-generalizable) methods shall not be added
 
 ### Requirements
-* Types are independent of their serialization method, but the module **types_protobuf** depends on module **types**.
+* Types are independent of their serialization method, but the module **types_proto** depends on module **types**.

@@ -9,6 +9,7 @@ with section("parse"):
             "kwargs": {
                 "NAME": 1,
                 "DEPENDS_ON_MODULES": '*',
+                "DEPENDS_ON_MODULES_FOR_TESTING": "*",
                 "DEPENDS_ON_EXTERNAL_PROJECTS": '*',
             }
         },

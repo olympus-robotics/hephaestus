@@ -4,7 +4,8 @@
 
 declare_module(
   NAME bag
-  DEPENDS_ON_MODULES containers ipc random
+  DEPENDS_ON_MODULES containers ipc
+  DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
 )
 

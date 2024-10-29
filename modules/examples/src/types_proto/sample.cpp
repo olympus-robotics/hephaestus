@@ -5,7 +5,7 @@
 #include "hephaestus/examples/types/sample.h"
 
 #include "hephaestus/examples/types/proto/sample.pb.h"
-#include "hephaestus/examples/types_protobuf/sample.h"
+#include "hephaestus/examples/types_proto/sample.h"
 
 namespace heph::examples::types {
 

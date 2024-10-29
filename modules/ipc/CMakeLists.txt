@@ -4,7 +4,8 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES cli concurrency containers utils serdes types
+  DEPENDS_ON_MODULES cli concurrency containers utils serdes
+  DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
 
@@ -36,7 +37,7 @@ set(SOURCES
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
     src/zenoh/action_server/types.cpp
-    src/zenoh/action_server/types_protobuf.cpp
+    src/zenoh/action_server/types_proto.cpp
     README.md
     include/hephaestus/ipc/topic.h
     include/hephaestus/ipc/topic_database.h
@@ -53,7 +54,7 @@ set(SOURCES
     include/hephaestus/ipc/zenoh/action_server/action_server.h
     include/hephaestus/ipc/zenoh/action_server/client_helper.h
     include/hephaestus/ipc/zenoh/action_server/types.h
-    include/hephaestus/ipc/zenoh/action_server/types_protobuf.h
+    include/hephaestus/ipc/zenoh/action_server/types_proto.h
 )
 
 # library target
@@ -70,7 +71,6 @@ define_module_library(
     hephaestus::cli
     hephaestus::utils
     hephaestus::serdes
-    hephaestus::types
     hephaestus::action_server_types_proto
     fmt::fmt
     nlohmann_json::nlohmann_json

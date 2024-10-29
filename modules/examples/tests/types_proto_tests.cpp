@@ -10,8 +10,8 @@
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types/proto/geometry.pb.h"
 #include "hephaestus/examples/types/proto/pose.pb.h"
-#include "hephaestus/examples/types_protobuf/geometry.h"
-#include "hephaestus/examples/types_protobuf/pose.h"
+#include "hephaestus/examples/types_proto/geometry.h"
+#include "hephaestus/examples/types_proto/pose.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;

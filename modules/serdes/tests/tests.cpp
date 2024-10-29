@@ -91,7 +91,7 @@ TEST(Protobuf, SerializerBuffers) {
 TEST(Protobuf, DeserializerBuffers) {
   const std::vector<std::byte> data{ NUMBER };
   const protobuf::DeserializerBuffer buffer{ data };
-  MockProtoMessage proto;
+  const MockProtoMessage proto;
 
   EXPECT_CALL(proto, ByteSizeLong).Times(0);
   EXPECT_CALL(proto, SerializeToArray).Times(0);
