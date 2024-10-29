@@ -158,7 +158,9 @@ endmacro()
 macro(declare_module)
   set(flags ALWAYS_BUILD EXCLUDE_FROM_ALL)
   set(single_opts NAME)
-  set(multi_opts DEPENDS_ON_MODULES DEPENDS_ON_EXTERNAL_PROJECTS)
+  set(multi_opts DEPENDS_ON_MODULES DEPENDS_ON_MODULES_FOR_TESTING DEPENDS_ON_EXTERNAL_PROJECTS
+                 DEPENDS_ON_EXTERNAL_PROJECTS_FOR_TESTING
+  )
 
   include(CMakeParseArguments)
   cmake_parse_arguments(MODULE_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
@@ -173,6 +175,11 @@ macro(declare_module)
 
   set(MODULE_ARG_NAME_NO_PREFIX ${MODULE_ARG_NAME})
   set(MODULE_ARG_NAME "${PROJECT_NAME}_${MODULE_ARG_NAME}")
+
+  if(BUILD_TESTING)
+    list(APPEND MODULE_ARG_DEPENDS_ON_MODULES ${MODULE_ARG_DEPENDS_ON_MODULES_FOR_TESTING})
+    list(APPEND MODULE_ARG_DEPENDS_ON_EXTERNAL_PROJECTS ${MODULE_ARG_DEPENDS_ON_EXTERNAL_PROJECTS_FOR_TESTING})
+  endif()
 
   # Either have it always build, or allow user to choose at configuration-time
   if(("${MODULE_ARG_NAME_NO_PREFIX}" IN_LIST BUILD_MODULES)
