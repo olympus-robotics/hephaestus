@@ -16,10 +16,10 @@
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <fmt/core.h>
-#include <range/v3/range/primitives.hpp>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/closures.hxx>
+#include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/sample.hxx>

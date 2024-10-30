@@ -16,6 +16,7 @@
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/enums.hxx>
+#include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/liveliness.hxx>
