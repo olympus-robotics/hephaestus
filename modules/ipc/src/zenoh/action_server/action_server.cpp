@@ -21,7 +21,7 @@ auto requestActionServerToStopExecution(Session& session, const TopicConfig& top
   const auto stop_topic = internal::getStopServiceTopic(topic_config);
   auto results = callService<std::string, std::string>(session, TopicConfig{ stop_topic }, "", TIMEOUT);
   if (results.size() != 1) {
-    LOG(ERROR) << fmt::format("Failed to stop the action server {}.", topic_config.name);
+    LOG(ERROR) << fmt::format("Failed to stop the action server {}", topic_config.name);
     return false;
   }
 

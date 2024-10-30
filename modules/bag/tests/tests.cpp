@@ -25,6 +25,7 @@
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/filesystem/scoped_path.h"
+#include "hephaestus/utils/utils.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -58,11 +59,15 @@ constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
   std::vector<types::DummyType> dummy_types(DUMMY_TYPE_MSG_COUNT);
   for (std::size_t i = 0; i < DUMMY_TYPE_MSG_COUNT; ++i) {
     dummy_types[i] = types::DummyType::random(mt);
-    mcap_writer->writeRecord({ .sender_id = SENDER_ID,
-                               .topic = DUMMY_TYPE_TOPIC,
-                               .timestamp = start_time + i * DUMMY_TYPE_MSG_PERIOD,
-                               .sequence_id = i },
-                             serdes::serialize(dummy_types[i]));
+    mcap_writer->writeRecord(
+        {
+            .sender_id = SENDER_ID,
+            .topic = DUMMY_TYPE_TOPIC,
+            .type_info = utils::getTypeName<types::DummyType>(),
+            .timestamp = start_time + i * DUMMY_TYPE_MSG_PERIOD,
+            .sequence_id = i,
+        },
+        serdes::serialize(dummy_types[i]));
   }
 
   std::vector<types::DummyPrimitivesType> dummy_primitive_type(DUMMY_PRIMITIVE_TYPE_MSG_COUNT);
@@ -70,6 +75,7 @@ constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
     dummy_primitive_type[i] = types::DummyPrimitivesType::random(mt);
     mcap_writer->writeRecord({ .sender_id = SENDER_ID,
                                .topic = DUMMY_PRIMITIVE_TYPE_TOPIC,
+                               .type_info = utils::getTypeName<types::DummyType>(),
                                .timestamp = start_time + i * DUMMY_PRIMITIVE_TYPE_MSG_PERIOD,
                                .sequence_id = i },
                              serdes::serialize(dummy_primitive_type[i]));
