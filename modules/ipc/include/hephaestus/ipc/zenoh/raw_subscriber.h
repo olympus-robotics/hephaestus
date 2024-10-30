@@ -19,6 +19,7 @@ struct MessageMetadata {
   // TODO: convert this to a uuid
   std::string sender_id;
   std::string topic;
+  std::string type_info;
   std::chrono::nanoseconds timestamp{};
   std::size_t sequence_id{};
 };

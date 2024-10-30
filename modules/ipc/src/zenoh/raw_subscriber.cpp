@@ -19,6 +19,7 @@
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/closures.hxx>
+#include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/sample.hxx>
@@ -46,6 +47,35 @@ template <typename C, typename D>
   ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
               ::zenoh::detail::closures::_zenoh_on_drop, closure);
   return c_closure;
+}
+
+[[nodiscard]] auto getMetadata(const ::zenoh::Sample& sample, const std::string& topic) -> MessageMetadata {
+  std::string sender_id;
+  std::string type_info;
+  std::size_t sequence_id{};
+  if (const auto attachment = sample.get_attachment(); attachment.has_value()) {
+    auto attachment_data =
+        ::zenoh::ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
+
+    auto res = absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &sequence_id);
+    LOG_IF(ERROR, !res) << fmt::format("[Subscriber {}] failed to read message counter from attachment",
+                                       topic);
+    sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
+    type_info = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO];
+  }
+
+  auto timestamp = std::chrono::nanoseconds{ 0 };
+  if (const auto zenoh_timestamp = sample.get_timestamp(); zenoh_timestamp.has_value()) {
+    timestamp = toChrono(zenoh_timestamp.value());
+  }
+
+  return {
+    .sender_id = std::move(sender_id),
+    .topic = std::string{ sample.get_keyexpr().as_string_view() },
+    .type_info = std::move(type_info),
+    .timestamp = timestamp,
+    .sequence_id = sequence_id,
+  };
 }
 }  // namespace
 
@@ -114,26 +144,7 @@ RawSubscriber::~RawSubscriber() {
 }
 
 void RawSubscriber::callback(const ::zenoh::Sample& sample) {
-  MessageMetadata metadata;
-  if (const auto attachment = sample.get_attachment(); attachment.has_value()) {
-    // TODO(@filippobrizzi): remove the NOLINT once they fix
-    // https://github.com/eclipse-zenoh/zenoh-cpp/pull/244
-    auto attachment_data = ::zenoh::ext::deserialize<  // NOLINT(misc-include-cleaner)
-        std::unordered_map<std::string, std::string>>(attachment->get());
-
-    auto res =
-        absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &metadata.sequence_id);
-    LOG_IF(ERROR, !res) << fmt::format("[Subscriber {}] failed to read message counter from attachment",
-                                       topic_config_.name);
-    metadata.sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
-  }
-
-  if (const auto timestamp = sample.get_timestamp(); timestamp.has_value()) {
-    metadata.timestamp = toChrono(timestamp.value());
-  }
-
-  metadata.topic = sample.get_keyexpr().as_string_view();
-
+  const auto metadata = getMetadata(sample, topic_config_.name);
   auto payload = toByteVector(sample.get_payload());
 
   if (dedicated_callback_thread_) {

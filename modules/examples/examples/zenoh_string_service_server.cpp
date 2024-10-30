@@ -33,8 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto callback = [](const std::string& sample) {
       LOG(INFO) << "Received query: " << sample;
-      std::string reply = (sample == "Marco") ? "Polo" : "What?";
-      return reply;
+      return (sample == "Marco") ? "Polo" : "What?";
     };
 
     const heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
