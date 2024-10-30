@@ -33,11 +33,10 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto callback = [](const heph::examples::types::Pose& sample) {
       LOG(INFO) << fmt::format("Received query: {}", sample);
-      heph::examples::types::Pose sample_reply{
+      return heph::examples::types::Pose{
         .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
         .position = Eigen::Vector3d{ 1, 2, 3 },                  // NOLINT
       };
-      return sample_reply;
     };
 
     const heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(

@@ -20,6 +20,7 @@ static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 /// We use single char key to reduce the overhead of the attachment.
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY = "0";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
+static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO = "2";
 
 [[nodiscard]] auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte>;
 

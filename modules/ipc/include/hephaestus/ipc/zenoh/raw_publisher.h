@@ -50,6 +50,7 @@ private:
   [[nodiscard]] auto createPublisherOptions() -> ::zenoh::Publisher::PutOptions;
   void enableMatchingListener();
   void createTypeInfoService();
+  void initializeAttachment();
 
 private:
   SessionPtr session_;

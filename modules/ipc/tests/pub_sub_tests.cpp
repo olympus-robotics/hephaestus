@@ -1,6 +1,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include <fmt/core.h>
@@ -54,9 +55,38 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   EXPECT_EQ(send_message, received_message);
 }
 
-TEST(ZenohTests, MessageExchange) {
+TEST(PublisherSubscriber, MessageExchange) {
   checkMessageExchange(false);
   checkMessageExchange(true);
+}
+
+TEST(PublisherSubscriber, MismatchType) {
+  auto mt = random::createRNG();
+  Config config{};
+  auto session = createSession(std::move(config));
+  const auto topic =
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
+
+  Publisher<types::DummyType> publisher(session, topic);
+
+  std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
+  auto subscriber = createSubscriber<types::DummyPrimitivesType>(
+      session, topic,
+      [&stop_flag]([[maybe_unused]] const MessageMetadata& metadata,
+                   const std::shared_ptr<types::DummyPrimitivesType>& message) {
+        (void)metadata;
+        (void)message;
+        stop_flag.test_and_set();
+        stop_flag.notify_all();
+      },
+      false);
+
+  EXPECT_THROW(
+      {
+        std::ignore = publisher.publish(types::DummyType::random(mt));
+        stop_flag.wait(false);
+      },
+      FailedZenohOperation);
 }
 
 }  // namespace

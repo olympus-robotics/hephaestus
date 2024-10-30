@@ -89,6 +89,8 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   if (match_cb_ != nullptr) {
     enableMatchingListener();
   }
+
+  initializeAttachment();
 }
 
 RawPublisher::~RawPublisher() {
@@ -125,9 +127,7 @@ auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
   put_options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
-  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
-  // TODO(@filippobrizzi): remove the NOLINT once they fix https://github.com/eclipse-zenoh/zenoh-cpp/pull/244
-  put_options.attachment = ::zenoh::ext::serialize(attachment_);  // NOLINT(misc-include-cleaner)
+  put_options.attachment = ::zenoh::ext::serialize(attachment_);
 
   return put_options;
 }
@@ -152,5 +152,10 @@ void RawPublisher::createTypeInfoService() {
   auto type_service_topic = TopicConfig{ .name = getTypeInfoServiceTopic(topic_config_.name) };
   type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
                                                                       std::move(type_info_callback));
+}
+
+void RawPublisher::initializeAttachment() {
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO] = type_info_.original_type;
 }
 }  // namespace heph::ipc::zenoh
