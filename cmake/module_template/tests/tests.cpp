@@ -7,9 +7,9 @@
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph@module@::tests {
+namespace @prefix@::@module@::tests {
 
 TEST(Example, Example) {
   EXPECT_TRUE(false);
 }
-}  // namespace heph@
+}
