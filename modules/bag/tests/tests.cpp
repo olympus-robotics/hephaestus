@@ -25,13 +25,10 @@
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/filesystem/scoped_path.h"
-<<<<<<< HEAD
-=======
 #include "hephaestus/utils/utils.h"
-    >>>>>>> 168fd6d (squash)
 
-    // NOLINTNEXTLINE(google-build-using-namespace)
-    using namespace ::testing;
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
 
 namespace heph::bag::tests {
 namespace {

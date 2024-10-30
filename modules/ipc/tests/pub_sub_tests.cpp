@@ -16,8 +16,9 @@
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/utils/exception.h"
 
-namespace heph::ipc::tests {
+namespace heph::ipc::zenoh::tests {
 
 namespace {
 void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
@@ -90,4 +91,4 @@ TEST(PublisherSubscriber, MismatchType) {
 }
 
 }  // namespace
-}  // namespace heph::ipc::tests
+}  // namespace heph::ipc::zenoh::tests
