@@ -39,6 +39,9 @@ public:
 
 private:
   void checkTypeInfo(const MessageMetadata& metadata) {
+    LOG_IF(ERROR, metadata.type_info != utils::getTypeName<T>())
+        << fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
+                       metadata.type_info, utils::getTypeName<T>());
     throwExceptionIf<FailedZenohOperation>(
         metadata.type_info != utils::getTypeName<T>(),
         fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
