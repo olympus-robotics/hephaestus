@@ -1,3 +1,4 @@
+
 //================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
@@ -179,7 +180,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   auto status_update_publisher =
       Publisher<StatusT>{ session_, internal::getStatusPublisherTopic(topic_config_) };
 
-  std::atomic_bool stop_requested{ false };
+  std::atomic_bool stop_requested{ false };  // NOLINT(misc-const-correctness) False positive
   auto stop_service = Service<std::string, std::string>(
       session_, internal::getStopServiceTopic(topic_config_), [&stop_requested](const std::string&) {
         stop_requested = true;
@@ -195,7 +196,10 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
     } catch (const std::exception& ex) {
       LOG(ERROR) << fmt::format("[ActionServer {}] execute callback failed with exception: {}.",
                                 topic_config_.name, ex.what());
-      return Response<ReplyT>{};
+      return Response<ReplyT>{
+        .value = ReplyT{},
+        .status = RequestStatus::INVALID,
+      };
     }
   }();
   const auto response_topic = internal::getResponseServiceTopic(topic_config_);

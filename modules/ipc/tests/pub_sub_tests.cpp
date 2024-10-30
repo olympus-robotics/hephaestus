@@ -23,23 +23,18 @@ namespace heph::ipc::zenoh::tests {
 namespace {
 void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   auto mt = random::createRNG();
-  ipc::zenoh::Config config{};
-  auto session = ipc::zenoh::createSession(std::move(config));
+  Config config{};
+  auto session = createSession(std::move(config));
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
-  const auto send_message = types::DummyType::random(mt);
-  auto received_message = types::DummyType::random(mt);
-  EXPECT_NE(received_message, send_message);
+  Publisher<types::DummyType> publisher(session, topic);
 
+  types::DummyType received_message;
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
-
-  // Create publisher and subscriber
-  ipc::zenoh::Publisher<types::DummyType> publisher(session, topic);
-
-  auto subscriber = ipc::zenoh::createSubscriber<types::DummyType>(
+  auto subscriber = createSubscriber<types::DummyType>(
       session, topic,
-      [&received_message, &stop_flag]([[maybe_unused]] const ipc::zenoh::MessageMetadata& metadata,
+      [&received_message, &stop_flag]([[maybe_unused]] const MessageMetadata& metadata,
                                       const std::shared_ptr<types::DummyType>& message) {
         received_message = *message;
         stop_flag.test_and_set();
@@ -47,6 +42,7 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
       },
       subscriber_dedicated_callback_thread);
 
+  const auto send_message = types::DummyType::random(mt);
   const auto success = publisher.publish(send_message);
   EXPECT_TRUE(success);
 

@@ -1,8 +1,8 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-
 #include <atomic>
+#include <chrono>
 #include <random>
 #include <string>
 #include <thread>
@@ -44,8 +44,8 @@ struct ActionServerData {
   auto service_topic = ipc::TopicConfig(
       fmt::format("test_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
-  ipc::zenoh::Config server_config{};
-  auto server_session = ipc::zenoh::createSession(std::move(server_config));
+  Config server_config{};
+  auto server_session = createSession(std::move(server_config));
 
   return {
     .topic_config = service_topic,
@@ -67,7 +67,7 @@ TEST(ActionServer, RejectedCall) {
   auto request = types::DummyType::random(mt);
   const auto reply = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
                          action_server_data.session, action_server_data.topic_config, request,
-                         [](const types::DummyPrimitivesType& status) { (void)status; }, SERVICE_CALL_TIMEOUT)
+                         [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT)
                          .get();
 
   EXPECT_EQ(reply.status, RequestStatus::REJECTED_USER);
@@ -167,5 +167,55 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   stop.notify_all();
   reply_future.get();
 }
+
+TEST(ActionServer, TypesMismatch) {
+  auto mt = random::createRNG();
+
+  auto action_server_data = createDummyActionServer(
+      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      [](const types::DummyType& request, Publisher<types::DummyPrimitivesType>& status_publisher,
+         std::atomic_bool&) {
+        auto success = status_publisher.publish({});
+        EXPECT_TRUE(success);
+        return request;
+        return request;
+      });
+
+  // Invalid Request
+  {
+    auto request = types::DummyPrimitivesType::random(mt);
+    const auto reply =
+        callActionServer<types::DummyPrimitivesType, types::DummyPrimitivesType, types::DummyPrimitivesType>(
+            action_server_data.session, action_server_data.topic_config, request,
+            [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT)
+            .get();
+
+    EXPECT_EQ(reply.status, RequestStatus::INVALID);
+  }
+
+  // Invalid Reply
+  {
+    auto request = types::DummyType::random(mt);
+    const auto reply =
+        callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyPrimitivesType>(
+            action_server_data.session, action_server_data.topic_config, request,
+            [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT)
+            .get();
+
+    EXPECT_EQ(reply.status, RequestStatus::INVALID);
+  }
+
+  // Invalid Status
+  {
+    auto request = types::DummyType::random(mt);
+    const auto reply = callActionServer<types::DummyType, types::DummyType, types::DummyType>(
+                           action_server_data.session, action_server_data.topic_config, request,
+                           [](const types::DummyType&) {}, SERVICE_CALL_TIMEOUT)
+                           .get();
+
+    EXPECT_EQ(reply.status, RequestStatus::INVALID);
+  }
+}
+
 }  // namespace
 }  // namespace heph::ipc::zenoh::action_server::tests

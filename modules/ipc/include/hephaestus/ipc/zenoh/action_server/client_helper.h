@@ -44,6 +44,7 @@ public:
 
 private:
   [[nodiscard]] auto serviceCallback(const Response<ReplyT>& reply) -> RequestResponse;
+  void onFailure();
 
 private:
   SessionPtr session_;
@@ -68,7 +69,8 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
         }))
   , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
-        [this](const Response<ReplyT>& reply) { return serviceCallback(reply); })) {
+        [this](const Response<ReplyT>& reply) { return serviceCallback(reply); },
+        [this]() { onFailure(); })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -81,6 +83,11 @@ auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<Rep
     -> RequestResponse {
   reply_promise_.set_value(reply);
   return { .status = RequestStatus::SUCCESSFUL };
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+void ClientHelper<RequestT, StatusT, ReplyT>::onFailure() {
+  reply_promise_.set_value({ .value = {}, .status = RequestStatus::INVALID });
 }
 
 }  // namespace heph::ipc::zenoh::action_server::internal
