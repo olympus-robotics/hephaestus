@@ -8,7 +8,7 @@ declare_module(NAME @module@ DEPENDS_ON_MODULES "" DEPENDS_ON_EXTERNAL_PROJECTS 
 set(SOURCES
         src/@module@.cpp
         README.md
-        include/hephaestus/@module@/@module@.h)
+        include/@include@/@module@/@module@.h)
 
 # library target
 define_module_library(

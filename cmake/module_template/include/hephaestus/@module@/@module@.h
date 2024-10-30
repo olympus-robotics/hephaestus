@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace @module@{
+namespace @prefix@::@module@{
   /// \addtogroup @module@ @module@ module
   /// @{
 
