@@ -8,7 +8,6 @@
 #include <chrono>
 #include <functional>
 #include <future>
-#include <thread>
 
 namespace heph::concurrency {
 
@@ -52,6 +51,7 @@ private:
 
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;
+  std::atomic_flag spinner_completed_ = ATOMIC_FLAG_INIT;
 
   std::chrono::microseconds spin_period_;
   std::chrono::system_clock::time_point start_timestamp_;
