@@ -11,7 +11,7 @@
 
 namespace heph::concurrency {
 
-/// @brief SpinnerManager allows to orchestrate the execution of multiple spinners.
+/// @brief SpinnersManager allows to orchestrate the execution of multiple spinners.
 /// The main feature is `waitAny` which allows to unblock as soon as one of the spinners is done.
 /// This allows to catch errors in spinner execution as soon as possible and stop the others.
 /// NOTE: right now we do not have any concept of error for the spinners: we cannot know if a spinner
@@ -20,9 +20,9 @@ namespace heph::concurrency {
 /// NOTE: this logic is quite generic and can be extended to any type of object that has `wait()` and `stop()`
 /// methods. To be faitful to the principle of implement only what you need now, we limit the scope to
 /// spinners and consider to expand the scope when an use case arises.
-class SpinnerManager {
+class SpinnersManager {
 public:
-  explicit SpinnerManager(std::vector<Spinner*> spinners);
+  explicit SpinnersManager(std::vector<Spinner*> spinners);
 
   void startAll();
   void waitAll();

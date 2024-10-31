@@ -15,18 +15,18 @@
 #include "hephaestus/concurrency/spinner.h"
 
 namespace heph::concurrency {
-SpinnerManager::SpinnerManager(std::vector<Spinner*> spinners) : spinners_{ std::move(spinners) } {
+SpinnersManager::SpinnersManager(std::vector<Spinner*> spinners) : spinners_{ std::move(spinners) } {
 }
 
-void SpinnerManager::startAll() {
+void SpinnersManager::startAll() {
   std::ranges::for_each(spinners_, [](auto* runner) { runner->start(); });
 }
 
-void SpinnerManager::waitAll() {
+void SpinnersManager::waitAll() {
   std::ranges::for_each(spinners_, [](auto* runner) { runner->wait(); });
 }
 
-void SpinnerManager::waitAny() {
+void SpinnersManager::waitAny() {
   std::atomic_flag flag = ATOMIC_FLAG_INIT;
   wait_futures_.reserve(spinners_.size());
   for (auto* runner : spinners_) {
@@ -41,7 +41,7 @@ void SpinnerManager::waitAny() {
   flag.wait(false);
 }
 
-void SpinnerManager::stopAll() {
+void SpinnersManager::stopAll() {
   std::vector<std::future<void>> futures;
   futures.reserve(spinners_.size());
 
