@@ -95,4 +95,7 @@ concept Waitable = requires(T value) {
   { value.wait() };
 };
 
+template <typename T>
+concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
+
 }  // namespace heph
