@@ -150,28 +150,66 @@ namespace internal {
 //=================================================================================================
 // Random string creation
 //=================================================================================================
+struct StringConfig {
+  static constexpr auto MIN_LENGTH = 0ul;
+  static constexpr auto MAX_LENGTH = 42ul;
+  Bounds<size_t> lenght = { .min = MIN_LENGTH, .max = MAX_LENGTH, .type = BoundsType::CLOSED };
+  bool allow_upper_case_characters = true;
+  bool allow_lower_case_characters = true;
+  bool allow_numbers = true;
+  bool allow_special_characters = true;
+} DEFAULT_STRING_CONFIG;
+
+namespace internal {
+[[nodiscard]] constexpr auto getCharacterPool(const StringConfig& config) -> std::string {
+  const std::string upper_case_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const std::string lower_case_characters = "abcdefghijklmnopqrstuvwxyz";
+  const std::string numbers = "0123456789";
+  const std::string special_characters = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+  std::string character_pool;
+
+  if (config.allow_upper_case_characters) {
+    character_pool += upper_case_chars;
+  }
+  if (config.allow_lower_case_characters) {
+    character_pool += lower_case_chars;
+  }
+  if (config.allow_numbers) {
+    character_pool += numbers;
+  }
+  if (config.allow_special_characters) {
+    character_pool += special_chars;
+  }
+
+  throwExceptionIf<InvalidConfigurationException>(character_pool.empty(),
+                                                  "No character sets enabled in StringConfig.");
+
+  return character_pool;
+}
+}  // namespace internal
+
 /// Generate a random string of characters, including special case characters and numbers.
 template <StringType T>
-[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
-                          bool allow_empty = true, bool lower_characters_only = false) -> T {
-  static constexpr auto PRINTABLE_ASCII_START = 32;         // Space
-  static constexpr auto PRINTABLE_ASCII_END = 126;          // Equivalency sign - tilde
-  static constexpr auto LOWER_CHARACTERS_ASCII_START = 97;  // a
-  static constexpr auto LOWER_CHARACTERS_ASCII_END = 122;   // z
+[[nodiscard]] auto random(std::mt19937_64& mt, StringConfig config = DEFAULT_STRING_CONFIG) -> T {
+  std::uniform_int_distribution<size_t> length_dist(config.length.min,
+                                                    config.length.max);  // check bounds type and dist
 
-  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+  const auto random_length = length_dist(mt);
 
-  auto char_dist =
-      lower_characters_only ?
-          std::uniform_int_distribution<unsigned char>(LOWER_CHARACTERS_ASCII_START,
-                                                       LOWER_CHARACTERS_ASCII_END) :
-          std::uniform_int_distribution<unsigned char>(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
+  if (random_length == 0) {
+    return T{};
+  }
 
-  std::string random_string;
-  random_string.reserve(size);
+  constexpr auto CHARACTER_POOL = internal::getCharacterPool(config);
+  std::uniform_int_distribution<size_t> char_dist(0, CHARACTER_POOL.size() - 1);
+  auto gen_random_char = [&mt, &char_dist, &CHARACTER_POOL]() -> char {
+    return static_cast<char>(character_pool[char_dist(mt)]);
+  };
 
-  auto gen_random_char = [&mt, &char_dist]() { return static_cast<char>(char_dist(mt)); };
-  std::generate_n(std::back_inserter(random_string), size, gen_random_char);
+  T random_string;
+  random_string.reserve(random_size);
+  std::generate_n(std::back_inserter(random_string), random_size, gen_random_char);
 
   return random_string;
 }

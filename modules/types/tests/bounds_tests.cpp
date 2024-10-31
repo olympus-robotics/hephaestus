@@ -11,8 +11,8 @@ using namespace ::testing;
 
 namespace heph::types::tests {
 
-TEST(BoundsTest, InclusiveBounds) {
-  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::INCLUSIVE };
+TEST(BoundsTest, ClosedBounds) {
+  const Bounds<float> bounds{ .lower = -5.0f, .upper = 10.0f, .type = BoundsType::CLOSED };
   EXPECT_TRUE(isWithinBounds(-5.0f, bounds));
   EXPECT_TRUE(isWithinBounds(0.0f, bounds));
   EXPECT_TRUE(isWithinBounds(10.0f, bounds));

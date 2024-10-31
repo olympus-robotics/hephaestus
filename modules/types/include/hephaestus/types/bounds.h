@@ -18,7 +18,7 @@
 namespace heph::types {
 
 enum class BoundsType : uint8_t {
-  INCLUSIVE,   // []
+  CLOSED,      // []
   LEFT_OPEN,   // (]
   RIGHT_OPEN,  // [)
   OPEN         // ()
@@ -33,7 +33,7 @@ struct Bounds {
 
   T lower{};
   T upper{};
-  BoundsType type{ BoundsType::INCLUSIVE };
+  BoundsType type{ BoundsType::CLOSED };
 };
 
 template <NumericType T>
@@ -59,7 +59,7 @@ auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
 template <NumericType T>
 constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
   switch (bounds.type) {
-    case BoundsType::INCLUSIVE:
+    case BoundsType::CLOSED:
       return value >= bounds.lower && value <= bounds.upper;
     case BoundsType::LEFT_OPEN:
       return value > bounds.lower && value <= bounds.upper;
@@ -83,7 +83,7 @@ template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
   std::string bounds_type_str;
   switch (bounds.type) {
-    case BoundsType::INCLUSIVE:
+    case BoundsType::CLOSED:
       bounds_type_str = "[]";
       break;
     case BoundsType::LEFT_OPEN:
