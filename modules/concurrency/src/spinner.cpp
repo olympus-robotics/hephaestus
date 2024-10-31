@@ -54,12 +54,13 @@ Spinner::~Spinner() {
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
 
+  stop_requested_.store(false);
+  spinner_completed_.clear();
   async_spinner_handle_ = std::async(std::launch::async, [this]() mutable { spin(); });
 }
 
 void Spinner::spin() {
   // TODO: set thread name
-  spinner_completed_.clear();
 
   try {
     start_timestamp_ = std::chrono::system_clock::now();

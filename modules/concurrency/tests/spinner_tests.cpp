@@ -116,4 +116,20 @@ TEST(SpinnerTest, ExceptionHandling) {
   EXPECT_THROW(spinner.stop().get(), heph::InvalidOperationException);
 }
 
+TEST(SpinnerTest, SpinStartAfterStop) {
+  size_t callback_called_counter = 0;
+  Spinner spinner(TestFixture::stoppingCallback(callback_called_counter));
+
+  spinner.start();
+  spinner.wait();
+  spinner.stop().get();
+  EXPECT_EQ(callback_called_counter, 10);
+
+  callback_called_counter = 0;
+  spinner.start();
+  spinner.wait();
+  spinner.stop().get();
+  EXPECT_EQ(callback_called_counter, 10);
+}
+
 }  // namespace heph::concurrency::tests

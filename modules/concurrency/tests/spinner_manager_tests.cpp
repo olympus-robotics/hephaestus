@@ -10,7 +10,6 @@
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/concurrency/spinner_manager.h"
-#include "hephaestus/utils/stack_trace.h"
 
 namespace heph::concurrency::tests {
 
@@ -68,7 +67,6 @@ TEST(RunnerManager, MultipleSpinnersSuccessful) {
 }
 
 TEST(RunnerManager, MultipleSpinnersWaitAny) {
-  utils::StackTrace trace;
   Spinner spinner1{ []() {} };  // Run indefinitely until stopped
 
   std::atomic_bool flag = false;
@@ -86,7 +84,6 @@ TEST(RunnerManager, MultipleSpinnersWaitAny) {
 }
 
 TEST(RunnerManager, MultipleSpinnersOneError) {
-  utils::StackTrace trace;
   Spinner spinner1{ []() {} };  // Run indefinitely until stopped
 
   Spinner spinner2{ []() { throw std::runtime_error("fail"); } };
