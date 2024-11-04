@@ -14,40 +14,32 @@
 
 namespace heph::concurrency {
 SpinnersManager::SpinnersManager(std::vector<Spinner*> spinners) : spinners_{ std::move(spinners) } {
+  std::ranges::for_each(spinners_, [this](auto* spinner) {
+    spinner->setTerminationCallback([this]() {
+      if (!termination_flag_.test_and_set()) {
+        termination_flag_.notify_all();
+      }
+    });
+  });
 }
 
 void SpinnersManager::startAll() {
-  std::ranges::for_each(spinners_, [](auto* runner) { runner->start(); });
+  std::ranges::for_each(spinners_, [](auto* spinner) { spinner->start(); });
 }
 
 void SpinnersManager::waitAll() {
-  std::ranges::for_each(spinners_, [](auto* runner) { runner->wait(); });
+  std::ranges::for_each(spinners_, [](auto* spinner) { spinner->wait(); });
 }
 
 void SpinnersManager::waitAny() {
-  std::atomic_flag flag = ATOMIC_FLAG_INIT;
-  wait_futures_.reserve(spinners_.size());
-  for (auto* runner : spinners_) {
-    auto future = std::async(std::launch::async, [runner, &flag]() {
-      runner->wait();
-      flag.test_and_set();
-      flag.notify_all();
-    });
-    wait_futures_.push_back(std::move(future));
-  }
-
-  flag.wait(false);
+  termination_flag_.wait(false);
 }
 
 void SpinnersManager::stopAll() {
   std::vector<std::future<void>> futures;
   futures.reserve(spinners_.size());
-
   std::ranges::for_each(spinners_,
-                        [&futures](auto* runner) { futures.push_back(std::move(runner->stop())); });
-
-  // If we called `waitAny`, we need to wait for the remaining futures.
-  std::ranges::for_each(wait_futures_, [](auto& future) { future.get(); });
+                        [&futures](auto* spinner) { futures.push_back(std::move(spinner->stop())); });
 
   std::ranges::for_each(futures, [](auto& f) { f.get(); });
 }

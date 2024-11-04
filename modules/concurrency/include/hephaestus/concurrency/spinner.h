@@ -40,6 +40,10 @@ public:
   auto stop() -> std::future<void>;
   void wait();
 
+  /// @brief  Set a callback that will be called when the spinner is stopped.
+  /// This callback could be extendend to pass the reason why the spinner was stopped, e.g. exceptions, ...
+  void setTerminationCallback(Callback&& termination_callback);
+
   [[nodiscard]] auto spinCount() const -> uint64_t;
 
 private:
@@ -48,6 +52,7 @@ private:
 
 private:
   StoppableCallback stoppable_callback_;
+  Callback termination_callback_ = []() {};
 
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;

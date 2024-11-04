@@ -36,7 +36,7 @@ public:
 private:
   std::vector<Spinner*> spinners_;
 
-  std::vector<std::future<void>> wait_futures_;
+  std::atomic_flag termination_flag_ = ATOMIC_FLAG_INIT;
 };
 
 }  // namespace heph::concurrency

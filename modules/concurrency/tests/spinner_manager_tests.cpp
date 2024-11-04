@@ -65,6 +65,15 @@ TEST(SpinnersManager, MultipleSpinnersSuccessful) {
   EXPECT_TRUE(flag2);
 }
 
+TEST(SpinnersManager, MultipleSpinnersSuccessfulNoTermination) {
+  Spinner spinner1{ []() {} };  // Run indefinitely until stopped
+  Spinner spinner2{ []() {} };  // Run indefinitely until stopped
+  SpinnersManager runner_manager{ { &spinner1, &spinner2 } };
+  runner_manager.startAll();
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
+  runner_manager.stopAll();
+}
+
 TEST(SpinnersManager, MultipleSpinnersWaitAny) {
   Spinner spinner1{ []() {} };  // Run indefinitely until stopped
 

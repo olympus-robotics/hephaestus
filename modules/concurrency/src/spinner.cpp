@@ -85,11 +85,13 @@ void Spinner::spin() {
   } catch (std::exception& e) {
     spinner_completed_.test_and_set();
     spinner_completed_.notify_all();
+    termination_callback_();
     throw;  // TODO(@filippo) consider if we want to handle this error in a different way.
   }
 
   spinner_completed_.test_and_set();
   spinner_completed_.notify_all();
+  termination_callback_();
 }
 
 auto Spinner::stop() -> std::future<void> {
@@ -111,6 +113,10 @@ void Spinner::wait() {
 
 auto Spinner::spinCount() const -> uint64_t {
   return spin_count_;
+}
+
+void Spinner::setTerminationCallback(Callback&& termination_callback) {
+  termination_callback_ = std::move(termination_callback);
 }
 
 }  // namespace heph::concurrency
