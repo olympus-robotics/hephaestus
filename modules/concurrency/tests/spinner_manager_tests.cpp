@@ -5,7 +5,6 @@
 #include <atomic>
 #include <stdexcept>
 
-#include <fmt/core.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/spinner.h"
