@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/core.h>
-
 #include "hephaestus/concurrency/spinner.h"
 
 namespace heph::concurrency {
