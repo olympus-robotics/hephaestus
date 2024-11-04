@@ -54,6 +54,8 @@ TEST(SpinnerTest, StartStopTest) {
 TEST(SpinnerTest, SpinTest) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
   Spinner spinner{ TestFixture::trivialCallback() };
+  bool callback_called = false;
+  spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
 
   spinner.start();
 
@@ -63,9 +65,10 @@ TEST(SpinnerTest, SpinTest) {
 
   // The counter should have been incremented.
   EXPECT_GT(spinner.spinCount(), 0);
+  EXPECT_TRUE(callback_called);
 }
 
-TEST(SpinnerTest, StopCallback) {
+TEST(SpinnerTest, Stop) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
@@ -111,9 +114,29 @@ TEST(SpinnerTest, ExceptionHandling) {
   static constexpr auto RATE_HZ = 1e3;
 
   Spinner spinner(TestFixture::throwingCallback(), RATE_HZ);
+  bool callback_called = false;
+  spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
+
   spinner.start();
   spinner.wait();
   EXPECT_THROW(spinner.stop().get(), heph::InvalidOperationException);
+  EXPECT_TRUE(callback_called);
+}
+
+TEST(SpinnerTest, SpinStartAfterStop) {
+  size_t callback_called_counter = 0;
+  Spinner spinner(TestFixture::stoppingCallback(callback_called_counter));
+
+  spinner.start();
+  spinner.wait();
+  spinner.stop().get();
+  EXPECT_EQ(callback_called_counter, 10);
+
+  callback_called_counter = 0;
+  spinner.start();
+  spinner.wait();
+  spinner.stop().get();
+  EXPECT_EQ(callback_called_counter, 10);
 }
 
 }  // namespace heph::concurrency::tests

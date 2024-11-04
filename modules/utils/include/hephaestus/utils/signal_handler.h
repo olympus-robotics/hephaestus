@@ -12,9 +12,6 @@
 
 namespace heph::utils {
 
-template <typename T>
-concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
-
 /// \brief Use this class to block until a signal is received.
 /// > NOTE: can be extended to call a generic callback when a signal is received.
 /// Usage:
