@@ -29,7 +29,7 @@ public:
   /// propagated as the other spinners are still blocking.
   void waitAll();
   /// @brief wait until any spinner terminates or throws an exception, which allows for immediate exception
-  /// handling. Not that the exception will be re-thrown when calling `stopAll`.
+  /// handling. Note that the exceptions will be re-thrown when calling `stopAll`.
   void waitAny();
   void stopAll();
 

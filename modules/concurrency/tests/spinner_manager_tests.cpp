@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <stdexcept>
+#include <thread>
 
 #include <gtest/gtest.h>
 
