@@ -54,31 +54,44 @@ Spinner::~Spinner() {
 void Spinner::start() {
   throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
 
+  stop_requested_.store(false);
+  spinner_completed_.clear();
   async_spinner_handle_ = std::async(std::launch::async, [this]() mutable { spin(); });
 }
 
 void Spinner::spin() {
   // TODO: set thread name
 
-  start_timestamp_ = std::chrono::system_clock::now();
+  try {
+    start_timestamp_ = std::chrono::system_clock::now();
 
-  while (!stop_requested_.load()) {
-    const auto spin_result = stoppable_callback_();
+    while (!stop_requested_.load()) {
+      const auto spin_result = stoppable_callback_();
 
-    ++spin_count_;
+      ++spin_count_;
 
-    if (spin_result == SpinResult::STOP) {
-      break;
+      if (spin_result == SpinResult::STOP) {
+        break;
+      }
+
+      if (spin_period_.count() == 0) {
+        continue;
+      }
+
+      const auto target_timestamp = start_timestamp_ + spin_count_ * spin_period_;
+      std::unique_lock<std::mutex> lock(mutex_);
+      condition_.wait_until(lock, target_timestamp);
     }
-
-    if (spin_period_.count() == 0) {
-      continue;
-    }
-
-    const auto target_timestamp = start_timestamp_ + spin_count_ * spin_period_;
-    std::unique_lock<std::mutex> lock(mutex_);
-    condition_.wait_until(lock, target_timestamp);
+  } catch (std::exception& e) {
+    spinner_completed_.test_and_set();
+    spinner_completed_.notify_all();
+    termination_callback_();
+    throw;  // TODO(@filippo) consider if we want to handle this error in a different way.
   }
+
+  spinner_completed_.test_and_set();
+  spinner_completed_.notify_all();
+  termination_callback_();
 }
 
 auto Spinner::stop() -> std::future<void> {
@@ -91,11 +104,19 @@ auto Spinner::stop() -> std::future<void> {
 }
 
 void Spinner::wait() {
-  async_spinner_handle_.wait();
+  if (!async_spinner_handle_.valid()) {
+    return;
+  }
+
+  spinner_completed_.wait(false);
 }
 
 auto Spinner::spinCount() const -> uint64_t {
   return spin_count_;
+}
+
+void Spinner::setTerminationCallback(Callback&& termination_callback) {
+  termination_callback_ = std::move(termination_callback);
 }
 
 }  // namespace heph::concurrency
