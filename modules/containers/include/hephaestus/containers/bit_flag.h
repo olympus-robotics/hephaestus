@@ -11,7 +11,7 @@
 
 #include "hephaestus/utils/exception.h"
 
-namespace heph::utils {
+namespace heph::containers {
 
 namespace internal {
 template <typename EnumT>
@@ -136,4 +136,4 @@ private:
              // do not reprenset any enum value.
 };
 
-}  // namespace heph::utils
+}  // namespace heph::containers

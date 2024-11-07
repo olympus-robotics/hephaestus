@@ -5,13 +5,13 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/utils/bit_flag.h"
+#include "hephaestus/containers/bit_flag.h"
 #include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph::utils::tests {
+namespace heph::containers::tests {
 
 TEST(BitFlag, EnumValuesPowerOfTwo) {
   enum class ValidEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u };
@@ -121,4 +121,4 @@ TEST(BitFlag, UnderlyingValue) {
   EXPECT_EQ(static_cast<int>(value), 7);
 }
 
-}  // namespace heph::utils::tests
+}  // namespace heph::containers::tests

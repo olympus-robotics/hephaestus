@@ -9,7 +9,13 @@ declare_module(
 )
 
 # library sources
-set(SOURCES src/blocking_queue.cpp README.md include/hephaestus/containers/blocking_queue.h)
+set(SOURCES
+  src/bit_flag.cpp
+  src/blocking_queue.cpp
+  README.md
+  include/hephaestus/containers/bit_flag.h
+  include/hephaestus/containers/blocking_queue.h
+)
 
 # library target
 define_module_library(
