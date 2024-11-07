@@ -9,6 +9,8 @@
 #include <magic_enum.hpp>
 #include <magic_enum_all.hpp>
 
+#include "hephaestus/utils/exception.h"
+
 namespace heph::utils {
 
 namespace internal {
@@ -27,6 +29,15 @@ constexpr auto checkEnumValuesArePowerOf2() -> bool {
 
   return std::all_of(POWER_OF_TWO.begin(), POWER_OF_TWO.end(), [](bool val) { return val; });
 }
+
+template <typename EnumT>
+constexpr auto allEnumValuesMask() -> std::underlying_type_t<EnumT> {
+  std::underlying_type_t<EnumT> mask{};
+  magic_enum::enum_for_each<EnumT>(
+      [&mask](auto enum_val) { mask |= magic_enum::enum_integer<EnumT>(enum_val); });
+  return mask;
+}
+
 }  // namespace internal
 
 template <typename EnumT>
@@ -64,6 +75,20 @@ public:
     // TODO: consider if there is a way to avoid this allocation.
     static_assert(internal::checkEnumValuesArePowerOf2<EnumT>(),
                   "Enum is not valid for BitFlag, its values must be power of 2.");
+  }
+
+  /// Constructs a BitFlag with the given underlying value.
+  ///
+  /// An 'InvalidParameterException' is thrown if there are bits set in 'underlying_value' which do not
+  /// correspond to a valid enum value.
+  constexpr explicit BitFlag(std::underlying_type_t<EnumT> underlying_value) : value_(underlying_value) {
+    static_assert(internal::checkEnumValuesArePowerOf2<EnumT>(),
+                  "Enum is not valid for BitFlag, its values must be power of 2.");
+
+    throwExceptionIf<InvalidParameterException>(
+        // NOLINTNEXTLINE(hicpp-signed-bitwise)
+        (underlying_value & ~internal::allEnumValuesMask<EnumT>()) != 0,
+        "Enum underlying value contains invalid bits (bits which don't correspond to a valid enum value).");
   }
 
   constexpr auto reset() -> BitFlag& {
