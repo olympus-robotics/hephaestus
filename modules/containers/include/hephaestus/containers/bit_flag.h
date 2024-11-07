@@ -91,6 +91,8 @@ public:
         "Enum underlying value contains invalid bits (bits which don't correspond to a valid enum value).");
   }
 
+  [[nodiscard]] auto operator==(const BitFlag&) const -> bool = default;
+
   constexpr auto reset() -> BitFlag& {
     value_ = 0;
     return *this;
