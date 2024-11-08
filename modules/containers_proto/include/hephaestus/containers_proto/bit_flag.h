@@ -25,7 +25,7 @@ auto toProto(proto::BitFlag& proto_bit_flag, const BitFlag<EnumT>& bit_flag) -> 
 
 template <typename EnumT>
 auto fromProto(const proto::BitFlag& proto_bit_flag, BitFlag<EnumT>& bit_flag) -> void {
-  bit_flag = BitFlag<EnumT>{ static_cast<std::underlying_type_t<EnumT>>(proto_bit_flag.value()) };
+  bit_flag = BitFlag<EnumT>{ static_cast<BitFlag<EnumT>::T>(proto_bit_flag.value()) };
 }
 
 }  // namespace heph::containers

@@ -18,10 +18,12 @@ namespace heph::containers::tests {
 TEST(BitFlagSerialization, RoundTrip) {
   enum class Enum : uint8_t { A = 1u << 3u, B = 1u << 5u };
 
-  const BitFlag<Enum> value{ Enum::B };
-  BitFlag<Enum> value_des{};
-
+  BitFlag<Enum> value;
+  value.set(Enum::A);
+  value.set(Enum::B);
   auto buff = serdes::serialize(value);
+
+  BitFlag<Enum> value_des{};
   serdes::deserialize(buff, value_des);
 
   EXPECT_EQ(value, value_des);
