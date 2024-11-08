@@ -5,12 +5,13 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/utils/bit_flag.h"
+#include "hephaestus/containers/bit_flag.h"
+#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace heph::utils::tests {
+namespace heph::containers::tests {
 
 TEST(BitFlag, EnumValuesPowerOfTwo) {
   enum class ValidEnum : uint8_t { A = 1u << 0u, B = 1u << 2u, C = 1u << 3u };
@@ -20,11 +21,31 @@ TEST(BitFlag, EnumValuesPowerOfTwo) {
   static_assert(!internal::checkEnumValuesArePowerOf2<InValidEnum>());
 }
 
+TEST(BitFlag, AllEnumValuesMask) {
+  enum class DenseEnum : uint8_t { A = 1u << 0u, B = 1u << 1u, C = 1u << 2u };
+  static_assert(internal::allEnumValuesMask<DenseEnum>() == ((1u << 0u) | (1u << 1u) | (1u << 2u)));
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  enum class SparseEnum : uint8_t { A = 1u << 3u, B = 1u << 6u };
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  static_assert(internal::allEnumValuesMask<SparseEnum>() == ((1u << 3u) | (1u << 6u)));
+}
+
 enum class TestEnum : uint8_t { A = 1u << 0u, B = 1u << 1u, C = 1u << 2u, D = 1u << 3u };
 TEST(BitFlag, Default) {
   const BitFlag<TestEnum> flag{ TestEnum::A };
   EXPECT_TRUE(flag.has(TestEnum::A));
   EXPECT_FALSE(flag.has(TestEnum::B));
+}
+
+TEST(BitField, WithUnderlyingValue) {
+  const BitFlag<TestEnum> flag{ (1u << 0u) | (1u << 2u) };
+  EXPECT_TRUE(flag.has(TestEnum::A));
+  EXPECT_FALSE(flag.has(TestEnum::B));
+  EXPECT_TRUE(flag.has(TestEnum::C));
+
+  EXPECT_THROW(BitFlag<TestEnum>{ 1u << 4u }, InvalidParameterException);
 }
 
 TEST(BitFlag, Reset) {
@@ -100,4 +121,4 @@ TEST(BitFlag, UnderlyingValue) {
   EXPECT_EQ(static_cast<int>(value), 7);
 }
 
-}  // namespace heph::utils::tests
+}  // namespace heph::containers::tests
