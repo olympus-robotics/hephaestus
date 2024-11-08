@@ -14,8 +14,9 @@ namespace heph::telemetry {
  *
  */
 class AbslLogSink : public ILogSink {
-  AbslLogSing();
-  AbslLogSing(Formatter&& f);
+public:
+  explicit AbslLogSink();
+  explicit AbslLogSink(Formatter&& f);
 
   void send(const LogEntry& entry) override;
 

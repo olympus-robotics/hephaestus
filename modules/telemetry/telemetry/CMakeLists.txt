@@ -26,4 +26,5 @@ define_module_library(
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
 
+add_subdirectory(examples)
 add_subdirectory(tests)

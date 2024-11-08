@@ -42,37 +42,26 @@ auto getHostname() -> std::string {
   return { buffer.data() };
 }
 
-/** @brief Do the actual logging. Take in LogEntry and send it to all sinks
- *  @param LogEntry, class that takes in the structured logs and formats them.
- *  @return void
- */
-void processLogEntries(const LogEntry& entry) {
-  auto& telemetry = instance();
-  const std::lock_guard lock(telemetry.sink_mutex_);
-  for (const auto& sink:telemetry.sinks_){
-    sink->send(entry);
-  }
-}
 }  // namespace
 
 auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
   switch (level) {
-    case Level::Trace:
+    case Level::TRACE:
       os << "trace";
       break;
-    case Level::Debug:
+    case Level::DEBUG:
       os << "debug";
       break;
-    case Level::Info:
+    case Level::INFO:
       os << "info";
       break;
-    case Level::Warn:
+    case Level::WARN:
       os << "warn";
       break;
-    case Level::Error:
+    case Level::ERROR:
       os << "error";
       break;
-    case Level::Fatal:
+    case Level::FATAL:
       os << "fatal";
       break;
   }
@@ -80,16 +69,28 @@ auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
   return os;
 }
 
-
 class Logger final {
 public:
   explicit Logger();
+  ~Logger();
+
+  Logger(const Logger&) = delete;
+  Logger(Logger&&) = delete;
+  auto operator=(const Logger&) -> Logger& = delete;
+  auto operator=(Logger&&) -> Logger& = delete;
+
   static void registerSink(std::unique_ptr<ILogSink> sink);
 
   static void log(const LogEntry& log_entry);
 
 private:
   [[nodiscard]] static auto instance() -> Logger&;
+
+  /** @brief Do the actual logging. Take in LogEntry and send it to all sinks
+   *  @param LogEntry, class that takes in the structured logs and formats them.
+   *  @return void
+   */
+  void processLogEntries(const LogEntry& entry);
 
 private:
   std::mutex sink_mutex_;
@@ -107,7 +108,12 @@ void log(const LogEntry& log_entry) {
 }
 
 Logger::Logger()
-  : log_entries_consumer_([](const LogEntry& entry) { processLogEntries(entry); }, std::nullopt) {
+  : log_entries_consumer_([this](const LogEntry& entry) { processLogEntries(entry); }, std::nullopt) {
+  log_entries_consumer_.start();
+}
+
+Logger::~Logger() {
+  log_entries_consumer_.stop();
 }
 
 auto Logger::instance() -> Logger& {
@@ -125,6 +131,13 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) {
 void Logger::log(const LogEntry& log_entry) {
   auto& telemetry = instance();
   telemetry.log_entries_consumer_.queue().forcePush(log_entry);
+}
+
+void Logger::processLogEntries(const LogEntry& entry) {
+  const std::lock_guard lock(sink_mutex_);
+  for (auto& sink : sinks_) {
+    sink->send(entry);
+  }
 }
 
 LogEntry::LogEntry(Level level, std::string_view message, std::source_location location)

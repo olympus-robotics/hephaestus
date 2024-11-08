@@ -1,7 +1,10 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include "hephaestus/telemetry/absl_log_sink.h"
+#include <memory>
+#include <string>
+
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/struclog.h"
 #include "hephaestus/utils/stack_trace.h"
 
@@ -18,5 +21,7 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   const std::string a = "testing absl log sink";
   const int num = 123;
-  ht::log(ht::LogEntry{ ht::Level::Warn, a } | "num"_f(num));
+  ht::log(ht::LogEntry{ ht::Level::WARN, a } | "num"_f(num));
+
+  return 0;
 }

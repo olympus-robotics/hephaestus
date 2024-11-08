@@ -6,11 +6,12 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace heph::telemetry {
 
-enum class Level : std::uint8_t { Trace, Debug, Info, Warn, Error, Fatal };
+enum class Level : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
 auto operator<<(std::ostream& /*os*/, const Level& /*level*/) -> std::ostream&;
 
 template <typename T>
@@ -31,7 +32,7 @@ struct Field final {
  * @brief A class that allows easy composition of logs for structured logging.
  *        Example(see also struclog.cpp):
  *        namespace ht=heph::telemetry;
- *        log(ht::LogEntry{Level::Info, "adding"} | "id"_f(12345) | ht::Field{"tag", "test"}) ;
+ *        log(ht::LogEntry{Level::INFO, "adding"} | "id"_f(12345) | ht::Field{"tag", "test"}) ;
  *
  *        logs
  *        'level=info file=struclog.h:123 time=2023-12-3T8:52:02+0 message="adding" id=12345 tag="test"'
@@ -97,13 +98,13 @@ public:
   Fields fields;
 };
 
-using Formatter=std::function<std::string(const LogEntry& log)>;
+using Formatter = std::function<std::string(const LogEntry& log)>;
 
 /**
  * @brief format function from LogEntry to string. Currently its in logfmt.
- * 
- * @param log 
- * @return std::string 
+ *
+ * @param log
+ * @return std::string
  */
 [[nodiscard]] auto format(const LogEntry& log) -> std::string;
 
@@ -121,9 +122,10 @@ public:
 
   /**
    * @brief Main interface to the sink, gets called on log.
-   *        @filippo: I am not sure if we can make this const, can you think of some case, where send modifies the sink? Perhaps having counters or sth like that for flushing?
-   * 
-   * @param l 
+   *        @filippo: I am not sure if we can make this const, can you think of some case, where send modifies
+   * the sink? Perhaps having counters or sth like that for flushing?
+   *
+   * @param l
    */
   virtual void send(const LogEntry& l) = 0;
 };
@@ -140,6 +142,6 @@ namespace heph::telemetry::literals {
  *         Hence we can use shorter log calls like `log(LogEntry{Severity::Info, "msg"} | "num"_f(1234));`
  */
 constexpr auto operator""_f(const char* key, [[maybe_unused]] size_t _) {
-  return [key](auto value) { return heph::telemetry::Field{ key, value }; };
+  return [key](auto&& value) { return heph::telemetry::Field{ key, std::forward<decltype(value)>(value) }; };
 }
 }  // namespace heph::telemetry::literals
