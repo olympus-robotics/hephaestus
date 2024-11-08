@@ -58,6 +58,11 @@ concept UnsignedEnum =
 /// Variable containing multiple flags can be created as constexpr:
 /// constexpr auto D = BitFlag<Flag>{ Flag::B }.set(Flag::C); // == Flag::B | Flag::C
 /// flag.hasAnyOf(D); // true
+///
+/// Note: This class uses magic_enum, which by default only supports enum values in the range -127..128. If
+/// your enum contains larger values, then 'magic_enum::customize::enum_range<EnumT>' needs to be implemented
+/// for that type. See https://github.com/Neargye/magic_enum/blob/master/doc/limitations.md#enum-range for
+/// more details.
 template <UnsignedEnum EnumT>
 class BitFlag {
 public:
