@@ -11,13 +11,11 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <numeric>
 #include <optional>
 #include <ostream>
 #include <source_location>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -113,6 +111,7 @@ Logger::Logger()
 }
 
 Logger::~Logger() {
+  // log_entries_consumer_.wait();
   log_entries_consumer_.stop();
 }
 
@@ -140,9 +139,10 @@ void Logger::processLogEntries(const LogEntry& entry) {
   }
 }
 
-LogEntry::LogEntry(Level level, std::string_view message, std::source_location location)
+LogEntry::LogEntry(Level level, std::string&& module, std::string&& message, std::source_location location)
   : level{ level }
-  , message{ message }
+  , module{ std::move(module) }
+  , message{ std::move(message) }
   , location{ location }
   , thread_id{ std::this_thread::get_id() }
   , time{ LogEntry::Clock::now() }
@@ -157,12 +157,16 @@ auto format(const LogEntry& log) -> std::string {
      << std::quoted(fmt::format("{}:{}",
                                 std::filesystem::path{ log.location.file_name() }.filename().string(),
                                 log.location.line()));
-  ss << " thread-id=" << log.thread_id << " message=" << std::quoted(log.message);
+  ss << " thread-id=" << log.thread_id;
   ss << " time=" << fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", log.time);
-  return std::accumulate(log.fields.cbegin(), log.fields.cend(), ss.str(),
-                         [](const std::string& accumulated, const Field<std::string>& next) {
-                           return fmt::format("{} {}={}", accumulated, next.key, next.val);
-                         });
+  ss << " module=" << std::quoted(log.module);
+  ss << " message=" << std::quoted(log.message);
+
+  for (const Field<std::string>& field : log.fields) {
+    ss << " " << field.key << "=" << field.val;
+  }
+
+  return ss.str();
 }
 
 }  // namespace heph::telemetry

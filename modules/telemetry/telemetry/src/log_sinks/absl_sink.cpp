@@ -14,7 +14,7 @@ namespace heph::telemetry {
 AbslLogSink::AbslLogSink() : formatter_([](const LogEntry& l) { return format(l); }) {
 }
 
-AbslLogSink::AbslLogSink(Formatter&& f) : formatter_(std::move(f)) {
+AbslLogSink::AbslLogSink(ILogSink::Formatter&& f) : formatter_(std::move(f)) {
 }
 
 void AbslLogSink::send(const LogEntry& entry) {

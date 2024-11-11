@@ -9,9 +9,8 @@
 #include "hephaestus/utils/stack_trace.h"
 
 namespace ht = heph::telemetry;
-// NOLINTBEGIN google-build-using-namespace
+// NOLINTNEXTLINE google-build-using-namespace
 using namespace heph::telemetry::literals;
-// NOLINTEND google-build-using-namespace
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 auto main(int /*argc*/, const char* /*argv*/[]) -> int {
@@ -19,9 +18,8 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
 
-  const std::string a = "testing absl log sink";
   const int num = 123;
-  ht::log(ht::LogEntry{ ht::Level::WARN, a } | "num"_f(num));
+  ht::log(ht::LogEntry{ ht::Level::WARN, "examples", "testing absl log sink" } | "num"_f(num));
 
   return 0;
 }

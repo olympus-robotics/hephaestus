@@ -32,25 +32,24 @@ struct Field final {
  * @brief A class that allows easy composition of logs for structured logging.
  *        Example(see also struclog.cpp):
  *        namespace ht=heph::telemetry;
- *        log(ht::LogEntry{Level::INFO, "adding"} | "id"_f(12345) | ht::Field{"tag", "test"}) ;
+ *        log(ht::LogEntry{Level::INFO, "my module", "adding"} | "id"_f(12345) | ht::Field{"tag", "test"}) ;
  *
  *        logs
- *        'level=info file=struclog.h:123 time=2023-12-3T8:52:02+0 message="adding" id=12345 tag="test"'
+ *        'level=info hostname=goofy location=struclog.h:123 thread-id=5124 time=2023-12-3T8:52:02+0
+ * module="my module" message="adding" id=12345 tag="test"'
  *
  *        Remark: We would like to use libfmt with quoted formatting as proposed in
  *                https://github.com/fmtlib/fmt/issues/825 once its included (instead of sstream).
  *
  */
-class LogEntry {
-public:
+struct LogEntry {
   using Fields = std::vector<Field<std::string>>;
   using Clock = std::chrono::system_clock;
 
-public:
-  explicit LogEntry(Level level, std::string_view message,
-                    std::source_location location = std::source_location::current());
+  LogEntry(Level level, std::string&& module, std::string&& message,
+           std::source_location location = std::source_location::current());
 
-  /*
+  /**
    * @brief General loginfo consumer, should be used like LogEntry("my message") | Field{"field", 1234}
    *        Converted to string with stringstream.
    *
@@ -68,7 +67,7 @@ public:
     return std::move(*this);
   }
 
-  /*
+  /**
    * @brief Specialized loginfo consumer for string types so that they are quoted, should be used like
    * LogEntry("my message") | Field{"field", "mystring"}
    *
@@ -89,6 +88,7 @@ public:
   }
 
   Level level;
+  std::string module;
   std::string message;
   std::source_location location;
   std::thread::id thread_id;
@@ -97,8 +97,6 @@ public:
 
   Fields fields;
 };
-
-using Formatter = std::function<std::string(const LogEntry& log)>;
 
 /**
  * @brief format function from LogEntry to string. Currently its in logfmt.
@@ -114,16 +112,16 @@ inline auto operator<<(std::ostream& os, const LogEntry& log) -> std::ostream& {
   return os;
 }
 
-/** @brief Interface for sinks that log entries can be sent to.
+/**
+ * @brief Interface for sinks that log entries can be sent to.
  */
-class ILogSink {
-public:
+struct ILogSink {
+  using Formatter = std::function<std::string(const LogEntry& log)>;
+
   virtual ~ILogSink() = default;
 
   /**
    * @brief Main interface to the sink, gets called on log.
-   *        @filippo: I am not sure if we can make this const, can you think of some case, where send modifies
-   * the sink? Perhaps having counters or sth like that for flushing?
    *
    * @param l
    */
@@ -138,7 +136,8 @@ void registerLogSink(std::unique_ptr<ILogSink> sink);
 
 namespace heph::telemetry::literals {
 
-/** @brief User-defined string literal to enable `Field f="data"_f(mydata);`
+/**
+ * @brief User-defined string literal to enable `Field f="data"_f(mydata);`
  *         Hence we can use shorter log calls like `log(LogEntry{Severity::Info, "msg"} | "num"_f(1234));`
  */
 constexpr auto operator""_f(const char* key, [[maybe_unused]] size_t _) {

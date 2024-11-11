@@ -16,12 +16,12 @@ namespace heph::telemetry {
 class AbslLogSink : public ILogSink {
 public:
   explicit AbslLogSink();
-  explicit AbslLogSink(Formatter&& f);
+  explicit AbslLogSink(ILogSink::Formatter&& f);
 
   void send(const LogEntry& entry) override;
 
 private:
-  Formatter formatter_;
+  ILogSink::Formatter formatter_;
 };
 
 }  // namespace heph::telemetry

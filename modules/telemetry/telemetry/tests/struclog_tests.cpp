@@ -19,9 +19,8 @@ using namespace ::testing;
 namespace hephtelemetry::tests {
 
 namespace ht = heph::telemetry;
-// NOLINTBEGIN google-build-using-namespace
+// NOLINTNEXTLINE google-build-using-namespace
 using namespace heph::telemetry::literals;
-// NOLINTEND google-build-using-namespace
 
 namespace {
 auto printout(const ht::LogEntry& s) -> std::string {
@@ -33,10 +32,7 @@ TEST(struclog, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
-  // int current_line = __LINE__; auto s = printout(ht::LogEntry{ht::Level::INFO, std::string(a)} | "b"_f("test \"great\" name"));
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, std::string(a)} | ht::Field{.key="b",.val="test \"great\" name"};
-  // Old format
-  // int current_line = __LINE__; auto s = printout(ht::LogEntry{std::string(a)}("b", std::string(b)));
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, "tests", std::string(a)} | ht::Field{.key="b",.val="test \"great\" name"};
   // clang-format on
   auto s = printout(log_entry);
   {
@@ -58,9 +54,7 @@ TEST(struclog, Escapes) {
   const std::string c = "test 'great' name";
   const int num = 123;
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, a} | "b"_f(b) | ht::Field{.key="c", .val=c} | "num"_f(num);
-  // Old format:
-  // int current_line = __LINE__; auto s = printout(ht::LogEntry{ std::string(a) }("b", std::string(b))( "c", std::string(c) )( "num", num));
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, "tests",std::string(a)} | "b"_f(b) | ht::Field{.key="c", .val=c} | "num"_f(num);
   // clang-format on
   auto s = printout(log_entry);
   ht::log(log_entry);
@@ -120,10 +114,10 @@ private:
 };
 
 TEST(struclog, sink) {
-  const std::string a = "test another great message";
   const int num = 123;
 
-  const auto log_entry = ht::LogEntry{ ht::Level::ERROR, a } | "num"_f(num);
+  const auto log_entry =
+      ht::LogEntry{ ht::Level::ERROR, "tests", "test another great message" } | "num"_f(num);
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
@@ -136,7 +130,4 @@ TEST(struclog, sink) {
   }
 }
 
-TEST(Example, Example) {
-  EXPECT_TRUE(true);
-}
 }  // namespace hephtelemetry::tests
