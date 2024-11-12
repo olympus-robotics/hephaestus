@@ -111,7 +111,6 @@ Logger::Logger()
 }
 
 Logger::~Logger() {
-  // log_entries_consumer_.wait();
   log_entries_consumer_.stop();
 }
 
