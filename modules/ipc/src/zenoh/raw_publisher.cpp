@@ -157,6 +157,6 @@ void RawPublisher::createTypeInfoService() {
 
 void RawPublisher::initializeAttachment() {
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
-  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO] = type_info_.original_type;
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO] = type_info_.name;
 }
 }  // namespace heph::ipc::zenoh
