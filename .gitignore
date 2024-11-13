@@ -37,3 +37,7 @@ build-gcc/
 *.exe
 *.out
 *.app
+
+# Bazel
+bazel-*
+MODUle.bazel.lock
