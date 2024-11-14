@@ -21,11 +21,11 @@ heph_cc_library(
         "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
-        "@com_github_ericniebler_range_v3//:range-v3",
         "@fmt",
         "@magic_enum",
         "@nlohmann_json//:json",
         "@protobuf",
+        "@range-v3//:range-v3",
     ],
 )
 

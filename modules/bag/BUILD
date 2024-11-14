@@ -10,15 +10,20 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    defines = [
+        # TODO(@fbrizzi): check how to specify this defines in the mcap library to be automatically picked here.
+        "MCAP_COMPRESSION_NO_LZ4",
+        "MCAP_COMPRESSION_NO_ZSTD",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+        "//bazel/foreign_cc:mcap",
         "//modules/containers",
         "//modules/ipc",
         "//modules/random",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/log:log",
-        "@mcap_lib",
     ],
 )
 
@@ -56,24 +61,12 @@ heph_cc_binary(
 
 BAG_TEST_DEPS = [
     ":bag",
+    "//modules/types",
+    "//modules/types_proto",
 ]
 
-PROTO_PATH = "/modules/bag/tests"
-
-cc_proto_library(
-    name = "test_cc_proto",
-    visibility = ["//visibility:public"],
-    deps = [":test"],
-)
-
-proto_library(
-    name = "test",
-    srcs = ["tests/test.proto"],
-    strip_import_prefix = PROTO_PATH,
-)
-
 heph_cc_test(
-    name = "tests",
-    srcs = ["tests/tests.cpp" + "tests/test_proto_conversion.h"],
-    deps = BAG_TEST_DEPS + [":test_cc_proto"],
+    name = "bag_tests",
+    srcs = ["tests/tests.cpp"],
+    deps = BAG_TEST_DEPS,
 )

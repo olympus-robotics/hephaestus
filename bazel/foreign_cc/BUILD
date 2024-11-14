@@ -11,7 +11,12 @@ DEFAULT_CACHE_ENTRIES = {
 cmake(
     name = "mcap",
     cache_entries = DEFAULT_CACHE_ENTRIES,
-    lib_source = "@com_olympus_robotics_mcap//:all_srcs",
+    # MCAP_COMPRESSION_NO_LZ4
+    # copts = [
+    #     "-DMCAP_COMPRESSION_NO_LZ4",
+    #     "-DMCAP_COMPRESSION_NO_ZSTD",
+    # ],
+    lib_source = "@mcap//:all_srcs",
     out_include_dir = "include",
     out_shared_libs = ["libmcap.so"],
     visibility = ["//visibility:public"],
@@ -27,7 +32,6 @@ cmake(
     lib_source = "@zenoh-c//:all_srcs",
     out_include_dir = "include",
     out_shared_libs = ["libzenohc.so"],
-    # tags = ["local"],  # have to break the sandbox to build ring@0.17.8
     visibility = ["//visibility:public"],
 )
 

@@ -39,6 +39,8 @@
     "https://bcr.bazel.build/modules/bazel_skylib/1.6.1/source.json": "082ed5f9837901fada8c68c2f3ddc958bb22b6d654f71dd73f3df30d45d4b749",
     "https://bcr.bazel.build/modules/buildozer/7.1.2/MODULE.bazel": "2e8dd40ede9c454042645fd8d8d0cd1527966aa5c919de86661e62953cd73d84",
     "https://bcr.bazel.build/modules/buildozer/7.1.2/source.json": "c9028a501d2db85793a6996205c8de120944f50a0d570438fcae0457a5f9d1f8",
+    "https://bcr.bazel.build/modules/eigen/3.4.0/MODULE.bazel": "c0929a2602e407d83edb5dbe7bfc90e0e65f11ce9030466858cb670b89599241",
+    "https://bcr.bazel.build/modules/eigen/3.4.0/source.json": "e9ed671b71d257d306185a65a0e806484b8fbc6abf56ac091450d616f996e8ab",
     "https://bcr.bazel.build/modules/fmt/11.0.2/MODULE.bazel": "d9e0ea6f68a762a84055172ce8f55cc01da950c94b5e27f66c1acc14e6fc59ce",
     "https://bcr.bazel.build/modules/fmt/11.0.2/source.json": "36cde5a3cbbee5eefc1e7f8a5a66d8ac9f352f7742bdd0c9b2d869601169c881",
     "https://bcr.bazel.build/modules/gazelle/0.27.0/MODULE.bazel": "3446abd608295de6d90b4a8a118ed64a9ce11dcb3dda2dc3290a22056bd20996",
@@ -131,6 +133,71 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "//bazel:extensions.bzl%external_dependencies": {
+      "general": {
+        "bzlTransitiveDigest": "MRqAAtWCwaZfEtbVB4bU6hY2tFnhd97IAOtyTNgjcHM=",
+        "usagesDigest": "Ey5tuNfBCzDLa82L/Gipw9A1Zj629rwf60PZ1WF45ko=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "range-v3": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "urls": [
+                "https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz"
+              ],
+              "strip_prefix": "range-v3-0.12.0",
+              "sha256": "015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb"
+            }
+          },
+          "zenoh-c": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "build_file_content": "\nfilegroup(\n    name = \"all_srcs\",\n    srcs = glob([\"**\"]),\n    visibility = [\"//visibility:public\"],\n)\n",
+              "urls": [
+                "https://github.com/eclipse-zenoh/zenoh-c/archive/release/1.0.0.zip"
+              ],
+              "strip_prefix": "zenoh-c-release-1.0.0",
+              "sha256": "7f86a341ff0c97da4c982f1a3934bc3f2555186a55d3098e9e347e6d2e232666"
+            }
+          },
+          "zenoh-cpp": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "build_file_content": "\nfilegroup(\n    name = \"all_srcs\",\n    srcs = glob([\"**\"]),\n    visibility = [\"//visibility:public\"],\n)\n",
+              "urls": [
+                "https://github.com/eclipse-zenoh/zenoh-cpp/archive/release/1.0.0.zip"
+              ],
+              "strip_prefix": "zenoh-cpp-release-1.0.0",
+              "sha256": "864def7a7c3cec9caa7f7a59c02065278ae1328308fb0cb24cac99d1221ae586"
+            }
+          },
+          "mcap": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "build_file_content": "\nfilegroup(\n    name = \"all_srcs\",\n    srcs = glob([\"**\"]),\n    visibility = [\"//visibility:public\"],\n)\n",
+              "urls": [
+                "https://github.com/olympus-robotics/mcap_builder/archive/ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee.zip"
+              ],
+              "strip_prefix": "mcap_builder-ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee",
+              "sha256": "6203dff6903b717a5b153f2620343b7b43dc92b751f266d98ae588556a9cd9b7"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@apple_support~//crosstool:setup.bzl%apple_cc_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "Co35oEwSoYZFy42IHjYfE7VkKR1WykyxhRlbUGSa3XA=",

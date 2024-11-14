@@ -11,7 +11,7 @@ def bazel_repositories():
     RANGES_VERSION = "0.12.0"
 
     http_archive(
-        name = "com_github_ericniebler_range_v3",
+        name = "range-v3",
         urls = ["https://github.com/ericniebler/range-v3/archive/{version}.tar.gz".format(version = RANGES_VERSION)],
         strip_prefix = "range-v3-" + RANGES_VERSION,
         sha256 = "015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb",
@@ -48,7 +48,7 @@ filegroup(
 
     MCAP_VERSION = "ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee"
     http_archive(
-        name = "com_olympus_robotics_mcap",
+        name = "mcap",
         build_file_content = _ALL_CONTENT,
         urls = ["https://github.com/olympus-robotics/mcap_builder/archive/{version}.zip".format(version = MCAP_VERSION)],
         strip_prefix = "mcap_builder-" + MCAP_VERSION,

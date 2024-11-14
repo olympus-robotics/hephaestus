@@ -51,33 +51,33 @@ def heph_linkopts():
     return ([])
 
 def heph_cc_library(
-        extra_copts = [],
-        extra_linkopts = [],
+        copts = [],
+        linkopts = [],
         **kwargs):
     cc_library(
-        copts = heph_copts() + extra_copts,
-        linkopts = heph_linkopts() + extra_linkopts,
+        copts = heph_copts() + copts,
+        linkopts = heph_linkopts() + linkopts,
         **kwargs
     )
 
 def heph_cc_binary(
-        extra_copts = [],
-        extra_linkopts = [],
+        copts = [],
+        linkopts = [],
         **kwargs):
     cc_binary(
-        copts = heph_copts() + extra_copts,
-        linkopts = heph_linkopts() + extra_linkopts,
+        copts = heph_copts() + copts,
+        linkopts = heph_linkopts() + linkopts,
         **kwargs
     )
 
 def heph_cc_test(
-        extra_copts = [],
-        extra_linkopts = [],
+        copts = [],
+        linkopts = [],
         deps = [],
         **kwargs):
     cc_test(
-        copts = heph_copts() + extra_copts,
-        linkopts = heph_linkopts() + extra_linkopts,
+        copts = heph_copts() + copts,
+        linkopts = heph_linkopts() + linkopts,
         deps = deps + [
             "@googletest//:gtest",
             "@googletest//:gtest_main",
