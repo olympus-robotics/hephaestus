@@ -58,6 +58,7 @@ private:
   [[nodiscard]] auto init() -> std::optional<ErrorMessageT>;
   [[nodiscard]] auto spinOnce() -> std::optional<ErrorMessageT>;
   void spin();
+  void terminate();
 
 private:
   SpinnerState state_ = SpinnerState::NOT_INITIALIZED;
