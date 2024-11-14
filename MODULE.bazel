@@ -52,9 +52,8 @@ git_override(
     module_name = "hedron_compile_commands",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
     commit = "4f28899228fb3ad0126897876f147ca15026151e",
-    # Replace the commit hash (above) with the latest (https://github.com/hedronvision/bazel-compile-commands-extractor/commits/main).
-    # Even better, set up Renovate and let it do the work for you (see "Suggestion: Updates" in the README).
 )
+bazel_dep(name = "rules_pkg", version = "1.0.1")
 
 ############################
 # Third-party dependencies #
@@ -67,6 +66,7 @@ bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "protobuf", version = "27.2")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0")
+
 # bazel_dep(name = "lz4", version = "1.9.4")
 # bazel_dep(name = "zstd", version = "1.5.6")
 
