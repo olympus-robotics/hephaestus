@@ -1,0 +1,79 @@
+load("//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+heph_cc_library(
+    name = "bag",
+    srcs = glob([
+        "src/**/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/**/*.h",
+    ]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//modules/containers",
+        "//modules/ipc",
+        "//modules/random",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/log:log",
+        "@mcap_lib",
+    ],
+)
+
+############
+# Binaries #
+############
+
+heph_cc_binary(
+    name = "bag_player",
+    srcs = ["apps/bag_player.cpp"],
+    deps = [
+        ":bag",
+    ],
+)
+
+heph_cc_binary(
+    name = "bag_recorder",
+    srcs = ["apps/bag_recorder.cpp"],
+    deps = [
+        ":bag",
+    ],
+)
+
+heph_cc_binary(
+    name = "bag_example",
+    srcs = ["examples/example.cpp"],
+    deps = [
+        ":bag",
+    ],
+)
+
+#########
+# Tests #
+#########
+
+BAG_TEST_DEPS = [
+    ":bag",
+]
+
+PROTO_PATH = "/modules/bag/tests"
+
+cc_proto_library(
+    name = "test_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = [":test"],
+)
+
+proto_library(
+    name = "test",
+    srcs = ["tests/test.proto"],
+    strip_import_prefix = PROTO_PATH,
+)
+
+heph_cc_test(
+    name = "tests",
+    srcs = ["tests/tests.cpp" + "tests/test_proto_conversion.h"],
+    deps = BAG_TEST_DEPS + [":test_cc_proto"],
+)

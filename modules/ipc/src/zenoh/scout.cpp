@@ -5,7 +5,6 @@
 #include "hephaestus/ipc/zenoh/scout.h"
 
 #include <algorithm>
-#include <mutex>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -14,6 +13,7 @@
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
@@ -47,7 +47,8 @@ namespace {
 class ScoutDataManager {
 public:
   void onDiscovery(const ::zenoh::Hello& hello) {
-    const std::unique_lock<std::mutex> lock{ mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
+
     const auto id = toString(hello.get_id());
     nodes_info_.emplace(id, NodeInfo{ .id = id,
                                       .mode = toMode(hello.get_whatami()),
@@ -55,14 +56,14 @@ public:
   }
 
   [[nodiscard]] auto getNodesInfo() const -> std::vector<NodeInfo> {
-    const std::unique_lock<std::mutex> lock{ mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     const auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
     return values;
   }
 
 private:
   std::unordered_map<std::string, NodeInfo> nodes_info_ ABSL_GUARDED_BY(mutex_);
-  mutable std::mutex mutex_;
+  mutable absl::Mutex mutex_;
 };
 
 [[nodiscard]] auto getRouterInfoJson(const std::string& router_id) -> std::string {

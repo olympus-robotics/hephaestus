@@ -4,21 +4,23 @@ repositories.bzl - Bazel repository definitions for Hephaestus
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-def init_repositories():
+def bazel_repositories():
     """
-    Initialize the repositories.
+    Downlad Bazel repositories.
     """
-    RANGES_COMMIT = "a81477931a8aa2ad025c6bda0609f38e09e4d7ec"
+    RANGES_VERSION = "0.12.0"
 
     http_archive(
-        name = "range-v3",
-        urls = ["https://github.com/ericniebler/range-v3/archive/{commit}.tar.gz".format(commit = RANGES_COMMIT)],
-        strip_prefix = "range-v3-" + RANGES_COMMIT,
-        sha256 = "612b5d89f58a578240b28a1304ffb0d085686ebe0137adf175ed0e3382b7ed58",
+        name = "com_github_ericniebler_range_v3",
+        urls = ["https://github.com/ericniebler/range-v3/archive/{version}.tar.gz".format(version = RANGES_VERSION)],
+        strip_prefix = "range-v3-" + RANGES_VERSION,
+        sha256 = "015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb",
     )
 
-    ZENOH_VERSION = "1.0.0.9"
-
+def cmake_repositories():
+    """
+    Downlad CMake repositories.
+    """
     _ALL_CONTENT = """
 filegroup(
     name = "all_srcs",
@@ -27,18 +29,28 @@ filegroup(
 )
 """
 
+    ZENOH_VERSION = "release/1.0.0"
     http_archive(
         name = "zenoh-c",
         build_file_content = _ALL_CONTENT,
         urls = ["https://github.com/eclipse-zenoh/zenoh-c/archive/{version}.zip".format(version = ZENOH_VERSION)],
-        strip_prefix = "zenoh-c-" + ZENOH_VERSION,
-        sha256 = "23f2cbf44465663dfc4df056f3b66e294e5f702a4b3647d8a50a8995ac8154b4",
+        strip_prefix = ("zenoh-c-" + ZENOH_VERSION).replace("/", "-"),
+        sha256 = "7f86a341ff0c97da4c982f1a3934bc3f2555186a55d3098e9e347e6d2e232666",
     )
 
     http_archive(
         name = "zenoh-cpp",
         build_file_content = _ALL_CONTENT,
         urls = ["https://github.com/eclipse-zenoh/zenoh-cpp/archive/{version}.zip".format(version = ZENOH_VERSION)],
-        strip_prefix = "zenoh-cpp-" + ZENOH_VERSION,
-        sha256 = "251fff971f100e7f8c523171860526281b9fc30ff78fc9eb7ddadc31fdbf7d28",
+        strip_prefix = ("zenoh-cpp-" + ZENOH_VERSION).replace("/", "-"),
+        sha256 = "864def7a7c3cec9caa7f7a59c02065278ae1328308fb0cb24cac99d1221ae586",
+    )
+
+    MCAP_VERSION = "ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee"
+    http_archive(
+        name = "com_olympus_robotics_mcap",
+        build_file_content = _ALL_CONTENT,
+        urls = ["https://github.com/olympus-robotics/mcap_builder/archive/{version}.zip".format(version = MCAP_VERSION)],
+        strip_prefix = "mcap_builder-" + MCAP_VERSION,
+        sha256 = "6203dff6903b717a5b153f2620343b7b43dc92b751f266d98ae588556a9cd9b7",
     )

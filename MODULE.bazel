@@ -42,23 +42,40 @@ register_toolchains("@rust_toolchains//:all")
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 
 ############################
+# Tools                    #
+############################
+
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "4f28899228fb3ad0126897876f147ca15026151e",
+    # Replace the commit hash (above) with the latest (https://github.com/hedronvision/bazel-compile-commands-extractor/commits/main).
+    # Even better, set up Renovate and let it do the work for you (see "Suggestion: Updates" in the README).
+)
+
+############################
 # Third-party dependencies #
 ############################
 
-bazel_dep(name = "abseil-cpp", version = "20240116.2")
-bazel_dep(name = "eigen", version = "3.4.0")
-bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
-bazel_dep(name = "lz4", version = "1.9.4")
+bazel_dep(name = "abseil-cpp", version = "20240116.2")
 bazel_dep(name = "magic_enum", version = "0.9.5")
-bazel_dep(name = "mcap", version = "1.2.1")
-bazel_dep(name = "nlohmann_json", version = "3.11.3")
+bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "protobuf", version = "27.2")
-bazel_dep(name = "zstd", version = "1.5.6")
+bazel_dep(name = "nlohmann_json", version = "3.11.3")
+# bazel_dep(name = "mcap", version = "1.2.1")
+# bazel_dep(name = "eigen", version = "3.4.0")
+# bazel_dep(name = "lz4", version = "1.9.4")
+# bazel_dep(name = "zstd", version = "1.5.6")
 
 ######################
 # Local dependencies #
 ######################
+
+# init_repositories()
 
 # local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
 

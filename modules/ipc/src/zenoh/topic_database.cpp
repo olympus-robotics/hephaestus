@@ -12,6 +12,7 @@
 #include <utility>
 
 #include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 
 #include "hephaestus/ipc/topic.h"
@@ -32,8 +33,8 @@ public:
 private:
   zenoh::SessionPtr session_;
 
+  absl::Mutex mutex_;
   std::unordered_map<std::string, serdes::TypeInfo> topics_type_db_ ABSL_GUARDED_BY(mutex_);
-  std::mutex mutex_;
 };
 
 ZenohTopicDatabase::ZenohTopicDatabase(zenoh::SessionPtr session) : session_(std::move(session)) {
@@ -41,7 +42,7 @@ ZenohTopicDatabase::ZenohTopicDatabase(zenoh::SessionPtr session) : session_(std
 
 auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::TypeInfo& {
   {
-    const std::unique_lock<std::mutex> lock(mutex_);
+    const absl::MutexLock lock{ &mutex_ };
     if (topics_type_db_.contains(topic)) {
       return topics_type_db_[topic];
     }
@@ -56,7 +57,7 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), query_topic));
 
-  const std::unique_lock<std::mutex> lock(mutex_);
+  const absl::MutexLock lock{ &mutex_ };
   // While waiting for the query someone else could have added the topic to the DB.
   if (!topics_type_db_.contains(topic)) {
     topics_type_db_[topic] = serdes::TypeInfo::fromJson(response.front().value);

@@ -50,20 +50,13 @@ def heph_copts():
 def heph_linkopts():
     return ([])
 
-def heph_cc_test(
+def heph_cc_library(
         extra_copts = [],
         extra_linkopts = [],
         **kwargs):
-    test_linkopts = [
-        "-lpthread",
-        "-lm",
-        "-lgtest_main",
-        "-lstdc++",
-    ]
-
-    cc_test(
+    cc_library(
         copts = heph_copts() + extra_copts,
-        linkopts = heph_linkopts() + test_linkopts + extra_linkopts,
+        linkopts = heph_linkopts() + extra_linkopts,
         **kwargs
     )
 
@@ -77,12 +70,17 @@ def heph_cc_binary(
         **kwargs
     )
 
-def ciao_cc_library(
+def heph_cc_test(
         extra_copts = [],
         extra_linkopts = [],
+        deps = [],
         **kwargs):
-    cc_library(
+    cc_test(
         copts = heph_copts() + extra_copts,
         linkopts = heph_linkopts() + extra_linkopts,
+        deps = deps + [
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
         **kwargs
     )
