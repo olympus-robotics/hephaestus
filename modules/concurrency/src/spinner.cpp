@@ -23,25 +23,17 @@ namespace {
     return std::chrono::microseconds{ 0 };
   }
 
-  const double period_seconds = 1 / rate_hz;
+  const double period_seconds = 1. / rate_hz;
   const auto period_microseconds = static_cast<uint64_t>(period_seconds * 1e6);
 
   return std::chrono::microseconds{ period_microseconds };
 }
 }  // namespace
 
-Spinner::Spinner(StoppableCallback&& stoppable_callback, double rate_hz /*= 0*/)
-  : stoppable_callback_(std::move(stoppable_callback))
+Spinner::Spinner(SpinnerCallbacks&& callbacks, double rate_hz /*= 0*/)
+  : callbacks_(std::move(callbacks))
   , stop_requested_(false)
   , spin_period_(rateToPeriod(rate_hz)) {
-}
-
-Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
-  : Spinner(StoppableCallback([cb = std::move(callback)]() -> SpinResult {
-              cb();
-              return SpinResult::CONTINUE;
-            }),
-            rate_hz) {
 }
 
 Spinner::~Spinner() {
@@ -64,34 +56,76 @@ void Spinner::spin() {
 
   try {
     start_timestamp_ = std::chrono::system_clock::now();
+    uint64_t spin_count_{ 0 };
 
     while (!stop_requested_.load()) {
-      const auto spin_result = stoppable_callback_();
-
-      ++spin_count_;
-
-      if (spin_result == SpinResult::STOP) {
-        break;
+      // State machine to handle the spinner lifecycle.
+      if(state_ == SpinnerState::NOT_INITIALIZED) {
+        state_ = SpinnerState::INITIALIZING;
+        const auto error_message = init();
+        state_ = error_message.has_value() ? SpinnerState::INIT_FAILED : SpinnerState::READY_TO_SPIN;
+        LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner initialization failed with message: {}", error_message.value());
       }
 
+      if(state_ == SpinnerState::READY_TO_SPIN) {
+        state_ = SpinnerState::SPINNING;
+        const auto error_message = spinOnce();
+        state_ = error_message.has_value() ? SpinnerState::SPIN_FAILED : SpinnerState::SPIN_SUCCESSFUL;
+        LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner spin failed with message: {}", error_message.value());
+      }
+
+      if(state_ == SpinnerState::INIT_FAILED || state_ == SpinnerState::SPIN_FAILED) {
+        state_ = shall_re_init_() ? SpinnerState::NOT_INITIALIZED : SpinnerState::TERMINATE;
+      }
+
+      if(state_ == SpinnerState::SPIN_SUCCESSFUL) {
+        state_ = shall_stop_() ? SpinnerState::TERMINATE : SpinnerState::READY_TO_SPIN;
+      }
+
+      if(state_ == SpinnerState::TERMINATE) {
+        state_ = SpinnerState::TERMINATING;
+        break;
+      }
+      // End of state machine.
+
+      // Logic to handle periodic spinning at a fixed rate.
       if (spin_period_.count() == 0) {
         continue;
       }
-
-      const auto target_timestamp = start_timestamp_ + spin_count_ * spin_period_;
+      const auto target_timestamp = start_timestamp_ + ++spin_count_ * spin_period_;
       std::unique_lock<std::mutex> lock(mutex_);
       condition_.wait_until(lock, target_timestamp);
     }
   } catch (std::exception& e) {
+    state_ = SpinnerState::TERMINATING;
     spinner_completed_.test_and_set();
     spinner_completed_.notify_all();
     termination_callback_();
+    state_ = SpinnerState::TERMINATED;
     throw;  // TODO(@filippo) consider if we want to handle this error in a different way.
   }
 
   spinner_completed_.test_and_set();
   spinner_completed_.notify_all();
   termination_callback_();
+}
+
+auto Spinner::init() -> std::optional<ErrorMessageT>{
+  try {
+    init_callback_();
+    return std::nullopt;
+  } catch (std::exception& e) {
+    return e.what();
+  }
+}
+
+auto Spinner::spinOnce() -> std::optional<ErrorMessageT>{
+  try {
+    spin_once_callback_();
+    return std::nullopt;
+  } catch (std::exception& e) {
+    return e.what();
+  }
 }
 
 auto Spinner::stop() -> std::future<void> {
@@ -109,14 +143,6 @@ void Spinner::wait() {
   }
 
   spinner_completed_.wait(false);
-}
-
-auto Spinner::spinCount() const -> uint64_t {
-  return spin_count_;
-}
-
-void Spinner::setTerminationCallback(Callback&& termination_callback) {
-  termination_callback_ = std::move(termination_callback);
 }
 
 }  // namespace heph::concurrency
