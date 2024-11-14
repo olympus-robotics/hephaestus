@@ -26,6 +26,7 @@ public:
 
   void start();
   void stop();
+  void wait();
 
   /// Return the queue to allow to push messages to process.
   /// This is simpler than having to mask all the different type of push methods of the queue.
@@ -56,6 +57,13 @@ template <typename T>
 void MessageQueueConsumer<T>::stop() {
   message_queue_.stop();
   spinner_.stop();
+}
+
+template <typename T>
+void MessageQueueConsumer<T>::wait() {
+  while (!message_queue_.empty()) {
+    consume();
+  }
 }
 
 template <typename T>
