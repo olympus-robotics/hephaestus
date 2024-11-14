@@ -1,10 +1,10 @@
-load("//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+load("//bazel:hephaestus.bzl", "ciao_cc_library", "heph_cc_binary", "heph_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
-INCLUDE_PATHS = [
-    "-Ibazel-out/k8-fastbuild/bin/modules/utils/src",
-]
+# INCLUDE_PATHS = [
+#     "-Ibazel-out/k8-fastbuild/bin/modules/utils/src",
+# ]
 
 filegroup(
     name = "util_srcs",
@@ -45,7 +45,7 @@ EOL
     local = True,
 )
 
-heph_cc_library(
+ciao_cc_library(
     name = "utils",
     srcs = glob([
         "src/**/*.cpp",
@@ -53,8 +53,11 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]) + ["src/version_impl.h"],
-    extra_copts = INCLUDE_PATHS,
-    includes = ["include"],
+    # extra_copts = INCLUDE_PATHS,
+    includes = [
+        "include",
+        "src",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":version",
@@ -74,6 +77,14 @@ heph_cc_library(
 heph_cc_binary(
     name = "example",
     srcs = ["examples/example.cpp"],
+)
+
+heph_cc_binary(
+    name = "show_version",
+    srcs = ["apps/show_version.cpp"],
+    deps = [
+        ":utils",
+    ],
 )
 
 #########

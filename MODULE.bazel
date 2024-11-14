@@ -12,9 +12,9 @@ bazel_dep(name = "toolchains_llvm", version = "1.2.0")
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 
 LLVM_VERSIONS = {
-    "": "19.1.1",
-    "linux-aarch64": "19.1.1",
-    "linux-x86_64": "19.1.1",
+    "": "19.1.0",
+    "linux-aarch64": "19.1.0",
+    "linux-x86_64": "19.1.0",
 }
 
 llvm.toolchain(
