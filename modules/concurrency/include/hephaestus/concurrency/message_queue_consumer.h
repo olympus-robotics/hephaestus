@@ -5,6 +5,8 @@
 #pragma once
 
 #include <functional>
+#include <future>
+#include <iostream>
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/containers/blocking_queue.h"
@@ -25,8 +27,10 @@ public:
   auto operator=(MessageQueueConsumer&&) -> MessageQueueConsumer& = delete;
 
   void start();
-  void stop();
-  void wait();
+
+  /// @brief Stop the message consumer, emptying the queue and stopping the processing.
+  /// @return future that waits on the queue to be emptied
+  auto stop() -> std::future<void>;
 
   /// Return the queue to allow to push messages to process.
   /// This is simpler than having to mask all the different type of push methods of the queue.
@@ -54,16 +58,20 @@ void MessageQueueConsumer<T>::start() {
 }
 
 template <typename T>
-void MessageQueueConsumer<T>::stop() {
+auto MessageQueueConsumer<T>::stop() -> std::future<void> {
   message_queue_.stop();
   spinner_.stop();
-}
 
-template <typename T>
-void MessageQueueConsumer<T>::wait() {
-  while (!message_queue_.empty()) {
-    consume();
-  }
+  return std::async(std::launch::async, [this]() {
+    while (!message_queue_.empty()) {
+      auto message = message_queue_.tryPop();
+      if (!message.has_value()) {
+        return;
+      }
+
+      callback_(message.value());
+    }
+  });
 }
 
 template <typename T>
