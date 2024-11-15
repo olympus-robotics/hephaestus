@@ -47,20 +47,22 @@ crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
-bazel_dep(name = "hedron_compile_commands", version = "0.0.0")
 git_override(
     module_name = "hedron_compile_commands",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
     commit = "4f28899228fb3ad0126897876f147ca15026151e",
 )
+bazel_dep(name = "hedron_compile_commands", version = "0.0.0")
+
 # bazel_dep(name = "rules_pkg", version = "1.0.1")
 
-bazel_dep(name = "bazel_clang_tidy", version = "0.0.0")
 git_override(
     module_name = "bazel_clang_tidy",
     commit = "bff5c59c843221b05ef0e37cef089ecc9d24e7da",
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
+bazel_dep(name = "bazel_clang_tidy", version = "0.0.0")
+
 bazel_dep(name = "aspect_rules_lint", version = "1.0.3")
 
 ############################
