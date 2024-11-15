@@ -150,23 +150,12 @@
   "moduleExtensions": {
     "//bazel:extensions.bzl%external_dependencies": {
       "general": {
-        "bzlTransitiveDigest": "MRqAAtWCwaZfEtbVB4bU6hY2tFnhd97IAOtyTNgjcHM=",
+        "bzlTransitiveDigest": "iCOkYbJ2EdytFneGJLJ9Fzpmk+E35AwPUHQHPPGGf1E=",
         "usagesDigest": "Ey5tuNfBCzDLa82L/Gipw9A1Zj629rwf60PZ1WF45ko=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
         "generatedRepoSpecs": {
-          "range-v3": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_archive",
-            "attributes": {
-              "urls": [
-                "https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz"
-              ],
-              "strip_prefix": "range-v3-0.12.0",
-              "sha256": "015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb"
-            }
-          },
           "zenoh-c": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_archive",
