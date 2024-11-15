@@ -44,8 +44,8 @@ def heph_gcc_copts():
 
 def heph_copts():
     return select({
-        "//:clang_compiler": heph_clang_copts(),
-        "//:gcc_compiler": heph_gcc_copts(),
+        "@hephaestus//:clang_compiler": heph_clang_copts(),
+        "@hephaestus//:gcc_compiler": heph_gcc_copts(),
     })
 
 def heph_linkopts():

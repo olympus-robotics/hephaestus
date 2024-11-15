@@ -155,7 +155,7 @@
   "moduleExtensions": {
     "//bazel:extensions.bzl%external_dependencies": {
       "general": {
-        "bzlTransitiveDigest": "tnWUb9sD7uft998XWQubzauxQx+ucaBSPl3NrJ8q0Z0=",
+        "bzlTransitiveDigest": "2WqDCBKa1cF1VN3cnQGeDyjgX+GcW1hzWU1m3fGI9wM=",
         "usagesDigest": "Ey5tuNfBCzDLa82L/Gipw9A1Zj629rwf60PZ1WF45ko=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

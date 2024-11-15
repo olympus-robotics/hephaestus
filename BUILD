@@ -9,7 +9,7 @@ config_setting(
     flag_values = {
         "@bazel_tools//tools/cpp:compiler": "clang",
     },
-    visibility = [":__subpackages__"],
+    visibility = ["//visibility:public"],
 )
 
 config_setting(
@@ -17,7 +17,7 @@ config_setting(
     flag_values = {
         "@bazel_tools//tools/cpp:compiler": "gcc",
     },
-    visibility = [":__subpackages__"],
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
