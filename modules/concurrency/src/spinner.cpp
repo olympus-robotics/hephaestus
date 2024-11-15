@@ -60,27 +60,27 @@ void Spinner::spin() {
 
     while (!stop_requested_.load()) {
       // State machine to handle the spinner lifecycle.
-      if(state_ == SpinnerState::NOT_INITIALIZED) {
+      if(state_ == State::NOT_INITIALIZED) {
         const auto error_message = init();
-        state_ = error_message.has_value() ? SpinnerState::INIT_FAILED : SpinnerState::READY_TO_SPIN;
+        state_ = error_message.has_value() ? State::INIT_FAILED : State::READY_TO_SPIN;
         LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner initialization failed with message: {}", error_message.value());
       }
 
-      if(state_ == SpinnerState::READY_TO_SPIN) {
+      if(state_ == State::READY_TO_SPIN) {
         const auto error_message = spinOnce();
-        state_ = error_message.has_value() ? SpinnerState::SPIN_FAILED : SpinnerState::SPIN_SUCCESSFUL;
+        state_ = error_message.has_value() ? State::SPIN_FAILED : State::SPIN_SUCCESSFUL;
         LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner spin failed with message: {}", error_message.value());
       }
 
-      if(state_ == SpinnerState::INIT_FAILED || state_ == SpinnerState::SPIN_FAILED) {
-        state_ = shall_re_init_() ? SpinnerState::NOT_INITIALIZED : SpinnerState::TERMINATE;
+      if(state_ == State::INIT_FAILED || state_ == State::SPIN_FAILED) {
+        state_ = shall_re_init_() ? State::NOT_INITIALIZED : State::TERMINATE;
       }
 
-      if(state_ == SpinnerState::SPIN_SUCCESSFUL) {
-        state_ = shall_stop_() ? SpinnerState::TERMINATE : SpinnerState::READY_TO_SPIN;
+      if(state_ == State::SPIN_SUCCESSFUL) {
+        state_ = shall_stop_() ? State::TERMINATE : State::READY_TO_SPIN;
       }
 
-      if(state_ == SpinnerState::TERMINATE) {
+      if(state_ == State::TERMINATE) {
         break;
       }
 
@@ -101,16 +101,16 @@ void Spinner::spin() {
 }
 
 auto Spinner::terminate() -> void {
-  state_ = SpinnerState::TERMINATING;
+  state_ = State::TERMINATING;
   spinner_completed_.test_and_set();
   spinner_completed_.notify_all();
   termination_callback_();
-  state_ = SpinnerState::TERMINATED;
+  state_ = State::TERMINATED;
 }
 
 auto Spinner::init() -> std::optional<ErrorMessageT>{
   try {
-    state_ = SpinnerState::INITIALIZING;
+    state_ = State::INITIALIZING;
     init_callback_();
     return std::nullopt;
   } catch (std::exception& e) {
@@ -120,7 +120,7 @@ auto Spinner::init() -> std::optional<ErrorMessageT>{
 
 auto Spinner::spinOnce() -> std::optional<ErrorMessageT>{
   try {
-    state_ = SpinnerState::SPINNING;
+    state_ = State::SPINNING;
     spin_once_callback_();
     return std::nullopt;
   } catch (std::exception& e) {

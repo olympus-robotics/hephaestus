@@ -12,9 +12,9 @@
 namespace heph::concurrency {
 
 struct SpinnerCallbacks {
-  std::function<void() init_cb = []() {};
-  std::function<void() spin_once_cb = []() {};
-  std::function<void() termination_cb = []() {};
+  std::function<void()> init_cb = []() {};
+  std::function<void()> spin_once_cb = []() {};
+  std::function<void()> termination_cb = []() {};
 
   std::function<bool> shall_stop_cb = []() { return false; };    //!< Default: spin indefinitely.
   std::function<bool> shall_re_init_cb = []() { return false; }; //!< Default: do not re-init.
@@ -26,7 +26,7 @@ struct SpinnerCallbacks {
 /// the given fixed rate.
 class Spinner {
 public:
-  enum class SpinnerState : uint8_t {
+  enum class State : uint8_t {
     NOT_INITIALIZED,
     INITIALIZING,
     INIT_FAILED,
@@ -61,7 +61,7 @@ private:
   void terminate();
 
 private:
-  SpinnerState state_ = SpinnerState::NOT_INITIALIZED;
+  State state_ = State::NOT_INITIALIZED;
   SpinnerCallbacks callbacks_;
 
   std::atomic_bool stop_requested_ = false;
