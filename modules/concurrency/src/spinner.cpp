@@ -28,12 +28,37 @@ namespace {
 
   return std::chrono::microseconds{ period_microseconds };
 }
+
+template <typename Callback>
+struct BinaryTransitionParams {
+  State input_state;
+  Callback& operation;
+  State success_state;
+  State failure_state;
+};
+[[nodiscard]] auto attemptBinaryTransition(State current_state, const BinaryTransitionParams& params)
+    -> State {
+  if (current_state != params.input_state) {
+    return current_state;
+  }
+
+  try {
+    if constexpr (std::is_same_v<decltype(operation), TransitionCallback>) {
+      params.operation();
+      return params.success_state;
+    } else if constexpr (std::is_same_v<decltype(operation), PolicyCallback>) {
+      return params.operation() ? params.success_state : params.failure_state;
+    }
+  } catch (const std::exception& exception_message) {
+    LOG(ERROR) << fmt::format("Spinner state transition failed with message: {}", exception_message);
+    return params.failure_state;
+  }
+}
+
 }  // namespace
 
-Spinner::Spinner(SpinnerCallbacks&& callbacks, double rate_hz /*= 0*/)
-  : callbacks_(std::move(callbacks))
-  , stop_requested_(false)
-  , spin_period_(rateToPeriod(rate_hz)) {
+Spinner::Spinner(Callbacks&& callbacks, double rate_hz /*= 0*/)
+  : callbacks_(std::move(callbacks)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
@@ -59,28 +84,32 @@ void Spinner::spin() {
     uint64_t spin_count_{ 0 };
 
     while (!stop_requested_.load()) {
-      // State machine to handle the spinner lifecycle.
-      if(state_ == State::NOT_INITIALIZED) {
-        const auto error_message = init();
-        state_ = error_message.has_value() ? State::INIT_FAILED : State::READY_TO_SPIN;
-        LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner initialization failed with message: {}", error_message.value());
-      }
+      state_ = attemptBinaryTransition(state_, { .input_state = State::NOT_INITIALIZED,
+                                                 .operation = callbacks_.init_cb,
+                                                 .success_state = State::INIT_SUCCESSFUL,
+                                                 .failure_state = State::INIT_FAILED });
 
-      if(state_ == State::READY_TO_SPIN) {
-        const auto error_message = spinOnce();
-        state_ = error_message.has_value() ? State::SPIN_FAILED : State::SPIN_SUCCESSFUL;
-        LOG_IF(ERROR, error_message.has_value()) << fmt::format("Spinner spin failed with message: {}", error_message.value());
-      }
+      state_ = attemptBinaryTransition(state_, { .input_state = State::INIT_FAILED,
+                                                 .operation = callbacks_.shall_re_init_cb,
+                                                 .success_state = State::NOT_INITIALIZED,
+                                                 .failure_state = State::TERMINATE });
 
-      if(state_ == State::INIT_FAILED || state_ == State::SPIN_FAILED) {
-        state_ = shall_re_init_() ? State::NOT_INITIALIZED : State::TERMINATE;
-      }
+      state_ = attemptBinaryTransition(state_, { .input_state = State::READY_TO_SPIN,
+                                                 .operation = callbacks_.spin_once_cb,
+                                                 .success_state = State::SPIN_SUCCESSFUL,
+                                                 .failure_state = State::SPIN_FAILED });
 
-      if(state_ == State::SPIN_SUCCESSFUL) {
-        state_ = shall_stop_() ? State::TERMINATE : State::READY_TO_SPIN;
-      }
+      state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_FAILED,
+                                                 .operation = callbacks_.shall_re_init_cb,
+                                                 .success_state = State::NOT_INITIALIZED,
+                                                 .failure_state = State::TERMINATE });
 
-      if(state_ == State::TERMINATE) {
+      state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_SUCCESSFUL,
+                                                 .operation = callbacks_.shall_stop_,
+                                                 .success_state = State::TERMINATE,
+                                                 .failure_state = State::READY_TO_SPIN });
+
+      if (state_ == State::TERMINATE) {
         break;
       }
 
@@ -106,26 +135,6 @@ auto Spinner::terminate() -> void {
   spinner_completed_.notify_all();
   termination_callback_();
   state_ = State::TERMINATED;
-}
-
-auto Spinner::init() -> std::optional<ErrorMessageT>{
-  try {
-    state_ = State::INITIALIZING;
-    init_callback_();
-    return std::nullopt;
-  } catch (std::exception& e) {
-    return e.what();
-  }
-}
-
-auto Spinner::spinOnce() -> std::optional<ErrorMessageT>{
-  try {
-    state_ = State::SPINNING;
-    spin_once_callback_();
-    return std::nullopt;
-  } catch (std::exception& e) {
-    return e.what();
-  }
 }
 
 auto Spinner::stop() -> std::future<void> {
