@@ -23,10 +23,10 @@ public:
   struct Callbacks {
     TransitionCallback init_cb = []() {};
     TransitionCallback spin_once_cb = []() {};
-    TransitionCallback termination_cb = []() {};
+    TransitionCallback completion_cb = []() {};
 
-    PolicyCallback shall_stop_cb = []() { return false; };     //!< Default: spin indefinitely.
-    PolicyCallback shall_re_init_cb = []() { return false; };  //!< Default: do not re-init.
+    PolicyCallback shall_stop_spinning_cb = []() { return false; };  //!< Default: spin indefinitely.
+    PolicyCallback shall_restart_cb = []() { return false; };        //!< Default: do not restart.
   };
 
   /// @brief Create a continuous spinner which cannot be stopped by the callback.
@@ -43,20 +43,15 @@ public:
   auto stop() -> std::future<void>;
   void wait();
 
-private:
-  void spin();
-  void terminate();
+  /// @brief  Set a callback that will be called when the spinner is stopped.
+  /// This callback could be extendend to pass the reason why the spinner was stopped, e.g. exceptions, ...
+  void setTerminationCallback(Callback&& termination_callback);
 
 private:
-  enum class State : uint8_t {
-    NOT_INITIALIZED,
-    INIT_FAILED,
-    READY_TO_SPIN,
-    SPIN_FAILED,
-    SPIN_SUCCESSFUL,
-    TERMINATE,
-    TERMINATED
-  };
+  void spin();
+
+private:
+  enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
   State state_ = State::NOT_INITIALIZED;
   SpinnerCallbacks callbacks_;
 

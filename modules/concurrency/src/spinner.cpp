@@ -79,62 +79,48 @@ void Spinner::start() {
 void Spinner::spin() {
   // TODO: set thread name
 
-  try {
-    start_timestamp_ = std::chrono::system_clock::now();
-    uint64_t spin_count_{ 0 };
+  start_timestamp_ = std::chrono::system_clock::now();
+  uint64_t spin_count_{ 0 };
 
-    while (!stop_requested_.load()) {
-      state_ = attemptBinaryTransition(state_, { .input_state = State::NOT_INITIALIZED,
-                                                 .operation = callbacks_.init_cb,
-                                                 .success_state = State::INIT_SUCCESSFUL,
-                                                 .failure_state = State::INIT_FAILED });
+  while (!stop_requested_.load()) {
+    // move into some state machine code
+    state_ = attemptBinaryTransition(state_, { .input_state = State::NOT_INITIALIZED,
+                                               .operation = callbacks_.init_cb,
+                                               .success_state = State::INIT_SUCCESSFUL,
+                                               .failure_state = State::FAILED });
 
-      state_ = attemptBinaryTransition(state_, { .input_state = State::INIT_FAILED,
-                                                 .operation = callbacks_.shall_re_init_cb,
-                                                 .success_state = State::NOT_INITIALIZED,
-                                                 .failure_state = State::TERMINATE });
+    state_ = attemptBinaryTransition(state_, { .input_state = State::READY_TO_SPIN,
+                                               .operation = callbacks_.spin_once_cb,
+                                               .success_state = State::SPIN_SUCCESSFUL,
+                                               .failure_state = State::FAILED });
 
-      state_ = attemptBinaryTransition(state_, { .input_state = State::READY_TO_SPIN,
-                                                 .operation = callbacks_.spin_once_cb,
-                                                 .success_state = State::SPIN_SUCCESSFUL,
-                                                 .failure_state = State::SPIN_FAILED });
+    state_ = attemptBinaryTransition(state_, { .input_state = State::FAILED,
+                                               .operation = callbacks_.shall_restart_cb,
+                                               .success_state = State::NOT_INITIALIZED,
+                                               .failure_state = State::EXIT });
 
-      state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_FAILED,
-                                                 .operation = callbacks_.shall_re_init_cb,
-                                                 .success_state = State::NOT_INITIALIZED,
-                                                 .failure_state = State::TERMINATE });
+    state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_SUCCESSFUL,
+                                               .operation = callbacks_.shall_stop_spinning_cb,
+                                               .success_state = State::EXIT,
+                                               .failure_state = State::READY_TO_SPIN });
 
-      state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_SUCCESSFUL,
-                                                 .operation = callbacks_.shall_stop_,
-                                                 .success_state = State::TERMINATE,
-                                                 .failure_state = State::READY_TO_SPIN });
-
-      if (state_ == State::TERMINATE) {
-        break;
-      }
-
-      // Logic to handle periodic spinning at a fixed rate.
-      if (spin_period_.count() == 0) {
-        continue;
-      }
-      const auto target_timestamp = start_timestamp_ + (++spin_count_ * spin_period_);
-      std::unique_lock<std::mutex> lock(mutex_);
-      condition_.wait_until(lock, target_timestamp);
+    if (state_ == State::EXIT) {
+      break;
     }
-  } catch (std::exception& e) {
-    terminate();
-    throw;  // TODO(@filippo) consider if we want to handle this error in a different way.
+    // ===============================================
+
+    // Logic to handle periodic spinning at a fixed rate.
+    if (spin_period_.count() == 0) {
+      continue;
+    }
+    const auto target_timestamp = start_timestamp_ + (++spin_count_ * spin_period_);
+    std::unique_lock<std::mutex> lock(mutex_);
+    condition_.wait_until(lock, target_timestamp);
   }
 
-  terminate();
-}
-
-auto Spinner::terminate() -> void {
-  state_ = State::TERMINATING;
   spinner_completed_.test_and_set();
   spinner_completed_.notify_all();
   termination_callback_();
-  state_ = State::TERMINATED;
 }
 
 auto Spinner::stop() -> std::future<void> {
@@ -152,6 +138,10 @@ void Spinner::wait() {
   }
 
   spinner_completed_.wait(false);
+}
+
+void Spinner::setTerminationCallback(Callback&& termination_callback) {
+  termination_callback_ = std::move(termination_callback);
 }
 
 }  // namespace heph::concurrency
