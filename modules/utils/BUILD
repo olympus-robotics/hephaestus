@@ -46,6 +46,7 @@ heph_cc_binary(
     srcs = ["apps/show_version.cpp"],
     deps = [
         ":utils",
+        "@fmt",
     ],
 )
 

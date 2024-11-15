@@ -2,6 +2,7 @@
 hephaestus.bzl - Bazel build rules for Hephaestus.
 """
 
+load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 def heph_basic_copts():
@@ -84,3 +85,11 @@ def heph_cc_test(
         ],
         **kwargs
     )
+
+clang_tidy = lint_clang_tidy_aspect(
+    binary = "@@//:clang_tidy",
+    configs = ["@@//:clang_tidy_config"],
+    lint_target_headers = True,
+    angle_includes_are_system = False,
+    verbose = False,
+)
