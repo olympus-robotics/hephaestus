@@ -50,3 +50,38 @@ cmake(
         ":zenoh-c",
     ],
 )
+
+cmake(
+    name = "cpr",
+    cache_entries = {
+        "CPR_USE_SYSTEM_CURL": "ON",
+        "BUILD_SHARED_LIBS": "ON",
+        "curl_DIR": "${EXT_BUILD_DEPS}",
+    },
+    lib_source = "@cpr//:all_srcs",
+    out_include_dir = "include",
+    out_shared_libs = ["libcpr.so"],
+    tags = ["local"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@curl",
+    ],
+)
+
+cmake(
+    name = "influxdb",
+    cache_entries = {
+        "INFLUXCXX_WITH_BOOST": "OFF",
+        "INFLUXCXX_TESTING": "OFF",
+        "INFLUXCXX_SYSTEMTEST": "OFF",
+        "cpr_DIR": "${EXT_BUILD_DEPS}/cpr/lib/cmake/cpr/",
+    },
+    lib_source = "@influxdb//:all_srcs",
+    out_include_dir = "include",
+    out_shared_libs = ["libInfluxDB.so"],
+    tags = ["local"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cpr",
+    ],
+)

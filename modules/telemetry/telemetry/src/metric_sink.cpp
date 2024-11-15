@@ -12,6 +12,7 @@
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <fmt/std.h>  // NOLINT(misc-include-cleaner)
 
 using ValueMap = std::unordered_map<std::string, heph::telemetry::Metric::ValueType>;

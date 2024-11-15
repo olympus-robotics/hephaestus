@@ -2,7 +2,7 @@
 extensions.bzl - Bazel extensions for Hephaestus
 """
 
-load("//bazel:repositories.bzl", "bazel_repositories", "cmake_repositories")
+load("//bazel:repositories.bzl", "cmake_repositories")
 
 def _external_dependencies_impl(_ctx):
     cmake_repositories()
