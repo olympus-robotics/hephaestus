@@ -8,17 +8,19 @@
 #include <chrono>
 #include <functional>
 #include <future>
+
 #include "hephaestus/concurrency/spinner_state_machine.h"
 
 namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.
 /// If the function is blocking, the spinner will block the thread.
-/// If the input `rate_hz` is set, the spinner will call the user-defined function at the given fixed rate.
+/// If the input `rate_hz` is set to a non-zero value, the spinner will call the user-defined function at the
+/// given fixed rate.
 class Spinner {
 public:
   /// @brief Create a continuous spinner.
-  explicit Spinner(SpinnerStateMachineCallback&& state_machine_callback, std::optional<double> rate_hz = std::nullopt);
+  explicit Spinner(SpinnerStateMachineCallback&& state_machine_callback, double rate_hz = 0);
 
   ~Spinner();
   Spinner(const Spinner&) = delete;
@@ -44,7 +46,7 @@ private:
   std::future<void> async_spinner_handle_;
   std::atomic_flag spinner_completed_ = ATOMIC_FLAG_INIT;
 
-  std::optional<std::chrono::microseconds> spin_period_;
+  std::chrono::microseconds spin_period_;
   std::chrono::system_clock::time_point start_timestamp_;
   std::mutex mutex_;
   std::condition_variable condition_;
