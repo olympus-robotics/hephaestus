@@ -9,8 +9,6 @@
 #include <functional>
 #include <future>
 
-#include "hephaestus/concurrency/spinner_state_machine.h"
-
 namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.
@@ -19,8 +17,19 @@ namespace heph::concurrency {
 /// given fixed rate.
 class Spinner {
 public:
+  struct Callbacks {
+    using TransitionCallback = std::function<void()>;
+    using PolicyCallback = std::function<bool()>;
+
+    TransitionCallback init_cb = []() {};       //!< Handles initialization.
+    TransitionCallback spin_once_cb = []() {};  //!< Handles execution.
+
+    PolicyCallback shall_stop_spinning_cb = []() { return false; };  //!< Default: spin indefinitely.
+    PolicyCallback shall_restart_cb = []() { return false; };        //!< Default: do not restart.
+  };
+
   /// @brief Create a continuous spinner.
-  explicit Spinner(SpinnerStateMachineCallback&& state_machine_callback, double rate_hz = 0);
+  explicit Spinner(Callbacks&& callbacks, double rate_hz = 0);
 
   ~Spinner();
   Spinner(const Spinner&) = delete;
@@ -40,7 +49,7 @@ private:
   void spin();
 
 private:
-  SpinnerStateMachineCallback state_machine_callback_;
+  Callbacks callbacks_;
 
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;

@@ -16,12 +16,10 @@ set(SOURCES
     src/message_queue_consumer.cpp
     src/spinner.cpp
     src/spinner_manager.cpp
-    src/spinner_state_machine.cpp
     README.md
     include/hephaestus/concurrency/message_queue_consumer.h
     include/hephaestus/concurrency/spinner.h
     include/hephaestus/concurrency/spinner_manager.h
-    include/hephaestus/concurrency/spinner_state_machine.h
 )
 
 # library target
