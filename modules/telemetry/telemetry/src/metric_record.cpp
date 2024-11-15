@@ -128,7 +128,7 @@ MetricRecorder::MetricRecorder()
 
 MetricRecorder::~MetricRecorder() {
   try {
-    entries_consumer_.stop().wait();
+    entries_consumer_.stop().get();
   } catch (const std::exception& ex) {
     LOG(FATAL) << "While emptying message consumer, exception happened: " << ex.what();
   }

@@ -30,7 +30,7 @@ public:
 
   /// @brief Stop the message consumer, emptying the queue and stopping the processing.
   /// @return future that waits on the queue to be emptied
-  auto stop() -> std::future<void>;
+  [[nodiscard]] auto stop() -> std::future<void>;
 
   /// Return the queue to allow to push messages to process.
   /// This is simpler than having to mask all the different type of push methods of the queue.
