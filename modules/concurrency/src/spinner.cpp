@@ -18,47 +18,20 @@
 
 namespace heph::concurrency {
 namespace {
-[[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
-  if (rate_hz == 0) {
-    return std::chrono::microseconds{ 0 };
+[[nodiscard]] auto rateToPeriod(std::optional<double> rate_hz) -> std::optional<std::chrono::microseconds> {
+  if (!rate_hz.has_value()) {
+    return std::nullopt;
   }
 
-  const double period_seconds = 1. / rate_hz;
+  const double period_seconds = 1. / rate_hz.value();
   const auto period_microseconds = static_cast<uint64_t>(period_seconds * 1e6);
 
   return std::chrono::microseconds{ period_microseconds };
 }
-
-template <typename Callback>
-struct BinaryTransitionParams {
-  State input_state;
-  Callback& operation;
-  State success_state;
-  State failure_state;
-};
-[[nodiscard]] auto attemptBinaryTransition(State current_state, const BinaryTransitionParams& params)
-    -> State {
-  if (current_state != params.input_state) {
-    return current_state;
-  }
-
-  try {
-    if constexpr (std::is_same_v<decltype(operation), TransitionCallback>) {
-      params.operation();
-      return params.success_state;
-    } else if constexpr (std::is_same_v<decltype(operation), PolicyCallback>) {
-      return params.operation() ? params.success_state : params.failure_state;
-    }
-  } catch (const std::exception& exception_message) {
-    LOG(ERROR) << fmt::format("Spinner state transition failed with message: {}", exception_message);
-    return params.failure_state;
-  }
-}
-
 }  // namespace
 
-Spinner::Spinner(Callbacks&& callbacks, double rate_hz /*= 0*/)
-  : callbacks_(std::move(callbacks)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
+Spinner::Spinner(SpinnerStateMachineCallback&& state_machine_callback, std::optional<double> rate_hz /*= std::nullopt*/)
+  : state_machine_callback_(std::move(state_machine_callback)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
@@ -81,39 +54,19 @@ void Spinner::spin() {
 
   start_timestamp_ = std::chrono::system_clock::now();
   uint64_t spin_count_{ 0 };
+  auto state = SpinnerState::NOT_INITIALIZED;
 
   while (!stop_requested_.load()) {
-    // move into some state machine code
-    state_ = attemptBinaryTransition(state_, { .input_state = State::NOT_INITIALIZED,
-                                               .operation = callbacks_.init_cb,
-                                               .success_state = State::INIT_SUCCESSFUL,
-                                               .failure_state = State::FAILED });
-
-    state_ = attemptBinaryTransition(state_, { .input_state = State::READY_TO_SPIN,
-                                               .operation = callbacks_.spin_once_cb,
-                                               .success_state = State::SPIN_SUCCESSFUL,
-                                               .failure_state = State::FAILED });
-
-    state_ = attemptBinaryTransition(state_, { .input_state = State::FAILED,
-                                               .operation = callbacks_.shall_restart_cb,
-                                               .success_state = State::NOT_INITIALIZED,
-                                               .failure_state = State::EXIT });
-
-    state_ = attemptBinaryTransition(state_, { .input_state = State::SPIN_SUCCESSFUL,
-                                               .operation = callbacks_.shall_stop_spinning_cb,
-                                               .success_state = State::EXIT,
-                                               .failure_state = State::READY_TO_SPIN });
-
+    state = state_machine_callback_(state);
     if (state_ == State::EXIT) {
       break;
     }
-    // ===============================================
 
-    // Logic to handle periodic spinning at a fixed rate.
-    if (spin_period_.count() == 0) {
+    // Logic to handle periodic spinning at a fixed rate. Initialization, execution etc. are handled at the same rate.
+    if (!spin_period_.has_value()) {
       continue;
     }
-    const auto target_timestamp = start_timestamp_ + (++spin_count_ * spin_period_);
+    const auto target_timestamp = start_timestamp_ + (++spin_count_ * spin_period_.value());
     std::unique_lock<std::mutex> lock(mutex_);
     condition_.wait_until(lock, target_timestamp);
   }
