@@ -128,7 +128,8 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
 
 RawSubscriber::~RawSubscriber() {
   if (callback_messages_consumer_ != nullptr) {
-    callback_messages_consumer_->stop();
+    auto stopped = callback_messages_consumer_->stop();
+    stopped.get();
   }
 
   if (enable_cache_) {

@@ -27,3 +27,4 @@ define_module_library(
 )
 
 add_subdirectory(tests)
+add_subdirectory(examples)
