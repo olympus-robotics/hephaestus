@@ -26,22 +26,9 @@
 #include <unistd.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
+#include "hephaestus/utils.h"
 
 namespace heph::telemetry {
-namespace {
-auto getHostname() -> std::string {
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
-  std::array<char, 256> buffer{};
-
-  if (gethostname(buffer.data(), buffer.size()) != 0) {
-    return "---";
-  }
-
-  return { buffer.data() };
-}
-
-}  // namespace
-
 auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
   switch (level) {
     case Level::TRACE:
@@ -84,10 +71,9 @@ public:
 private:
   [[nodiscard]] static auto instance() -> Logger&;
 
-  /** @brief Do the actual logging. Take in LogEntry and send it to all sinks
-   *  @param LogEntry, class that takes in the structured logs and formats them.
-   *  @return void
-   */
+  /// @brief Do the actual logging. Take in LogEntry and send it to all sinks
+  /// @param LogEntry, class that takes in the structured logs and formats them.
+  /// @return void
   void processLogEntries(const LogEntry& entry);
 
 private:
@@ -138,14 +124,15 @@ void Logger::processLogEntries(const LogEntry& entry) {
   }
 }
 
-LogEntry::LogEntry(Level level, std::string&& module, std::string&& message, std::source_location location)
-  : level{ level }
-  , module{ std::move(module) }
-  , message{ std::move(message) }
-  , location{ location }
+LogEntry::LogEntry(Level level_in, std::string&& module_in, std::string&& message_in,
+                   std::source_location location_in)
+  : level{ level_in }
+  , module{ std::move(module_in) }
+  , message{ std::move(message_in) }
+  , location{ location_in }
   , thread_id{ std::this_thread::get_id() }
-  , time{ LogEntry::Clock::now() }
-  , hostname{ getHostname() } {
+  , time{ LogEntry::ClockT::now() }
+  , hostname{ heph::utils::getHostName() } {
 }
 
 auto format(const LogEntry& log) -> std::string {

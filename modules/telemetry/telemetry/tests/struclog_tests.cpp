@@ -90,8 +90,7 @@ TEST(struclog, Escapes) {
   }
 }
 
-/** @brief Custom sink that will write the log to a string.
- */
+/// @brief Custom sink that will write the log to a string.
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {

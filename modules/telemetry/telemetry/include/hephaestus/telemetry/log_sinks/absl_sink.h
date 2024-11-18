@@ -8,11 +8,9 @@
 
 namespace heph::telemetry {
 
-/**
- * @brief A simple sink that passes the struclogs to ABSL.
- *        Per default entry is formatted via heph::telemetry::format.
- *
- */
+
+/// @brief A simple sink that passes the struclogs to ABSL.
+///        Per default entry is formatted via heph::telemetry::format.
 class AbslLogSink : public ILogSink {
 public:
   explicit AbslLogSink();

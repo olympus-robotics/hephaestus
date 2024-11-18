@@ -1,8 +1,9 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <chrono>
 #include <memory>
-#include <string>
+#include <thread>
 
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/struclog.h"
@@ -18,8 +19,11 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
 
-  const int num = 123;
-  ht::log(ht::LogEntry{ ht::Level::WARN, "examples", "testing absl log sink" } | "num"_f(num));
+  const int num = 1234;
+  ht::log(ht::LogEntry{ ht::Level::WARN, "examples", "testing absl log sink a" } | "num"_f(num));
+  ht::log({ ht::Level::WARN, "examples", "testing absl log sink" });
 
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  
   return 0;
 }
