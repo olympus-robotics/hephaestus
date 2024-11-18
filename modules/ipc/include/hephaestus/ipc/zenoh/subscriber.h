@@ -14,7 +14,6 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/utils/utils.h"
 
 namespace heph::ipc::zenoh {
 
@@ -31,7 +30,7 @@ public:
             std::call_once(subscriber_check_flag_, [this, &metadata]() { checkTypeInfo(metadata); });
 
             auto data = std::make_shared<T>();
-            heph::serdes::deserialize(buffer, *data);
+            serdes::deserialize(buffer, *data);
             callback(metadata, std::move(data));
           },
           dedicated_callback_thread) {
@@ -39,13 +38,11 @@ public:
 
 private:
   void checkTypeInfo(const MessageMetadata& metadata) {
-    LOG_IF(ERROR, metadata.type_info != utils::getTypeName<T>())
-        << fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
-                       metadata.type_info, utils::getTypeName<T>());
+    const auto serialized_type = serdes::getSerializedTypeInfo<T>().name;
     throwExceptionIf<FailedZenohOperation>(
-        metadata.type_info != utils::getTypeName<T>(),
+        metadata.type_info != serialized_type,
         fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
-                    metadata.type_info, utils::getTypeName<T>()));
+                    metadata.type_info, serialized_type));
   }
 
 private:

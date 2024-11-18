@@ -87,7 +87,7 @@ template <typename RequestT, typename ReplyT>
 [[nodiscard]] auto checkQueryTypeInfo(const ::zenoh::Query& query) -> bool {
   const auto attachment = query.get_attachment();
   if (!attachment.has_value()) {
-    LOG(WARNING) << fmt::format("[Service {}] Query is missing attachments",
+    LOG(WARNING) << fmt::format("[Service '{}'] Query is missing attachments",
                                 query.get_keyexpr().as_string_view());
     return false;
   }
@@ -98,8 +98,15 @@ template <typename RequestT, typename ReplyT>
   const auto request_type_info = attachment_data[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO];
   const auto reply_type_info = attachment_data[SERVICE_ATTACHMENT_REPLY_TYPE_INFO];
 
-  return request_type_info == utils::getTypeName<RequestT>() &&
-         reply_type_info == utils::getTypeName<ReplyT>();
+  const auto this_request_type = std::is_same_v<RequestT, std::string> ?
+                                     utils::getTypeName<std::string>() :
+                                     serdes::getSerializedTypeInfo<RequestT>().name;
+
+  const auto this_reply_type = std::is_same_v<ReplyT, std::string> ?
+                                   utils::getTypeName<std::string>() :
+                                   serdes::getSerializedTypeInfo<ReplyT>().name;
+
+  return request_type_info == this_request_type && reply_type_info == this_reply_type;
 }
 
 template <class RequestT>
@@ -172,19 +179,25 @@ template <typename RequestT, typename ReplyT>
     options.timeout_ms = static_cast<uint64_t>(timeout->count());
   }
 
+  std::unordered_map<std::string, std::string> attachments;
+
   if constexpr (std::is_same_v<RequestT, std::string>) {
     options.encoding = ::zenoh::Encoding::Predefined::zenoh_string();
     options.payload = ::zenoh::ext::serialize(request);
+    attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = utils::getTypeName<std::string>();
   } else {
     options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
     options.payload = toZenohBytes(serdes::serialize(request));
+    attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = serdes::getSerializedTypeInfo<RequestT>().name;
   }
 
-  std::unordered_map<std::string, std::string> attachments;
-  attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = utils::getTypeName<RequestT>();
-  attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = utils::getTypeName<ReplyT>();
-  options.attachment = ::zenoh::ext::serialize(attachments);
+  if constexpr (std::is_same_v<ReplyT, std::string>) {
+    attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = utils::getTypeName<std::string>();
+  } else {
+    attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = serdes::getSerializedTypeInfo<ReplyT>().name;
+  }
 
+  options.attachment = ::zenoh::ext::serialize(attachments);
   return options;
 }
 
@@ -198,7 +211,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   , callback_(std::move(callback))
   , failure_callback_(std::move(failure_callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
-  LOG(INFO) << fmt::format("[Service {}] Started service", topic_config_.name);
+  LOG(INFO) << fmt::format("[Service '{}'] Started service", topic_config_.name);
 
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable { onQuery(query); };
 
@@ -209,18 +222,18 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
       &result));
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
-      fmt::format("[Service {}] failed to create zenoh queryable, err {}", topic_config_.name, result));
+      fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
 }
 
 template <typename RequestT, typename ReplyT>
 void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
-  LOG(INFO) << fmt::format("[Service {}] received query from '{}'", topic_config_.name,
+  LOG(INFO) << fmt::format("[Service '{}'] received query from '{}'", topic_config_.name,
                            query.get_keyexpr().as_string_view());
 
   ::zenoh::ZResult result{};
 
   if (!internal::checkQueryTypeInfo<RequestT, ReplyT>(query)) {
-    LOG(ERROR) << fmt::format("[Service {}] failed to process query: type mismatch for request and reply",
+    LOG(ERROR) << fmt::format("[Service '{}'] failed to process query: type mismatch for request and reply",
                               query.get_keyexpr().as_string_view());
     failure_callback_();
     query.reply_err(::zenoh::ext::serialize("Type mismatch for request and reply"),
@@ -239,7 +252,7 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
     query.reply(this->topic_config_.name, toZenohBytes(buffer), std::move(options), &result);
   }
 
-  LOG_IF(ERROR, result != Z_OK) << fmt::format("[Service {}] failed to reply to query, err {}",
+  LOG_IF(ERROR, result != Z_OK) << fmt::format("[Service '{}'] failed to reply to query, err {}",
                                                topic_config_.name, result);
 }
 
@@ -259,7 +272,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   auto replies = session.zenoh_session.get(keyexpr, "", ::zenoh::channels::FifoChannel(FIFO_QUEUE_SIZE),
                                            std::move(options), &result);
   throwExceptionIf<FailedZenohOperation>(result != Z_OK,
-                                         fmt::format("Failed to call service on: {}", topic_config.name));
+                                         fmt::format("Failed to call service on '{}'", topic_config.name));
 
   std::vector<ServiceResponse<ReplyT>> reply_messages;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {

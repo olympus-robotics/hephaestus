@@ -134,7 +134,8 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
-  request_consumer_.stop();
+  auto stopped = request_consumer_.stop();
+  stopped.get();
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
