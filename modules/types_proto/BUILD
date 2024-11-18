@@ -16,9 +16,7 @@ heph_cc_library(
         "//modules/random",
         "//modules/serdes",
         "//modules/types",
-        "//modules/types_proto/proto:bounds_cc_proto",
-        "//modules/types_proto/proto:dummy_type_cc_proto",
-        "//modules/types_proto/proto:numeric_value_cc_proto",
+        "//modules/types_proto/proto:types_gen_cc_proto",
     ],
 )
 

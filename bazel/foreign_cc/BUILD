@@ -32,6 +32,7 @@ cmake(
     lib_source = "@zenoh-c//:all_srcs",
     out_include_dir = "include",
     out_shared_libs = ["libzenohc.so"],
+    tags = ["local"],
     visibility = ["//visibility:public"],
 )
 
