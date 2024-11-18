@@ -9,10 +9,13 @@
 #include <exception>
 #include <functional>
 #include <future>
+#include <limits>
 #include <mutex>
+#include <type_traits>
 #include <utility>
 
 #include <absl/log/log.h>
+#include <fmt/core.h>
 
 #include "hephaestus/utils/exception.h"
 
@@ -35,16 +38,16 @@ enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCES
 template <typename CallbackT>
 struct BinaryTransitionParams {
   State input_state;
-  CallbackT& operation;
+  CallbackT& operation;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
   State success_state;
   State failure_state;
 };
 
 template <typename T>
-struct is_policy_callback : std::false_type {};
+struct IsPolicyCallback : std::false_type {};
 
 template <>
-struct is_policy_callback<Spinner::StateMachineCallbacks::PolicyCallback> : std::true_type {};
+struct IsPolicyCallback<Spinner::StateMachineCallbacks::PolicyCallback> : std::true_type {};
 
 template <typename CallbackT>
 [[nodiscard]] auto attemptBinaryTransition(State current_state,
@@ -54,7 +57,7 @@ template <typename CallbackT>
   }
 
   try {
-    if constexpr (is_policy_callback<CallbackT>::value) {
+    if constexpr (IsPolicyCallback<CallbackT>::value) {
       return params.operation() ? params.success_state : params.failure_state;
     }
 

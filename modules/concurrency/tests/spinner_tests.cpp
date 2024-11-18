@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstddef>
 #include <thread>
+#include <utility>
 
 #include <gtest/gtest.h>
 
@@ -13,6 +14,7 @@
 
 namespace heph::concurrency::tests {
 
+namespace {
 constexpr auto MAX_ITERATION_COUNT = 10;
 
 [[nodiscard]] auto createTrivialCallback() -> Spinner::StoppableCallback {
@@ -41,6 +43,7 @@ constexpr auto MAX_ITERATION_COUNT = 10;
   auto cb = []() { throwException<InvalidOperationException>("This is a test exception."); };
   return Spinner::createNeverStoppingCallback(std::move(cb));
 }
+}  // namespace
 
 TEST(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
