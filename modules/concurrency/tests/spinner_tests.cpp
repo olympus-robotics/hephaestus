@@ -13,34 +13,38 @@
 
 namespace heph::concurrency::tests {
 
-struct TestFixture : public ::testing::Test {
-  static auto trivialCallback() -> Spinner::Callback {
-    return []() {};
-  }
+constexpr auto MAX_ITERATION_COUNT = 10;
 
-  static auto stoppingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
-    return [&callback_called_counter]() {
-      static constexpr auto STOP_AFTER = 10;
-      if (callback_called_counter < STOP_AFTER) {
-        ++callback_called_counter;
-        return Spinner::SpinResult::CONTINUE;
-      }
+[[nodiscard]] auto createTrivialCallback() -> Spinner::StoppableCallback {
+  auto cb = []() {};
+  return Spinner::createNeverStoppingCallback(std::move(cb));
+}
 
-      return Spinner::SpinResult::STOP;
-    };
-  }
+[[nodiscard]] auto createStoppingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
+  return [&callback_called_counter]() {
+    constexpr auto MAX_ITERATION_COUNT = 10;
+    if (callback_called_counter < MAX_ITERATION_COUNT) {
+      ++callback_called_counter;
+      return Spinner::SpinResult::CONTINUE;
+    }
 
-  static auto nonThrowingCallback(size_t& callback_called_counter) -> Spinner::Callback {
-    return [&callback_called_counter]() { ++callback_called_counter; };
-  }
+    return Spinner::SpinResult::STOP;
+  };
+}
 
-  static auto throwingCallback() -> Spinner::Callback {
-    return []() { throwException<InvalidOperationException>("This is a test exception."); };
-  }
-};
+[[nodiscard]] auto createNonThrowingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
+  auto cb = [&callback_called_counter]() { ++callback_called_counter; };
+  return Spinner::createNeverStoppingCallback(std::move(cb));
+}
+
+[[nodiscard]] auto createThrowingCallback() -> Spinner::StoppableCallback {
+  auto cb = []() { throwException<InvalidOperationException>("This is a test exception."); };
+  return Spinner::createNeverStoppingCallback(std::move(cb));
+}
 
 TEST(SpinnerTest, StartStopTest) {
-  Spinner spinner{ TestFixture::trivialCallback() };
+  auto cb = createTrivialCallback();
+  Spinner spinner{ std::move(cb) };
 
   EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
   spinner.start();
@@ -53,7 +57,9 @@ TEST(SpinnerTest, StartStopTest) {
 
 TEST(SpinnerTest, SpinTest) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
-  Spinner spinner{ TestFixture::trivialCallback() };
+  size_t callback_called_counter = 0;
+  auto cb = createNonThrowingCallback(callback_called_counter);
+  Spinner spinner{ std::move(cb) };
   bool callback_called = false;
   spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
 
@@ -64,7 +70,7 @@ TEST(SpinnerTest, SpinTest) {
   spinner.stop().get();
 
   // The counter should have been incremented.
-  EXPECT_GT(spinner.spinCount(), 0);
+  EXPECT_GT(callback_called_counter, 0);
   EXPECT_TRUE(callback_called);
 }
 
@@ -72,14 +78,14 @@ TEST(SpinnerTest, Stop) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::nonThrowingCallback(callback_called_counter));
+  auto cb = createNonThrowingCallback(callback_called_counter);
+  Spinner spinner{ std::move(cb) };
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
   spinner.stop().get();
 
   EXPECT_GT(callback_called_counter, 0);
-  EXPECT_EQ(callback_called_counter, spinner.spinCount());
 }
 
 TEST(SpinnerTest, SpinWithPeriod) {
@@ -87,7 +93,8 @@ TEST(SpinnerTest, SpinWithPeriod) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::nonThrowingCallback(callback_called_counter), RATE_HZ);
+  auto cb = createNonThrowingCallback(callback_called_counter);
+  Spinner spinner{ std::move(cb), RATE_HZ };
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
@@ -101,19 +108,21 @@ TEST(SpinnerTest, SpinStopsOnStop) {
   static constexpr auto RATE_HZ = 1e3;
 
   size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::stoppingCallback(callback_called_counter), RATE_HZ);
+  auto cb = createStoppingCallback(callback_called_counter);
+  Spinner spinner(std::move(cb), RATE_HZ);
 
   spinner.start();
   spinner.wait();
   spinner.stop().get();
 
-  EXPECT_EQ(callback_called_counter, 10);
+  EXPECT_EQ(callback_called_counter, MAX_ITERATION_COUNT);
 }
 
 TEST(SpinnerTest, ExceptionHandling) {
   static constexpr auto RATE_HZ = 1e3;
 
-  Spinner spinner(TestFixture::throwingCallback(), RATE_HZ);
+  auto cb = createThrowingCallback();
+  Spinner spinner(std::move(cb), RATE_HZ);
   bool callback_called = false;
   spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
 
@@ -125,18 +134,19 @@ TEST(SpinnerTest, ExceptionHandling) {
 
 TEST(SpinnerTest, SpinStartAfterStop) {
   size_t callback_called_counter = 0;
-  Spinner spinner(TestFixture::stoppingCallback(callback_called_counter));
+  auto cb = createStoppingCallback(callback_called_counter);
+  Spinner spinner(std::move(cb));
 
   spinner.start();
   spinner.wait();
   spinner.stop().get();
-  EXPECT_EQ(callback_called_counter, 10);
+  EXPECT_EQ(callback_called_counter, MAX_ITERATION_COUNT);
 
   callback_called_counter = 0;
   spinner.start();
   spinner.wait();
   spinner.stop().get();
-  EXPECT_EQ(callback_called_counter, 10);
+  EXPECT_EQ(callback_called_counter, MAX_ITERATION_COUNT);
 }
 
 }  // namespace heph::concurrency::tests

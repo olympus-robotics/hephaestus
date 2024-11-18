@@ -61,6 +61,7 @@ public:
 
 private:
   void spin();
+  void terminate();
 
 private:
   StoppableCallback stoppable_callback_;
