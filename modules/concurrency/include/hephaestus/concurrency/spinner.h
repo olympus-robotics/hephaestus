@@ -13,9 +13,8 @@ namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.
 /// If the function is blocking, the spinner will block the thread.
-/// If the input `rate_hz` is set to a non-zero value, the spinner will call the user-defined function at the
-/// given fixed rate.
-/// The spinner behavior can be configured using callbacks.
+/// If the input `rate_hz` is set to a non-infinite value, the spinner will call the user-defined function at
+/// the given fixed rate. The spinner behavior can be configured using callbacks.
 class Spinner {
 public:
   enum class SpinResult : bool { CONTINUE, STOP };
@@ -37,12 +36,14 @@ public:
   };
 
   /// @brief Create a callback for the spinner which internally handles the state machine.
-  [[nodiscard]] static auto createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) -> StoppableCallback;
+  [[nodiscard]] static auto createCallbackWithStateMachine(StateMachineCallbacks&& callbacks)
+      -> StoppableCallback;
 
   /// @brief Create a spinner with a stoppable callback. A stoppable callback is a function that returns
-  /// SpinResult::STOP to indicate that the spinner should stop. Other types of callbacks are supported via mappings to StoppableCallback.
-  /// Example: a callback that stops after 10 iterations.
-  explicit Spinner(StoppableCallback&& stoppable_callback, double rate_hz = 0);
+  /// SpinResult::STOP to indicate that the spinner should stop. Other types of callbacks are supported via
+  /// mappings to StoppableCallback. Example: a callback that stops after 10 iterations.
+  explicit Spinner(StoppableCallback&& stoppable_callback,
+                   double rate_hz = std::numeric_limits<double>::infinity());
 
   ~Spinner();
   Spinner(const Spinner&) = delete;
@@ -62,14 +63,14 @@ private:
   void spin();
 
 private:
-  Callbacks callbacks_;
+  StoppableCallback stoppable_callback_;
+  Callback termination_callback_ = []() {};
 
   std::atomic_bool stop_requested_ = false;
   std::future<void> async_spinner_handle_;
   std::atomic_flag spinner_completed_ = ATOMIC_FLAG_INIT;
 
   std::chrono::microseconds spin_period_;
-  std::chrono::system_clock::time_point start_timestamp_;
   std::mutex mutex_;
   std::condition_variable condition_;
 };

@@ -19,7 +19,8 @@
 namespace heph::concurrency {
 namespace {
 [[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
-  if (rate_hz == 0) {
+  // Explicit check to prevent floating point errors
+  if (rate_hz == std::numeric_limits<double>::infinity()) {
     return std::chrono::microseconds{ 0 };
   }
 
@@ -118,7 +119,7 @@ auto Spinner::createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) 
                                              .failure_state = State::READY_TO_SPIN });
 
     // If the state machine reaches the exit state, the spinner should stop, else continue spinning.
-    if(state == State::EXIT) {
+    if (state == State::EXIT) {
       return SpinnerState::STOP;
     }
 
@@ -126,9 +127,11 @@ auto Spinner::createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) 
   };
 }
 
-
-Spinner::Spinner(Callbacks&& callbacks, double rate_hz /*= 0*/)
-  : callbacks_(std::move(callbacks)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {
+Spinner::Spinner(StoppableCallback&& stoppable_callback,
+                 double rate_hz /*= std::numeric_limits<double>::infinity()*/)
+  : stoppable_callback_(std::move(stoppable_callback))
+  , stop_requested_(false)
+  , spin_period_(rateToPeriod(rate_hz)) {
 }
 
 Spinner::~Spinner() {
@@ -147,27 +150,23 @@ void Spinner::start() {
 }
 
 void Spinner::spin() {
-  // TODO: set thread name
+  // TODO(@brizzi): set thread name
 
-  start_timestamp_ = std::chrono::system_clock::now();
-  uint64_t spin_count_{ 0 };
-  auto state = SpinnerState::NOT_INITIALIZED;
-  auto state_machine_callback = createSpinnerStateMachine(std::move(callbacks_));
+  auto get_target_timestamp =
+      [spin_period = this->spin_period_, spin_count = uint64_t{ 0 },
+       start_timestamp = std::chrono::system_clock::now]() -> std::chrono::system_clock::time_point {
+    return start_timestamp + (++spin_count * spin_period);
+  };
 
   while (!stop_requested_.load()) {
-    state = state_machine_callback(state);
-    if (state_ == State::EXIT) {
+    if (stoppable_callback_() == SpinResult::STOP) {
       break;
     }
 
-    if (spin_period_.count() == 0) {
-      continue;
+    if (spin_period_.count() > 0) {  // Throttle spinner to a fixed rate if a valid rate_hz is provided.
+      std::unique_lock<std::mutex> lock(mutex_);
+      condition_.wait_until(lock, get_target_timestamp());
     }
-    // Handle periodic spinning at a fixed rate. All operations (initialization, execution etc.) share the
-    // same rate.
-    const auto target_timestamp = start_timestamp_ + (++spin_count_ * spin_period_.value());
-    std::unique_lock<std::mutex> lock(mutex_);
-    condition_.wait_until(lock, target_timestamp);
   }
 
   spinner_completed_.test_and_set();
