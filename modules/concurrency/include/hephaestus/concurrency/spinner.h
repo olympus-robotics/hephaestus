@@ -31,8 +31,14 @@ public:
     TransitionCallback init_cb = []() {};       //!< Handles initialization.
     TransitionCallback spin_once_cb = []() {};  //!< Handles execution.
 
-    PolicyCallback shall_stop_spinning_cb = []() { return false; };  //!< This callback is called after successful execution. It decides if spinning shall continue or conclude. Default: spin indefinitely.
-    PolicyCallback shall_restart_cb = []() { return false; };        //!< This callback is called after failure. It decides if operation shall restart, or the spinner shall conclude. Default: do not restart.
+    PolicyCallback shall_stop_spinning_cb = []() {
+      return false;
+    };  //!< This callback is called after successful execution. It decides if spinning shall continue or
+        //!< conclude. Default: spin indefinitely.
+    PolicyCallback shall_restart_cb = []() {
+      return false;
+    };  //!< This callback is called after failure. It decides if operation shall restart, or the spinner
+        //!< shall conclude. Default: do not restart.
   };
 
   /// @brief Create a callback for the spinner which internally handles the state machine.
