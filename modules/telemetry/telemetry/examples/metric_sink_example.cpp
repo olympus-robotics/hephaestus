@@ -7,8 +7,6 @@
 #include <memory>
 #include <string>
 
-#include <nlohmann/detail/macro_scope.hpp>
-
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metric_record.h"
