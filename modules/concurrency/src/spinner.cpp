@@ -40,6 +40,12 @@ struct BinaryTransitionParams {
   State failure_state;
 };
 
+template <typename T>
+struct is_policy_callback : std::false_type {};
+
+template <>
+struct is_policy_callback<Spinner::StateMachineCallbacks::PolicyCallback> : std::true_type {};
+
 template <typename CallbackT>
 [[nodiscard]] auto attemptBinaryTransition(State current_state,
                                            const BinaryTransitionParams<CallbackT>& params) -> State {
@@ -48,8 +54,7 @@ template <typename CallbackT>
   }
 
   try {
-    if constexpr (std::is_same_v<decltype(params.operation),
-                                 Spinner::StateMachineCallbacks::PolicyCallback>) {
+    if constexpr (is_policy_callback<CallbackT>::value) {
       return params.operation() ? params.success_state : params.failure_state;
     }
 

@@ -173,12 +173,7 @@ TEST(SpinnerTest, StateMachine) {
           ++successful_spin_counter;
         },
     .shall_stop_spinning_cb =
-        [&successful_spin_counter]() {
-          fmt::println("shall_stop_spinning_cb: {}",
-                       successful_spin_counter > MAX_ITERATION_COUNT ? true : false);
-
-          return successful_spin_counter > MAX_ITERATION_COUNT ? true : false;
-        },
+        [&successful_spin_counter]() { return successful_spin_counter < MAX_ITERATION_COUNT ? false : true; },
     .shall_restart_cb = []() { return true; }
   };
 
@@ -188,10 +183,6 @@ TEST(SpinnerTest, StateMachine) {
   spinner.start();
   spinner.wait();
   spinner.stop().get();
-
-  fmt::println("init_counter: {}", init_counter);
-  fmt::println("successful_spin_counter: {}", successful_spin_counter);
-  fmt::println("total_spin_counter: {}", total_spin_counter);
 
   EXPECT_EQ(init_counter, 3);  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
   EXPECT_EQ(successful_spin_counter, MAX_ITERATION_COUNT);
