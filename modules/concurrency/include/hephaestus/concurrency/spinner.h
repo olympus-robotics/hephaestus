@@ -21,7 +21,7 @@ public:
   using StoppableCallback = std::function<SpinResult()>;
   using Callback = std::function<void()>;
 
-  /// @brief Create a callback for the spinner which never stops.
+  /// @brief Wrap the user provided callback in a callback that never stops.
   [[nodiscard]] static auto createNeverStoppingCallback(Callback&& callback) -> StoppableCallback;
 
   struct StateMachineCallbacks {
