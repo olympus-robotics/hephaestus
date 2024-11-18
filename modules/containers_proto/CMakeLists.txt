@@ -3,20 +3,20 @@
 # =================================================================================================
 
 declare_module(
-  NAME containers
-  DEPENDS_ON_MODULES utils
+  NAME containers_proto
+  DEPENDS_ON_MODULES containers serdes
   DEPENDS_ON_EXTERNAL_PROJECTS ""
 )
 
+add_subdirectory(proto)
+
 # library sources
-set(SOURCES src/bit_flag.cpp src/blocking_queue.cpp README.md include/hephaestus/containers/bit_flag.h
-            include/hephaestus/containers/blocking_queue.h
-)
+set(SOURCES README.md include/hephaestus/containers_proto/bit_flag.h)
 
 # library target
 define_module_library(
-  NAME containers
-  PUBLIC_LINK_LIBS hephaestus::utils
+  NAME containers_proto
+  PUBLIC_LINK_LIBS hephaestus::containers hephaestus::serdes hephaestus::containers_gen_proto
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -26,4 +26,3 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
-add_subdirectory(examples)

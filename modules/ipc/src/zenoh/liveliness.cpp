@@ -104,7 +104,8 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
 }
 
 PublisherDiscovery::~PublisherDiscovery() {
-  infos_consumer_->stop();
+  auto stopped = infos_consumer_->stop();
+  stopped.get();
   try {
     std::move(*liveliness_subscriber_).undeclare();
   } catch (std::exception& e) {
