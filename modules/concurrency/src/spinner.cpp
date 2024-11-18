@@ -30,7 +30,6 @@ namespace {
   return std::chrono::microseconds{ period_microseconds };
 }
 
-//======= State machine to handle initialization, execution, and stopping of the spinner ==========
 enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
 
 template <typename Callback>
@@ -59,34 +58,7 @@ struct BinaryTransitionParams {
     return params.failure_state;
   }
 }
-
-/// @brief Create a spinner state machine which returns the next state based on the current state.
-auto createSpinnerStateMachine(SpinnerCallbacks&& callbacks) -> SpinnerStateMachineCallback {
-  return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> SpinnerState {
-    state = attemptBinaryTransition(state, { .input_state = State::NOT_INITIALIZED,
-                                             .operation = callbacks_.init_cb,
-                                             .success_state = State::INIT_SUCCESSFUL,
-                                             .failure_state = State::FAILED });
-
-    state = attemptBinaryTransition(state, { .input_state = State::READY_TO_SPIN,
-                                             .operation = callbacks_.spin_once_cb,
-                                             .success_state = State::SPIN_SUCCESSFUL,
-                                             .failure_state = State::FAILED });
-
-    state = attemptBinaryTransition(state, { .input_state = State::FAILED,
-                                             .operation = callbacks_.shall_restart_cb,
-                                             .success_state = State::NOT_INITIALIZED,
-                                             .failure_state = State::EXIT });
-
-    state = attemptBinaryTransition(state, { .input_state = State::SPIN_SUCCESSFUL,
-                                             .operation = callbacks_.shall_stop_spinning_cb,
-                                             .success_state = State::EXIT,
-                                             .failure_state = State::READY_TO_SPIN });
-
-    return state;
-  };
 }
-//================================== END OF STATE MACHINE =========================================
 }  // namespace
 
 auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallback {
