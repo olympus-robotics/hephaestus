@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/concurrency/spinner_manager.h"
+#include "hephaestus/concurrency/spinners_manager.h"
 
 #include <algorithm>
 #include <atomic>

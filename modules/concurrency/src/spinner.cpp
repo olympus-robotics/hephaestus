@@ -61,7 +61,7 @@ struct BinaryTransitionParams {
 
 /// @brief Create a spinner state machine which returns the next state based on the current state.
 auto createSpinnerStateMachine(SpinnerCallbacks&& callbacks) -> SpinnerStateMachineCallback {
-  return [callbacks = std::move(callbacks)](SpinnerState state) mutable -> SpinnerState {
+  return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> SpinnerState {
     state = attemptBinaryTransition(state, { .input_state = State::NOT_INITIALIZED,
                                              .operation = callbacks_.init_cb,
                                              .success_state = State::INIT_SUCCESSFUL,
@@ -87,6 +87,45 @@ auto createSpinnerStateMachine(SpinnerCallbacks&& callbacks) -> SpinnerStateMach
 }
 //================================== END OF STATE MACHINE =========================================
 }  // namespace
+
+auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallback {
+  return [callback = std::move(callback)]() -> SpinResult {
+    callback();
+    return SpinResult::CONTINUE;
+  };
+}
+
+auto Spinner::createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) -> StoppableCallback {
+  return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> SpinnerState {
+    state = attemptBinaryTransition(state, { .input_state = State::NOT_INITIALIZED,
+                                             .operation = callbacks_.init_cb,
+                                             .success_state = State::INIT_SUCCESSFUL,
+                                             .failure_state = State::FAILED });
+
+    state = attemptBinaryTransition(state, { .input_state = State::READY_TO_SPIN,
+                                             .operation = callbacks_.spin_once_cb,
+                                             .success_state = State::SPIN_SUCCESSFUL,
+                                             .failure_state = State::FAILED });
+
+    state = attemptBinaryTransition(state, { .input_state = State::FAILED,
+                                             .operation = callbacks_.shall_restart_cb,
+                                             .success_state = State::NOT_INITIALIZED,
+                                             .failure_state = State::EXIT });
+
+    state = attemptBinaryTransition(state, { .input_state = State::SPIN_SUCCESSFUL,
+                                             .operation = callbacks_.shall_stop_spinning_cb,
+                                             .success_state = State::EXIT,
+                                             .failure_state = State::READY_TO_SPIN });
+
+    // If the state machine reaches the exit state, the spinner should stop, else continue spinning.
+    if(state == State::EXIT) {
+      return SpinnerState::STOP;
+    }
+
+    return SpinnerState::CONTINUE;
+  };
+}
+
 
 Spinner::Spinner(Callbacks&& callbacks, double rate_hz /*= 0*/)
   : callbacks_(std::move(callbacks)), stop_requested_(false), spin_period_(rateToPeriod(rate_hz)) {

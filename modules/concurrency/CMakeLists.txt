@@ -15,11 +15,11 @@ find_package(fmt REQUIRED)
 set(SOURCES
     src/message_queue_consumer.cpp
     src/spinner.cpp
-    src/spinner_manager.cpp
+    src/spinners_manager.cpp
     README.md
     include/hephaestus/concurrency/message_queue_consumer.h
     include/hephaestus/concurrency/spinner.h
-    include/hephaestus/concurrency/spinner_manager.h
+    include/hephaestus/concurrency/spinners_manager.h
 )
 
 # library target
