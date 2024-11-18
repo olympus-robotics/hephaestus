@@ -49,7 +49,9 @@ private:
 
 template <typename T>
 MessageQueueConsumer<T>::MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size)
-  : callback_(std::move(callback)), message_queue_(max_queue_size), spinner_([this] { consume(); }) {
+  : callback_(std::move(callback))
+  , message_queue_(max_queue_size)
+  , spinner_(Spinner::createNeverStoppingCallback(std::move([this] { consume(); }))) {
 }
 
 template <typename T>

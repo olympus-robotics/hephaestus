@@ -9,17 +9,21 @@
 #include <exception>
 #include <functional>
 #include <future>
+#include <limits>
 #include <mutex>
+#include <type_traits>
 #include <utility>
 
 #include <absl/log/log.h>
+#include <fmt/core.h>
 
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
 namespace {
 [[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
-  if (rate_hz == 0) {
+  // Explicit check to prevent floating point errors
+  if (rate_hz == std::numeric_limits<double>::infinity()) {
     return std::chrono::microseconds{ 0 };
   }
 
@@ -28,20 +32,89 @@ namespace {
 
   return std::chrono::microseconds{ period_microseconds };
 }
+
+enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
+
+template <typename CallbackT>
+struct BinaryTransitionParams {
+  State input_state;
+  CallbackT& operation;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+  State success_state;
+  State failure_state;
+};
+
+template <typename T>
+struct IsPolicyCallback : std::false_type {};
+
+template <>
+struct IsPolicyCallback<Spinner::StateMachineCallbacks::PolicyCallback> : std::true_type {};
+
+template <typename CallbackT>
+[[nodiscard]] auto attemptBinaryTransition(State current_state,
+                                           const BinaryTransitionParams<CallbackT>& params) -> State {
+  if (current_state != params.input_state) {
+    return current_state;
+  }
+
+  try {
+    if constexpr (IsPolicyCallback<CallbackT>::value) {
+      return params.operation() ? params.success_state : params.failure_state;
+    }
+
+    params.operation();
+  } catch (const std::exception& exception_message) {
+    LOG(ERROR) << fmt::format("Spinner state transition failed with message: {}", exception_message.what());
+    return params.failure_state;
+  }
+
+  return params.success_state;
+}
 }  // namespace
 
-Spinner::Spinner(StoppableCallback&& stoppable_callback, double rate_hz /*= 0*/)
+auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallback {
+  return [callback = std::move(callback)]() -> SpinResult {
+    callback();
+    return SpinResult::CONTINUE;
+  };
+}
+
+auto Spinner::createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) -> StoppableCallback {
+  return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> SpinResult {
+    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::NOT_INITIALIZED,
+                                                                   .operation = callbacks.init_cb,
+                                                                   .success_state = State::READY_TO_SPIN,
+                                                                   .failure_state = State::FAILED });
+
+    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::READY_TO_SPIN,
+                                                                   .operation = callbacks.spin_once_cb,
+                                                                   .success_state = State::SPIN_SUCCESSFUL,
+                                                                   .failure_state = State::FAILED });
+
+    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::FAILED,
+                                                                   .operation = callbacks.shall_restart_cb,
+                                                                   .success_state = State::NOT_INITIALIZED,
+                                                                   .failure_state = State::EXIT });
+
+    state =
+        attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::SPIN_SUCCESSFUL,
+                                                               .operation = callbacks.shall_stop_spinning_cb,
+                                                               .success_state = State::EXIT,
+                                                               .failure_state = State::READY_TO_SPIN });
+
+    // If the state machine reaches the exit state, the spinner should stop, else continue spinning.
+    if (state == State::EXIT) {
+      return SpinResult::STOP;
+    }
+
+    return SpinResult::CONTINUE;
+  };
+}
+
+Spinner::Spinner(StoppableCallback&& stoppable_callback,
+                 double rate_hz /*= std::numeric_limits<double>::infinity()*/)
   : stoppable_callback_(std::move(stoppable_callback))
   , stop_requested_(false)
   , spin_period_(rateToPeriod(rate_hz)) {
-}
-
-Spinner::Spinner(Callback&& callback, double rate_hz /*= 0*/)
-  : Spinner(StoppableCallback([cb = std::move(callback)]() -> SpinResult {
-              cb();
-              return SpinResult::CONTINUE;
-            }),
-            rate_hz) {
 }
 
 Spinner::~Spinner() {
@@ -60,35 +133,32 @@ void Spinner::start() {
 }
 
 void Spinner::spin() {
-  // TODO: set thread name
+  // TODO(@brizzi): set thread name
 
-  try {
-    start_timestamp_ = std::chrono::system_clock::now();
+  auto get_target_timestamp = [spin_period = this->spin_period_, spin_count = uint64_t{ 0 },
+                               start_timestamp = std::chrono::system_clock::now()]() mutable
+      -> std::chrono::system_clock::time_point { return start_timestamp + (++spin_count * spin_period); };
 
-    while (!stop_requested_.load()) {
-      const auto spin_result = stoppable_callback_();
-
-      ++spin_count_;
-
-      if (spin_result == SpinResult::STOP) {
+  while (!stop_requested_.load()) {
+    try {
+      if (stoppable_callback_() == SpinResult::STOP) {
         break;
       }
 
-      if (spin_period_.count() == 0) {
-        continue;
+      if (spin_period_.count() > 0) {  // Throttle spinner to a fixed rate if a valid rate_hz is provided.
+        std::unique_lock<std::mutex> lock(mutex_);
+        condition_.wait_until(lock, get_target_timestamp());
       }
-
-      const auto target_timestamp = start_timestamp_ + spin_count_ * spin_period_;
-      std::unique_lock<std::mutex> lock(mutex_);
-      condition_.wait_until(lock, target_timestamp);
+    } catch (std::exception& e) {
+      terminate();
+      throw;
     }
-  } catch (std::exception& e) {
-    spinner_completed_.test_and_set();
-    spinner_completed_.notify_all();
-    termination_callback_();
-    throw;  // TODO(@filippo) consider if we want to handle this error in a different way.
   }
 
+  terminate();
+}
+
+void Spinner::terminate() {
   spinner_completed_.test_and_set();
   spinner_completed_.notify_all();
   termination_callback_();
@@ -109,10 +179,6 @@ void Spinner::wait() {
   }
 
   spinner_completed_.wait(false);
-}
-
-auto Spinner::spinCount() const -> uint64_t {
-  return spin_count_;
 }
 
 void Spinner::setTerminationCallback(Callback&& termination_callback) {

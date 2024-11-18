@@ -15,7 +15,8 @@ static constexpr auto RATE_HZ = 10;
 
 class Worker {
 public:
-  Worker() : spinner_([this] { doWork(); }, RATE_HZ) {
+  Worker()
+    : spinner_(heph::concurrency::Spinner::createNeverStoppingCallback([this] { doWork(); }), RATE_HZ) {
   }
 
   void start() {

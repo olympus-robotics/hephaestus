@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/spinner.h"
-#include "hephaestus/concurrency/spinner_manager.h"
+#include "hephaestus/concurrency/spinners_manager.h"
 
 namespace heph::concurrency::tests {
 
@@ -36,7 +36,7 @@ TEST(SpinnersManager, OneSpinnerSuccessful) {
 }
 
 TEST(SpinnersManager, OneSpinnerError) {
-  Spinner spinner{ []() { throw std::runtime_error("fail"); } };
+  Spinner spinner{ Spinner::createNeverStoppingCallback([]() { throw std::runtime_error("fail"); }) };
 
   SpinnersManager runner_manager{ { &spinner } };
   runner_manager.startAll();
@@ -67,8 +67,8 @@ TEST(SpinnersManager, MultipleSpinnersSuccessful) {
 }
 
 TEST(SpinnersManager, MultipleSpinnersSuccessfulNoTermination) {
-  Spinner spinner1{ []() {} };  // Run indefinitely until stopped
-  Spinner spinner2{ []() {} };  // Run indefinitely until stopped
+  Spinner spinner1{ Spinner::createNeverStoppingCallback([]() {}) };  // Run indefinitely until stopped
+  Spinner spinner2{ Spinner::createNeverStoppingCallback([]() {}) };  // Run indefinitely until stopped
   SpinnersManager runner_manager{ { &spinner1, &spinner2 } };
   runner_manager.startAll();
   std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
@@ -76,7 +76,7 @@ TEST(SpinnersManager, MultipleSpinnersSuccessfulNoTermination) {
 }
 
 TEST(SpinnersManager, MultipleSpinnersWaitAny) {
-  Spinner spinner1{ []() {} };  // Run indefinitely until stopped
+  Spinner spinner1{ Spinner::createNeverStoppingCallback([]() {}) };  // Run indefinitely until stopped
 
   std::atomic_bool flag = false;
   Spinner spinner2{ Spinner::StoppableCallback{ [&flag]() -> Spinner::SpinResult {
@@ -93,9 +93,9 @@ TEST(SpinnersManager, MultipleSpinnersWaitAny) {
 }
 
 TEST(SpinnersManager, MultipleSpinnersOneError) {
-  Spinner spinner1{ []() {} };  // Run indefinitely until stopped
+  Spinner spinner1{ Spinner::createNeverStoppingCallback([]() {}) };  // Run indefinitely until stopped
 
-  Spinner spinner2{ []() { throw std::runtime_error("fail"); } };
+  Spinner spinner2{ Spinner::createNeverStoppingCallback([]() { throw std::runtime_error("fail"); }) };
 
   SpinnersManager runner_manager{ { &spinner1, &spinner2 } };
   runner_manager.startAll();
