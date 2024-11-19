@@ -25,7 +25,7 @@ struct Config {
   bool qos = false;
   bool real_time = false;
   Protocol protocol{ Protocol::ANY };
-  bool multicast_scouting_enabled = false;
+  bool multicast_scouting_enabled = true;
   std::string multicast_scouting_interface = "auto";
 };
 
