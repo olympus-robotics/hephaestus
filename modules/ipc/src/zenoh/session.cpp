@@ -35,6 +35,14 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
     zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
   }
 
+  // Set multicast settings
+  if (config.multicast_scouting_enabled) {
+    zconfig.insert_json5("scouting/multicast/enabled", "true");  // NOLINT(misc-include-cleaner)
+  }
+  const auto multicast_scouting_interface = fmt::format(R"("{}")", config.multicast_scouting_interface);
+  zconfig.insert_json5("scouting/multicast/interface",
+                       multicast_scouting_interface);  // NOLINT(misc-include-cleaner)
+
   // Set the transport to UDP, but I am not sure it is the right way.
   // zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
   if (config.protocol == Protocol::UDP) {
