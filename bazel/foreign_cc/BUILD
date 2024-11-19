@@ -1,4 +1,5 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+load(":cargo.bzl", "cargo_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -28,6 +29,10 @@ cmake(
         "ZENOHC_CARGO_CHANNEL": "+stable",
         "ZENOHC_BUILD_WITH_SHARED_MEMORY": "TRUE",
         "ZENOHC_BUILD_WITH_UNSTABLE_API": "TRUE",
+    },
+    env = {
+        "RUSTUP_HOME": "/usr/local/rustup",  # TODO(@fbrizzi) figure out how to read this from env var
+        "RUSTC_WRAPPER": "sccache",
     },
     lib_source = "@zenoh-c//:all_srcs",
     out_include_dir = "include",
@@ -62,7 +67,6 @@ cmake(
     lib_source = "@cpr//:all_srcs",
     out_include_dir = "include",
     out_shared_libs = ["libcpr.so"],
-    tags = ["local"],
     visibility = ["//visibility:public"],
     deps = [
         "@curl",
@@ -80,7 +84,6 @@ cmake(
     lib_source = "@influxdb//:all_srcs",
     out_include_dir = "include",
     out_shared_libs = ["libInfluxDB.so"],
-    tags = ["local"],
     visibility = ["//visibility:public"],
     deps = [
         ":cpr",
