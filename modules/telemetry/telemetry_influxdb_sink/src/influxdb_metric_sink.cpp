@@ -36,10 +36,8 @@ namespace {
 }
 
 [[nodiscard]] auto createInfluxdbPoint(const telemetry::Metric& entry) -> influxdb::Point {
-  auto point = influxdb::Point{ entry.component }
-                   .addTag("tag", entry.tag)
-                   .addTag("id", std::to_string(entry.id))
-                   .setTimestamp(entry.timestamp);
+  auto point = influxdb::Point{ entry.component }.addTag("tag", entry.tag).setTimestamp(entry.timestamp);
+
   for (const auto& [key, value] : entry.values) {
     std::visit(
         [&point, &key](auto&& arg) {
