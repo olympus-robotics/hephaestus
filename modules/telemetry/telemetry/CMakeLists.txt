@@ -11,14 +11,14 @@ declare_module(
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES src/metric_sink.cpp src/metric_record.cpp src/metric_sinks/terminal_sink.cpp include/hephaestus/telemetry/metric_sink.h
-            include/hephaestus/telemetry/metric_record.h include/hephaestus/telemetry/metric_sinks/terminal_sink.h
+set(SOURCES src/metric_sink.cpp src/metric_record.cpp src/struclog.cpp src/log_sinks/absl_sink.cpp src/metric_sinks/terminal_sink.cpp 
+            include/hephaestus/telemetry/metric_sink.h include/hephaestus/telemetry/metric_record.h include/hephaestus/telemetry/struclog.h include/hephaestus/telemetry/log_sinks/absl_sink.h include/hephaestus/telemetry/metric_sinks/terminal_sink.h
 )
 
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes hephaestus::utils fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -26,5 +26,6 @@ define_module_library(
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
 
+add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(examples)
