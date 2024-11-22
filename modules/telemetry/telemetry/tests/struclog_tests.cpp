@@ -19,8 +19,6 @@ using namespace ::testing;
 namespace hephtelemetry::tests {
 
 namespace ht = heph::telemetry;
-// NOLINTNEXTLINE google-build-using-namespace
-using namespace heph::telemetry::literals;
 
 namespace {
 auto printout(const ht::LogEntry& s) -> std::string {
@@ -32,7 +30,7 @@ TEST(struclog, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, "tests", std::string(a)} | ht::Field{.key="b",.val="test \"great\" name"};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, std::string(a)} | ht::Field{.key="b",.val="test \"great\" name"};
   // clang-format on
   auto s = printout(log_entry);
   {
@@ -50,14 +48,12 @@ TEST(struclog, LogEntry) {
 
 TEST(struclog, Escapes) {
   const std::string a = "test a great message";
-  const std::string b = "test \"great\" name";
   const std::string c = "test 'great' name";
-  const int num = 123;
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, "tests",std::string(a)} | "b"_f(b) | ht::Field{.key="c", .val=c} | "num"_f(num);
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, std::string(a)} | ht::Field{.key="c", .val=c};
   // clang-format on
   auto s = printout(log_entry);
-  ht::log(log_entry);
+  ht::internal::log(std::move(log_entry));
   {
     std::stringstream ss;
     ss << "level=info";
@@ -75,17 +71,7 @@ TEST(struclog, Escapes) {
   }
   {
     std::stringstream ss;
-    ss << "b=" << std::quoted(b);
-    EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
-  }
-  {
-    std::stringstream ss;
     ss << "c=" << std::quoted(c);
-    EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
-  }
-  {
-    std::stringstream ss;
-    ss << "num=" << num;
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
 }
@@ -115,16 +101,40 @@ private:
 TEST(struclog, sink) {
   const int num = 123;
 
-  const auto log_entry =
-      ht::LogEntry{ ht::Level::ERROR, "tests", "test another great message" } | "num"_f(num);
+  auto log_entry =
+      ht::LogEntry{ ht::Level::ERROR, "test another great message" } | ht::Field{ .key = "num", .val = num };
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
-  ht::log(log_entry);
+  ht::internal::log(std::move(log_entry));
   sink_ptr->wait();
   {
     std::stringstream ss;
     ss << "num=" << num;
+    EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
+  }
+}
+
+TEST(struclog, log) {
+  const int num = 123;
+
+  auto mock_sink = std::make_unique<MockLogSink>();
+  const MockLogSink* sink_ptr = mock_sink.get();
+  ht::registerLogSink(std::move(mock_sink));
+  ht::log(ht::Level::ERROR, "test another great message", ht::Field{ .key = "num", .val = num },
+          ht::Field{ .key = "test", .val = "lala" });
+  // NOLINTBEGIN(modernize-use-designated-initializers)
+  // ht::log(ht::Level::ERROR, "test another great message", { "num", num }, { "test", "lala" });
+  // NOLINTEND(modernize-use-designated-initializers)
+  sink_ptr->wait();
+  {
+    std::stringstream ss;
+    ss << "num=" << num;
+    EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
+  }
+  {
+    std::stringstream ss;
+    ss << "test=\"lala\"";
     EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
   }
 }

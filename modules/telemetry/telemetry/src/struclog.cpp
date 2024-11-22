@@ -5,7 +5,7 @@
 
 #include "hephaestus/telemetry/struclog.h"
 
-#include <array>
+#include <exception>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -23,10 +23,9 @@
 #include <absl/base/thread_annotations.h>
 #include <fmt/chrono.h>
 #include <fmt/format.h>
-#include <unistd.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/utils.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::telemetry {
 auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
@@ -54,6 +53,7 @@ auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
   return os;
 }
 
+namespace {
 class Logger final {
 public:
   explicit Logger();
@@ -66,7 +66,7 @@ public:
 
   static void registerSink(std::unique_ptr<ILogSink> sink);
 
-  static void log(const LogEntry& log_entry);
+  static void log(LogEntry&& log_entry);
 
 private:
   [[nodiscard]] static auto instance() -> Logger&;
@@ -83,21 +83,17 @@ private:
   concurrency::MessageQueueConsumer<LogEntry> log_entries_consumer_;
 };
 
-void registerLogSink(std::unique_ptr<ILogSink> sink) {
-  Logger::registerSink(std::move(sink));
-}
-
-void log(const LogEntry& log_entry) {
-  Logger::log(log_entry);
-}
-
 Logger::Logger()
   : log_entries_consumer_([this](const LogEntry& entry) { processLogEntries(entry); }, std::nullopt) {
   log_entries_consumer_.start();
 }
 
 Logger::~Logger() {
-  log_entries_consumer_.stop();
+  try {
+    log_entries_consumer_.stop().get();
+  } catch (const std::exception& ex) {
+    std::cerr << "While emptying message consumer, exception happened: " << ex.what() << "\n";
+  }
 }
 
 auto Logger::instance() -> Logger& {
@@ -112,9 +108,9 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) {
   telemetry.sinks_.emplace_back(std::move(sink));
 }
 
-void Logger::log(const LogEntry& log_entry) {
+void Logger::log(LogEntry&& log_entry) {
   auto& telemetry = instance();
-  telemetry.log_entries_consumer_.queue().forcePush(log_entry);
+  telemetry.log_entries_consumer_.queue().forcePush(std::move(log_entry));
 }
 
 void Logger::processLogEntries(const LogEntry& entry) {
@@ -123,11 +119,18 @@ void Logger::processLogEntries(const LogEntry& entry) {
     sink->send(entry);
   }
 }
+}  // namespace
 
-LogEntry::LogEntry(Level level_in, std::string&& module_in, std::string&& message_in,
-                   std::source_location location_in)
+void registerLogSink(std::unique_ptr<ILogSink> sink) {
+  Logger::registerSink(std::move(sink));
+}
+
+void internal::log(LogEntry&& log_entry) {
+  Logger::log(std::move(log_entry));
+}
+
+LogEntry::LogEntry(Level level_in, std::string&& message_in, std::source_location location_in)
   : level{ level_in }
-  , module{ std::move(module_in) }
   , message{ std::move(message_in) }
   , location{ location_in }
   , thread_id{ std::this_thread::get_id() }
@@ -145,7 +148,6 @@ auto format(const LogEntry& log) -> std::string {
                                 log.location.line()));
   ss << " thread-id=" << log.thread_id;
   ss << " time=" << fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", log.time);
-  ss << " module=" << std::quoted(log.module);
   ss << " message=" << std::quoted(log.message);
 
   for (const Field<std::string>& field : log.fields) {

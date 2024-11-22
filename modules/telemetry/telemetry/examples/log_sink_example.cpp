@@ -1,17 +1,13 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include <chrono>
 #include <memory>
-#include <thread>
 
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/struclog.h"
 #include "hephaestus/utils/stack_trace.h"
 
 namespace ht = heph::telemetry;
-// NOLINTNEXTLINE google-build-using-namespace
-using namespace heph::telemetry::literals;
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 auto main(int /*argc*/, const char* /*argv*/[]) -> int {
@@ -20,10 +16,10 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
   ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
 
   const int num = 1234;
-  ht::log(ht::LogEntry{ ht::Level::WARN, "examples", "testing absl log sink a" } | "num"_f(num));
-  ht::log({ ht::Level::WARN, "examples", "testing absl log sink" });
-
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  
+  ht::log(ht::Level::WARN, "testing absl log sink");
+  // NOLINTBEGIN(modernize-use-designated-initializers)
+  ht::log(ht::Level::WARN, "testing absl log sink with field", ht::Field{ "num", num },
+          ht::Field{ "quoted_string", "test" });
+  // NOLINTEND(modernize-use-designated-initializers)
   return 0;
 }

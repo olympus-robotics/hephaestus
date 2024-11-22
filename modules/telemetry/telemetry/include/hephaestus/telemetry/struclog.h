@@ -29,24 +29,33 @@ struct Field final {
   T val;
 };
 
+/*
+struct MessageWithLocation {
+  std::string value;
+  std::source_location loc;
+
+  MessageWithLocation(std::string&& s, const std::source_location& l = std::source_location::current())
+    : value(s), loc(l) {
+  }
+};*/
+
 /// @brief A class that allows easy composition of logs for structured logging.
 ///       Example(see also struclog.cpp):
 ///       ```cpp
 ///         namespace ht=heph::telemetry;
-///         log(ht::LogEntry{Level::INFO, "my module", "adding"} | "id"_f(12345) | ht::Field{"tag", "test"});
+///         log(Level::INFO, "adding", {"speed", 31.3}, {"tag", "test"});
 ///       ```
 ///         logs
 ///        'level=info hostname=goofy location=struclog.h:123 thread-id=5124 time=2023-12-3T8:52:02+0
-/// module="my module" message="adding" id=12345 tag="test"'
+/// module="my module" message="adding" id=12345 speed=31.3 tag="test"'
 ///        Remark: We would like to use libfmt with quoted formatting as proposed in
 ///                https://github.com/fmtlib/fmt/issues/825 once its included (instead of sstream).
 struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(Level level, std::string&& module, std::string&& message,
+  LogEntry(Level level, std::string&& message,
            std::source_location location = std::source_location::current());
-
 
   /// @brief General loginfo consumer, should be used like LogEntry("my message") | Field{"field", 1234}
   ///        Converted to string with stringstream.
@@ -85,7 +94,6 @@ struct LogEntry {
   }
 
   Level level;
-  std::string module;
   std::string message;
   std::source_location location;
   std::thread::id thread_id;
@@ -119,17 +127,24 @@ struct ILogSink {
   virtual void send(const LogEntry& log_entry) = 0;
 };
 
-void log(const LogEntry& log_entry);
+namespace internal {
+void log(LogEntry&& log_entry);
+}
+
+template <typename... Fields>
+//  NOLINTNEXTLINE(readability-identifier-naming)
+struct log {
+  log(Level level, std::string&& msg, Fields&&... fields,
+      const std::source_location& location = std::source_location::current()) {
+    LogEntry entry{ level, std::move(msg), location };
+    ((entry | std::forward<Fields>(fields)), ...);
+    internal::log(std::move(entry));
+  }
+};
+
+template <typename... Ts>
+log(Level level, std::string&&, Ts&&...) -> log<Ts...>;
 
 void registerLogSink(std::unique_ptr<ILogSink> sink);
 
 }  // namespace heph::telemetry
-
-namespace heph::telemetry::literals {
-
-/// @brief User-defined string literal to enable `Field f="data"_f(mydata);`
-///        Hence we can use shorter log calls like `log(LogEntry{Severity::Info, "msg"} | "num"_f(1234));`
-constexpr auto operator""_f(const char* key, [[maybe_unused]] size_t _) {
-  return [key](auto&& value) { return heph::telemetry::Field{ key, std::forward<decltype(value)>(value) }; };
-}
-}  // namespace heph::telemetry::literals
