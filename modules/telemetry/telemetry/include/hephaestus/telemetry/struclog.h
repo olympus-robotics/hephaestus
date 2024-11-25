@@ -134,6 +134,7 @@ struct ILogSink {
 namespace internal {
 void log(LogEntry&& log_entry);
 
+/*
 // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
 // cppcoreguidelines-missing-std-forward)
 ///@brief Stop function for recursion: Uneven number of parameters
@@ -143,6 +144,7 @@ void logWithFields(LogEntry&&, First&&) {
 }
 // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
 // cppcoreguidelines-missing-std-forward)
+*/
 
 ///@brief Stop function for recursion: Even number of parameters
 template <typename First, typename Second>
