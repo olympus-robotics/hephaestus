@@ -22,7 +22,7 @@
 
 #include <absl/base/thread_annotations.h>
 #include <fmt/chrono.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/utils/utils.h"
