@@ -11,7 +11,8 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/telemetry/struclog.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -26,7 +27,7 @@ auto printout(const ht::LogEntry& s) -> std::string {
 }
 }  // namespace
 
-TEST(struclog, LogEntry) {
+TEST(log, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
@@ -43,10 +44,10 @@ TEST(struclog, LogEntry) {
     ss << " b=" << std::quoted(b);
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
-  EXPECT_TRUE(s.find(std::format("location=\"struclog_tests.cpp:{}\"", current_line)) != std::string::npos);
+  EXPECT_TRUE(s.find(std::format("location=\"log_tests.cpp:{}\"", current_line)) != std::string::npos);
 }
 
-TEST(struclog, Escapes) {
+TEST(log, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
@@ -66,7 +67,7 @@ TEST(struclog, Escapes) {
   }
   {
     std::stringstream ss;
-    ss << std::format("location=\"struclog_tests.cpp:{}\"", current_line);
+    ss << std::format("location=\"log_tests.cpp:{}\"", current_line);
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
   {
@@ -98,7 +99,7 @@ private:
   std::atomic_flag flag_ = ATOMIC_FLAG_INIT;
 };
 
-TEST(struclog, sink) {
+TEST(log, sink) {
   const int num = 123;
 
   auto log_entry = ht::LogEntry{ heph::LogLevel::ERROR, "test another great message" }
@@ -115,7 +116,7 @@ TEST(struclog, sink) {
   }
 }
 
-TEST(struclog, log) {
+TEST(log, log) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
@@ -125,7 +126,7 @@ TEST(struclog, log) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
-TEST(struclog, logWithFields) {
+TEST(log, logWithFields) {
   const int num = 123;
 
   auto mock_sink = std::make_unique<MockLogSink>();

@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "hephaestus/telemetry/struclog.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry {
 
-/// @brief A simple sink that passes the struclogs to ABSL.
+/// @brief A simple sink that passes the logs to ABSL.
 ///        Per default entry is formatted via heph::telemetry::format.
 class AbslLogSink final : public ILogSink {
 public:

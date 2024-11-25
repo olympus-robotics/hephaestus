@@ -1,13 +1,14 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 
 #include <utility>
 
 #include <absl/log/absl_log.h>
 
-#include "hephaestus/telemetry/struclog.h"
+#include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry {
 

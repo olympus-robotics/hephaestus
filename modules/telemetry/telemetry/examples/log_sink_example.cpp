@@ -3,8 +3,9 @@
 //=================================================================================================
 #include <memory>
 
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/telemetry/struclog.h"
 #include "hephaestus/utils/stack_trace.h"
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
