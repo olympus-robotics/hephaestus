@@ -11,8 +11,8 @@
 #include <vector>
 
 namespace heph {
-enum class Level : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
-auto operator<<(std::ostream& /*os*/, const Level& /*level*/) -> std::ostream&;
+enum class LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
+auto operator<<(std::ostream& /*os*/, const LogLevel& /*log_level*/) -> std::ostream&;
 }  // namespace heph
 
 namespace heph::telemetry {
@@ -32,9 +32,9 @@ struct Field final {
 
 ///@brief Wrapper around string literals to enhance them with a location.
 ///       Note that the message is not owned by this class.
-///       We need to use a const char* here in order to enable implicit conversion from `log(Level::INFO,"my
-///       string");`. The standard guarantees that string literals exist for the entirety of the program
-///       lifetime, so it is fine to use it as `MessageWithLocation("my message");`
+///       We need to use a const char* here in order to enable implicit conversion from
+///       `log(LogLevel::INFO,"my string");`. The standard guarantees that string literals exist for the
+///       entirety of the program lifetime, so it is fine to use it as `MessageWithLocation("my message");`
 struct MessageWithLocation final {
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   MessageWithLocation(const char* s, const std::source_location& l = std::source_location::current())
@@ -49,7 +49,7 @@ struct MessageWithLocation final {
 ///       Example(see also struclog.cpp):
 ///       ```cpp
 ///         namespace ht=heph::telemetry;
-///         log(Level::INFO, "adding", {"speed", 31.3}, {"tag", "test"});
+///         log(LogLevel::INFO, "adding", {"speed", 31.3}, {"tag", "test"});
 ///       ```
 ///         logs
 ///        'level=info hostname=goofy location=struclog.h:123 thread-id=5124 time=2023-12-3T8:52:02+0
@@ -60,7 +60,7 @@ struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(heph::Level level, MessageWithLocation message);
+  LogEntry(heph::LogLevel level, MessageWithLocation message);
 
   /// @brief General loginfo consumer, should be used like LogEntry("my message") << Field{"field", 1234}
   ///        Converted to string with stringstream.
@@ -98,7 +98,7 @@ struct LogEntry {
     return std::move(*this);
   }
 
-  heph::Level level;
+  heph::LogLevel level;
   const char* message;
   std::source_location location;
   std::thread::id thread_id;
@@ -174,20 +174,20 @@ void registerLogSink(std::unique_ptr<ILogSink> sink);
 namespace heph {
 ///@brief Log a message. Example:
 ///       ```
-///       heph::log(heph::Level::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0, "entity",
-///       "km/h")
+///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0,
+///       "entity", "km/h")
 ///       ```
 template <typename... Args>
-void log(Level level, telemetry::MessageWithLocation msg, Args&&... fields) {
+void log(LogLevel level, telemetry::MessageWithLocation msg, Args&&... fields) {
   telemetry::internal::logWithFields(telemetry::LogEntry{ level, msg }, std::forward<Args>(fields)...);
 }
 
 ///@brief Log a message without fields. Example:
 ///       ```
-///       heph::log(heph::Level::WARN, "speed is over limit", "current_speed"))
+///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed"))
 ///       ```
 template <typename... Args>
-void log(Level level, telemetry::MessageWithLocation msg) {
+void log(LogLevel level, telemetry::MessageWithLocation msg) {
   telemetry::internal::log(telemetry::LogEntry{ level, msg });
 }
 

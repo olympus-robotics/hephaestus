@@ -30,7 +30,7 @@ TEST(struclog, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::Level::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
   // clang-format on
   auto s = printout(log_entry);
   {
@@ -50,7 +50,7 @@ TEST(struclog, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::Level::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
   // clang-format on
   auto s = printout(log_entry);
   ht::internal::log(std::move(log_entry));
@@ -101,7 +101,7 @@ private:
 TEST(struclog, sink) {
   const int num = 123;
 
-  auto log_entry = ht::LogEntry{ heph::Level::ERROR, "test another great message" }
+  auto log_entry = ht::LogEntry{ heph::LogLevel::ERROR, "test another great message" }
                    << ht::Field{ .key = "num", .value = num };
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
@@ -119,7 +119,7 @@ TEST(struclog, log) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
-  heph::log(heph::Level::ERROR, "test another great message");
+  heph::log(heph::LogLevel::ERROR, "test another great message");
   sink_ptr->wait();
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
@@ -131,7 +131,7 @@ TEST(struclog, logWithFields) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
-  heph::log(heph::Level::ERROR, "test another great message", "num", num, "test", "lala");
+  heph::log(heph::LogLevel::ERROR, "test another great message", "num", num, "test", "lala");
   sink_ptr->wait();
   {
     std::stringstream ss;

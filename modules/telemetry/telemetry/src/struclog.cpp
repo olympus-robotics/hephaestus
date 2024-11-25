@@ -28,24 +28,24 @@
 #include "hephaestus/utils/utils.h"
 
 namespace heph {
-auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
+auto operator<<(std::ostream& os, const LogLevel& level) -> std::ostream& {
   switch (level) {
-    case Level::TRACE:
+    case LogLevel::TRACE:
       os << "trace";
       break;
-    case Level::DEBUG:
+    case LogLevel::DEBUG:
       os << "debug";
       break;
-    case Level::INFO:
+    case LogLevel::INFO:
       os << "info";
       break;
-    case Level::WARN:
+    case LogLevel::WARN:
       os << "warn";
       break;
-    case Level::ERROR:
+    case LogLevel::ERROR:
       os << "error";
       break;
-    case Level::FATAL:
+    case LogLevel::FATAL:
       os << "fatal";
       break;
   }
@@ -131,7 +131,7 @@ void internal::log(LogEntry&& log_entry) {
   Logger::log(std::move(log_entry));
 }
 
-LogEntry::LogEntry(Level level_in, MessageWithLocation message_in)
+LogEntry::LogEntry(LogLevel level_in, MessageWithLocation message_in)
   : level{ level_in }
   , message{ message_in.value }
   , location{ message_in.location }

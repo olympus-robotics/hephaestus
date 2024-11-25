@@ -21,22 +21,22 @@ void AbslLogSink::send(const LogEntry& entry) {
   // Use the ABSL_LOG version since it is more explicit than LOG
   // Use NoPrefix since all information is contained in the entry and we want logfmt formatting.
   switch (entry.level) {
-    case Level::TRACE:
+    case LogLevel::TRACE:
       ABSL_VLOG(2).NoPrefix() << formatter_(entry);
       break;
-    case Level::DEBUG:
+    case LogLevel::DEBUG:
       ABSL_VLOG(1).NoPrefix() << formatter_(entry);
       break;
-    case Level::INFO:
+    case LogLevel::INFO:
       ABSL_LOG(INFO).NoPrefix() << formatter_(entry);
       break;
-    case Level::WARN:
+    case LogLevel::WARN:
       ABSL_LOG(WARNING).NoPrefix() << formatter_(entry);
       break;
-    case Level::ERROR:
+    case LogLevel::ERROR:
       ABSL_LOG(ERROR).NoPrefix() << formatter_(entry);
       break;
-    case Level::FATAL:
+    case LogLevel::FATAL:
       ABSL_LOG(FATAL).NoPrefix() << formatter_(entry);
       break;
   }
