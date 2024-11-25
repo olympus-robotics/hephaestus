@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <absl/strings/ascii.h>
 #include <fmt/format.h>
 
 #include "hephaestus/utils/concepts.h"
@@ -203,6 +204,10 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
     // note: since std::istringstream extracts only up to whitespace, this special case is
     // neccessary for parsing strings containing multiple words
     return it->value;
+  }
+
+  if (absl::AsciiStrToLower(it->value) == "nan") {
+    return std::numeric_limits<T>::quiet_NaN();
   }
 
   T value;

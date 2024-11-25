@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "gmock/gmock.h"
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/utils/exception.h"
 
@@ -29,6 +30,7 @@ TEST(ProgramOptions, Option) {
       .defineOption<float>("bar", "desc", NUMBER)
       .defineOption<int>("foo", 'f', "desc", 1)
       .defineOption<float>("baz", "desc")
+      .defineOption<float>("nan_options", "desc", std::numeric_limits<float>::quiet_NaN())
       .defineFlag("flag", 'b', "desc");
   {
     auto options = ProgramDescription{ desc }.parse(
@@ -43,6 +45,7 @@ TEST(ProgramOptions, Option) {
     EXPECT_EQ(options.getOption<int>("foo"), 1);
     EXPECT_TRUE(options.hasOption("baz"));
     EXPECT_EQ(options.getOption<float>("baz"), -1.0);
+    EXPECT_THAT(options.getOption<float>("nan_options"), IsNan());
     EXPECT_TRUE(options.hasOption("flag"));
     EXPECT_FALSE(options.getOption<bool>("flag"));
   }
