@@ -75,6 +75,15 @@ namespace internal {
 static constexpr auto SERVICE_ATTACHMENT_REQUEST_TYPE_INFO = "0";
 static constexpr auto SERVICE_ATTACHMENT_REPLY_TYPE_INFO = "1";
 
+template <typename T>
+[[nodiscard]] auto getSerialiazedTypeName() -> std::string {
+  if constexpr (std::is_same_v<T, std::string>) {
+    return utils::getTypeName<std::string>();
+  } else {
+    return serdes::getSerializedTypeInfo<T>().name;
+  }
+}
+
 template <typename RequestT, typename ReplyT>
 constexpr void checkTemplatedTypes() {
   static_assert(serdes::protobuf::ProtobufSerializable<RequestT> || std::is_same_v<RequestT, std::string>,
@@ -98,13 +107,8 @@ template <typename RequestT, typename ReplyT>
   const auto request_type_info = attachment_data[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO];
   const auto reply_type_info = attachment_data[SERVICE_ATTACHMENT_REPLY_TYPE_INFO];
 
-  const auto this_request_type = std::is_same_v<RequestT, std::string> ?
-                                     utils::getTypeName<std::string>() :
-                                     serdes::getSerializedTypeInfo<RequestT>().name;
-
-  const auto this_reply_type = std::is_same_v<ReplyT, std::string> ?
-                                   utils::getTypeName<std::string>() :
-                                   serdes::getSerializedTypeInfo<ReplyT>().name;
+  const auto this_request_type = getSerialiazedTypeName<RequestT>();
+  const auto this_reply_type = getSerialiazedTypeName<ReplyT>();
 
   return request_type_info == this_request_type && reply_type_info == this_reply_type;
 }
