@@ -30,7 +30,7 @@ TEST(struclog, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, std::string(a)} | ht::Field{.key="b",.val="test \"great\" name"};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
   // clang-format on
   auto s = printout(log_entry);
   {
@@ -50,7 +50,7 @@ TEST(struclog, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, std::string(a)} | ht::Field{.key="c", .val=c};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{ht::Level::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
   // clang-format on
   auto s = printout(log_entry);
   ht::internal::log(std::move(log_entry));
@@ -101,8 +101,8 @@ private:
 TEST(struclog, sink) {
   const int num = 123;
 
-  auto log_entry =
-      ht::LogEntry{ ht::Level::ERROR, "test another great message" } | ht::Field{ .key = "num", .val = num };
+  auto log_entry = ht::LogEntry{ ht::Level::ERROR, "test another great message" }
+                   << ht::Field{ .key = "num", .value = num };
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
@@ -116,16 +116,22 @@ TEST(struclog, sink) {
 }
 
 TEST(struclog, log) {
+  auto mock_sink = std::make_unique<MockLogSink>();
+  const MockLogSink* sink_ptr = mock_sink.get();
+  ht::registerLogSink(std::move(mock_sink));
+  ht::log(ht::Level::ERROR, "test another great message");
+  sink_ptr->wait();
+
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
+}
+
+TEST(struclog, logWithFields) {
   const int num = 123;
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
-  ht::log(ht::Level::ERROR, "test another great message", ht::Field{ .key = "num", .val = num },
-          ht::Field{ .key = "test", .val = "lala" });
-  // NOLINTBEGIN(modernize-use-designated-initializers)
-  // ht::log(ht::Level::ERROR, "test another great message", { "num", num }, { "test", "lala" });
-  // NOLINTEND(modernize-use-designated-initializers)
+  ht::log(ht::Level::ERROR, "test another great message", "num", num, "test", "lala");
   sink_ptr->wait();
   {
     std::stringstream ss;

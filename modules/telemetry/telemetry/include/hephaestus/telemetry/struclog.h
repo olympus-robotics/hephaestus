@@ -16,7 +16,7 @@ enum class Level : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
 auto operator<<(std::ostream& /*os*/, const Level& /*level*/) -> std::ostream&;
 
 template <typename T>
-concept NotQuotable = !std::convertible_to<T, std::string> && requires(std::ostream& os, T t) {
+concept NonQuotable = !std::convertible_to<T, std::string> && requires(std::ostream& os, T t) {
   { os << t } -> std::same_as<std::ostream&>;
 };
 
@@ -26,18 +26,24 @@ concept Quotable = std::convertible_to<T, std::string>;
 template <typename T>
 struct Field final {
   std::string key;
-  T val;
+  T value;
 };
 
-/*
-struct MessageWithLocation {
-  std::string value;
-  std::source_location loc;
-
-  MessageWithLocation(std::string&& s, const std::source_location& l = std::source_location::current())
-    : value(s), loc(l) {
+///@brief Wrapper around string literals to enhance them with a location.
+///       Note that the message is not owned by this class.
+///       We need to use a const char* here in order to enable implicit conversion from `log(Level::INFO,"my
+///       string");`. Th  //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)e standard
+///       guarantees that string literals exist for the entirety of the program lifetime, so i is fine to use
+///       it as `MessageWithLocation("my message");`
+struct MessageWithLocation final {
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  MessageWithLocation(const char* s, const std::source_location& l = std::source_location::current())
+    : value(s), location(l) {
   }
-};*/
+
+  const char* value;
+  std::source_location location;
+};
 
 /// @brief A class that allows easy composition of logs for structured logging.
 ///       Example(see also struclog.cpp):
@@ -54,28 +60,27 @@ struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(Level level, std::string&& message,
-           std::source_location location = std::source_location::current());
+  LogEntry(Level level, MessageWithLocation message);
 
-  /// @brief General loginfo consumer, should be used like LogEntry("my message") | Field{"field", 1234}
+  /// @brief General loginfo consumer, should be used like LogEntry("my message") << Field{"field", 1234}
   ///        Converted to string with stringstream.
   ///
   /// @tparam T any type that is consumeable by stringstream
   /// @param key identifier for the logging data
-  /// @param val value of the logging data
+  /// @param value value of the logging data
   /// @return LogEntry&&
 
-  template <NotQuotable T>
-  auto operator|(const Field<T>& field) -> LogEntry&& {
+  template <NonQuotable T>
+  auto operator<<(const Field<T>& field) -> LogEntry&& {
     std::stringstream ss;
-    ss << field.val;
+    ss << field.value;
     fields.emplace_back(field.key, ss.str());
 
     return std::move(*this);
   }
 
   /// @brief Specialized loginfo consumer for string types so that they are quoted, should be used like
-  ///        LogEntry("my message") | Field{"field", "mystring"}
+  ///        LogEntry("my message") << Field{"field", "mystring"}
   ///
   /// @tparam T any type that is consumeable by stringstream
   /// @param key identifier for the logging data
@@ -83,19 +88,18 @@ struct LogEntry {
   /// @return LogEntry&&
 
   template <Quotable S>
-  auto operator|(const Field<S>& field) -> LogEntry&& {
+  auto operator<<(const Field<S>& field) -> LogEntry&& {
     std::stringstream ss;
     // Pointer decay is wanted here to catch char[n] messages
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-    ss << std::quoted(field.val);
+    ss << std::quoted(field.value);
     fields.emplace_back(field.key, ss.str());
 
     return std::move(*this);
   }
 
   Level level;
-  std::string message;
-  std::source_location location;
+  MessageWithLocation msg_with_loc;
   std::thread::id thread_id;
   ClockT::time_point time;
   std::string hostname;
@@ -103,7 +107,7 @@ struct LogEntry {
   FieldsT fields;
 };
 
-/// @brief format function from LogEntry to string. Currently its in logfmt.
+/// @brief format function from LogEntry to string adheruing to logfmt rules.
 ///
 /// @param log
 /// @return std::string
@@ -129,22 +133,53 @@ struct ILogSink {
 
 namespace internal {
 void log(LogEntry&& log_entry);
+
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
+// cppcoreguidelines-missing-std-forward)
+///@brief Stop function for recursion: Uneven number of parameters
+template <typename First>
+void logWithFields(LogEntry&&, First&&) {
+  static_assert(false, "number of input parameters is uneven.");
+}
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
+// cppcoreguidelines-missing-std-forward)
+
+///@brief Stop function for recursion: Even number of parameters
+template <typename First, typename Second>
+void logWithFields(LogEntry&& entry, First&& first, Second&& second) {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+  entry << Field{ .key = std::forward<First>(first), .value = std::forward<Second>(second) };
+  log(std::move(entry));
 }
 
-template <typename... Fields>
-//  NOLINTNEXTLINE(readability-identifier-naming)
-struct log {
-  log(Level level, std::string&& msg, Fields&&... fields,
-      const std::source_location& location = std::source_location::current()) {
-    LogEntry entry{ level, std::move(msg), location };
-    ((entry | std::forward<Fields>(fields)), ...);
-    internal::log(std::move(entry));
-  }
-};
-
-template <typename... Ts>
-log(Level level, std::string&&, Ts&&...) -> log<Ts...>;
+///@brief Add fields pairwise to entry. `addFields(entry, "a", 3,"b","lala")` will result in fields a=3 and
+/// b="lala".
+template <typename First, typename Second, typename... Rest>
+void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... rest) {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+  entry << Field{ .key = std::forward<First>(first), .value = std::forward<Second>(second) };
+  logWithFields(std::move(entry), std::forward<Rest>(rest)...);
+}
+}  // namespace internal
 
 void registerLogSink(std::unique_ptr<ILogSink> sink);
+
+///@brief Log a message. Example:
+///       ```
+///       log(Level::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0, "entity", "km/h")
+///       ```
+template <typename... Args>
+void log(Level level, MessageWithLocation msg, Args&&... fields) {
+  internal::logWithFields(LogEntry{ level, msg }, std::forward<Args>(fields)...);
+}
+
+///@brief Log a message without fields. Example:
+///       ```
+///       log(Level::WARN, "speed is over limit", "current_speed"))
+///       ```
+template <typename... Args>
+void log(Level level, MessageWithLocation msg) {
+  internal::log(LogEntry{ level, msg });
+}
 
 }  // namespace heph::telemetry

@@ -129,10 +129,9 @@ void internal::log(LogEntry&& log_entry) {
   Logger::log(std::move(log_entry));
 }
 
-LogEntry::LogEntry(Level level_in, std::string&& message_in, std::source_location location_in)
+LogEntry::LogEntry(Level level_in, MessageWithLocation message_in)
   : level{ level_in }
-  , message{ std::move(message_in) }
-  , location{ location_in }
+  , msg_with_loc{ message_in }
   , thread_id{ std::this_thread::get_id() }
   , time{ LogEntry::ClockT::now() }
   , hostname{ heph::utils::getHostName() } {
@@ -143,15 +142,15 @@ auto format(const LogEntry& log) -> std::string {
   ss << "level=" << log.level;
   ss << " hostname=" << std::quoted(log.hostname);
   ss << " location="
-     << std::quoted(fmt::format("{}:{}",
-                                std::filesystem::path{ log.location.file_name() }.filename().string(),
-                                log.location.line()));
+     << std::quoted(fmt::format(
+            "{}:{}", std::filesystem::path{ log.msg_with_loc.location.file_name() }.filename().string(),
+            log.msg_with_loc.location.line()));
   ss << " thread-id=" << log.thread_id;
   ss << " time=" << fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", log.time);
-  ss << " message=" << std::quoted(log.message);
+  ss << " message=" << std::quoted(log.msg_with_loc.value);
 
   for (const Field<std::string>& field : log.fields) {
-    ss << " " << field.key << "=" << field.val;
+    ss << " " << field.key << "=" << field.value;
   }
 
   return ss.str();

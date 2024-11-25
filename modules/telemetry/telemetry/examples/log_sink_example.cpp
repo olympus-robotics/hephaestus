@@ -17,9 +17,7 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   const int num = 1234;
   ht::log(ht::Level::WARN, "testing absl log sink");
-  // NOLINTBEGIN(modernize-use-designated-initializers)
-  ht::log(ht::Level::WARN, "testing absl log sink with field", ht::Field{ "num", num },
-          ht::Field{ "quoted_string", "test" });
-  // NOLINTEND(modernize-use-designated-initializers)
+  ht::log(ht::Level::WARN, "testing absl log sink with field", "num", num, "quoted_string", "test");
+
   return 0;
 }
