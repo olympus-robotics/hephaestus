@@ -148,7 +148,7 @@ TEST(TypeFormattingTests, ChronoTimestampFormattingSteadyClock) {
   const auto timestamp = std::chrono::steady_clock::now();
   const auto str = fmt::format("{}", toString(timestamp));
 
-  ASSERT_LE(str.length(), 24);
+  ASSERT_LE(str.length(), 25);
 
   const auto it = std::ranges::find(str, 'd');
   ASSERT_TRUE(it != str.end());

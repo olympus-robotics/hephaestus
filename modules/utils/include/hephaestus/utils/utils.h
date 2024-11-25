@@ -13,7 +13,7 @@ namespace heph::utils {
 
 /// Return user-readable name for specified type
 template <typename T>
-inline auto getTypeName() -> std::string {
+auto getTypeName() -> std::string {
   // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
   const auto* const mangled_name = typeid(T).name();
   int status{ 0 };
