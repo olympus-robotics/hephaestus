@@ -21,13 +21,13 @@
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
-#include <fmt/chrono.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/core.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/utils/utils.h"
 
-namespace heph::telemetry {
+namespace heph {
 auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
   switch (level) {
     case Level::TRACE:
@@ -52,7 +52,9 @@ auto operator<<(std::ostream& os, const Level& level) -> std::ostream& {
 
   return os;
 }
+}  // namespace heph
 
+namespace heph::telemetry {
 namespace {
 class Logger final {
 public:
@@ -131,7 +133,8 @@ void internal::log(LogEntry&& log_entry) {
 
 LogEntry::LogEntry(Level level_in, MessageWithLocation message_in)
   : level{ level_in }
-  , msg_with_loc{ message_in }
+  , message{ message_in.value }
+  , location{ message_in.location }
   , thread_id{ std::this_thread::get_id() }
   , time{ LogEntry::ClockT::now() }
   , hostname{ heph::utils::getHostName() } {
@@ -142,12 +145,12 @@ auto format(const LogEntry& log) -> std::string {
   ss << "level=" << log.level;
   ss << " hostname=" << std::quoted(log.hostname);
   ss << " location="
-     << std::quoted(fmt::format(
-            "{}:{}", std::filesystem::path{ log.msg_with_loc.location.file_name() }.filename().string(),
-            log.msg_with_loc.location.line()));
+     << std::quoted(fmt::format("{}:{}",
+                                std::filesystem::path{ log.location.file_name() }.filename().string(),
+                                log.location.line()));
   ss << " thread-id=" << log.thread_id;
   ss << " time=" << fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", log.time);
-  ss << " message=" << std::quoted(log.msg_with_loc.value);
+  ss << " message=" << std::quoted(log.message);
 
   for (const Field<std::string>& field : log.fields) {
     ss << " " << field.key << "=" << field.value;

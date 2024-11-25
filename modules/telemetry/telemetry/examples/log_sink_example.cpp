@@ -7,17 +7,16 @@
 #include "hephaestus/telemetry/struclog.h"
 #include "hephaestus/utils/stack_trace.h"
 
-namespace ht = heph::telemetry;
-
 // NOLINTNEXTLINE(bugprone-exception-escape)
 auto main(int /*argc*/, const char* /*argv*/[]) -> int {
   const heph::utils::StackTrace stack;
 
-  ht::registerLogSink(std::make_unique<ht::AbslLogSink>());
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
+  heph::log(heph::Level::WARN, "testing absl log sink");
 
   const int num = 1234;
-  ht::log(ht::Level::WARN, "testing absl log sink");
-  ht::log(ht::Level::WARN, "testing absl log sink with field", "num", num, "quoted_string", "test");
+  heph::log(heph::Level::INFO, "absl log sink with fields", "num", num, "quoted_string", "test");
 
   return 0;
 }

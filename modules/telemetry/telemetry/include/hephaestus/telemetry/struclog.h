@@ -10,11 +10,12 @@
 #include <utility>
 #include <vector>
 
-namespace heph::telemetry {
-
+namespace heph {
 enum class Level : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
 auto operator<<(std::ostream& /*os*/, const Level& /*level*/) -> std::ostream&;
+}  // namespace heph
 
+namespace heph::telemetry {
 template <typename T>
 concept NonQuotable = !std::convertible_to<T, std::string> && requires(std::ostream& os, T t) {
   { os << t } -> std::same_as<std::ostream&>;
@@ -32,9 +33,8 @@ struct Field final {
 ///@brief Wrapper around string literals to enhance them with a location.
 ///       Note that the message is not owned by this class.
 ///       We need to use a const char* here in order to enable implicit conversion from `log(Level::INFO,"my
-///       string");`. Th  //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)e standard
-///       guarantees that string literals exist for the entirety of the program lifetime, so i is fine to use
-///       it as `MessageWithLocation("my message");`
+///       string");`. The standard guarantees that string literals exist for the entirety of the program
+///       lifetime, so it is fine to use it as `MessageWithLocation("my message");`
 struct MessageWithLocation final {
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   MessageWithLocation(const char* s, const std::source_location& l = std::source_location::current())
@@ -60,7 +60,7 @@ struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(Level level, MessageWithLocation message);
+  LogEntry(heph::Level level, MessageWithLocation message);
 
   /// @brief General loginfo consumer, should be used like LogEntry("my message") << Field{"field", 1234}
   ///        Converted to string with stringstream.
@@ -98,8 +98,9 @@ struct LogEntry {
     return std::move(*this);
   }
 
-  Level level;
-  MessageWithLocation msg_with_loc;
+  heph::Level level;
+  const char* message;
+  std::source_location location;
   std::thread::id thread_id;
   ClockT::time_point time;
   std::string hostname;
@@ -134,17 +135,19 @@ struct ILogSink {
 namespace internal {
 void log(LogEntry&& log_entry);
 
-/*
+#if (__GNUC__ >= 14) || defined(__clang__)
 // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
 // cppcoreguidelines-missing-std-forward)
-///@brief Stop function for recursion: Uneven number of parameters
+///@brief Stop function for recursion: Uneven number of parameters.
+///       This is exists for better understandable compiler errors.
+///       Code gcc<14 will still work as expected but the compiler error message is hard to read.
 template <typename First>
 void logWithFields(LogEntry&&, First&&) {
   static_assert(false, "number of input parameters is uneven.");
 }
 // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
 // cppcoreguidelines-missing-std-forward)
-*/
+#endif
 
 ///@brief Stop function for recursion: Even number of parameters
 template <typename First, typename Second>
@@ -166,22 +169,26 @@ void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... r
 
 void registerLogSink(std::unique_ptr<ILogSink> sink);
 
+}  // namespace heph::telemetry
+
+namespace heph {
 ///@brief Log a message. Example:
 ///       ```
-///       log(Level::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0, "entity", "km/h")
+///       heph::log(heph::Level::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0, "entity",
+///       "km/h")
 ///       ```
 template <typename... Args>
-void log(Level level, MessageWithLocation msg, Args&&... fields) {
-  internal::logWithFields(LogEntry{ level, msg }, std::forward<Args>(fields)...);
+void log(Level level, telemetry::MessageWithLocation msg, Args&&... fields) {
+  telemetry::internal::logWithFields(telemetry::LogEntry{ level, msg }, std::forward<Args>(fields)...);
 }
 
 ///@brief Log a message without fields. Example:
 ///       ```
-///       log(Level::WARN, "speed is over limit", "current_speed"))
+///       heph::log(heph::Level::WARN, "speed is over limit", "current_speed"))
 ///       ```
 template <typename... Args>
-void log(Level level, MessageWithLocation msg) {
-  internal::log(LogEntry{ level, msg });
+void log(Level level, telemetry::MessageWithLocation msg) {
+  telemetry::internal::log(telemetry::LogEntry{ level, msg });
 }
 
-}  // namespace heph::telemetry
+}  // namespace heph
