@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 #include <memory>
+#include <string>
 
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"

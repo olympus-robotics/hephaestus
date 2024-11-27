@@ -60,7 +60,7 @@ struct MessageWithLocation final {
 ///       Example(see also log.cpp):
 ///       ```cpp
 ///         namespace ht=heph::telemetry;
-///         log(LogLevel::INFO, "adding", {"speed", 31.3}, {"tag", "test"});
+///         log(LogLevel::INFO, "adding", "speed", 31.3, "tag", "test");
 ///       ```
 ///         logs
 ///        'level=info hostname=goofy location=log.h:123 thread-id=5124 time=2023-12-3T8:52:02+0

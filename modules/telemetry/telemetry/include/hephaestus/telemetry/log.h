@@ -65,7 +65,7 @@ void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields)
 
 ///@brief Log a message without fields. Example:
 ///       ```
-///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed"))
+///       heph::log(heph::LogLevel::WARN, "speed is over limit")
 ///       ```
 template <typename... Args>
 void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
