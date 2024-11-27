@@ -81,7 +81,7 @@ TEST(log, Escapes) {
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {
-    log_ = format(s);
+    log_ += format(s);
     flag_.test_and_set();
     flag_.notify_all();
   }
@@ -117,22 +117,54 @@ TEST(log, sink) {
 }
 
 TEST(log, log) {
+  using namespace std::literals::string_literals;
+
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
   heph::log(heph::LogLevel::ERROR, "test another great message");
+
   sink_ptr->wait();
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
+TEST(log, logString) {
+  using namespace std::literals::string_literals;
+
+  auto mock_sink = std::make_unique<MockLogSink>();
+  const MockLogSink* sink_ptr = mock_sink.get();
+  ht::registerLogSink(std::move(mock_sink));
+  heph::log(heph::LogLevel::ERROR, "as string"s);
+
+  sink_ptr->wait();
+
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
+}
+
+TEST(log, logFmt) {
+  auto mock_sink = std::make_unique<MockLogSink>();
+  const MockLogSink* sink_ptr = mock_sink.get();
+  ht::registerLogSink(std::move(mock_sink));
+
+  const int num = 456;
+  heph::log(heph::LogLevel::ERROR, std::format("this {} is formatted", num));
+
+  sink_ptr->wait();
+
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+}
+
 TEST(log, logWithFields) {
+  using namespace std::literals::string_literals;
+
   const int num = 123;
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   ht::registerLogSink(std::move(mock_sink));
   heph::log(heph::LogLevel::ERROR, "test another great message", "num", num, "test", "lala");
+
   sink_ptr->wait();
   {
     std::stringstream ss;

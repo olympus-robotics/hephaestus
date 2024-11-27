@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/core.h>
@@ -43,9 +44,11 @@ auto operator<<(std::ostream& os, const LogLevel& level) -> std::ostream& {
 }  // namespace heph
 
 namespace heph::telemetry {
-LogEntry::LogEntry(LogLevel level_in, MessageWithLocation message_in)
+// Instead of deactvating the following check we could globally set AllowPartialMove to true
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+LogEntry::LogEntry(LogLevel level_in, MessageWithLocation&& message_in)
   : level{ level_in }
-  , message{ message_in.value }
+  , message{ std::move(message_in.value) }
   , location{ message_in.location }
   , thread_id{ std::this_thread::get_id() }
   , time{ LogEntry::ClockT::now() }

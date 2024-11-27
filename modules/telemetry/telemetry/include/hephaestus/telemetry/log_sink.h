@@ -40,12 +40,19 @@ struct Field final {
 ///       `log(LogLevel::INFO,"my string");`. The standard guarantees that string literals exist for the
 ///       entirety of the program lifetime, so it is fine to use it as `MessageWithLocation("my message");`
 struct MessageWithLocation final {
+  ///@brief Constructor for interface as `log(Level::Warn, "msg");`
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   MessageWithLocation(const char* s, const std::source_location& l = std::source_location::current())
     : value(s), location(l) {
   }
 
-  const char* value;
+  ///@brief Constructor for interface as `log(Level::Warn, "msg"s);` or `log(Level::Warn, std::format(...));`
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  MessageWithLocation(std::string s, const std::source_location& l = std::source_location::current())
+    : value(std::move(s)), location(l) {
+  }
+
+  std::string value;
   std::source_location location;
 };
 
@@ -64,7 +71,7 @@ struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(heph::LogLevel level, MessageWithLocation message);
+  LogEntry(heph::LogLevel level, MessageWithLocation&& message);
 
   /// @brief General loginfo consumer, should be used like LogEntry("my message") << Field{"field", 1234}
   ///        Converted to string with stringstream.
@@ -103,7 +110,7 @@ struct LogEntry {
   }
 
   heph::LogLevel level;
-  const char* message;
+  std::string message;
   std::source_location location;
   std::thread::id thread_id;
   ClockT::time_point time;

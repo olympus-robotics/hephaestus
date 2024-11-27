@@ -58,8 +58,9 @@ namespace heph {
 ///       "entity", "km/h")
 ///       ```
 template <typename... Args>
-void log(LogLevel level, telemetry::MessageWithLocation msg, Args&&... fields) {
-  telemetry::internal::logWithFields(telemetry::LogEntry{ level, msg }, std::forward<Args>(fields)...);
+void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields) {
+  telemetry::internal::logWithFields(telemetry::LogEntry{ level, std::move(msg) },
+                                     std::forward<Args>(fields)...);
 }
 
 ///@brief Log a message without fields. Example:
@@ -67,8 +68,8 @@ void log(LogLevel level, telemetry::MessageWithLocation msg, Args&&... fields) {
 ///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed"))
 ///       ```
 template <typename... Args>
-void log(LogLevel level, telemetry::MessageWithLocation msg) {
-  telemetry::internal::log(telemetry::LogEntry{ level, msg });
+void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
+  telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
 }
 
 }  // namespace heph
