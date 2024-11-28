@@ -108,6 +108,14 @@ public:
 };
 
 //=================================================================================================
+/// Exception raised due to a hardware issue
+class HardwareException : public heph::Exception {
+public:
+  HardwareException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
+  }
+};
+
+//=================================================================================================
 /// Exception raised due failed Zenoh operation
 class FailedZenohOperation : public heph::Exception {
 public:
