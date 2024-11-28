@@ -18,9 +18,10 @@ TEST(StopWatch, AccumulateTime) {
 
   StopWatch swatch;
   swatch.start();
-  const auto t1 = swatch.getAccumulatedLapTimes();
+  const auto t1 = swatch.accumulatedLapsDuration();
+  EXPECT_GT(t1.count(), 0);
   std::this_thread::sleep_for(PERIOD);
-  const auto t2 = swatch.getAccumulatedLapTimes();
+  const auto t2 = swatch.accumulatedLapsDuration();
   EXPECT_LT(t1, t2);
 }
 
@@ -30,15 +31,17 @@ TEST(StopWatch, Stoppable) {
 
   StopWatch swatch;
   swatch.start();
+
   std::this_thread::sleep_for(PERIOD);
   const auto elapsed = swatch.stop();
   EXPECT_EQ(swatch.getLapsCount(), 1);
 
-  const auto t1 = swatch.getAccumulatedLapTimes();
+  const auto t1 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(elapsed, t1);
-  std::this_thread::sleep_for(PERIOD);
-  const auto t2 = swatch.getAccumulatedLapTimes();
   EXPECT_GT(t1.count(), 0);
+
+  std::this_thread::sleep_for(PERIOD);
+  const auto t2 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(t1.count(), t2.count());
 }
 
@@ -60,11 +63,11 @@ TEST(StopWatch, ResumeCounting) {
   swatch.start();
   std::this_thread::sleep_for(PERIOD);
   // should have accumulated about 2 periods of count
-  const auto t2 = swatch.getAccumulatedLapTimes();
+  const auto t2 = swatch.accumulatedLapsDuration();
   EXPECT_GT(t2, 2 * PERIOD - 1ms);
 
   std::ignore = swatch.stop();
-  EXPECT_EQ(swatch.getLapsCount(), 2);
+  EXPECT_EQ(swatch.lapsCount(), 2);
 }
 
 TEST(StopWatch, Reset) {
@@ -76,10 +79,25 @@ TEST(StopWatch, Reset) {
   std::this_thread::sleep_for(PERIOD);
   std::ignore = swatch.stop();
 
-  EXPECT_NE(swatch.getAccumulatedLapTimes().count(), 0);
+  EXPECT_NE(swatch.accumulatedLapsDuration().count(), 0);
 
   swatch.reset();
-  EXPECT_EQ(swatch.getAccumulatedLapTimes().count(), 0);
+  EXPECT_EQ(swatch.accumulatedLapsDuration().count(), 0);
+  EXPECT_EQ(swatch.lapsCount(), 0);
+}
+
+TEST(StopWatch, Lapse) {
+  using namespace std::chrono_literals;
+  constexpr auto PERIOD = 10ms;
+
+  StopWatch swatch;
+  swatch.start();
+  std::this_thread::sleep_for(PERIOD);
+  const auto l1 = swatch.lapse();
+  const auto l2 = swatch.lapse();
+  const auto d = swatch.stop();
+  EXPECT_GT(l1, l2);
+  EXPECT_GT(d, l2);
 }
 
 TEST(StopWatch, DurationCast) {

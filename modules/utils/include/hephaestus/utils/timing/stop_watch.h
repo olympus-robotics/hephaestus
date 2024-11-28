@@ -26,46 +26,41 @@ public:
   template <typename DurationT = StopWatch::DurationT>
   [[nodiscard]] auto stop() -> DurationT;
 
-  /// \return Currently running lap time (time elapsed from most recent start()) cast to the
-  /// desired duration.
-  /// Doesn't stop the watch.
+  /// \return Currently running lap time:
+  /// - time elapsed from max[most recent start(), most recent lap()] to now.
+  /// - Cast to desired duration.
+  /// - Doesn't stop the watch.
   template <typename DurationT = StopWatch::DurationT>
-  [[nodiscard]] auto lapse() const -> DurationT;
+  [[nodiscard]] auto lapse() -> DurationT;
 
   /// Stop and reset accumlated information.
   void reset();
 
   /// \return Time accumulated across all laps since last reset().
-  [[nodiscard]] auto getAccumulatedLapTimes() const -> DurationT;
+  [[nodiscard]] auto accumulatedLapsDuration() const -> DurationT;
 
-  /// \return Time elapsed since first start() after reset(). This includes time accumulated
-  /// across laps and in between laps.
-  [[nodiscard]] auto getTotalElapsedTime() const -> DurationT;
-
-  /// \return Timestamp at most recent stop().
-  /// \note (getLastStopTimestamp() - getTotalElapsedTime()) gives timestamp of the first call to
-  /// start() after reset().
-  [[nodiscard]] auto getLastStopTimestamp() const -> ClockT::time_point;
+  /// \return Timestamp of the first `start()` call after the last `reset()`.
+  [[nodiscard]] auto initialStartTimestamp() const -> std::optional<ClockT::time_point>;
 
   /// \return the number of times the timer has been stopped and re-started.
-  [[nodiscard]] auto getLapsCount() const -> std::size_t;
+  [[nodiscard]] auto lapsCount() const -> std::size_t;
 
 private:
-  [[nodiscard]] auto lapseImpl() const -> DurationT;
+  [[nodiscard]] auto lapseImpl() -> DurationT;
   [[nodiscard]] auto stopImpl() -> DurationT;
 
 private:
-  std::optional<ClockT::time_point> lap_start_time_;      //!< Timestamp at start()
-  std::optional<ClockT::time_point> initial_start_time_;  //!< Timestamp at first start() after reset().
-  ClockT::time_point lap_stop_time_;                      //!< Timestamp at last stop()
-  std::chrono::nanoseconds accumulated_time_{ 0 };        //!< The time accumulated between start() and
-                                                          //!< stop() calls, after the last reset() call.
+  std::optional<ClockT::time_point> lap_start_timestamp_;      //!< Timestamp at start().
+  std::optional<ClockT::time_point> initial_start_timestamp_;  //!< Timestamp at first start() after reset().
+  std::optional<ClockT::time_point> lapse_timestamp_;          //!< Timestamp at lapse().
+  std::chrono::nanoseconds accumulated_time_{ 0 };             //!< The time accumulated between start() and
+                                                               //!< stop() calls, after the last reset() call.
   std::size_t lap_counter_{ 0 };  //!< Counts how many time stop() have been called after the last
                                   //!< reset().
 };
 
 template <typename DurationT>
-auto StopWatch::lapse() const -> DurationT {
+auto StopWatch::lapse() -> DurationT {
   return std::chrono::duration_cast<DurationT>(lapseImpl());
 }
 
