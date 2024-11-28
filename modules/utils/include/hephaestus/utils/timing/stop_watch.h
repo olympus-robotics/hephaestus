@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <optional>
 
 namespace heph::utils::timing {
 
@@ -47,19 +48,18 @@ public:
   [[nodiscard]] auto getLastStopTimestamp() const -> ClockT::time_point;
 
   /// \return the number of times the timer has been stopped and re-started.
-  [[nodiscard]] auto getNumLaps() const -> std::size_t;
+  [[nodiscard]] auto getLapsCount() const -> std::size_t;
 
 private:
   [[nodiscard]] auto lapseImpl() const -> DurationT;
   [[nodiscard]] auto stopImpl() -> DurationT;
 
 private:
-  ClockT::time_point lap_start_time_;               //!< Timestamp at start()
-  ClockT::time_point initial_start_time_;           //!< Timestamp at first start() after reset().
-  ClockT::time_point lap_stop_time_;                //!< Timestamp at last stop()
-  std::chrono::nanoseconds accumulated_time_{ 0 };  //!< The time accumulated between start() and
-                                                    //!< stop() calls, after the last reset() call.
-  bool is_running_{ false };                        //!< True if start() has been called, but not stop().
+  std::optional<ClockT::time_point> lap_start_time_;      //!< Timestamp at start()
+  std::optional<ClockT::time_point> initial_start_time_;  //!< Timestamp at first start() after reset().
+  ClockT::time_point lap_stop_time_;                      //!< Timestamp at last stop()
+  std::chrono::nanoseconds accumulated_time_{ 0 };        //!< The time accumulated between start() and
+                                                          //!< stop() calls, after the last reset() call.
   std::size_t lap_counter_{ 0 };  //!< Counts how many time stop() have been called after the last
                                   //!< reset().
 };

@@ -32,6 +32,8 @@ TEST(StopWatch, Stoppable) {
   swatch.start();
   std::this_thread::sleep_for(PERIOD);
   const auto elapsed = swatch.stop();
+  EXPECT_EQ(swatch.getLapsCount(), 1);
+
   const auto t1 = swatch.getAccumulatedLapTimes();
   EXPECT_EQ(elapsed, t1);
   std::this_thread::sleep_for(PERIOD);
@@ -57,10 +59,12 @@ TEST(StopWatch, ResumeCounting) {
   // start again and let it run for period
   swatch.start();
   std::this_thread::sleep_for(PERIOD);
-  const auto t2 = swatch.getAccumulatedLapTimes();
-
   // should have accumulated about 2 periods of count
+  const auto t2 = swatch.getAccumulatedLapTimes();
   EXPECT_GT(t2, 2 * PERIOD - 1ms);
+
+  std::ignore = swatch.stop();
+  EXPECT_EQ(swatch.getLapsCount(), 2);
 }
 
 TEST(StopWatch, Reset) {
