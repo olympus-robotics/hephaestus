@@ -78,4 +78,16 @@ TEST(StopWatch, Reset) {
   EXPECT_EQ(swatch.getAccumulatedLapTimes().count(), 0);
 }
 
+TEST(StopWatch, DurationCast) {
+  using namespace std::chrono_literals;
+  using DurationT = std::chrono::duration<double>;
+  StopWatch swatch;
+  swatch.start();
+  auto elapsed = swatch.lapse<DurationT>();
+  static_assert(std::is_same_v<decltype(elapsed), DurationT>);
+
+  auto total_elapsed = swatch.stop<DurationT>();
+  static_assert(std::is_same_v<decltype(total_elapsed), DurationT>);
+}
+
 }  // namespace heph::utils::timing::tests

@@ -27,25 +27,6 @@ void StopWatch::start() {
   is_running_ = true;
 }
 
-auto StopWatch::lapse() const -> ClockT::duration {
-  if (!is_running_) {
-    return {};
-  }
-  return ClockT::now() - lap_start_time_;
-}
-
-auto StopWatch::stop() -> ClockT::duration {
-  if (!is_running_) {
-    return {};
-  }
-  lap_stop_time_ = ClockT::now();
-  is_running_ = false;
-  const auto lap_time = lap_stop_time_ - lap_start_time_;
-  accumulated_time_ += lap_time;
-  ++lap_counter_;
-  return lap_time;
-}
-
 void StopWatch::reset() {
   using namespace std::chrono_literals;
   std::ignore = stop();
@@ -69,6 +50,27 @@ auto StopWatch::getLastStopTimestamp() const -> ClockT::time_point {
 
 auto StopWatch::getNumLaps() const -> std::size_t {
   return lap_counter_;
+}
+
+auto StopWatch::lapseImpl() const -> ClockT::duration {
+  if (!is_running_) {
+    return {};
+  }
+
+  return std::chrono::duration_cast<DurationT>(ClockT::now() - lap_start_time_);
+}
+
+auto StopWatch::stopImpl() -> ClockT::duration {
+  if (!is_running_) {
+    return {};
+  }
+
+  lap_stop_time_ = ClockT::now();
+  is_running_ = false;
+  const auto lap_time = lap_stop_time_ - lap_start_time_;
+  accumulated_time_ += lap_time;
+  ++lap_counter_;
+  return lap_time;
 }
 
 }  // namespace heph::utils::timing
