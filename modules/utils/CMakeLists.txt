@@ -23,6 +23,7 @@ set(SOURCES
     src/format/format.cpp
     src/string/string_literal.cpp
     src/string/string_utils.cpp
+    src/timing/stop_watch.cpp
     src/timing/watchdog.cpp
     src/concepts.cpp
     src/exception.cpp
@@ -36,6 +37,7 @@ set(SOURCES
     include/hephaestus/utils/format/format.h
     include/hephaestus/utils/string/string_literal.h
     include/hephaestus/utils/string/string_utils.h
+    include/hephaestus/utils/timing/stop_watch.h
     include/hephaestus/utils/timing/watchdog.h
     include/hephaestus/utils/concepts.h
     include/hephaestus/utils/exception.h
