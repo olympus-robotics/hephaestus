@@ -45,6 +45,39 @@ constexpr auto MAX_ITERATION_COUNT = 10;
 }
 }  // namespace
 
+TEST(SpinnerTest, ComputeNextSpinTimestamp) {
+  using ClockT = std::chrono::system_clock;
+  const auto start_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 0 } };
+  const auto spin_period = std::chrono::milliseconds{ 10 };
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 5 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 10 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 12 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 20 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 49 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 50 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 50 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 50 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+}
+
 TEST(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
