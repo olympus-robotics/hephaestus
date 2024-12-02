@@ -4,13 +4,14 @@
 
 #pragma once
 
+#include <cstddef>
 #include <span>
+#include <string>
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
-#include <google/protobuf/util/json_util.h>
 
 #include "hephaestus/serdes/type_info.h"
 

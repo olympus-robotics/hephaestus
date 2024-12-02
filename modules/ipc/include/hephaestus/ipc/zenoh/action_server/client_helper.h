@@ -4,13 +4,19 @@
 
 #pragma once
 
+#include <functional>
 #include <future>
+#include <memory>
+#include <string>
+#include <utility>
 
-#include <fmt/core.h>
+#include <absl/log/log.h>
+#include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_proto.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"

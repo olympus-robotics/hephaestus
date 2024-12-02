@@ -4,11 +4,18 @@
 
 #pragma once
 
+#include <cstddef>
+#include <span>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
-#include <range/v3/range/conversion.hpp>
 
 #include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf_internal.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/exception.h"

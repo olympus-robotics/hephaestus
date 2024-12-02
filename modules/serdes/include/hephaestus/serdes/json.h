@@ -4,10 +4,12 @@
 
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <string_view>
 
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"

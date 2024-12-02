@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include "hephaestus/serdes/protobuf/concepts.h"

@@ -5,10 +5,14 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <variant>
 
+#include <fmt/base.h>
 #include <fmt/format.h>
 
 namespace heph::telemetry {

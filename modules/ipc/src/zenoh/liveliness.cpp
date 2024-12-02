@@ -16,7 +16,8 @@
 #include <vector>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>

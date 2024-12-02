@@ -18,7 +18,7 @@
 
 #include <absl/log/log.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 

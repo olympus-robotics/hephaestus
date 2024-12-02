@@ -3,13 +3,13 @@
 //=================================================================================================
 
 #pragma once
-#include <queue>
 
 #include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
 #include "hephaestus/serdes/protobuf/buffers.h"
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 

@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 

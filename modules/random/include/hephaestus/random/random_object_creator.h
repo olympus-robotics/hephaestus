@@ -7,9 +7,12 @@
 #include <chrono>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <limits>
+#include <optional>
 #include <random>
-#include <type_traits>
-#include <vector>
+#include <string>
 
 #include <fmt/format.h>
 #include <magic_enum.hpp>

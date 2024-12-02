@@ -6,7 +6,7 @@
 #include <exception>
 #include <future>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/utils/signal_handler.h"

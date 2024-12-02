@@ -10,7 +10,8 @@
 #include <absl/random/random.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 namespace heph::utils::filesystem {
 

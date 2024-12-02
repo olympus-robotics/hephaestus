@@ -8,7 +8,7 @@
 #include <random>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 namespace heph::random {
 

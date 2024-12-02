@@ -3,7 +3,12 @@
 //=================================================================================================
 
 #pragma once
+
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/metric_sink.h"

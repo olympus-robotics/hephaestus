@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <concepts>
 #include <condition_variable>
+#include <cstddef>
 #include <deque>
 #include <mutex>
 #include <optional>

@@ -8,7 +8,7 @@
 #include <span>
 #include <string>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/message.h>
