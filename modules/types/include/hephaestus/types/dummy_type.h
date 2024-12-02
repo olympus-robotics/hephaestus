@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <fmt/base.h>
 #include <fmt/ostream.h>
-#include <magic_enum.hpp>
 
 namespace heph::types {
 

@@ -9,7 +9,7 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/cli/program_options.h"
 

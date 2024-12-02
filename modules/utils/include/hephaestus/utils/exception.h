@@ -7,10 +7,12 @@
 
 #include <source_location>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
-#include <absl/log/check.h>
-#include <fmt/core.h>
+#ifdef DISABLE_EXCEPTIONS
+#include <fmt/format.h>
+#endif
 
 namespace heph {
 
@@ -104,6 +106,14 @@ public:
 class InvalidOperationException : public heph::Exception {
 public:
   InvalidOperationException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
+  }
+};
+
+//=================================================================================================
+/// Exception raised due to a hardware issue
+class HardwareException : public heph::Exception {
+public:
+  HardwareException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
   }
 };
 

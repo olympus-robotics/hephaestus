@@ -6,8 +6,11 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <future>
+#include <limits>
+#include <mutex>
 
 namespace heph::concurrency {
 
@@ -81,4 +84,11 @@ private:
   std::mutex mutex_;
   std::condition_variable condition_;
 };
+
+namespace internal {
+[[nodiscard]] auto computeNextSpinTimestamp(const std::chrono::system_clock::time_point& start_timestamp,
+                                            const std::chrono::system_clock::time_point& now,
+                                            const std::chrono::microseconds& spin_period)
+    -> std::chrono::system_clock::time_point;
+}
 }  // namespace heph::concurrency

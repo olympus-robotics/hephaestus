@@ -7,7 +7,6 @@
 #include "hephaestus/containers/bit_flag.h"
 #include "hephaestus/containers/proto/bit_flag.pb.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "hephaestus/serdes/protobuf/enums.h"
 
 namespace heph::serdes::protobuf {
 template <typename EnumT>

@@ -15,7 +15,7 @@
 
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/closures.hxx>

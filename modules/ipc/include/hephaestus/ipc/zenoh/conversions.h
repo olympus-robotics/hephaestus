@@ -5,12 +5,16 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
-#include <zenoh.hxx>
 #include <zenoh/api/bytes.hxx>
+#include <zenoh/api/enums.hxx>
 #include <zenoh/api/id.hxx>
+#include <zenoh/api/timestamp.hxx>
 
 #include "hephaestus/ipc/zenoh/session.h"
 

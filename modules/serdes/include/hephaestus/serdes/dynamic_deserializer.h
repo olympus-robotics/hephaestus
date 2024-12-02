@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <span>
+#include <string>
+#include <unordered_map>
 
 #include "hephaestus/serdes/protobuf/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"

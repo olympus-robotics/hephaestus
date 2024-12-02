@@ -5,6 +5,8 @@
 #include "hephaestus/concurrency/spinner.h"
 
 #include <chrono>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -15,7 +17,7 @@
 #include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "hephaestus/utils/exception.h"
 
@@ -135,10 +137,7 @@ void Spinner::start() {
 void Spinner::spin() {
   // TODO(@brizzi): set thread name
 
-  auto get_target_timestamp = [spin_period = this->spin_period_, spin_count = uint64_t{ 0 },
-                               start_timestamp = std::chrono::system_clock::now()]() mutable
-      -> std::chrono::system_clock::time_point { return start_timestamp + (++spin_count * spin_period); };
-
+  auto start_timestamp = std::chrono::system_clock::now();
   while (!stop_requested_.load()) {
     try {
       if (stoppable_callback_() == SpinResult::STOP) {
@@ -147,7 +146,8 @@ void Spinner::spin() {
 
       if (spin_period_.count() > 0) {  // Throttle spinner to a fixed rate if a valid rate_hz is provided.
         std::unique_lock<std::mutex> lock(mutex_);
-        condition_.wait_until(lock, get_target_timestamp());
+        condition_.wait_until(lock, internal::computeNextSpinTimestamp(
+                                        start_timestamp, std::chrono::system_clock::now(), spin_period_));
       }
     } catch (std::exception& e) {
       terminate();
@@ -185,4 +185,16 @@ void Spinner::setTerminationCallback(Callback&& termination_callback) {
   termination_callback_ = std::move(termination_callback);
 }
 
+namespace internal {
+auto computeNextSpinTimestamp(const std::chrono::system_clock::time_point& start_timestamp,
+                              const std::chrono::system_clock::time_point& now,
+                              const std::chrono::microseconds& spin_period)
+    -> std::chrono::system_clock::time_point {
+  const auto elapsed_time_since_start_micro_sec = static_cast<double>(
+      std::chrono::duration_cast<std::chrono::microseconds>(now - start_timestamp).count());
+  const auto spin_count = static_cast<std::size_t>(
+      std::ceil(elapsed_time_since_start_micro_sec / static_cast<double>(spin_period.count())));
+  return start_timestamp + (spin_count * spin_period);
+}
+}  // namespace internal
 }  // namespace heph::concurrency

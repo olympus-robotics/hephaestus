@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <thread>
@@ -45,6 +46,39 @@ constexpr auto MAX_ITERATION_COUNT = 10;
 }
 }  // namespace
 
+TEST(SpinnerTest, ComputeNextSpinTimestamp) {
+  using ClockT = std::chrono::system_clock;
+  const auto start_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 0 } };
+  const auto spin_period = std::chrono::milliseconds{ 10 };
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 5 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 10 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 12 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 20 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 49 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 50 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+
+  {
+    const auto now = start_timestamp + std::chrono::milliseconds{ 50 };
+    const auto expected_next_spin_timestamp = ClockT::time_point{ std::chrono::milliseconds{ 50 } };
+    const auto next_spin_timestamp = internal::computeNextSpinTimestamp(start_timestamp, now, spin_period);
+    EXPECT_EQ(next_spin_timestamp, expected_next_spin_timestamp);
+  }
+}
+
 TEST(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
@@ -59,21 +93,21 @@ TEST(SpinnerTest, StartStopTest) {
 }
 
 TEST(SpinnerTest, SpinTest) {
-  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
-  size_t callback_called_counter = 0;
-  auto cb = createNonThrowingCallback(callback_called_counter);
-  Spinner spinner{ std::move(cb) };
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+  Spinner spinner{ Spinner::createNeverStoppingCallback([&flag]() {
+    flag.test_and_set();
+    flag.notify_all();
+  }) };
   bool callback_called = false;
   spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
 
   spinner.start();
 
   // Wait for a while to let the spinner do some work.
-  std::this_thread::sleep_for(WAIT_FOR);
+  flag.wait(false);
   spinner.stop().get();
 
   // The counter should have been incremented.
-  EXPECT_GT(callback_called_counter, 0);
   EXPECT_TRUE(callback_called);
 }
 

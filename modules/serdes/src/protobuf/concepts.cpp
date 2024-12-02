@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/serdes/protobuf/concepts.h"
+#include "hephaestus/serdes/protobuf/concepts.h"  // NOLINT(misc-include-cleaner)

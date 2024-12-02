@@ -4,16 +4,18 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <string_view>
-
-#include <fmt/core.h>
-#include <zenoh/api/subscriber.hxx>
+#include <vector>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "zenoh/api/subscriber.hxx"
 
 namespace heph::ipc::zenoh {
 

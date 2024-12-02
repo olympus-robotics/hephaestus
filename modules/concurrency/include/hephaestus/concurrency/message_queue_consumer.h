@@ -4,9 +4,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <future>
-#include <iostream>
+#include <optional>
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/containers/blocking_queue.h"

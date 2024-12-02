@@ -15,7 +15,8 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 

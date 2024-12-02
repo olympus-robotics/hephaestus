@@ -4,7 +4,9 @@
 
 #include <exception>
 
-#include <fmt/core.h>
+#include <Eigen/Dense>
+
+#include <fmt/base.h>
 
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_proto/pose.h"  // NOLINT(misc-include-cleaner)

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <future>
+#include <memory>
 
 #include <mcap/reader.hpp>
 

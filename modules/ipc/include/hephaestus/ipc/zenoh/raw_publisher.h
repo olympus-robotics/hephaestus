@@ -4,11 +4,19 @@
 
 #pragma once
 
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <span>
+#include <string>
+#include <unordered_map>
 
+#include <fmt/format.h>
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/liveliness.hxx>
+#include <zenoh/api/publisher.hxx>
 
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"

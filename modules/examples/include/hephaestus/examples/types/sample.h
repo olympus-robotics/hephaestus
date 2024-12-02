@@ -5,8 +5,10 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 #include <fmt/format.h>
+
 namespace heph::examples::types {
 
 struct SampleRequest {

@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/format/format.h"

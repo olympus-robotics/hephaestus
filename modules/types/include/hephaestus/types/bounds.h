@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <concepts>
 #include <cstdint>
 #include <iostream>
 #include <random>
 
+#include <fmt/base.h>
 #include <fmt/ostream.h>
 
 #include "hephaestus/random/random_object_creator.h"
