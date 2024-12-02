@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cstddef>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -11,6 +12,7 @@
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes {
 
@@ -56,6 +58,16 @@ auto deserializeFromText(std::string_view buffer, T& data) -> void {
 template <protobuf::ProtobufSerializable T>
 auto getSerializedTypeInfo() -> TypeInfo {
   return protobuf::getTypeInfo<T>();
+}
+
+template <StringType T>
+auto getSerializedTypeInfo() -> TypeInfo {
+  return {
+    .name = "string",
+    .schema = {},
+    .serialization = TypeInfo::Serialization::TEXT,
+    .original_type = "string",
+  };
 }
 
 }  // namespace heph::serdes

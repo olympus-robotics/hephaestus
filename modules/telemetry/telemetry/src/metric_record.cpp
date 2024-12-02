@@ -7,7 +7,6 @@
 #include <exception>
 #include <limits>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -18,7 +17,8 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
-#include <fmt/core.h>
+#include <absl/synchronization/mutex.h>
+#include <fmt/format.h>
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
@@ -108,7 +108,7 @@ private:
   void processEntries(const Metric& entry);
 
 private:
-  std::mutex sink_mutex_;
+  absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
   concurrency::MessageQueueConsumer<Metric> entries_consumer_;
 };
@@ -141,7 +141,7 @@ auto MetricRecorder::instance() -> MetricRecorder& {
 
 void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
   auto& telemetry = instance();
-  const std::lock_guard lock(telemetry.sink_mutex_);
+  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
   telemetry.sinks_.push_back(std::move(sink));
 }
 
@@ -151,7 +151,7 @@ void MetricRecorder::record(const Metric& metric) {
 }
 
 void MetricRecorder::processEntries(const Metric& entry) {
-  const std::lock_guard lock(sink_mutex_);
+  const absl::MutexLock lock{ &sink_mutex_ };
   for (auto& sink : sinks_) {
     sink->send(entry);
   }

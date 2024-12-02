@@ -4,16 +4,20 @@
 
 #pragma once
 
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <mutex>
 #include <span>
+#include <utility>
 
-#include <absl/log/log.h>
-#include <zenoh.h>
-#include <zenoh.hxx>
+#include <fmt/format.h>
 
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 

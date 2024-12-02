@@ -3,6 +3,9 @@
 //=================================================================================================
 #pragma once
 
+#include <string>
+#include <utility>
+
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"

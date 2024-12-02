@@ -4,17 +4,16 @@
 
 #pragma once
 
+#include <string>
 #include <string_view>
-#include <type_traits>
 #include <unordered_map>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/format/format.h"
-#include "hephaestus/utils/string/string_literal.h"
 #include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::serdes::protobuf {

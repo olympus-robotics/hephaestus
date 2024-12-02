@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include <absl/synchronization/mutex.h>
-#include <fmt/core.h>
+#include <algorithm>
+#include <type_traits>
+
 #include <magic_enum.hpp>
-#include <magic_enum_all.hpp>
+#include <magic_enum_utility.hpp>
 
 #include "hephaestus/utils/exception.h"
 

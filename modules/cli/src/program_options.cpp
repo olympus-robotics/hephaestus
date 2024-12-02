@@ -13,7 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"

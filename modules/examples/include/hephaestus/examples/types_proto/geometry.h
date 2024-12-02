@@ -4,7 +4,13 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <Eigen/Dense>
+
+#include <Eigen/src/Core/Map.h>
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/src/Geometry/Quaternion.h>
 
 #include "hephaestus/examples/types/proto/geometry.pb.h"
 #include "hephaestus/utils/exception.h"

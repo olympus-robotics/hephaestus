@@ -5,10 +5,18 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <exception>
 #include <functional>
 #include <future>
+#include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
+#include <absl/log/log.h>
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"

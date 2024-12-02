@@ -12,7 +12,7 @@
 #include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_database.h"

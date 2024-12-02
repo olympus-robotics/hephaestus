@@ -5,10 +5,13 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <ranges>
 #include <sstream>
+#include <string>
+#include <string_view>
 
-#include <fmt/chrono.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <range/v3/view/zip.hpp>

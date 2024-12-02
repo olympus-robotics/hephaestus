@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/random/random_number_generator.h"

@@ -10,7 +10,7 @@
 #include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/zenoh/program_options.h"

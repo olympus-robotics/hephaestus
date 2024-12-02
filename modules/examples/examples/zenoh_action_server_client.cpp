@@ -11,7 +11,8 @@
 #include <utility>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/cli/program_options.h"

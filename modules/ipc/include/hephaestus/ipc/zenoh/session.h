@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include <zenoh.h>
-#include <zenoh.hxx>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+
+#include <zenoh/api/queryable.hxx>
+#include <zenoh/api/session.hxx>
 
 namespace heph::ipc::zenoh {
 

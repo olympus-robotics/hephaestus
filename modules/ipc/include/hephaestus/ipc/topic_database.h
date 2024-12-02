@@ -5,9 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
-#include <absl/base/thread_annotations.h>
-
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::ipc {

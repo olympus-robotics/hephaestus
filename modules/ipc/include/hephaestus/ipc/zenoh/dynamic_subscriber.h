@@ -4,7 +4,14 @@
 
 #pragma once
 
+#include <cstddef>
+#include <functional>
 #include <future>
+#include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <unordered_map>
 
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"

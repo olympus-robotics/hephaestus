@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstdint>
 #include <string>
 
 enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };

@@ -6,8 +6,11 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <future>
+#include <limits>
+#include <mutex>
 
 namespace heph::concurrency {
 

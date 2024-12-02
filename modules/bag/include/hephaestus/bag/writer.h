@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <span>
+#include <string>
 
-#include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {
