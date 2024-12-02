@@ -5,6 +5,7 @@
 #pragma once
 
 #include <future>
+#include <memory>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/ipc/topic_filter.h"

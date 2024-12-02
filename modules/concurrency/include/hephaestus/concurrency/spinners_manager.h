@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <future>
+#include <atomic>
 #include <vector>
 
 #include "hephaestus/concurrency/spinner.h"

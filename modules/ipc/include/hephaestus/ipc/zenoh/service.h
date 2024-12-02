@@ -5,32 +5,35 @@
 #pragma once
 
 #include <chrono>
-#include <condition_variable>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <span>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include <absl/log/log.h>
-#include <fmt/core.h>
-#include <fmt/ranges.h>
+#include <fmt/format.h>
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/base.hxx>
+#include <zenoh/api/channels.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/ext/serialization.hxx>
+#include <zenoh/api/query.hxx>
 #include <zenoh/api/queryable.hxx>
+#include <zenoh/api/reply.hxx>
+#include <zenoh/api/sample.hxx>
 #include <zenoh/api/session.hxx>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"

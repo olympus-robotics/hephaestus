@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <thread>
@@ -59,21 +60,21 @@ TEST(SpinnerTest, StartStopTest) {
 }
 
 TEST(SpinnerTest, SpinTest) {
-  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 1 };
-  size_t callback_called_counter = 0;
-  auto cb = createNonThrowingCallback(callback_called_counter);
-  Spinner spinner{ std::move(cb) };
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+  Spinner spinner{ Spinner::createNeverStoppingCallback([&flag]() {
+    flag.test_and_set();
+    flag.notify_all();
+  }) };
   bool callback_called = false;
   spinner.setTerminationCallback([&callback_called]() { callback_called = true; });
 
   spinner.start();
 
   // Wait for a while to let the spinner do some work.
-  std::this_thread::sleep_for(WAIT_FOR);
+  flag.wait(false);
   spinner.stop().get();
 
   // The counter should have been incremented.
-  EXPECT_GT(callback_called_counter, 0);
   EXPECT_TRUE(callback_called);
 }
 

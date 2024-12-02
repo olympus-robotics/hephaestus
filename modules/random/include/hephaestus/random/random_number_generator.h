@@ -5,6 +5,7 @@
 #pragma once
 
 #include <random>
+#include <utility>
 
 namespace heph::random {
 

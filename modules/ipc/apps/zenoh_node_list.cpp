@@ -8,7 +8,7 @@
 #include <exception>
 #include <tuple>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/ipc/zenoh/scout.h"
 #include "hephaestus/utils/stack_trace.h"

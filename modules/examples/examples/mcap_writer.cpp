@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"

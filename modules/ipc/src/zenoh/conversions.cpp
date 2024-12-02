@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <zenoh/api/bytes.hxx>
 #include <zenoh/api/id.hxx>
 #include <zenoh/api/timestamp.hxx>

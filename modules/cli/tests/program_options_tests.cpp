@@ -11,7 +11,8 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/utils/exception.h"
 
-// NOLINTNEXTLINE(google-build-using-namespace)
+// NOLINTBEGIN(cert-err58-cpp, cppcoreguidelines-owning-memory, modernize-use-trailing-return-type,
+// cppcoreguidelines-avoid-goto) NOLINTNEXTLINE(google-build-using-namespace, modernize-type-traits)
 using namespace ::testing;
 
 namespace heph::cli::tests {
@@ -88,3 +89,5 @@ TEST(ProgramOptions, Errors) {
 }
 
 }  // namespace heph::cli::tests
+// NOLINTEND(cert-err58-cpp, cppcoreguidelines-owning-memory, modernize-use-trailing-return-type,
+// cppcoreguidelines-avoid-goto, modernize-type-traits)

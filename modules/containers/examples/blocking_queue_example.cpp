@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/containers/blocking_queue.h"
 

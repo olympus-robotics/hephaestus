@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <optional>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace heph::utils::filesystem {

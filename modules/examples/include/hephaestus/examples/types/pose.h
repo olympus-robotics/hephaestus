@@ -3,8 +3,15 @@
 //=================================================================================================
 
 #pragma once
+
+#include <string>
+#include <string_view>
+
 #include <Eigen/Dense>
 
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/src/Geometry/Quaternion.h>
+#include <fmt/base.h>
 #include <fmt/format.h>
 
 namespace heph::examples::types {

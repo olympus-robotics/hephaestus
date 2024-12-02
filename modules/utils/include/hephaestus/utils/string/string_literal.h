@@ -5,13 +5,15 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <string_view>
 
 namespace heph::utils::string {
 
 /// Helper to convert a string literal to a std::string_view. This for example allows to use a literal string
 /// "foo" as a non-type template parameter.
-template <size_t Size>
+template <std::size_t Size>
 struct StringLiteral {
   // Note: The following constructor is not marked explicit on purpose. It allows to use a string literal as a
   // non-type template parameter.

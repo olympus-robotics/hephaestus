@@ -34,7 +34,7 @@ TEST(StopWatch, Stoppable) {
 
   std::this_thread::sleep_for(PERIOD);
   const auto elapsed = swatch.stop();
-  EXPECT_EQ(swatch.getLapsCount(), 1);
+  EXPECT_EQ(swatch.lapsCount(), 1);
 
   const auto t1 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(elapsed, t1);

@@ -4,10 +4,18 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/sample.hxx>
+#include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"

@@ -13,7 +13,7 @@
 #include <thread>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 #include <nlohmann/detail/macro_scope.hpp>
 
 #include "hephaestus/random/random_number_generator.h"

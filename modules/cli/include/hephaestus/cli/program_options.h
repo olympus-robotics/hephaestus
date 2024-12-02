@@ -6,6 +6,8 @@
 #pragma once
 
 #include <algorithm>
+#include <ios>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>

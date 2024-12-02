@@ -12,8 +12,9 @@
 #include <utility>
 
 #include <absl/log/log.h>
+#include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/pose.h"
