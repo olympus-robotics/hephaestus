@@ -37,7 +37,7 @@ endif()
 
 if(CMAKE_FORMAT_BIN AND ENABLE_FORMATTER)
   set(_cmake_files
-      "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/external/CMakeLists.txt;${PROJECT_SOURCE_DIR}/modules/**/*.txt"
+      "${PROJECT_SOURCE_DIR}/CMakeLists.txt;${PROJECT_SOURCE_DIR}/externals/CMakeLists.txt;${PROJECT_SOURCE_DIR}/modules/**/*.txt"
   )
   if(EXISTS "${PROJECT_SOURCE_DIR}/cmake")
     list(APPEND _cmake_files "${PROJECT_SOURCE_DIR}/cmake/*.cmake")

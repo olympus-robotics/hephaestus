@@ -23,10 +23,35 @@ Hephaestus provides functionalities that cover the following domains:
 
 When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 
-## Build
+## Dev Env
+The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build and start the container with `make docker-up`.
 
-### Env
-The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
+If you use VS Code, run `make configure-attach-container` and then Command Palette (Ctrl+Shift+P) `Dev Container: Attach to running container...` -> `/hephaestus-dev`
+
+## Bazel
+Bazel is the official tool to build Hephaestus.
+
+Commands:
+* Build:
+  * `bazel build //modules/...`
+  * You can also build a specific module or library by providing the path:
+    * `bazel build //modules/ipc/...`
+    * `bazel build //modules/ipc:zenoh_topic_list`
+* Build with clang-tidy:
+  * `bazel build //modules/... --config clang-tidy`
+* Run tests:
+  * `bazel test //modules/...`
+* Format the code:
+  * `bazel run :format` -> fixes the formatting errors
+  * `bazel run :format.check` -> fails on error
+* Generate `compile_commands.json`, for VS Code `clangd` tool:
+  * `bazel run :refresh_compile_commands`
+* Run binaries:
+  * `bazel run //modules/ipc:zenoh_topic_list`, or
+  * `./bazel-bin/modules/ipc/zenoh_topic_list``
+
+## CMake
+The following sections contains all the information needed to use Hephaestus with CMake
 
 ### Compilation
 
@@ -47,7 +72,7 @@ ninja check
 
 > TODO: add section on the different flags and options.
 
-## Build system
+### Build system
 You can use the build system of `hephaestus` in your own project by importing the CMake files and recreating the required folder structure.
 
 Create the top level `CMakeLists.txt` as:
@@ -70,7 +95,7 @@ if(NOT hephaestus_POPULATED)
 endif()
 
 # If you want to use hephaestus toolchain add:
-# set(CMAKE_TOOLCHAIN_FILE ${hephaestus_SOURCE_DIR}/toolchains/toolchain_clang.cmake)
+# set(CMAKE_TOOLCHAIN_FILE ${hephaestus_SOURCE_DIR}/cmake/toolchains/toolchain_clang.cmake)
 
 # Include the Cmake functions.
 include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
@@ -98,10 +123,10 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 # )
 ```
 
-## Using Hephaestus
+### Using Hephaestus
 There are multiple ways to use Hephaestus in your repo.
 
-### Global installation
+#### Global installation
 Install hephaestus in a known folder, e.g. `/install`. When you compile your project pass `-DCMAKE_PREFIX_PATH=/install` and in your CMakeLists.txt:
 
 ```cmake
@@ -159,7 +184,7 @@ include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 
 ## Notes
 
-Initially this repo was supporting C++23, but to maximise compatibilty we reverted back to C++20.
+Initially this repo was supporting C++23, but to maximize compatibilty we reverted back to C++20.
 
 When switching again back to C++23 it will be possible to remove `fmt` and `ranges-v3`. The transition will be easy, just rename `fmt::` -> `std::` and remove `fmt::formatter`.
 

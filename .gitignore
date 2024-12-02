@@ -37,3 +37,8 @@ build-gcc/
 *.exe
 *.out
 *.app
+
+# Bazel
+bazel-*
+MODULE.bazel.lock
+command.profile.gz
