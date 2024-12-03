@@ -11,11 +11,7 @@
 
 #include "hephaestus/telemetry/log_sink.h"
 
-namespace heph::telemetry {
-
-void registerLogSink(std::unique_ptr<ILogSink> sink);
-
-namespace internal {
+namespace heph::telemetry::internal {
 void log(LogEntry&& log_entry);
 
 #if (__GNUC__ >= 14) || defined(__clang__)
@@ -48,8 +44,7 @@ void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... r
   entry << Field{ .key = std::forward<First>(first), .value = std::forward<Second>(second) };
   logWithFields(std::move(entry), std::forward<Rest>(rest)...);
 }
-}  // namespace internal
-}  // namespace heph::telemetry
+}  // namespace heph::telemetry::internal
 
 namespace heph {
 ///@brief Log a message. Example:
@@ -71,5 +66,8 @@ template <typename... Args>
 void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
   telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
 }
+
+///@brief Register a sink for logging.
+void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink);
 
 }  // namespace heph

@@ -5,14 +5,14 @@
 #pragma once
 
 #include <functional>
-#include <iomanip>
 #include <source_location>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include <fmt/format.h>
 
 namespace heph {
 enum class LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
@@ -83,9 +83,7 @@ struct LogEntry {
 
   template <NonQuotable T>
   auto operator<<(const Field<T>& field) -> LogEntry&& {
-    std::stringstream ss;
-    ss << field.value;
-    fields.emplace_back(field.key, ss.str());
+    fields.emplace_back(field.key, fmt::format("{}", field.value));
 
     return std::move(*this);
   }
@@ -100,11 +98,7 @@ struct LogEntry {
 
   template <Quotable S>
   auto operator<<(const Field<S>& field) -> LogEntry&& {
-    std::stringstream ss;
-    // Pointer decay is wanted here to catch char[n] messages
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-    ss << std::quoted(field.value);
-    fields.emplace_back(field.key, ss.str());
+    fields.emplace_back(field.key, fmt::format("{:?}", field.value));
 
     return std::move(*this);
   }

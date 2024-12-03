@@ -4,17 +4,46 @@
 #include "hephaestus/telemetry/log_sink.h"
 
 #include <filesystem>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 
+#include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <fmt/std.h>  // NOLINT(misc-include-cleaner)
 
 #include "hephaestus/utils/utils.h"
+
+template <>
+struct fmt::formatter<heph::telemetry::Field<std::string>> : fmt::formatter<std::string_view> {
+  static auto format(const heph::telemetry::Field<std::string>& field, fmt::format_context& ctx) {
+    return fmt::format_to(ctx.out(), "{}={}", field.key, field.value);
+  }
+};
+
+template <>
+struct fmt::formatter<heph::LogLevel> : fmt::formatter<std::string_view> {
+  static auto format(const heph::LogLevel& level, fmt::format_context& ctx) {
+    switch (level) {
+      case heph::LogLevel::TRACE:
+        return fmt::format_to(ctx.out(), "trace");
+      case heph::LogLevel::DEBUG:
+        return fmt::format_to(ctx.out(), "debug");
+      case heph::LogLevel::INFO:
+        return fmt::format_to(ctx.out(), "info");
+      case heph::LogLevel::WARN:
+        return fmt::format_to(ctx.out(), "warn");
+      case heph::LogLevel::ERROR:
+        return fmt::format_to(ctx.out(), "error");
+      case heph::LogLevel::FATAL:
+        return fmt::format_to(ctx.out(), "fatal");
+    }
+  }
+};
 
 namespace heph {
 auto operator<<(std::ostream& os, const LogLevel& level) -> std::ostream& {
@@ -56,22 +85,10 @@ LogEntry::LogEntry(LogLevel level_in, MessageWithLocation&& message_in)
 }
 
 auto format(const LogEntry& log) -> std::string {
-  std::stringstream ss;
-  ss << "level=" << log.level;
-  ss << " hostname=" << std::quoted(log.hostname);
-  ss << " location="
-     << std::quoted(fmt::format("{}:{}",
-                                std::filesystem::path{ log.location.file_name() }.filename().string(),
-                                log.location.line()));
-  ss << " thread-id=" << log.thread_id;
-  ss << " time=" << fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", log.time);
-  ss << " message=" << std::quoted(log.message);
-
-  for (const Field<std::string>& field : log.fields) {
-    ss << " " << field.key << "=" << field.value;
-  }
-
-  return ss.str();
+  return fmt::format(
+      "level={} hostname={:?} location=\"{}:{}\" thread-id={} time={:%Y-%m-%dT%H:%M:%SZ} message={:?} {}",
+      log.level, log.hostname, std::filesystem::path{ log.location.file_name() }.filename().string(),
+      log.location.line(), log.thread_id, log.time, log.message, fmt::join(log.fields, " "));
 }
 
 }  // namespace heph::telemetry

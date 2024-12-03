@@ -15,7 +15,7 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   const heph::utils::StackTrace stack;
 
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   heph::log(heph::LogLevel::WARN, "testing absl log sink"s);
 

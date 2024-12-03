@@ -106,7 +106,7 @@ TEST(log, sink) {
                    << ht::Field{ .key = "num", .value = num };
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  ht::registerLogSink(std::move(mock_sink));
+  heph::registerLogSink(std::move(mock_sink));
   ht::internal::log(std::move(log_entry));
   sink_ptr->wait();
   {
@@ -121,7 +121,7 @@ TEST(log, log) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  ht::registerLogSink(std::move(mock_sink));
+  heph::registerLogSink(std::move(mock_sink));
   heph::log(heph::LogLevel::ERROR, "test another great message");
 
   sink_ptr->wait();
@@ -134,7 +134,7 @@ TEST(log, logString) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  ht::registerLogSink(std::move(mock_sink));
+  heph::registerLogSink(std::move(mock_sink));
   heph::log(heph::LogLevel::ERROR, "as string"s);
 
   sink_ptr->wait();
@@ -145,7 +145,7 @@ TEST(log, logString) {
 TEST(log, logFmt) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  ht::registerLogSink(std::move(mock_sink));
+  heph::registerLogSink(std::move(mock_sink));
 
   const int num = 456;
   heph::log(heph::LogLevel::ERROR, std::format("this {} is formatted", num));
@@ -162,7 +162,7 @@ TEST(log, logWithFields) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  ht::registerLogSink(std::move(mock_sink));
+  heph::registerLogSink(std::move(mock_sink));
   heph::log(heph::LogLevel::ERROR, "test another great message", "num", num, "test", "lala");
 
   sink_ptr->wait();

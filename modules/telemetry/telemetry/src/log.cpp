@@ -17,7 +17,6 @@
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/telemetry/log_sink.h"
 
-namespace heph::telemetry {
 namespace {
 class Logger final {
 public:
@@ -29,9 +28,9 @@ public:
   auto operator=(const Logger&) -> Logger& = delete;
   auto operator=(Logger&&) -> Logger& = delete;
 
-  static void registerSink(std::unique_ptr<ILogSink> sink);
+  static void registerSink(std::unique_ptr<heph::telemetry::ILogSink> sink);
 
-  static void log(LogEntry&& log_entry);
+  static void log(heph::telemetry::LogEntry&& log_entry);
 
 private:
   [[nodiscard]] static auto instance() -> Logger&;
@@ -39,17 +38,18 @@ private:
   /// @brief Do the actual logging. Take in LogEntry and send it to all sinks
   /// @param LogEntry, class that takes in the structured logs and formats them.
   /// @return void
-  void processLogEntries(const LogEntry& entry);
+  void processLogEntries(const heph::telemetry::LogEntry& entry);
 
 private:
   std::mutex sink_mutex_;
   // This is used as registry for the log sinks
-  std::vector<std::unique_ptr<ILogSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  concurrency::MessageQueueConsumer<LogEntry> log_entries_consumer_;
+  std::vector<std::unique_ptr<heph::telemetry::ILogSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
+  heph::concurrency::MessageQueueConsumer<heph::telemetry::LogEntry> log_entries_consumer_;
 };
 
 Logger::Logger()
-  : log_entries_consumer_([this](const LogEntry& entry) { processLogEntries(entry); }, std::nullopt) {
+  : log_entries_consumer_([this](const heph::telemetry::LogEntry& entry) { processLogEntries(entry); },
+                          std::nullopt) {
   log_entries_consumer_.start();
 }
 
@@ -66,19 +66,19 @@ auto Logger::instance() -> Logger& {
   return telemetry;
 }
 
-void Logger::registerSink(std::unique_ptr<ILogSink> sink) {
+void Logger::registerSink(std::unique_ptr<heph::telemetry::ILogSink> sink) {
   // Add the custom log sink
   auto& telemetry = instance();
   const std::lock_guard lock(telemetry.sink_mutex_);
   telemetry.sinks_.emplace_back(std::move(sink));
 }
 
-void Logger::log(LogEntry&& log_entry) {
+void Logger::log(heph::telemetry::LogEntry&& log_entry) {
   auto& telemetry = instance();
   telemetry.log_entries_consumer_.queue().forcePush(std::move(log_entry));
 }
 
-void Logger::processLogEntries(const LogEntry& entry) {
+void Logger::processLogEntries(const heph::telemetry::LogEntry& entry) {
   const std::lock_guard lock(sink_mutex_);
   for (auto& sink : sinks_) {
     sink->send(entry);
@@ -86,12 +86,10 @@ void Logger::processLogEntries(const LogEntry& entry) {
 }
 }  // namespace
 
-void registerLogSink(std::unique_ptr<ILogSink> sink) {
-  Logger::registerSink(std::move(sink));
-}
-
-void internal::log(LogEntry&& log_entry) {
+void heph::telemetry::internal::log(heph::telemetry::LogEntry&& log_entry) {
   Logger::log(std::move(log_entry));
 }
 
-}  // namespace heph::telemetry
+void heph::registerLogSink(std::unique_ptr<heph::telemetry::ILogSink> sink) {
+  Logger::registerSink(std::move(sink));
+}
