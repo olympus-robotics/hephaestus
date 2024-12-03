@@ -152,9 +152,12 @@ struct fmt::formatter<heph::LogLevel> : fmt::formatter<std::string_view> {
         return fmt::format_to(ctx.out(), "error");
       case heph::LogLevel::FATAL:
         return fmt::format_to(ctx.out(), "fatal");
+      default:
+        return fmt::format_to(ctx.out(), "XXX");
     }
   }
 };
+
 /// @brief Formatter for LogEntry adhering to logfmt rules.
 template <>
 struct fmt::formatter<heph::telemetry::LogEntry> : fmt::formatter<std::string_view> {

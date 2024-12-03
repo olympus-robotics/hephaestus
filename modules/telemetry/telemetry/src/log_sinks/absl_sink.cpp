@@ -7,6 +7,7 @@
 #include <utility>
 
 #include <absl/log/absl_log.h>
+#include <fmt/format.h>
 
 #include "hephaestus/telemetry/log_sink.h"
 
