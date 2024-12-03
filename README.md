@@ -26,7 +26,7 @@ When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 ## Dev Env
 The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build and start the container with `make docker-up`.
 
-If you use VS Code, run `make configure-attach-container` and then Command Palette (Ctrl+Shift+P) `Dev Container: Attach to running container...` -> `/hephaestus-dev`
+If you use VS Code, run `make configure-attach-container` and then Command Palette (Ctrl+Shift+P) `Dev Containers: Attach to Running Container...` -> `/hephaestus-dev`
 
 ## Bazel
 Bazel is the official tool to build Hephaestus.

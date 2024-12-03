@@ -8,12 +8,10 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 def heph_basic_copts():
     return [
-        "-std=c++20",
         "-Wall",
         "-Wextra",
         "-Wpedantic",
         "-Werror",
-        "-Wshadow",  # warn the user if a variable declaration shadows one from a parent context
         "-Wnon-virtual-dtor",  # warn if a class with virtual functions has a non-virtual destructor.
         "-Wold-style-cast",  # warn for c-style casts
         "-Wcast-align",  # warn for potential performance problem casts
@@ -35,6 +33,7 @@ def heph_clang_copts():
     return [
         "-fcolor-diagnostics",
         "-fPIC",
+        "-Wshadow",  # warn the user if a variable declaration shadows one from a parent context
     ]
 
 def heph_gcc_copts():
@@ -55,7 +54,7 @@ def heph_copts():
 
 def heph_linkopts():
     return select({
-        "@hephaestus//bazel:clang_compiler": ["--rtlib=compiler-rt"],
+        "@hephaestus//bazel:clang_compiler": [],
         "@hephaestus//bazel:gcc_compiler": [],
     })
 
