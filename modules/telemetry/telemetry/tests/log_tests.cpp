@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/telemetry/log.h"
@@ -21,19 +22,13 @@ namespace hephtelemetry::tests {
 
 namespace ht = heph::telemetry;
 
-namespace {
-auto printout(const ht::LogEntry& s) -> std::string {
-  return ht::format(s);
-}
-}  // namespace
-
 TEST(log, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
   const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
   // clang-format on
-  auto s = printout(log_entry);
+  auto s = fmt::format("{}", log_entry);
   {
     std::stringstream ss;
     ss << "message=" << std::quoted(a);
@@ -44,7 +39,7 @@ TEST(log, LogEntry) {
     ss << " b=" << std::quoted(b);
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
-  EXPECT_TRUE(s.find(std::format("location=\"log_tests.cpp:{}\"", current_line)) != std::string::npos);
+  EXPECT_TRUE(s.find(fmt::format("location=\"log_tests.cpp:{}\"", current_line)) != std::string::npos);
 }
 
 TEST(log, Escapes) {
@@ -53,7 +48,7 @@ TEST(log, Escapes) {
   // clang-format off
   const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
   // clang-format on
-  auto s = printout(log_entry);
+  auto s = fmt::format("{}", log_entry);
   ht::internal::log(std::move(log_entry));
   {
     std::stringstream ss;
@@ -67,7 +62,7 @@ TEST(log, Escapes) {
   }
   {
     std::stringstream ss;
-    ss << std::format("location=\"log_tests.cpp:{}\"", current_line);
+    ss << fmt::format("location=\"log_tests.cpp:{}\"", current_line);
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
   {
@@ -81,7 +76,7 @@ TEST(log, Escapes) {
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {
-    log_ += format(s);
+    log_ += fmt::format("{}", s);
     flag_.test_and_set();
     flag_.notify_all();
   }
@@ -142,7 +137,20 @@ TEST(log, logString) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
 }
 
-TEST(log, logFmt) {
+TEST(log, logLibFmt) {
+  auto mock_sink = std::make_unique<MockLogSink>();
+  const MockLogSink* sink_ptr = mock_sink.get();
+  heph::registerLogSink(std::move(mock_sink));
+
+  const int num = 456;
+  heph::log(heph::LogLevel::ERROR, fmt::format("this {} is formatted", num));
+
+  sink_ptr->wait();
+
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+}
+
+TEST(log, logStdFmt) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
   heph::registerLogSink(std::move(mock_sink));

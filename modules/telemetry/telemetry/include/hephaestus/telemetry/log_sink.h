@@ -12,11 +12,14 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/base.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <fmt/std.h>  // NOLINT(misc-include-cleaner)
 
 namespace heph {
 enum class LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
-auto operator<<(std::ostream& /*os*/, const LogLevel& /*log_level*/) -> std::ostream&;
 }  // namespace heph
 
 namespace heph::telemetry {
@@ -113,18 +116,6 @@ struct LogEntry {
   FieldsT fields;
 };
 
-/// @brief format function from LogEntry to string adheruing to logfmt rules.
-///
-/// @param log
-/// @return std::string
-[[nodiscard]] auto format(const LogEntry& log) -> std::string;
-
-inline auto operator<<(std::ostream& os, const LogEntry& log) -> std::ostream& {
-  os << format(log);
-
-  return os;
-}
-
 /// @brief Interface for sinks that log entries can be sent to.
 struct ILogSink {
   using Formatter = std::function<std::string(const LogEntry& log)>;
@@ -137,3 +128,41 @@ struct ILogSink {
   virtual void send(const LogEntry& log_entry) = 0;
 };
 }  // namespace heph::telemetry
+
+template <>
+struct fmt::formatter<heph::telemetry::Field<std::string>> : fmt::formatter<std::string_view> {
+  static auto format(const heph::telemetry::Field<std::string>& field, fmt::format_context& ctx) {
+    return fmt::format_to(ctx.out(), "{}={}", field.key, field.value);
+  }
+};
+
+template <>
+struct fmt::formatter<heph::LogLevel> : fmt::formatter<std::string_view> {
+  static auto format(const heph::LogLevel& level, fmt::format_context& ctx) {
+    switch (level) {
+      case heph::LogLevel::TRACE:
+        return fmt::format_to(ctx.out(), "trace");
+      case heph::LogLevel::DEBUG:
+        return fmt::format_to(ctx.out(), "debug");
+      case heph::LogLevel::INFO:
+        return fmt::format_to(ctx.out(), "info");
+      case heph::LogLevel::WARN:
+        return fmt::format_to(ctx.out(), "warn");
+      case heph::LogLevel::ERROR:
+        return fmt::format_to(ctx.out(), "error");
+      case heph::LogLevel::FATAL:
+        return fmt::format_to(ctx.out(), "fatal");
+    }
+  }
+};
+/// @brief Formatter for LogEntry adhering to logfmt rules.
+template <>
+struct fmt::formatter<heph::telemetry::LogEntry> : fmt::formatter<std::string_view> {
+  static auto format(const heph::telemetry::LogEntry& log, fmt::format_context& ctx) {
+    return fmt::format_to(
+        ctx.out(),
+        "level={} hostname={:?} location=\"{}:{}\" thread-id={} time={:%Y-%m-%dT%H:%M:%SZ} message={:?} {}",
+        log.level, log.hostname, std::filesystem::path{ log.location.file_name() }.filename().string(),
+        log.location.line(), log.thread_id, log.time, log.message, fmt::join(log.fields, " "));
+  }
+};
