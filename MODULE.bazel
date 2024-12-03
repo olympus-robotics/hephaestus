@@ -29,10 +29,10 @@ LLVM_VERSIONS = {
 
 llvm.toolchain(
     name = "llvm_toolchain",
-    llvm_versions = LLVM_VERSIONS,
     cxx_standard = {
         "": "c++20",
     },
+    llvm_versions = LLVM_VERSIONS,
 )
 use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
 
