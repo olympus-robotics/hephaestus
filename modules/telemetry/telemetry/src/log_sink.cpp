@@ -12,7 +12,7 @@
 #include <utility>
 
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "hephaestus/utils/utils.h"
 
