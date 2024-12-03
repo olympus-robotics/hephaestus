@@ -31,7 +31,7 @@ If you use VS Code, run `make configure-attach-container` and then Command Palet
 ## Bazel
 Bazel is the official tool to build Hephaestus.
 
-Commands:
+### Commands
 * Build:
   * `bazel build //modules/...`
   * You can also build a specific module or library by providing the path:
@@ -48,7 +48,17 @@ Commands:
   * `bazel run :refresh_compile_commands`
 * Run binaries:
   * `bazel run //modules/ipc:zenoh_topic_list`, or
-  * `./bazel-bin/modules/ipc/zenoh_topic_list``
+  * `./bazel-bin/modules/ipc/zenoh_topic_list`
+
+### Folders
+Bazel generates three folders in the workspace:
+* `bazel-bin`
+  * Contains the binaries and release artifacts like debians and packages
+* `bazel-out`
+  * Contains build artifacts, build and test logs
+* `bazel-hephaestus`
+  * Can be ignored
+
 
 ## CMake
 The following sections contains all the information needed to use Hephaestus with CMake
