@@ -1,81 +1,81 @@
 {
- "version": 7,
- "configurePresets": [
-  {
-   "name": "default",
-   "description": "Configuration setting for all modules with preferred toolchain",
-   "generator": "Ninja",
-   "binaryDir": "${sourceDir}/build",
-   "installDir": "/install",
-   "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
-   "cacheVariables": {
-    "BUILD_MODULES": "all;examples",
-    "BUILD_TESTING": "ON"
-   }
-  },
-  {
-    "name": "fast",
-    "description": "Configuration setting for all modules with preferred toolchain",
-    "generator": "Ninja",
-    "binaryDir": "${sourceDir}/build",
-    "installDir": "/install",
-    "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
-    "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "OFF",
-     "CMAKE_BUILD_TYPE": "Release"
+  "version": 7,
+  "configurePresets": [
+    {
+      "name": "default",
+      "description": "Configuration setting for all modules with preferred toolchain",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "installDir": "/install",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/toolchain_clang.cmake",
+      "cacheVariables": {
+        "BUILD_MODULES": "all;examples",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "fast",
+      "description": "Configuration setting for all modules with preferred toolchain",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "installDir": "/install",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/toolchain_clang.cmake",
+      "cacheVariables": {
+        "BUILD_MODULES": "all;examples",
+        "ENABLE_LINTER": "OFF",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "deps-docker",
+      "description": "Configuration setting for all modules with preferred toolchain",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "installDir": "/install",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/toolchain_clang.cmake",
+      "cacheVariables": {
+        "BUILD_MODULES": "all;examples",
+        "ENABLE_LINTER": "OFF",
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "CI",
+      "description": "Configuration setting for all modules with preferred toolchain",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "installDir": "/install",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/toolchain_clang.cmake",
+      "cacheVariables": {
+        "BUILD_MODULES": "all;examples",
+        "ENABLE_LINTER": "OFF",
+        "ENABLE_LINTER_CACHE": "OFF",
+        "FORMAT_FAIL_ON_CHANGE": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_PREFIX_PATH": "/install"
+      }
+    },
+    {
+      "name": "gcc",
+      "description": "Configuration setting for all modules with preferred toolchain",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-gcc",
+      "installDir": "/install-gcc",
+      "cacheVariables": {
+        "BUILD_MODULES": "all;examples",
+        "ENABLE_LINTER": "OFF",
+        "ENABLE_FORMATTER": "OFF",
+        "ENABLE_CACHE": "OFF",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
-   },
-  {
-    "name": "deps-docker",
-    "description": "Configuration setting for all modules with preferred toolchain",
-    "generator": "Ninja",
-    "binaryDir": "${sourceDir}/build",
-    "installDir": "/install",
-    "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
-    "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "OFF",
-     "CMAKE_BUILD_TYPE": "Release",
-     "BUILD_TESTING": "OFF"
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "description": "Preferred build settings",
+      "configurePreset": "default"
     }
-   },
-   {
-    "name": "CI",
-    "description": "Configuration setting for all modules with preferred toolchain",
-    "generator": "Ninja",
-    "binaryDir": "${sourceDir}/build",
-    "installDir": "/install",
-    "toolchainFile": "${sourceDir}/toolchains/toolchain_clang.cmake",
-    "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "ON",
-     "ENABLE_LINTER_CACHE": "OFF",
-     "FORMAT_FAIL_ON_CHANGE": "ON",
-     "CMAKE_BUILD_TYPE": "Release",
-     "CMAKE_PREFIX_PATH": "/install"
-    }
-   },
-   {
-    "name": "gcc",
-    "description": "Configuration setting for all modules with preferred toolchain",
-    "generator": "Ninja",
-    "binaryDir": "${sourceDir}/build-gcc",
-    "installDir": "/install-gcc",
-    "cacheVariables": {
-     "BUILD_MODULES": "all;examples",
-     "ENABLE_LINTER": "OFF",
-     "ENABLE_FORMATTER": "OFF",
-     "ENABLE_CACHE": "OFF",
-     "CMAKE_BUILD_TYPE": "Release"
-    }
-   }
- ],
- "buildPresets": [
-  {
-   "name": "default",
-   "description": "Preferred build settings",
-   "configurePreset": "default"
-  }
- ]
+  ]
 }

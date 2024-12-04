@@ -12,10 +12,12 @@ add_subdirectory(proto)
 
 # library sources
 set(SOURCES
+    src/bool.cpp
     src/bounds.cpp
     src/dummy_type.cpp
     src/numeric_value.cpp
     README.md
+    include/hephaestus/types_proto/bool.h
     include/hephaestus/types_proto/bounds.h
     include/hephaestus/types_proto/dummy_type.h
     include/hephaestus/types_proto/numeric_value.h
