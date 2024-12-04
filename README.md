@@ -51,6 +51,8 @@ Bazel is the official tool to build Hephaestus.
   * `./bazel-bin/modules/ipc/zenoh_topic_list`
 
 ### Folders
+For more details see https://bazel.build/remote/output-directories
+
 Bazel generates three folders in the workspace:
 * `bazel-bin`
   * Contains the binaries and release artifacts like debians and packages
