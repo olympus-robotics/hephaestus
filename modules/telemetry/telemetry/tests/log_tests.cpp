@@ -26,7 +26,7 @@ TEST(log, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="b",.value="test \"great\" name"};
   // clang-format on
   auto s = fmt::format("{}", log_entry);
   {
@@ -46,13 +46,13 @@ TEST(log, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
-  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::LogLevel::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
+  const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
   // clang-format on
   auto s = fmt::format("{}", log_entry);
   ht::internal::log(std::move(log_entry));
   {
     std::stringstream ss;
-    ss << "level=info";
+    ss << "level=INFO";
     EXPECT_TRUE(s.find(ss.str()) != std::string::npos);
   }
   {
@@ -97,11 +97,11 @@ private:
 TEST(log, sink) {
   const int num = 123;
 
-  auto log_entry = ht::LogEntry{ heph::LogLevel::ERROR, "test another great message" }
+  auto log_entry = ht::LogEntry{ heph::ERROR, "test another great message" }
                    << ht::Field{ .key = "num", .value = num };
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
+  heph::telemetry::registerLogSink(std::move(mock_sink));
   ht::internal::log(std::move(log_entry));
   sink_ptr->wait();
   {
@@ -116,8 +116,8 @@ TEST(log, log) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
-  heph::log(heph::LogLevel::ERROR, "test another great message");
+  heph::telemetry::registerLogSink(std::move(mock_sink));
+  heph::log(heph::ERROR, "test another great message");
 
   sink_ptr->wait();
 
@@ -129,8 +129,8 @@ TEST(log, logString) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
-  heph::log(heph::LogLevel::ERROR, "as string"s);
+  heph::telemetry::registerLogSink(std::move(mock_sink));
+  heph::log(heph::ERROR, "as string"s);
 
   sink_ptr->wait();
 
@@ -140,10 +140,10 @@ TEST(log, logString) {
 TEST(log, logLibFmt) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
+  heph::telemetry::registerLogSink(std::move(mock_sink));
 
   const int num = 456;
-  heph::log(heph::LogLevel::ERROR, fmt::format("this {} is formatted", num));
+  heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
 
   sink_ptr->wait();
 
@@ -153,10 +153,10 @@ TEST(log, logLibFmt) {
 TEST(log, logStdFmt) {
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
+  heph::telemetry::registerLogSink(std::move(mock_sink));
 
   const int num = 456;
-  heph::log(heph::LogLevel::ERROR, std::format("this {} is formatted", num));
+  heph::log(heph::ERROR, std::format("this {} is formatted", num));
 
   sink_ptr->wait();
 
@@ -170,8 +170,8 @@ TEST(log, logWithFields) {
 
   auto mock_sink = std::make_unique<MockLogSink>();
   const MockLogSink* sink_ptr = mock_sink.get();
-  heph::registerLogSink(std::move(mock_sink));
-  heph::log(heph::LogLevel::ERROR, "test another great message", "num", num, "test", "lala");
+  heph::telemetry::registerLogSink(std::move(mock_sink));
+  heph::log(heph::ERROR, "test another great message", "num", num, "test", "lala");
 
   sink_ptr->wait();
   {

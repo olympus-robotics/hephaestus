@@ -15,12 +15,12 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
 
   const heph::utils::StackTrace stack;
 
-  heph::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
-  heph::log(heph::LogLevel::WARN, "testing absl log sink"s);
+  heph::log(heph::WARN, "testing absl log sink"s);
 
   const int num = 1234;
-  heph::log(heph::LogLevel::INFO, "absl log sink with fields", "num", num, "quoted_string", "test");
+  heph::log(heph::INFO, "absl log sink with fields", "num", num, "quoted_string", "test");
 
   return 0;
 }

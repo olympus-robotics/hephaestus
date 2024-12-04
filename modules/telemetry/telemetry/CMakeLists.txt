@@ -18,7 +18,7 @@ set(SOURCES src/metric_sink.cpp src/metric_record.cpp src/log_sink.cpp  src/log.
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes hephaestus::utils fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes hephaestus::utils fmt::fmt magic_enum::magic_enum
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

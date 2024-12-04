@@ -67,7 +67,9 @@ void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
   telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
 }
 
+namespace telemetry {
 ///@brief Register a sink for logging.
 void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink);
+}  // namespace telemetry
 
 }  // namespace heph

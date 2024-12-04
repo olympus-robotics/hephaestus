@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/telemetry/log_sink.h"
@@ -41,7 +42,7 @@ private:
   void processLogEntries(const heph::telemetry::LogEntry& entry);
 
 private:
-  std::mutex sink_mutex_;
+  absl::Mutex sink_mutex_;
   // This is used as registry for the log sinks
   std::vector<std::unique_ptr<heph::telemetry::ILogSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
   heph::concurrency::MessageQueueConsumer<heph::telemetry::LogEntry> log_entries_consumer_;
@@ -69,7 +70,7 @@ auto Logger::instance() -> Logger& {
 void Logger::registerSink(std::unique_ptr<heph::telemetry::ILogSink> sink) {
   // Add the custom log sink
   auto& telemetry = instance();
-  const std::lock_guard lock(telemetry.sink_mutex_);
+  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
   telemetry.sinks_.emplace_back(std::move(sink));
 }
 
@@ -79,7 +80,7 @@ void Logger::log(heph::telemetry::LogEntry&& log_entry) {
 }
 
 void Logger::processLogEntries(const heph::telemetry::LogEntry& entry) {
-  const std::lock_guard lock(sink_mutex_);
+  const absl::MutexLock lock{ &sink_mutex_ };
   for (auto& sink : sinks_) {
     sink->send(entry);
   }
@@ -90,6 +91,6 @@ void heph::telemetry::internal::log(heph::telemetry::LogEntry&& log_entry) {
   Logger::log(std::move(log_entry));
 }
 
-void heph::registerLogSink(std::unique_ptr<heph::telemetry::ILogSink> sink) {
+void heph::telemetry::registerLogSink(std::unique_ptr<heph::telemetry::ILogSink> sink) {
   Logger::registerSink(std::move(sink));
 }
