@@ -3,7 +3,8 @@
 # =================================================================================================
 
 set(SOURCES
-    hephaestus/types/proto/bounds.proto 
+    hephaestus/types/proto/bool.proto
+    hephaestus/types/proto/bounds.proto
     hephaestus/types/proto/dummy_type.proto
     hephaestus/types/proto/numeric_value.proto
 )
