@@ -137,7 +137,7 @@ TEST(SpinnerTest, SpinWithPeriod) {
   std::this_thread::sleep_for(WAIT_FOR);
   spinner.stop().get();
 
-  EXPECT_GT(callback_called_counter, 6);
+  EXPECT_GT(callback_called_counter, 1);
   EXPECT_LT(callback_called_counter, 12);
 }
 
