@@ -6,7 +6,6 @@
 
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/types/proto/bool.pb.h"
-#include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes::protobuf {
 template <>
