@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry {

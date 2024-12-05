@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <chrono>
+#include <concepts>
+#include <cstdint>
 #include <functional>
 #include <source_location>
 #include <string>
@@ -25,9 +28,7 @@ enum LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
 
 namespace heph::telemetry {
 template <typename T>
-concept NonQuotable = !std::convertible_to<T, std::string> && requires(std::ostream& os, T t) {
-  { os << t } -> std::same_as<std::ostream&>;
-};
+concept NonQuotable = !std::convertible_to<T, std::string> && fmt::is_formattable<T>::value;
 
 template <typename T>
 concept Quotable = std::convertible_to<T, std::string>;

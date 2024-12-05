@@ -5,8 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <sstream>
-#include <string>
 #include <utility>
 
 #include "hephaestus/telemetry/log_sink.h"
