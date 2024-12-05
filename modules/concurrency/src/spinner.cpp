@@ -16,9 +16,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
@@ -65,7 +65,8 @@ template <typename CallbackT>
 
     params.operation();
   } catch (const std::exception& exception_message) {
-    LOG(ERROR) << fmt::format("Spinner state transition failed with message: {}", exception_message.what());
+    heph::log(heph::ERROR, "spinner state transition failed", "exception", exception_message.what());
+
     return params.failure_state;
   }
 
@@ -121,7 +122,7 @@ Spinner::Spinner(StoppableCallback&& stoppable_callback,
 
 Spinner::~Spinner() {
   if (async_spinner_handle_.valid()) {
-    LOG(FATAL) << "Spinner is still running. Call stop() before destroying the object.";
+    heph::log(heph::FATAL, "Spinner is still running. Call stop() before destroying the object.");
     std::terminate();
   }
 }
