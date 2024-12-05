@@ -20,7 +20,6 @@ heph_cc_library(
         "//modules/concurrency",
         "//modules/random",
         "//modules/serdes",
-        "@abseil-cpp//absl/base:log",
         "@abseil-cpp//absl/log:absl_log",
         "@fmt",
         "@magic_enum",
