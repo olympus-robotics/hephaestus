@@ -1,10 +1,14 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
-#include <atomic>
+
+#include <chrono>
+// #include <condition_variable>
 #include <format>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+// #include <mutex>
+#include <source_location>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -18,11 +22,50 @@
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-namespace hephtelemetry::tests {
+namespace heph::telemetry::tests {
 
 namespace ht = heph::telemetry;
 
-TEST(log, LogEntry) {
+/// @brief Custom sink that will write the log to a string.
+class MockLogSink final : public ht::ILogSink {
+  using Line = size_t;
+
+public:
+  void send(const ht::LogEntry& s) override {
+    logs_.emplace(s.location.line(), fmt::format("{}", s));
+  }
+
+  [[nodiscard]] auto getLog(std::source_location loc) -> const std::string& {
+    /*
+    std::unique_lock<std::mutex> lock(mtx);
+    std::cout << "waiting for " << loc.line() << "\n";
+    cv.wait(lock, [&]() { return logs_.find(loc.line()) != logs_.cend(); });
+*/
+    using namespace std::chrono_literals;
+    while (logs_.find(loc.line()) == logs_.cend()) {
+      std::this_thread::sleep_for(10ms);
+    }
+    return logs_.at(loc.line());
+  }
+
+private:
+  std::map<Line, std::string> logs_;
+  // std::mutex mtx;
+  // std::condition_variable cv;
+};
+
+class LogTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    auto mock_sink = std::make_unique<MockLogSink>();
+    sink_ptr = mock_sink.get();
+    heph::telemetry::registerLogSink(std::move(mock_sink));
+  }
+
+  MockLogSink* sink_ptr;
+};
+
+TEST_F(LogTest, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
@@ -42,14 +85,13 @@ TEST(log, LogEntry) {
   EXPECT_TRUE(s.find(fmt::format("location=\"log_tests.cpp:{}\"", current_line)) != std::string::npos);
 }
 
-TEST(log, Escapes) {
+TEST_F(LogTest, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
   const int current_line = __LINE__; auto log_entry = ht::LogEntry{heph::INFO, ht::MessageWithLocation{a.c_str()}} << ht::Field{.key="c", .value=c};
   // clang-format on
   auto s = fmt::format("{}", log_entry);
-  ht::internal::log(std::move(log_entry));
   {
     std::stringstream ss;
     ss << "level=INFO";
@@ -72,118 +114,79 @@ TEST(log, Escapes) {
   }
 }
 
-/// @brief Custom sink that will write the log to a string.
-class MockLogSink final : public ht::ILogSink {
-public:
-  void send(const ht::LogEntry& s) override {
-    log_ += fmt::format("{}", s);
-    flag_.test_and_set();
-    flag_.notify_all();
-  }
-
-  [[nodiscard]] auto getLog() const -> const std::string& {
-    return log_;
-  }
-
-  void wait() const {
-    flag_.wait(false);
-  }
-
-private:
-  std::string log_;
-  std::atomic_flag flag_ = ATOMIC_FLAG_INIT;
-};
-
-TEST(log, sink) {
+TEST_F(LogTest, sink) {
   const int num = 123;
 
-  auto log_entry = ht::LogEntry{ heph::ERROR, "test another great message" }
-                   << ht::Field{ .key = "num", .value = num };
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
+  // clang-format off
+  const auto loc = std::source_location::current(); auto log_entry = ht::LogEntry{ heph::ERROR, "test another great message" } << ht::Field{ .key = "num", .value = num };
+  // clang-format on
+
   ht::internal::log(std::move(log_entry));
-  sink_ptr->wait();
+  fmt::print("{}", sink_ptr->getLog(loc));
   {
     std::stringstream ss;
     ss << "num=" << num;
-    EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
   }
 }
-
-TEST(log, log) {
+TEST_F(LogTest, log) {
   using namespace std::literals::string_literals;
 
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
-  heph::log(heph::ERROR, "test another great message");
+  // clang-format off
+   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "test another great message");
+  // clang-format on
 
-  sink_ptr->wait();
-
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"test another great message\"") != std::string::npos);
 }
 
-TEST(log, logString) {
+TEST_F(LogTest, logString) {
   using namespace std::literals::string_literals;
 
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
-  heph::log(heph::ERROR, "as string"s);
+  // clang-format off
+   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "as string"s);
+  // clang-format on
 
-  sink_ptr->wait();
-
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"as string\"") != std::string::npos);
 }
 
-TEST(log, logLibFmt) {
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
-
+TEST_F(LogTest, logLibFmt) {
   const int num = 456;
-  heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
+  // clang-format off
+   const auto loc = std::source_location::current(); heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
+  // clang-format on
 
-  sink_ptr->wait();
-
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
-TEST(log, logStdFmt) {
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
-
+TEST_F(LogTest, logStdFmt) {
   const int num = 456;
-  heph::log(heph::ERROR, std::format("this {} is formatted", num));
+  // clang-format off
+   const auto loc = std::source_location::current(); heph::log(heph::ERROR, std::format("this {} is formatted", num));
+  // clang-format on
 
-  sink_ptr->wait();
-
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
-TEST(log, logWithFields) {
+TEST_F(LogTest, logWithFields) {
   using namespace std::literals::string_literals;
 
   const int num = 123;
 
-  auto mock_sink = std::make_unique<MockLogSink>();
-  const MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
-  heph::log(heph::ERROR, "test another great message", "num", num, "test", "lala");
+  // clang-format off
+   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "test another great message",
+ "num", num, "test", "lala");
+  // clang-format on
 
-  sink_ptr->wait();
   {
     std::stringstream ss;
     ss << "num=" << num;
-    EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
   }
   {
     std::stringstream ss;
     ss << "test=\"lala\"";
-    EXPECT_TRUE(sink_ptr->getLog().find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
   }
 }
 
-}  // namespace hephtelemetry::tests
+}  // namespace heph::telemetry::tests
