@@ -21,30 +21,9 @@ heph_cc_library(
         "//modules/random",
         "//modules/serdes",
         "@abseil-cpp//absl/base:log",
-        "@abseil-cpp//absl/base:thread_annotations",
         "@abseil-cpp//absl/log:absl_log",
         "@fmt",
         "@magic_enum",
-    ],
-)
-
-#########
-# Tests #
-#########
-
-heph_cc_test(
-    name = "metric_record_tests",
-    srcs = ["tests/metric_record_tests.cpp"],
-    deps = [
-        ":telemetry",
-    ],
-)
-
-heph_cc_test(
-    name = "log_tests",
-    srcs = ["tests/log_tests.cpp"],
-    deps = [
-        ":telemetry",
     ],
 )
 
@@ -63,6 +42,26 @@ heph_cc_binary(
 heph_cc_binary(
     name = "log_sink_example",
     srcs = ["examples/log_sink_example.cpp"],
+    deps = [
+        ":telemetry",
+    ],
+)
+
+#########
+# Tests #
+#########
+
+heph_cc_test(
+    name = "metric_record_tests",
+    srcs = ["tests/metric_record_tests.cpp"],
+    deps = [
+        ":telemetry",
+    ],
+)
+
+heph_cc_test(
+    name = "log_tests",
+    srcs = ["tests/log_tests.cpp"],
     deps = [
         ":telemetry",
     ],
