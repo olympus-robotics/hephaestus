@@ -7,7 +7,6 @@
 #include <exception>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <utility>
 #include <vector>
