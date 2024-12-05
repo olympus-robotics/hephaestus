@@ -5,10 +5,12 @@
 declare_module(
   NAME telemetry
   DEPENDS_ON_MODULES concurrency random serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum absl
 )
 
+find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
+find_package(magic_enum REQUIRED)
 
 # library sources
 set(SOURCES
@@ -29,8 +31,16 @@ set(SOURCES
 # library target
 define_module_library(
   NAME telemetry
-  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes hephaestus::utils fmt::fmt
-                   magic_enum::magic_enum
+  PUBLIC_LINK_LIBS
+    hephaestus::concurrency
+    hephaestus::random
+    hephaestus::serdes
+    hephaestus::utils
+    fmt::fmt
+    magic_enum::magic_enum
+    absl::log
+    absl::base
+    absl::synchronization
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
