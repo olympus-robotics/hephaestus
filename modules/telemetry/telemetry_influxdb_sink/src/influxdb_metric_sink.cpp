@@ -13,9 +13,9 @@
 #include <utility>
 #include <variant>
 
-#include <InfluxDB.h>
-#include <InfluxDBFactory.h>
-#include <Point.h>
+#include <InfluxDB/InfluxDB.h>
+#include <InfluxDB/InfluxDBFactory.h>
+#include <InfluxDB/Point.h>
 #include <absl/log/log.h>
 #include <absl/strings/ascii.h>
 #include <fmt/format.h>
@@ -79,7 +79,12 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
     influxdb_->batchOf(DEFAULT_BATCH_SIZE);
     spinner_ = std::make_unique<concurrency::Spinner>(
         [this]() {
-          influxdb_->flushBatch();
+          try {
+            influxdb_->flushBatch();
+          } catch (std::exception& e) {
+            LOG(ERROR) << fmt::format("Failed to flush batch to InfluxDB: {}", e.what());
+          }
+
           return concurrency::Spinner::SpinResult::CONTINUE;
         },
         config_.flush_rate_hz.value());
