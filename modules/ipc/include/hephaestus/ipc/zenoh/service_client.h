@@ -40,7 +40,7 @@ template <typename RequestT, typename ReplyT>
 auto ServiceClient<RequestT, ReplyT>::call(
     const RequestT& request, const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
     -> std::vector<ServiceResponse<ReplyT>> {
-  return callService(*session_, topic_config_, request, timeout);
+  return callService<RequestT, ReplyT>(*session_, topic_config_, request, timeout);
 }
 
 }  // namespace heph::ipc::zenoh
