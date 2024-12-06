@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 
 #include <chrono>
-// #include <condition_variable>
 #include <format>
 #include <iomanip>
 #include <iostream>
@@ -16,6 +15,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 
@@ -28,32 +28,33 @@ namespace ht = heph::telemetry;
 
 /// @brief Custom sink that will write the log to a string.
 class MockLogSink final : public ht::ILogSink {
-  using Line = size_t;
-
 public:
   void send(const ht::LogEntry& s) override {
-    logs_.emplaceBack(fmt::format("{}", s));
+    std::ignore = logs_.tryEmplace(fmt::format("{}", s));
   }
 
   [[nodiscard]] auto getLog() -> std::string {
-      return logs_.waitAndPop().value();
+    auto log = logs_.waitAndPop();
+    if (log.has_value()) {
+      return std::move(log.value());
+    }
+
+    return "";
   }
 
 private:
-    containers::BlockingQueue<std::string> logs_;
-  // std::mutex mtx;
-  // std::condition_variable cv;
+  containers::BlockingQueue<std::string> logs_{ std::nullopt };
 };
 
 class LogTest : public ::testing::Test {
 protected:
   void SetUp() override {
     auto mock_sink = std::make_unique<MockLogSink>();
-    sink_ptr = mock_sink.get();
+    sink_ptr_ = mock_sink.get();
     heph::telemetry::registerLogSink(std::move(mock_sink));
   }
 
-  MockLogSink* sink_ptr;
+  MockLogSink* sink_ptr_;
 };
 
 TEST_F(LogTest, LogEntry) {
@@ -108,54 +109,44 @@ TEST_F(LogTest, Escapes) {
 TEST_F(LogTest, sink) {
   const int num = 123;
 
-  // clang-format off
-  const auto loc = std::source_location::current(); auto log_entry = ht::LogEntry{ heph::ERROR, "test another great message" } << ht::Field{ .key = "num", .value = num };
-  // clang-format on
-
-  ht::internal::log(std::move(log_entry));
-  fmt::print("{}", sink_ptr->getLog(loc));
+  heph::log(heph::ERROR, "test another great message", "num", num);
+  const auto log = sink_ptr_->getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
-    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
   }
 }
+
 TEST_F(LogTest, log) {
   using namespace std::literals::string_literals;
 
-  // clang-format off
-   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "test another great message");
-  // clang-format on
+  heph::log(heph::ERROR, "test another great message");
 
-  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"test another great message\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logString) {
   using namespace std::literals::string_literals;
 
-  // clang-format off
-   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "as string"s);
-  // clang-format on
+  heph::log(heph::ERROR, "as string"s);
 
-  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"as string\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"as string\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logLibFmt) {
   const int num = 456;
-  // clang-format off
-   const auto loc = std::source_location::current(); heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
-  // clang-format on
 
-  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"this 456 is formatted\"") != std::string::npos);
+  heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
+
+  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logStdFmt) {
   const int num = 456;
-  // clang-format off
-   const auto loc = std::source_location::current(); heph::log(heph::ERROR, std::format("this {} is formatted", num));
-  // clang-format on
+  heph::log(heph::ERROR, std::format("this {} is formatted", num));
 
-  EXPECT_TRUE(sink_ptr->getLog(loc).find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logWithFields) {
@@ -163,20 +154,18 @@ TEST_F(LogTest, logWithFields) {
 
   const int num = 123;
 
-  // clang-format off
-   const auto loc = std::source_location::current(); heph::log(heph::ERROR, "test another great message",
- "num", num, "test", "lala");
-  // clang-format on
+  heph::log(heph::ERROR, "test another great message", "num", num, "test", "lala");
 
+  const auto log = sink_ptr_->getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
-    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
   }
   {
     std::stringstream ss;
     ss << "test=\"lala\"";
-    EXPECT_TRUE(sink_ptr->getLog(loc).find(ss.str()) != std::string::npos);
+    EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
   }
 }
 
