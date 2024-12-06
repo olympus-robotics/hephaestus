@@ -4,6 +4,7 @@
 
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
@@ -19,6 +20,7 @@
 #include <absl/strings/ascii.h>
 #include <fmt/format.h>
 
+#include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry_sink {
@@ -70,12 +72,26 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
   const auto url = fmt::format(URI_FORMAT, config_.token, config_.url, config_.database);
   LOG(INFO) << fmt::format("Connecting to InfluxDB at {}", url);
   influxdb_ = influxdb::InfluxDBFactory::Get(url);
-  if (config_.batch_size > 0) {
-    influxdb_->batchOf(config_.batch_size);
+
+  if (config_.flush_rate_hz.has_value()) {
+    // NOTE: we define a very large number for the batch size as we want to flush at a fixed rate.
+    static constexpr std::size_t DEFAULT_BATCH_SIZE = 1e6;
+    influxdb_->batchOf(DEFAULT_BATCH_SIZE);
+    spinner_ = std::make_unique<concurrency::Spinner>(
+        [this]() {
+          influxdb_->flushBatch();
+          return concurrency::Spinner::SpinResult::CONTINUE;
+        },
+        config_.flush_rate_hz.value());
+    spinner_->start();
+  } else if (config_.batch_size.has_value()) {
+    influxdb_->batchOf(config_.batch_size.value());
   }
 }
 
-InfluxDBSink::~InfluxDBSink() = default;
+InfluxDBSink::~InfluxDBSink() {
+  spinner_->stop().get();
+}
 
 void InfluxDBSink::send(const telemetry::Metric& entry) {
   auto point = createInfluxdbPoint(entry);
