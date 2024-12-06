@@ -72,7 +72,9 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
                  const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
     -> std::vector<ServiceResponse<ReplyT>>;
 
-// --------- Implementation ----------
+// -----------------------------------------------------------------------------------------------
+// Implementation
+// -----------------------------------------------------------------------------------------------
 
 namespace internal {
 static constexpr auto SERVICE_ATTACHMENT_REQUEST_TYPE_INFO = "0";
