@@ -129,6 +129,28 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "zenoh_action_server",
+    srcs = [
+        "examples/zenoh_action_server.cpp",
+        "examples/zenoh_program_options.h",
+    ],
+    deps = [
+        ":examples",
+    ],
+)
+
+heph_cc_binary(
+    name = "zenoh_action_server_client",
+    srcs = [
+        "examples/zenoh_action_server_client.cpp",
+        "examples/zenoh_program_options.h",
+    ],
+    deps = [
+        ":examples",
+    ],
+)
+
 #########
 # Tests #
 #########
