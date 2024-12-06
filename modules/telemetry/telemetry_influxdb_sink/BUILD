@@ -22,7 +22,6 @@ heph_cc_library(
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "@fmt",
-        # "@hephaestus//bazel/foreign_cc:influxdb",
         "@influxdb",
     ],
 )
