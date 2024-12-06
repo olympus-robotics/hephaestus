@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chrono>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -19,7 +18,7 @@ template <typename RequestT, typename ReplyT>
 class ServiceClient {
 public:
   ServiceClient(SessionPtr session, TopicConfig topic_config);
-  auto call(const RequestT& request, const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
+  auto call(const RequestT& request, std::chrono::milliseconds timeout)
       -> std::vector<ServiceResponse<ReplyT>>;
 
 private:
@@ -37,8 +36,7 @@ ServiceClient<RequestT, ReplyT>::ServiceClient(SessionPtr session, TopicConfig t
 }
 
 template <typename RequestT, typename ReplyT>
-auto ServiceClient<RequestT, ReplyT>::call(
-    const RequestT& request, const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
+auto ServiceClient<RequestT, ReplyT>::call(const RequestT& request, std::chrono::milliseconds timeout)
     -> std::vector<ServiceResponse<ReplyT>> {
   return callService<RequestT, ReplyT>(*session_, topic_config_, request, timeout);
 }

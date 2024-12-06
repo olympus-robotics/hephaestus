@@ -91,6 +91,8 @@ private:
   void execute(const RequestT& request);
 
 private:
+  static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
+
   SessionPtr session_;
   TopicConfig topic_config_;
 
@@ -112,7 +114,7 @@ using StatusUpdateCallback = std::function<void(const StatusT&)>;
 template <typename RequestT, typename StatusT, typename ReplyT>
 [[nodiscard]] auto callActionServer(SessionPtr session, const TopicConfig& topic_config,
                                     const RequestT& request, StatusUpdateCallback<StatusT>&& status_update_cb,
-                                    const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
+                                    std::chrono::milliseconds request_timeout)
     -> std::future<Response<ReplyT>>;
 
 /// Request the action server to stop.
@@ -211,8 +213,9 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
     }
   }();
   const auto response_topic = internal::getResponseServiceTopic(topic_config_);
-  const auto client_response =
-      callService<Response<ReplyT>, RequestResponse>(*session_, response_topic, reply);
+
+  const auto client_response = callService<Response<ReplyT>, RequestResponse>(
+      *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
     LOG(ERROR) << fmt::format("[ActionServer {}] failed to send final response to client.",
                               topic_config_.name);
@@ -228,10 +231,9 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
                       StatusUpdateCallback<StatusT>&& status_update_cb,
-                      const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
-    -> std::future<Response<ReplyT>> {
+                      std::chrono::milliseconds request_timeout) -> std::future<Response<ReplyT>> {
   const auto server_responses =
-      callService<RequestT, RequestResponse>(*session, topic_config, request, timeout);
+      callService<RequestT, RequestResponse>(*session, topic_config, request, request_timeout);
   if (server_responses.empty()) {
     return internal::handleFailure<ReplyT>(topic_config.name, "no response", RequestStatus::INVALID);
   }

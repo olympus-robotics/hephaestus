@@ -69,8 +69,7 @@ struct ServiceResponse {
 
 template <typename RequestT, typename ReplyT>
 auto callService(Session& session, const TopicConfig& topic_config, const RequestT& request,
-                 const std::optional<std::chrono::milliseconds>& timeout = std::nullopt)
-    -> std::vector<ServiceResponse<ReplyT>>;
+                 std::chrono::milliseconds timeout) -> std::vector<ServiceResponse<ReplyT>>;
 
 // -----------------------------------------------------------------------------------------------
 // Implementation
@@ -180,13 +179,10 @@ auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
 }
 
 template <typename RequestT, typename ReplyT>
-[[nodiscard]] auto createZenohGetOptions(const RequestT& request,
-                                         const std::optional<std::chrono::milliseconds>& timeout)
+[[nodiscard]] auto createZenohGetOptions(const RequestT& request, std::chrono::milliseconds timeout)
     -> ::zenoh::Session::GetOptions {
   ::zenoh::Session::GetOptions options{};
-  if (timeout.has_value()) {
-    options.timeout_ms = static_cast<uint64_t>(timeout->count());
-  }
+  options.timeout_ms = static_cast<uint64_t>(timeout.count());
 
   std::unordered_map<std::string, std::string> attachments;
 
@@ -267,8 +263,7 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
 
 template <typename RequestT, typename ReplyT>
 auto callService(Session& session, const TopicConfig& topic_config, const RequestT& request,
-                 const std::optional<std::chrono::milliseconds>& timeout /*= std::nullopt*/)
-    -> std::vector<ServiceResponse<ReplyT>> {
+                 std::chrono::milliseconds timeout) -> std::vector<ServiceResponse<ReplyT>> {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
   LOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
