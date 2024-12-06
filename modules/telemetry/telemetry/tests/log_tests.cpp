@@ -32,24 +32,15 @@ class MockLogSink final : public ht::ILogSink {
 
 public:
   void send(const ht::LogEntry& s) override {
-    logs_.emplace(s.location.line(), fmt::format("{}", s));
+    logs_.emplaceBack(fmt::format("{}", s));
   }
 
-  [[nodiscard]] auto getLog(std::source_location loc) -> const std::string& {
-    /*
-    std::unique_lock<std::mutex> lock(mtx);
-    std::cout << "waiting for " << loc.line() << "\n";
-    cv.wait(lock, [&]() { return logs_.find(loc.line()) != logs_.cend(); });
-*/
-    using namespace std::chrono_literals;
-    while (logs_.find(loc.line()) == logs_.cend()) {
-      std::this_thread::sleep_for(10ms);
-    }
-    return logs_.at(loc.line());
+  [[nodiscard]] auto getLog() -> std::string {
+      return logs_.waitAndPop().value();
   }
 
 private:
-  std::map<Line, std::string> logs_;
+    containers::BlockingQueue<std::string> logs_;
   // std::mutex mtx;
   // std::condition_variable cv;
 };
