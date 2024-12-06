@@ -2,15 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <chrono>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <future>
-#include <random>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <fmt/base.h>
@@ -44,7 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto influxdb_sink = heph::telemetry_sink::InfluxDBSink::create({ .url = "localhost:8099",
                                                                       .token = "my-super-secret-auth-token",
                                                                       .database = "hephaestus",
-                                                                      .flush_rate_hz = 0.1 });
+                                                                      .flush_rate_hz = 1.0 });
     heph::telemetry::registerMetricSink(std::move(influxdb_sink));
 
     int64_t counter = 0;

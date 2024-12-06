@@ -5,9 +5,6 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def foreign_cc_repositories():
-    """
-    Download binary install repositories.
-    """
     ZENOH_VERSION = "1.0.0"
     http_archive(
         name = "zenohc_builder",
