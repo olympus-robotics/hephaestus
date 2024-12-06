@@ -1,5 +1,5 @@
 version: "3"
-name: influxdb-grafana
+name: hephaestus-influxdb-grafana
 networks:
   monitoring:
 
@@ -7,7 +7,7 @@ services:
   influxdb:
     image: influxdb:2.7.6
     ports:
-      - 8087:8086
+      - 8099:8086
     networks:
       - monitoring
     environment:
@@ -21,7 +21,7 @@ services:
   grafana:
     image: grafana/grafana:9.1.5
     ports:
-      - 3002:3000
+      - 3099:3000
     networks:
       - monitoring
     volumes:

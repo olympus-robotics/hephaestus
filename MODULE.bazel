@@ -76,6 +76,7 @@ bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "protobuf", version = "27.2")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0")
+bazel_dep(name = "curl", version = "8.8.0.bcr.1")
 bazel_dep(name = "range-v3", version = "")
 git_override(
     module_name = "range-v3",
@@ -89,4 +90,4 @@ git_override(
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "cpr", "curl", "influxdb", "mcap", "zenohc_builder")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "zenohc_builder")

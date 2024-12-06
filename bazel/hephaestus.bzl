@@ -56,6 +56,9 @@ def heph_linkopts():
     return select({
         "@hephaestus//bazel:clang_compiler": [],
         "@hephaestus//bazel:gcc_compiler": [],
+    }) + select({
+        "@hephaestus//bazel:dbg_compilation": ["-rdynamic"],
+        "//conditions:default": [],
     })
 
 # Create a filegroup containing all the headers file needed by the input target
