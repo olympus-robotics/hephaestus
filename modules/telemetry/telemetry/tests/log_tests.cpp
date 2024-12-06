@@ -45,14 +45,16 @@ private:
 
 class LogTest : public ::testing::Test {
 protected:
-  void SetUp() override {
+  static void SetUpTestSuite() {
     auto mock_sink = std::make_unique<MockLogSink>();
-    sink_ptr_ = mock_sink.get();
+    sink_ptr = mock_sink.get();
     heph::telemetry::registerLogSink(std::move(mock_sink));
   }
 
-  MockLogSink* sink_ptr_;
+  static MockLogSink* sink_ptr;
 };
+
+MockLogSink* LogTest::sink_ptr{ nullptr };
 
 TEST_F(LogTest, LogEntry) {
   const std::string a = "test a great message";
@@ -107,7 +109,7 @@ TEST_F(LogTest, sink) {
   const int num = 123;
 
   heph::log(heph::ERROR, "test another great message", "num", num);
-  const auto log = sink_ptr_->getLog();
+  const auto log = sink_ptr->getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
@@ -120,7 +122,7 @@ TEST_F(LogTest, log) {
 
   heph::log(heph::ERROR, "test another great message");
 
-  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"test another great message\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logString) {
@@ -128,7 +130,7 @@ TEST_F(LogTest, logString) {
 
   heph::log(heph::ERROR, "as string"s);
 
-  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"as string\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logLibFmt) {
@@ -136,14 +138,14 @@ TEST_F(LogTest, logLibFmt) {
 
   heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
 
-  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logStdFmt) {
   const int num = 456;
   heph::log(heph::ERROR, std::format("this {} is formatted", num));
 
-  EXPECT_TRUE(sink_ptr_->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
 TEST_F(LogTest, logWithFields) {
@@ -153,7 +155,7 @@ TEST_F(LogTest, logWithFields) {
 
   heph::log(heph::ERROR, "test another great message", "num", num, "test", "lala");
 
-  const auto log = sink_ptr_->getLog();
+  const auto log = sink_ptr->getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
