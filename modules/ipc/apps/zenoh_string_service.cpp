@@ -38,7 +38,9 @@ auto main(int argc, const char* argv[]) -> int {
     LOG(INFO) << fmt::format("Opening session: {}",
                              heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
-    auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value);
+    static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
+    auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value,
+                                                                           DEFAULT_TIMEOUT);
 
     std::ranges::for_each(
         results, [](const auto& res) { fmt::println(">> Received ('{}': '{}')", res.topic, res.value); });
