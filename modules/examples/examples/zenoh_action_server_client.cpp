@@ -10,7 +10,6 @@
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <magic_enum.hpp>

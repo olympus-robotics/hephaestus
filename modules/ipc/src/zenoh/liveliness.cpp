@@ -15,7 +15,6 @@
 #include <variant>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <zenoh.h>

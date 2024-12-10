@@ -9,7 +9,6 @@
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"

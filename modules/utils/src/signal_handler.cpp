@@ -9,8 +9,6 @@
 #include <mutex>
 #include <utility>
 
-#include <absl/log/log.h>
-
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::utils {

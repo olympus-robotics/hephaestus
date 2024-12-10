@@ -7,7 +7,6 @@
 #include <chrono>
 #include <string>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"

@@ -10,7 +10,6 @@
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 #include <fmt/chrono.h>  //NOLINT(misc-include-cleaner)
 #include <fmt/format.h>

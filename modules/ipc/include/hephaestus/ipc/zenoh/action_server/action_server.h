@@ -15,7 +15,6 @@
 #include <string>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
@@ -163,15 +162,16 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
       return { .status = RequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
-    heph::log(heph::ERROR, "request callback failed", "topic"
-                              topic_config_.name, "exception", ex.what());
+    heph::log(heph::ERROR, "request callback failed", "topic" topic_config_.name, "exception", ex.what());
     return { .status = RequestStatus::INVALID };
   }
 
   if (!request_consumer_.queue().tryPush(request)) {
     // NOTE: this should never happen as the queue is unbound.
-    heph::log(heph::ERROR, "failed to push the job in the queue. NOTE: this should not happen, something is wrong in the code!", "topic",
-                              topic_config_.name);
+    heph::log(
+        heph::ERROR,
+        "failed to push the job in the queue. NOTE: this should not happen, something is wrong in the code!",
+        "topic", topic_config_.name);
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
@@ -204,8 +204,8 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
         .status = stop_requested ? RequestStatus::STOPPED : RequestStatus::SUCCESSFUL,
       };
     } catch (const std::exception& ex) {
-      heph::log(heph::ERROR, "execute callback failed with exception", "topic",
-                                topic_config_.name, "exception", ex.what());
+      heph::log(heph::ERROR, "execute callback failed with exception", "topic", topic_config_.name,
+                "exception", ex.what());
       return Response<ReplyT>{
         .value = ReplyT{},
         .status = RequestStatus::INVALID,
@@ -217,8 +217,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
-    heph::log(heph::ERROR, "failed to send final response to client", "topic",
-                              topic_config_.name);
+    heph::log(heph::ERROR, "failed to send final response to client", "topic", topic_config_.name);
   }
 
   is_running_ = false;

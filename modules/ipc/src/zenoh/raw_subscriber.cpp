@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <fmt/format.h>
 #include <zenoh.h>

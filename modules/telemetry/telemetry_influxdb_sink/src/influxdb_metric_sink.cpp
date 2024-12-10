@@ -16,7 +16,6 @@
 #include <InfluxDB/InfluxDB.h>
 #include <InfluxDB/InfluxDBFactory.h>
 #include <InfluxDB/Point.h>
-#include <absl/log/log.h>
 #include <absl/strings/ascii.h>
 #include <fmt/format.h>
 

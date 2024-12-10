@@ -10,7 +10,6 @@
 #include <string>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"
@@ -32,7 +31,7 @@ namespace heph::ipc::zenoh::action_server::internal {
 template <typename ReplyT>
 [[nodiscard]] auto handleFailure(const std::string& topic_name, const std::string& error_message,
                                  RequestStatus error) -> std::future<Response<ReplyT>> {
-  heph::log(heph::ERROR, "failed to call action server ","topic", topic_name,"error", error_message);
+  heph::log(heph::ERROR, "failed to call action server ", "topic", topic_name, "error", error_message);
   std::promise<Response<ReplyT>> promise;
   promise.set_value({ ReplyT{}, error });
   return promise.get_future();

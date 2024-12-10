@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
-#include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <fmt/format.h>
