@@ -21,12 +21,17 @@
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("Action server client example");
@@ -42,7 +47,7 @@ auto main(int argc, const char* argv[]) -> int {
     });
 
     auto status_update_cb = [](const heph::examples::types::SampleReply& sample) {
-      LOG(INFO) << fmt::format("Received update: {}", sample);
+      heph::log(heph::INFO, "received update", "reply", sample);
     };
 
     static constexpr std::size_t START = 42;
@@ -58,13 +63,12 @@ auto main(int argc, const char* argv[]) -> int {
                                                           heph::examples::types::SampleReply>(
             session, topic_config, target, status_update_cb, DEFAULT_TIMEOUT);
 
-    LOG(INFO) << fmt::format("Call to Action Server (topic: '{}') started. Wating for result.",
-                             topic_config.name);
+    heph::log(heph::INFO, "call to Action Server started, waiting for result", "topic", topic_config.name);
 
     const auto result = result_future.get();
 
-    LOG(INFO) << fmt::format("Received result: status {} | {}", magic_enum::enum_name(result.status),
-                             result.value);
+    heph::log(heph::INFO, "received result", "status", magic_enum::enum_name(result.status), "value",
+              result.value);
 
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {

@@ -20,11 +20,16 @@
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("String service client example");
@@ -36,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
     const std::string query = "Marco";
-    LOG(INFO) << fmt::format("Calling service on topic: {} with {}.", topic_config.name, query);
+    heph::log(heph::INFO, "calling service", "topic", topic_config.name, "query" query);
     const auto replies =
         heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
@@ -44,9 +49,9 @@ auto main(int argc, const char* argv[]) -> int {
       std::ranges::for_each(replies, [&reply_str](const auto& reply) {
         reply_str = fmt::format("{}\n-\t{}: {}", reply_str, reply.topic, reply.value);
       });
-      LOG(INFO) << "Received: " << reply_str;
+      heph::log(heph::INFO, "received", "reply", reply_str);
     } else {
-      LOG(ERROR) << fmt::format("Error or no messages received after {}", K_TIMEOUT);
+      heph::log(heph::ERROR, "error happened or no messages received", "timeout", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;

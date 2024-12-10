@@ -35,6 +35,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
@@ -100,8 +101,7 @@ template <typename RequestT, typename ReplyT>
 [[nodiscard]] auto checkQueryTypeInfo(const ::zenoh::Query& query) -> bool {
   const auto attachment = query.get_attachment();
   if (!attachment.has_value()) {
-    LOG(WARNING) << fmt::format("[Service '{}'] Query is missing attachments",
-                                query.get_keyexpr().as_string_view());
+    heph::log(heph::WARN, "query is missing attachments", "service", query.get_keyexpr().as_string_view());
     return false;
   }
 
@@ -216,7 +216,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   , callback_(std::move(callback))
   , failure_callback_(std::move(failure_callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
-  LOG(INFO) << fmt::format("[Service '{}'] Started service", topic_config_.name);
+  heph::log(heph::INFO, "started service", "name", topic_config_.name);
 
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable { onQuery(query); };
 
@@ -232,14 +232,13 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
 
 template <typename RequestT, typename ReplyT>
 void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
-  LOG(INFO) << fmt::format("[Service '{}'] received query from '{}'", topic_config_.name,
-                           query.get_keyexpr().as_string_view());
+  heph::log(heph::INFO, "received query", "from", topic_config_.name, query.get_keyexpr().as_string_view());
 
   ::zenoh::ZResult result{};
 
   if (!internal::checkQueryTypeInfo<RequestT, ReplyT>(query)) {
-    LOG(ERROR) << fmt::format("[Service '{}'] failed to process query: type mismatch for request and reply",
-                              query.get_keyexpr().as_string_view());
+    heph::log(heph::ERROR, "failed to process query", "error", "type mismatch for request and reply",
+              "service", query.get_keyexpr().as_string_view());
     failure_callback_();
     query.reply_err(::zenoh::ext::serialize("Type mismatch for request and reply"),
                     ::zenoh::Query::ReplyErrOptions::create_default(), &result);
@@ -266,7 +265,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
                  std::chrono::milliseconds timeout) -> std::vector<ServiceResponse<ReplyT>> {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  LOG(INFO) << fmt::format("Calling service on '{}'", topic_config.name);
+  heph::log(heph::INFO, "calling service", "topic", topic_config.name);
 
   const ::zenoh::KeyExpr keyexpr(topic_config.name);
   auto options = internal::createZenohGetOptions<RequestT, ReplyT>(request, timeout);
@@ -282,8 +281,8 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
-      LOG(ERROR) << fmt::format("Failed to call service on '{}': {}", topic_config.name,
-                                reply.get_err().get_payload().as_string());
+      heph::log(heph::ERROR, "failed to call service", "topic", topic_config.name, "error",
+                reply.get_err().get_payload().as_string());
       continue;
     }
 

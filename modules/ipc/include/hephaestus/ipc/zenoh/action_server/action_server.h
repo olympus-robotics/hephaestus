@@ -27,6 +27,7 @@
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh::action_server {
 
@@ -139,7 +140,7 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
-  LOG(INFO) << fmt::format("[ActionServer {}] Started Action Server.", topic_config_.name);
+  heph::log(heph::INFO, "started Action Server", "topic", topic_config_.name);
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -151,7 +152,7 @@ ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request) -> RequestResponse {
   if (is_running_) {
-    LOG(ERROR) << fmt::format("[ActionServer {}] server is already serving one request.", topic_config_.name);
+    heph::log(heph::ERROR, "action server is already serving one request", "topic", topic_config_.name);
 
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
@@ -162,20 +163,19 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
       return { .status = RequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
-    LOG(ERROR) << fmt::format("[ActionServer {}] request callback failed with exception: {}.",
-                              topic_config_.name, ex.what());
+    heph::log(heph::ERROR, "request callback failed", "topic"
+                              topic_config_.name, "exception", ex.what());
     return { .status = RequestStatus::INVALID };
   }
 
   if (!request_consumer_.queue().tryPush(request)) {
     // NOTE: this should never happen as the queue is unbound.
-    LOG(ERROR) << fmt::format("[ActionServer {}] failed to push the job in the queue. NOTE: this "
-                              "should not happen, something is wrong in the code.",
+    heph::log(heph::ERROR, "failed to push the job in the queue. NOTE: this should not happen, something is wrong in the code!", "topic",
                               topic_config_.name);
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
-  LOG(INFO) << fmt::format("[ActionServer {}] request accepted.", topic_config_.name);
+  heph::log(heph::INFO, "request accepted.", "topic", topic_config_.name);
   return { .status = RequestStatus::SUCCESSFUL };
 }
 
@@ -204,8 +204,8 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
         .status = stop_requested ? RequestStatus::STOPPED : RequestStatus::SUCCESSFUL,
       };
     } catch (const std::exception& ex) {
-      LOG(ERROR) << fmt::format("[ActionServer {}] execute callback failed with exception: {}.",
-                                topic_config_.name, ex.what());
+      heph::log(heph::ERROR, "execute callback failed with exception", "topic",
+                                topic_config_.name, "exception", ex.what());
       return Response<ReplyT>{
         .value = ReplyT{},
         .status = RequestStatus::INVALID,
@@ -217,7 +217,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
-    LOG(ERROR) << fmt::format("[ActionServer {}] failed to send final response to client.",
+    heph::log(heph::ERROR, "failed to send final response to client", "topic",
                               topic_config_.name);
   }
 

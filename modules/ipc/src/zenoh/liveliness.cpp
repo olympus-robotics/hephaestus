@@ -30,6 +30,7 @@
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -58,7 +59,7 @@ auto getListOfPublishers(const Session& session, std::string_view topic) -> std:
       const auto& sample = reply.get_ok();
       topics.emplace(sample.get_keyexpr().as_string_view());
     } else {
-      LOG(ERROR) << fmt::format("Invalid reply for liveliness on topic {}", topic);
+      heph::log(heph::ERROR, "invalid reply for liveliness", "topic", topic);
     }
   }
 
@@ -110,8 +111,8 @@ PublisherDiscovery::~PublisherDiscovery() {
   try {
     std::move(*liveliness_subscriber_).undeclare();
   } catch (std::exception& e) {
-    LOG(ERROR) << fmt::format("Failed to undeclare liveliness subscriber for: {}. Exception: {}",
-                              topic_config_.name, e.what());
+    heph::log(heph::ERROR, "failed to undeclare liveliness subscriber", "topic", topic_config_.name,
+              "exception", e.what());
   }
 }
 
