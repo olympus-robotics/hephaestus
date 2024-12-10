@@ -112,7 +112,6 @@ TEST(Measure, Metric) {
 
   const auto entry = Metric{ .component = random::random<std::string>(mt),
                              .tag = random::random<std::string>(mt),
-                             .id = random::random<std::size_t>(mt),
                              .timestamp = random::random<ClockT::time_point>(mt),
                              .values = { { random::random<std::string>(mt), random::random<int64_t>(mt) } } };
   record(entry);
@@ -126,7 +125,6 @@ TEST(Measure, Metric) {
 TEST(Measure, Serialization) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
-  static constexpr auto ID = 42;
 
   auto mt = random::createRNG();
 
@@ -135,7 +133,7 @@ TEST(Measure, Serialization) {
   registerMetricSink(std::move(mock_sink));
 
   auto dummy = Dummy::random(mt);
-  record(COMPONENT, TAG, ID, dummy);
+  record(COMPONENT, TAG, dummy);
 
   mock_sink_ptr->wait();
   const auto& measure_entries = mock_sink_ptr->getMeasureEntries();

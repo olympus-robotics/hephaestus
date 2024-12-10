@@ -10,6 +10,7 @@
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/service_client.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
@@ -34,8 +35,8 @@ TEST(ZenohTests, ServiceCallExchange) {
       server_session, service_topic, [](const types::DummyType& request) { return request; });
 
   auto client_session = createSession({});
-  const auto replies = callService<types::DummyType, types::DummyType>(
-      *client_session, service_topic, request_message, std::chrono::milliseconds(10));
+  auto service_client = ServiceClient<types::DummyType, types::DummyType>(client_session, service_topic);
+  const auto replies = service_client.call(request_message, std::chrono::milliseconds(10));
   EXPECT_FALSE(replies.empty());
   EXPECT_EQ(replies.size(), 1);
   EXPECT_EQ(replies.front().topic, service_topic.name);

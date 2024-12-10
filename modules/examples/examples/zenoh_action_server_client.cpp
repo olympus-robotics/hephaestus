@@ -51,11 +51,12 @@ auto main(int argc, const char* argv[]) -> int {
       .initial_value = START,
       .iterations_count = ITERATIONS,
     };
+    static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
     auto result_future =
         heph::ipc::zenoh::action_server::callActionServer<heph::examples::types::SampleRequest,
                                                           heph::examples::types::SampleReply,
                                                           heph::examples::types::SampleReply>(
-            session, topic_config, target, status_update_cb);
+            session, topic_config, target, status_update_cb, DEFAULT_TIMEOUT);
 
     LOG(INFO) << fmt::format("Call to Action Server (topic: '{}') started. Wating for result.",
                              topic_config.name);

@@ -188,7 +188,7 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # influxdb
-set(INFLUXDB_GIT_TAG 8d8ab3b5ddc40b767a3ebf5eb1df76aa170dbca9)
+set(INFLUXDB_GIT_TAG 2b8a87cfbb2b0a8c01a38212fade79553c8f75c8)
 add_cmake_dependency(
   NAME InfluxDB
   DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip

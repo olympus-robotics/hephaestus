@@ -88,10 +88,12 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
 
   auto request = types::DummyType::random(mt);
   types::DummyPrimitivesType received_status;
+  static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 10000 };
   const auto reply =
       callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
           action_server_data.session, action_server_data.topic_config, request,
-          [&received_status](const types::DummyPrimitivesType& status) { received_status = status; })
+          [&received_status](const types::DummyPrimitivesType& status) { received_status = status; },
+          REPLY_SERVICE_DEFAULT_TIMEOUT)
           .get();
 
   EXPECT_EQ(status, received_status);
