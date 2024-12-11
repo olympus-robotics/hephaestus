@@ -115,7 +115,7 @@ private:
   absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
   containers::BlockingQueue<Metric> entries_;
-  std::future<void> stop_signal_;
+  std::future<void> message_process_future_;
 };
 
 void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
@@ -127,7 +127,7 @@ void record(const Metric& metric) {
 }
 
 MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
-  stop_signal_ = std::async(std::launch::async, [this]() {
+  message_process_future_ = std::async(std::launch::async, [this]() {
     while (true) {
       auto message = entries_.waitAndPop();
       if (!message.has_value()) {
@@ -143,7 +143,7 @@ MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
 MetricRecorder::~MetricRecorder() {
   try {
     entries_.stop();
-    stop_signal_.get();
+    message_process_future_.get();
   } catch (const std::exception& ex) {
     LOG(FATAL) << "While emptying message consumer, exception happened: " << ex.what();
   }
