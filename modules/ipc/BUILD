@@ -22,6 +22,7 @@ heph_cc_library(
         "//modules/containers",
         "//modules/ipc/proto:types_gen_proto",
         "//modules/serdes",
+        "//modules/telemetry/telemetry",
         "//modules/utils",
         "@abseil-cpp//absl/log:log",
         "@fmt",

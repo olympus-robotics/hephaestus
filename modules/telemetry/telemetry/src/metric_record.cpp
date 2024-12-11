@@ -15,13 +15,14 @@
 #include <vector>
 
 #include <absl/base/thread_annotations.h>
-#include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <fmt/format.h>
+#include <hephaestus/telemetry/log_sink.h>
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry {
@@ -73,7 +74,7 @@ void jsonToValues(const nlohmann::json& json, std::unordered_map<std::string, Me
       jsonToValues(value, values, full_key);
     } else {
       // NOTE: we do not support arrays.
-      LOG(ERROR) << fmt::format("Failed to parse value for key: {}, value: {}", full_key, value.dump());
+      heph::log(heph::ERROR, "failed to parse value", "key", full_key, "value", value.dump());
     }
   }
 }
@@ -130,7 +131,7 @@ MetricRecorder::~MetricRecorder() {
   try {
     entries_consumer_.stop().get();
   } catch (const std::exception& ex) {
-    LOG(FATAL) << "While emptying message consumer, exception happened: " << ex.what();
+    heph::log(heph::FATAL, "emptying message consumer", "exception", ex.what());
   }
 }
 

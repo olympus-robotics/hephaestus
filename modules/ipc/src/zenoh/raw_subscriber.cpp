@@ -32,6 +32,7 @@
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
@@ -138,8 +139,8 @@ RawSubscriber::~RawSubscriber() {
     try {
       std::move(*subscriber_).undeclare();
     } catch (std::exception& e) {
-      LOG(ERROR) << fmt::format("Failed to undeclare subscriber for: {}. Exception: {}", topic_config_.name,
-                                e.what());
+      heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
+                e.what());
     }
   }
 }

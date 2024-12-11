@@ -8,9 +8,6 @@ package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "containers_proto",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
     hdrs = glob([
         "include/**/*.h",
     ]),

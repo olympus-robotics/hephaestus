@@ -88,19 +88,20 @@
     }
   },
   "extensions": [
-    // language support
-    "ms-python.python",
-    "ms-vscode.cpptools",
-    "ms-vscode.cmake-tools", // cmake syntax support
-    "zxh404.vscode-proto3", // protobuf support and linting
-    "ms-azuretools.vscode-docker", // dockerfile and linting support
-    // formatters
-    "llvm-vs-code-extensions.vscode-clangd", // linting, code-formatting
-    "cheshirekow.cmake-format", // cmake formatting
-    "foxundermoon.shell-format", // shell script formatting
-    "redhat.vscode-yaml", // yaml syntax highlighting and formatting
-    "streetsidesoftware.code-spell-checker",
-    "charliermarsh.ruff", // fast python formatting
-    "bazelbuild.vscode-bazel",
-  ],
+	"bazelbuild.vscode-bazel",
+	"charliermarsh.ruff",
+	"cheshirekow.cmake-format",
+	"foxundermoon.shell-format",
+	"llvm-vs-code-extensions.vscode-clangd",
+	"ms-azuretools.vscode-docker",
+	"ms-python.debugpy",
+	"ms-python.python",
+	"ms-python.vscode-pylance",
+	"ms-vscode.cmake-tools",
+	"ms-vscode.cpptools",
+	"redhat.vscode-yaml",
+	"streetsidesoftware.code-spell-checker",
+	"twxs.cmake",
+	"zxh404.vscode-proto3"
+],
 }

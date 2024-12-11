@@ -26,6 +26,7 @@
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::bag {
@@ -76,7 +77,7 @@ auto ZenohPlayer::Impl::start() -> std::future<void> {
 
   const auto channels = bag_reader_->channels();
   channel_count_ = channels.size();
-  LOG(INFO) << fmt::format("found {} channels in the bag", channels.size());
+  heph::log(heph::INFO, "found channels in the bag", "num_channels", channels.size());
   for (const auto& [id, channel] : channels) {
     createPublisher(*channel);
   }
@@ -128,7 +129,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
         }
       });
 
-  LOG(INFO) << fmt::format("Created publisher for topic: {}", channel.topic);
+  heph::log(heph::INFO, "created publisher for topic", "name", channel.topic);
 }
 
 void ZenohPlayer::Impl::run() {
@@ -163,8 +164,8 @@ void ZenohPlayer::Impl::run() {
 
     if (const auto now = std::chrono::system_clock::now(); now > write_timestamp && msgs_played_count > 0) {
       ++deadline_missed_count;
-      LOG(WARNING) << fmt::format("deadline misseed on message {} for topic {}, delay {}",
-                                  message.message.sequence, topic, now - write_timestamp);
+      heph::log(heph::WARN, "deadline missed", "message_name", message.message.sequence, "topic", topic,
+                "delay", now - write_timestamp);
     } else {
       std::unique_lock<std::mutex> guard(play_mutex_);
       if (play_cv_.wait_until(guard, write_timestamp, [this] { return terminate_.load(); })) {
@@ -179,8 +180,8 @@ void ZenohPlayer::Impl::run() {
     ++msgs_played_count;
   }
 
-  LOG(INFO) << fmt::format("Played {} messages, missed {} deadlines", msgs_played_count,
-                           deadline_missed_count);
+  heph::log(heph::INFO, "playing finished", "num_played_messages", msgs_played_count, "num_missed_deadlines",
+            deadline_missed_count);
 }
 
 // ----------------------------------------------------------------------------------------------------------
