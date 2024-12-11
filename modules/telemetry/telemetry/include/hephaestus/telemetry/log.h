@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
@@ -45,6 +46,9 @@ void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... r
 }  // namespace heph::telemetry::internal
 
 namespace heph {
+
+enum LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
+
 ///@brief Log a message. Example:
 ///       ```
 ///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0,

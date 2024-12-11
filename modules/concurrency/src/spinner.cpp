@@ -16,8 +16,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {

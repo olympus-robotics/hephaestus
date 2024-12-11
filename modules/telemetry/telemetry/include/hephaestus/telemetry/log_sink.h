@@ -23,7 +23,9 @@
 #include <magic_enum.hpp>
 
 namespace heph {
-enum LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
+///@brief Forward declaration of LogLevel. Definition is in log.h, since we only want to include that when
+/// logging.
+enum LogLevel : std::uint8_t;
 }  // namespace heph
 
 namespace heph::telemetry {

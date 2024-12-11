@@ -11,8 +11,6 @@
 #include <span>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"

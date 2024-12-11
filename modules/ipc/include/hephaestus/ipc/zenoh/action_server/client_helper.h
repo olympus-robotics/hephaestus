@@ -10,8 +10,6 @@
 #include <string>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_proto.h"  // NOLINT(misc-include-cleaner)

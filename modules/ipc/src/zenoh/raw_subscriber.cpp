@@ -127,6 +127,7 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   }
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 RawSubscriber::~RawSubscriber() {
   if (callback_messages_consumer_ != nullptr) {
     auto stopped = callback_messages_consumer_->stop();

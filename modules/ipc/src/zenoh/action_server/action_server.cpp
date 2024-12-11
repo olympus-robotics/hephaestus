@@ -7,8 +7,6 @@
 #include <chrono>
 #include <string>
 
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 #include "hephaestus/ipc/zenoh/service.h"

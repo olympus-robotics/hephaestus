@@ -9,13 +9,13 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
+#include <memory>
 #include <thread>
 #include <tuple>
 #include <utility>
 
 #include <absl/log/log.h>
 #include <fmt/base.h>
-#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/sample.h"
@@ -25,7 +25,6 @@
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"

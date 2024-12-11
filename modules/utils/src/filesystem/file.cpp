@@ -15,7 +15,6 @@
 #include <linux/limits.h>
 #endif
 
-#include <fmt/format.h>
 #include <unistd.h>
 
 namespace heph::utils::filesystem {

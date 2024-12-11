@@ -104,6 +104,7 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
   createLivelinessSubscriber();
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 PublisherDiscovery::~PublisherDiscovery() {
   auto stopped = infos_consumer_->stop();
   stopped.get();

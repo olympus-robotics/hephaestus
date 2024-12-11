@@ -9,6 +9,7 @@
 #include <absl/log/absl_log.h>
 #include <fmt/format.h>
 
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry {

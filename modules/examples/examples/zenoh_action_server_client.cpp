@@ -7,11 +7,11 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
+#include <memory>
 #include <tuple>
 #include <utility>
 
 #include <fmt/base.h>
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/cli/program_options.h"
@@ -21,7 +21,6 @@
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
