@@ -32,7 +32,7 @@ set(SOURCES
 define_module_library(
   NAME telemetry
   PUBLIC_LINK_LIBS
-    hephaestus::concurrency
+    hephaestus::containers
     hephaestus::random
     hephaestus::serdes
     hephaestus::utils

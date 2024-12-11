@@ -17,7 +17,7 @@ heph_cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/concurrency",
+        "//modules/containers",
         "//modules/random",
         "//modules/serdes",
         "@abseil-cpp//absl/log:absl_log",
