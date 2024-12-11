@@ -4,6 +4,7 @@
 
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@rules_buf//buf:defs.bzl", "buf_lint_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 def heph_basic_copts():
@@ -122,19 +123,39 @@ def heph_cc_test(
         **kwargs
     )
 
+def heph_proto_library(
+        name,
+        srcs,
+        module,
+        deps = [],
+        **kwargs):
+    proto_library(
+        name = name,
+        srcs = srcs,
+        strip_import_prefix = "/" + module,
+        deps = deps,
+        **kwargs
+    )
+
+    buf_lint_test(
+        name = name + "_lint",
+        targets = [":" + name],
+        config = "@@//:buf.yaml",
+        module = module,
+    )
+
 def heph_cc_proto_library(
         name,
         srcs,
-        strip_import_prefix,
+        module,
         deps = [],
         **kwargs):
     proto_library_name = name + "_gen_proto"
-    proto_library(
+    heph_proto_library(
         name = proto_library_name,
         srcs = srcs,
-        strip_import_prefix = strip_import_prefix,
+        module = module,
         deps = deps,
-        **kwargs
     )
 
     cc_proto_library(
