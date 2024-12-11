@@ -40,7 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
     const std::string query = "Marco";
-    heph::log(heph::INFO, "calling service", "topic", topic_config.name, "query" query);
+    heph::log(heph::INFO, "calling service", "topic", topic_config.name, "query", query);
     const auto replies =
         heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {

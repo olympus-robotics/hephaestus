@@ -21,6 +21,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
+
 namespace heph::ipc::zenoh {
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)
 DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)

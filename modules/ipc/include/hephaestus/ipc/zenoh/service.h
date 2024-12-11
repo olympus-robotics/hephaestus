@@ -232,7 +232,8 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
 
 template <typename RequestT, typename ReplyT>
 void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
-  heph::log(heph::INFO, "received query", "from", topic_config_.name, query.get_keyexpr().as_string_view());
+  heph::log(heph::INFO, "received query", "service", topic_config_.name, "from",
+            query.get_keyexpr().as_string_view());
 
   ::zenoh::ZResult result{};
 

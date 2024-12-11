@@ -162,7 +162,7 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
       return { .status = RequestStatus::REJECTED_USER };
     }
   } catch (const std::exception& ex) {
-    heph::log(heph::ERROR, "request callback failed", "topic" topic_config_.name, "exception", ex.what());
+    heph::log(heph::ERROR, "request callback failed", "topic", topic_config_.name, "exception", ex.what());
     return { .status = RequestStatus::INVALID };
   }
 
