@@ -142,6 +142,7 @@ def heph_proto_library(
         targets = [":" + name],
         config = "@@//:buf.yaml",
         module = module,
+        **kwargs
     )
 
 def heph_cc_proto_library(
@@ -156,6 +157,7 @@ def heph_cc_proto_library(
         srcs = srcs,
         module = module,
         deps = deps,
+        **kwargs
     )
 
     cc_proto_library(
