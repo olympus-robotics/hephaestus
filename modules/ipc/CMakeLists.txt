@@ -72,6 +72,7 @@ define_module_library(
     hephaestus::utils
     hephaestus::serdes
     hephaestus::action_server_types_proto
+    hephaestus::telemetry
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3
