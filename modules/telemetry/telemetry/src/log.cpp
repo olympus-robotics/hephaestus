@@ -58,12 +58,12 @@ Logger::Logger() : entries_{ std::nullopt } {
     while (true) {
       auto message = entries_.waitAndPop();
       if (!message.has_value()) {
-        emptyQueue();
-        return;
+        break;
       }
 
       processEntry(message.value());
     }
+    emptyQueue();
   });
 }
 
