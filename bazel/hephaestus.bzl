@@ -59,6 +59,7 @@ def heph_linkopts():
         "@hephaestus//bazel:gcc_compiler": [],
     }) + select({
         "@hephaestus//bazel:dbg_compilation": ["-rdynamic"],
+        "@hephaestus//bazel:fastbuild_compilation": ["-rdynamic"],
         "//conditions:default": [],
     })
 
