@@ -21,8 +21,6 @@ heph_cc_library(
         "//modules/ipc",
         "//modules/random",
         "//modules/telemetry/telemetry",
-        "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/log:log",
         "@mcap",
     ],
 )

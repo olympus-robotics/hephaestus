@@ -14,7 +14,6 @@
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 
 #include "hephaestus/cli/program_options.h"
@@ -59,7 +58,8 @@ execute(const heph::examples::types::SampleRequest& request,
     accumulated += 1;
     const auto result = status_update_publisher.publish(
         heph::examples::types::SampleReply{ .value = accumulated, .counter = counter });
-    LOG_IF(ERROR, !result) << "Failed to publish status update";
+    heph::logIf(heph::ERROR, !result, "failed to publish status update");
+
     fmt::println("- Update {}: {} ", counter, accumulated);
     std::this_thread::sleep_for(WAIT_FOR);
   }

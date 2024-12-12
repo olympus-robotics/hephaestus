@@ -16,7 +16,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 #include <mcap/reader.hpp>
@@ -143,7 +142,8 @@ void ZenohPlayer::Impl::run() {
   std::size_t msgs_played_count = 0;
   std::size_t deadline_missed_count = 0;
 
-  LOG_IF(WARNING, wait_for_readers_to_connect_) << "Waiting for subscribers to connect is NOT supported yet!";
+  heph::logIf(heph::WARN, wait_for_readers_to_connect_,
+              "waiting for subscribers to connect is NOT supported yet!");
   if (wait_for_readers_to_connect_) {
     all_publisher_connected_.wait(false);
   }
@@ -174,8 +174,8 @@ void ZenohPlayer::Impl::run() {
     }
 
     auto success = publisher->publish({ message.message.data, message.message.dataSize });
-    LOG_IF(WARNING, !success) << fmt::format("Failed to publish message {} for topic {}",
-                                             message.message.sequence, topic);
+    heph::logIf(heph::WARN, !success, "failed to publish message", "message", message.message.sequence,
+                "topic", topic);
 
     ++msgs_played_count;
   }

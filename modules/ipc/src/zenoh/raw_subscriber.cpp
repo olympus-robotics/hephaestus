@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <fmt/format.h>
 #include <zenoh.h>
@@ -59,8 +58,8 @@ template <typename C, typename D>
         ::zenoh::ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
 
     auto res = absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &sequence_id);
-    LOG_IF(ERROR, !res) << fmt::format("[Subscriber {}] failed to read message counter from attachment",
-                                       topic);
+    heph::logIf(heph::ERROR, !res, "failed to read message counter from attachment", "service", topic);
+
     sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
     type_info = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO];
   }

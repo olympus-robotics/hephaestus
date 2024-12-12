@@ -24,7 +24,6 @@ heph_cc_library(
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/utils",
-        "@abseil-cpp//absl/log:log",
         "@fmt",
         "@nlohmann_json//:json",
         "@zenohc_builder//:zenoh-c",

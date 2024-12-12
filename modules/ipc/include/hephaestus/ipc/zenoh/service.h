@@ -253,8 +253,8 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
     query.reply(this->topic_config_.name, toZenohBytes(buffer), std::move(options), &result);
   }
 
-  LOG_IF(ERROR, result != Z_OK) << fmt::format("[Service '{}'] failed to reply to query, err {}",
-                                               topic_config_.name, result);
+  heph::logIf(heph::ERROR, result != Z_OK, "failed to reply to query", "service", topic_config_.name, "error",
+              result);
 }
 
 template <typename RequestT, typename ReplyT>

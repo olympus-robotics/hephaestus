@@ -20,7 +20,6 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/utils",
-        "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
         "@fmt",
