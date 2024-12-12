@@ -95,7 +95,9 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
 }
 
 InfluxDBSink::~InfluxDBSink() {
-  spinner_->stop().get();
+  if (spinner_) {
+    spinner_->stop().get();
+  }
 }
 
 void InfluxDBSink::send(const telemetry::Metric& entry) {
