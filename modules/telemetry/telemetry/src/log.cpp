@@ -6,7 +6,6 @@
 
 #include <exception>
 #include <future>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -14,6 +13,7 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <fmt/base.h>
 
 #include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log_sink.h"
