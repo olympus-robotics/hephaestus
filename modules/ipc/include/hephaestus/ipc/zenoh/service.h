@@ -17,7 +17,6 @@
 #include <variant>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
@@ -146,7 +145,6 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
 
     auto buffer = toByteVector(payload->get());  // NOLINT(bugprone-unchecked-optional-access)
 
-    DLOG(INFO) << fmt::format("Deserializing buffer of size: {}", buffer.size());
     RequestT request;
     serdes::deserialize<RequestT>(buffer, request);
     return request;
@@ -156,7 +154,6 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
 template <class ReplyT>
 auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
   const auto server_topic = static_cast<std::string>(sample.get_keyexpr().as_string_view());
-  DLOG(INFO) << fmt::format("Received answer of '{}'", server_topic);
 
   if constexpr (std::is_same_v<ReplyT, std::string>) {
     throwExceptionIf<InvalidParameterException>(
@@ -164,7 +161,6 @@ auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
         fmt::format("Encoding for Service {} should be '{}'", server_topic,
                     ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
     auto payload = sample.get_payload().as_string();
-    DLOG(INFO) << fmt::format("Serivce {}: payload is string: '{}'", server_topic, payload);
     return ServiceResponse<ReplyT>{ .topic = server_topic, .value = std::move(payload) };
   } else {
     throwExceptionIf<InvalidParameterException>(
