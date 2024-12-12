@@ -72,7 +72,7 @@ Logger::~Logger() {
     entries_.stop();
     message_process_future_.get();
   } catch (const std::exception& ex) {
-    std::cerr << "While emptying log queue, exception happened: " << ex.what() << "\n";
+    fmt::println(stderr, "While emptying log queue, exception happened: {}", ex.what());
   }
 }
 
