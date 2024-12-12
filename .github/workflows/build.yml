@@ -4,9 +4,9 @@ name: Build and deploy pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -74,14 +74,14 @@ jobs:
         username: ${{ github.actor}}
         password: ${{secrets.GITHUB_TOKEN}}
     steps:
-    - uses: actions/checkout@v4.1.1
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build --preset CI
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build -- all examples
+      - uses: actions/checkout@v4.1.1
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build --preset CI
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build -- all examples
 
   build-gcc:
     needs: docker_build_and_publish
@@ -94,38 +94,48 @@ jobs:
         username: ${{ github.actor}}
         password: ${{secrets.GITHUB_TOKEN}}
     steps:
-    - uses: actions/checkout@v4.1.1
-    - name: Install Rust
-      run: |
-        export PATH=/root/.cargo/bin:$PATH
-        echo $(rustup toolchain install stable)
-        echo $(rustup default stable)
-        echo $(rustup show)
-    - name: Configure CMake
-      run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build -- all examples
+      - uses: actions/checkout@v4.1.1
+      - name: Install Rust
+        run: |
+          export PATH=/root/.cargo/bin:$PATH
+          echo $(rustup toolchain install stable)
+          echo $(rustup default stable)
+          echo $(rustup show)
+      - name: Configure CMake
+        run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build -- all examples
 
   build-bazel:
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
-    - uses: actions/checkout@v4.1.1
-    - name: Cache Bazel
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/bazel
-        key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
-    - name: Format
-      run: bazelisk run //:format.check
-    - name: Build
-      run: bazelisk build //modules/... --config clang-tidy
-    - name: Test
-      run: bazelisk test --test_output=errors //modules/...
+      - uses: actions/checkout@v4.1.1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+      - name: Format
+        run: bazelisk run //:format.check
+      - name: Build
+        run: bazelisk build //modules/... --config clang-tidy
+      - name: Test
+        run: bazelisk test --test_output=errors //modules/...
 
   protobuf:
     needs: docker_build_and_publish
