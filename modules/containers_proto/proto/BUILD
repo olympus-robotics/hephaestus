@@ -4,13 +4,13 @@
 
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_proto_library")
 
-PROTO_PATH = "/modules/containers_proto/proto"
+PROTO_MODULE = "modules/containers_proto/proto"
 
 heph_cc_proto_library(
     name = "containers_gen_proto",
     srcs = glob([
         "**/*.proto",
     ]),
-    strip_import_prefix = PROTO_PATH,
+    module = PROTO_MODULE,
     visibility = ["//visibility:public"],
 )
