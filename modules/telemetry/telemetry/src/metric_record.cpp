@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <future>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -21,7 +22,7 @@
 #include <fmt/format.h>
 #include <nlohmann/json_fwd.hpp>
 
-#include "hephaestus/concurrency/message_queue_consumer.h"
+#include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry {
@@ -105,12 +106,16 @@ public:
 
 private:
   [[nodiscard]] static auto instance() -> MetricRecorder&;
-  void processEntries(const Metric& entry);
+  void processEntry(const Metric& entry);
+
+  /// @brief Empty the queue so that remaining messages get processed
+  void emptyQueue();
 
 private:
   absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  concurrency::MessageQueueConsumer<Metric> entries_consumer_;
+  containers::BlockingQueue<Metric> entries_;
+  std::future<void> message_process_future_;
 };
 
 void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
@@ -121,14 +126,24 @@ void record(const Metric& metric) {
   MetricRecorder::record(metric);
 }
 
-MetricRecorder::MetricRecorder()
-  : entries_consumer_([this](const Metric& entry) { processEntries(entry); }, std::nullopt) {
-  entries_consumer_.start();
+MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
+  message_process_future_ = std::async(std::launch::async, [this]() {
+    while (true) {
+      auto message = entries_.waitAndPop();
+      if (!message.has_value()) {
+        break;
+      }
+
+      processEntry(message.value());
+    }
+    emptyQueue();
+  });
 }
 
 MetricRecorder::~MetricRecorder() {
   try {
-    entries_consumer_.stop().get();
+    entries_.stop();
+    message_process_future_.get();
   } catch (const std::exception& ex) {
     LOG(FATAL) << "While emptying message consumer, exception happened: " << ex.what();
   }
@@ -147,13 +162,24 @@ void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
 
 void MetricRecorder::record(const Metric& metric) {
   auto& telemetry = instance();
-  telemetry.entries_consumer_.queue().forcePush(metric);
+  telemetry.entries_.forcePush(metric);
 }
 
-void MetricRecorder::processEntries(const Metric& entry) {
+void MetricRecorder::processEntry(const Metric& entry) {
   const absl::MutexLock lock{ &sink_mutex_ };
   for (auto& sink : sinks_) {
     sink->send(entry);
+  }
+}
+
+void MetricRecorder::emptyQueue() {
+  while (!entries_.empty()) {
+    auto message = entries_.tryPop();
+    if (!message.has_value()) {
+      return;
+    }
+
+    processEntry(message.value());
   }
 }
 

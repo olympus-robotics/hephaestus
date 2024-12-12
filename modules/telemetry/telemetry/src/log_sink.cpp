@@ -3,14 +3,8 @@
 //=================================================================================================
 #include "hephaestus/telemetry/log_sink.h"
 
-// #include <filesystem>
-// #include <string>
-// #include <string_view>
 #include <thread>
 #include <utility>
-
-// #include <fmt/base.h>
-// #include <fmt/format.h>
 
 #include "hephaestus/utils/utils.h"
 
