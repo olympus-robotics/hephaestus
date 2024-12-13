@@ -118,11 +118,10 @@ TEST(BitFlag, SetWithValueTrue) {
 }
 
 TEST(BitFlag, SetWithValueFalse) {
-  BitFlag<TestEnum> flag{ TestEnum::A};
+  BitFlag<TestEnum> flag{ TestEnum::A };
   flag.set(TestEnum::B);
 
-  flag.set(TestEnum::A, false)
-  EXPECT_FALSE(flag.has(TestEnum::A));
+  flag.set(TestEnum::A, false) EXPECT_FALSE(flag.has(TestEnum::A));
   EXPECT_TRUE(flag.has(TestEnum::B));
   EXPECT_FALSE(flag.has(TestEnum::C));
 }

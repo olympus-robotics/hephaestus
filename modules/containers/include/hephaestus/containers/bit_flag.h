@@ -118,7 +118,7 @@ public:
 
   // Set the input flag(s) to `value`.
   constexpr auto set(BitFlag flag, bool value) -> BitFlag& {
-    if(value) {
+    if (value) {
       set(flag);
     } else {
       unset(flag);
