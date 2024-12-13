@@ -10,7 +10,6 @@
 #include <memory>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <mcap/errors.hpp>
@@ -20,12 +19,16 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("Playback a bag to zenoh topics");
@@ -38,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto wait_for_readers_to_connect = args.getOption<bool>("wait_for_readers_to_connect");
     auto [config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    LOG(INFO) << fmt::format("Reading bag file: {}", input_file.string());
+    heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 
     heph::throwExceptionIf<heph::InvalidDataException>(
         !std::filesystem::exists(input_file),

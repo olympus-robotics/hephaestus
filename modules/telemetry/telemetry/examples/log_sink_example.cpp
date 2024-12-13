@@ -5,7 +5,6 @@
 #include <string>
 
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 

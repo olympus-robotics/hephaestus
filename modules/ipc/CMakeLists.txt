@@ -65,13 +65,13 @@ define_module_library(
     absl::raw_hash_set
     absl::status
     absl::statusor
-    absl::log
     hephaestus::concurrency
     hephaestus::containers
     hephaestus::cli
     hephaestus::utils
     hephaestus::serdes
     hephaestus::action_server_types_proto
+    hephaestus::telemetry
     fmt::fmt
     nlohmann_json::nlohmann_json
     range-v3::range-v3

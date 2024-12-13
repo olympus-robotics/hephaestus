@@ -6,23 +6,26 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
-#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc =
@@ -35,8 +38,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto [config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(config));
-    LOG(INFO) << fmt::format("Opening session: {}",
-                             heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
+    heph::log(heph::DEBUG, "opening session", "id",
+              heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
     static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
     auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value,

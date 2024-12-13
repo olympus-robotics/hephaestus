@@ -20,8 +20,7 @@ heph_cc_library(
         "//modules/containers",
         "//modules/ipc",
         "//modules/random",
-        "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/log:log",
+        "//modules/telemetry/telemetry",
         "@mcap",
     ],
 )

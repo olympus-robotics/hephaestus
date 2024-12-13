@@ -45,6 +45,7 @@ void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... r
 }  // namespace heph::telemetry::internal
 
 namespace heph {
+
 ///@brief Log a message. Example:
 ///       ```
 ///       heph::log(heph::LogLevel::WARN, "speed is over limit", "current_speed", 31.3, "limit", 30.0,
@@ -63,6 +64,30 @@ void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields)
 template <typename... Args>
 void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
   telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
+}
+
+///@brief Conditionally log a message. Example:
+///       ```
+///       heph::log(heph::LogLevel::WARN, a==3,  "speed is over limit", "current_speed", 31.3, "limit", 30.0,
+///       "entity", "km/h")
+///       ```
+template <typename... Args>
+void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg, Args&&... fields) {
+  if (condition) {
+    telemetry::internal::logWithFields(telemetry::LogEntry{ level, std::move(msg) },
+                                       std::forward<Args>(fields)...);
+  }
+}
+
+///@brief Conditionally log a message without fields. Example:
+///       ```
+///       heph::log(heph::LogLevel::WARN, a==3, "speed is over limit")
+///       ```
+template <typename... Args>
+void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg) {
+  if (condition) {
+    telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
+  }
 }
 
 namespace telemetry {

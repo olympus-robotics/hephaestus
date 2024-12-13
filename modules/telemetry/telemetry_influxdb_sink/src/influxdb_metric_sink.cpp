@@ -16,11 +16,11 @@
 #include <InfluxDB/InfluxDB.h>
 #include <InfluxDB/InfluxDBFactory.h>
 #include <InfluxDB/Point.h>
-#include <absl/log/log.h>
 #include <absl/strings/ascii.h>
 #include <fmt/format.h>
 
 #include "hephaestus/concurrency/spinner.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry_sink {
@@ -70,7 +70,7 @@ auto InfluxDBSink::create(InfluxDBSinkConfig config) -> std::unique_ptr<InfluxDB
 InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config)) {
   static constexpr auto URI_FORMAT = "http://{}@{}?db={}";
   const auto url = fmt::format(URI_FORMAT, config_.token, config_.url, config_.database);
-  LOG(INFO) << fmt::format("Connecting to InfluxDB at {}", url);
+  heph::log(heph::DEBUG, "connecting to InfluxDB", "url", url);
   influxdb_ = influxdb::InfluxDBFactory::Get(url);
 
   if (config_.flush_rate_hz.has_value()) {
@@ -82,7 +82,7 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
           try {
             influxdb_->flushBatch();
           } catch (std::exception& e) {
-            LOG(ERROR) << fmt::format("Failed to flush batch to InfluxDB: {}", e.what());
+            heph::log(heph::ERROR, "failed to flush batch to InfluxDB", "exception", e.what());
           }
 
           return concurrency::Spinner::SpinResult::CONTINUE;
@@ -106,7 +106,7 @@ void InfluxDBSink::send(const telemetry::Metric& entry) {
   try {
     influxdb_->write(std::move(point));
   } catch (std::exception& e) {
-    LOG(ERROR) << fmt::format("Failed to publish to InfluxDB: {}", e.what());
+    heph::log(heph::ERROR, "failed to publish to InfluxDB", "exception", e.what());
   }
 }
 
