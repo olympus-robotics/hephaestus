@@ -74,7 +74,8 @@ private:
   static constexpr auto ROUTER_TOPIC = "@/router/{}";
   const auto query_topic = TopicConfig{ fmt::format(ROUTER_TOPIC, router_id) };
   fmt::println("QUERY TOPIC: {}", query_topic.name);
-  auto query_res = callService<std::string, std::string>(*session, query_topic, "");
+  static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
+  auto query_res = callService<std::string, std::string>(*session, query_topic, "", DEFAULT_TIMEOUT);
   throwExceptionIf<FailedZenohOperation>(query_res.empty(), "failed to query for router info: no response");
 
   return query_res.front().value;

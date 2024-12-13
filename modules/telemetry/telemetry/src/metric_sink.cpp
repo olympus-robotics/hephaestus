@@ -34,6 +34,6 @@ struct fmt::formatter<ValueMap> : fmt::formatter<std::string_view> {
 
 namespace heph::telemetry {
 auto Metric::toString() const -> std::string {
-  return fmt::format("[Metric][{}] [{}] tag: {}, id: {}{}", timestamp, component, tag, id, values);
+  return fmt::format("[Metric][{}] [{}] tag: {}, {}", timestamp, component, tag, values);
 }
 }  // namespace heph::telemetry

@@ -24,7 +24,6 @@ auto main(int /*argc*/, const char* /*argv*/[]) -> int {
   auto mt = heph::random::createRNG();
   const auto entry = ht::Metric{ .component = heph::random::random<std::string>(mt),
                                  .tag = heph::random::random<std::string>(mt),
-                                 .id = heph::random::random<std::size_t>(mt),
                                  .timestamp = heph::random::random<ht::ClockT::time_point>(mt),
                                  .values = { { heph::random::random<std::string>(mt),
                                                heph::random::random<int64_t>(mt) } } };
