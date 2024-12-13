@@ -65,7 +65,6 @@ define_module_library(
     absl::raw_hash_set
     absl::status
     absl::statusor
-    absl::log
     hephaestus::concurrency
     hephaestus::containers
     hephaestus::cli
