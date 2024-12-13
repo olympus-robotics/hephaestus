@@ -25,7 +25,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME concurrency
-  PUBLIC_LINK_LIBS hephaestus::containers hephaestus::utils fmt::fmt
+  PUBLIC_LINK_LIBS hephaestus::containers hephaestus::utils hephaestus::telemetry fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
