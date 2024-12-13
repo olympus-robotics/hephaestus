@@ -116,6 +116,16 @@ public:
     return *this;
   }
 
+  // Set the input flag(s) to `value`.
+  constexpr auto set(BitFlag flag, bool value) -> BitFlag& {
+    if (value) {
+      set(flag);
+    } else {
+      unset(flag);
+    }
+    return *this;
+  }
+
   /// Returns true if the input flag is set.
   /// In case of multiple input flags, returns true if all input flags are set.
   /// `has` logically behaves as `hasAll`.
