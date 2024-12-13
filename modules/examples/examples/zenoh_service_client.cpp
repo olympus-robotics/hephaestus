@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto query =
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };                // NOLINT
-    heph::log(heph::INFO, "calling service", "topic", topic_config.name, "query", query);
+    heph::log(heph::DEBUG, "calling service", "topic", topic_config.name, "query", query);
     const auto replies =
         heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
             *session, topic_config, query, K_TIMEOUT);

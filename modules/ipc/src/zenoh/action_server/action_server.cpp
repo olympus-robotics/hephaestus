@@ -12,6 +12,7 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
+
 namespace heph::ipc::zenoh::action_server {
 auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config) -> bool {
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };

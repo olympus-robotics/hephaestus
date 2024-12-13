@@ -76,7 +76,7 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
     return;
   }
 
-  heph::log(heph::INFO, "create subscriber", "topic", info.topic);
+  heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ .name = info.topic },
       [this, optional_type_info = std::move(optional_type_info)](const MessageMetadata& metadata,
@@ -91,7 +91,7 @@ void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
     return;
   }
 
-  heph::log(heph::INFO, "drop subscriber", "topic", info.topic);
+  heph::log(heph::DEBUG, "drop subscriber", "topic", info.topic);
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
 }

@@ -32,7 +32,7 @@
 namespace {
 [[nodiscard]] auto request(const heph::examples::types::SampleRequest& sample)
     -> heph::ipc::zenoh::action_server::TriggerStatus {
-  heph::log(heph::INFO, "request received", "request", sample);
+  heph::log(heph::DEBUG, "request received", "request", sample);
   if (sample.iterations_count == 0) {
     heph::log(heph::ERROR, "invalid request, iterations must be greater than 0");
     return heph::ipc::zenoh::action_server::TriggerStatus::REJECTED;
@@ -46,12 +46,12 @@ execute(const heph::examples::types::SampleRequest& request,
         heph::ipc::zenoh::Publisher<heph::examples::types::SampleReply>& status_update_publisher,
         std::atomic_bool& stop_requested) -> heph::examples::types::SampleReply {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 500 };
-  heph::log(heph::INFO, "start execution", "iterations", request.iterations_count);
+  heph::log(heph::DEBUG, "start execution", "iterations", request.iterations_count);
   std::size_t accumulated = request.initial_value;
   std::size_t counter = 0;
   for (; counter < request.iterations_count; ++counter) {
     if (stop_requested) {
-      heph::log(heph::INFO, "stop requested, stopping execution");
+      heph::log(heph::DEBUG, "stop requested, stopping execution");
       break;
     }
 
@@ -101,7 +101,7 @@ auto main(int argc, const char* argv[]) -> int {
                                                         heph::examples::types::SampleReply>
         action_server(session, topic_config, request_callback, execute_callback);
 
-    heph::log(heph::INFO, "Action Server started, waiting for queries", "topic", topic_config.name);
+    heph::log(heph::DEBUG, "Action Server started, waiting for queries", "topic", topic_config.name);
 
     heph::utils::TerminationBlocker::registerInterruptCallback(
         [stop_session = std::ref(*stop_session), &topic_config] {

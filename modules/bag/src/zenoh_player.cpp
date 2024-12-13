@@ -76,7 +76,7 @@ auto ZenohPlayer::Impl::start() -> std::future<void> {
 
   const auto channels = bag_reader_->channels();
   channel_count_ = channels.size();
-  heph::log(heph::INFO, "found channels in the bag", "num_channels", channels.size());
+  heph::log(heph::DEBUG, "found channels in the bag", "num_channels", channels.size());
   for (const auto& [id, channel] : channels) {
     createPublisher(*channel);
   }
@@ -128,7 +128,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
         }
       });
 
-  heph::log(heph::INFO, "created publisher for topic", "name", channel.topic);
+  heph::log(heph::DEBUG, "created publisher for topic", "name", channel.topic);
 }
 
 void ZenohPlayer::Impl::run() {
@@ -164,7 +164,7 @@ void ZenohPlayer::Impl::run() {
 
     if (const auto now = std::chrono::system_clock::now(); now > write_timestamp && msgs_played_count > 0) {
       ++deadline_missed_count;
-      heph::log(heph::WARN, "deadline missed", "message_name", message.message.sequence, "topic", topic,
+      heph::log(heph::WARN, "deadline missed", "sequence_counter", message.message.sequence, "topic", topic,
                 "delay", now - write_timestamp);
     } else {
       std::unique_lock<std::mutex> guard(play_mutex_);
@@ -180,8 +180,8 @@ void ZenohPlayer::Impl::run() {
     ++msgs_played_count;
   }
 
-  heph::log(heph::INFO, "playing finished", "num_played_messages", msgs_played_count, "num_missed_deadlines",
-            deadline_missed_count);
+  heph::log(heph::DEBUG, "playing finished", "played_message_count", msgs_played_count,
+            "num_missed_deadlines", deadline_missed_count);
 }
 
 // ----------------------------------------------------------------------------------------------------------

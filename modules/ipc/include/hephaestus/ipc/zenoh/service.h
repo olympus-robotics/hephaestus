@@ -212,7 +212,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   , callback_(std::move(callback))
   , failure_callback_(std::move(failure_callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
-  heph::log(heph::INFO, "started service", "name", topic_config_.name);
+  heph::log(heph::DEBUG, "started service", "name", topic_config_.name);
 
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable { onQuery(query); };
 
@@ -228,7 +228,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
 
 template <typename RequestT, typename ReplyT>
 void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
-  heph::log(heph::INFO, "received query", "service", topic_config_.name, "from",
+  heph::log(heph::DEBUG, "received query", "service", topic_config_.name, "from",
             query.get_keyexpr().as_string_view());
 
   ::zenoh::ZResult result{};
@@ -262,7 +262,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
                  std::chrono::milliseconds timeout) -> std::vector<ServiceResponse<ReplyT>> {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
 
-  heph::log(heph::INFO, "calling service", "topic", topic_config.name);
+  heph::log(heph::DEBUG, "calling service", "topic", topic_config.name);
 
   const ::zenoh::KeyExpr keyexpr(topic_config.name);
   auto options = internal::createZenohGetOptions<RequestT, ReplyT>(request, timeout);

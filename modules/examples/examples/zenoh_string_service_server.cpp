@@ -36,13 +36,13 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto callback = [](const std::string& sample) {
-      heph::log(heph::INFO, "received query", "query", sample);
+      heph::log(heph::DEBUG, "received query", "query", sample);
       return (sample == "Marco") ? "Polo" : "What?";
     };
 
     const heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
 
-    heph::log(heph::INFO, "string server started, waiting for queries", "topic", topic_config.name);
+    heph::log(heph::DEBUG, "string server started, waiting for queries", "topic", topic_config.name);
 
     heph::utils::TerminationBlocker::waitForInterrupt();
 

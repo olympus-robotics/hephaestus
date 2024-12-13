@@ -45,7 +45,7 @@ auto main(int argc, const char* argv[]) -> int {
     });
 
     auto status_update_cb = [](const heph::examples::types::SampleReply& sample) {
-      heph::log(heph::INFO, "received update", "reply", sample);
+      heph::log(heph::DEBUG, "received update", "reply", sample);
     };
 
     static constexpr std::size_t START = 42;
@@ -61,11 +61,11 @@ auto main(int argc, const char* argv[]) -> int {
                                                           heph::examples::types::SampleReply>(
             session, topic_config, target, status_update_cb, DEFAULT_TIMEOUT);
 
-    heph::log(heph::INFO, "call to Action Server started, waiting for result", "topic", topic_config.name);
+    heph::log(heph::DEBUG, "call to Action Server started, waiting for result", "topic", topic_config.name);
 
     const auto result = result_future.get();
 
-    heph::log(heph::INFO, "received result", "status", magic_enum::enum_name(result.status), "value",
+    heph::log(heph::DEBUG, "received result", "status", magic_enum::enum_name(result.status), "value",
               result.value);
 
     return EXIT_SUCCESS;

@@ -139,7 +139,7 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
         session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
-  heph::log(heph::INFO, "started Action Server", "topic", topic_config_.name);
+  heph::log(heph::DEBUG, "started Action Server", "topic", topic_config_.name);
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -175,7 +175,7 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const RequestT& request)
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
 
-  heph::log(heph::INFO, "request accepted.", "topic", topic_config_.name);
+  heph::log(heph::DEBUG, "request accepted.", "topic", topic_config_.name);
   return { .status = RequestStatus::SUCCESSFUL };
 }
 

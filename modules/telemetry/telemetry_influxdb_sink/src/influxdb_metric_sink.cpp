@@ -70,7 +70,7 @@ auto InfluxDBSink::create(InfluxDBSinkConfig config) -> std::unique_ptr<InfluxDB
 InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config)) {
   static constexpr auto URI_FORMAT = "http://{}@{}?db={}";
   const auto url = fmt::format(URI_FORMAT, config_.token, config_.url, config_.database);
-  heph::log(heph::INFO, "connecting to InfluxDB", "url", url);
+  heph::log(heph::DEBUG, "connecting to InfluxDB", "url", url);
   influxdb_ = influxdb::InfluxDBFactory::Get(url);
 
   if (config_.flush_rate_hz.has_value()) {

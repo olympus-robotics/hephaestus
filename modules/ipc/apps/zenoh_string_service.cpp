@@ -38,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto [config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(config));
-    heph::log(heph::INFO, "opening session", "id",
+    heph::log(heph::DEBUG, "opening session", "id",
               heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
     static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };

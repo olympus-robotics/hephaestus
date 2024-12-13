@@ -41,7 +41,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto wait_for_readers_to_connect = args.getOption<bool>("wait_for_readers_to_connect");
     auto [config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    heph::log(heph::INFO, "reading bag file", "file", input_file.string());
+    heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 
     heph::throwExceptionIf<heph::InvalidDataException>(
         !std::filesystem::exists(input_file),
