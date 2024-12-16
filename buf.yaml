@@ -2,8 +2,9 @@ version: v2
 modules:
   - path: modules/examples/proto
   - path: modules/ipc/proto
-  - path: modules/serdes
+  - path: modules/serdes/tests
   - path: modules/types_proto/proto
+  - path: modules/containers_proto/proto
 lint:
   use:
     - DEFAULT

@@ -10,10 +10,8 @@
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
 #include <fmt/chrono.h>  //NOLINT(misc-include-cleaner)
-#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/pose.h"
@@ -22,6 +20,8 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
@@ -29,14 +29,15 @@
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
   try {
     auto desc = heph::cli::ProgramDescription("Subscriber example");
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::PUBSUB));
     const auto args = std::move(desc).parse(argc, argv);
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    LOG(INFO) << "Opening session...";
-    LOG(INFO) << fmt::format("Declaring Subscriber on '{}'", topic_config.name);
+    heph::log(heph::DEBUG, "opening session", "subscriber_name", topic_config.name);
 
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 

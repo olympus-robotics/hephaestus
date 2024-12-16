@@ -21,7 +21,6 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/random:random",
         "@abseil-cpp//absl/time:time",
         "@fmt",

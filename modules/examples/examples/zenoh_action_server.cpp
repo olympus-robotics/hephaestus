@@ -9,13 +9,12 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
+#include <memory>
 #include <thread>
 #include <tuple>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/base.h>
-#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/examples/types/sample.h"
@@ -24,6 +23,8 @@
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "zenoh_program_options.h"
@@ -31,9 +32,9 @@
 namespace {
 [[nodiscard]] auto request(const heph::examples::types::SampleRequest& sample)
     -> heph::ipc::zenoh::action_server::TriggerStatus {
-  LOG(INFO) << fmt::format("Request received: {}", sample);
+  heph::log(heph::DEBUG, "request received", "request", sample);
   if (sample.iterations_count == 0) {
-    LOG(ERROR) << "Invalid request, iterations must be greater than 0";
+    heph::log(heph::ERROR, "invalid request, iterations must be greater than 0");
     return heph::ipc::zenoh::action_server::TriggerStatus::REJECTED;
   }
 
@@ -45,19 +46,20 @@ execute(const heph::examples::types::SampleRequest& request,
         heph::ipc::zenoh::Publisher<heph::examples::types::SampleReply>& status_update_publisher,
         std::atomic_bool& stop_requested) -> heph::examples::types::SampleReply {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 500 };
-  LOG(INFO) << fmt::format("Start execution, iterations: {}", request.iterations_count);
+  heph::log(heph::DEBUG, "start execution", "iterations", request.iterations_count);
   std::size_t accumulated = request.initial_value;
   std::size_t counter = 0;
   for (; counter < request.iterations_count; ++counter) {
     if (stop_requested) {
-      LOG(INFO) << "Stop requested, stopping execution";
+      heph::log(heph::DEBUG, "stop requested, stopping execution");
       break;
     }
 
     accumulated += 1;
     const auto result = status_update_publisher.publish(
         heph::examples::types::SampleReply{ .value = accumulated, .counter = counter });
-    LOG_IF(ERROR, !result) << "Failed to publish status update";
+    heph::logIf(heph::ERROR, !result, "failed to publish status update");
+
     fmt::println("- Update {}: {} ", counter, accumulated);
     std::this_thread::sleep_for(WAIT_FOR);
   }
@@ -71,6 +73,8 @@ execute(const heph::examples::types::SampleRequest& request,
 // This example shows how to create an action server that receives a query and executes a task.
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("Action server example");
@@ -97,7 +101,7 @@ auto main(int argc, const char* argv[]) -> int {
                                                         heph::examples::types::SampleReply>
         action_server(session, topic_config, request_callback, execute_callback);
 
-    LOG(INFO) << fmt::format("Action Server started. Wating for queries on '{}' topic", topic_config.name);
+    heph::log(heph::DEBUG, "Action Server started, waiting for queries", "topic", topic_config.name);
 
     heph::utils::TerminationBlocker::registerInterruptCallback(
         [stop_session = std::ref(*stop_session), &topic_config] {

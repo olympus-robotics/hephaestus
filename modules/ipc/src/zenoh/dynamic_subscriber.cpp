@@ -11,9 +11,6 @@
 #include <span>
 #include <utility>
 
-#include <absl/log/log.h>
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_database.h"
 #include "hephaestus/ipc/topic_filter.h"
@@ -21,6 +18,7 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh {
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,-warnings-as-errors)
@@ -74,11 +72,11 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
   }
 
   if (subscribers_.contains(info.topic)) {
-    LOG(ERROR) << fmt::format("Adding subscriber for topic: {}, but one already exists", info.topic);
+    heph::log(heph::ERROR, "adding subscriber for topic but one already exists", "topic", info.topic);
     return;
   }
 
-  LOG(INFO) << fmt::format("Create subscriber for topic: {}", info.topic);
+  heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ .name = info.topic },
       [this, optional_type_info = std::move(optional_type_info)](const MessageMetadata& metadata,
@@ -89,11 +87,11 @@ void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
 
 void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
   if (!subscribers_.contains(info.topic)) {
-    LOG(ERROR) << fmt::format("Trying to drop subscriber for topic: {}, but one doesn't exist", info.topic);
+    heph::log(heph::ERROR, "trying to drop subscriber, but one doesn't exist", "topic", info.topic);
     return;
   }
 
-  LOG(INFO) << fmt::format("Drop subscriber for topic: {}", info.topic);
+  heph::log(heph::DEBUG, "drop subscriber", "topic", info.topic);
   subscribers_[info.topic] = nullptr;
   subscribers_.extract(info.topic);
 }

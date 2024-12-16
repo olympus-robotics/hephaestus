@@ -20,7 +20,6 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/utils",
-        "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
         "@fmt",
@@ -35,12 +34,12 @@ heph_cc_library(
 # Tests #
 #########
 
-PROTO_PATH = "/modules/serdes/tests"
+PROTO_MODULE = "modules/serdes/tests"
 
 heph_cc_proto_library(
     name = "test_gen_proto",
     srcs = ["tests/test_user_type.proto"],
-    strip_import_prefix = PROTO_PATH,
+    module = PROTO_MODULE,
 )
 
 heph_cc_test(

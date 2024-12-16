@@ -13,7 +13,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <absl/strings/numbers.h>
 #include <fmt/format.h>
 #include <zenoh.h>
@@ -32,6 +31,7 @@
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
@@ -58,8 +58,8 @@ template <typename C, typename D>
         ::zenoh::ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
 
     auto res = absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &sequence_id);
-    LOG_IF(ERROR, !res) << fmt::format("[Subscriber {}] failed to read message counter from attachment",
-                                       topic);
+    heph::logIf(heph::ERROR, !res, "failed to read message counter from attachment", "service", topic);
+
     sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
     type_info = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO];
   }
@@ -126,6 +126,7 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   }
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 RawSubscriber::~RawSubscriber() {
   if (callback_messages_consumer_ != nullptr) {
     auto stopped = callback_messages_consumer_->stop();
@@ -138,8 +139,8 @@ RawSubscriber::~RawSubscriber() {
     try {
       std::move(*subscriber_).undeclare();
     } catch (std::exception& e) {
-      LOG(ERROR) << fmt::format("Failed to undeclare subscriber for: {}. Exception: {}", topic_config_.name,
-                                e.what());
+      heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
+                e.what());
     }
   }
 }

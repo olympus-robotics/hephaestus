@@ -39,6 +39,10 @@ public:
     return "";
   }
 
+  auto empty() const -> bool {
+    return logs_.empty();
+  }
+
 private:
   containers::BlockingQueue<std::string> logs_{ std::nullopt };
 };
@@ -166,6 +170,31 @@ TEST_F(LogTest, logWithFields) {
     ss << "test=\"lala\"";
     EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
   }
+}
+
+TEST_F(LogTest, logIfWithFields) {
+  using namespace std::literals::string_literals;
+
+  const int num = 123;
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  heph::logIf(heph::ERROR, num == 123, "test another great message", "num", num, "test", "lala");
+
+  const auto log = sink_ptr->getLog();
+  {
+    std::stringstream ss;
+    ss << "num=" << num;
+    EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
+  }
+  {
+    std::stringstream ss;
+    ss << "test=\"lala\"";
+    EXPECT_TRUE(log.find(ss.str()) != std::string::npos);
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  heph::logIf(heph::ERROR, num == 124, "test another great message", "num", num, "test", "lala");
+  EXPECT_TRUE(sink_ptr->empty());
 }
 
 }  // namespace heph::telemetry::tests
