@@ -19,17 +19,17 @@ namespace heph::ipc::zenoh {
 
 void appendProgramOption(cli::ProgramDescription& program_description,
                          const std::string& default_topic /*= DEFAULT_TOPIC*/) {
-  program_description.defineOption<std::string>("topic", 't', "Key expression", default_topic)
-      .defineOption<std::size_t>("cache", 'c', "Cache size", 0)
-      .defineOption<std::string>("mode", 'm', "Running mode: options: peer, client", "peer")
-      .defineOption<std::string>("router", 'r', "Router endpoint", "")
-      .defineOption<std::string>("protocol", 'p', "Protocol to use, options: udp, tcp, any", "any")
-      .defineOption<std::string>("multicast_scouting_interface", 'i',
-                                 "Interface to use for multicast, options: auto, <INTERFACE_NAME>", "auto")
-      .defineFlag("shared_memory", 's', "Enable shared memory")
+  program_description.defineOption<std::string>("topic", "Key expression", default_topic)
+      .defineOption<std::size_t>("cache", "Cache size", 0)
+      .defineOption<std::string>("mode", "Running mode: options: peer, client", "peer")
+      .defineOption<std::string>("router", "Router endpoint", "")
+      .defineOption<std::string>("protocol", "Protocol to use, options: udp, tcp, any", "any")
+      .defineOption<std::string>("multicast_scouting_interface"
+                                 "Interface to use for multicast, options: auto, <INTERFACE_NAME>",
+                                 "auto")
+      .defineFlag("shared_memory", "Enable shared memory")
       .defineFlag("multicast_scouting_enabled", "Enable multicast scouting")
-
-      .defineFlag("qos", 'q', "Enable QoS")
+      .defineFlag("qos", "Enable QoS")
       .defineFlag("realtime", "Enable real-time communication");
 }
 
