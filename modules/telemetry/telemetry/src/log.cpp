@@ -17,6 +17,7 @@
 
 #include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::telemetry {
 namespace {
@@ -90,11 +91,16 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) {
 
 void Logger::log(LogEntry&& log_entry) {
   auto& telemetry = instance();
+  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
+  throwExceptionIf<InvalidConfigurationException>(
+      telemetry.sinks_.empty(), "no log sink registered, please use telemetry::registerLogSink in your main");
   telemetry.entries_.forcePush(std::move(log_entry));
 }
 
 void Logger::processEntry(const LogEntry& entry) {
   const absl::MutexLock lock{ &sink_mutex_ };
+  // throwExceptionIf<InvalidConfigurationException>(
+  //     sinks_.empty(), "no log sink registered, please use telemetry::registerLogSink in your main");
   for (auto& sink : sinks_) {
     sink->send(entry);
   }

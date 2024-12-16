@@ -65,3 +65,11 @@ heph_cc_test(
         ":telemetry",
     ],
 )
+
+heph_cc_test(
+    name = "log_tests_exception",
+    srcs = ["tests/log_tests_exception.cpp"],
+    deps = [
+        ":telemetry",
+    ],
+)
