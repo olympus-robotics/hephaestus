@@ -17,8 +17,8 @@ define_module_test(
 )
 
 define_module_test(
-  NAME log_tests_exception
-  SOURCES log_tests_exception.cpp
+  NAME log_tests_no_sink
+  SOURCES log_tests_no_sink.cpp
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
   PUBLIC_LINK_LIBS ""
 )

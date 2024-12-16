@@ -67,8 +67,8 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "log_tests_exception",
-    srcs = ["tests/log_tests_exception.cpp"],
+    name = "log_tests_no_sink",
+    srcs = ["tests/log_tests_no_sink.cpp"],
     deps = [
         ":telemetry",
     ],
