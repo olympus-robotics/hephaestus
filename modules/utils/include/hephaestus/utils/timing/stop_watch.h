@@ -27,13 +27,17 @@ public:
   [[nodiscard]] auto stop() -> TargetDurationT;
 
   /// \return Currently running lap time:
-  /// - time elapsed from max[most recent start(), most recent lap()] to now.
+  /// - time elapsed from max[most recent start(), most recent lapse()] to now.
   /// - Cast to desired duration.
   /// - Doesn't stop the watch.
   template <typename TargetDurationT = StopWatch::DurationT>
   [[nodiscard]] auto lapse() -> TargetDurationT;
 
-  /// Stop and reset accumlated information.
+  /// \return Elapsed time since the last start() cast to the desired duration.
+  template <typename TargetDurationT = StopWatch::DurationT>
+  [[nodiscard]] auto elapsed() -> TargetDurationT;
+
+  /// Stop and reset accumulated information.
   void reset();
 
   /// \return Time accumulated across all laps since last reset().
@@ -48,6 +52,7 @@ public:
 private:
   [[nodiscard]] auto lapseImpl() -> DurationT;
   [[nodiscard]] auto stopImpl() -> DurationT;
+  [[nodiscard]] auto elapsedImpl() -> DurationT;
 
 private:
   std::optional<ClockT::time_point> lap_start_timestamp_;      //!< Timestamp at start().
@@ -67,6 +72,11 @@ auto StopWatch::lapse() -> TargetDurationT {
 template <typename TargetDurationT>
 auto StopWatch::stop() -> TargetDurationT {
   return std::chrono::duration_cast<TargetDurationT>(stopImpl());
+}
+
+template <typename TargetDurationT>
+auto StopWatch::elapsed() -> TargetDurationT {
+  return std::chrono::duration_cast<TargetDurationT>(elapsedImpl());
 }
 
 }  // namespace heph::utils::timing

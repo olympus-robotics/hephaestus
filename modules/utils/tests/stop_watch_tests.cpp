@@ -95,9 +95,12 @@ TEST(StopWatch, Lapse) {
   std::this_thread::sleep_for(PERIOD);
   const auto l1 = swatch.lapse();
   const auto l2 = swatch.lapse();
-  const auto d = swatch.stop();
   EXPECT_GT(l1, l2);
+  const auto e = swatch.elapsed();
+  EXPECT_GT(e, l1 + l2);
+  const auto d = swatch.stop();
   EXPECT_GT(d, l2);
+  EXPECT_GT(d, e);
 }
 
 TEST(StopWatch, DurationCast) {
