@@ -112,6 +112,7 @@ def heph_cc_test(
         copts = [],
         linkopts = [],
         deps = [],
+        tags = [],
         **kwargs):
     cc_test(
         copts = heph_copts() + copts,
@@ -120,7 +121,7 @@ def heph_cc_test(
             "@googletest//:gtest",
             "@googletest//:gtest_main",
         ],
-        tags = ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
+        tags = tags + ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
         **kwargs
     )
 
