@@ -65,3 +65,11 @@ heph_cc_test(
         ":telemetry",
     ],
 )
+
+heph_cc_test(
+    name = "log_tests_no_sink",
+    srcs = ["tests/log_tests_no_sink.cpp"],
+    deps = [
+        ":telemetry",
+    ],
+)

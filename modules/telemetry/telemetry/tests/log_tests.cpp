@@ -47,7 +47,7 @@ private:
   containers::BlockingQueue<std::string> logs_{ std::nullopt };
 };
 
-class LogTest : public ::testing::Test {
+class LogTestFixture : public ::testing::Test {
 protected:
   static void SetUpTestSuite() {
     auto mock_sink = std::make_unique<MockLogSink>();
@@ -58,9 +58,9 @@ protected:
   static MockLogSink* sink_ptr;
 };
 
-MockLogSink* LogTest::sink_ptr{ nullptr };
+MockLogSink* LogTestFixture::sink_ptr{ nullptr };
 
-TEST_F(LogTest, LogEntry) {
+TEST_F(LogTestFixture, LogEntry) {
   const std::string a = "test a great message";
   const std::string b = "test \"great\" name";
   // clang-format off
@@ -80,7 +80,7 @@ TEST_F(LogTest, LogEntry) {
   EXPECT_TRUE(s.find(fmt::format("location=\"log_tests.cpp:{}\"", current_line)) != std::string::npos);
 }
 
-TEST_F(LogTest, Escapes) {
+TEST_F(LogTestFixture, Escapes) {
   const std::string a = "test a great message";
   const std::string c = "test 'great' name";
   // clang-format off
@@ -109,7 +109,7 @@ TEST_F(LogTest, Escapes) {
   }
 }
 
-TEST_F(LogTest, sink) {
+TEST_F(LogTestFixture, sink) {
   const int num = 123;
 
   heph::log(heph::ERROR, "test another great message", "num", num);
@@ -121,7 +121,7 @@ TEST_F(LogTest, sink) {
   }
 }
 
-TEST_F(LogTest, log) {
+TEST_F(LogTestFixture, log) {
   using namespace std::literals::string_literals;
 
   heph::log(heph::ERROR, "test another great message");
@@ -129,7 +129,7 @@ TEST_F(LogTest, log) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
-TEST_F(LogTest, logString) {
+TEST_F(LogTestFixture, logString) {
   using namespace std::literals::string_literals;
 
   heph::log(heph::ERROR, "as string"s);
@@ -137,7 +137,7 @@ TEST_F(LogTest, logString) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
 }
 
-TEST_F(LogTest, logLibFmt) {
+TEST_F(LogTestFixture, logLibFmt) {
   const int num = 456;
 
   heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
@@ -145,14 +145,14 @@ TEST_F(LogTest, logLibFmt) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
-TEST_F(LogTest, logStdFmt) {
+TEST_F(LogTestFixture, logStdFmt) {
   const int num = 456;
   heph::log(heph::ERROR, std::format("this {} is formatted", num));
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
-TEST_F(LogTest, logWithFields) {
+TEST_F(LogTestFixture, logWithFields) {
   using namespace std::literals::string_literals;
 
   const int num = 123;
@@ -172,7 +172,7 @@ TEST_F(LogTest, logWithFields) {
   }
 }
 
-TEST_F(LogTest, logIfWithFields) {
+TEST_F(LogTestFixture, logIfWithFields) {
   using namespace std::literals::string_literals;
 
   const int num = 123;

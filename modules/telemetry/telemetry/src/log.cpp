@@ -95,6 +95,11 @@ void Logger::log(LogEntry&& log_entry) {
 
 void Logger::processEntry(const LogEntry& entry) {
   const absl::MutexLock lock{ &sink_mutex_ };
+  if (sinks_.empty()) {
+    fmt::println(stderr, "########################################################\n"
+                         "REGISTER A LOG SINK TO SEE THE MESSAGES\n"
+                         "########################################################\n");
+  }
   for (auto& sink : sinks_) {
     sink->send(entry);
   }
