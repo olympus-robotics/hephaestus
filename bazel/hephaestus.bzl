@@ -113,6 +113,7 @@ def heph_cc_test(
         linkopts = [],
         deps = [],
         tags = [],
+        size = "small",
         **kwargs):
     cc_test(
         copts = heph_copts() + copts,
@@ -122,6 +123,7 @@ def heph_cc_test(
             "@googletest//:gtest_main",
         ],
         tags = tags + ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
+        size = size,
         **kwargs
     )
 
