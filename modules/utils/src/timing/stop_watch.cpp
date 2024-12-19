@@ -78,4 +78,12 @@ auto StopWatch::stopImpl() -> ClockT::duration {
   return lap_time;
 }
 
+auto StopWatch::elapsedImpl() -> ClockT::duration {
+  if (!lap_start_timestamp_.has_value()) {
+    return {};
+  }
+
+  return ClockT::now() - lap_start_timestamp_.value();
+}
+
 }  // namespace heph::utils::timing
