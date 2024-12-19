@@ -153,13 +153,14 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
         return request;
       });
 
+  auto client_session = createSession({});
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
+      client_session, action_server_data.topic_config, request, [](const types::DummyPrimitivesType&) {},
+      SERVICE_CALL_TIMEOUT);
 
   auto other_reply = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-                         action_server_data.session, action_server_data.topic_config, request,
+                         client_session, action_server_data.topic_config, request,
                          [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT)
                          .get();
   EXPECT_EQ(other_reply.status, RequestStatus::REJECTED_ALREADY_RUNNING);

@@ -83,7 +83,6 @@ heph_cc_test(
     srcs = [
         "tests/action_server_tests.cpp",
     ],
-    flaky = True,
     deps = IPC_TEST_DEPS,
 )
 
