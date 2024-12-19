@@ -10,6 +10,14 @@
 
 namespace heph::utils::timing {
 
+/// StopWatch provides functionalities to measure elapsed time in different intervals.
+///
+/// start                stop   start        stop
+///   |  lapse  |  lapse  |       |   lapse   |
+///   |   elapsed   |
+///   |___________________|       |___________|
+///             accumulatedLapsDuration
+///
 class StopWatch {
 public:
   using ClockT = std::chrono::steady_clock;
@@ -26,7 +34,8 @@ public:
   template <typename TargetDurationT = StopWatch::DurationT>
   [[nodiscard]] auto stop() -> TargetDurationT;
 
-  /// \return Currently running lap time:
+  /// \return Currently running lap time, measured from the last call to lapse.
+  /// The first lap is measured from the last start timestamp:
   /// - time elapsed from max[most recent start(), most recent lapse()] to now.
   /// - Cast to desired duration.
   /// - Doesn't stop the watch.
