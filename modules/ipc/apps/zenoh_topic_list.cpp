@@ -17,6 +17,8 @@
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
@@ -37,8 +39,9 @@ void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::Top
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
-
   try {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
     auto desc = heph::cli::ProgramDescription("List all the publishers of a topic.");
     heph::ipc::zenoh::appendProgramOption(desc);
     desc.defineFlag("live", 'l', "if set the app will keep running waiting for new publisher to advertise");

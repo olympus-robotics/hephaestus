@@ -28,6 +28,8 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/dynamic_deserializer.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/format/format.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -114,6 +116,8 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
     auto desc = heph::cli::ProgramDescription("Echo the data from a topic to the console.");
     heph::ipc::zenoh::appendProgramOption(desc);
 

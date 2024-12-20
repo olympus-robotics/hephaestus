@@ -11,6 +11,8 @@
 #include <fmt/base.h>
 
 #include "hephaestus/ipc/zenoh/scout.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
@@ -20,6 +22,8 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
     fmt::println("Scouting..");
 
     auto nodes_info = heph::ipc::zenoh::getListOfNodes();
