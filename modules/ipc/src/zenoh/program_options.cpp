@@ -24,9 +24,8 @@ void appendProgramOption(cli::ProgramDescription& program_description,
       .defineOption<std::string>("mode", "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", "Router endpoint", "")
       .defineOption<std::string>("protocol", "Protocol to use, options: udp, tcp, any", "any")
-      .defineOption<std::string>("multicast_scouting_interface"
-                                 "Interface to use for multicast, options: auto, <INTERFACE_NAME>",
-                                 "auto")
+      .defineOption<std::string>("multicast_scouting_interface",
+                                 "Interface to use for multicast, options: auto, <INTERFACE_NAME>", "auto")
       .defineFlag("shared_memory", "Enable shared memory")
       .defineFlag("multicast_scouting_enabled", "Enable multicast scouting")
       .defineFlag("qos", "Enable QoS")
