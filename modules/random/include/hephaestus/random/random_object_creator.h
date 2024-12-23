@@ -43,13 +43,23 @@ template <BooleanType T>
 //=================================================================================================
 // Random integer value creation
 //=================================================================================================
-template <typename T>
-concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
-
 template <NonBooleanIntegralType T>
 [[nodiscard]] auto random(std::mt19937_64& mt, Limits<T> limits = NO_LIMITS<T>) -> T {
   std::uniform_int_distribution<T> dist(limits.min, limits.max);
   return dist(mt);
+}
+
+//=================================================================================================
+// Random optional creation
+//=================================================================================================
+template <OptionalType T>
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(T::value_type::random(mt));
+  }
+  return std::nullopt;
 }
 
 //=================================================================================================
@@ -133,8 +143,8 @@ concept RandomCreatable = requires(std::mt19937_64& mt) {
 // Internal helper functions for container types
 //=================================================================================================
 namespace internal {
-[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size, bool allow_empty)
-    -> size_t {
+[[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size,
+                                  bool allow_empty) -> size_t {
   if (fixed_size.has_value()) {
     throwExceptionIf<InvalidParameterException>(
         allow_empty == false && fixed_size.value() == 0,
@@ -194,6 +204,66 @@ template <RandomCreatableVector T>
   T vec;
   vec.reserve(size);
 
+  auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
+  std::generate_n(std::back_inserter(vec), size, gen);
+
+  return vec;
+};
+
+//=================================================================================================
+// Random array creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableArray = ArrayType<T> && RandomCreatable<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableArray T>
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  const auto size = T().size();
+
+  T array;
+  for (std::size_t it = 0; it < size; ++it) {
+    array[it] = random<typename T::value_type>(mt);
+  }
+
+  return array;
+};
+
+//=================================================================================================
+// Random vector of vectors creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableVectorOfVectors =
+    VectorOfVectorsType<T> && RandomCreatableVector<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableVectorOfVectors T>
+[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
+                          bool allow_empty = true) -> T {
+  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+
+  T vecs;
+  vecs.reserve(size);
+  auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
+  std::generate_n(std::back_inserter(vecs), size, gen);
+
+  return vecs;
+};
+
+//=================================================================================================
+// Random vector of arrays creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableVectorOfArrays = VectorOfArraysType<T> && RandomCreatableArray<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableVectorOfArrays T>
+[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
+                          bool allow_empty = true) -> T {
+  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+
+  T vec;
+  vec.reserve(size);
   auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
   std::generate_n(std::back_inserter(vec), size, gen);
 

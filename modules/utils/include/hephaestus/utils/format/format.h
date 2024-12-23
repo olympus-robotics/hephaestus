@@ -42,6 +42,20 @@ template <ArrayOrVectorType T>
 }
 
 //=================================================================================================
+// Optionals
+//=================================================================================================
+template <OptionalType T>
+[[nodiscard]] inline auto toString(const T& optional) -> std::string {
+  std::stringstream ss;
+
+  if (optional.has_value()) {
+    ss << optional.value() << "\n";
+  }
+
+  return ss.str();
+}
+
+//=================================================================================================
 // UnorderedMap
 //=================================================================================================
 template <UnorderedMapType T>
