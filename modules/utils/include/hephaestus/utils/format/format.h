@@ -49,7 +49,9 @@ template <OptionalType T>
   std::stringstream ss;
 
   if (optional.has_value()) {
-    ss << optional.value() << "\n";
+    ss << optional.value();
+  } else {
+    ss << "std::nullopt";
   }
 
   return ss.str();
