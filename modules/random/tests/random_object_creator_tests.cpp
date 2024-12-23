@@ -27,7 +27,7 @@ namespace {
 template <class T>
 [[nodiscard]] auto compareRandomEqualMultipleTimes(const std::function<T(std::mt19937_64&)>& gen,
                                                    std::mt19937_64& mt) -> bool {
-  static constexpr std::size_t MAX_COMPARISON_COUNT = 10;
+  static constexpr std::size_t MAX_COMPARISON_COUNT = 100;
 
   for (std::size_t tries = 0; tries < MAX_COMPARISON_COUNT; ++tries) {
     const T first_result = gen(mt);
