@@ -59,6 +59,7 @@ template <OptionalType T>
   if (has_value) {
     return std::make_optional(T::value_type::random(mt));
   }
+
   return std::nullopt;
 }
 
@@ -219,9 +220,9 @@ concept RandomCreatableArray = ArrayType<T> && RandomCreatable<typename T::value
 /// Fill a vector with randomly generated values of type T.
 template <RandomCreatableArray T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  const auto size = T().size();
-
   T array;
+  const auto size = array.size();
+
   for (std::size_t it = 0; it < size; ++it) {
     array[it] = random<typename T::value_type>(mt);
   }
@@ -244,7 +245,8 @@ template <RandomCreatableVectorOfVectors T>
 
   T vecs;
   vecs.reserve(size);
-  auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
+  auto gen = [&mt, fixed_size, allow_empty]() ->
+      typename T::value_type { return random<typename T::value_type>(mt, fixed_size, allow_empty); };
   std::generate_n(std::back_inserter(vecs), size, gen);
 
   return vecs;
