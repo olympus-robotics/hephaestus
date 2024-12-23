@@ -66,10 +66,14 @@ using RandomTypeImplementations = ::testing::Types<
     /* Integer types */ int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
     /* Floating point types */ float, double, long double,
     /* Enum type */ TestEnum,
+    /* Optional type */ std::optional<TestStruct>,
     /* Timestamp type */ std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds>,
     std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>,
     std::chrono::time_point<std::chrono::steady_clock>,
-    /* Container types */ std::string, std::vector<int>, std::vector<double>,
+    /* Container types */ std::string, std::vector<int>, std::vector<double>, std::vector<std::vector<int>>,
+    std::vector<std::vector<double>>,
+    /* Array types*/ std::array<int, 4>, std::array<double, 4>, std::vector<std::array<int, 4>>,
+    std::vector<std::array<double, 4>>,
     /* Custom types */ TestStruct>;
 TYPED_TEST_SUITE(RandomTypeTests, RandomTypeImplementations);
 
@@ -100,9 +104,9 @@ TYPED_TEST(RandomTypeTests, LimitsTest) {
 // case, as it is already included in testing for randomness. Repeadedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
-  if constexpr (RandomCreatableVector<TypeParam> || StringType<TypeParam>) {
-    auto mt = createRNG();
-
+  auto mt = createRNG();
+  if constexpr (RandomCreatableVector<TypeParam> || RandomCreatableVectorOfVectors<TypeParam> ||
+                RandomCreatableVectorOfArrays<TypeParam> || StringType<TypeParam>) {
     static constexpr std::size_t SIZE_ZERO = 0;
     static constexpr bool ALLOW_EMPTY_CONTAINER = true;
     static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
