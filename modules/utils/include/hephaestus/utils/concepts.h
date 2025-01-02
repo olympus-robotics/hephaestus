@@ -8,6 +8,7 @@
 #include <chrono>
 #include <concepts>
 #include <future>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -29,6 +30,12 @@ template <typename T>
 concept StringType = std::is_same_v<T, std::string>;
 
 template <typename T>
+concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
+
+template <typename T>
+concept OptionalType = std::is_same_v<T, std::optional<typename T::value_type>>;
+
+template <typename T>
 concept ArrayType = requires {
   typename T::value_type;
   requires std::same_as<T, std::array<typename T::value_type, T().size()>>;
@@ -40,6 +47,12 @@ concept VectorType = requires {
   typename T::allocator_type;
   requires std::same_as<T, std::vector<typename T::value_type, typename T::allocator_type>>;
 };
+
+template <typename T>
+concept VectorOfArraysType = VectorType<T> && ArrayType<typename T::value_type>;
+
+template <typename T>
+concept VectorOfVectorsType = VectorType<T> && VectorType<typename T::value_type>;
 
 template <typename T>
 concept UnorderedMapType = requires(T t) {
