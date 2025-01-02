@@ -185,8 +185,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   // NOTE: we create the publisher and the subscriber only if the request is successful.
   // This has the limit that that some status updates could be lost if the pub/sub are still discovering each
   // other, but has the great advantage that we do not risk receiving messages from other requests if our
-  // request is rejected. auto publisher = Publisher<StatusT>{ session_,
-  // internal::getStatusPublisherTopic(topic_config_) };
+  // request is rejected.
   auto status_update_publisher =
       Publisher<StatusT>{ session_, internal::getStatusPublisherTopic(topic_config_) };
 
