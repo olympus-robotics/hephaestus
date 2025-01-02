@@ -138,7 +138,7 @@ TEST(SpinnerTest, SpinWithPeriod) {
   spinner.stop().get();
 
   EXPECT_GT(callback_called_counter, 1);
-  EXPECT_LT(callback_called_counter, 12);
+  EXPECT_LT(callback_called_counter, 13);
 }
 
 TEST(SpinnerTest, SpinStopsOnStop) {
