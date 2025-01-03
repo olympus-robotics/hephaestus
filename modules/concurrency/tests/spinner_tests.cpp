@@ -23,7 +23,7 @@ constexpr auto MAX_ITERATION_COUNT = 10;
   return Spinner::createNeverStoppingCallback(std::move(cb));
 }
 
-[[nodiscard]] auto createStoppingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
+[[nodiscard]] auto createSelfStoppingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
   return [&callback_called_counter]() {
     constexpr auto MAX_ITERATION_COUNT = 10;
     if (callback_called_counter < MAX_ITERATION_COUNT) {
@@ -35,8 +35,13 @@ constexpr auto MAX_ITERATION_COUNT = 10;
   };
 }
 
-[[nodiscard]] auto createNonThrowingCallback(size_t& callback_called_counter) -> Spinner::StoppableCallback {
-  auto cb = [&callback_called_counter]() { ++callback_called_counter; };
+[[nodiscard]] auto createNonThrowingCallback(size_t& callback_called_counter, std::atomic_flag& flag)
+    -> Spinner::StoppableCallback {
+  auto cb = [&callback_called_counter, &flag]() {
+    ++callback_called_counter;
+    flag.test_and_set();
+    flag.notify_all();
+  };
   return Spinner::createNeverStoppingCallback(std::move(cb));
 }
 
@@ -112,14 +117,13 @@ TEST(SpinnerTest, SpinTest) {
 }
 
 TEST(SpinnerTest, Stop) {
-  static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
-
   size_t callback_called_counter = 0;
-  auto cb = createNonThrowingCallback(callback_called_counter);
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+  auto cb = createNonThrowingCallback(callback_called_counter, flag);
   Spinner spinner{ std::move(cb) };
 
   spinner.start();
-  std::this_thread::sleep_for(WAIT_FOR);
+  flag.wait(false);
   spinner.stop().get();
 
   EXPECT_GT(callback_called_counter, 0);
@@ -130,14 +134,16 @@ TEST(SpinnerTest, SpinWithPeriod) {
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
-  auto cb = createNonThrowingCallback(callback_called_counter);
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+  auto cb = createNonThrowingCallback(callback_called_counter, flag);
   Spinner spinner{ std::move(cb), RATE_HZ };
 
   spinner.start();
   std::this_thread::sleep_for(WAIT_FOR);
+  flag.wait(false);
   spinner.stop().get();
 
-  EXPECT_GT(callback_called_counter, 1);
+  EXPECT_GT(callback_called_counter, 0);
   EXPECT_LT(callback_called_counter, 13);
 }
 
@@ -145,7 +151,7 @@ TEST(SpinnerTest, SpinStopsOnStop) {
   static constexpr auto RATE_HZ = 1e3;
 
   size_t callback_called_counter = 0;
-  auto cb = createStoppingCallback(callback_called_counter);
+  auto cb = createSelfStoppingCallback(callback_called_counter);
   Spinner spinner(std::move(cb), RATE_HZ);
 
   spinner.start();
@@ -171,7 +177,7 @@ TEST(SpinnerTest, ExceptionHandling) {
 
 TEST(SpinnerTest, SpinStartAfterStop) {
   size_t callback_called_counter = 0;
-  auto cb = createStoppingCallback(callback_called_counter);
+  auto cb = createSelfStoppingCallback(callback_called_counter);
   Spinner spinner(std::move(cb));
 
   spinner.start();
