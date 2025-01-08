@@ -36,7 +36,6 @@
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
-#include "hephaestus/utils/utils.h"
 
 namespace heph::ipc::zenoh {
 
@@ -80,9 +79,10 @@ static constexpr auto SERVICE_ATTACHMENT_REQUEST_TYPE_INFO = "0";
 static constexpr auto SERVICE_ATTACHMENT_REPLY_TYPE_INFO = "1";
 
 template <typename T>
-[[nodiscard]] auto getSerialiazedTypeName() -> std::string {
+[[nodiscard]] auto getSerializedTypeName() -> std::string {
   if constexpr (std::is_same_v<T, std::string>) {
-    return utils::getTypeName<std::string>();
+    // NOTE: we manually write the type name to avoid namespace conflicts between GCC and clang.
+    return "std::string";
   } else {
     return serdes::getSerializedTypeInfo<T>().name;
   }
@@ -110,8 +110,8 @@ template <typename RequestT, typename ReplyT>
   const auto request_type_info = attachment_data[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO];
   const auto reply_type_info = attachment_data[SERVICE_ATTACHMENT_REPLY_TYPE_INFO];
 
-  const auto this_request_type = getSerialiazedTypeName<RequestT>();
-  const auto this_reply_type = getSerialiazedTypeName<ReplyT>();
+  const auto this_request_type = getSerializedTypeName<RequestT>();
+  const auto this_reply_type = getSerializedTypeName<ReplyT>();
 
   return request_type_info == this_request_type && reply_type_info == this_reply_type;
 }
@@ -185,20 +185,15 @@ template <typename RequestT, typename ReplyT>
   if constexpr (std::is_same_v<RequestT, std::string>) {
     options.encoding = ::zenoh::Encoding::Predefined::zenoh_string();
     options.payload = ::zenoh::ext::serialize(request);
-    attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = utils::getTypeName<std::string>();
   } else {
     options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
     options.payload = toZenohBytes(serdes::serialize(request));
-    attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = serdes::getSerializedTypeInfo<RequestT>().name;
   }
 
-  if constexpr (std::is_same_v<ReplyT, std::string>) {
-    attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = utils::getTypeName<std::string>();
-  } else {
-    attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = serdes::getSerializedTypeInfo<ReplyT>().name;
-  }
-
+  attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = getSerializedTypeName<RequestT>();
+  attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = getSerializedTypeName<ReplyT>();
   options.attachment = ::zenoh::ext::serialize(attachments);
+
   return options;
 }
 
