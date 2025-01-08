@@ -180,8 +180,6 @@ template <typename RequestT, typename ReplyT>
   ::zenoh::Session::GetOptions options{};
   options.timeout_ms = static_cast<uint64_t>(timeout.count());
 
-  std::unordered_map<std::string, std::string> attachments;
-
   if constexpr (std::is_same_v<RequestT, std::string>) {
     options.encoding = ::zenoh::Encoding::Predefined::zenoh_string();
     options.payload = ::zenoh::ext::serialize(request);
@@ -190,6 +188,7 @@ template <typename RequestT, typename ReplyT>
     options.payload = toZenohBytes(serdes::serialize(request));
   }
 
+  std::unordered_map<std::string, std::string> attachments;
   attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = getSerializedTypeName<RequestT>();
   attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = getSerializedTypeName<ReplyT>();
   options.attachment = ::zenoh::ext::serialize(attachments);
