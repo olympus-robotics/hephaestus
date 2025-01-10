@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -46,7 +47,7 @@ namespace {
             return;
           }
 
-          // When coming from JSON a value can be erronously first creted as int and then become double.
+          // When coming from JSON a value can be erroneously first creed as int and then become double.
           // Influxdb forbid mixing types in the same field, so we need to convert every int to double.
           if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, int64_t>) {
             point.addField(key, static_cast<double>(arg));
@@ -80,6 +81,7 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
     spinner_ = std::make_unique<concurrency::Spinner>(
         [this]() {
           try {
+            const std::scoped_lock<std::mutex> lock(mutex_);
             influxdb_->flushBatch();
           } catch (std::exception& e) {
             heph::log(heph::ERROR, "failed to flush batch to InfluxDB", "exception", e.what());
@@ -104,6 +106,7 @@ void InfluxDBSink::send(const telemetry::Metric& entry) {
   auto point = createInfluxdbPoint(entry);
 
   try {
+    const std::scoped_lock<std::mutex> lock(mutex_);
     influxdb_->write(std::move(point));
   } catch (std::exception& e) {
     heph::log(heph::ERROR, "failed to publish to InfluxDB", "exception", e.what());

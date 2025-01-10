@@ -3,6 +3,7 @@
 //=================================================================================================
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 
@@ -38,6 +39,7 @@ private:
 
 private:
   InfluxDBSinkConfig config_;
+  std::mutex mutex_;
   std::unique_ptr<influxdb::InfluxDB> influxdb_;
   std::unique_ptr<concurrency::Spinner> spinner_;
 };
