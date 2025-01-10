@@ -22,7 +22,7 @@ public:
     proto.SerializeToArray(buffer_.data(), static_cast<int>(buffer_.size()));
   }
 
-  [[nodiscard]] auto exctractSerializedData() && -> std::vector<std::byte>&& {
+  [[nodiscard]] auto extractSerializedData() && -> std::vector<std::byte>&& {
     return std::move(buffer_);
   }
 

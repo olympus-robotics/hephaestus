@@ -8,7 +8,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include <google/protobuf/text_format.h>
@@ -24,9 +23,6 @@
 namespace heph::serdes::protobuf {
 
 template <class T>
-[[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
-
-template <class T, class ProtoT>
 [[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
 
 template <class T>
@@ -48,23 +44,13 @@ auto deserializeFromText(std::string_view buffer, T& data) -> void;
 template <class T>
 [[nodiscard]] auto getTypeInfo() -> TypeInfo;
 
-template <class ProtoT>
-[[nodiscard]] auto getProtoTypeInfo(std::string original_type) -> TypeInfo;
-
 // -----------------------------------------------------------------------------------------------
 // Implementation
 // -----------------------------------------------------------------------------------------------
 
 template <class T>
 auto serialize(const T& data) -> std::vector<std::byte> {
-  return serialize<T, typename ProtoAssociation<T>::Type>(data);
-}
-
-template <class T, class ProtoT>
-[[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte> {
-  SerializerBuffer buffer{};
-  internal::toProtobuf<T, ProtoT>(buffer, data);
-  return std::move(buffer).exctractSerializedData();
+  return internal::serialize<T, typename ProtoAssociation<T>::Type>(data);
 }
 
 template <class T>
@@ -130,21 +116,7 @@ auto deserializeFromText(std::string_view buffer, T& data) -> void {
 template <class T>
 auto getTypeInfo() -> TypeInfo {
   using ProtoT = ProtoAssociation<T>::Type;
-  return getProtoTypeInfo<ProtoT>(utils::getTypeName<T>());
-}
-
-template <class ProtoT>
-auto getProtoTypeInfo(std::string original_type) -> TypeInfo {
-  auto proto_descriptor = ProtoT::descriptor();
-  auto file_descriptor = internal::buildFileDescriptorSet(proto_descriptor).SerializeAsString();
-
-  std::vector<std::byte> schema(file_descriptor.size());
-  std::transform(file_descriptor.begin(), file_descriptor.end(), schema.begin(),
-                 [](char c) { return static_cast<std::byte>(c); });
-  return { .name = proto_descriptor->full_name(),
-           .schema = schema,
-           .serialization = TypeInfo::Serialization::PROTOBUF,
-           .original_type = std::move(original_type) };
+  return internal::getProtoTypeInfo<ProtoT>(utils::getTypeName<T>());
 }
 
 }  // namespace heph::serdes::protobuf

@@ -17,6 +17,7 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
@@ -43,10 +44,13 @@ public:
 private:
   void checkTypeInfo(const MessageMetadata& metadata) {
     const auto serialized_type = serdes::getSerializedTypeInfo<T>().name;
-    throwExceptionIf<FailedZenohOperation>(
-        metadata.type_info != serialized_type,
-        fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
-                    metadata.type_info, serialized_type));
+    if (metadata.type_info != serialized_type) {
+      heph::log(heph::ERROR, "subscriber type mismatch; terminating", "topic", metadata.topic,
+                "subscriber_type", serialized_type, "topic_type", metadata.type_info);
+      throwException<FailedZenohOperation>(
+          fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
+                      metadata.type_info, serialized_type));
+    }
   }
 
 private:
