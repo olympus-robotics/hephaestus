@@ -84,7 +84,7 @@ TEST(Protobuf, SerializerBuffers) {
 
   buffer.serialize(proto);
 
-  const auto data = std::move(buffer).exctractSerializedData();
+  const auto data = std::move(buffer).extractSerializedData();
   EXPECT_THAT(data, SizeIs(NUMBER));
 }
 
