@@ -15,10 +15,9 @@
 
 namespace heph::serdes::protobuf::internal {
 
-template <class T>
+template <class T, class ProtoT>
 void toProtobuf(SerializerBuffer& buffer, const T& data) {
-  using Proto = ProtoAssociation<T>::Type;
-  Proto proto;
+  ProtoT proto;
   toProto(proto, data);
   buffer.serialize(proto);
 }
