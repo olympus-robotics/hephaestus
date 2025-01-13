@@ -30,7 +30,7 @@ template <typename T>
 concept StringType = std::is_same_v<T, std::string>;
 
 template <typename T>
-concept IsString =
+concept IsStringLike =
     // Built-in string types
     std::same_as<std::remove_cvref_t<T>, std::string> ||
     std::same_as<std::remove_cvref_t<T>, std::string_view> ||

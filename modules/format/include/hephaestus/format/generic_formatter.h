@@ -52,7 +52,7 @@ struct Reflector<std::chrono::time_point<SystemClockType>> {
 }  // namespace rfl
 
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::IsString<T> && !fmt::detail::has_to_string_view<T>::value)
+  requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T> && !fmt::detail::has_to_string_view<T>::value)
 struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
   auto format(const T& a, FormatContext& ctx) const {
