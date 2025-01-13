@@ -30,12 +30,14 @@ TEST(ZenohTests, ServiceCallExchange) {
   const auto service_topic =
       ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
-  auto server_session = createSession({});
-  auto service_server = Service<types::DummyType, types::DummyType>(
-      server_session, service_topic, [](const types::DummyType& request) { return request; });
+  Config config{};
+  config.multicast_scouting_enabled = false;
+  auto session = createSession(std::move(config));
 
-  auto client_session = createSession({});
-  auto service_client = ServiceClient<types::DummyType, types::DummyType>(client_session, service_topic);
+  auto service_server = Service<types::DummyType, types::DummyType>(
+      session, service_topic, [](const types::DummyType& request) { return request; });
+
+  auto service_client = ServiceClient<types::DummyType, types::DummyType>(session, service_topic);
   const auto replies = service_client.call(request_message, std::chrono::milliseconds(10));
   EXPECT_FALSE(replies.empty());
   EXPECT_EQ(replies.size(), 1);
@@ -49,20 +51,19 @@ TEST(ZenohTests, TypesMismatch) {
   const auto service_topic =
       ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
-  Config server_config{};
-  auto server_session = createSession(std::move(server_config));
+  Config config{};
+  config.multicast_scouting_enabled = false;
+  auto session = createSession(std::move(config));
+
   std::size_t failed_requests = 0;
   auto service_server = Service<types::DummyType, types::DummyType>(
-      server_session, service_topic, [](const types::DummyType& request) { return request; },
+      session, service_topic, [](const types::DummyType& request) { return request; },
       [&failed_requests]() { ++failed_requests; });
 
-  Config client_config{};
-  auto client_session = createSession(std::move(client_config));
   // Invalid request
   {
     const auto replies = callService<types::DummyPrimitivesType, types::DummyType>(
-        *client_session, service_topic, types::DummyPrimitivesType::random(mt),
-        std::chrono::milliseconds(10));
+        *session, service_topic, types::DummyPrimitivesType::random(mt), std::chrono::milliseconds(10));
     EXPECT_THAT(replies, IsEmpty());
     EXPECT_EQ(failed_requests, 1);
   }
@@ -70,7 +71,7 @@ TEST(ZenohTests, TypesMismatch) {
   // Invalid reply
   {
     const auto replies = callService<types::DummyType, types::DummyPrimitivesType>(
-        *client_session, service_topic, types::DummyType::random(mt), std::chrono::milliseconds(10));
+        *session, service_topic, types::DummyType::random(mt), std::chrono::milliseconds(10));
     EXPECT_THAT(replies, IsEmpty());
     EXPECT_EQ(failed_requests, 2);
   }
