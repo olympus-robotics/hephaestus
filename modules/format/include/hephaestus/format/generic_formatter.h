@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <string>
+#include <type_traits>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>
@@ -50,13 +51,11 @@ struct Reflector<std::chrono::time_point<SystemClockType>> {
 };
 }  // namespace rfl
 
-namespace fmt {
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::IsString<T>)
-struct formatter<T> : formatter<std::string_view> {
+  requires(!std::is_arithmetic_v<T> && !heph::IsString<T> && !fmt::detail::has_to_string_view<T>::value)
+struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
   auto format(const T& a, FormatContext& ctx) const {
-    return format_to(ctx.out(), "{}", heph::format::toString(a));
+    return fmt::format_to(ctx.out(), "{}", heph::format::toString(a));
   }
 };
-}  // namespace fmt

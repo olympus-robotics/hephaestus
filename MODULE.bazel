@@ -75,6 +75,7 @@ bazel_dep(name = "protobuf", version = "29.0")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0")
 bazel_dep(name = "curl", version = "8.8.0.bcr.1")
+bazel_dep(name = "yaml-cpp", version = "0.8.0")
 bazel_dep(name = "range-v3", version = "")
 git_override(
     module_name = "range-v3",
