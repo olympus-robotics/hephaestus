@@ -24,6 +24,7 @@ namespace {
 void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   auto mt = random::createRNG();
   Config config{};
+  config.multicast_scouting_enabled = false;
   auto session = createSession(std::move(config));
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
