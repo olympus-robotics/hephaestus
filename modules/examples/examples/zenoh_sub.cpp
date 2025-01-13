@@ -36,8 +36,7 @@ auto main(int argc, const char* argv[]) -> int {
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::PUBSUB));
     const auto args = std::move(desc).parse(argc, argv);
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
-    // session_config.listen_endpoints = { "tcp/localhost:0" };
-    session_config.connect_endpoints = { "tcp/localhost:0" };
+
     heph::log(heph::DEBUG, "opening session", "subscriber_name", topic_config.name);
 
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));

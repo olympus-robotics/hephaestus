@@ -64,20 +64,6 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
     zconfig.insert_json5("transport/unicast/lowlatency", "true");
   }
 
-  if (config.connect_endpoints.size() == 1) {
-    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, fmt::format(R"(["{}"])", config.connect_endpoints.front()));
-    zconfig.insert_json5("scouting/multicast/enabled", "false");  // NO LINT(misc-include-cleaner)
-    zconfig.insert_json5("scouting/gossip/enabled", "false");     // NOLINT(misc-include-cleaner)
-  }
-
-  if (config.listen_endpoints.size() == 1) {
-    zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, fmt::format(R"(["{}"])", config.listen_endpoints.front()));
-    zconfig.insert_json5("scouting/multicast/enabled", "false");  // NO LINT(misc-include-cleaner)
-    zconfig.insert_json5("scouting/gossip/enabled", "false");     // NOLINT(misc-include-cleaner)
-  }
-
-  fmt::println("Zenoh config:\n{}", zconfig.to_string());
-
   return zconfig;
 }
 }  // namespace

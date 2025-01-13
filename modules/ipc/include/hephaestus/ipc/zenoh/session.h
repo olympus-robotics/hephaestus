@@ -31,8 +31,6 @@ struct Config {
   bool real_time = false;
   Protocol protocol{ Protocol::ANY };
   bool multicast_scouting_enabled = true;
-  std::vector<std::string> connect_endpoints;
-  std::vector<std::string> listen_endpoints;
   std::string multicast_scouting_interface = "auto";
 };
 
