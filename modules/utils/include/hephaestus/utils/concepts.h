@@ -30,6 +30,16 @@ template <typename T>
 concept StringType = std::is_same_v<T, std::string>;
 
 template <typename T>
+concept IsString =
+    // Built-in string types
+    std::same_as<std::remove_cvref_t<T>, std::string> ||
+    std::same_as<std::remove_cvref_t<T>, std::string_view> ||
+    std::same_as<std::remove_cvref_t<T>, const char*> ||
+    // Array of chars (including string literals)
+    (std::is_array_v<std::remove_reference_t<T>> &&
+     std::same_as<std::remove_all_extents_t<std::remove_reference_t<T>>, char>);
+
+template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
 
 template <typename T>
