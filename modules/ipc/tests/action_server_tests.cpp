@@ -58,9 +58,7 @@ struct ActionServerData {
   auto service_topic = ipc::TopicConfig(
       fmt::format("test_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
-  Config server_config{};
-  server_config.multicast_scouting_enabled = false;
-  auto server_session = createSession(std::move(server_config));
+  auto server_session = createSession(createLocalConfig());
 
   return {
     .topic_config = service_topic,

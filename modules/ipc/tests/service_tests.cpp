@@ -30,9 +30,7 @@ TEST(ZenohTests, ServiceCallExchange) {
   const auto service_topic =
       ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
-  Config config{};
-  config.multicast_scouting_enabled = false;
-  auto session = createSession(std::move(config));
+  auto session = createSession(createLocalConfig());
 
   auto service_server = Service<types::DummyType, types::DummyType>(
       session, service_topic, [](const types::DummyType& request) { return request; });
@@ -51,9 +49,7 @@ TEST(ZenohTests, TypesMismatch) {
   const auto service_topic =
       ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
-  Config config{};
-  config.multicast_scouting_enabled = false;
-  auto session = createSession(std::move(config));
+  auto session = createSession(createLocalConfig());
 
   std::size_t failed_requests = 0;
   auto service_server = Service<types::DummyType, types::DummyType>(
