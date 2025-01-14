@@ -89,9 +89,7 @@ TEST(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
   auto [bag_path, dummy_types, companies] = createBag();
   {
-    ipc::zenoh::Config config{};
-    config.multicast_scouting_enabled = false;
-    auto session = ipc::zenoh::createSession(std::move(config));
+    auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
 
     auto bag_writer = createMcapWriter({ output_bag });
     auto recorder = ZenohRecorder::create({ .session = session,

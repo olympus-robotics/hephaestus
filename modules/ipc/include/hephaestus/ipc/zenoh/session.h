@@ -39,6 +39,10 @@ struct Session {
   Config config;
 };
 
+/// Create configuration for a session that doesn't connect to any other session.
+/// This is useful for testing and for local communications
+[[nodiscard]] auto createLocalConfig() -> Config;
+
 using SessionPtr = std::shared_ptr<Session>;
 [[nodiscard]] auto createSession(Config config) -> SessionPtr;
 

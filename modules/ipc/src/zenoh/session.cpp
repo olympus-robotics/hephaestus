@@ -68,6 +68,12 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
 }
 }  // namespace
 
+auto createLocalConfig() -> Config {
+  Config config;
+  config.multicast_scouting_enabled = false;
+  return config;
+}
+
 auto createSession(Config config) -> SessionPtr {
   auto zconfig = createZenohConfig(config);
   return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)), std::move(config));
