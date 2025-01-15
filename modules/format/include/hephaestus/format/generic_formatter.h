@@ -8,6 +8,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
@@ -58,7 +59,7 @@ struct Reflector<T> {  // NOLINT(misc-include-cleaner)
 
 template <typename T>
   requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T> && !fmt::detail::has_to_string_view<T>::value &&
-           !std::is_same<std::tm, T>::value)
+           !std::is_same_v<std::tm, T>)
 struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
   auto format(const T& data, FormatContext& ctx) const {
