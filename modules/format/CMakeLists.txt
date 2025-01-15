@@ -5,7 +5,7 @@
 declare_module(
   NAME format
   DEPENDS_ON_MODULES utils
-  DEPENDS_ON_EXTERNAL_PROJECTS ""
+  DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt
 )
 
 find_package(fmt REQUIRED)
