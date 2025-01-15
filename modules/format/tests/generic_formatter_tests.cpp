@@ -62,7 +62,6 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
   // Dummy test if general printers can be compiled
   std::cout << "cout: " << x << "\n" << std::flush;
   fmt::println("fmt: {}", x);
-  EXPECT_TRUE(false);
 }
 
 TEST(GenericFormatterTests, TestFormatBounds) {
