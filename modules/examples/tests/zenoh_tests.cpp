@@ -46,8 +46,7 @@ TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
 
 TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
   auto mt = random::createRNG();
-  ipc::zenoh::Config config{};
-  auto session = ipc::zenoh::createSession(std::move(config));
+  auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
   const auto topic = ipc::TopicConfig("test_topic");
 
   const auto send_message = randomPose(mt);

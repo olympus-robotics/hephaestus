@@ -1,30 +1,62 @@
 # Hephaestus
 
-Hephaestus is a C++ framework designed to facilitate robotics development by providing commonly needed functionality and abstractions.
+A high-performance C++ framework for production-ready robotics development.
 
-The goal of Hephaestus is to support the deployment of robotic code in production. This means:
-* Simple, stable, performant functionalities.
-* No focus on simplifying experimentation and no-nonsense functionality.
-    * New features will be added if they make production code better (faster/stable/simpler), not for making running experiments faster (I am looking at you ROS).
-* Abstract from the developer as much of the complexity of writing C++ code as possible:
-    * Memory managment.
-    * Parallelism and multi/threading.
-    * Containers and basic algorithm.
+## Overview
 
-Hephaestus provides functionalities that cover the following domains:
-* Inter Process Comunication (IPC).
-* Data serialization for IPC and storage.
-* Multi-threading, e.g. thread pools and parallelism primitive.
-* Containers, e.g. thread safe containers for sharing data across threads.
-* Memory pool.
-* Functionalities to run real-time code.
+Hephaestus is a C++ framework designed for deploying robotic systems in production environments. It provides essential, performance-critical functionalities while abstracting away common C++ complexities, allowing developers to focus on their robotics-specific implementation.
 
-> NOTE: most of the above functionalities are still work in progress.
+Unlike other robotics frameworks that prioritize rapid prototyping, Hephaestus emphasizes production-ready code with a focus on performance, stability, and simplicity.
+
+### Design Philosophy
+
+- **Production-First**: Features are added only if they improve production code quality through enhanced performance, stability, or simplicity
+- **Focused Scope**: Concentrates on common infrastructure needs across robotic platforms while avoiding use-case specific implementations
+- **C++ Abstraction**: Reduces cognitive load by handling complex C++ patterns and best practices automatically
+
+### Core Features
+
+#### Current Implementation
+
+Hephaestus provides robust abstractions for fundamental robotics infrastructure:
+
+- **Memory Management**
+  - Automated memory handling
+  - Memory pools for efficient allocation
+  
+- **Concurrency**
+  - Thread pools
+  - Parallelism primitives
+  - Thread-safe containers for cross-thread data sharing
+
+- **System Communication**
+  - Inter-Process Communication (IPC)
+  - Data serialization for communication and storage
+
+- **Performance Optimization**
+  - Real-time execution capabilities
+  - Telemetry for system monitoring
+
+## Project Status
+
+> **Note**: Many features are currently under development. Please check the issue tracker or project boards for current status.
 
 When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 
+### Scope Limitations
+
+Hephaestus intentionally excludes the following to maintain focus and allow for use-case optimization:
+
+- Data type definitions (images, point clouds, etc.)
+- Visualization tools
+- Geometric operations
+- Autonomy algorithms
+- Use-case specific implementations
+
+This deliberate limitation allows teams to implement these features optimally for their specific robotics applications while leveraging Hephaestus's robust infrastructure.
+
 ## Dev Env
-The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build and start the container with `make docker-up`.
+The best way to build Hephaestus is to do it inside the docker container provided in the `docker` folder. You can build and start the container with `make docker-up`.
 
 If you use VS Code, run `make configure-attach-container` and then Command Palette (Ctrl+Shift+P) `Dev Containers: Attach to Running Container...` -> `/hephaestus-dev`
 

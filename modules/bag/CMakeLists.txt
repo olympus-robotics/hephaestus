@@ -4,7 +4,7 @@
 
 declare_module(
   NAME bag
-  DEPENDS_ON_MODULES containers ipc
+  DEPENDS_ON_MODULES containers ipc telemetry
   DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
 )
@@ -26,7 +26,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME bag
-  PUBLIC_LINK_LIBS absl::base hephaestus::containers hephaestus::ipc mcap
+  PUBLIC_LINK_LIBS absl::base hephaestus::containers hephaestus::ipc hephaestus::telemetry mcap
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

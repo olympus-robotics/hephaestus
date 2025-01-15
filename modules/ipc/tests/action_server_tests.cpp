@@ -58,8 +58,7 @@ struct ActionServerData {
   auto service_topic = ipc::TopicConfig(
       fmt::format("test_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
-  Config server_config{};
-  auto server_session = createSession(std::move(server_config));
+  auto server_session = createSession(createLocalConfig());
 
   return {
     .topic_config = service_topic,
@@ -78,12 +77,10 @@ TEST(ActionServer, RejectedCall) {
         return request;
       });
 
-  auto client_session = createSession(action_server_data.session->config);
-
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      client_session, action_server_data.topic_config, request, [](const types::DummyPrimitivesType&) {},
-      SERVICE_CALL_TIMEOUT);
+      action_server_data.session, action_server_data.topic_config, request,
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
   const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
   ASSERT_EQ(wait_res, std::future_status::ready);
 
@@ -103,13 +100,11 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
         return request;
       });
 
-  auto client_session = createSession(action_server_data.session->config);
-
   auto request = types::DummyType::random(mt);
   types::DummyPrimitivesType received_status;
   static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 10000 };
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      client_session, action_server_data.topic_config, request,
+      action_server_data.session, action_server_data.topic_config, request,
       [&received_status](const types::DummyPrimitivesType& status) { received_status = status; },
       REPLY_SERVICE_DEFAULT_TIMEOUT);
 
@@ -141,12 +136,10 @@ TEST(ActionServer, ActionServerStopRequest) {
         return request;
       });
 
-  auto client_session = createSession(action_server_data.session->config);
-
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      client_session, action_server_data.topic_config, request, [](const types::DummyPrimitivesType&) {},
-      SERVICE_CALL_TIMEOUT);
+      action_server_data.session, action_server_data.topic_config, request,
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
   requested_started.wait(false);
 
@@ -155,7 +148,8 @@ TEST(ActionServer, ActionServerStopRequest) {
   // this is controlled by Zenoh.
   // For this reason there is the chance that we need to try multiple times to stop the action server.
   while (true) {
-    auto success = requestActionServerToStopExecution(*client_session, action_server_data.topic_config);
+    auto success =
+        requestActionServerToStopExecution(*action_server_data.session, action_server_data.topic_config);
     if (success) {
       break;
     }
@@ -188,15 +182,14 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
         return request;
       });
 
-  auto client_session = createSession(action_server_data.session->config);
   auto request = types::DummyType::random(mt);
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      client_session, action_server_data.topic_config, request, [](const types::DummyPrimitivesType&) {},
-      SERVICE_CALL_TIMEOUT);
+      action_server_data.session, action_server_data.topic_config, request,
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
   auto other_reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      client_session, action_server_data.topic_config, request, [](const types::DummyPrimitivesType&) {},
-      SERVICE_CALL_TIMEOUT);
+      action_server_data.session, action_server_data.topic_config, request,
+      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
   const auto other_wait_res = other_reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
   ASSERT_EQ(other_wait_res, std::future_status::ready);
@@ -224,13 +217,12 @@ TEST(ActionServer, TypesMismatch) {
         return request;
       });
 
-  auto client_session = createSession(action_server_data.session->config);
   // Invalid Request
   if (false) {
     auto request = types::DummyPrimitivesType::random(mt);
     auto reply_future =
         callActionServer<types::DummyPrimitivesType, types::DummyPrimitivesType, types::DummyType>(
-            client_session, action_server_data.topic_config, request,
+            action_server_data.session, action_server_data.topic_config, request,
             [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
     const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
     ASSERT_EQ(wait_res, std::future_status::ready);
@@ -241,7 +233,7 @@ TEST(ActionServer, TypesMismatch) {
   if (false) {
     auto request = types::DummyType::random(mt);
     auto reply_future = callActionServer<types::DummyType, types::DummyType, types::DummyType>(
-        client_session, action_server_data.topic_config, request, [](const types::DummyType&) {},
+        action_server_data.session, action_server_data.topic_config, request, [](const types::DummyType&) {},
         SERVICE_CALL_TIMEOUT);
 
     const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);

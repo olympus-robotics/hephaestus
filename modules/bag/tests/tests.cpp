@@ -89,8 +89,10 @@ TEST(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
   auto [bag_path, dummy_types, companies] = createBag();
   {
+    auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
+
     auto bag_writer = createMcapWriter({ output_bag });
-    auto recorder = ZenohRecorder::create({ .session = ipc::zenoh::createSession({}),
+    auto recorder = ZenohRecorder::create({ .session = session,
                                             .bag_writer = std::move(bag_writer),
                                             .topics_filter_params = {
                                                 .include_topics_only = {},
@@ -101,9 +103,8 @@ TEST(Bag, PlayAndRecord) {
       auto reader = std::make_unique<mcap::McapReader>();
       const auto status = reader->open(bag_path);
       EXPECT_TRUE(status.ok());
-      auto player = ZenohPlayer::create({ .session = ipc::zenoh::createSession({}),
-                                          .bag_reader = std::move(reader),
-                                          .wait_for_readers_to_connect = true });
+      auto player = ZenohPlayer::create(
+          { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
       recorder.start().get();
       player.start().get();
       player.wait();
