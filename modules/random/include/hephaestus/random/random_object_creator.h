@@ -51,20 +51,6 @@ template <NonBooleanIntegralType T>
 }
 
 //=================================================================================================
-// Random optional creation
-//=================================================================================================
-template <OptionalType T>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  std::bernoulli_distribution dist;
-  const auto has_value = dist(mt);
-  if (has_value) {
-    return std::make_optional(T::value_type::random(mt));
-  }
-
-  return std::nullopt;
-}
-
-//=================================================================================================
 // Random floating point value creation
 //=================================================================================================
 template <std::floating_point T>
@@ -140,6 +126,36 @@ template <class T>
 concept RandomCreatable = requires(std::mt19937_64& mt) {
   { random<T>(mt) } -> std::convertible_to<T>;
 };
+
+//=================================================================================================
+// Random optional creation
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && RandomCreatable<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(random<T>(mt));
+  }
+
+  return std::nullopt;
+}
+
+//=================================================================================================
+// Random optional creation
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && HasRandomMethod<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(T::value_type::random(mt));
+  }
+
+  return std::nullopt;
+}
 
 //=================================================================================================
 // Internal helper functions for container types
