@@ -10,8 +10,8 @@ declare_module(
 
 find_package(fmt REQUIRED)
 
-# library sources set(SOURCES src/random_number_generator.cpp src/random_object_creator.cpp README.md
-# include/hephaestus/random/random_number_generator.h include/hephaestus/random/random_object_creator.h )
+# library sources
+set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generic_formatter.h)
 
 # library target
 define_module_library(
