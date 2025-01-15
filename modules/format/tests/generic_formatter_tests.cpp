@@ -11,6 +11,7 @@
 #include <rfl.hpp>
 
 #include "hephaestus/format/generic_formatter.h"
+#include "hephaestus/types/bounds.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 
@@ -58,6 +59,31 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
   std::string formatted = toString(x);
   fmt::println("test: {}", x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
+}
+
+TEST(GenericFormatterTests, TestFormatBounds) {
+  types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
+  types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
+  std::string formatted = toString(bounds);
+  fmt::println("bounds inclusive: {} vs\n {}", bounds, formatted);
+  fmt::println("bounds left open: {} vs\n {}", bounds2, toString(bounds2));
+
+  EXPECT_NE(formatted.find("1"), std::string::npos);
+  EXPECT_NE(formatted.find("2"), std::string::npos);
+}
+
+TEST(GenericFormatterTests, TestFormatStructWithBounds) {
+  struct TestStruct {
+    types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
+    types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
+  };
+  TestStruct x{};
+  std::string formatted = toString(x);
+  fmt::println("test: {}", x);
+  EXPECT_NE(formatted.find("1"), std::string::npos);
+  EXPECT_NE(formatted.find("2"), std::string::npos);
+  EXPECT_NE(formatted.find("3"), std::string::npos);
+  EXPECT_NE(formatted.find("4"), std::string::npos);
 }
 
 }  // namespace heph::format::tests

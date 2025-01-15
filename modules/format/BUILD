@@ -30,5 +30,8 @@ heph_cc_library(
 heph_cc_test(
     name = "generic_formatter_tests",
     srcs = ["tests/generic_formatter_tests.cpp"],
-    deps = [":format"],
+    deps = [
+        ":format",
+        "//modules/types",
+    ],
 )

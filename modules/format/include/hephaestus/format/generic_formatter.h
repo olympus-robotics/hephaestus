@@ -27,6 +27,11 @@ auto toString(const T& data) -> std::string {
   return rfl::yaml::write(data);
 }
 
+template <typename T>
+concept Formattable = requires(std::ostream& os, const T& t) {
+  { t.format() } -> std::same_as<std::string>;
+};
+
 }  // namespace heph::format
 
 namespace rfl {
@@ -47,6 +52,15 @@ struct Reflector<std::chrono::time_point<SystemClockType>> {
   static auto from(const std::chrono::time_point<SystemClockType>& x) noexcept -> ReflType {
     return fmt::format("{:%Y-%m-%d %H:%M:%S}",
                        std::chrono::time_point_cast<std::chrono::microseconds, SystemClockType>(x));
+  }
+};
+
+template <heph::format::Formattable T>
+struct Reflector<T> {
+  using ReflType = std::string;
+
+  static auto from(const T& x) noexcept -> ReflType {
+    return x.format();
   }
 };
 }  // namespace rfl
