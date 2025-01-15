@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <string>
 
 #include <fmt/base.h>
 #include <fmt/ostream.h>

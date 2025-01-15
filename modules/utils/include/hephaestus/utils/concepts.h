@@ -11,6 +11,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +39,11 @@ concept IsStringLike =
     // Array of chars (including string literals)
     (std::is_array_v<std::remove_reference_t<T>> &&
      std::same_as<std::remove_all_extents_t<std::remove_reference_t<T>>, char>);
+
+template <typename T>
+concept Formattable = requires(const T& t) {
+  { t.format() } -> std::same_as<std::string>;
+};
 
 template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;

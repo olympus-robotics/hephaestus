@@ -4,14 +4,15 @@
 #pragma once
 
 #include <chrono>
+#include <ctime>
 #include <string>
-#include <type_traits>
+#include <string_view>
 
 #include <fmt/base.h>
-#include <fmt/chrono.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
-#include <rfl.hpp>
-#include <rfl/yaml.hpp>
+#include <rfl.hpp>       // NOLINT(misc-include-cleaner)
+#include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
 #include "hephaestus/utils/concepts.h"
 
@@ -27,11 +28,6 @@ auto toString(const T& data) -> std::string {
   return rfl::yaml::write(data);
 }
 
-template <typename T>
-concept Formattable = requires(std::ostream& os, const T& t) {
-  { t.format() } -> std::same_as<std::string>;
-};
-
 }  // namespace heph::format
 
 namespace rfl {
@@ -39,15 +35,15 @@ namespace rfl {
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
 using SystemClockType = std::chrono::system_clock;
 template <>
-struct Reflector<std::chrono::time_point<SystemClockType>> {
+struct Reflector<std::chrono::time_point<SystemClockType>> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
 
-  static auto to(const ReflType& x) noexcept -> std::chrono::time_point<SystemClockType> {
-    std::tm tm = {};
-    std::stringstream ss(x.data());
-    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-    return SystemClockType::from_time_t(std::mktime(&tm));
-  }
+  // static auto to(const ReflType& x) noexcept -> std::chrono::time_point<SystemClockType> {
+  //   std::tm tm = {};
+  //   std::stringstream ss(x.data());
+  //   ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+  //   return SystemClockType::from_time_t(std::mktime(&tm));
+  // }
 
   static auto from(const std::chrono::time_point<SystemClockType>& x) noexcept -> ReflType {
     return fmt::format("{:%Y-%m-%d %H:%M:%S}",
@@ -55,8 +51,8 @@ struct Reflector<std::chrono::time_point<SystemClockType>> {
   }
 };
 
-template <heph::format::Formattable T>
-struct Reflector<T> {
+template <heph::Formattable T>
+struct Reflector<T> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
 
   static auto from(const T& x) noexcept -> ReflType {
