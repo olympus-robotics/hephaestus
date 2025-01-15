@@ -34,17 +34,11 @@ auto toString(const T& data) -> std::string {
 namespace rfl {
 /// \brief Specialization of the Reflector for chrono based Timestamp type. See
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
+/// For implementation of Reflector::to see commit b1a4eda
 using SystemClockType = std::chrono::system_clock;
 template <>
 struct Reflector<std::chrono::time_point<SystemClockType>> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
-
-  // static auto to(const ReflType& x) noexcept -> std::chrono::time_point<SystemClockType> {
-  //   std::tm tm = {};
-  //   std::stringstream ss(x.data());
-  //   ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-  //   return SystemClockType::from_time_t(std::mktime(&tm));
-  // }
 
   static auto from(const std::chrono::time_point<SystemClockType>& x) noexcept -> ReflType {
     return fmt::format("{:%Y-%m-%d %H:%M:%S}",
