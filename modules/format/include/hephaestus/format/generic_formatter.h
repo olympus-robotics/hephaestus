@@ -65,7 +65,13 @@ template <typename T>
   requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T> && !fmt::detail::has_to_string_view<T>::value)
 struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(const T& a, FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), "{}", heph::format::toString(a));
+  auto format(const T& data, FormatContext& ctx) const {
+    return fmt::format_to(ctx.out(), "{}", heph::format::toString(data));
   }
 };
+
+template <typename T>
+  requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T>)
+auto operator<<(std::ostream& os, const T& data) -> std::ostream& {
+  return os << heph::format::toString(data);
+}

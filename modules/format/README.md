@@ -10,8 +10,10 @@ The **format** module defines several toString methods as well as a generic_form
 The generic_formatter is intended to use for types, so that we do not need to implement formatting individually.
 Use like:
 ```cpp
-// By including the generic_formatter a fmt::formatter will be declared for any type you define
+// By including the generic_formatter a `fmt::formatter` and `ostream operator<<` will be declared for any type you define
 #include "hephaestus/format/generic_formatter.h" // NOLINT(misc-include-cleaner)
+#include <iostream>
+#include <fmt/format.h>
 
 struct MySubType{
   std::string a="answer to everything";
@@ -28,5 +30,6 @@ int main() {
   MyType x{};
   // Will print format to yaml and print
   fmt::println("{}", x);
+  std::cout << x << "\n" ;
 }
 ```

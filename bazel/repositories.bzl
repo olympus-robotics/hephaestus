@@ -50,11 +50,3 @@ def foreign_cc_repositories():
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION,
         sha256 = "16494784cf7af86a9903213eb4f654579258d44502b6fc8b1b50467c66b5a4a3",
     )
-
-#     _ALL_CONTENT = """
-# filegroup(
-#     name = "all_srcs",
-#     srcs = glob(["**"]),
-#     visibility = ["//visibility:public"],
-# )
-# """

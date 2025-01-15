@@ -57,8 +57,12 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
   };
   TestStruct x{};
   std::string formatted = toString(x);
-  fmt::println("test: {}", x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
+
+  // Dummy test if general printers can be compiled
+  std::cout << "cout: " << x << "\n" << std::flush;
+  fmt::println("fmt: {}", x);
+  EXPECT_TRUE(false);
 }
 
 TEST(GenericFormatterTests, TestFormatBounds) {
@@ -79,11 +83,15 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
   };
   TestStruct x{};
   std::string formatted = toString(x);
-  fmt::println("test: {}", x);
+
   EXPECT_NE(formatted.find("1"), std::string::npos);
   EXPECT_NE(formatted.find("2"), std::string::npos);
   EXPECT_NE(formatted.find("3"), std::string::npos);
   EXPECT_NE(formatted.find("4"), std::string::npos);
+
+  // Dummy test if the custom formatters can be compiled
+  fmt::println("test: {}", x);
+  std::cout << "cout: " << x << "\n" << std::flush;
 }
 
 }  // namespace heph::format::tests
