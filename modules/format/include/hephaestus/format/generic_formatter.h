@@ -4,7 +4,6 @@
 #pragma once
 
 #include <chrono>
-#include <ctime>
 #include <ostream>
 #include <string>
 #include <string_view>

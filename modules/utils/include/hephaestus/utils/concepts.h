@@ -7,6 +7,7 @@
 #include <array>
 #include <chrono>
 #include <concepts>
+#include <ctime>
 #include <future>
 #include <optional>
 #include <sstream>
