@@ -5,24 +5,23 @@
 #include <chrono>
 
 #include <fmt/base.h>
-#include <fmt/chrono.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <rfl.hpp>
+#include <rfl.hpp>  // NOLINT(misc-include-cleaner)
 
 #include "hephaestus/format/generic_formatter.h"
 #include "hephaestus/types/bounds.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
-
 using namespace ::testing;
 
 namespace heph::format::tests {
 
 TEST(GenericFormatterTests, TestFormatInt) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-  int x = 42;
-  std::string formatted = toString(x);
+  const int x = 42;
+  const std::string formatted = toString(x);
   EXPECT_NE(formatted.find("42"), std::string::npos);
 }
 
@@ -30,8 +29,8 @@ TEST(GenericFormatterTests, TestFormatKnownObject) {
   struct TestStruct {
     std::string a;
   };
-  TestStruct x{ .a = "test_value" };
-  std::string formatted = toString(x);
+  const TestStruct x{ .a = "test_value" };
+  const std::string formatted = toString(x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
 }
 
@@ -42,11 +41,11 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithRflTimestamp) {
     rfl::Timestamp<timestamp_format> b;
   };
   TestStruct x{};
-  auto timestamp = std::chrono::system_clock::now();
+  const auto timestamp = std::chrono::system_clock::now();
   x.b = fmt::format(
       "{:%Y-%m-%d %H:%M:%S}",
       std::chrono::time_point_cast<std::chrono::microseconds, std::chrono::system_clock>(timestamp));
-  std::string formatted = toString(x);
+  const std::string formatted = toString(x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
 }
 
@@ -55,8 +54,8 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
     std::string a = "test_value";
     std::chrono::time_point<std::chrono::system_clock> b = std::chrono::system_clock::now();
   };
-  TestStruct x{};
-  std::string formatted = toString(x);
+  const TestStruct x{};
+  const std::string formatted = toString(x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
 
   // Dummy test if general printers can be compiled
@@ -65,9 +64,9 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
 }
 
 TEST(GenericFormatterTests, TestFormatBounds) {
-  types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
-  types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
-  std::string formatted = toString(bounds);
+  const types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
+  const types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
+  const std::string formatted = toString(bounds);
   fmt::println("bounds inclusive: {} vs\n {}", bounds, formatted);
   fmt::println("bounds left open: {} vs\n {}", bounds2, toString(bounds2));
 
@@ -80,8 +79,8 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
     types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
     types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
   };
-  TestStruct x{};
-  std::string formatted = toString(x);
+  const TestStruct x{};
+  const std::string formatted = toString(x);
 
   EXPECT_NE(formatted.find("1"), std::string::npos);
   EXPECT_NE(formatted.find("2"), std::string::npos);
