@@ -109,6 +109,12 @@ template <typename T>
 concept ChronoTimestampType = ChronoSystemClockTimestampType<T> || ChronoSteadyClockTimestampType<T>;
 
 template <typename T>
+concept CTimeType = std::is_same_v<std::tm, T>;
+
+template <typename T>
+concept TimeType = CTimeType<T> || ChronoTimestampType<T>;
+
+template <typename T>
 concept NumericType = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
 
 /// Types that are convertable to and from a string
