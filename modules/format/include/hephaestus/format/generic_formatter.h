@@ -16,6 +16,7 @@
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
 #include "hephaestus/utils/concepts.h"
+#include "hephaestus/utils/format/format.h"
 
 namespace heph::format {
 
@@ -35,14 +36,23 @@ namespace rfl {
 /// \brief Specialization of the Reflector for chrono based Timestamp type. See
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
 /// For implementation of Reflector::to see commit b1a4eda
-using SystemClockType = std::chrono::system_clock;
-template <>
-struct Reflector<std::chrono::time_point<SystemClockType>> {  // NOLINT(misc-include-cleaner)
+template <typename Clock>
+  requires(heph::ChronoSteadyClockType<Clock> || heph::ChronoSystemClockType<Clock>)
+struct Reflector<std::chrono::time_point<Clock>> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
 
-  static auto from(const std::chrono::time_point<SystemClockType>& x) noexcept -> ReflType {
-    return fmt::format("{:%Y-%m-%d %H:%M:%S}",
-                       std::chrono::time_point_cast<std::chrono::microseconds, SystemClockType>(x));
+  static auto from(const std::chrono::time_point<Clock>& x) noexcept -> ReflType {
+    return heph::utils::format::toString(x);
+  }
+};
+
+/// \brief Specialization of the Reflector for chrono based Duration type.
+template <typename Rep, typename Period>
+struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-cleaner)
+  using ReflType = std::string;
+
+  static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
+    return fmt::format("{:.3f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
   }
 };
 
