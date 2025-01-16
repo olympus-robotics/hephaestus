@@ -68,7 +68,7 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoDuration) {
   struct TestStruct {
     std::string a = "test_value";
     std::chrono::duration<double> b = 42min;
-    std::chrono::duration<double> c = 42ms;
+    std::chrono::milliseconds c = 42ms;
   };
   const TestStruct x{};
   const std::string formatted = toString(x);
