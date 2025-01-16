@@ -36,6 +36,11 @@ if(cpr IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${CPR_DEPENDS})
 endif()
 
+if(reflectcpp IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(REFLECT_CPP_DEPENDS yaml-cpp)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${REFLECT_CPP_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -145,6 +150,28 @@ add_cmake_dependency(
   GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
   GIT_TAG ${FMT_VERSION}
   CMAKE_ARGS ${FMT_CMAKE_ARGS}
+)
+
+# --------------------------------------------------------------------------------------------------
+# yaml-cpp
+set(YAML_CPP_VERSION 0.8.0)
+add_cmake_dependency(
+  NAME yaml-cpp
+  VERSION ${YAML_CPP_VERSION}
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG ${YAML_CPP_VERSION}
+)
+
+# --------------------------------------------------------------------------------------------------
+# reflect-cpp
+set(REFLECT_CPP_VERSION 0.16.0)
+set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION})
+add_cmake_dependency(
+  NAME reflectcpp
+  DEPENDS ${REFLECT_CPP_DEPENDS}
+  GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+  GIT_TAG ${REFLECT_CPP_TAG}
+  CMAKE_ARGS -DREFLECTCPP_YAML=ON -DCMAKE_BUILD_TYPE=Debug
 )
 
 # --------------------------------------------------------------------------------------------------
