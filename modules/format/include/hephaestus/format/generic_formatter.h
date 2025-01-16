@@ -67,7 +67,7 @@ struct Reflector<T> {  // NOLINT(misc-include-cleaner)
 }  // namespace rfl
 
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T> && !fmt::detail::has_to_string_view<T>::value &&
+  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !fmt::detail::has_to_string_view<T>::value &&
            !heph::TimeType<T>)
 struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   template <typename FormatContext>
@@ -77,7 +77,7 @@ struct fmt::formatter<T> : fmt::formatter<std::string_view> {
 };
 
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::IsStringLike<T>)
+  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T>)
 auto operator<<(std::ostream& os, const T& data) -> std::ostream& {
   return os << heph::format::toString(data);
 }

@@ -32,7 +32,7 @@ template <typename T>
 concept StringType = std::is_same_v<T, std::string>;
 
 template <typename T>
-concept IsStringLike =
+concept StringLike =
     // Built-in string types
     std::same_as<std::remove_cvref_t<T>, std::string> ||
     std::same_as<std::remove_cvref_t<T>, std::string_view> ||
@@ -45,6 +45,23 @@ template <typename T>
 concept Formattable = requires(const T& t) {
   { t.format() } -> std::same_as<std::string>;
 };
+
+namespace internal {
+// To allow ADL with custom begin/end
+using std::begin;
+using std::end;
+
+template <typename T>
+concept IsIterableImpl = requires(T& t) {
+  begin(t) != end(t);                     // begin/end and operator !=
+  ++std::declval<decltype(begin(t))&>();  // operator ++
+  *begin(t);                              // operator*
+};
+}  // namespace internal
+
+/// @brief Concept to check if a type is iterable.
+template <typename T>
+concept Iterable = internal::IsIterableImpl<T>;
 
 template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
