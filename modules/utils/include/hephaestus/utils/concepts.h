@@ -7,10 +7,12 @@
 #include <array>
 #include <chrono>
 #include <concepts>
+#include <ctime>
 #include <future>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +30,21 @@ concept BooleanType = std::is_same_v<T, bool>;
 
 template <typename T>
 concept StringType = std::is_same_v<T, std::string>;
+
+template <typename T>
+concept IsStringLike =
+    // Built-in string types
+    std::same_as<std::remove_cvref_t<T>, std::string> ||
+    std::same_as<std::remove_cvref_t<T>, std::string_view> ||
+    std::same_as<std::remove_cvref_t<T>, const char*> ||
+    // Array of chars (including string literals)
+    (std::is_array_v<std::remove_reference_t<T>> &&
+     std::same_as<std::remove_all_extents_t<std::remove_reference_t<T>>, char>);
+
+template <typename T>
+concept Formattable = requires(const T& t) {
+  { t.format() } -> std::same_as<std::string>;
+};
 
 template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
@@ -91,6 +108,12 @@ concept ChronoSteadyClockTimestampType = requires {
 
 template <typename T>
 concept ChronoTimestampType = ChronoSystemClockTimestampType<T> || ChronoSteadyClockTimestampType<T>;
+
+template <typename T>
+concept CTimeType = std::is_same_v<std::tm, T>;
+
+template <typename T>
+concept TimeType = CTimeType<T> || ChronoTimestampType<T>;
 
 template <typename T>
 concept NumericType = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;

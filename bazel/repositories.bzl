@@ -41,3 +41,12 @@ def foreign_cc_repositories():
         strip_prefix = "influxdb-cxx-" + INFLUXDB_VERSION,
         sha256 = "374f5cff1cabc5ce8ff0d4b227475e2221c038b668a797fd9ef117bee43ead07",
     )
+
+    REFLECT_CPP_VERSION = "0.16.0"
+    http_archive(
+        name = "reflect-cpp",
+        build_file = "//bazel/foreign_cc:reflect_cpp.BUILD",
+        urls = ["https://github.com/getml/reflect-cpp/archive/v{version}.zip".format(version = REFLECT_CPP_VERSION)],
+        strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION,
+        sha256 = "16494784cf7af86a9903213eb4f654579258d44502b6fc8b1b50467c66b5a4a3",
+    )

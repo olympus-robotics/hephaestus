@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <string>
 
 #include <fmt/base.h>
 #include <fmt/ostream.h>
@@ -34,6 +35,8 @@ struct Bounds {
   T lower{};
   T upper{};
   BoundsType type{ BoundsType::INCLUSIVE };
+
+  [[nodiscard]] auto format() const -> std::string;
 };
 
 template <NumericType T>
@@ -44,7 +47,6 @@ template <NumericType T>
 
 template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
-
 //=================================================================================================
 // IMPLEMENTATION
 //=================================================================================================
@@ -80,9 +82,9 @@ constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
 }
 
 template <NumericType T>
-auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
+auto Bounds<T>::format() const -> std::string {
   std::string bounds_type_str;
-  switch (bounds.type) {
+  switch (type) {
     case BoundsType::INCLUSIVE:
       bounds_type_str = "[]";
       break;
@@ -99,8 +101,13 @@ auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
       throwException<InvalidParameterException>("Incorrect BoundsType");
   }
 
-  return os << "Bounds: " << bounds_type_str[0] << bounds.lower << " - " << bounds.upper << bounds_type_str[1]
-            << "\n";
+  return fmt::format("{}{} - {}{}", bounds_type_str[0], lower, upper, bounds_type_str[1]);
+}
+
+template <NumericType T>
+auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
+  os << "Bounds: " << bounds.format();
+  return os;
 }
 
 }  // namespace heph::types
