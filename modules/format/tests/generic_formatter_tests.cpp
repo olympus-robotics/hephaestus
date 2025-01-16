@@ -49,10 +49,26 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithRflTimestamp) {
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
 }
 
-TEST(GenericFormatterTests, TestFormatKnownObjectWithChrono) {
+TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoTimePoint) {
   struct TestStruct {
     std::string a = "test_value";
     std::chrono::time_point<std::chrono::system_clock> b = std::chrono::system_clock::now();
+  };
+  const TestStruct x{};
+  const std::string formatted = toString(x);
+  EXPECT_NE(formatted.find("test_value"), std::string::npos);
+
+  // Dummy test if general printers can be compiled
+  std::cout << "cout: " << x << "\n" << std::flush;
+  fmt::println("fmt: {}", x);
+}
+
+TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoDuration) {
+  using namespace std::literals::chrono_literals;
+  struct TestStruct {
+    std::string a = "test_value";
+    std::chrono::duration<double> b = 42min;
+    std::chrono::duration<double> c = 42ms;
   };
   const TestStruct x{};
   const std::string formatted = toString(x);
