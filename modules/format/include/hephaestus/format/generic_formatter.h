@@ -4,7 +4,6 @@
 #pragma once
 
 #include <chrono>
-#include <format>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -53,7 +52,7 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
   using ReflType = std::string;
 
   static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
-    return std::format("{}", x);
+    return fmt::format("{:.3f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
   }
 };
 
