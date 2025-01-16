@@ -51,20 +51,6 @@ template <NonBooleanIntegralType T>
 }
 
 //=================================================================================================
-// Random optional creation
-//=================================================================================================
-template <OptionalType T>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  std::bernoulli_distribution dist;
-  const auto has_value = dist(mt);
-  if (has_value) {
-    return std::make_optional(T::value_type::random(mt));
-  }
-
-  return std::nullopt;
-}
-
-//=================================================================================================
 // Random floating point value creation
 //=================================================================================================
 template <std::floating_point T>
@@ -140,6 +126,56 @@ template <class T>
 concept RandomCreatable = requires(std::mt19937_64& mt) {
   { random<T>(mt) } -> std::convertible_to<T>;
 };
+
+//=================================================================================================
+// Random optional creation for types with random free function
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && RandomCreatable<typename T::value_type> &&
+           !HasRandomMethod<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(random<typename T::value_type>(mt));
+  }
+
+  return std::nullopt;
+}
+
+//=================================================================================================
+// Random optional creation for types with random method
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && HasRandomMethod<typename T::value_type> &&
+           !RandomCreatable<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(T::value_type::random(mt));
+  }
+
+  return std::nullopt;
+}
+
+//=================================================================================================
+// Random optional creation for types that have both
+//=================================================================================================
+/// TODO(@graeter) This is a workaround until we have cpp23 and can introduce the
+/// generic_random_object_creator
+template <typename T>
+  requires(OptionalType<T> && RandomCreatable<typename T::value_type> &&
+           HasRandomMethod<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(random<typename T::value_type>(mt));
+  }
+
+  return std::nullopt;
+}
 
 //=================================================================================================
 // Internal helper functions for container types
