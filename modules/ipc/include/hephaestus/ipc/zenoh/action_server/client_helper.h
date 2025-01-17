@@ -87,7 +87,6 @@ auto ClientHelper<RequestT, StatusT, ReplyT>::getResponse() -> std::future<Respo
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
     -> RequestResponse {
-  // reply_promise_.set_value(reply);
   reply_ = reply;
   return { .status = RequestStatus::SUCCESSFUL };
 }

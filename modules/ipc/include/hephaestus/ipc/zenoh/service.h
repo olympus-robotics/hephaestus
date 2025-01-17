@@ -45,6 +45,11 @@ public:
   using Callback = std::function<ReplyT(const RequestT&)>;
   using FailureCallback = std::function<void()>;
   using PostReplyCallback = std::function<void()>;
+  /// Create a new service that listen for request on `topic_config`.
+  /// - The `callback` will be called with the request and should return the reply.
+  /// - The `failure_callback` will be called if the service fails to process the request.
+  /// - The `post_reply_callback` will be called after the reply has been sent.
+  ///   - This can be used to perform cleanup operations.
   Service(
       SessionPtr session, TopicConfig topic_config, Callback&& callback,
       FailureCallback&& failure_callback = []() {}, PostReplyCallback&& post_reply_callback = []() {});
