@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include <fmt/format.h>
