@@ -19,6 +19,7 @@
 #include "hephaestus/utils/format/format.h"
 
 namespace heph::format {
+
 /// @brief Custom formatter for various data types using reflect-cpp
 ///
 /// @tparam T The type of data to format.
@@ -79,8 +80,10 @@ struct formatter<T> : formatter<std::string_view> {
 }  // namespace fmt
 
 namespace std {
-/// \brief Generic operator<< for all types that are not handled by the standard.
-template <typename T>
+/// \brief Generic operator<< for all types that are not handled by the standard. Note that here we actually
+/// need SFINAE, since concept Streamable would fall in infinite recursion.
+// NOLINTNEXTLINE(modernize-use-constraints)
+template <typename T, typename = std::enable_if_t<!heph::has_stream_operator<T>::value>>
   requires(!is_arithmetic_v<T> && !heph::StringLike<T>)
 auto operator<<(ostream& os, const T& data) -> ostream& {
   return os << heph::format::toString(data);

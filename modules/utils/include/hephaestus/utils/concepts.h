@@ -63,6 +63,19 @@ concept IsIterableImpl = requires(T& t) {
 template <typename T>
 concept Iterable = internal::IsIterableImpl<T>;
 
+// We want a SFINAE variant of this in order to be able to use it in the generic operator<< without falling
+// into infinite recursion
+template <typename T, typename = void>
+struct has_stream_operator : std::false_type {};  // NOLINT(readability-identifier-naming)
+
+template <typename T>
+struct has_stream_operator<T, std::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>>
+  : std::true_type {};
+
+// Concept based on the SFINAE detection
+template <typename T>
+concept Streamable = has_stream_operator<T>::value;
+
 template <typename T>
 concept NonBooleanIntegralType = std::integral<T> && !BooleanType<T>;
 
