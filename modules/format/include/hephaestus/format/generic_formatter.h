@@ -76,8 +76,10 @@ struct fmt::formatter<T> : fmt::formatter<std::string_view> {
   }
 };
 
+namespace std {
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T>)
-auto operator<<(std::ostream& os, const T& data) -> std::ostream& {
+  requires(!is_arithmetic_v<T> && !heph::StringLike<T>)
+auto operator<<(ostream& os, const T& data) -> ostream& {
   return os << heph::format::toString(data);
 }
+}  // namespace std
