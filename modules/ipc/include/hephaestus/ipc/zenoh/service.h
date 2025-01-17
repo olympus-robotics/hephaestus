@@ -44,9 +44,10 @@ class Service {
 public:
   using Callback = std::function<ReplyT(const RequestT&)>;
   using FailureCallback = std::function<void()>;
+  using PostReplyCallback = std::function<void()>;
   Service(
       SessionPtr session, TopicConfig topic_config, Callback&& callback,
-      FailureCallback&& failure_callback = []() {});
+      FailureCallback&& failure_callback = []() {}, PostReplyCallback&& post_reply_callback = []() {});
 
 private:
   void onQuery(const ::zenoh::Query& query);
@@ -58,6 +59,7 @@ private:
   TopicConfig topic_config_;
   Callback callback_;
   FailureCallback failure_callback_;
+  PostReplyCallback post_reply_callback_;
 };
 
 template <typename ReplyT>
@@ -200,11 +202,13 @@ template <typename RequestT, typename ReplyT>
 
 template <typename RequestT, typename ReplyT>
 Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback,
-                                   FailureCallback&& failure_callback)
+                                   FailureCallback&& failure_callback,
+                                   PostReplyCallback&& post_reply_callback)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
-  , failure_callback_(std::move(failure_callback)) {
+  , failure_callback_(std::move(failure_callback))
+  , post_reply_callback_(std::move(post_reply_callback)) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
   heph::log(heph::DEBUG, "started service", "name", topic_config_.name);
 
@@ -249,6 +253,8 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
 
   heph::logIf(heph::ERROR, result != Z_OK, "failed to reply to query", "service", topic_config_.name, "error",
               result);
+
+  post_reply_callback_();
 }
 
 template <typename RequestT, typename ReplyT>

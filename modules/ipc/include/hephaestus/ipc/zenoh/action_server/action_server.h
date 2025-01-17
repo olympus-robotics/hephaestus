@@ -271,8 +271,8 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
         // available.
         // Also, 100milliseconds it a completely arbitrary value, we will need to increase it if we still have
         // issues.
-        static constexpr auto WAIT_TIME = std::chrono::milliseconds{ 100 };
-        std::this_thread::sleep_for(WAIT_TIME);
+        // static constexpr auto WAIT_TIME = std::chrono::milliseconds{ 100 };
+        // std::this_thread::sleep_for(WAIT_TIME);
 
         return response;
       });
