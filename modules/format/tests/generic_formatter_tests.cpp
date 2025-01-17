@@ -13,6 +13,8 @@
 
 #include "hephaestus/format/generic_formatter.h"
 #include "hephaestus/types/bounds.h"
+// This is part of the test, since if operator<< is defined this will not compile due to conflicts
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
