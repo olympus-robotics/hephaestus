@@ -19,8 +19,7 @@
 #include "hephaestus/utils/format/format.h"
 
 namespace heph::format {
-
-// @brief Custom formatter for various data types using reflect-cpp
+/// @brief Custom formatter for various data types using reflect-cpp
 ///
 /// @tparam T The type of data to format.
 /// @param data The data to format.
@@ -29,7 +28,6 @@ template <typename T>
 auto toString(const T& data) -> std::string {
   return rfl::yaml::write(data);
 }
-
 }  // namespace heph::format
 
 namespace rfl {
@@ -56,6 +54,7 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
   }
 };
 
+/// \brief Specialization of the Reflector for custom format that is defined as described by Formattable<T>.
 template <heph::Formattable T>
 struct Reflector<T> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
@@ -66,17 +65,21 @@ struct Reflector<T> {  // NOLINT(misc-include-cleaner)
 };
 }  // namespace rfl
 
+namespace fmt {
+/// \brief Generic fmt::formatter for all types that are not handled by fmt library.
 template <typename T>
-  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !fmt::detail::has_to_string_view<T>::value &&
+  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !detail::has_to_string_view<T>::value &&
            !heph::TimeType<T>)
-struct fmt::formatter<T> : fmt::formatter<std::string_view> {
+struct formatter<T> : formatter<std::string_view> {
   template <typename FormatContext>
   auto format(const T& data, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "{}", heph::format::toString(data));
   }
 };
+}  // namespace fmt
 
 namespace std {
+/// \brief Generic operator<< for all types that are not handled by the standard.
 template <typename T>
   requires(!is_arithmetic_v<T> && !heph::StringLike<T>)
 auto operator<<(ostream& os, const T& data) -> ostream& {
