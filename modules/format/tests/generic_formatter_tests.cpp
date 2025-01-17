@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <chrono>
+#include <sstream>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
@@ -73,6 +74,10 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoDuration) {
   const TestStruct x{};
   const std::string formatted = toString(x);
   EXPECT_NE(formatted.find("test_value"), std::string::npos);
+
+  std::stringstream ss;
+  ss << x;
+  EXPECT_EQ(formatted, ss.str());
 
   // Dummy test if general printers can be compiled
   std::cout << "cout: " << x << "\n" << std::flush;
