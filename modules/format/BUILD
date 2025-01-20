@@ -36,3 +36,11 @@ heph_cc_test(
         "//modules/types_proto",
     ],
 )
+
+heph_cc_test(
+    name = "formatter_collisions_tests",
+    srcs = ["tests/formatter_collisions_tests.cpp"],
+    deps = [
+        ":format",
+    ],
+)
