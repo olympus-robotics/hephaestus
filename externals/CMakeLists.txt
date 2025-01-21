@@ -50,7 +50,7 @@ set(ZENOHC_CMAKE_ARGS -DZENOHC_CARGO_CHANNEL=+stable -DZENOHC_BUILD_WITH_SHARED_
 if(NOT BUILD_SHARED_LIBS)
   list(APPEND ZENOHC_CMAKE_ARGS "-DZENOHC_INSTALL_STATIC_LIBRARY=TRUE")
 endif()
-set(ZENOH_VERSION "release/1.0.0")
+set(ZENOH_VERSION "release/1.1.1")
 add_cmake_dependency(
   NAME zenohc
   GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-c
