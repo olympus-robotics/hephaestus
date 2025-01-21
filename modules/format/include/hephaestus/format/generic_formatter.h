@@ -68,10 +68,10 @@ struct Reflector<T> {  // NOLINT(misc-include-cleaner)
 
 namespace fmt {
 /// \brief Generic fmt::formatter for all types that are not handled by fmt library.
-template <typename T>
+template <typename T, typename Char>
   requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !detail::has_to_string_view<T>::value &&
            !heph::TimeType<T>)
-struct formatter<T> : formatter<std::string_view> {
+struct formatter<T, Char> : formatter<std::string_view, Char> {
   template <typename FormatContext>
   auto format(const T& data, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "{}", heph::format::toString(data));

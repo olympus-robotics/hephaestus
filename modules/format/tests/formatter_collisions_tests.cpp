@@ -8,16 +8,14 @@
 #include <fmt/format.h>
 #include <fmt/std.h>
 #include <gtest/gtest.h>
-// THIS DOES NOT PASS
-// clang-format off
-// #include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
-// clang-format on
+
+#include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 struct MyTest {
-  // std::string a = "test";
+  std::string a = "test";
   std::thread::id id = std::this_thread::get_id();
 };
 template <>
@@ -26,11 +24,6 @@ struct fmt::formatter<MyTest> : fmt::formatter<std::string_view> {
     return fmt::format_to(ctx.out(), "id={}", data.id);
   }
 };
-
-// THIS PASSES
-// clang-format off
-#include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
-// clang-format on
 
 namespace heph::format::tests {
 TEST(FormatterCollisions, TestFormatKnownObject) {
