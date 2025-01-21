@@ -13,7 +13,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <fmt/format.h>
@@ -261,19 +260,6 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
                                                                                 std::move(status_update_cb) };
 
         auto response = client_helper.getResponse().get();
-
-        // TODO(@fbrizzi): fix this properly
-        // This is a temporary fix to avoid the client to return before the server has finished.
-        // If we return immediately what can happen is that we destroy the `response_service_` Service inside
-        // ClientHelper, before it has finished sending the response to the caller (the ActionServer).
-        // This causes Zenoh to panic and the process to segfault.
-        // Ideally, we could have a way for the server to tell us when is idle, but not sure if this is
-        // available.
-        // Also, 100milliseconds it a completely arbitrary value, we will need to increase it if we still have
-        // issues.
-        static constexpr auto WAIT_TIME = std::chrono::milliseconds{ 100 };
-        std::this_thread::sleep_for(WAIT_TIME);
-
         return response;
       });
 }

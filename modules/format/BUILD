@@ -33,5 +33,6 @@ heph_cc_test(
     deps = [
         ":format",
         "//modules/types",
+        "//modules/types_proto",
     ],
 )

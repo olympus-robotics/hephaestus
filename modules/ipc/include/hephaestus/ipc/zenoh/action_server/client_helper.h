@@ -49,6 +49,7 @@ public:
 private:
   [[nodiscard]] auto serviceCallback(const Response<ReplyT>& reply) -> RequestResponse;
   void onFailure();
+  void postReplyServiceCallback();
 
 private:
   SessionPtr session_;
@@ -57,6 +58,7 @@ private:
   std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
   std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
 
+  Response<ReplyT> reply_;
   std::promise<Response<ReplyT>> reply_promise_;
 };
 
@@ -73,8 +75,8 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
         }))
   , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
-        [this](const Response<ReplyT>& reply) { return serviceCallback(reply); },
-        [this]() { onFailure(); })) {
+        [this](const Response<ReplyT>& reply) { return serviceCallback(reply); }, [this]() { onFailure(); },
+        [this]() { postReplyServiceCallback(); })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -85,13 +87,18 @@ auto ClientHelper<RequestT, StatusT, ReplyT>::getResponse() -> std::future<Respo
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
     -> RequestResponse {
-  reply_promise_.set_value(reply);
+  reply_ = reply;
   return { .status = RequestStatus::SUCCESSFUL };
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::onFailure() {
   reply_promise_.set_value({ .value = {}, .status = RequestStatus::INVALID });
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+void ClientHelper<RequestT, StatusT, ReplyT>::postReplyServiceCallback() {
+  reply_promise_.set_value(std::move(reply_));
 }
 
 }  // namespace heph::ipc::zenoh::action_server::internal
