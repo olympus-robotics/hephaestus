@@ -68,7 +68,8 @@ struct Reflector<T> {  // NOLINT(misc-include-cleaner)
 
 namespace fmt {
 /// \brief Generic fmt::formatter for all types that are not handled by fmt library.
-///        Note that we
+///        Note that we need to have the typename Char here in order to have the formatters in fmt/std.h be
+///        more specific than this one, to avoid collisions.
 template <typename T, typename Char>
   requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !detail::has_to_string_view<T>::value)
 struct formatter<T, Char> : formatter<std::string_view, Char> {
