@@ -38,6 +38,7 @@ namespace rfl {
 /// \brief Specialization of the Reflector for chrono based Timestamp type. See
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
 /// For implementation of Reflector::to see commit b1a4eda
+/// Limitation: Reflect-cpp does not work on any type that has private members.
 template <typename Clock>
   requires(heph::ChronoSteadyClockType<Clock> || heph::ChronoSystemClockType<Clock>)
 struct Reflector<std::chrono::time_point<Clock>> {  // NOLINT(misc-include-cleaner)
