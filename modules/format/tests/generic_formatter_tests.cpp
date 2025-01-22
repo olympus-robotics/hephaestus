@@ -115,4 +115,24 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
   std::cout << "cout: " << x << "\n" << std::flush;
 }
 
+TEST(GenericFormatterTests, TestFormatStructArray) {
+  class TestStruct {
+    // Reflect-cpp will only work on aggregate types (so no private members, no custom constructor)
+  public:
+    // TestStruct() = default;
+    std::array<int, 2> a_{ 1, 2 };
+    // private:
+    [[maybe_unused]] int b_ = 3;
+  };
+  const TestStruct x{};
+  const std::string formatted = toString(x);
+
+  EXPECT_NE(formatted.find("1"), std::string::npos);
+  EXPECT_NE(formatted.find("2"), std::string::npos);
+
+  // Dummy test if the custom formatters can be compiled
+  fmt::println("test: {}", x);
+  std::cout << "cout: " << x << "\n" << std::flush;
+}
+
 }  // namespace heph::format::tests
