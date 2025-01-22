@@ -117,10 +117,11 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
 
 TEST(GenericFormatterTests, TestFormatStructArray) {
   class TestStruct {
+    // Reflect-cpp will only work on aggregate types (so no private members, no custom constructor)
   public:
+    // TestStruct() = default;
     std::array<int, 2> a_{ 1, 2 };
-    // Reflect-cpp will not work if the class as private or protected members, methods do not have an effect
-  public:
+    // private:
     [[maybe_unused]] int b_ = 3;
   };
   const TestStruct x{};
