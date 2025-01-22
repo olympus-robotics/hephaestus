@@ -20,12 +20,15 @@
 
 namespace heph::format {
 
+template <typename T>
+concept IsReflectable = std::is_aggregate_v<T> || rfl::internal::has_write_reflector<T>;
+
 /// @brief Custom formatter for various data types using reflect-cpp
 ///
 /// @tparam T The type of data to format.
 /// @param data The data to format.
 /// @return A formatted string representation of the data.
-template <typename T>
+template <IsReflectable T>
 auto toString(const T& data) -> std::string {
   return rfl::yaml::write(data);
 }
@@ -35,7 +38,6 @@ namespace rfl {
 /// \brief Specialization of the Reflector for chrono based Timestamp type. See
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
 /// For implementation of Reflector::to see commit b1a4eda
-/// Limitation: Reflect-cpp does not work on any type that has private members.
 template <typename Clock>
   requires(heph::ChronoSteadyClockType<Clock> || heph::ChronoSystemClockType<Clock>)
 struct Reflector<std::chrono::time_point<Clock>> {  // NOLINT(misc-include-cleaner)
@@ -72,7 +74,7 @@ namespace fmt {
 ///        Note that we need to have the typename Char here in order to have the formatters in fmt/std.h be
 ///        more specific than this one, to avoid collisions.
 template <typename T, typename Char>
-  requires(!std::is_arithmetic_v<T> && !heph::StringLike<T> && !detail::has_to_string_view<T>::value)
+  requires(heph::format::IsReflectable<T> && !heph::StringLike<T> && !detail::has_to_string_view<T>::value)
 struct formatter<T, Char> : formatter<std::string_view, Char> {
   template <typename FormatContext>
   auto format(const T& data, FormatContext& ctx) const {
@@ -82,11 +84,9 @@ struct formatter<T, Char> : formatter<std::string_view, Char> {
 }  // namespace fmt
 
 namespace std {
-/// \brief Generic operator<< for all types that are not handled by the standard. Note that here we actually
-/// need SFINAE, since concept Streamable would fall in infinite recursion.
-// NOLINTNEXTLINE(modernize-use-constraints)
-template <typename T, typename = std::enable_if_t<!heph::has_stream_operator<T>::value>>
-  requires(!is_arithmetic_v<T> && !heph::StringLike<T>)
+/// \brief Generic operator<< for all types that are not handled by the standard.
+template <typename T>
+  requires(heph::format::IsReflectable<T> && !heph::StringLike<T>)
 auto operator<<(ostream& os, const T& data) -> ostream& {
   return os << heph::format::toString(data);
 }
