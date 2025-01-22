@@ -28,7 +28,7 @@ concept IsReflectable = std::is_aggregate_v<T> || rfl::internal::has_write_refle
 /// @tparam T The type of data to format.
 /// @param data The data to format.
 /// @return A formatted string representation of the data.
-template <IsReflectable T>
+template <typename T>
 auto toString(const T& data) -> std::string {
   return rfl::yaml::write(data);
 }
