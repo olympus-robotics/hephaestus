@@ -12,7 +12,7 @@ namespace heph::telemetry {
 ///        Per default entry is formatted via heph::telemetry::format.
 class AbslLogSink final : public ILogSink {
 public:
-  explicit AbslLogSink();
+  explicit AbslLogSink(LogLevel log_level = LogLevel::INFO);
   explicit AbslLogSink(ILogSink::Formatter&& f);
 
   void send(const LogEntry& entry) override;

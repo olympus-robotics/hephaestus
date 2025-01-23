@@ -7,13 +7,31 @@
 #include <utility>
 
 #include <absl/log/absl_log.h>
+#include <absl/log/globals.h>
 #include <fmt/format.h>
 
 #include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry {
 
-AbslLogSink::AbslLogSink() : formatter_([](const LogEntry& l) { return fmt::format("{}", l); }) {
+AbslLogSink::AbslLogSink(LogLevel log_level)
+  : formatter_([](const LogEntry& l) { return fmt::format("{}", l); }) {
+  switch (log_level) {
+    case LogLevel::TRACE:
+      fmt::println("Setting vlevel 2");
+      absl::SetGlobalVLogLevel(2);
+      break;
+    case LogLevel::DEBUG:
+      fmt::println("Setting vlevel 1");
+      absl::SetGlobalVLogLevel(1);
+      break;
+    case LogLevel::INFO:
+    case LogLevel::WARN:
+    case LogLevel::ERROR:
+    case LogLevel::FATAL:
+      fmt::println("Setting vlevel 0");
+      absl::SetGlobalVLogLevel(0);
+  }
 }
 
 AbslLogSink::AbslLogSink(ILogSink::Formatter&& f) : formatter_(std::move(f)) {

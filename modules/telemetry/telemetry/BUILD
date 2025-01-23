@@ -43,6 +43,7 @@ heph_cc_binary(
     srcs = ["examples/log_sink_example.cpp"],
     deps = [
         ":telemetry",
+        "//modules/cli",
     ],
 )
 
