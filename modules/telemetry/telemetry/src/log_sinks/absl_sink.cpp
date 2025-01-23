@@ -18,18 +18,15 @@ AbslLogSink::AbslLogSink(LogLevel log_level)
   : formatter_([](const LogEntry& l) { return fmt::format("{}", l); }) {
   switch (log_level) {
     case LogLevel::TRACE:
-      fmt::println("Setting vlevel 2");
       absl::SetGlobalVLogLevel(2);
       break;
     case LogLevel::DEBUG:
-      fmt::println("Setting vlevel 1");
       absl::SetGlobalVLogLevel(1);
       break;
     case LogLevel::INFO:
     case LogLevel::WARN:
     case LogLevel::ERROR:
     case LogLevel::FATAL:
-      fmt::println("Setting vlevel 0");
       absl::SetGlobalVLogLevel(0);
   }
 }
