@@ -28,6 +28,7 @@ AbslLogSink::AbslLogSink(LogLevel log_level)
     case LogLevel::ERROR:
     case LogLevel::FATAL:
       absl::SetGlobalVLogLevel(0);
+      break;
   }
 }
 
