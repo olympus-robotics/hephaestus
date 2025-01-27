@@ -8,7 +8,6 @@
 #include <memory>
 #include <span>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include <fmt/format.h>
@@ -16,11 +15,13 @@
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/enums.hxx>
+#include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/ext/serialization.hxx>
+#include <zenoh/api/ext/session_ext.hxx>
 #include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/liveliness.hxx>
-#include <zenoh/api/publisher.hxx>
+#include <zenoh/api/matching.hxx>
 #include <zenoh/api/queryable.hxx>
 #include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>
@@ -31,73 +32,42 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
-namespace {
-extern "C" {
-inline void zenohOnMatchingStatus(const ::zc_matching_status_t* matching_status, void* context) {
-  ::zenoh::detail::closures::IClosure<void, const zc_matching_status_t*>::call_from_context(context,
-                                                                                            matching_status);
-}
-}
-
-template <typename C, typename D>
-[[nodiscard]] auto createZenohcClosureMatchingStatus(C&& on_matching_status, D&& on_drop)
-    -> zc_owned_closure_matching_status_t {
-  zc_owned_closure_matching_status_t c_closure;
-  using Cval = std::remove_reference_t<C>;
-  using Dval = std::remove_reference_t<D>;
-  using ClosureType =
-      typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const zc_matching_status_t*>;
-  auto closure = ClosureType::into_context(std::forward<C>(on_matching_status), std::forward<D>(on_drop));
-  ::z_closure(&c_closure, zenohOnMatchingStatus, ::zenoh::detail::closures::_zenoh_on_drop, closure);
-  return c_closure;
-}
-}  // namespace
-
 RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
                            MatchCallback&& match_cb)
   : session_(std::move(session))
+  , session_ext_(session->zenoh_session)
   , topic_config_(std::move(topic_config))
   , type_info_(std::move(type_info))
-  , enable_cache_(session_->config.cache_size > 0)
   , match_cb_(std ::move(match_cb)) {
   createTypeInfoService();
 
-  // Enable publishing of a liveliness token.
-  const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
-  ::zenoh::ZResult result{};
-  liveliness_token_ =
-      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
-          keyexpr, ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  throwExceptionIf<FailedZenohOperation>(
-      result != Z_OK,
-      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
-
-  if (enable_cache_) {
-    enableCache();
-  }
-
-  auto pub_options = ::zenoh::Session::PublisherOptions::create_default();
+  auto pub_options = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::create_default();
   if (session_->config.real_time) {
-    pub_options.priority = ::zenoh::Priority::Z_PRIORITY_REAL_TIME;
+    pub_options.publisher_options.priority = ::zenoh::Priority::Z_PRIORITY_REAL_TIME;
   }
 
-  publisher_ = std::make_unique<::zenoh::Publisher>(
-      session_->zenoh_session.declare_publisher(keyexpr, std::move(pub_options)));
+  if (session_->config.cache_size > 0) {
+    pub_options.cache->max_samples = session_->config.cache_size;
+  }
+
+  pub_options.publisher_detection = true;
+
+  const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
+  publisher_ = std::make_unique<::zenoh::ext::AdvancedPublisher>(
+      session_ext_.declare_advanced_publisher(keyexpr, std::move(pub_options)));
 
   if (match_cb_ != nullptr) {
-    enableMatchingListener();
+    matching_listener_ =
+        std::make_unique<::zenoh::MatchingListener<void>>(publisher_->declare_matching_listener(
+            [this](const ::zenoh::MatchingStatus& matching_status) {
+              this->match_cb_({ .matching = matching_status.matching });
+            },
+            []() {}));
   }
 
   initializeAttachment();
-}
-
-RawPublisher::~RawPublisher() {
-  if (enable_cache_) {
-    z_drop(z_move(cache_publisher_));
-  }
 }
 
 auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
@@ -109,39 +79,13 @@ auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
   return result == Z_OK;
 }
 
-void RawPublisher::enableCache() {
-  ze_publication_cache_options_t cache_publisher_opts;
-  ze_publication_cache_options_default(&cache_publisher_opts);
-  cache_publisher_opts.history = session_->config.cache_size;
-
-  z_view_keyexpr_t keyexpr;
-  z_view_keyexpr_from_str(&keyexpr, topic_config_.name.data());
-
-  const auto result = ze_declare_publication_cache(::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
-                                                   &cache_publisher_, z_loan(keyexpr), &cache_publisher_opts);
-  throwExceptionIf<FailedZenohOperation>(
-      result != Z_OK,
-      fmt::format("[Publisher {}] failed to enable cache, result {}", topic_config_.name, result));
-}
-
-auto RawPublisher::createPublisherOptions() -> ::zenoh::Publisher::PutOptions {
+auto RawPublisher::createPublisherOptions() -> ::zenoh::ext::AdvancedPublisher::PutOptions {
   auto put_options = ::zenoh::Publisher::PutOptions::create_default();
   put_options.encoding = ::zenoh::Encoding::Predefined::zenoh_bytes();
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY] = std::to_string(pub_msg_count_++);
   put_options.attachment = ::zenoh::ext::serialize(attachment_);
 
-  return put_options;
-}
-
-void RawPublisher::enableMatchingListener() {
-  auto closure = createZenohcClosureMatchingStatus(
-      [this](const zc_matching_status_t* matching_status) {
-        const MatchingStatus status{ .matching = matching_status->matching };
-        this->match_cb_(status);
-      },
-      []() {});
-  zc_publisher_declare_matching_listener(::zenoh::interop::as_loaned_c_ptr(*publisher_),
-                                         &subscriers_listener_, z_move(closure));
+  return { .put_options = std::move(put_options) };
 }
 
 void RawPublisher::createTypeInfoService() {
