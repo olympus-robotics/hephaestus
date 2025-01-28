@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include <__chrono/duration.h>
-
 namespace heph {
 
 template <typename T>
@@ -116,7 +114,7 @@ concept UnorderedMapType = requires(T t) {
 };
 
 template <typename T>
-concept ChronoDurationType = std::chrono::__is_duration<T>::value;
+concept ChronoDurationType = std::chrono::__is_duration<T>::value;  // NOLINT(misc-include-cleaner)
 
 template <typename T>
 concept ChronoSystemClockType = std::is_same_v<T, std::chrono::system_clock>;
