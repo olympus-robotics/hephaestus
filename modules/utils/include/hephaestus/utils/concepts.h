@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include <__chrono/duration.h>
+
 namespace heph {
 
 template <typename T>
