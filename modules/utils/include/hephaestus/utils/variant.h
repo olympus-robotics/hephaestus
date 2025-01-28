@@ -8,7 +8,7 @@ namespace heph {
 
 /// A helper struct which allows you to easily branch on the type of alternative held by a variant:
 ///
-///  std::visit( heph::Overloads {
+///  std::visit(heph::Overloads {
 ///    [](const &FirstAlternative& value) {
 ///      // Code to be run if variant holds a value of type FirstAlternative.
 ///    },
