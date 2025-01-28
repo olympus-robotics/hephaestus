@@ -40,12 +40,21 @@ namespace rfl {
 /// https://github.com/getml/reflect-cpp/blob/main/docs/custom_parser.md
 /// For implementation of Reflector::to see commit b1a4eda
 /// Limitation: Reflect-cpp does not work on any type that has private members.
-template <typename Clock>
+// template <typename Clock>
+//   requires(heph::ChronoSteadyClockType<Clock> || heph::ChronoSystemClockType<Clock>)
+// struct Reflector<std::chrono::time_point<Clock>> {  // NOLINT(misc-include-cleaner)
+//   using ReflType = std::string;
+
+//   static auto from(const std::chrono::time_point<Clock>& x) noexcept -> ReflType {
+//     return heph::utils::format::toString(x);
+//   }
+// };
+template <typename Clock, typename Duration>
   requires(heph::ChronoSteadyClockType<Clock> || heph::ChronoSystemClockType<Clock>)
-struct Reflector<std::chrono::time_point<Clock>> {  // NOLINT(misc-include-cleaner)
+struct Reflector<std::chrono::time_point<Clock, Duration>> {  // NOLINT(misc-include-cleaner)
   using ReflType = std::string;
 
-  static auto from(const std::chrono::time_point<Clock>& x) noexcept -> ReflType {
+  static auto from(const std::chrono::time_point<Clock, Duration>& x) noexcept -> ReflType {
     return heph::utils::format::toString(x);
   }
 };

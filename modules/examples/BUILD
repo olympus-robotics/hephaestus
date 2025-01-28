@@ -151,6 +151,17 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "generic_formatter_example",
+    srcs = [
+        "examples/generic_formatter_example.cpp",
+    ],
+    deps = [
+        ":examples",
+        "//modules/format",
+    ],
+)
+
 #########
 # Tests #
 #########

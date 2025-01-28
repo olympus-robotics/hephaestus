@@ -83,15 +83,14 @@ template <EnumType T>
 //=================================================================================================
 // ChronoTimePoint
 //=================================================================================================
-
-template <ChronoSystemClockType T>
-[[nodiscard]] inline auto toString(const std::chrono::time_point<T>& timestamp) -> std::string {
+template <ChronoSystemClockType Clock, ChronoDurationType Duration>
+[[nodiscard]] inline auto toString(const std::chrono::time_point<Clock, Duration>& timestamp) -> std::string {
   return fmt::format("{:%Y-%m-%d %H:%M:%S}",
-                     std::chrono::time_point_cast<std::chrono::microseconds, T>(timestamp));
+                     std::chrono::time_point_cast<std::chrono::microseconds, Clock>(timestamp));
 }
 
-template <ChronoSteadyClockType T>
-[[nodiscard]] inline auto toString(const std::chrono::time_point<T>& timestamp) -> std::string {
+template <ChronoSteadyClockType Clock, ChronoDurationType Duration>
+[[nodiscard]] inline auto toString(const std::chrono::time_point<Clock, Duration>& timestamp) -> std::string {
   auto duration_since_epoch = timestamp.time_since_epoch();
   auto total_seconds = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch).count();
   auto days = total_seconds / (24 * 3600);            // NOLINT(cppcoreguidelines-avoid-magic-numbers)
@@ -100,7 +99,7 @@ template <ChronoSteadyClockType T>
   auto seconds = total_seconds % 60;                  // NOLINT(cppcoreguidelines-avoid-magic-numbers)
   auto sub_seconds = (duration_since_epoch - std::chrono::seconds(total_seconds)).count();
 
-  static constexpr auto TIME_BASE = T::duration::period::den;  // sub-second precision
+  static constexpr auto TIME_BASE = Clock::duration::period::den;  // sub-second precision
   static constexpr int64_t GIGA = 1'000'000'000;
   static constexpr int64_t SCALER = GIGA / TIME_BASE;  // 1 for time base nanoseconds, 1'000 for microseconds
 
