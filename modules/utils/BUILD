@@ -80,3 +80,9 @@ heph_cc_test(
     srcs = ["tests/stop_watch_tests.cpp"],
     deps = [":utils"],
 )
+
+heph_cc_test(
+    name = "variant_tests",
+    srcs = ["tests/variant_tests.cpp"],
+    deps = [":utils"],
+)
