@@ -53,9 +53,11 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithRflTimestamp) {
 }
 
 TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoTimePoint) {
+  using ClockT = std::chrono::system_clock;
+  using TimestampT = std::chrono::time_point<ClockT, std::chrono::microseconds>;
   struct TestStruct {
     std::string a = "test_value";
-    std::chrono::time_point<std::chrono::system_clock> b = std::chrono::system_clock::now();
+    TimestampT b = std::chrono::time_point_cast<TimestampT::duration>(std::chrono::system_clock::now());
   };
   const TestStruct x{};
   const std::string formatted = toString(x);
