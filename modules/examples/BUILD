@@ -30,6 +30,7 @@ heph_cc_library(
         "@eigen",
         "@fmt",
         "@protobuf",
+        "@zstd",
     ],
 )
 

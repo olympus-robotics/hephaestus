@@ -41,7 +41,7 @@ TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
         stop_flag.notify_all();
       });
 
-  EXPECT_THROW(std::ignore = publisher.publish(send_message);, std::exception);
+  EXPECT_THROW_OR_DEATH(std::ignore = publisher.publish(send_message);, std::exception, "");
 }
 
 TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
@@ -64,7 +64,7 @@ TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
         stop_flag.notify_all();
       });
 
-  EXPECT_THROW(std::ignore = publisher.publish(send_message);, std::exception);
+  EXPECT_THROW_OR_DEATH(std::ignore = publisher.publish(send_message);, std::exception, "");
 }
 
 }  // namespace

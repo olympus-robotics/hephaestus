@@ -78,12 +78,12 @@ TEST(PublisherSubscriber, MismatchType) {
       },
       false);
 
-  EXPECT_THROW(
+  EXPECT_THROW_OR_DEATH(
       {
         std::ignore = publisher.publish(types::DummyType::random(mt));
         stop_flag.wait(false);
       },
-      FailedZenohOperation);
+      FailedZenohOperation, "");
 }
 
 }  // namespace

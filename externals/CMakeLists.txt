@@ -221,3 +221,13 @@ add_cmake_dependency(
   DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
   CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )
+
+# --------------------------------------------------------------------------------------------------
+# zstd
+set(ZSTD_VERSION 1.5.6)
+add_cmake_dependency(
+  NAME zstd
+  DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz
+  CMAKE_ARGS -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_PROGRAMS=OFF
+             -DZSTD_BUILD_TESTS=OFF -DZSTD_BUILD_LEGACY=OFF
+)

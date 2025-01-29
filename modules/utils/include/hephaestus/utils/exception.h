@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #ifdef DISABLE_EXCEPTIONS
+#include <absl/log/absl_check.h>
 #include <fmt/format.h>
 #endif
 
@@ -41,8 +42,8 @@ constexpr void throwException(const std::string& message,
   throw T{ message, location };
 #else
   auto e = T{ message, location };
-  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                              location.line());
+  ABSL_CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                   location.line());
 #endif
 }
 
@@ -62,10 +63,18 @@ constexpr void throwExceptionIf(bool condition, const std::string& message,
   }
 #else
   auto e = T{ message, location };
-  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                   location.line());
+  ABSL_CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                        location.line());
 #endif
 }
+
+#ifdef DISABLE_EXCEPTIONS
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_DEATH(statement, expected_matcher)
+#else
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_THROW(statement, expected_exception)
+#endif
 
 //=================================================================================================
 /// Exception raised on operating with mismatched types. Examples

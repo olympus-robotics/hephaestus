@@ -46,7 +46,9 @@ constexpr auto MAX_ITERATION_COUNT = 10;
 }
 
 [[nodiscard]] auto createThrowingCallback() -> Spinner::StoppableCallback {
-  auto cb = []() { throwException<InvalidOperationException>("This is a test exception."); };
+  auto cb = []() {
+    throw heph::InvalidOperationException{ "This is a test exception.", std::source_location::current() };
+  };
   return Spinner::createNeverStoppingCallback(std::move(cb));
 }
 }  // namespace
@@ -88,13 +90,13 @@ TEST(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
 
-  EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
+  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::InvalidOperationException, "");
   spinner.start();
 
-  EXPECT_THROW(spinner.start(), heph::InvalidOperationException);
+  EXPECT_THROW_OR_DEATH(spinner.start(), heph::InvalidOperationException, "");
   spinner.stop().get();
 
-  EXPECT_THROW(spinner.stop(), heph::InvalidOperationException);
+  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::InvalidOperationException, "");
 }
 
 TEST(SpinnerTest, SpinTest) {
@@ -206,13 +208,17 @@ TEST(SpinnerTest, StateMachine) {
         [&init_counter]() {
           {
             ++init_counter;
-            throwExceptionIf<InvalidOperationException>(init_counter == 1, "Init failed.");
+            if (init_counter == 1) [[unlikely]] {
+              throw InvalidOperationException{ "Init failed.", std::source_location::current() };
+            }
           }
         },
     .spin_once_cb =
         [&successful_spin_counter, &total_spin_counter]() {
           ++total_spin_counter;
-          throwExceptionIf<InvalidOperationException>(total_spin_counter == 1, "Spin failed.");
+          if (total_spin_counter == 1) [[unlikely]] {
+            throw InvalidOperationException{ "Spin failed.", std::source_location::current() };
+          }
           ++successful_spin_counter;
         },
     .shall_stop_spinning_cb =

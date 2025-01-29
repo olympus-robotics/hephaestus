@@ -32,15 +32,15 @@ set(SOURCES
 define_module_library(
   NAME telemetry
   PUBLIC_LINK_LIBS
+    absl::base
+    absl::log
+    absl::synchronization
+    fmt::fmt
     hephaestus::containers
     hephaestus::random
     hephaestus::serdes
     hephaestus::utils
-    fmt::fmt
     magic_enum::magic_enum
-    absl::log
-    absl::base
-    absl::synchronization
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

@@ -20,7 +20,11 @@ set(SOURCES src/bounds.cpp src/dummy_type.cpp README.md include/hephaestus/types
 # library target
 define_module_library(
   NAME types
-  PUBLIC_LINK_LIBS fmt::fmt magic_enum::magic_enum range-v3::range-v3 hephaestus::random
+  PUBLIC_LINK_LIBS
+    fmt::fmt
+    hephaestus::random
+    magic_enum::magic_enum
+    range-v3::range-v3
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

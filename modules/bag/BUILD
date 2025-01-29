@@ -22,6 +22,7 @@ heph_cc_library(
         "//modules/random",
         "//modules/telemetry/telemetry",
         "@mcap",
+        "@zstd",
     ],
 )
 

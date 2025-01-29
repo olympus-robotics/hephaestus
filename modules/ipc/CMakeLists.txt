@@ -62,17 +62,18 @@ define_module_library(
   NAME ipc
   PUBLIC_LINK_LIBS
     absl::base
+    absl::log
     absl::raw_hash_set
     absl::status
     absl::statusor
+    fmt::fmt
+    hephaestus::action_server_types_proto
+    hephaestus::cli
     hephaestus::concurrency
     hephaestus::containers
-    hephaestus::cli
-    hephaestus::utils
     hephaestus::serdes
-    hephaestus::action_server_types_proto
     hephaestus::telemetry
-    fmt::fmt
+    hephaestus::utils
     nlohmann_json::nlohmann_json
     range-v3::range-v3
     zenohc::lib

@@ -26,7 +26,11 @@ set(SOURCES
 # library target
 define_module_library(
   NAME types_proto
-  PUBLIC_LINK_LIBS hephaestus::random hephaestus::serdes hephaestus::types hephaestus::types_gen_proto
+  PUBLIC_LINK_LIBS
+    hephaestus::random
+    hephaestus::serdes
+    hephaestus::types
+    hephaestus::types_gen_proto
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

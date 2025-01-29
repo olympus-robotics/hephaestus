@@ -27,8 +27,8 @@ struct Message {
 
 TEST(MessageQueueConsumer, Fail) {
 #ifndef DISABLE_EXCEPTION
-  EXPECT_THROW(std::ignore = MessageQueueConsumer<Message>([](const Message&) {}, 0),
-               InvalidParameterException);
+  EXPECT_THROW_OR_DEATH(std::ignore = MessageQueueConsumer<Message>([](const Message&) {}, 0),
+                        InvalidParameterException, "");
 #endif
 }
 
