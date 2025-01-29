@@ -25,5 +25,5 @@ cc_library(
     ],
     includes = ["cpp/mcap/include"],
     visibility = ["//visibility:public"],
-    deps = [":mcap_src"],
+    deps = [":mcap_src", :"@zstd"],
 )
