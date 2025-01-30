@@ -15,7 +15,7 @@ namespace heph::bag::tests {
 namespace {
 using TestCasesT = std::vector<std::pair<std::string, bool>>;
 
-auto runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) -> void {
+void runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) {
   for (const auto& [input, expected_output] : test_cases) {
     EXPECT_EQ(filter.isAcceptable(input), expected_output) << "input: " << input;
   }

@@ -47,7 +47,7 @@ private:
   TerminationBlocker() = default;
   [[nodiscard]] static auto instance() -> TerminationBlocker&;
 
-  static auto signalHandler(int /*unused*/) -> void;
+  static void signalHandler(int /*unused*/);
 
 private:
   std::atomic_flag stop_flag_ = ATOMIC_FLAG_INIT;
