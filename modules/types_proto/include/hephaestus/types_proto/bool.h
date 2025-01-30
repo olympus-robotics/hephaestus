@@ -18,7 +18,7 @@ namespace heph::types::proto {
 
 /// \brief Convert a numeric value to a protobuf message. These functions are specialized for each numeric
 /// type. The main usage is to allow for serialization of templated numeric types.
-auto toProto(Bool& proto_value, bool value) -> void;
-auto fromProto(const Bool& proto_value, bool& value) -> void;
+void toProto(Bool& proto_value, bool value);
+void fromProto(const Bool& proto_value, bool& value);
 
 }  // namespace heph::types::proto

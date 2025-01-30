@@ -23,10 +23,10 @@ template <class T>
 [[nodiscard]] auto serializeToText(const T& data) -> std::string;
 
 template <class T>
-auto deserialize(std::span<const std::byte> buffer, T& data) -> void;
+void deserialize(std::span<const std::byte> buffer, T& data);
 
 template <class T>
-auto deserializeFromText(std::string_view buffer, T& data) -> void;
+void deserializeFromText(std::string_view buffer, T& data);
 
 template <class T>
 auto getSerializedTypeInfo() -> TypeInfo;
@@ -46,12 +46,12 @@ template <protobuf::ProtobufSerializable T>
 }
 
 template <protobuf::ProtobufSerializable T>
-auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
+void deserialize(std::span<const std::byte> buffer, T& data) {
   protobuf::deserialize(buffer, data);
 }
 
 template <protobuf::ProtobufSerializable T>
-auto deserializeFromText(std::string_view buffer, T& data) -> void {
+void deserializeFromText(std::string_view buffer, T& data) {
   protobuf::deserializeFromText(buffer, data);
 }
 

@@ -18,12 +18,12 @@ struct ProtoAssociation<containers::BitFlag<EnumT>> {
 namespace heph::containers {
 
 template <typename EnumT>
-auto toProto(proto::BitFlag& proto_bit_flag, const BitFlag<EnumT>& bit_flag) -> void {
+void toProto(proto::BitFlag& proto_bit_flag, const BitFlag<EnumT>& bit_flag) {
   proto_bit_flag.set_value(bit_flag.getUnderlyingValue());
 }
 
 template <typename EnumT>
-auto fromProto(const proto::BitFlag& proto_bit_flag, BitFlag<EnumT>& bit_flag) -> void {
+void fromProto(const proto::BitFlag& proto_bit_flag, BitFlag<EnumT>& bit_flag) {
   bit_flag = BitFlag<EnumT>{ static_cast<BitFlag<EnumT>::T>(proto_bit_flag.value()) };
 }
 
