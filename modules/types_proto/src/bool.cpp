@@ -8,11 +8,11 @@
 
 namespace heph::types::proto {
 
-auto toProto(Bool& proto_value, bool value) -> void {
+void toProto(Bool& proto_value, bool value) {
   proto_value.set_value(value);
 }
 
-auto fromProto(const Bool& proto_value, bool& value) -> void {
+void fromProto(const Bool& proto_value, bool& value) {
   value = proto_value.value();
 }
 

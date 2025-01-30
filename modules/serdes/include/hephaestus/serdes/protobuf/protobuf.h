@@ -32,13 +32,13 @@ template <class T>
 [[nodiscard]] auto serializeToText(const T& data) -> std::string;
 
 template <class T>
-auto deserialize(std::span<const std::byte> buffer, T& data) -> void;
+void deserialize(std::span<const std::byte> buffer, T& data);
 
 template <class T>
-auto deserializeFromJSON(std::string_view buffer, T& data) -> void;
+void deserializeFromJSON(std::string_view buffer, T& data);
 
 template <class T>
-auto deserializeFromText(std::string_view buffer, T& data) -> void;
+void deserializeFromText(std::string_view buffer, T& data);
 
 /// Create the type info for the serialized type associated with `T`.
 template <class T>
@@ -86,13 +86,13 @@ template <class T>
 }
 
 template <class T>
-auto deserialize(std::span<const std::byte> buffer, T& data) -> void {
+void deserialize(std::span<const std::byte> buffer, T& data) {
   DeserializerBuffer des_buffer{ buffer };
   internal::fromProtobuf(des_buffer, data);
 }
 
 template <class T>
-auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
+void deserializeFromJSON(std::string_view buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto status = google::protobuf::util::JsonStringToMessage(buffer, &proto);
@@ -103,7 +103,7 @@ auto deserializeFromJSON(std::string_view buffer, T& data) -> void {
 }
 
 template <class T>
-auto deserializeFromText(std::string_view buffer, T& data) -> void {
+void deserializeFromText(std::string_view buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
 

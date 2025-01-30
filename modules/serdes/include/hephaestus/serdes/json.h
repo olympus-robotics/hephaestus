@@ -43,7 +43,7 @@ template <class T>
 /// Deserialize data from JSON.
 /// See `serializeToJSON` for more details.
 template <class T>
-auto deserializeFromJSON(std::string_view json, T& data) -> void;
+void deserializeFromJSON(std::string_view json, T& data);
 
 // -----------------------------------------------------------------------------------------------
 // Specializations
@@ -66,17 +66,17 @@ auto serializeToJSON(const T& data) -> std::string {
 }
 
 template <protobuf::ProtobufSerializable T>
-auto deserializeFromJSON(std::string_view json, T& data) -> void {
+void deserializeFromJSON(std::string_view json, T& data) {
   protobuf::deserializeFromJSON(json, data);
 }
 
 template <JSONDeserializable T>
-auto deserializeFromJSON(std::string_view json, T& data) -> void {
+void deserializeFromJSON(std::string_view json, T& data) {
   fromJSON(json, data);
 }
 
 template <NlohmannJSONSerializable T>
-auto deserializeFromJSON(std::string_view json, T& data) -> void {
+void deserializeFromJSON(std::string_view json, T& data) {
   data = nlohmann::json::parse(json).get<T>();
 }
 

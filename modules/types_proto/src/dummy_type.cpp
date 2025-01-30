@@ -17,8 +17,7 @@ namespace {
 // Vector
 //=================================================================================================
 template <typename T, typename ProtoT>
-auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec)
-    -> void {
+void toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec) {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
   proto_repeated_field.Reserve(static_cast<int>(vec.size()));
   for (const auto& value : vec) {
@@ -27,8 +26,7 @@ auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, cons
 }
 
 template <typename T, typename ProtoT>
-auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec)
-    -> void {
+void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec) {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
   for (const auto& proto_value : proto_repeated_field) {
@@ -39,8 +37,8 @@ auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_fie
 //=================================================================================================
 // DummyPrimitivesType
 //=================================================================================================
-auto toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
-             const DummyPrimitivesType& dummy_primitives_type) -> void {
+void toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
+             const DummyPrimitivesType& dummy_primitives_type) {
   proto_dummy_primitives_type.set_dummy_bool(dummy_primitives_type.dummy_bool);
 
   proto_dummy_primitives_type.set_dummy_int8_t(dummy_primitives_type.dummy_int8_t);
@@ -57,8 +55,8 @@ auto toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
   proto_dummy_primitives_type.set_dummy_double(dummy_primitives_type.dummy_double);
 }
 
-auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
-               DummyPrimitivesType& dummy_primitives_type) -> void {
+void fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
+               DummyPrimitivesType& dummy_primitives_type) {
   dummy_primitives_type.dummy_bool = proto_dummy_primitives_type.dummy_bool();
 
   dummy_primitives_type.dummy_int8_t =
@@ -83,7 +81,7 @@ auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
 // DummyType
 //=================================================================================================
 
-auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) -> void {
+void toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) {
   toProto(*proto_dummy_type.mutable_dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
   proto_dummy_type.set_internal_dummy_enum(
@@ -96,7 +94,7 @@ auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) ->
   toProto(*proto_dummy_type.mutable_dummy_vector(), dummy_type.dummy_vector);
 }
 
-auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) -> void {
+void fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) {
   fromProto(proto_dummy_type.dummy_primitives_type(), dummy_type.dummy_primitives_type);
 
   serdes::protobuf::fromProto(proto_dummy_type.internal_dummy_enum(), dummy_type.internal_dummy_enum);
