@@ -19,29 +19,38 @@
 
 namespace heph::ipc::zenoh {
 
-enum class PublisherStatus : uint8_t { ALIVE = 0, DROPPED };
-struct PublisherInfo {
+enum class ActorType : uint8_t { PUBLISHER = 0, SUBSCRIBER, SERVICE, ACTION_SERVER };
+
+struct ActorInfo {
+  enum class Status : uint8_t { ALIVE = 0, DROPPED };
+  std::string session_id;
   std::string topic;
-  PublisherStatus status;
+  ActorType type;
+  Status status;
 };
 
-[[nodiscard]] auto getListOfPublishers(const Session& session, std::string_view topic = "**")
-    -> std::vector<PublisherInfo>;
+[[nodiscard]] auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
+                                                  ActorType actor_type) -> std::string;
 
-void printPublisherInfo(const PublisherInfo& info);
+[[nodiscard]] auto parseLivelinessTokenKeyexpr(std::string_view keyexpr) -> std::optional<ActorInfo>;
+
+[[nodiscard]] auto getListOfActors(const Session& session, std::string_view topic = "**")
+    -> std::vector<ActorInfo>;
+
+void printActorInfo(const ActorInfo& info);
 
 /// Class to detect all the publisher present in the network.
 /// The publisher need to advertise their presence with the liveliness token.
-class PublisherDiscovery {
+class ActorDiscovery {
 public:
-  using Callback = std::function<void(const PublisherInfo& info)>;
-  explicit PublisherDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
-  ~PublisherDiscovery();
+  using Callback = std::function<void(const ActorInfo& info)>;
+  explicit ActorDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
+  ~ActorDiscovery();
 
-  PublisherDiscovery(const PublisherDiscovery&) = delete;
-  PublisherDiscovery(PublisherDiscovery&&) = delete;
-  auto operator=(const PublisherDiscovery&) -> PublisherDiscovery& = delete;
-  auto operator=(PublisherDiscovery&&) -> PublisherDiscovery& = delete;
+  ActorDiscovery(const ActorDiscovery&) = delete;
+  ActorDiscovery(ActorDiscovery&&) = delete;
+  auto operator=(const ActorDiscovery&) -> ActorDiscovery& = delete;
+  auto operator=(ActorDiscovery&&) -> ActorDiscovery& = delete;
 
 private:
   void createLivelinessSubscriber();
@@ -54,7 +63,7 @@ private:
   std::unique_ptr<::zenoh::Subscriber<void>> liveliness_subscriber_;
 
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
-  std::unique_ptr<concurrency::MessageQueueConsumer<PublisherInfo>> infos_consumer_;
+  std::unique_ptr<concurrency::MessageQueueConsumer<ActorInfo>> infos_consumer_;
 };
 
 }  // namespace heph::ipc::zenoh

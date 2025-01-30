@@ -25,14 +25,13 @@
 
 namespace {
 void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
-  const auto publishers_info = heph::ipc::zenoh::getListOfPublishers(session, topic);
-  std::ranges::for_each(publishers_info.begin(), publishers_info.end(),
-                        &heph::ipc::zenoh::printPublisherInfo);
+  const auto publishers_info = heph::ipc::zenoh::getListOfActors(session, topic);
+  std::ranges::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printActorInfo);
 }
 
 void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
-  const heph::ipc::zenoh::PublisherDiscovery discover{ std::move(session), std::move(topic_config),
-                                                       &heph::ipc::zenoh::printPublisherInfo };
+  const heph::ipc::zenoh::ActorDiscovery discover{ std::move(session), std::move(topic_config),
+                                                   &heph::ipc::zenoh::printActorInfo };
 
   heph::utils::TerminationBlocker::waitForInterrupt();
 }

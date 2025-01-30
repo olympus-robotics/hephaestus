@@ -47,15 +47,15 @@ public:
   [[nodiscard]] auto stop() -> std::future<void>;
 
 private:
-  void onPublisher(const PublisherInfo& info);
-  void onPublisherAdded(const PublisherInfo& info);
-  void onPublisherDropped(const PublisherInfo& info);
+  void onPublisher(const ActorInfo& info);
+  void onPublisherAdded(const ActorInfo& info);
+  void onPublisherDropped(const ActorInfo& info);
 
 private:
   SessionPtr session_;
   TopicFilter topic_filter_;
 
-  std::unique_ptr<PublisherDiscovery> discover_publishers_;
+  std::unique_ptr<ActorDiscovery> discover_publishers_;
 
   std::unique_ptr<ITopicDatabase> topic_db_;
 

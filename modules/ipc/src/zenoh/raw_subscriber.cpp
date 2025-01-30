@@ -18,11 +18,12 @@
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/closures.hxx>
+#include <zenoh/api/ext/advanced_subscriber.hxx>
 #include <zenoh/api/ext/serialization.hxx>
+#include <zenoh/api/ext/session_ext.hxx>
 #include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/sample.hxx>
-#include <zenoh/api/subscriber.hxx>
 #include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>
 #include <zenoh_macros.h>
@@ -30,6 +31,7 @@
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
@@ -84,36 +86,29 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
-  , enable_cache_(session_->config.cache_size > 0)
   , dedicated_callback_thread_(dedicated_callback_thread) {
-  auto cb = [this](const ::zenoh::Sample& sample) { this->callback(sample); };
-  if (!enable_cache_) {
-    ::zenoh::ZResult result{};
-    const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
-    subscriber_ = std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.declare_subscriber(
-        keyexpr, std::move(cb), ::zenoh::closures::none,
-        ::zenoh::Session::SubscriberOptions::create_default(), &result));
-    heph::throwExceptionIf<heph::FailedZenohOperation>(
-        result != Z_OK,
-        fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
-  } else {
-    // zenohcxx still doesn't support cache querying subscribers, so we have to use the C API.
-    ze_querying_subscriber_options_t sub_opts;
-    ze_querying_subscriber_options_default(&sub_opts);
-
-    z_view_keyexpr_t keyexpr;
-    z_view_keyexpr_from_str(&keyexpr, topic_config_.name.c_str());
-
-    auto c_closure = createZenohcClosure(cb, ::zenoh::closures::none);
-
-    const auto result =
-        ze_declare_querying_subscriber(::zenoh::interop::as_loaned_c_ptr(session_->zenoh_session),
-                                       &cache_subscriber_, z_loan(keyexpr), z_move(c_closure), &sub_opts);
-
-    heph::throwExceptionIf<heph::FailedZenohOperation>(
-        result != Z_OK,
-        fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
+  auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
+  if (session_->config.cache_size > 0) {
+    sub_options.history =
+        ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::HistoryOptions::create_default();
+    sub_options.history->max_samples = session_->config.cache_size;
   }
+
+  ::zenoh::ZResult result{};
+  const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
+  subscriber_ = std::make_unique<::zenoh::ext::AdvancedSubscriber<void>>(
+      session_->zenoh_session.ext().declare_advanced_subscriber(
+          keyexpr, [this](const ::zenoh::Sample& sample) { this->callback(sample); }, []() {},
+          std::move(sub_options), &result));
+  heph::throwExceptionIf<heph::FailedZenohOperation>(
+      result != Z_OK,
+      fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
+
+  liveliness_token_ =
+      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                         ActorType::SUBSCRIBER),
+          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
 
   if (dedicated_callback_thread_) {
     callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
@@ -133,15 +128,11 @@ RawSubscriber::~RawSubscriber() {
     stopped.get();
   }
 
-  if (enable_cache_) {
-    z_drop(z_move(cache_subscriber_));
-  } else {
-    try {
-      std::move(*subscriber_).undeclare();
-    } catch (std::exception& e) {
-      heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
-                e.what());
-    }
+  try {
+    std::move(*subscriber_).undeclare();
+  } catch (std::exception& e) {
+    heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
+              e.what());
   }
 }
 

@@ -9,6 +9,7 @@
 namespace heph::ipc {
 
 struct TopicConfig {
+  explicit TopicConfig(std::string name);
   std::string name;
 };
 

@@ -61,10 +61,10 @@ private:
 
 private:
   SessionPtr session_;
-  ::zenoh::ext::SessionExt session_ext_;
 
   TopicConfig topic_config_;
   std::unique_ptr<::zenoh::ext::AdvancedPublisher> publisher_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   serdes::TypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_service_;

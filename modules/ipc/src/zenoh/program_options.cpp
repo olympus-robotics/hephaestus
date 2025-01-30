@@ -33,7 +33,7 @@ void appendProgramOption(cli::ProgramDescription& program_description,
 }
 
 auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
-  TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
+  TopicConfig topic_config{ args.getOption<std::string>("topic") };
 
   Config config;
   config.cache_size = args.getOption<std::size_t>("cache");

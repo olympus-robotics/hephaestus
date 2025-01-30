@@ -115,7 +115,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
   };
 
   publishers_[channel.topic] = std::make_unique<ipc::zenoh::RawPublisher>(
-      session_, ipc::TopicConfig{ .name = channel.topic }, std::move(type_info),
+      session_, ipc::TopicConfig{ channel.topic }, std::move(type_info),
       [this, &channel](ipc::zenoh::MatchingStatus status) {
         if (!status.matching) {
           return;

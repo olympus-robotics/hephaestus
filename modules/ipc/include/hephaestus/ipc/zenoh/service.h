@@ -31,6 +31,7 @@
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
@@ -64,6 +65,7 @@ private:
 private:
   SessionPtr session_;
   std::unique_ptr<::zenoh::Queryable<void>> queryable_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   TopicConfig topic_config_;
   Callback callback_;
@@ -231,6 +233,15 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
       fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
+
+  liveliness_token_ =
+      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                         ActorType::SERVICE),
+          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+  throwExceptionIf<FailedZenohOperation>(
+      result != Z_OK,
+      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
 }
 
 template <typename RequestT, typename ReplyT>

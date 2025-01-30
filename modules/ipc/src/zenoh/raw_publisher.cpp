@@ -29,6 +29,7 @@
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
@@ -37,7 +38,6 @@ namespace heph::ipc::zenoh {
 RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
                            MatchCallback&& match_cb)
   : session_(std::move(session))
-  , session_ext_(session->zenoh_session)
   , topic_config_(std::move(topic_config))
   , type_info_(std::move(type_info))
   , match_cb_(std ::move(match_cb)) {
@@ -49,14 +49,23 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   }
 
   if (session_->config.cache_size > 0) {
+    pub_options.cache = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::CacheOptions::create_default();
     pub_options.cache->max_samples = session_->config.cache_size;
   }
 
-  pub_options.publisher_detection = true;
-
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   publisher_ = std::make_unique<::zenoh::ext::AdvancedPublisher>(
-      session_ext_.declare_advanced_publisher(keyexpr, std::move(pub_options)));
+      session_->zenoh_session.ext().declare_advanced_publisher(keyexpr, std::move(pub_options)));
+
+  ::zenoh::ZResult result{};
+  liveliness_token_ =
+      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                         ActorType::PUBLISHER),
+          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+  throwExceptionIf<FailedZenohOperation>(
+      result != Z_OK,
+      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
 
   if (match_cb_ != nullptr) {
     matching_listener_ =
@@ -94,7 +103,7 @@ void RawPublisher::createTypeInfoService() {
     (void)request;
     return type_info_json;
   };
-  auto type_service_topic = TopicConfig{ .name = getTypeInfoServiceTopic(topic_config_.name) };
+  auto type_service_topic = TopicConfig{ getTypeInfoServiceTopic(topic_config_.name) };
   type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
                                                                       std::move(type_info_callback));
 }
