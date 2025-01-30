@@ -50,7 +50,7 @@ public:
   void onDiscovery(const ::zenoh::Hello& hello) {
     const absl::MutexLock lock{ &mutex_ };
 
-    const auto id = toString(hello.get_id());
+    const auto id = hello.get_id().to_string();
     nodes_info_.emplace(id, NodeInfo{ .id = id,
                                       .mode = toMode(hello.get_whatami()),
                                       .locators = toStringVector(hello.get_locators()) });

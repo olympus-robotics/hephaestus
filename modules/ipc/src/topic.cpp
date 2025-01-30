@@ -4,6 +4,9 @@
 
 #include "hephaestus/ipc/topic.h"
 
+#include <string>
+#include <utility>
+
 #include <fmt/format.h>
 
 #include "hephaestus/utils/exception.h"

@@ -22,6 +22,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/filesystem/scoped_path.h"
@@ -29,6 +30,16 @@
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
+
+class MyEnvironment : public Environment {
+public:
+  ~MyEnvironment() = default;
+  void SetUp() override {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
+  }
+};
+// NOLINTNEXTLINE
+const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
 
 namespace heph::bag::tests {
 namespace {

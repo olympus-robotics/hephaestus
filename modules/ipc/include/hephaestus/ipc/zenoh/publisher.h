@@ -31,8 +31,8 @@ public:
     return publisher_.publish(buffer);
   }
 
-  [[nodiscard]] auto id() const -> std::string {
-    return publisher_.id();
+  [[nodiscard]] auto sessionId() const -> std::string {
+    return publisher_.sessionId();
   }
 
 private:

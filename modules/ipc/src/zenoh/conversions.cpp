@@ -49,8 +49,14 @@ auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
 }
 
 auto toString(const ::zenoh::Id& id) -> std::string {
-  return std::accumulate(std::begin(id.bytes()), std::end(id.bytes()), std::string(),
-                         [](const std::string& s, uint8_t v) { return fmt::format("{:02x}", v) + s; });
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  if (std::ranges::any_of(id.bytes(), [](const auto byte) {
+        fmt::println("{}", static_cast<int>(byte));
+        return static_cast<int>(byte) > 172 || static_cast<int>(byte) < 60;
+      })) {
+    return id.to_string();
+  }
+  return { reinterpret_cast<const char*>(id.bytes().data()), id.bytes().size() };
 }
 
 auto toString(const std::vector<std::string>& vec) -> std::string {

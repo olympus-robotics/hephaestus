@@ -118,6 +118,7 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
 auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
                                     ActorType actor_type) -> std::string {
   return fmt::format("{}/{}/{}", topic, toString(session_id), actorTypeToSuffix(actor_type));
+  // return fmt::format("{}/{}/{}", topic, session_id.to_string(), actorTypeToSuffix(actor_type));
 }
 
 auto getListOfActors(const Session& session, std::string_view topic) -> std::vector<ActorInfo> {

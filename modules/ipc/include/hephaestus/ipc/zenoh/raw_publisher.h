@@ -50,7 +50,7 @@ public:
 
   [[nodiscard]] auto publish(std::span<const std::byte> data) -> bool;
 
-  [[nodiscard]] auto id() const -> std::string {
+  [[nodiscard]] auto sessionId() const -> std::string {
     return toString(session_->zenoh_session.get_zid());
   }
 

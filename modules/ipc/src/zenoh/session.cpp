@@ -3,6 +3,7 @@
 //=================================================================================================
 #include "hephaestus/ipc/zenoh/session.h"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -10,10 +11,14 @@
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::ipc::zenoh {
 namespace {
+
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> ::zenoh::Config {
   throwExceptionIf<InvalidParameterException>(config.qos && config.real_time,
@@ -22,6 +27,22 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
                                               "cannot specify both protocol and the router endpoint");
 
   auto zconfig = ::zenoh::Config::create_default();
+
+  if (config.id.has_value()) {
+    static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
+    auto session_id = config.id.value();
+    if (session_id.size() > MAX_SESSION_ID_SIZE) {
+      heph::log(heph::WARN, "session id is too long, truncating", "session_id", session_id, "max_size",
+                MAX_SESSION_ID_SIZE);
+      session_id = session_id.substr(0, MAX_SESSION_ID_SIZE);
+    }
+
+    // Zenoh reverse this.
+    std::ranges::reverse(session_id);
+    const auto hex_str = utils::string::toHex(session_id);
+    zconfig.insert_json5("id", fmt::format(R"("{}")", hex_str));  // NOLINT(misc-include-cleaner)
+  }
+
   // A timestamp is add to every published message.
   zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
 
