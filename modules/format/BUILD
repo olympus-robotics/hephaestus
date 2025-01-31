@@ -2,7 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library", "heph_cc_test")
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -20,6 +20,20 @@ heph_cc_library(
         "//modules/utils",
         "@fmt",
         "@reflect-cpp",
+    ],
+)
+
+############
+# Examples #
+############
+
+heph_cc_binary(
+    name = "generic_formatter_example",
+    srcs = [
+        "examples/generic_formatter_example.cpp",
+    ],
+    deps = [
+        ":format",
     ],
 )
 

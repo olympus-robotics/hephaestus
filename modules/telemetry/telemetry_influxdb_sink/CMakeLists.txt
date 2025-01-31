@@ -17,8 +17,13 @@ set(SOURCES src/influxdb_metric_sink.cpp include/hephaestus/telemetry_influxdb_s
 # library target
 define_module_library(
   NAME telemetry_influxdb_sink
-  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::random hephaestus::serdes hephaestus::telemetry
-                   InfluxData::InfluxDB fmt::fmt
+  PUBLIC_LINK_LIBS
+    fmt::fmt
+    hephaestus::concurrency
+    hephaestus::random
+    hephaestus::serdes
+    hephaestus::telemetry
+    InfluxData::InfluxDB
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

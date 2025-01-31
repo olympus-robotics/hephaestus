@@ -22,9 +22,8 @@ cc_library(
     ]),
     defines = [
         "MCAP_COMPRESSION_NO_LZ4",
-        "MCAP_COMPRESSION_NO_ZSTD",
     ],
     includes = ["cpp/mcap/include"],
     visibility = ["//visibility:public"],
-    deps = [":mcap_src"],
+    deps = [":mcap_src", "@zstd"],
 )

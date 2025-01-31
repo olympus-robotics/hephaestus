@@ -20,7 +20,7 @@ using namespace ::testing;
 namespace heph::containers::tests {
 
 TEST(BlockingQueue, Failures) {
-  EXPECT_THROW(BlockingQueue<int>{ 0 }, InvalidParameterException);
+  EXPECT_THROW_OR_DEATH(BlockingQueue<int>{ 0 }, InvalidParameterException, "");
 }
 
 TEST(BlockingQueue, Push) {

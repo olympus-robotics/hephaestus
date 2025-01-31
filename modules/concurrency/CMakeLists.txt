@@ -5,11 +5,12 @@
 declare_module(
   NAME concurrency
   DEPENDS_ON_MODULES utils containers random
-  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt Protobuf
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
+find_package(Protobuf REQUIRED)
 
 # library sources
 set(SOURCES
@@ -25,7 +26,12 @@ set(SOURCES
 # library target
 define_module_library(
   NAME concurrency
-  PUBLIC_LINK_LIBS hephaestus::containers hephaestus::utils hephaestus::telemetry fmt::fmt
+  PUBLIC_LINK_LIBS
+    fmt::fmt
+    hephaestus::containers
+    hephaestus::telemetry
+    hephaestus::utils
+    protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

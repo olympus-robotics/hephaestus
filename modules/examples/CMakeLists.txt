@@ -1,7 +1,7 @@
 declare_module(
   NAME examples
-  DEPENDS_ON_MODULES bag utils ipc random serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf
+  DEPENDS_ON_MODULES bag utils ipc random serdes types_proto types
+  DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf zstd
   EXCLUDE_FROM_ALL
 )
 
@@ -9,6 +9,8 @@ find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(mcap REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(zstd REQUIRED)
 
 add_subdirectory(proto)
 
@@ -20,7 +22,15 @@ set(TYPES_SOURCES src/types/pose.cpp README.md include/hephaestus/examples/types
 # library target
 define_module_library(
   NAME examples_types
-  PUBLIC_LINK_LIBS absl::base absl::status Eigen3::Eigen hephaestus::bag fmt::fmt mcap
+  PUBLIC_LINK_LIBS
+    absl::base
+    absl::status
+    fmt::fmt
+    Eigen3::Eigen
+    hephaestus::bag
+    hephaestus::action_server_types_proto
+    mcap
+    zstd::libzstd
   PRIVATE_LINK_LIBS ""
   SOURCES ${TYPES_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -38,8 +48,14 @@ set(types_proto_SOURCES
 # library target
 define_module_library(
   NAME examples_types_proto
-  PUBLIC_LINK_LIBS hephaestus::utils hephaestus::serdes hephaestus::random hephaestus::examples_types
-                   hephaestus::examples_types_gen_proto Eigen3::Eigen
+  PUBLIC_LINK_LIBS
+    Eigen3::Eigen 
+    hephaestus::utils
+    hephaestus::serdes
+    hephaestus::random
+    hephaestus::examples_types
+    hephaestus::examples_types_gen_proto
+    protobuf::libprotobuf
   PRIVATE_LINK_LIBS ""
   SOURCES ${types_proto_SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

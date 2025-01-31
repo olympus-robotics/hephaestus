@@ -16,7 +16,10 @@ set(SOURCES README.md include/hephaestus/containers_proto/bit_flag.h)
 # library target
 define_module_library(
   NAME containers_proto
-  PUBLIC_LINK_LIBS hephaestus::containers hephaestus::serdes hephaestus::containers_gen_proto
+  PUBLIC_LINK_LIBS
+    hephaestus::containers
+    hephaestus::serdes 
+    hephaestus::containers_gen_proto
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

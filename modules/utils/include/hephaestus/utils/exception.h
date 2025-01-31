@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #ifdef DISABLE_EXCEPTIONS
+#include <absl/log/absl_check.h>
 #include <fmt/format.h>
 #endif
 
@@ -41,8 +42,8 @@ constexpr void throwException(const std::string& message,
   throw T{ message, location };
 #else
   auto e = T{ message, location };
-  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                              location.line());
+  ABSL_CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                   location.line());
 #endif
 }
 
@@ -62,10 +63,27 @@ constexpr void throwExceptionIf(bool condition, const std::string& message,
   }
 #else
   auto e = T{ message, location };
-  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                   location.line());
+  ABSL_CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                        location.line());
 #endif
 }
+
+/// @brief Macro to test if a statement throws an exception or causes a program death depending
+/// on whether the library is compiled with exceptions enabled.
+/// @param statement The statement to be tested.
+/// @param expected_exception The type of exception expected to be thrown.
+/// @param expected_matcher The matcher to be used in case of program death.
+/// @note If `DISABLE_EXCEPTIONS` is defined, this macro uses `EXPECT_DEATH` to check for program death.
+///       Otherwise, it uses `EXPECT_THROW` to check for the expected exception.
+#ifdef DISABLE_EXCEPTIONS
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_DEATH(statement, expected_matcher)
+#else
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_THROW(statement, expected_exception)
+// NOLINTEND(cppcoreguidelines-macro-usage)
+#endif
 
 //=================================================================================================
 /// Exception raised on operating with mismatched types. Examples

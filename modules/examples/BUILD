@@ -30,6 +30,7 @@ heph_cc_library(
         "@eigen",
         "@fmt",
         "@protobuf",
+        "@zstd",
     ],
 )
 
@@ -148,17 +149,6 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
-    ],
-)
-
-heph_cc_binary(
-    name = "generic_formatter_example",
-    srcs = [
-        "examples/generic_formatter_example.cpp",
-    ],
-    deps = [
-        ":examples",
-        "//modules/format",
     ],
 )
 

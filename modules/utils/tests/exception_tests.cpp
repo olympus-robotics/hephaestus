@@ -15,7 +15,7 @@ namespace heph::utils::tests {
 TEST(Exception, Throw) {
 #ifndef DISABLE_EXCEPTIONS
   auto throwing_func = []() { throwException<TypeMismatchException>("type mismatch"); };
-  EXPECT_THROW(throwing_func(), TypeMismatchException);
+  EXPECT_THROW_OR_DEATH(throwing_func(), TypeMismatchException, "type mismatch");
 
   try {
     throwing_func();

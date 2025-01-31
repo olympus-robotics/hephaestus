@@ -187,10 +187,26 @@ add_cmake_dependency(
 )
 
 # --------------------------------------------------------------------------------------------------
+# zstd
+set(ZSTD_VERSION "1.5.6")
+set(ZSTD_CMAKE_ARGS -DZSTD_BUILD_STATIC=ON -DZSTD_BUILD_SHARED=OFF -DZSTD_BUILD_TESTS=OFF -G Ninja)
+add_cmake_dependency(
+  NAME zstd
+  VERSION ${ZSTD_VERSION}
+  URL "https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz"
+  SOURCE_SUBDIR build/cmake
+  CMAKE_ARGS ${ZSTD_CMAKE_ARGS}
+)
+
+# --------------------------------------------------------------------------------------------------
 # mcap
 set(MCAP_TAG ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee)
+set(MCAP_CMAKE_ARGS -DMCAP_COMPRESSION_NO_LZ4=ON)
 add_cmake_dependency(
-  NAME mcap VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
+  NAME mcap
+  VERSION ${MCAP_VERSION}
+  URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
+  CMAKE_ARGS ${MCAP_CMAKE_ARGS}
 )
 
 # --------------------------------------------------------------------------------------------------

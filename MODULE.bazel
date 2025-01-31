@@ -83,9 +83,10 @@ git_override(
     remote = "https://github.com/ericniebler/range-v3",
 )
 
+bazel_dep(name = "zstd", version = "1.5.6")
+
 # TODO: eventually add
 # bazel_dep(name = "lz4", version = "1.9.4")
-# bazel_dep(name = "zstd", version = "1.5.6")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")

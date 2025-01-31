@@ -1,7 +1,9 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
 #include <format>
+#endif
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -145,12 +147,15 @@ TEST_F(LogTestFixture, logLibFmt) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
+// TODO(mfehr): Currently not supported by the libc++ version we have.
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
 TEST_F(LogTestFixture, logStdFmt) {
   const int num = 456;
   heph::log(heph::ERROR, std::format("this {} is formatted", num));
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
+#endif
 
 TEST_F(LogTestFixture, logWithFields) {
   using namespace std::literals::string_literals;

@@ -42,3 +42,4 @@ build-gcc/
 bazel-*
 MODULE.bazel.lock
 command.profile.gz
+compile_commands.json

@@ -62,21 +62,27 @@ TEST(ProgramOptions, Option) {
 TEST(ProgramOptions, Errors) {
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
-    EXPECT_THROW(std::move(desc).parse({ "--option" }), InvalidParameterException);
+    EXPECT_THROW_OR_DEATH(std::move(desc).parse({ "--option" }), InvalidParameterException,
+                          "Undefined option");
   }
 
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
     desc.defineOption<std::string>("option", "desc").defineOption<int>("other", "desc");
-    EXPECT_THROW(ProgramDescription{ desc }.parse({}), InvalidConfigurationException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option" }), InvalidParameterException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "value" }), InvalidParameterException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "--other_option" }),
-                 InvalidParameterException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }),
-                 InvalidParameterException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value" }), InvalidConfigurationException);
-    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "-o" }), InvalidParameterException);
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({}), InvalidConfigurationException,
+                          "Required option 'option' not specified");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option" }), InvalidParameterException,
+                          "is supposed to be a value");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "value" }), InvalidParameterException,
+                          "Arg value is not a valid option");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }),
+                          InvalidParameterException, "not another option");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }),
+                          InvalidParameterException, "not a valid option");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }),
+                          InvalidConfigurationException, "not specified");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), InvalidParameterException,
+                          "not another option");
   }
 
   {

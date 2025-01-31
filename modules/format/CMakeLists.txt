@@ -17,7 +17,11 @@ set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generi
 # library target
 define_module_library(
   NAME format
-  PUBLIC_LINK_LIBS fmt::fmt reflectcpp::reflectcpp hephaestus::utils
+  PUBLIC_LINK_LIBS
+    fmt::fmt
+    hephaestus::utils
+    reflectcpp::reflectcpp
+  PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
   PRIVATE_INCLUDE_PATHS ""
@@ -26,3 +30,4 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
+add_subdirectory(examples)
