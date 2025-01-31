@@ -151,4 +151,12 @@ public:
   }
 };
 
+//=================================================================================================
+/// Exception raised due to a logic error internal to a class/function.
+class LogicException : public heph::Exception {
+public:
+  LogicException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
+  }
+};
+
 }  // namespace heph
