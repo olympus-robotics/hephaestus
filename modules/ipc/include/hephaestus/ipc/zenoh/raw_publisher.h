@@ -12,10 +12,9 @@
 #include <unordered_map>
 
 #include <fmt/format.h>
-#include <zenoh.h>
 #include <zenoh/api/ext/advanced_publisher.hxx>
-#include <zenoh/api/ext/session_ext.hxx>
 #include <zenoh/api/liveliness.hxx>
+#include <zenoh/api/matching.hxx>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"

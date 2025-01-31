@@ -6,11 +6,12 @@ cc_library(
     name = "zenoh-c",
     srcs = ["lib/libzenohc.a"],
     hdrs = glob(["include/**/*.h"]),
-    includes = ["include"],
     defines = [
         "ZENOH_WITH_UNSTABLE_API",
+        "Z_FEATURE_UNSTABLE_API",
         "ZENOHCXX_ZENOHC",
     ],
+    includes = ["include"],
     visibility = ["//visibility:public"],
 )
 

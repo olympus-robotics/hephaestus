@@ -18,14 +18,10 @@
 #include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/ext/session_ext.hxx>
-#include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/matching.hxx>
 #include <zenoh/api/queryable.hxx>
-#include <zenoh/detail/closures.hxx>
-#include <zenoh/detail/closures_concrete.hxx>
-#include <zenoh_macros.h>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
@@ -33,6 +29,7 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
@@ -109,7 +106,7 @@ void RawPublisher::createTypeInfoService() {
 }
 
 void RawPublisher::initializeAttachment() {
-  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = session_->zenoh_session.get_zid().to_string();
+  attachment_[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY] = toString(session_->zenoh_session.get_zid());
   attachment_[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO] = type_info_.name;
 }
 }  // namespace heph::ipc::zenoh

@@ -23,6 +23,7 @@
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/ext/serialization.hxx>
+#include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/query.hxx>
 #include <zenoh/api/queryable.hxx>
 #include <zenoh/api/reply.hxx>

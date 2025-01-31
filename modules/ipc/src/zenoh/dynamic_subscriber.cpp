@@ -65,15 +65,15 @@ void DynamicSubscriber::onPublisher(const ActorInfo& info) {
 
 void DynamicSubscriber::onPublisherAdded(const ActorInfo& info) {
   std::optional<serdes::TypeInfo> optional_type_info;
+  if (subscribers_.contains(info.topic)) {
+    heph::log(heph::ERROR, "trying to add subscriber for topic but one already exists", "topic", info.topic);
+    return;
+  }
+
   if (init_subscriber_cb_) {
     auto type_info = topic_db_->getTypeInfo(info.topic);
     init_subscriber_cb_(info.topic, type_info);
     optional_type_info = std::move(type_info);
-  }
-
-  if (subscribers_.contains(info.topic)) {
-    heph::log(heph::ERROR, "adding subscriber for topic but one already exists", "topic", info.topic);
-    return;
   }
 
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);

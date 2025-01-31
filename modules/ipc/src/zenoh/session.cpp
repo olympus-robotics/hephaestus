@@ -4,7 +4,9 @@
 #include "hephaestus/ipc/zenoh/session.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include <fmt/format.h>
@@ -15,9 +17,37 @@
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/string/string_utils.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::ipc::zenoh {
 namespace {
+
+[[nodiscard]] auto createSessionId(const std::string& id) -> std::string {
+  static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
+
+  throwExceptionIf<InvalidParameterException>(
+      !utils::string::isAlphanumericString(id),
+      fmt::format("invalid session id: {}, must be an alphanumeric string", id));
+
+  auto session_id = id;
+  if (session_id.size() > MAX_SESSION_ID_SIZE) {
+    heph::log(heph::WARN, "session id is too long, truncating", "session_id", session_id, "max_size",
+              MAX_SESSION_ID_SIZE);
+    session_id = session_id.substr(0, MAX_SESSION_ID_SIZE);
+  }
+
+  // Zenoh reverse this.
+  std::ranges::reverse(session_id);
+  return utils::string::toAsciiHex(session_id);
+}
+
+[[nodiscard]] auto createSessionIdFromBinaryName() -> std::string {
+  auto binary_name = utils::getBinaryPath();
+  throwExceptionIf<InvalidParameterException>(!binary_name.has_value(), "cannot get binary name");
+  std::string filename = binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access)
+  utils::string::removeNonAlphanumericChar(filename);
+  return createSessionId(filename);
+}
 
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> ::zenoh::Config {
@@ -28,19 +58,12 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
 
   auto zconfig = ::zenoh::Config::create_default();
 
-  if (config.id.has_value()) {
-    static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
-    auto session_id = config.id.value();
-    if (session_id.size() > MAX_SESSION_ID_SIZE) {
-      heph::log(heph::WARN, "session id is too long, truncating", "session_id", session_id, "max_size",
-                MAX_SESSION_ID_SIZE);
-      session_id = session_id.substr(0, MAX_SESSION_ID_SIZE);
-    }
-
-    // Zenoh reverse this.
-    std::ranges::reverse(session_id);
-    const auto hex_str = utils::string::toHex(session_id);
-    zconfig.insert_json5("id", fmt::format(R"("{}")", hex_str));  // NOLINT(misc-include-cleaner)
+  if (config.use_binary_name_as_session_id) {
+    const auto session_id = createSessionIdFromBinaryName();
+    zconfig.insert_json5("id", fmt::format(R"("{}")", session_id));  // NOLINT(misc-include-cleaner)
+  } else if (config.id.has_value()) {
+    const auto session_id = createSessionId(config.id.value());
+    zconfig.insert_json5("id", fmt::format(R"("{}")", session_id));  // NOLINT(misc-include-cleaner)
   }
 
   // A timestamp is add to every published message.

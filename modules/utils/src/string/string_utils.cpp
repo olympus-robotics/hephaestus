@@ -4,9 +4,11 @@
 
 #include "hephaestus/utils/string/string_utils.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <iomanip>
+#include <ios>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -38,15 +40,24 @@ auto toScreamingSnakeCase(std::string_view camel_case) -> std::string {
   return absl::AsciiStrToUpper(snake_case);
 }
 
-auto toHex(const std::string& input) -> std::string {
+auto toAsciiHex(const std::string& input) -> std::string {
   std::stringstream ss;
   ss << std::hex << std::setfill('0');
 
-  for (char c : input) {
+  for (const char c : input) {
     ss << std::setw(2) << static_cast<int>(c);
   }
 
   return ss.str();
+}
+
+auto isAlphanumericString(const std::string& input) -> bool {
+  return std::ranges::all_of(input, [](char c) { return std::isalnum(c) != 0; });
+}
+
+void removeNonAlphanumericChar(std::string& str) {
+  const auto [first, last] = std::ranges::remove_if(str, [](char c) { return !std::isalnum(c); });
+  str.erase(first, last);
 }
 
 }  // namespace heph::utils::string

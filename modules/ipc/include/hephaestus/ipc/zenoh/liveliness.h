@@ -8,14 +8,17 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include <zenoh/api/id.hxx>
+#include <zenoh/api/subscriber.hxx>
+
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "zenoh/api/subscriber.hxx"
 
 namespace heph::ipc::zenoh {
 

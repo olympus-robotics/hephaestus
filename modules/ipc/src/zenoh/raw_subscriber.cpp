@@ -17,12 +17,11 @@
 #include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
-#include <zenoh/api/closures.hxx>
 #include <zenoh/api/ext/advanced_subscriber.hxx>
 #include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/ext/session_ext.hxx>
-#include <zenoh/api/interop.hxx>
 #include <zenoh/api/keyexpr.hxx>
+#include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/sample.hxx>
 #include <zenoh/detail/closures.hxx>
 #include <zenoh/detail/closures_concrete.hxx>

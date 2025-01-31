@@ -5,7 +5,9 @@
 #pragma once
 
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <cxxabi.h>
@@ -25,5 +27,7 @@ auto getTypeName() -> std::string {
 }
 
 [[nodiscard]] auto getHostName() -> std::string;
+
+[[nodiscard]] auto getBinaryPath() -> std::optional<std::filesystem::path>;
 
 }  // namespace heph::utils

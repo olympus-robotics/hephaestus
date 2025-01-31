@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include <zenoh.h>
 #include <zenoh/api/ext/advanced_subscriber.hxx>
+#include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/sample.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"

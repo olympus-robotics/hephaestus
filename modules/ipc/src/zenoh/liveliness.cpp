@@ -4,13 +4,10 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
-#include <algorithm>
 #include <exception>
-#include <iterator>
 #include <memory>
 #include <optional>
 #include <ranges>
-#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -25,6 +22,7 @@
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
+#include <zenoh/api/id.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/reply.hxx>
 #include <zenoh/api/sample.hxx>
@@ -118,7 +116,6 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
 auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
                                     ActorType actor_type) -> std::string {
   return fmt::format("{}/{}/{}", topic, toString(session_id), actorTypeToSuffix(actor_type));
-  // return fmt::format("{}/{}/{}", topic, session_id.to_string(), actorTypeToSuffix(actor_type));
 }
 
 auto getListOfActors(const Session& session, std::string_view topic) -> std::vector<ActorInfo> {

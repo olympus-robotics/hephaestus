@@ -4,10 +4,10 @@
 
 #include "hephaestus/ipc/zenoh/conversions.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <span>
 #include <string>
 #include <string_view>
@@ -17,6 +17,8 @@
 #include <zenoh/api/bytes.hxx>
 #include <zenoh/api/id.hxx>
 #include <zenoh/api/timestamp.hxx>
+
+#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -31,6 +33,13 @@ namespace {
       std::chrono::nanoseconds{ static_cast<uint64_t>(fraction) * 1'000'000'000 / 0x100000000 };  // NOLINT
 
   return seconds + nanoseconds;
+}
+
+[[nodiscard]] auto fromAsciiHex(std::span<const uint8_t> input) -> std::string {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto str = std::string{ reinterpret_cast<const char*>(input.data()), input.size() };
+  str.erase(std::ranges::find(str, '\0'), str.end());
+  return str;
 }
 }  // namespace
 
@@ -49,14 +58,12 @@ auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
 }
 
 auto toString(const ::zenoh::Id& id) -> std::string {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  if (std::ranges::any_of(id.bytes(), [](const auto byte) {
-        fmt::println("{}", static_cast<int>(byte));
-        return static_cast<int>(byte) > 172 || static_cast<int>(byte) < 60;
-      })) {
-    return id.to_string();
+  auto id_str = fromAsciiHex(std::span<const uint8_t>{ id.bytes().data(), id.bytes().size() });
+  if (utils::string::isAlphanumericString(id_str)) {
+    return id_str;
   }
-  return { reinterpret_cast<const char*>(id.bytes().data()), id.bytes().size() };
+
+  return id.to_string();
 }
 
 auto toString(const std::vector<std::string>& vec) -> std::string {

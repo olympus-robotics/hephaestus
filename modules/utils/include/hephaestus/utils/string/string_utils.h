@@ -32,7 +32,13 @@ namespace heph::utils::string {
 
 /// Convert a string to its ASCII hex representation.
 /// Examples: "ciao" -> "6369616f"
-[[nodiscard]] auto toHex(const std::string& input) -> std::string;
+[[nodiscard]] auto toAsciiHex(const std::string& input) -> std::string;
+
+/// Return true if all the characters in the string are alphanumeric.
+[[nodiscard]] auto isAlphanumericString(const std::string& input) -> bool;
+
+/// Remove all characters that are not alphanumeric from the string.
+void removeNonAlphanumericChar(std::string& str);
 
 //=================================================================================================
 // Implementation

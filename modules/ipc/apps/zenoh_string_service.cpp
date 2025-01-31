@@ -14,6 +14,7 @@
 #include <fmt/base.h>
 
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -37,7 +38,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto [config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(std::move(config));
-    heph::log(heph::DEBUG, "opening session", "id", session->zenoh_session.get_zid().to_string());
+    heph::log(heph::DEBUG, "opening session", "id",
+              heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
     static constexpr auto DEFAULT_TIMEOUT = std::chrono::milliseconds{ 1000 };
     auto results = heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, value,
