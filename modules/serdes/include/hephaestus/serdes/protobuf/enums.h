@@ -22,7 +22,7 @@ template <EnumType ProtoT, EnumType T>
 [[nodiscard]] auto toProtoEnum(const T& enum_value) -> ProtoT;
 
 template <EnumType ProtoT, EnumType T>
-auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void;
+void fromProto(const ProtoT& proto_enum_value, T& enum_value);
 
 //=================================================================================================
 // Implementation
@@ -103,7 +103,7 @@ auto toProtoEnum(const T& enum_value) -> ProtoT {
 }
 
 template <EnumType ProtoT, EnumType T>
-auto fromProto(const ProtoT& proto_enum_value, T& enum_value) -> void {
+void fromProto(const ProtoT& proto_enum_value, T& enum_value) {
   static const auto proto_enum_value_to_enum =
       internal::createInverseLookupTable(internal::createEnumLookupTable<ProtoT, T>());
   const auto it = proto_enum_value_to_enum.find(proto_enum_value);

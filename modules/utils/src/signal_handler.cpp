@@ -40,7 +40,7 @@ auto TerminationBlocker::instance() -> TerminationBlocker& {
   return instance;
 }
 
-auto TerminationBlocker::signalHandler(int /*unused*/) -> void {
+void TerminationBlocker::signalHandler(int /*unused*/) {
   instance().stop_future_ = instance().app_stop_callback_();
   instance().interrupt_callback_();
 

@@ -36,7 +36,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VER
     --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-$CLANG_VERSION && \
     ln -s "/usr/bin/clangd-${CLANG_VERSION}" "/usr/bin/clangd"
 
-ARG ZENOH_VERSION=1.0.0
+ARG ZENOH_VERSION=1.1.1
 RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
     ( apt-get update && apt-get install --no-install-recommends -y --allow-downgrades \
     zenohd=${ZENOH_VERSION} \
