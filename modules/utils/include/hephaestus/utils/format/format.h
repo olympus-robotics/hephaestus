@@ -14,7 +14,6 @@
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 #include <magic_enum.hpp>
-#include <range/v3/view/zip.hpp>
 
 #include "hephaestus/utils/concepts.h"
 
@@ -30,11 +29,10 @@ template <ArrayOrVectorType T>
 [[nodiscard]] inline auto toString(const T& vec) -> std::string {
   std::stringstream ss;
 
-  const auto indices = std::views::iota(0);
-  const auto indexed_vec = ranges::views::zip(indices, vec);
-
-  for (const auto& [index, value] : indexed_vec) {
-    const std::string str = fmt::format("  Index: {}, Value: {}\n", index, value);
+  std::size_t idx = 0;
+  for (const auto& value : vec) {
+    const std::string str = fmt::format("  Index: {}, Value: {}\n", idx, value);
+    ++idx;
     ss << str;
   }
 
