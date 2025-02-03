@@ -65,8 +65,8 @@ set(ZENOHCXX_CMAKE_ARGS -DZ_FEATURE_UNSTABLE_API=1, -DZENOH_WITH_UNSTABLE_API=1,
 add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS}
-  GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp
-  GIT_TAG ${ZENOHCXX_VERSION}
+          # GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG ${ZENOHCXX_VERSION}
+          URL URL https://github.com/olympus-robotics/mcap_builder/archive/${ZENOHCXX_VERSION}.zip
   CMAKE_ARGS ${ZENOHCXX_CMAKE_ARGS}
 )
 
