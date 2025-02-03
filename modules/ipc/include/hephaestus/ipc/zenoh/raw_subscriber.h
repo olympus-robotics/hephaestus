@@ -61,9 +61,6 @@ private:
   std::unique_ptr<::zenoh::ext::AdvancedSubscriber<void>> subscriber_;
   std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
-  // bool enable_cache_ = false;
-  // ze_owned_querying_subscriber_t cache_subscriber_{};
-
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
   std::unique_ptr<concurrency::MessageQueueConsumer<Message>> callback_messages_consumer_;

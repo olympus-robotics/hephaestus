@@ -24,12 +24,12 @@
 #include "hephaestus/utils/stack_trace.h"
 
 namespace {
-void getListOfPublisher(const heph::ipc::zenoh::Session& session, std::string_view topic) {
+void getListOfZenohActors(const heph::ipc::zenoh::Session& session, std::string_view topic) {
   const auto publishers_info = heph::ipc::zenoh::getListOfActors(session, topic);
   std::ranges::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printActorInfo);
 }
 
-void getLiveListOfPublisher(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
+void getLiveListOfZenohActors(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
   const heph::ipc::zenoh::ActorDiscovery discover{ std::move(session), std::move(topic_config),
                                                    &heph::ipc::zenoh::printActorInfo };
 
@@ -53,9 +53,9 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     if (!args.getOption<bool>("live")) {
-      getListOfPublisher(*session, topic_config.name);
+      getListOfZenohActors(*session, topic_config.name);
     } else {
-      getLiveListOfPublisher(session, std::move(topic_config));
+      getLiveListOfZenohActors(session, std::move(topic_config));
     }
 
     return EXIT_SUCCESS;
