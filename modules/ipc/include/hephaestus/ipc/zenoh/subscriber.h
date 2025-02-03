@@ -22,8 +22,13 @@
 
 namespace heph::ipc::zenoh {
 
+class SubscriberBase {
+public:
+  virtual ~SubscriberBase() = default;
+};
+
 template <typename T>
-class Subscriber {
+class Subscriber : public SubscriberBase {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<T>&)>;
   Subscriber(zenoh::SessionPtr session, TopicConfig topic_config, DataCallback&& callback,

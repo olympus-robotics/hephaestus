@@ -12,7 +12,9 @@
 #include <unordered_map>
 #include <utility>
 
+#include <absl/log/log.h>
 #include <absl/strings/ascii.h>
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <mcap/types.hpp>
@@ -34,6 +36,7 @@ namespace {
 class McapWriter final : public IBagWriter {
 public:
   explicit McapWriter(McapWriterParams params);
+
   ~McapWriter() override = default;
 
   void writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) override;
@@ -50,7 +53,7 @@ private:
 };
 
 McapWriter::McapWriter(McapWriterParams params) : params_(std::move(params)) {
-  auto options = mcap::McapWriterOptions("");
+  auto options = params_.mcap_writer_options;
   const auto status = writer_.open(params_.output_file.string(), options);
   throwExceptionIf<InvalidParameterException>(
       !status.ok(), fmt::format("failed to create Mcap writer for file {}, with error: {}",

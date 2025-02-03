@@ -10,6 +10,8 @@
 #include <span>
 #include <string>
 
+#include <mcap/writer.hpp>
+
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
@@ -26,6 +28,7 @@ public:
 
 struct McapWriterParams {
   std::filesystem::path output_file;
+  mcap::McapWriterOptions mcap_writer_options = mcap::McapWriterOptions("");
 };
 
 [[nodiscard]] auto createMcapWriter(McapWriterParams params) -> std::unique_ptr<IBagWriter>;
