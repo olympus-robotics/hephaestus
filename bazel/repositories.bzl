@@ -5,13 +5,13 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def foreign_cc_repositories():
-    ZENOH_VERSION = "1.1.1"
+    ZENOH_VERSION = "1.2.0-includefix"
     http_archive(
         name = "zenohc_builder",
         build_file = ":foreign_cc/zenohc_builder.BUILD",
         urls = ["https://github.com/olympus-robotics/zenohc_builder/archive/refs/tags/{version}.zip".format(version = ZENOH_VERSION)],
         strip_prefix = "zenohc_builder-{version}".format(version = ZENOH_VERSION),
-        sha256 = "ef44926100b10a4e75b12e64344295ac0bdc8549a2f40fcd3f7a6eb95631104a",
+        sha256 = "c29d886503950396358aa7f8f0950207d594e2d8cee4be0f889dac4dfbc12583",
     )
 
     MCAP_VERSION = "bebea860f68b278d6cccdb70e0ed299d2656af96"
