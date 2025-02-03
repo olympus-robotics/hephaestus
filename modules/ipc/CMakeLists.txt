@@ -84,7 +84,7 @@ define_module_library(
   PRIVATE_INCLUDE_PATHS ""
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
-target_compile_definitions(ipc PUBLIC ZENOH_WITH_UNSTABLE_API Z_FEATURE_UNSTABLE_API ZENOHCXX_ZENOHC)
+target_compile_definitions(hephaestus_ipc PUBLIC ZENOH_WITH_UNSTABLE_API Z_FEATURE_UNSTABLE_API ZENOHCXX_ZENOHC)
 
 # Subprojects
 add_subdirectory(tests)
