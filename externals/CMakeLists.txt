@@ -66,7 +66,7 @@ add_cmake_dependency(
   NAME zenohcxx
   DEPENDS ${ZENOHCXX_DEPENDS}
           # GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG ${ZENOHCXX_VERSION}
-          URL URL https://github.com/olympus-robotics/mcap_builder/archive/${ZENOHCXX_VERSION}.zip
+          URL URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   CMAKE_ARGS ${ZENOHCXX_CMAKE_ARGS}
 )
 
@@ -195,7 +195,7 @@ set(ZSTD_CMAKE_ARGS -DZSTD_BUILD_STATIC=ON -DZSTD_BUILD_SHARED=OFF -DZSTD_BUILD_
 add_cmake_dependency(
   NAME zstd
   VERSION ${ZSTD_VERSION}
-  URL "https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz"
+          URL "https://github.com/facebook/zstd/releases/download/v${ZSTD_VERSION}/zstd-${ZSTD_VERSION}.tar.gz"
   SOURCE_SUBDIR build/cmake
   CMAKE_ARGS ${ZSTD_CMAKE_ARGS}
 )
@@ -206,8 +206,7 @@ set(MCAP_TAG ff7ef1b941f4eb17c87a31b3ed5a55627f3a4aee)
 set(MCAP_CMAKE_ARGS -DMCAP_COMPRESSION_NO_LZ4=ON)
 add_cmake_dependency(
   NAME mcap
-  VERSION ${MCAP_VERSION}
-  URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
+  VERSION ${MCAP_VERSION} URL https://github.com/olympus-robotics/mcap_builder/archive/${MCAP_TAG}.zip
   CMAKE_ARGS ${MCAP_CMAKE_ARGS}
 )
 
