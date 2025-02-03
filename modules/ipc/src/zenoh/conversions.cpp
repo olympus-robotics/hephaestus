@@ -59,7 +59,7 @@ auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
 
 auto toString(const ::zenoh::Id& id) -> std::string {
   auto id_str = fromAsciiHex(std::span<const uint8_t>{ id.bytes().data(), id.bytes().size() });
-  if (utils::string::isAlphanumericString(id_str)) {
+  if (!id_str.empty() && utils::string::isAlphanumericString(id_str)) {
     return id_str;
   }
 
