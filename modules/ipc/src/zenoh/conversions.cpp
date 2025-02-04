@@ -5,6 +5,7 @@
 #include "hephaestus/ipc/zenoh/conversions.h"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -17,8 +18,6 @@
 #include <zenoh/api/bytes.hxx>
 #include <zenoh/api/id.hxx>
 #include <zenoh/api/timestamp.hxx>
-
-#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -57,9 +56,18 @@ auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
   return ::zenoh::Bytes{ data_view };
 }
 
+/// Only alphanumeric or underscore characters are allowed.
+auto isValidIdChar(char c) -> bool {
+  return std::isalnum(c) != 0 || c == '_';
+}
+
+auto isValidId(std::string_view session_id) -> bool {
+  return std::ranges::all_of(session_id, [](char c) { return isValidIdChar(c); });
+}
+
 auto toString(const ::zenoh::Id& id) -> std::string {
   auto id_str = fromAsciiHex(std::span<const uint8_t>{ id.bytes().data(), id.bytes().size() });
-  if (!id_str.empty() && utils::string::isAlphanumericString(id_str)) {
+  if (!id_str.empty() && isValidId(id_str)) {
     return id_str;
   }
 

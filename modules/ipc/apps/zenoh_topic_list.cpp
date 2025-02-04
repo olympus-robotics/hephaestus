@@ -30,8 +30,8 @@ void getListOfZenohActors(const heph::ipc::zenoh::Session& session, std::string_
 }
 
 void getLiveListOfZenohActors(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
-  const heph::ipc::zenoh::ActorDiscovery discover{ std::move(session), std::move(topic_config),
-                                                   &heph::ipc::zenoh::printActorInfo };
+  const heph::ipc::zenoh::EndpointDiscovery discover{ std::move(session), std::move(topic_config),
+                                                      &heph::ipc::zenoh::printActorInfo };
 
   heph::utils::TerminationBlocker::waitForInterrupt();
 }

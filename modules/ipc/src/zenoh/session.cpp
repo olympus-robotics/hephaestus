@@ -7,12 +7,15 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include <fmt/format.h>
+#include <unistd.h>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/utils/exception.h"
@@ -22,14 +25,19 @@
 namespace heph::ipc::zenoh {
 namespace {
 
-[[nodiscard]] auto createSessionId(const std::string& id) -> std::string {
+void removeInvalidChar(std::string& str) {
+  const auto [first, last] = std::ranges::remove_if(str, [](char c) { return !isValidIdChar(c); });
+  str.erase(first, last);
+}
+
+[[nodiscard]] auto createSessionId(std::string_view id) -> std::string {
   static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
 
   throwExceptionIf<InvalidParameterException>(
-      !utils::string::isAlphanumericString(id),
-      fmt::format("invalid session id: {}, must be an alphanumeric string", id));
+      !isValidId(id), fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
 
-  auto session_id = id;
+  std::string session_id{ id };
+
   if (session_id.size() > MAX_SESSION_ID_SIZE) {
     heph::log(heph::WARN, "session id is too long, truncating", "session_id", session_id, "max_size",
               MAX_SESSION_ID_SIZE);
@@ -44,8 +52,9 @@ namespace {
 [[nodiscard]] auto createSessionIdFromBinaryName() -> std::string {
   auto binary_name = utils::getBinaryPath();
   throwExceptionIf<InvalidParameterException>(!binary_name.has_value(), "cannot get binary name");
-  std::string filename = binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access)
-  utils::string::removeNonAlphanumericChar(filename);
+  std::string filename = binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access);
+  removeInvalidChar(filename);
+  filename = fmt::format("{}_{}", getpid(), filename);
   return createSessionId(filename);
 }
 
@@ -60,7 +69,7 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
 
   if (config.use_binary_name_as_session_id) {
     const auto session_id = createSessionIdFromBinaryName();
-    zconfig.insert_json5("id", fmt::format(R"("{}")", session_id));  // NOLINT(misc-include-cleaner)
+    zconfig.insert_json5("id", fmt::format(R"("{}")", session_id));
   } else if (config.id.has_value()) {
     const auto session_id = createSessionId(config.id.value());
     zconfig.insert_json5("id", fmt::format(R"("{}")", session_id));  // NOLINT(misc-include-cleaner)

@@ -106,7 +106,7 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   liveliness_token_ =
       std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
           generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
-                                         ActorType::SUBSCRIBER),
+                                         EndpointType::SUBSCRIBER),
           ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
 
   if (dedicated_callback_thread_) {

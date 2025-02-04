@@ -118,3 +118,19 @@ heph_cc_test(
     ],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "liveliness_tests",
+    srcs = [
+        "tests/liveliness_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "session_tests",
+    srcs = [
+        "tests/session_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)

@@ -238,7 +238,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   liveliness_token_ =
       std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
           generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
-                                         ActorType::SERVICE),
+                                         EndpointType::SERVICE_SERVER),
           ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,

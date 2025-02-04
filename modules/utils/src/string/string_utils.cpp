@@ -4,7 +4,6 @@
 
 #include "hephaestus/utils/string/string_utils.h"
 
-#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <iomanip>
@@ -50,14 +49,4 @@ auto toAsciiHex(const std::string& input) -> std::string {
 
   return ss.str();
 }
-
-auto isAlphanumericString(const std::string& input) -> bool {
-  return std::ranges::all_of(input, [](char c) { return std::isalnum(c) != 0; });
-}
-
-void removeNonAlphanumericChar(std::string& str) {
-  const auto [first, last] = std::ranges::remove_if(str, [](char c) { return !std::isalnum(c); });
-  str.erase(first, last);
-}
-
 }  // namespace heph::utils::string

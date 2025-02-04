@@ -7,7 +7,6 @@
 #include <exception>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -40,55 +39,62 @@ namespace {
 struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view PUBLISHER = "hephaestus_publisher";
   static constexpr std::string_view SUBSCRIBER = "hephaestus_subscriber";
-  static constexpr std::string_view SERVICE = "hephaestus_service";
+  static constexpr std::string_view SERVICE_SERVER = "hephaestus_service_server";
   static constexpr std::string_view ACTION_SERVER = "hephaestus_actor_server";
 };
 
-[[nodiscard]] auto toActorInfoStatus(::zenoh::SampleKind kind) -> ActorInfo::Status {
+[[nodiscard]] auto toActorInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
-      return ActorInfo::Status::ALIVE;
+      return EndpointInfo::Status::ALIVE;
     case Z_SAMPLE_KIND_DELETE:
-      return ActorInfo::Status::DROPPED;
+      return EndpointInfo::Status::DROPPED;
   }
 
   __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
 
-[[nodiscard]] auto actorTypeToSuffix(ActorType type) -> std::string_view {
+[[nodiscard]] auto actorTypeToSuffix(EndpointType type) -> std::string_view {
   switch (type) {
-    case ActorType::PUBLISHER:
+    case EndpointType::PUBLISHER:
       return LivelinessTokenKeyexprSuffix::PUBLISHER;
-    case ActorType::SUBSCRIBER:
+    case EndpointType::SUBSCRIBER:
       return LivelinessTokenKeyexprSuffix::SUBSCRIBER;
-    case ActorType::SERVICE:
-      return LivelinessTokenKeyexprSuffix::SERVICE;
-    case ActorType::ACTION_SERVER:
+    case EndpointType::SERVICE_SERVER:
+      return LivelinessTokenKeyexprSuffix::SERVICE_SERVER;
+    case EndpointType::ACTION_SERVER:
       return LivelinessTokenKeyexprSuffix::ACTION_SERVER;
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
 
-auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::optional<ActorType> {
+auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::optional<EndpointType> {
   if (type == LivelinessTokenKeyexprSuffix::PUBLISHER) {
-    return ActorType::PUBLISHER;
+    return EndpointType::PUBLISHER;
   }
   if (type == LivelinessTokenKeyexprSuffix::SUBSCRIBER) {
-    return ActorType::SUBSCRIBER;
+    return EndpointType::SUBSCRIBER;
   }
-  if (type == LivelinessTokenKeyexprSuffix::SERVICE) {
-    return ActorType::SERVICE;
+  if (type == LivelinessTokenKeyexprSuffix::SERVICE_SERVER) {
+    return EndpointType::SERVICE_SERVER;
   }
   if (type == LivelinessTokenKeyexprSuffix::ACTION_SERVER) {
-    return ActorType::ACTION_SERVER;
+    return EndpointType::ACTION_SERVER;
   }
 
   return std::nullopt;
 }
+}  // namespace
 
-[[nodiscard]] auto parseLivelinessToken(const ::zenoh::Sample& sample) -> std::optional<ActorInfo> {
+auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
+                                    EndpointType actor_type) -> std::string {
+  return fmt::format("{}|{}|{}", topic, toString(session_id), actorTypeToSuffix(actor_type));
+}
+
+auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) -> std::optional<EndpointInfo> {
   // Expected keyexpr: <topic/name/whatever>/<session_id>/<actor_type>
-  const auto keyexpr = sample.get_keyexpr().as_string_view();
-  const std::vector<std::string> items = absl::StrSplit(keyexpr, '/');
+  const std::vector<std::string> items = absl::StrSplit(keyexpr, '|');
   if (items.size() < 3) {
     heph::log(heph::ERROR, "invalid liveliness keyexpr", "keyexpr", keyexpr);
     return std::nullopt;
@@ -101,29 +107,19 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
   }
 
   std::string topic = items[0];
-  for (const auto& str : items | std::views::drop(1) | std::views::take(items.size() - 3)) {
-    topic = fmt::format("{}/{}", topic, str);
-  }
 
-  return ActorInfo{ .session_id = items[items.size() - 2],
-                    .topic = topic,
-                    .type = *type,
-                    .status = toActorInfoStatus(sample.get_kind()) };
+  return EndpointInfo{ .session_id = items[items.size() - 2],
+                       .topic = std::move(topic),
+                       .type = *type,
+                       .status = toActorInfoStatus(kind) };
 }
 
-}  // namespace
-
-auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
-                                    ActorType actor_type) -> std::string {
-  return fmt::format("{}/{}/{}", topic, toString(session_id), actorTypeToSuffix(actor_type));
-}
-
-auto getListOfActors(const Session& session, std::string_view topic) -> std::vector<ActorInfo> {
+auto getListOfActors(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
   static constexpr auto FIFO_BOUND = 100;
   const ::zenoh::KeyExpr keyexpr(topic);
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
-  std::vector<ActorInfo> actors;
+  std::vector<EndpointInfo> actors;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
@@ -132,7 +128,7 @@ auto getListOfActors(const Session& session, std::string_view topic) -> std::vec
     }
 
     const auto& sample = reply.get_ok();
-    auto actor_info = parseLivelinessToken(sample);
+    auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
     if (actor_info) {
       actors.push_back(std::move(*actor_info));
     }
@@ -141,22 +137,23 @@ auto getListOfActors(const Session& session, std::string_view topic) -> std::vec
   return actors;
 }
 
-void printActorInfo(const ActorInfo& info) {
-  auto text = fmt::format("[{}] Session: {} Topic: {}", magic_enum::enum_name(info.type), info.session_id,
-                          info.topic);
-  if (info.status == ActorInfo::Status::DROPPED) {
+void printActorInfo(const EndpointInfo& info) {
+  auto text = fmt::format("[{}] Session: '{}'. Topic: '{}'", magic_enum::enum_name(info.type),
+                          info.session_id, info.topic);
+  if (info.status == EndpointInfo::Status::DROPPED) {
     text = fmt::format("{} - DROPPED", text);
   }
 
   fmt::println("{}", text);
 }
 
-ActorDiscovery::ActorDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/, Callback&& callback)
+EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
+                                     Callback&& callback)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
-  , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<ActorInfo>>(
-        [this](const ActorInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
+  , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<EndpointInfo>>(
+        [this](const EndpointInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
   infos_consumer_->start();
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
@@ -176,7 +173,7 @@ ActorDiscovery::ActorDiscovery(SessionPtr session, TopicConfig topic_config /* =
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
-ActorDiscovery::~ActorDiscovery() {
+EndpointDiscovery::~EndpointDiscovery() {
   auto stopped = infos_consumer_->stop();
   stopped.get();
   try {
@@ -187,11 +184,11 @@ ActorDiscovery::~ActorDiscovery() {
   }
 }
 
-void ActorDiscovery::createLivelinessSubscriber() {
+void EndpointDiscovery::createLivelinessSubscriber() {
   const ::zenoh::KeyExpr keyexpr(topic_config_.name);
 
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
-    auto info = parseLivelinessToken(sample);
+    auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
     if (info.has_value()) {
       infos_consumer_->queue().forcePush(std::move(*info));
     }

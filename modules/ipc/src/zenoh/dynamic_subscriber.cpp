@@ -31,8 +31,8 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 }
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
-  discover_publishers_ = std::make_unique<ActorDiscovery>(
-      session_, TopicConfig{ "**" }, [this](const ActorInfo& info) { onPublisher(info); });
+  discover_publishers_ = std::make_unique<EndpointDiscovery>(
+      session_, TopicConfig{ "**" }, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -48,22 +48,30 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
   return promise.get_future();
 }
 
-void DynamicSubscriber::onPublisher(const ActorInfo& info) {
+void DynamicSubscriber::onEndpointDiscovered(const EndpointInfo& info) {
+  if (info.type != EndpointType::PUBLISHER) {
+    return;
+  }
+
+  onPublisher(info);
+}
+
+void DynamicSubscriber::onPublisher(const EndpointInfo& info) {
   if (!topic_filter_.isAcceptable(info.topic)) {
     return;
   }
 
   switch (info.status) {
-    case ipc::zenoh::ActorInfo::Status::ALIVE:
+    case ipc::zenoh::EndpointInfo::Status::ALIVE:
       onPublisherAdded(info);
       break;
-    case ipc::zenoh::ActorInfo::Status::DROPPED:
+    case ipc::zenoh::EndpointInfo::Status::DROPPED:
       onPublisherDropped(info);
       break;
   }
 }
 
-void DynamicSubscriber::onPublisherAdded(const ActorInfo& info) {
+void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   std::optional<serdes::TypeInfo> optional_type_info;
   if (subscribers_.contains(info.topic)) {
     heph::log(heph::ERROR, "trying to add subscriber for topic but one already exists", "topic", info.topic);
@@ -85,7 +93,7 @@ void DynamicSubscriber::onPublisherAdded(const ActorInfo& info) {
       });
 }
 
-void DynamicSubscriber::onPublisherDropped(const ActorInfo& info) {
+void DynamicSubscriber::onPublisherDropped(const EndpointInfo& info) {
   if (!subscribers_.contains(info.topic)) {
     heph::log(heph::ERROR, "trying to drop subscriber, but one doesn't exist", "topic", info.topic);
     return;
