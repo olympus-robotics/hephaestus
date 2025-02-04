@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
-#include <utility>
 
 #include <fmt/base.h>
 
@@ -25,9 +24,9 @@ auto main(int argc, const char* argv[]) -> int {
                    argv[0]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       std::exit(1);
     }
-    std::filesystem::path output{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const std::filesystem::path output{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    auto bag_writer = heph::bag::createMcapWriter({ std::move(output) });
+    auto bag_writer = heph::bag::createMcapWriter({ .output_file = output });
 
     auto type_info = heph::serdes::getSerializedTypeInfo<heph::examples::types::Pose>();
     bag_writer->registerSchema(type_info);
