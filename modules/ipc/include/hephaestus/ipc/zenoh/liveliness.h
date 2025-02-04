@@ -23,7 +23,13 @@
 
 namespace heph::ipc::zenoh {
 
-enum class EndpointType : uint8_t { PUBLISHER = 0, SUBSCRIBER, SERVICE_SERVER, ACTION_SERVER };
+enum class EndpointType : uint8_t {
+  PUBLISHER = 0,
+  SUBSCRIBER,
+  SERVICE_SERVER,
+  SERVICE_CLIENT,
+  ACTION_SERVER
+};
 
 struct EndpointInfo {
   enum class Status : uint8_t { ALIVE = 0, DROPPED };

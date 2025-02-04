@@ -35,8 +35,9 @@ TEST(ZenohTests, ServiceCallExchange) {
   auto service_server = Service<types::DummyType, types::DummyType>(
       session, service_topic, [](const types::DummyType& request) { return request; });
 
-  auto service_client = ServiceClient<types::DummyType, types::DummyType>(session, service_topic);
-  const auto replies = service_client.call(request_message, std::chrono::milliseconds(10));
+  auto service_client =
+      ServiceClient<types::DummyType, types::DummyType>(session, service_topic, std::chrono::seconds(1));
+  const auto replies = service_client.call(request_message);
   EXPECT_FALSE(replies.empty());
   EXPECT_EQ(replies.size(), 1);
   EXPECT_EQ(replies.front().topic, service_topic.name);

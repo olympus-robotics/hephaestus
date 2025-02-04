@@ -9,6 +9,7 @@
 #include <tuple>
 #include <utility>
 
+#include <fmt/base.h>
 #include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
@@ -36,7 +37,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto callback = [](const heph::examples::types::Pose& sample) {
-      heph::log(heph::DEBUG, "received query", "pose", sample);
+      fmt::println("received query: pose = {}", sample);
       return heph::examples::types::Pose{
         .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
         .position = Eigen::Vector3d{ 1, 2, 3 },                  // NOLINT

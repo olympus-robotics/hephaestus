@@ -40,6 +40,7 @@ struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view PUBLISHER = "hephaestus_publisher";
   static constexpr std::string_view SUBSCRIBER = "hephaestus_subscriber";
   static constexpr std::string_view SERVICE_SERVER = "hephaestus_service_server";
+  static constexpr std::string_view SERVICE_CLIENT = "hephaestus_service_client";
   static constexpr std::string_view ACTION_SERVER = "hephaestus_actor_server";
 };
 
@@ -62,6 +63,8 @@ struct LivelinessTokenKeyexprSuffix {
       return LivelinessTokenKeyexprSuffix::SUBSCRIBER;
     case EndpointType::SERVICE_SERVER:
       return LivelinessTokenKeyexprSuffix::SERVICE_SERVER;
+    case EndpointType::SERVICE_CLIENT:
+      return LivelinessTokenKeyexprSuffix::SERVICE_CLIENT;
     case EndpointType::ACTION_SERVER:
       return LivelinessTokenKeyexprSuffix::ACTION_SERVER;
   }

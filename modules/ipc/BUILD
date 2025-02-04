@@ -44,8 +44,8 @@ heph_cc_binary(
 )
 
 heph_cc_binary(
-    name = "zenoh_string_service",
-    srcs = ["apps/zenoh_string_service.cpp"],
+    name = "zenoh_string_service_client",
+    srcs = ["apps/zenoh_string_service_client.cpp"],
     deps = [
         ":ipc",
     ],
