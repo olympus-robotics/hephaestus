@@ -114,12 +114,12 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
                        .status = toActorInfoStatus(kind) };
 }
 
-auto getListOfActors(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
+auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
   static constexpr auto FIFO_BOUND = 100;
   const ::zenoh::KeyExpr keyexpr(topic);
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
-  std::vector<EndpointInfo> actors;
+  std::vector<EndpointInfo> endpoints;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
@@ -130,11 +130,11 @@ auto getListOfActors(const Session& session, std::string_view topic) -> std::vec
     const auto& sample = reply.get_ok();
     auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
     if (actor_info) {
-      actors.push_back(std::move(*actor_info));
+      endpoints.push_back(std::move(*actor_info));
     }
   }
 
-  return actors;
+  return endpoints;
 }
 
 void printActorInfo(const EndpointInfo& info) {
@@ -158,7 +158,7 @@ EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_confi
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfActors(*session_, topic_config_.name);
+  auto publishers_info = getListOfEndpoints(*session_, topic_config_.name);
   for (const auto& info : publishers_info) {
     infos_consumer_->queue().forcePush(info);
   }

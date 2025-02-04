@@ -41,7 +41,7 @@ struct EndpointInfo {
 [[nodiscard]] auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind)
     -> std::optional<EndpointInfo>;
 
-[[nodiscard]] auto getListOfActors(const Session& session, std::string_view topic = "**")
+[[nodiscard]] auto getListOfEndpoints(const Session& session, std::string_view topic = "**")
     -> std::vector<EndpointInfo>;
 
 void printActorInfo(const EndpointInfo& info);
