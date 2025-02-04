@@ -5,7 +5,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def foreign_cc_repositories():
-    ZENOH_VERSION = "1.2.0-includefix"
+    ZENOH_VERSION = "1.2.0-includefix-variant"
     http_archive(
         name = "zenohc_builder",
         build_file = ":foreign_cc/zenohc_builder.BUILD",

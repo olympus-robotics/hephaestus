@@ -58,15 +58,13 @@ add_cmake_dependency(
   CMAKE_ARGS ${ZENOHC_CMAKE_ARGS}
 )
 
-set(ZENOHCXX_VERSION 2cbffe318d2eb3b632080b9c32f7870ed5158f52)
+set(ZENOHCXX_VERSION d501cec713d12fdcd581d9d3c7cb489a3382f793)
 set(ZENOHCXX_CMAKE_ARGS -DZ_FEATURE_UNSTABLE_API=1, -DZENOH_WITH_UNSTABLE_API=1, -DZENOHCXX_ZENOHC=1,
                         -DZENOHCXX_EXAMPLES_PROTOBUF=OFF
 )
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS}
-          # GIT_REPOSITORY https://github.com/eclipse-zenoh/zenoh-cpp GIT_TAG ${ZENOHCXX_VERSION}
-          URL URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
+  DEPENDS ${ZENOHCXX_DEPENDS} URL URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   CMAKE_ARGS ${ZENOHCXX_CMAKE_ARGS}
 )
 
