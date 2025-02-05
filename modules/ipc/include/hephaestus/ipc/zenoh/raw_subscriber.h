@@ -13,9 +13,9 @@
 #include <utility>
 #include <vector>
 
-#include <zenoh.h>
+#include <zenoh/api/ext/advanced_subscriber.hxx>
+#include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/sample.hxx>
-#include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
@@ -58,10 +58,8 @@ private:
 
   DataCallback callback_;
 
-  std::unique_ptr<::zenoh::Subscriber<void>> subscriber_;
-
-  bool enable_cache_ = false;
-  ze_owned_querying_subscriber_t cache_subscriber_{};
+  std::unique_ptr<::zenoh::ext::AdvancedSubscriber<void>> subscriber_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;

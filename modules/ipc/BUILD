@@ -44,8 +44,8 @@ heph_cc_binary(
 )
 
 heph_cc_binary(
-    name = "zenoh_string_service",
-    srcs = ["apps/zenoh_string_service.cpp"],
+    name = "zenoh_string_service_client",
+    srcs = ["apps/zenoh_string_service_client.cpp"],
     deps = [
         ":ipc",
     ],
@@ -115,6 +115,22 @@ heph_cc_test(
     name = "topic_filter_tests",
     srcs = [
         "tests/topic_filter_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "liveliness_tests",
+    srcs = [
+        "tests/liveliness_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "session_tests",
+    srcs = [
+        "tests/session_tests.cpp",
     ],
     deps = IPC_TEST_DEPS,
 )

@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <zenoh/api/queryable.hxx>
@@ -18,6 +19,8 @@ enum class Mode : uint8_t { PEER = 0, CLIENT, ROUTER };
 enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
 
 struct Config {
+  bool use_binary_name_as_session_id = false;
+  std::optional<std::string> id{ std::nullopt };
   bool enable_shared_memory = false;  //! NOTE: With shared-memory enabled, the publisher still uses the
                                       //! network transport layer to notify subscribers of the shared-memory
                                       //! segment to read. Therefore, for very small messages, shared -

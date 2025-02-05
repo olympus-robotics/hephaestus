@@ -31,8 +31,8 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 }
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
-  discover_publishers_ = std::make_unique<PublisherDiscovery>(
-      session_, TopicConfig{ .name = "**" }, [this](const PublisherInfo& info) { onPublisher(info); });
+  discover_publishers_ = std::make_unique<EndpointDiscovery>(
+      session_, TopicConfig{ "**" }, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -48,44 +48,52 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
   return promise.get_future();
 }
 
-void DynamicSubscriber::onPublisher(const PublisherInfo& info) {
+void DynamicSubscriber::onEndpointDiscovered(const EndpointInfo& info) {
+  if (info.type != EndpointType::PUBLISHER) {
+    return;
+  }
+
+  onPublisher(info);
+}
+
+void DynamicSubscriber::onPublisher(const EndpointInfo& info) {
   if (!topic_filter_.isAcceptable(info.topic)) {
     return;
   }
 
   switch (info.status) {
-    case ipc::zenoh::PublisherStatus::ALIVE:
+    case ipc::zenoh::EndpointInfo::Status::ALIVE:
       onPublisherAdded(info);
       break;
-    case ipc::zenoh::PublisherStatus::DROPPED:
+    case ipc::zenoh::EndpointInfo::Status::DROPPED:
       onPublisherDropped(info);
       break;
   }
 }
 
-void DynamicSubscriber::onPublisherAdded(const PublisherInfo& info) {
+void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   std::optional<serdes::TypeInfo> optional_type_info;
+  if (subscribers_.contains(info.topic)) {
+    heph::log(heph::ERROR, "trying to add subscriber for topic but one already exists", "topic", info.topic);
+    return;
+  }
+
   if (init_subscriber_cb_) {
     auto type_info = topic_db_->getTypeInfo(info.topic);
     init_subscriber_cb_(info.topic, type_info);
     optional_type_info = std::move(type_info);
   }
 
-  if (subscribers_.contains(info.topic)) {
-    heph::log(heph::ERROR, "adding subscriber for topic but one already exists", "topic", info.topic);
-    return;
-  }
-
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
-      session_, ipc::TopicConfig{ .name = info.topic },
+      session_, ipc::TopicConfig{ info.topic },
       [this, optional_type_info = std::move(optional_type_info)](const MessageMetadata& metadata,
                                                                  std::span<const std::byte> data) {
         subscriber_cb_(metadata, data, optional_type_info);
       });
 }
 
-void DynamicSubscriber::onPublisherDropped(const PublisherInfo& info) {
+void DynamicSubscriber::onPublisherDropped(const EndpointInfo& info) {
   if (!subscribers_.contains(info.topic)) {
     heph::log(heph::ERROR, "trying to drop subscriber, but one doesn't exist", "topic", info.topic);
     return;

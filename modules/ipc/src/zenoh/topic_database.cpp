@@ -50,8 +50,8 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> const serdes::
   auto query_topic = zenoh::getTypeInfoServiceTopic(topic);
 
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 5000 };
-  const auto response = zenoh::callService<std::string, std::string>(
-      *session_, TopicConfig{ .name = query_topic }, "", TIMEOUT);
+  const auto response =
+      zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
   throwExceptionIf<heph::InvalidDataException>(
       response.size() != 1,
       fmt::format("received {} responses for type from service {}", response.size(), query_topic));

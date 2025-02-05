@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };
+enum class ExampleType : uint8_t { PUBSUB, SERVICE_SERVER, ACTION_SERVER };
 
 [[nodiscard]] inline auto getDefaultTopic(const ExampleType type) -> std::string {
   static constexpr auto DEFAULT_PUBSUB_KEY = "hephaestus/ipc/example/zenoh/put";
@@ -15,7 +15,7 @@ enum class ExampleType : uint8_t { PUBSUB, SERVICE, ACTION_SERVER };
   switch (type) {
     case ExampleType::PUBSUB:
       return DEFAULT_PUBSUB_KEY;
-    case ExampleType::SERVICE:
+    case ExampleType::SERVICE_SERVER:
       return DEFAULT_SERVICE_KEY;
     case ExampleType::ACTION_SERVER:
       return DEFAULT_ACTION_SERVER_KEY;

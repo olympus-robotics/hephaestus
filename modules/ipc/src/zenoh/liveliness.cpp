@@ -4,23 +4,24 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
-#include <algorithm>
 #include <exception>
-#include <iterator>
 #include <memory>
-#include <set>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include <absl/strings/str_split.h>
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <magic_enum.hpp>
 #include <zenoh.h>
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
+#include <zenoh/api/id.hxx>
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/reply.hxx>
 #include <zenoh/api/sample.hxx>
@@ -28,69 +29,139 @@
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh {
 namespace {
-[[nodiscard]] auto toPublisherStatus(::zenoh::SampleKind kind) -> PublisherStatus {
+
+struct LivelinessTokenKeyexprSuffix {
+  static constexpr std::string_view PUBLISHER = "hephaestus_publisher";
+  static constexpr std::string_view SUBSCRIBER = "hephaestus_subscriber";
+  static constexpr std::string_view SERVICE_SERVER = "hephaestus_service_server";
+  static constexpr std::string_view SERVICE_CLIENT = "hephaestus_service_client";
+  static constexpr std::string_view ACTION_SERVER = "hephaestus_action_server";
+};
+
+[[nodiscard]] auto toActorInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
-      return PublisherStatus::ALIVE;
+      return EndpointInfo::Status::ALIVE;
     case Z_SAMPLE_KIND_DELETE:
-      return PublisherStatus::DROPPED;
+      return EndpointInfo::Status::DROPPED;
   }
 
   __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
 }
 
+[[nodiscard]] auto actorTypeToSuffix(EndpointType type) -> std::string_view {
+  switch (type) {
+    case EndpointType::PUBLISHER:
+      return LivelinessTokenKeyexprSuffix::PUBLISHER;
+    case EndpointType::SUBSCRIBER:
+      return LivelinessTokenKeyexprSuffix::SUBSCRIBER;
+    case EndpointType::SERVICE_SERVER:
+      return LivelinessTokenKeyexprSuffix::SERVICE_SERVER;
+    case EndpointType::SERVICE_CLIENT:
+      return LivelinessTokenKeyexprSuffix::SERVICE_CLIENT;
+    case EndpointType::ACTION_SERVER:
+      return LivelinessTokenKeyexprSuffix::ACTION_SERVER;
+  }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable() in C++23
+}
+
+auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::optional<EndpointType> {
+  if (type == LivelinessTokenKeyexprSuffix::PUBLISHER) {
+    return EndpointType::PUBLISHER;
+  }
+  if (type == LivelinessTokenKeyexprSuffix::SUBSCRIBER) {
+    return EndpointType::SUBSCRIBER;
+  }
+  if (type == LivelinessTokenKeyexprSuffix::SERVICE_SERVER) {
+    return EndpointType::SERVICE_SERVER;
+  }
+  if (type == LivelinessTokenKeyexprSuffix::ACTION_SERVER) {
+    return EndpointType::ACTION_SERVER;
+  }
+
+  return std::nullopt;
+}
 }  // namespace
 
-auto getListOfPublishers(const Session& session, std::string_view topic) -> std::vector<PublisherInfo> {
+auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
+                                    EndpointType actor_type) -> std::string {
+  return fmt::format("{}|{}|{}", topic, toString(session_id), actorTypeToSuffix(actor_type));
+}
+
+auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) -> std::optional<EndpointInfo> {
+  // Expected keyexpr: <topic/name/whatever>/<session_id>/<actor_type>
+  const std::vector<std::string> items = absl::StrSplit(keyexpr, '|');
+  if (items.size() < 3) {
+    heph::log(heph::ERROR, "invalid liveliness keyexpr", "keyexpr", keyexpr);
+    return std::nullopt;
+  }
+
+  auto type = livelinessTokenKeyexprSuffixTActionType(items.back());
+  if (!type) {
+    heph::log(heph::ERROR, "invalid liveliness keyexpr", "keyexpr", keyexpr);
+    return std::nullopt;
+  }
+
+  std::string topic = items[0];
+
+  return EndpointInfo{ .session_id = items[items.size() - 2],
+                       .topic = std::move(topic),
+                       .type = *type,
+                       .status = toActorInfoStatus(kind) };
+}
+
+auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
   static constexpr auto FIFO_BOUND = 100;
   const ::zenoh::KeyExpr keyexpr(topic);
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
-  std::set<std::string> topics;
+  std::vector<EndpointInfo> endpoints;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
-    if (reply.is_ok()) {
-      const auto& sample = reply.get_ok();
-      topics.emplace(sample.get_keyexpr().as_string_view());
-    } else {
+    if (!reply.is_ok()) {
       heph::log(heph::ERROR, "invalid reply for liveliness", "topic", topic);
+      continue;
+    }
+
+    const auto& sample = reply.get_ok();
+    auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
+    if (actor_info) {
+      endpoints.push_back(std::move(*actor_info));
     }
   }
 
-  std::vector<PublisherInfo> infos;
-  infos.reserve(topics.size());
-  std::ranges::transform(topics, std::back_inserter(infos), [](const std::string& topic_name) {
-    return PublisherInfo{ .topic = topic_name, .status = PublisherStatus::ALIVE };
-  });
-  return infos;
+  return endpoints;
 }
 
-void printPublisherInfo(const PublisherInfo& info) {
-  auto text = fmt::format("[Publisher] Topic: {}", info.topic);
-  if (info.status == PublisherStatus::DROPPED) {
+void printActorInfo(const EndpointInfo& info) {
+  auto text = fmt::format("[{}] Session: '{}'. Topic: '{}'", magic_enum::enum_name(info.type),
+                          info.session_id, info.topic);
+  if (info.status == EndpointInfo::Status::DROPPED) {
     text = fmt::format("{} - DROPPED", text);
   }
 
   fmt::println("{}", text);
 }
 
-PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
-                                       Callback&& callback)
+EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
+                                     Callback&& callback)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
-  , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<PublisherInfo>>(
-        [this](const PublisherInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
+  , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<EndpointInfo>>(
+        [this](const EndpointInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
   infos_consumer_->start();
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfPublishers(*session_, topic_config_.name);
+  auto publishers_info = getListOfEndpoints(*session_, topic_config_.name);
   for (const auto& info : publishers_info) {
     infos_consumer_->queue().forcePush(info);
   }
@@ -105,7 +176,7 @@ PublisherDiscovery::PublisherDiscovery(SessionPtr session, TopicConfig topic_con
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
-PublisherDiscovery::~PublisherDiscovery() {
+EndpointDiscovery::~EndpointDiscovery() {
   auto stopped = infos_consumer_->stop();
   stopped.get();
   try {
@@ -116,14 +187,14 @@ PublisherDiscovery::~PublisherDiscovery() {
   }
 }
 
-void PublisherDiscovery::createLivelinessSubscriber() {
+void EndpointDiscovery::createLivelinessSubscriber() {
   const ::zenoh::KeyExpr keyexpr(topic_config_.name);
 
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
-    const PublisherInfo info{ .topic = std::string{ sample.get_keyexpr().as_string_view() },
-                              .status = toPublisherStatus(sample.get_kind()) };
-
-    infos_consumer_->queue().forcePush(info);
+    auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
+    if (info.has_value()) {
+      infos_consumer_->queue().forcePush(std::move(*info));
+    }
   };
 
   liveliness_subscriber_ =

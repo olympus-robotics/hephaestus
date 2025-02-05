@@ -20,6 +20,8 @@ namespace heph::ipc::zenoh {
 void appendProgramOption(cli::ProgramDescription& program_description,
                          const std::string& default_topic /*= DEFAULT_TOPIC*/) {
   program_description.defineOption<std::string>("topic", "Key expression", default_topic)
+      .defineFlag("use_binary_name_as_session_id", "Use the binary name as the session id")
+      .defineOption<std::string>("session_id", "the session id", "")
       .defineOption<std::size_t>("cache", "Cache size", 0)
       .defineOption<std::string>("mode", "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", "Router endpoint", "")
@@ -33,9 +35,15 @@ void appendProgramOption(cli::ProgramDescription& program_description,
 }
 
 auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
-  TopicConfig topic_config{ .name = args.getOption<std::string>("topic") };
+  TopicConfig topic_config{ args.getOption<std::string>("topic") };
 
   Config config;
+  if (args.getOption<bool>("use_binary_name_as_session_id")) {
+    config.use_binary_name_as_session_id = true;
+  } else if (auto session_id = args.getOption<std::string>("session_id"); !session_id.empty()) {
+    config.id = std::move(session_id);
+  }
+
   config.cache_size = args.getOption<std::size_t>("cache");
 
   auto mode = args.getOption<std::string>("mode");

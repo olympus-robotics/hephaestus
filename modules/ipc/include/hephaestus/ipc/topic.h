@@ -9,6 +9,9 @@
 namespace heph::ipc {
 
 struct TopicConfig {
+  /// Construct a TopicConfig with the given name.
+  /// The constructor will throw an exception if the name is not a valid zenoh topic name.
+  explicit TopicConfig(std::string topic_name);
   std::string name;
 };
 

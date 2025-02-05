@@ -30,6 +30,10 @@ namespace heph::utils::string {
 /// camelCase -> CAMEL_CASE
 [[nodiscard]] auto toScreamingSnakeCase(std::string_view camel_case) -> std::string;
 
+/// Convert a string to its ASCII hex representation.
+/// Examples: "ciao" -> "6369616f"
+[[nodiscard]] auto toAsciiHex(const std::string& input) -> std::string;
+
 //=================================================================================================
 // Implementation
 //=================================================================================================

@@ -23,6 +23,7 @@
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/encoding.hxx>
 #include <zenoh/api/ext/serialization.hxx>
+#include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/query.hxx>
 #include <zenoh/api/queryable.hxx>
 #include <zenoh/api/reply.hxx>
@@ -31,6 +32,7 @@
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
@@ -64,6 +66,7 @@ private:
 private:
   SessionPtr session_;
   std::unique_ptr<::zenoh::Queryable<void>> queryable_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   TopicConfig topic_config_;
   Callback callback_;
@@ -207,6 +210,25 @@ template <typename RequestT, typename ReplyT>
   return options;
 }
 
+template <typename ReplyT>
+[[nodiscard]] auto
+getServiceCallResponses(const ::zenoh::channels::FifoChannel::HandlerType<::zenoh::Reply>& service_replies)
+    -> std::vector<ServiceResponse<ReplyT>> {
+  std::vector<ServiceResponse<ReplyT>> reply_messages;
+  for (auto res = service_replies.recv(); std::holds_alternative<::zenoh::Reply>(res);
+       res = service_replies.recv()) {
+    const auto& reply = std::get<::zenoh::Reply>(res);
+    if (!reply.is_ok()) {
+      continue;
+    }
+
+    auto message = internal::onReply<ReplyT>(reply.get_ok());
+    reply_messages.emplace_back(std::move(message));
+  }
+
+  return reply_messages;
+}
+
 }  // namespace internal
 
 template <typename RequestT, typename ReplyT>
@@ -231,6 +253,15 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   throwExceptionIf<FailedZenohOperation>(
       result != Z_OK,
       fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
+
+  liveliness_token_ =
+      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                         EndpointType::SERVICE_SERVER),
+          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+  throwExceptionIf<FailedZenohOperation>(
+      result != Z_OK,
+      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
 }
 
 template <typename RequestT, typename ReplyT>
@@ -283,20 +314,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   throwExceptionIf<FailedZenohOperation>(result != Z_OK,
                                          fmt::format("Failed to call service on '{}'", topic_config.name));
 
-  std::vector<ServiceResponse<ReplyT>> reply_messages;
-  for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
-    const auto& reply = std::get<::zenoh::Reply>(res);
-    if (!reply.is_ok()) {
-      heph::log(heph::ERROR, "failed to call service", "topic", topic_config.name, "error",
-                reply.get_err().get_payload().as_string());
-      continue;
-    }
-
-    auto message = internal::onReply<ReplyT>(reply.get_ok());
-    reply_messages.emplace_back(std::move(message));
-  }
-
-  return reply_messages;
+  return internal::getServiceCallResponses<ReplyT>(replies);
 }
 
 }  // namespace heph::ipc::zenoh

@@ -30,6 +30,8 @@ static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO = "2";
 
 [[nodiscard]] auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes;
 
+[[nodiscard]] auto isValidIdChar(char c) -> bool;
+[[nodiscard]] auto isValidId(std::string_view session_id) -> bool;
 [[nodiscard]] auto toString(const ::zenoh::Id& id) -> std::string;
 
 [[nodiscard]] auto toString(const std::vector<std::string>& vec) -> std::string;

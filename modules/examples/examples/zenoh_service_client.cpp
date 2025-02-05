@@ -20,7 +20,7 @@
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_proto/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/program_options.h"
-#include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/service_client.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -34,7 +34,7 @@ auto main(int argc, const char* argv[]) -> int {
 
   try {
     auto desc = heph::cli::ProgramDescription("Binary service client example");
-    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE));
+    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
@@ -45,9 +45,11 @@ auto main(int argc, const char* argv[]) -> int {
         heph::examples::types::Pose{ .orientation = Eigen::Quaterniond{ 1., 0.3, 0.2, 0.1 },  // NOLINT
                                      .position = Eigen::Vector3d{ 3, 2, 1 } };                // NOLINT
     heph::log(heph::DEBUG, "calling service", "topic", topic_config.name, "query", query);
-    const auto replies =
-        heph::ipc::zenoh::callService<heph::examples::types::Pose, heph::examples::types::Pose>(
-            *session, topic_config, query, K_TIMEOUT);
+    auto service_client =
+        heph::ipc::zenoh::ServiceClient<heph::examples::types::Pose, heph::examples::types::Pose>(
+            session, topic_config, K_TIMEOUT);
+
+    const auto replies = service_client.call(query);
     if (!replies.empty()) {
       std::string reply_str;
       std::ranges::for_each(

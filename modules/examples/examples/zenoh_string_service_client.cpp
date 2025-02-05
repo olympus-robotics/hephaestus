@@ -32,7 +32,7 @@ auto main(int argc, const char* argv[]) -> int {
 
   try {
     auto desc = heph::cli::ProgramDescription("String service client example");
-    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE));
+    heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 

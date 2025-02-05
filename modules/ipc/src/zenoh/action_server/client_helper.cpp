@@ -11,16 +11,16 @@
 namespace heph::ipc::zenoh::action_server::internal {
 auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig {
   static constexpr auto STATUS_TOPIC_FORMAT = "{}/status_update";
-  return { fmt::format(STATUS_TOPIC_FORMAT, server_topic.name) };
+  return TopicConfig{ fmt::format(STATUS_TOPIC_FORMAT, server_topic.name) };
 }
 
 auto getResponseServiceTopic(const TopicConfig& topic_config) -> TopicConfig {
   static constexpr auto RESPONSE_TOPIC_FORMAT = "{}/response";
-  return { fmt::format(RESPONSE_TOPIC_FORMAT, topic_config.name) };
+  return TopicConfig{ fmt::format(RESPONSE_TOPIC_FORMAT, topic_config.name) };
 }
 
 auto getStopServiceTopic(const TopicConfig& topic_config) -> TopicConfig {
   static constexpr auto STOP_SERVICE_TOPIC_FORMAT = "{}/stop_request";
-  return { fmt::format(STOP_SERVICE_TOPIC_FORMAT, topic_config.name) };
+  return TopicConfig{ fmt::format(STOP_SERVICE_TOPIC_FORMAT, topic_config.name) };
 }
 }  // namespace heph::ipc::zenoh::action_server::internal
