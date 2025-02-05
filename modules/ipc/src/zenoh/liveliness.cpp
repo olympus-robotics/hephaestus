@@ -41,7 +41,7 @@ struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view SUBSCRIBER = "hephaestus_subscriber";
   static constexpr std::string_view SERVICE_SERVER = "hephaestus_service_server";
   static constexpr std::string_view SERVICE_CLIENT = "hephaestus_service_client";
-  static constexpr std::string_view ACTION_SERVER = "hephaestus_actor_server";
+  static constexpr std::string_view ACTION_SERVER = "hephaestus_action_server";
 };
 
 [[nodiscard]] auto toActorInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {

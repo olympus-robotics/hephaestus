@@ -11,7 +11,7 @@ def foreign_cc_repositories():
         build_file = ":foreign_cc/zenohc_builder.BUILD",
         urls = ["https://github.com/olympus-robotics/zenohc_builder/archive/refs/tags/{version}.zip".format(version = ZENOH_VERSION)],
         strip_prefix = "zenohc_builder-{version}".format(version = ZENOH_VERSION),
-        sha256 = "c29d886503950396358aa7f8f0950207d594e2d8cee4be0f889dac4dfbc12583",
+        sha256 = "c356d6bd35bc87b8d972355d929d371fdd40ef6e398ce784b629f1feeacdc116",
     )
 
     MCAP_VERSION = "bebea860f68b278d6cccdb70e0ed299d2656af96"
