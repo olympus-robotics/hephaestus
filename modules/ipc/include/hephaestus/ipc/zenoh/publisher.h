@@ -13,8 +13,13 @@
 
 namespace heph::ipc::zenoh {
 
+class PublisherBase {
+public:
+  virtual ~PublisherBase() = default;
+};
+
 template <class T>
-class Publisher {
+class Publisher : public PublisherBase {
 public:
   Publisher(SessionPtr session, TopicConfig topic_config, RawPublisher::MatchCallback&& match_cb = nullptr)
     : publisher_(std::move(session), std::move(topic_config), serdes::getSerializedTypeInfo<T>(),

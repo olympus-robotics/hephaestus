@@ -39,8 +39,12 @@
 
 namespace heph::ipc::zenoh {
 
+class ServiceBase {
+public:
+  virtual ~ServiceBase() = default;
+};
 template <typename RequestT, typename ReplyT>
-class Service {
+class Service : public ServiceBase {
 public:
   using Callback = std::function<ReplyT(const RequestT&)>;
   using FailureCallback = std::function<void()>;

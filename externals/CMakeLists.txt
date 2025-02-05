@@ -127,7 +127,7 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # magic_enum
-set(MAGIC_ENUM_VERSION 0.9.5)
+set(MAGIC_ENUM_VERSION 0.9.6)
 set(MAGIC_ENUM_TAG v${MAGIC_ENUM_VERSION})
 set(MAGIC_ENUM_CMAKE_ARGS -DMAGIC_ENUM_OPT_BUILD_EXAMPLES=OFF -DMAGIC_ENUM_OPT_BUILD_TESTS=OFF
                           -DMAGIC_ENUM_OPT_INSTALL=ON

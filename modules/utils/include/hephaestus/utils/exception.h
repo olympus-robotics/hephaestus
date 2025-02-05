@@ -11,7 +11,7 @@
 #include <type_traits>
 
 #ifdef DISABLE_EXCEPTIONS
-#include <absl/log/absl_check.h>
+#include <absl/log/check.h>
 #include <fmt/format.h>
 #endif
 
@@ -42,8 +42,8 @@ constexpr void throwException(const std::string& message,
   throw T{ message, location };
 #else
   auto e = T{ message, location };
-  ABSL_CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                   location.line());
+  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                              location.line());
 #endif
 }
 
@@ -63,8 +63,8 @@ constexpr void throwExceptionIf(bool condition, const std::string& message,
   }
 #else
   auto e = T{ message, location };
-  ABSL_CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                        location.line());
+  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
+                                   location.line());
 #endif
 }
 
