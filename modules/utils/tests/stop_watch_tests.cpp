@@ -15,11 +15,11 @@ TEST(StopWatch, AccumulateTime) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 100ms;
 
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
   swatch.start();
   const auto t1 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(t1.count(), 0);
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
   const auto t2 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(t2, t1 + PERIOD);
 }
@@ -28,10 +28,10 @@ TEST(StopWatch, Stoppable) {
   using namespace std::chrono_literals;
   static constexpr auto PERIOD = 10ms;
 
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
   swatch.start();
 
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
   const auto elapsed = swatch.stop();
   EXPECT_EQ(swatch.lapsCount(), 1);
   EXPECT_EQ(elapsed, PERIOD);
@@ -39,7 +39,7 @@ TEST(StopWatch, Stoppable) {
   const auto t1 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(elapsed, t1);
 
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
   const auto t2 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(t1, t2);
 }
@@ -48,19 +48,19 @@ TEST(StopWatch, ResumeCounting) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
 
   // start and let it run for period
   swatch.start();
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
 
   // stop for a while
   std::ignore = swatch.stop();
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
 
   // start again and let it run for period
   swatch.start();
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
 
   // should have accumulated about 2 periods of count
   const auto t2 = swatch.accumulatedLapsDuration();
@@ -74,9 +74,9 @@ TEST(StopWatch, Reset) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
   swatch.start();
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
   std::ignore = swatch.stop();
 
   EXPECT_EQ(swatch.accumulatedLapsDuration(), PERIOD);
@@ -90,12 +90,12 @@ TEST(StopWatch, Lapse) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
   swatch.start();
-  FakeSteadyClock::advance(PERIOD);
+  FakeClock::advance(PERIOD);
   const auto l1 = swatch.lapse();
   EXPECT_EQ(l1, PERIOD);
-  FakeSteadyClock::advance(2 * PERIOD);
+  FakeClock::advance(2 * PERIOD);
   const auto l2 = swatch.lapse();
   EXPECT_EQ(l2, 2 * PERIOD);
   const auto e = swatch.elapsed();
@@ -107,7 +107,7 @@ TEST(StopWatch, Lapse) {
 TEST(StopWatch, DurationCast) {
   using namespace std::chrono_literals;
   using DurationT = std::chrono::duration<double>;
-  StopWatch<FakeSteadyClock> swatch;
+  StopWatch<FakeClock> swatch;
   swatch.start();
   auto elapsed = swatch.lapse<DurationT>();
   static_assert(std::is_same_v<decltype(elapsed), DurationT>);
