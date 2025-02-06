@@ -16,6 +16,7 @@
 #include <absl/strings/str_split.h>
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <magic_enum.hpp>
 #include <zenoh.h>
 #include <zenoh/api/channels.hxx>

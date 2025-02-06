@@ -10,7 +10,7 @@
 #include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::telemetry::internal {
-void log(LogEntry&& log_entry);
+void log(LogEntry&& log_entry) noexcept;
 
 #if (__GNUC__ >= 14) || defined(__clang__)
 // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
@@ -19,7 +19,7 @@ void log(LogEntry&& log_entry);
 ///       This is exists for better understandable compiler errors.
 ///       Code gcc<14 will still work as expected but the compiler error message is hard to read.
 template <typename First>
-void logWithFields(LogEntry&&, First&&) {
+void logWithFields(LogEntry&&, First&&) noexcept {
   static_assert(false, "number of input parameters is uneven.");
 }
 // NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved, misc-unused-parameters,
@@ -28,7 +28,7 @@ void logWithFields(LogEntry&&, First&&) {
 
 ///@brief Stop function for recursion: Even number of parameters
 template <typename First, typename Second>
-void logWithFields(LogEntry&& entry, First&& first, Second&& second) {
+void logWithFields(LogEntry&& entry, First&& first, Second&& second) noexcept {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   entry << Field{ .key = std::forward<First>(first), .value = std::forward<Second>(second) };
   log(std::move(entry));
@@ -37,7 +37,7 @@ void logWithFields(LogEntry&& entry, First&& first, Second&& second) {
 ///@brief Add fields pairwise to entry. `addFields(entry, "a", 3,"b","lala")` will result in fields a=3 and
 /// b="lala".
 template <typename First, typename Second, typename... Rest>
-void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... rest) {
+void logWithFields(LogEntry&& entry, First&& first, Second&& second, Rest&&... rest) noexcept {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   entry << Field{ .key = std::forward<First>(first), .value = std::forward<Second>(second) };
   logWithFields(std::move(entry), std::forward<Rest>(rest)...);
@@ -52,7 +52,7 @@ namespace heph {
 ///       "entity", "km/h")
 ///       ```
 template <typename... Args>
-void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields) {
+void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields) noexcept {
   telemetry::internal::logWithFields(telemetry::LogEntry{ level, std::move(msg) },
                                      std::forward<Args>(fields)...);
 }
@@ -62,7 +62,7 @@ void log(LogLevel level, telemetry::MessageWithLocation&& msg, Args&&... fields)
 ///       heph::log(heph::LogLevel::WARN, "speed is over limit")
 ///       ```
 template <typename... Args>
-void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
+void log(LogLevel level, telemetry::MessageWithLocation&& msg) noexcept {
   telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
 }
 
@@ -72,7 +72,7 @@ void log(LogLevel level, telemetry::MessageWithLocation&& msg) {
 ///       "entity", "km/h")
 ///       ```
 template <typename... Args>
-void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg, Args&&... fields) {
+void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg, Args&&... fields) noexcept {
   if (condition) {
     telemetry::internal::logWithFields(telemetry::LogEntry{ level, std::move(msg) },
                                        std::forward<Args>(fields)...);
@@ -84,7 +84,7 @@ void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg,
 ///       heph::log(heph::LogLevel::WARN, a==3, "speed is over limit")
 ///       ```
 template <typename... Args>
-void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg) {
+void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg) noexcept {
   if (condition) {
     telemetry::internal::log(telemetry::LogEntry{ level, std::move(msg) });
   }
@@ -92,7 +92,7 @@ void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg)
 
 namespace telemetry {
 ///@brief Register a sink for logging.
-void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink);
+void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink) noexcept;
 }  // namespace telemetry
 
 }  // namespace heph
