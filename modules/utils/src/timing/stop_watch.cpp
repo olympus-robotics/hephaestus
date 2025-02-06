@@ -6,6 +6,10 @@
 
 #include "hephaestus/utils/timing/stop_watch.h"
 
+#include <chrono>
+#include <cstddef>
+#include <optional>
+
 namespace heph::utils::timing {
 
 StopWatch::StopWatch(NowFunctionPtr now_fn) : now_fn_(now_fn) {
