@@ -29,8 +29,15 @@ public:
   /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
   /// infinite length is created.
   explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
-    throwExceptionIf<InvalidParameterException>(max_size_.has_value() && *max_size_ == 0,
+  }
+
+  /// Create a queue, checking for invalid parameters.
+  /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
+  /// infinite length is created.
+  auto create(std::optional<std::size_t> max_size) -> BlockingQueue<T> {
+    throwExceptionIf<InvalidParameterException>(max_size.has_value() && max_size.value() == 0,
                                                 "Cannot create a queue with max size 0");
+    return BlockingQueue<T>(max_size);
   }
 
   /// Attempt to enqueue the data if there is space in the queue.
