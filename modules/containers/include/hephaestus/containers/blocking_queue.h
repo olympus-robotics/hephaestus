@@ -12,8 +12,6 @@
 #include <optional>
 #include <type_traits>
 
-#include "hephaestus/utils/exception.h"
-
 namespace heph::containers {
 namespace concepts {
 template <typename T, typename U>
@@ -29,8 +27,6 @@ public:
   /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
   /// infinite length is created.
   explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
-    throwExceptionIf<InvalidParameterException>(max_size_.has_value() && *max_size_ == 0,
-                                                "Cannot create a queue with max size 0");
   }
 
   /// Attempt to enqueue the data if there is space in the queue.
