@@ -25,7 +25,7 @@ concept SimilarTo = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>
 template <class T>
 class BlockingQueue {
 public:
-  /// Create a queue
+  /// Create a queue, leave constructor public to go around throwing input parameter checks.
   /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
   /// infinite length is created.
   explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
