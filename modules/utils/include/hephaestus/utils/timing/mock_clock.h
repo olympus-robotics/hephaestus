@@ -8,18 +8,18 @@
 
 namespace heph::utils::timing {
 
-class FakeClock {
+class MockClock {
 public:
   using duration = std::chrono::steady_clock::duration;
   using rep = std::chrono::steady_clock::rep;
   using period = std::chrono::steady_clock::period;
-  using time_point = std::chrono::time_point<FakeClock>;
+  using time_point = std::chrono::time_point<MockClock>;
 
-  ~FakeClock() = default;
-  FakeClock(const FakeClock&) = delete;
-  auto operator=(const FakeClock&) -> FakeClock& = delete;
-  FakeClock(FakeClock&&) = delete;
-  auto operator=(FakeClock&&) -> FakeClock& = delete;
+  ~MockClock() = default;
+  MockClock(const MockClock&) = delete;
+  auto operator=(const MockClock&) -> MockClock& = delete;
+  MockClock(MockClock&&) = delete;
+  auto operator=(MockClock&&) -> MockClock& = delete;
 
   // Standard clock interface methods
   static auto now() -> time_point {
@@ -46,7 +46,7 @@ public:
 
 private:
   // Private constructor to prevent instantiation
-  FakeClock() = default;
+  MockClock() = default;
 
   // Static variable to track current time
   static inline time_point current_time = time_point::min();

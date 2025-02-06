@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/timing/fake_clock.h"
+#include "hephaestus/utils/timing/mock_clock.h"
