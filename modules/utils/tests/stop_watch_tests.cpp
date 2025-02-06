@@ -15,7 +15,7 @@ TEST(StopWatch, AccumulateTime) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 100ms;
 
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
   swatch.start();
   const auto t1 = swatch.accumulatedLapsDuration();
   EXPECT_EQ(t1.count(), 0);
@@ -28,7 +28,7 @@ TEST(StopWatch, Stoppable) {
   using namespace std::chrono_literals;
   static constexpr auto PERIOD = 10ms;
 
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
   swatch.start();
 
   MockClock::advance(PERIOD);
@@ -48,7 +48,7 @@ TEST(StopWatch, ResumeCounting) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
 
   // start and let it run for period
   swatch.start();
@@ -74,7 +74,7 @@ TEST(StopWatch, Reset) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
   swatch.start();
   MockClock::advance(PERIOD);
   std::ignore = swatch.stop();
@@ -90,7 +90,7 @@ TEST(StopWatch, Lapse) {
   using namespace std::chrono_literals;
   constexpr auto PERIOD = 10ms;
 
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
   swatch.start();
   MockClock::advance(PERIOD);
   const auto l1 = swatch.lapse();
@@ -107,7 +107,7 @@ TEST(StopWatch, Lapse) {
 TEST(StopWatch, DurationCast) {
   using namespace std::chrono_literals;
   using DurationT = std::chrono::duration<double>;
-  StopWatch<MockClock> swatch;
+  StopWatch swatch{ MockClock::now };
   swatch.start();
   auto elapsed = swatch.lapse<DurationT>();
   static_assert(std::is_same_v<decltype(elapsed), DurationT>);

@@ -13,7 +13,7 @@ public:
   using duration = std::chrono::steady_clock::duration;
   using rep = std::chrono::steady_clock::rep;
   using period = std::chrono::steady_clock::period;
-  using time_point = std::chrono::time_point<MockClock>;
+  using time_point = std::chrono::time_point<std::chrono::steady_clock>;
 
   ~MockClock() = default;
   MockClock(const MockClock&) = delete;
