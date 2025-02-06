@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <memory>
 #include <string>
 
@@ -16,7 +20,6 @@
 using namespace ::testing;
 
 namespace heph::ipc::zenoh::tests {
-
 namespace {
 
 [[nodiscard]] auto generateRandomTopicName(std::mt19937_64& mt) -> std::string {

@@ -1,7 +1,5 @@
 //=================================================================================================
-// PIPPO © Copyright, 2015-2023. All Rights Reserved.
-//
-// This file is part of the RoboCool project
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/timing/stop_watch.h"
+#include "hephaestus/utils/timing/mock_clock.h"

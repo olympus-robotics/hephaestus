@@ -85,6 +85,9 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
   if (type == LivelinessTokenKeyexprSuffix::ACTION_SERVER) {
     return EndpointType::ACTION_SERVER;
   }
+  if (type == LivelinessTokenKeyexprSuffix::SERVICE_CLIENT) {
+    return EndpointType::SERVICE_CLIENT;
+  }
 
   return std::nullopt;
 }
@@ -96,22 +99,28 @@ auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& s
 }
 
 auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) -> std::optional<EndpointInfo> {
+  static constexpr auto TOPIC_IDX = 0;
+  static constexpr auto SESSION_IDX = 1;
+  static constexpr auto TYPE_IDX = 2;
   // Expected keyexpr: <topic/name/whatever>/<session_id>/<actor_type>
   const std::vector<std::string> items = absl::StrSplit(keyexpr, '|');
-  if (items.size() < 3) {
-    heph::log(heph::ERROR, "invalid liveliness keyexpr", "keyexpr", keyexpr);
+  fmt::println("items:\n - {}", fmt::join(items, "\n - "));
+  if (items.size() != 3) {
+    heph::log(heph::ERROR, "invalid liveliness keyexpr, too few items", "keyexpr", keyexpr, "items_count",
+              items.size());
     return std::nullopt;
   }
 
-  auto type = livelinessTokenKeyexprSuffixTActionType(items.back());
+  auto type = livelinessTokenKeyexprSuffixTActionType(items[TYPE_IDX]);
   if (!type) {
-    heph::log(heph::ERROR, "invalid liveliness keyexpr", "keyexpr", keyexpr);
+    heph::log(heph::ERROR, "invalid liveliness keyexpr, failed to parse type", "keyexpr", keyexpr, "type",
+              items[TYPE_IDX]);
     return std::nullopt;
   }
 
-  std::string topic = items[0];
+  std::string topic = items[TOPIC_IDX];
 
-  return EndpointInfo{ .session_id = items[items.size() - 2],
+  return EndpointInfo{ .session_id = items[SESSION_IDX],
                        .topic = std::move(topic),
                        .type = *type,
                        .status = toActorInfoStatus(kind) };
