@@ -12,8 +12,6 @@
 #include <optional>
 #include <type_traits>
 
-#include "hephaestus/utils/exception.h"
-
 namespace heph::containers {
 namespace concepts {
 template <typename T, typename U>
@@ -25,19 +23,10 @@ concept SimilarTo = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>
 template <class T>
 class BlockingQueue {
 public:
-  /// Create a queue, leave constructor public to go around throwing input parameter checks.
+  /// Create a queue
   /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
   /// infinite length is created.
   explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
-  }
-
-  /// Create a queue, checking for invalid parameters.
-  /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
-  /// infinite length is created.
-  auto create(std::optional<std::size_t> max_size) -> BlockingQueue<T> {
-    throwExceptionIf<InvalidParameterException>(max_size.has_value() && max_size.value() == 0,
-                                                "Cannot create a queue with max size 0");
-    return BlockingQueue<T>(max_size);
   }
 
   /// Attempt to enqueue the data if there is space in the queue.
