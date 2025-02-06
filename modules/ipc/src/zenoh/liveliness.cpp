@@ -104,7 +104,6 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
   static constexpr auto TYPE_IDX = 2;
   // Expected keyexpr: <topic/name/whatever>/<session_id>/<actor_type>
   const std::vector<std::string> items = absl::StrSplit(keyexpr, '|');
-  fmt::println("items:\n - {}", fmt::join(items, "\n - "));
   if (items.size() != 3) {
     heph::log(heph::ERROR, "invalid liveliness keyexpr, too few items", "keyexpr", keyexpr, "items_count",
               items.size());
