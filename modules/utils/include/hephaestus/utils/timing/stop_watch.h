@@ -18,12 +18,13 @@ namespace heph::utils::timing {
 ///   |___________________|       |___________|
 ///             accumulatedLapsDuration
 ///
-template <typename ClockT = std::chrono::steady_clock>
 class StopWatch {
 public:
+  using ClockT = std::chrono::steady_clock;
   using DurationT = ClockT::duration;
+  using NowFunctionPtr = std::chrono::steady_clock::time_point (*)();
 
-  StopWatch();
+  explicit StopWatch(NowFunctionPtr now_fn = &ClockT::now);
 
   /// Start new lap. Does nothing if already ticking.
   void start();
@@ -64,6 +65,8 @@ private:
   [[nodiscard]] auto elapsedImpl() -> DurationT;
 
 private:
+  NowFunctionPtr now_fn_;
+
   std::optional<typename ClockT::time_point> lap_start_timestamp_;      //!< Timestamp at start().
   std::optional<typename ClockT::time_point> initial_start_timestamp_;  //!< Timestamp at first start() after
                                                                         //!< reset().
@@ -74,105 +77,19 @@ private:
                                   //!< reset().
 };
 
-template <typename ClockT>
-StopWatch<ClockT>::StopWatch() {
-  reset();
-}
-
-template <typename ClockT>
-void StopWatch<ClockT>::start() {
-  if (lap_start_timestamp_.has_value()) {
-    return;
-  }
-
-  lap_start_timestamp_ = ClockT::now();
-  if (!initial_start_timestamp_.has_value()) {
-    initial_start_timestamp_ = lap_start_timestamp_.value();
-  }
-}
-
-template <typename ClockT>
-void StopWatch<ClockT>::reset() {
-  lap_start_timestamp_ = std::nullopt;
-  initial_start_timestamp_ = std::nullopt;
-  lapse_timestamp_ = std::nullopt;
-  accumulated_time_ = {};
-  lap_counter_ = 0;
-}
-
-template <typename ClockT>
 template <typename TargetDurationT>
-auto StopWatch<ClockT>::lapse() -> TargetDurationT {
-  return std::chrono::duration_cast<TargetDurationT>(lapseImpl());
-}
-
-template <typename ClockT>
-template <typename TargetDurationT>
-auto StopWatch<ClockT>::stop() -> TargetDurationT {
+auto StopWatch::stop() -> TargetDurationT {
   return std::chrono::duration_cast<TargetDurationT>(stopImpl());
 }
 
-template <typename ClockT>
 template <typename TargetDurationT>
-auto StopWatch<ClockT>::elapsed() -> TargetDurationT {
+auto StopWatch::lapse() -> TargetDurationT {
+  return std::chrono::duration_cast<TargetDurationT>(lapseImpl());
+}
+
+template <typename TargetDurationT>
+auto StopWatch::elapsed() -> TargetDurationT {
   return std::chrono::duration_cast<TargetDurationT>(elapsedImpl());
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::accumulatedLapsDuration() const -> ClockT::duration {
-  return (lap_start_timestamp_.has_value() ?
-              (accumulated_time_ + (ClockT::now() - lap_start_timestamp_.value())) :
-              accumulated_time_);
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::initialStartTimestamp() const -> std::optional<typename ClockT::time_point> {
-  return initial_start_timestamp_;
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::lapsCount() const -> std::size_t {
-  return lap_counter_;
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::lapseImpl() -> ClockT::duration {
-  if (!lap_start_timestamp_.has_value()) {
-    return {};
-  }
-
-  auto lapse_start_timestamp =
-      lapse_timestamp_.has_value() ? lapse_timestamp_.value() : lap_start_timestamp_.value();
-
-  lapse_timestamp_ = ClockT::now();
-
-  return lapse_timestamp_.value() - lapse_start_timestamp;
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::stopImpl() -> ClockT::duration {
-  if (!lap_start_timestamp_.has_value()) {
-    return {};
-  }
-
-  auto stop_timestamp = ClockT::now();
-  const auto lap_time = stop_timestamp - lap_start_timestamp_.value();
-
-  lap_start_timestamp_ = std::nullopt;
-  lapse_timestamp_ = std::nullopt;
-  accumulated_time_ += lap_time;
-  ++lap_counter_;
-
-  return lap_time;
-}
-
-template <typename ClockT>
-auto StopWatch<ClockT>::elapsedImpl() -> ClockT::duration {
-  if (!lap_start_timestamp_.has_value()) {
-    return {};
-  }
-
-  return ClockT::now() - lap_start_timestamp_.value();
 }
 
 }  // namespace heph::utils::timing
