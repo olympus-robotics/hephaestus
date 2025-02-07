@@ -143,8 +143,8 @@ TEST(ZenohTests, ServiceTypeInfo) {
 
   auto session = createSession(createLocalConfig());
 
-  auto service_server = Service<types::DummyType, types::DummyPrimitivesType>(
-      session, service_topic, [](const types::DummyType&) { return types::DummyPrimitivesType{}; });
+  auto service_server = Service<types::DummyType, std::string>(session, service_topic,
+                                                               [](const types::DummyType&) { return ""; });
 
   auto type_info_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(service_topic.name) };
   EXPECT_TRUE(isEndpointTypeInfoServiceTopic(type_info_service_topic.name));
@@ -158,7 +158,7 @@ TEST(ZenohTests, ServiceTypeInfo) {
 
   auto type_info = serdes::ServiceTypeInfo::fromJson(replies.front().value);
   EXPECT_EQ(type_info.request, serdes::getSerializedTypeInfo<types::DummyType>());
-  EXPECT_EQ(type_info.reply, serdes::getSerializedTypeInfo<types::DummyPrimitivesType>());
+  EXPECT_EQ(type_info.reply, serdes::getSerializedTypeInfo<std::string>());
 }
 
 }  // namespace
