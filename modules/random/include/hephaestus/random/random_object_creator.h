@@ -60,6 +60,16 @@ template <std::floating_point T>
 }
 
 //=================================================================================================
+// Random floating point value creation
+//=================================================================================================
+template <typename T>
+  requires(std::is_same_v<T, std::byte>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::uniform_int_distribution<std::uint8_t> dist;
+  return static_cast<std::byte>(dist(mt));
+}
+
+//=================================================================================================
 // Random enum creation
 //=================================================================================================
 template <EnumType T>

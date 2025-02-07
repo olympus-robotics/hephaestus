@@ -13,6 +13,7 @@
 #include <variant>
 #include <vector>
 
+#include <absl/strings/str_split.h>
 #include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
@@ -29,6 +30,9 @@
 
 namespace heph::ipc::zenoh {
 namespace {
+
+constexpr auto TOPIC_INFO_SERVICE_TOPIC_PREFIX = "topic_info";
+
 [[nodiscard]] auto
 getServiceCallResponses(const ::zenoh::channels::FifoChannel::HandlerType<::zenoh::Reply>& service_replies)
     -> std::vector<ServiceResponse<std::vector<std::byte>>> {
@@ -75,6 +79,15 @@ auto callServiceRaw(Session& session, const TopicConfig& topic_config, std::span
 }
 
 auto getEndpointTypeInfoServiceTopic(const std::string& topic) -> std::string {
-  return fmt::format("type_info/{}", topic);
+  return fmt::format("{}/{}", TOPIC_INFO_SERVICE_TOPIC_PREFIX, topic);
+}
+
+auto isEndpointTypeInfoServiceTopic(const std::string& topic) -> bool {
+  std::vector<std::string> elements = absl::StrSplit(topic, '/');
+  if (elements.empty()) {
+    return false;
+  }
+
+  return elements.front() == TOPIC_INFO_SERVICE_TOPIC_PREFIX;
 }
 }  // namespace heph::ipc::zenoh

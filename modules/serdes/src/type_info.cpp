@@ -38,4 +38,18 @@ auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
            .serialization = serialization.value(),  // NOLINT(bugprone-unchecked-optional-access)
            .original_type = data["original_type"] };
 }
+
+auto ServiceTypeInfo::toJson() const -> std::string {
+  nlohmann::json data;
+  data["request"] = nlohmann::json::parse(request.toJson());
+  data["reply"] = nlohmann::json::parse(reply.toJson());
+
+  return data.dump();
+}
+
+auto ServiceTypeInfo::fromJson(const std::string& info) -> ServiceTypeInfo {
+  auto data = nlohmann::json::parse(info);
+  return { .request = TypeInfo::fromJson(data["request"].dump()),
+           .reply = TypeInfo::fromJson(data["reply"].dump()) };
+}
 }  // namespace heph::serdes

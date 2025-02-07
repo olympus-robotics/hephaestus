@@ -7,6 +7,7 @@
 #include <array>
 #include <chrono>
 #include <concepts>
+#include <cstddef>
 #include <ctime>
 #include <future>
 #include <optional>
@@ -25,7 +26,7 @@ template <typename T>
 concept ScalarType = std::is_scalar_v<T>;
 
 template <typename T>
-concept EnumType = std::is_enum_v<T>;
+concept EnumType = std::is_enum_v<T> && !std::is_same_v<std::byte, T>;
 
 template <typename T>
 concept BooleanType = std::is_same_v<T, bool>;
