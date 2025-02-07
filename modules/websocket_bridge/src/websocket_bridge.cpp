@@ -144,22 +144,75 @@ void WsBridge::wait() const {
 /////////////////////////
 // IPC Graph Callbacks //
 /////////////////////////
+
 void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
                                               const heph::serdes::TypeInfo& type_info) {
-  (void)topic;
-  (void)type_info;
-  // Handle the topic discovery logic here
-  // For example, you might want to log the discovery or update some internal state
-  // Example:
-  // LOG(INFO) << "Topic found: " << topic << " with type: " << type_info.name;
+  CHECK(ipc_graph_);
+
+  if (state_.hasIpcTopicMapping(topic)) {
+    fmt::print("{}\n", state_.toString());
+    heph::log(heph::WARN,
+              fmt::format("[WS Bridge] - Topic is already advertized! There are likely multiple publishers!",
+                          "topic", topic));
+    return;
+  }
+
+  const std::string schema_str = convertProtoBytesToFoxgloveBase64String(type_info.schema);
+
+  const std::string schema_encoding_str = convertSerializationTypeToString(type_info.serialization);
+
+  WsServerChannelInfo new_ws_server_channel{
+    .topic = topic,
+    .encoding = schema_encoding_str,
+    .schemaName = type_info.name,
+    .schema = schema_str,
+    .schemaEncoding = schema_encoding_str,
+  };
+
+  // debugPrintSchema(type_info.schema);
+
+  heph::log(heph::INFO, "[WS Bridge] - New Channel", "topic", new_ws_server_channel.topic, "encoding",
+            new_ws_server_channel.encoding, "schemaName", new_ws_server_channel.schemaName, "schema",
+            new_ws_server_channel.schema, "schemaEncoding",
+            new_ws_server_channel.schemaEncoding.value_or("N/A"));
+
+  std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
+  auto new_channel_ids = ws_server_->addChannels(new_ws_server_channels);
+
+  CHECK_EQ(new_channel_ids.size(), 1);
+  const auto new_channel_id = new_channel_ids.front();
+
+  state_.addWsChannelToIpcTopicMapping(new_channel_id, topic);
 }
 
 void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
   (void)topic;
-  // Handle the topic removal logic here
-  // For example, you might want to log the removal or update some internal state
-  // Example:
-  // LOG(INFO) << "Topic dropped: " << topic;
+  if (!state_.hasIpcTopicMapping(topic)) {
+    fmt::print("{}\n", state_.toString());
+    heph::log(
+        heph::WARN,
+        fmt::format("[WS Bridge] - Topic is already unadvertized! There are likely multiple publishers!",
+                    "topic", topic));
+    return;
+  }
+
+  const auto channel_id = state_.getWsChannelForIpcTopic(topic);
+
+  // Clean up IPC interface side
+  {
+    state_.removeWsChannelToIpcTopicMapping(channel_id, topic);
+
+    // if (ipc_interface_->HasSubscriber(topic)) {
+    //   ipc_interface_->RemoveSubscriber(topic);
+    // }
+  }
+
+  // Clean up WS Server side
+  {
+    state_.removeWsChannelToClientMapping(channel_id);
+
+    ws_server_->removeChannels({ channel_id });
+  }
 }
 
 void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {

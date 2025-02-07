@@ -56,14 +56,22 @@ public:
   // their types as they are stored in  topics_to_types_map_.
   std::string getTopicListString();
 
+  void addPublisher(const ipc::zenoh::EndpointInfo& info);
+  void removePublisher(const ipc::zenoh::EndpointInfo& info);
+  bool hasPublisher(const std::string& topic) const;
+
+  void addSubscriber(const ipc::zenoh::EndpointInfo& info);
+  void removeSubscriber(const ipc::zenoh::EndpointInfo& info);
+
+  bool addTopic(const std::string& topic);
+  void removeTopic(const std::string& topic);
+  bool hasTopic(const std::string& topic_name) const;
+
+public:
   TopicsToTypesMap getTopicsToTypesMap() const;
-
   TopicsToTypesMap getServicesToTypesMap() const;
-
   TopicsToTypesMap getServicesToNodesMap() const;
-
   TopicToNodesMap getTopicToSubscribersMap() const;
-
   TopicToNodesMap getTopicToPublishersMap() const;
 
 private:
@@ -77,16 +85,16 @@ private:
   std::unique_ptr<ipc::zenoh::EndpointDiscovery> discovery_;
 
 private:
-  void addPublisher(const ipc::zenoh::EndpointInfo& info);
-  void removePublisher(const ipc::zenoh::EndpointInfo& info);
-  bool hasPublisher(const std::string& topic) const;
+  void addPublisherImpl(const ipc::zenoh::EndpointInfo& info);
+  void removePublisherImpl(const ipc::zenoh::EndpointInfo& info);
+  bool hasPublisherImpl(const std::string& topic) const;
 
-  void addSubscriber(const ipc::zenoh::EndpointInfo& info);
-  void removeSubscriber(const ipc::zenoh::EndpointInfo& info);
+  void addSubscriberImpl(const ipc::zenoh::EndpointInfo& info);
+  void removeSubscriberImpl(const ipc::zenoh::EndpointInfo& info);
 
-  bool addTopic(const std::string& topic);
-  void removeTopic(const std::string& topic);
-  bool hasTopic(const std::string& topic_name) const;
+  bool addTopicImpl(const std::string& topic);
+  void removeTopicImpl(const std::string& topic);
+  bool hasTopicImpl(const std::string& topic_name) const;
 
   IpcGraphState state_;
 

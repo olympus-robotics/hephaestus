@@ -11,8 +11,8 @@ std::string WsBridgeState::getIpcTopicForWsChannel(const WsServerChannelId& chan
   auto it = channel_to_topic_.find(channel_id);
   if (it == channel_to_topic_.end()) {
     heph::log(heph::ERROR, toString());
-    heph::log(heph::ERROR, "[WS Bridge] - Could not convert channel id [", std::to_string(channel_id),
-              "] to topic. Something went wrong!");
+    heph::log(heph::ERROR, "[WS Bridge] - Could not convert channel id to topic. Something went wrong!",
+              "channel id", std::to_string(channel_id));
     return "";
   }
   return it->second;
@@ -23,8 +23,8 @@ WsServerChannelId WsBridgeState::getWsChannelForIpcTopic(const std::string& topi
   auto it = topic_to_channel_.find(topic);
   if (it == topic_to_channel_.end()) {
     heph::log(heph::ERROR, toString());
-    heph::log(heph::ERROR, "[WS Bridge] - Could not find channel id for topic '", topic,
-              "'. Something went wrong!");
+    heph::log(heph::ERROR, "[WS Bridge] - Could not find channel id for topic. Something went wrong!",
+              "topic", topic);
     return {};
   }
   return it->second;
@@ -64,7 +64,7 @@ std::string WsBridgeState::topicChannelMappingToString() const {
   }
 
   for (const auto& [channel_id, topic] : channel_to_topic_) {
-    oss << "  \t[" << channel_id << "] -> '" << topic << "'\n";
+    oss << "  \t'" << topic << "' -> [" << channel_id << "]\n";
   }
   return oss.str();
 }
@@ -75,8 +75,8 @@ bool WsBridgeState::hasWsChannelWithClients(const WsServerChannelId& channel_id)
   const bool channel_is_in_map = it != channel_to_client_map_.end();
   const bool channel_has_clients = channel_is_in_map && !it->second.empty();
   if (channel_is_in_map && !channel_has_clients) {
-    heph::log(heph::ERROR, "If a channel [", std::to_string(channel_id),
-              "] is in the map, it must have at least one client handle!");
+    heph::log(heph::ERROR, "If a channel is in the map, it must have at least one client handle!",
+              "channel id", std::to_string(channel_id));
   }
   return channel_has_clients;
 }
@@ -129,8 +129,8 @@ WsBridgeState::getClientsForWsChannel(const WsServerChannelId& channel_id) const
   WsServerClientHandleSet client_handles;
   for (const auto& client : it->second) {
     if (client.first.expired()) {
-      heph::log(heph::ERROR, "If a channel [", std::to_string(channel_id),
-                "] is in the map, it must have at least one client handle!");
+      heph::log(heph::ERROR, "If a channel is in the map, it must have at least one client handle!",
+                "channel id", std::to_string(channel_id));
     }
     client_handles.insert(client);
   }

@@ -65,7 +65,7 @@ auto main(int argc, const char* argv[]) -> int {
     heph::utils::TerminationBlocker::waitForInterruptOrAppCompletion(*bridge);
 
   } catch (const std::exception& ex) {
-    heph::log(heph::ERROR, "Failed with ", "exception: ", ex.what());
+    heph::log(heph::ERROR, "Failed with exception", "exception", ex.what());
     return EXIT_FAILURE;
   }
 

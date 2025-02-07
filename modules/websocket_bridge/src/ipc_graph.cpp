@@ -35,9 +35,10 @@ std::optional<heph::serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::stri
 }
 
 void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
+  absl::MutexLock lock(&mutex_);
+
   ipc::zenoh::printEndpointInfo(info);
 
-  absl::MutexLock lock(&mutex_);
   bool graph_updated = false;
 
   switch (info.type) {
@@ -53,23 +54,25 @@ void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info
     case ipc::zenoh::EndpointType::PUBLISHER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addPublisher(info);
+          addPublisherImpl(info);
           graph_updated = true;
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removePublisher(info);
+          removePublisherImpl(info);
           graph_updated = true;
+          break;
       }
       break;
     case ipc::zenoh::EndpointType::SUBSCRIBER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addSubscriber(info);
+          addSubscriberImpl(info);
           graph_updated = true;
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removeSubscriber(info);
+          removeSubscriberImpl(info);
           graph_updated = true;
+          break;
       }
       break;
   }
@@ -131,32 +134,32 @@ TopicToNodesMap IpcGraph::getTopicToPublishersMap() const {
   return state_.topic_to_publishers_map;
 }
 
-void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
-  if (!addTopic(info.topic)) {
+void IpcGraph::addPublisherImpl(const ipc::zenoh::EndpointInfo& info) {
+  if (!addTopicImpl(info.topic)) {
     return;
   }
 
   state_.topic_to_publishers_map[info.topic].push_back(info.session_id);
 }
 
-void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removePublisherImpl(const ipc::zenoh::EndpointInfo& info) {
   auto& publishers = state_.topic_to_publishers_map[info.topic];
   publishers.erase(std::remove(publishers.begin(), publishers.end(), info.session_id), publishers.end());
   if (publishers.empty()) {
     state_.topic_to_publishers_map.erase(info.topic);
-    removeTopic(info.topic);
+    removeTopicImpl(info.topic);
   }
 }
 
-bool IpcGraph::hasPublisher(const std::string& topic) const {
+bool IpcGraph::hasPublisherImpl(const std::string& topic) const {
   return state_.topic_to_publishers_map.find(topic) != state_.topic_to_publishers_map.end();
 }
 
-void IpcGraph::addSubscriber(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::addSubscriberImpl(const ipc::zenoh::EndpointInfo& info) {
   state_.topic_to_subscribers_map[info.topic].push_back(info.session_id);
 }
 
-void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removeSubscriberImpl(const ipc::zenoh::EndpointInfo& info) {
   auto& subscribers = state_.topic_to_subscribers_map[info.topic];
   subscribers.erase(std::remove(subscribers.begin(), subscribers.end(), info.session_id), subscribers.end());
   if (subscribers.empty()) {
@@ -164,43 +167,83 @@ void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
   }
 }
 
-void IpcGraph::removeTopic(const std::string& topic) {
+void IpcGraph::removeTopicImpl(const std::string& topic) {
   state_.topics_to_types_map.erase(topic);
   state_.topic_to_publishers_map.erase(topic);
   state_.topic_to_subscribers_map.erase(topic);
 
-  heph::log(heph::INFO, "[IPC Graph] - Topic dropped: '", topic, "'");
+  heph::log(heph::INFO, "[IPC Graph] - Topic dropped", "topic", topic);
 
   if (config_.topic_removal_cb) {
     config_.topic_removal_cb(topic);
   }
 }
 
-bool IpcGraph::hasTopic(const std::string& topic_name) const {
+bool IpcGraph::hasTopicImpl(const std::string& topic_name) const {
   return state_.topics_to_types_map.find(topic_name) != state_.topics_to_types_map.end();
 }
 
-bool IpcGraph::addTopic(const std::string& topic) {
-  if (hasTopic(topic)) {
-    heph::log(heph::ERROR, "[IPC Graph] - Trying to add a topic twice: '", topic, "'");
+bool IpcGraph::addTopicImpl(const std::string& topic) {
+  if (hasTopicImpl(topic)) {
+    heph::log(heph::ERROR, "[IPC Graph] - Trying to add a topic twice", "topic", topic);
     return true;
   }
 
   auto type_info = topic_db_->getTypeInfo(topic);
   if (!type_info.has_value()) {
-    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic: '", topic, "'");
+    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic", "topic", topic);
     return false;
   }
 
   state_.topics_to_types_map[topic] = type_info->name;
 
-  heph::log(heph::INFO, "[IPC Graph] - Topic discovered: ", topic, " with type '", type_info->name, "'");
+  heph::log(heph::INFO, "[IPC Graph] - Topic discovered", "topic", topic, "type", type_info->name);
 
   if (config_.topic_discovery_cb) {
     config_.topic_discovery_cb(topic, type_info.value());
   }
 
   return true;
+}
+
+void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
+  absl::MutexLock lock(&mutex_);
+  addPublisherImpl(info);
+}
+
+void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
+  absl::MutexLock lock(&mutex_);
+  removePublisherImpl(info);
+}
+
+bool IpcGraph::hasPublisher(const std::string& topic) const {
+  absl::MutexLock lock(&mutex_);
+  return hasPublisherImpl(topic);
+}
+
+void IpcGraph::addSubscriber(const ipc::zenoh::EndpointInfo& info) {
+  absl::MutexLock lock(&mutex_);
+  addSubscriberImpl(info);
+}
+
+void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
+  absl::MutexLock lock(&mutex_);
+  removeSubscriberImpl(info);
+}
+
+bool IpcGraph::addTopic(const std::string& topic) {
+  absl::MutexLock lock(&mutex_);
+  return addTopicImpl(topic);
+}
+
+void IpcGraph::removeTopic(const std::string& topic) {
+  absl::MutexLock lock(&mutex_);
+  removeTopicImpl(topic);
+}
+
+bool IpcGraph::hasTopic(const std::string& topic_name) const {
+  absl::MutexLock lock(&mutex_);
+  return hasTopicImpl(topic_name);
 }
 
 }  // namespace heph::ws_bridge

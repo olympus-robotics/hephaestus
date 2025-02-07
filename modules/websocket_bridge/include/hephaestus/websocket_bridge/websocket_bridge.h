@@ -28,6 +28,7 @@
 
 #include "hephaestus/websocket_bridge/config.h"
 #include "hephaestus/websocket_bridge/ipc_graph.h"
+#include "hephaestus/websocket_bridge/serialization_utils.h"
 #include "hephaestus/websocket_bridge/websocket_bridge_state.h"
 #include "hephaestus/websocket_bridge/websocket_server_utils.h"
 

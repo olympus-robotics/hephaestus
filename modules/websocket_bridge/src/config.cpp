@@ -13,7 +13,8 @@ std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_
       regex_vector.push_back(
           std::regex(regex_string, std::regex_constants::ECMAScript | std::regex_constants::icase));
     } catch (const std::exception& ex) {
-      heph::log(heph::ERROR, "Ignoring invalid regular expression '{}' - Error: {}", regex_string, ex.what());
+      heph::log(heph::ERROR, "Ignoring invalid regular expression", "expression", regex_string, "error",
+                ex.what());
     }
   }
 
