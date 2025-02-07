@@ -11,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <fmt/format.h>
 #include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/matching.hxx>
@@ -74,9 +73,5 @@ private:
   MatchCallback match_cb_{ nullptr };
   std::unique_ptr<::zenoh::MatchingListener<void>> matching_listener_;
 };
-
-[[nodiscard]] static inline auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
-  return fmt::format("type_info/{}", topic);
-}
 
 }  // namespace heph::ipc::zenoh

@@ -19,7 +19,9 @@
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
 
 namespace heph::ipc::zenoh {
 
@@ -40,7 +42,7 @@ public:
   /// While this avoid blocking the Zenoh session thread to process other messages,
   /// it also introduce an overhead due to the message data being copied.
   RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                bool dedicated_callback_thread = false);
+                serdes::TypeInfo type_info, bool dedicated_callback_thread = false);
   ~RawSubscriber();
   RawSubscriber(const RawSubscriber&) = delete;
   RawSubscriber(RawSubscriber&&) = delete;
@@ -49,6 +51,7 @@ public:
 
 private:
   void callback(const ::zenoh::Sample& sample);
+  void createTypeInfoService();
 
 private:
   using Message = std::pair<MessageMetadata, std::vector<std::byte>>;
@@ -60,6 +63,9 @@ private:
 
   std::unique_ptr<::zenoh::ext::AdvancedSubscriber<void>> subscriber_;
   std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
+
+  serdes::TypeInfo type_info_;
+  std::unique_ptr<Service<std::string, std::string>> type_service_;
 
   bool dedicated_callback_thread_;
   static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;

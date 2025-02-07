@@ -22,6 +22,7 @@ struct TypeInfo {
 
   [[nodiscard]] auto toJson() const -> std::string;
   [[nodiscard]] static auto fromJson(const std::string& info) -> TypeInfo;
+  [[nodiscard]] auto operator==(const TypeInfo&) const -> bool = default;
 };
 
 }  // namespace heph::serdes

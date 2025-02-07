@@ -9,7 +9,6 @@
 #include <memory>
 #include <span>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -23,33 +22,19 @@
 #include <zenoh/api/keyexpr.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/sample.hxx>
-#include <zenoh/detail/closures.hxx>
-#include <zenoh/detail/closures_concrete.hxx>
-#include <zenoh_macros.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
-// This code comes from `zenoh/api/session.hxx`
-template <typename C, typename D>
-[[nodiscard]] auto createZenohcClosure(C&& on_sample, D&& on_drop) -> z_owned_closure_sample_t {
-  z_owned_closure_sample_t c_closure;
-  using Cval = std::remove_reference_t<C>;
-  using Dval = std::remove_reference_t<D>;
-  using ClosureType = typename ::zenoh::detail::closures::Closure<Cval, Dval, void, const ::zenoh::Sample&>;
-  auto closure = ClosureType::into_context(std::forward<C>(on_sample), std::forward<D>(on_drop));
-  ::z_closure(&c_closure, ::zenoh::detail::closures::_zenoh_on_sample_call,
-              ::zenoh::detail::closures::_zenoh_on_drop, closure);
-  return c_closure;
-}
-
 [[nodiscard]] auto getMetadata(const ::zenoh::Sample& sample, const std::string& topic) -> MessageMetadata {
   std::string sender_id;
   std::string type_info;
@@ -81,11 +66,14 @@ template <typename C, typename D>
 }  // namespace
 
 RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                             bool dedicated_callback_thread /*= false*/)
+                             serdes::TypeInfo type_info, bool dedicated_callback_thread /*= false*/)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
+  , type_info_(std::move(type_info))
   , dedicated_callback_thread_(dedicated_callback_thread) {
+  createTypeInfoService();
+
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
   if (session_->config.cache_size > 0) {
     sub_options.history =
@@ -144,6 +132,17 @@ void RawSubscriber::callback(const ::zenoh::Sample& sample) {
   } else {
     callback_(metadata, { payload.data(), payload.size() });
   }
+}
+
+void RawSubscriber::createTypeInfoService() {
+  auto type_info_json = this->type_info_.toJson();
+  auto type_info_callback = [type_info_json](const auto& request) {
+    (void)request;
+    return type_info_json;
+  };
+  auto type_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) };
+  type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
+                                                                      std::move(type_info_callback));
 }
 
 }  // namespace heph::ipc::zenoh

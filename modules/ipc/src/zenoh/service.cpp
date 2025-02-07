@@ -13,6 +13,7 @@
 #include <variant>
 #include <vector>
 
+#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/channels.hxx>
@@ -71,5 +72,9 @@ auto callServiceRaw(Session& session, const TopicConfig& topic_config, std::span
   }
 
   return getServiceCallResponses(replies);
+}
+
+auto getEndpointTypeInfoServiceTopic(const std::string& topic) -> std::string {
+  return fmt::format("type_info/{}", topic);
 }
 }  // namespace heph::ipc::zenoh
