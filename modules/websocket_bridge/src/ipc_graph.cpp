@@ -172,8 +172,6 @@ void IpcGraph::removeTopicImpl(const std::string& topic) {
   state_.topic_to_publishers_map.erase(topic);
   state_.topic_to_subscribers_map.erase(topic);
 
-  heph::log(heph::INFO, "[IPC Graph] - Topic dropped", "topic", topic);
-
   if (config_.topic_removal_cb) {
     config_.topic_removal_cb(topic);
   }
@@ -196,8 +194,6 @@ bool IpcGraph::addTopicImpl(const std::string& topic) {
   }
 
   state_.topics_to_types_map[topic] = type_info->name;
-
-  heph::log(heph::INFO, "[IPC Graph] - Topic discovered", "topic", topic, "type", type_info->name);
 
   if (config_.topic_discovery_cb) {
     config_.topic_discovery_cb(topic, type_info.value());

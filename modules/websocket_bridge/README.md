@@ -9,7 +9,7 @@ This module bridges Zenoh-based communication over a WebSocket interface, enabli
 To build the WebSocket bridge, execute the following command:
 
 ```bash
-bazel build //modules/websocket_bridge:websocket_bridge_app
+bazel build //modules/websocket_bridge:app
 ```
 
 ## Running the WebSocket Bridge
@@ -17,7 +17,7 @@ bazel build //modules/websocket_bridge:websocket_bridge_app
 To run the WebSocket bridge, execute the following command:
 
 ```bash
-bazel run //modules/websocket_bridge::websocket_bridge_app -- -c <path to config file>
+bazel run //modules/websocket_bridge::app -- -c <path to config file>
 ```
 
 ## Detailed description

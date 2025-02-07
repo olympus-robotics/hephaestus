@@ -61,8 +61,11 @@ auto main(int argc, const char* argv[]) -> int {
 
     bridge->start().get();
 
-    // Spin (keep the application running)
-    heph::utils::TerminationBlocker::waitForInterruptOrAppCompletion(*bridge);
+    // Spinn
+    heph::utils::TerminationBlocker::waitForInterrupt();
+
+    bridge->stop().get();
+    bridge->wait();
 
   } catch (const std::exception& ex) {
     heph::log(heph::ERROR, "Failed with exception", "exception", ex.what());

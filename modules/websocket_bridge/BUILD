@@ -43,8 +43,8 @@ heph_cc_library(
 ############
 
 heph_cc_binary(
-    name = "websocket_bridge_app",
-    srcs = ["apps/websocket_bridge_app.cpp"],
+    name = "app",
+    srcs = ["apps/bridge_app.cpp"],
     deps = [
         ":websocket_bridge",
     ],
