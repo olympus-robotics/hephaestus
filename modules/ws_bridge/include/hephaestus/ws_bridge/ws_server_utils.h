@@ -22,16 +22,15 @@ using WsServerChannelInfo = foxglove::ChannelWithoutId;
 using WsServerServiceId = foxglove::ServiceId;
 using WsServerServiceInfo = foxglove::ServiceWithoutId;
 
+using ClientHandleWithName = std::pair<WsServerClientHandle, std::string>;
+
 struct WsServerClientComparator {
-  bool operator()(const WsServerClientHandle& lhs, const WsServerClientHandle& rhs) const {
-    return lhs.lock() < rhs.lock();
+  bool operator()(const ClientHandleWithName& lhs, const ClientHandleWithName& rhs) const {
+    return lhs.first.lock() < rhs.first.lock();
   }
 };
+using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
 
-using WsServerClientHandleSet = std::set<WsServerClientHandle, WsServerClientComparator>;
-
-using WsChannelIdToClientHandleMap = std::unordered_map<foxglove::ChannelId, WsServerClientHandleSet>;
-
-foxglove::ServerOptions GetWsServerOptions(const BridgeConfig& config);
+foxglove::ServerOptions GetWsServerOptions(const WsBridgeConfig& config);
 
 }  // namespace heph::ws_bridge

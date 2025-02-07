@@ -25,7 +25,7 @@ heph_cc_library(
         "//modules/telemetry/telemetry",
         "//modules/utils",
         "@fmt",
-        "@nlohmann_json//:json",
+        "@yaml-cpp",
         "@zenohc_builder//:zenoh-c",
         "@zenohc_builder//:zenoh-cpp",
         "@websocketpp",

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -14,6 +13,7 @@
 #include <vector>
 
 #include <absl/log/check.h>
+#include <absl/synchronization/mutex.h>
 #include <fmt/core.h>
 #include <foxglove/websocket/callback_queue.hpp>
 #include <magic_enum.hpp>
@@ -27,24 +27,26 @@
 
 #include "hephaestus/ws_bridge/config.h"
 #include "hephaestus/ws_bridge/ipc_graph.h"
+#include "hephaestus/ws_bridge/ws_bridge_state.h"
 #include "hephaestus/ws_bridge/ws_server_utils.h"
 
 namespace heph::ws_bridge {
 
-class Bridge {
+class WsBridge {
 public:
-public:
-  Bridge(std::shared_ptr<ipc::zenoh::Session> session, const BridgeConfig& config);
-  ~Bridge();
+  WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config);
+  ~WsBridge();
 
   [[nodiscard]] auto start() -> std::future<void>;
   [[nodiscard]] auto stop() -> std::future<void>;
   void wait() const;
 
 private:
-  mutable std::mutex mutex_;
+  mutable absl::Mutex mutex_;
 
-  BridgeConfig config_;
+  WsBridgeConfig config_;
+
+  std::unique_ptr<concurrency::Spinner> spinner_;
 
   ////////////////////////////////
   // Websocket Server Interface //
@@ -52,7 +54,7 @@ private:
 
   WsServerInterfacePtr ws_server_;
 
-  void StartWsServer(const BridgeConfig& config);
+  void StartWsServer(const WsBridgeConfig& config);
   void StopWsServer();
 
   // WS Server - Connection Graph
@@ -62,18 +64,6 @@ private:
                                      const TopicsToTypesMap& services_to_nodes,
                                      const TopicToNodesMap& topic_to_subs,
                                      const TopicToNodesMap& topic_to_pubs);
-
-  // WS Server - Channel Id to Client Mapping
-  // bool HasWsChannelWithClients(const WsServerChannelId& channel_id) const;
-  // void AddWsChannelToClientMapping(const WsServerChannelId& channel_id, WsServerClientHandle
-  // client_handle); void CleanUpChannelToClientMapping(); void RemoveWsChannelToClientMapping(const
-  // WsServerChannelId& channel_id,
-  //                                     WsServerClientHandle client_handle);
-  // void RemoveWsChannelToClientMapping(const WsServerChannelId& channel_id);
-  // std::optional<WsServerClientHandleSet> GetClientsForWsChannel(const WsServerChannelId& channel_id) const;
-  // std::string GetChannelClientMappingAsString() const;
-
-  // WsChannelIdToClientHandleMap ws_server_channel_to_client_map_;
 
   // WS Server - Callbacks triggered by the server [THREADSAFE]
   void CallbackWsServerLogHandler(WsServerLogLevel level, char const* msg);
@@ -108,21 +98,10 @@ private:
   // void CallbackPrintBridgeStatus() const;
 
   ////////////////////////////////
-  // [WS Server <=> IPC] Bridge //
+  // [WS Server <=> IPC] WsBridge //
   ////////////////////////////////
 
-  // Bidirectional WS Channel to IPC Topic Mapping
-  // std::string GetIpcTopicForWsChannel(const WsServerChannelId& channel_id) const;
-  // WsServerChannelId GetWsChannelForIpcTopic(const std::string& topic) const;
-  // void AddWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
-  // void RemoveWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
-  // bool HasWsChannelMapping(const WsServerChannelId& channel_id) const;
-  // bool HasIpcTopicMapping(const std::string& topic) const;
-  // std::string GetTopicChannelMappingAsString() const;
-  // std::unordered_map<foxglove::ChannelId, std::string> ws_server_channel_id_to_ipc_topic_map_;
-  // std::unordered_map<std::string, foxglove::ChannelId> ws_server_ipc_topic_to_channel_id_map_;
-
-  // std::string BridgeStatusAsString() const;
+  WsBridgeState state_;
 };
 
 }  // namespace heph::ws_bridge

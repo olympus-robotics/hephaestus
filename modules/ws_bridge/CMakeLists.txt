@@ -5,7 +5,7 @@
 declare_module(
         NAME ws_bridge
         DEPENDS_ON_MODULES ipc cli concurrency containers utils serdes telemetry
-        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt nlohmann_json zenohc zenohcxx ws_protocol)
+        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt yaml-cpp zenohc zenohcxx ws_protocol)
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
@@ -31,7 +31,7 @@ define_module_library(
                 absl::base
                 absl::log
                 fmt::fmt
-                nlohmann_json::nlohmann_json
+                yaml-cpp
                 OpenSSL::SSL
                 OpenSSL::Crypto
         PRIVATE_LINK_LIBS ""

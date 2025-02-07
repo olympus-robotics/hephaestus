@@ -14,11 +14,11 @@
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/telemetry/log.h>
 #include <magic_enum.hpp>
-#include <nlohmann/json.hpp>
+#include <yaml-cpp/yaml.h>
 
 namespace heph::ws_bridge {
 
-struct BridgeConfig {
+struct WsBridgeConfig {
   uint16_t ws_server_listening_port = 8765;
   std::string ws_server_address = "0.0.0.0";
   std::vector<std::string> ws_server_client_topic_whitelist = { ".*" };
@@ -50,16 +50,16 @@ struct BridgeConfig {
   // uint8_t ipc_max_qos_depth;
 };
 
-bool shouldBridgeIpcTopic(const std::string& topic, const BridgeConfig& config);
-bool shouldBridgeIpcService(const std::string& service, const BridgeConfig& config);
-bool shouldBridgeWsTopic(const std::string& topic, const BridgeConfig& config);
+bool shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config);
+bool shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config);
+bool shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config);
 
 bool isMatch(const std::string& topic, const std::vector<std::string>& whitelist);
 
 std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector);
 
-BridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
+WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
 
-void saveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_file_path);
+void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& yaml_file_path);
 
 }  // namespace heph::ws_bridge

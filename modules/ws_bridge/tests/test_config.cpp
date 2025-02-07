@@ -8,7 +8,7 @@
 namespace heph::ws_bridge::tests {
 
 TEST(ConfigParsing, BridgeConfigYamlLoadAndSave) {
-  BridgeConfig config;
+  WsBridgeConfig config;
   config.ws_server_listening_port = 8080;
   config.ws_server_address = "127.0.0.1";
   config.ws_server_client_topic_whitelist = { "^topic1.*", ".*topic2$" };
@@ -22,7 +22,7 @@ TEST(ConfigParsing, BridgeConfigYamlLoadAndSave) {
 
   saveBridgeConfigToYaml(config, "/tmp/test_config.yaml");
 
-  BridgeConfig loaded_config = loadBridgeConfigFromYaml("/tmp/test_config.yaml");
+  WsBridgeConfig loaded_config = loadBridgeConfigFromYaml("/tmp/test_config.yaml");
 
   EXPECT_EQ(config.ws_server_listening_port, loaded_config.ws_server_listening_port);
   EXPECT_EQ(config.ws_server_address, loaded_config.ws_server_address);
@@ -73,7 +73,7 @@ TEST(ConfigParsing, isMatch) {
 }
 
 TEST(ConfigParsing, shouldBridgeIpcTopic) {
-  BridgeConfig config;
+  WsBridgeConfig config;
   config.ipc_topic_whitelist = { "^topic1.*", ".*topic2$" };
   config.ipc_topic_blacklist = { "blacklist1", "blacklist2" };
 
@@ -84,7 +84,7 @@ TEST(ConfigParsing, shouldBridgeIpcTopic) {
 }
 
 TEST(ConfigParsing, shouldBridgeIpcService) {
-  BridgeConfig config;
+  WsBridgeConfig config;
   config.ipc_service_whitelist = { "^service1.*", ".*service2$" };
   config.ipc_service_blacklist = { "blacklist_service1", "blacklist_service2" };
 
@@ -95,7 +95,7 @@ TEST(ConfigParsing, shouldBridgeIpcService) {
 }
 
 TEST(ConfigParsing, shouldBridgeWsTopic) {
-  BridgeConfig config;
+  WsBridgeConfig config;
   config.ws_server_client_topic_whitelist = { "^topic1.*", ".*topic2$" };
 
   EXPECT_TRUE(shouldBridgeWsTopic("topic1_test", config));

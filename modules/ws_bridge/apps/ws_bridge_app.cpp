@@ -12,6 +12,7 @@
 #include <hephaestus/cli/program_options.h>
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/telemetry/log.h>
+#include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
 #include <hephaestus/ws_bridge/config.h>
@@ -20,14 +21,16 @@
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+
   try {
     // Define program options
-    auto desc = heph::cli::ProgramDescription("Hephaestus <===> WebSocket (Foxglove) Bridge");
+    auto desc = heph::cli::ProgramDescription("Hephaestus <===> WebSocket (Foxglove) WsBridge");
     desc.defineOption<std::filesystem::path>("config", 'c', "Path to the configuration YAML file");
 
     // Parse command line arguments
     const auto args = std::move(desc).parse(argc, argv);
-    heph::ws_bridge::BridgeConfig config;
+    heph::ws_bridge::WsBridgeConfig config;
 
     if (args.hasOption("config")) {
       auto config_file_path = args.getOption<std::filesystem::path>("config");
@@ -35,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
       config = heph::ws_bridge::loadBridgeConfigFromYaml(config_file_path.string());
     } else {
       // Create a default configuration
-      config = heph::ws_bridge::BridgeConfig();
+      config = heph::ws_bridge::WsBridgeConfig();
     }
 
     // Create a Zenoh session
@@ -53,8 +56,10 @@ auto main(int argc, const char* argv[]) -> int {
     zenoh_config.multicast_scouting_interface = "auto";
     auto session = heph::ipc::zenoh::createSession(zenoh_config);
 
-    // Create the Bridge instance
-    auto bridge = std::make_unique<heph::ws_bridge::Bridge>(session, config);
+    // Create the WsBridge instance
+    auto bridge = std::make_unique<heph::ws_bridge::WsBridge>(session, config);
+
+    bridge->start().get();
 
     // Spin (keep the application running)
     heph::utils::TerminationBlocker::waitForInterruptOrAppCompletion(*bridge);

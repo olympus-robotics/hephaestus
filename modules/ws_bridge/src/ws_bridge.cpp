@@ -6,7 +6,7 @@
 
 namespace heph::ws_bridge {
 
-Bridge::Bridge(std::shared_ptr<ipc::zenoh::Session> session, const BridgeConfig& config)
+WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config)
   : config_(config), ws_server_(nullptr), ipc_graph_(nullptr) {
   // Initialize IPC Graph
   {
@@ -82,70 +82,82 @@ Bridge::Bridge(std::shared_ptr<ipc::zenoh::Session> session, const BridgeConfig&
 
     ws_server_->setHandlers(std::move(ws_server_hdlrs));
   }
+
+  {
+    spinner_ =
+        std::make_unique<concurrency::Spinner>(concurrency::Spinner::createNeverStoppingCallback(
+                                                   [this] { heph::log(heph::INFO, state_.toString()); }),
+                                               config_.ipc_spin_rate_hz);
+  }
 }
 
-Bridge::~Bridge() {
+WsBridge::~WsBridge() {
   // Destructor implementation
 }
 
-////////////////////////////////////
-// Bridge Life-cycle [THREADSAFE] //
-////////////////////////////////////
+//////////////////////////////////////
+// WsBridge Life-cycle [THREADSAFE] //
+//////////////////////////////////////
 
-auto Bridge::start() -> std::future<void> {
-    std::lock_guard<std::mutex> lock(mutex_);
-    // Start the IPC Graph
-    ipc_graph_->Start();
+auto WsBridge::start() -> std::future<void> {
+  absl::MutexLock lock(&mutex_);
+  CHECK(spinner_);
+  CHECK(ws_server_);
+  CHECK(ipc_graph_);
 
-    // Start the WS Server
-    StartWsServer(config_);
+  ipc_graph_->Start();
 
-    std::promise<void> promise;
-    promise.set_value();
-    return promise.get_future();
+  StartWsServer(config_);
+
+  spinner_->start();
+
+  std::promise<void> promise;
+  promise.set_value();
+  return promise.get_future();
 }
 
-auto Bridge::stop() -> std::future<void> {
-    std::lock_guard<std::mutex> lock(mutex_);
-    // Stop the IPC Graph
-    ipc_graph_->Stop();
+auto WsBridge::stop() -> std::future<void> {
+  absl::MutexLock lock(&mutex_);
+  CHECK(spinner_);
+  CHECK(ws_server_);
+  CHECK(ipc_graph_);
 
-    // Stop the WS Server
-    StopWsServer();
+  ipc_graph_->Stop();
 
-    std::promise<void> promise;
-    promise.set_value();
-    return promise.get_future();
+  StopWsServer();
+
+  return spinner_->stop();
 }
 
-void Bridge::wait() const {
-    // This function can be used to wait for the server to stop if needed
-    // Currently, it does nothing as the start and stop functions are synchronous
+void WsBridge::wait() const {
+  absl::MutexLock lock(&mutex_);
+  CHECK(spinner_);
+  spinner_->wait();
 }
 
 /////////////////////////////////////////////////
 // Websocket Server Interface [NOT THREADSAFE] //
 /////////////////////////////////////////////////
 
-void Bridge::StartWsServer(const BridgeConfig& config) {
-  heph::log(heph::INFO, "[WS Bridge] - Starting WS Server...");
+void WsBridge::StartWsServer(const WsBridgeConfig& config) {
+  heph::log(heph::INFO, "[WS WsBridge] - Starting WS Server...");
   ws_server_->start(config.ws_server_address, config.ws_server_listening_port);
-  heph::log(heph::INFO, "[WS Bridge] - WS Server ONLINE");
+  heph::log(heph::INFO, "[WS WsBridge] - WS Server ONLINE");
 
   const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
   CHECK_EQ(ws_server_actual_listening_port, config.ws_server_listening_port);
 }
 
-void Bridge::StopWsServer() {
-  heph::log(heph::INFO, "[WS Bridge] - Stopping WS Server...");
+void WsBridge::StopWsServer() {
+  heph::log(heph::INFO, "[WS WsBridge] - Stopping WS Server...");
   ws_server_->stop();
-  heph::log(heph::INFO, "[WS Bridge] - WS Server OFFLINE");
+  heph::log(heph::INFO, "[WS WsBridge] - WS Server OFFLINE");
 }
 
-void Bridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_type,
-                                           const TopicsToTypesMap& services_to_nodes,
-                                           const TopicToNodesMap& topic_to_subs,
-                                           const TopicToNodesMap& topic_to_pubs) {
+void WsBridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_type,
+                                             const TopicsToTypesMap& services_to_nodes,
+                                             const TopicToNodesMap& topic_to_subs,
+                                             const TopicToNodesMap& topic_to_pubs) {
   foxglove::MapOfSets topic_to_pub_node_map;
   foxglove::MapOfSets topic_to_sub_node_map;
   for (const auto& [topic_name, topic_type] : topics_w_type) {
@@ -174,14 +186,14 @@ void Bridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_type
 
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
 
-  heph::log(heph::INFO, "[WS Bridge] - Updated IPC connection graph");
+  heph::log(heph::INFO, "[WS WsBridge] - Updated IPC connection graph");
 }
 
 //////////////////////////////////////
 // IPC Graph Callbacks [THREADSAFE] //
 //////////////////////////////////////
-void Bridge::CallbackIpcGraphTopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackIpcGraphTopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info) {
+  absl::MutexLock lock(&mutex_);
   (void)topic;
   (void)type_info;
   // Handle the topic discovery logic here
@@ -190,8 +202,8 @@ void Bridge::CallbackIpcGraphTopicFound(const std::string& topic, const heph::se
   // LOG(INFO) << "Topic found: " << topic << " with type: " << type_info.name;
 }
 
-void Bridge::CallbackIpcGraphTopicDropped(const std::string& topic) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackIpcGraphTopicDropped(const std::string& topic) {
+  absl::MutexLock lock(&mutex_);
   (void)topic;
   // Handle the topic removal logic here
   // For example, you might want to log the removal or update some internal state
@@ -199,8 +211,8 @@ void Bridge::CallbackIpcGraphTopicDropped(const std::string& topic) {
   // LOG(INFO) << "Topic dropped: " << topic;
 }
 
-void Bridge::CallbackIpcGraphUpdated(IpcGraphState state) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackIpcGraphUpdated(IpcGraphState state) {
+  absl::MutexLock lock(&mutex_);
   UpdateWsServerConnectionGraph(state.topics_to_types_map, state.services_to_nodes_map,
                                 state.topic_to_subscribers_map, state.topic_to_publishers_map);
 }
@@ -209,17 +221,28 @@ void Bridge::CallbackIpcGraphUpdated(IpcGraphState state) {
 // Websocket Server Callbacks [THREADSAFE] //
 /////////////////////////////////////////////
 
-void Bridge::CallbackWsServerLogHandler(WsServerLogLevel level, char const* msg) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  (void)level;
-  (void)msg;
-  // Handle the log message
-  // Example:
-  // LOG(INFO) << "WS Server Log [" << static_cast<int>(level) << "]: " << msg;
+void WsBridge::CallbackWsServerLogHandler(WsServerLogLevel level, char const* msg) {
+  switch (level) {
+    case WsServerLogLevel::Debug:
+      heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
+      break;
+    case WsServerLogLevel::Info:
+      heph::log(heph::INFO, fmt::format("[WS Server] - {}", msg));
+      break;
+    case WsServerLogLevel::Warn:
+      heph::log(heph::WARN, fmt::format("[WS Server] - {}", msg));
+      break;
+    case WsServerLogLevel::Error:
+      heph::log(heph::ERROR, fmt::format("[WS Server] - {}", msg));
+      break;
+    case WsServerLogLevel::Critical:
+      heph::log(heph::ERROR, fmt::format("[WS Server] - CRITICAL - {}", msg));
+      break;
+  }
 }
 
-void Bridge::CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the subscription logic here
@@ -227,8 +250,9 @@ void Bridge::CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServerC
   // LOG(INFO) << "Client subscribed to channel: " << channel_type;
 }
 
-void Bridge::CallbackWsServerUnsubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerUnsubscribe(WsServerChannelId channel_type,
+                                           WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the unsubscription logic here
@@ -236,9 +260,9 @@ void Bridge::CallbackWsServerUnsubscribe(WsServerChannelId channel_type, WsServe
   // LOG(INFO) << "Client unsubscribed from channel: " << channel_type;
 }
 
-void Bridge::CallbackWsServerClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
-                                             WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
+                                               WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)advertisement;
   (void)client_handle;
   // Handle the client advertisement logic here
@@ -246,9 +270,9 @@ void Bridge::CallbackWsServerClientAdvertise(const foxglove::ClientAdvertisement
   // LOG(INFO) << "Client advertised: " << advertisement.topic;
 }
 
-void Bridge::CallbackWsServerClientUnadvertise(WsServerChannelId channel_type,
-                                               WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerClientUnadvertise(WsServerChannelId channel_type,
+                                                 WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the client unadvertisement logic here
@@ -256,9 +280,9 @@ void Bridge::CallbackWsServerClientUnadvertise(WsServerChannelId channel_type,
   // LOG(INFO) << "Client unadvertised channel: " << channel_type;
 }
 
-void Bridge::CallbackWsServerClientMessage(const foxglove::ClientMessage& message,
-                                           WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerClientMessage(const foxglove::ClientMessage& message,
+                                             WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)message;
   (void)client_handle;
   // Handle the client message logic here
@@ -266,9 +290,9 @@ void Bridge::CallbackWsServerClientMessage(const foxglove::ClientMessage& messag
   // LOG(INFO) << "Client sent message on channel: " << message.channel_id;
 }
 
-void Bridge::CallbackWsServerServiceRequest(const foxglove::ServiceRequest& request,
-                                            WsServerClientHandle client_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerServiceRequest(const foxglove::ServiceRequest& request,
+                                              WsServerClientHandle client_handle) {
+  absl::MutexLock lock(&mutex_);
   (void)request;
   (void)client_handle;
   // Handle the service request logic here
@@ -276,8 +300,8 @@ void Bridge::CallbackWsServerServiceRequest(const foxglove::ServiceRequest& requ
   // LOG(INFO) << "Service request received: " << request.service_id;
 }
 
-void Bridge::CallbackWsServerSubscribeConnectionGraph(bool subscribe) {
-  std::lock_guard<std::mutex> lock(mutex_);
+void WsBridge::CallbackWsServerSubscribeConnectionGraph(bool subscribe) {
+  absl::MutexLock lock(&mutex_);
   (void)subscribe;
   ws_server_subscribed_to_connection_graph_ = subscribe;
 

@@ -2,15 +2,17 @@ ws_server:
   listening_port: 8080
   address: "127.0.0.1"
   client_topic_whitelist:
-    - "**"
+    - ".*"
   supported_encodings:
     - "json"
     - "protobuf"
   use_compression: true
 
 ipc:
-  spin_rate_hz: 10.0
+  spin_rate_hz: 0.5
   topic_whitelist:
-    - "**"
+    - ".*"
+  topic_blacklist: []
   service_whitelist:
-    - "**"
+    - ".*"
+  service_blacklist: []
