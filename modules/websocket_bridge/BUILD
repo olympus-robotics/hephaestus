@@ -59,9 +59,9 @@ IPC_TEST_DEPS = [
 ]
 
 heph_cc_test(
-    name = "test_config",
+    name = "test_bridge_config",
     srcs = [
-        "tests/test_config.cpp",
+        "tests/test_bridge_config.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,

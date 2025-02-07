@@ -1,7 +1,7 @@
-#include "hephaestus/websocket_bridge/websocket_server_utils.h"
+#include "hephaestus/websocket_bridge/server_utils.h"
 
 #include "foxglove/websocket/server_interface.hpp"
-#include "hephaestus/websocket_bridge/config.h"
+#include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws_bridge {
 

@@ -7,7 +7,7 @@
 #include <foxglove/websocket/server_interface.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
-#include "hephaestus/websocket_bridge/config.h"
+#include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws_bridge {
 

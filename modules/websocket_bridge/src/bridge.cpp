@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/websocket_bridge/websocket_bridge.h"
+#include "hephaestus/websocket_bridge/bridge.h"
 
 namespace heph::ws_bridge {
 
