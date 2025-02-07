@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include <fmt/format.h>
 #include <gmock/gmock.h>
@@ -14,6 +13,8 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -22,7 +23,39 @@ namespace {
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
+class MyEnvironment : public Environment {
+public:
+  ~MyEnvironment() = default;
+  void SetUp() override {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
+  }
+};
+// NOLINTNEXTLINE
+const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
+
 TEST(ZenohTests, ServiceCallExchange) {
+  auto mt = random::createRNG();
+
+  const auto request_message = types::DummyType::random(mt);
+
+  const auto service_topic =
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
+
+  auto session = createSession(createLocalConfig());
+
+  auto service_server = Service<types::DummyType, types::DummyType>(
+      session, service_topic, [](const types::DummyType& request) { return request; });
+
+  const auto replies = callService<types::DummyType, types::DummyType>(
+      *session, service_topic, request_message, std::chrono::milliseconds(10));
+
+  EXPECT_FALSE(replies.empty());
+  EXPECT_EQ(replies.size(), 1);
+  EXPECT_EQ(replies.front().topic, service_topic.name);
+  EXPECT_EQ(replies.front().value, request_message);
+}
+
+TEST(ZenohTests, ServiceClientCallExchange) {
   auto mt = random::createRNG();
 
   const auto request_message = types::DummyType::random(mt);
@@ -42,6 +75,32 @@ TEST(ZenohTests, ServiceCallExchange) {
   EXPECT_EQ(replies.size(), 1);
   EXPECT_EQ(replies.front().topic, service_topic.name);
   EXPECT_EQ(replies.front().value, request_message);
+}
+
+TEST(ZenohTests, ServiceCallRawExchange) {
+  auto mt = random::createRNG();
+
+  const auto request_message = types::DummyType::random(mt);
+
+  const auto service_topic =
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
+
+  auto session = createSession(createLocalConfig());
+
+  auto service_server = Service<types::DummyType, types::DummyType>(
+      session, service_topic, [](const types::DummyType& request) { return request; });
+
+  auto request_buffer = serdes::serialize(request_message);
+  const auto replies = callServiceRaw(*session, service_topic, request_buffer, std::chrono::milliseconds(10));
+
+  EXPECT_FALSE(replies.empty());
+  EXPECT_EQ(replies.size(), 1);
+  EXPECT_EQ(replies.front().topic, service_topic.name);
+  auto reply_buffer = replies.front().value;
+
+  types::DummyType reply;
+  serdes::deserialize<types::DummyType>(reply_buffer, reply);
+  EXPECT_EQ(reply, request_message);
 }
 
 TEST(ZenohTests, TypesMismatch) {
