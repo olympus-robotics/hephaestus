@@ -1,4 +1,4 @@
-#include "hephaestus/ws_bridge/ipc_graph.h"
+#include "hephaestus/websocket_bridge/ipc_graph.h"
 
 #include <memory>
 #include <string>

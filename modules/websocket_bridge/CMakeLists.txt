@@ -3,7 +3,7 @@
 #=================================================================================================
 
 declare_module(
-        NAME ws_bridge
+        NAME websocket_bridge
         DEPENDS_ON_MODULES ipc cli concurrency containers utils serdes telemetry
         DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt yaml-cpp zenohc zenohcxx ws_protocol)
 
@@ -16,9 +16,9 @@ find_package(ws_protocol REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 # library target
-file(GLOB_RECURSE SOURCES src/*.cpp include/hephaestus/ws_bridge/*.h)
+file(GLOB_RECURSE SOURCES src/*.cpp include/hephaestus/websocket_bridge/*.h)
 define_module_library(
-        NAME ws_bridge
+        NAME websocket_bridge
         PUBLIC_LINK_LIBS
                 hephaestus::action_server_types_proto
                 hephaestus::cli

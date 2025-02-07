@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/ws_bridge/config.h"
+#include "hephaestus/websocket_bridge/config.h"
 
 namespace heph::ws_bridge::tests {
 

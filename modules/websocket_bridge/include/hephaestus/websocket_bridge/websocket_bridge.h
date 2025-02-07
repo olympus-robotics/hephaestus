@@ -26,10 +26,10 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <websocketpp/common/connection_hdl.hpp>
 
-#include "hephaestus/ws_bridge/config.h"
-#include "hephaestus/ws_bridge/ipc_graph.h"
-#include "hephaestus/ws_bridge/ws_bridge_state.h"
-#include "hephaestus/ws_bridge/ws_server_utils.h"
+#include "hephaestus/websocket_bridge/config.h"
+#include "hephaestus/websocket_bridge/ipc_graph.h"
+#include "hephaestus/websocket_bridge/websocket_bridge_state.h"
+#include "hephaestus/websocket_bridge/websocket_server_utils.h"
 
 namespace heph::ws_bridge {
 

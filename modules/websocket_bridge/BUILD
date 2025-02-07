@@ -7,12 +7,12 @@ load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
-    name = "ws_bridge",
+    name = "websocket_bridge",
     srcs = glob([
         "src/*.cpp",
     ]),
     hdrs = glob([
-        "include/hephaestus/ws_bridge/*.h",
+        "include/hephaestus/websocket_bridge/*.h",
     ]),
     includes = ["include"],
     linkopts = [
@@ -43,10 +43,10 @@ heph_cc_library(
 ############
 
 heph_cc_binary(
-    name = "ws_bridge_app",
-    srcs = ["apps/ws_bridge_app.cpp"],
+    name = "websocket_bridge_app",
+    srcs = ["apps/websocket_bridge_app.cpp"],
     deps = [
-        ":ws_bridge",
+        ":websocket_bridge",
     ],
 )
 
@@ -55,7 +55,7 @@ heph_cc_binary(
 #########
 
 IPC_TEST_DEPS = [
-    ":ws_bridge",
+    ":websocket_bridge",
 ]
 
 heph_cc_test(

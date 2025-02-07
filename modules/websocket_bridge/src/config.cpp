@@ -1,4 +1,4 @@
-#include "hephaestus/ws_bridge/config.h"
+#include "hephaestus/websocket_bridge/config.h"
 
 #include <yaml-cpp/yaml.h>
 

@@ -15,8 +15,8 @@
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/ws_bridge/config.h>
-#include <hephaestus/ws_bridge/ws_bridge.h>
+#include <hephaestus/websocket_bridge/config.h>
+#include <hephaestus/websocket_bridge/websocket_bridge.h>
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
     // Create a Zenoh session
     heph::ipc::zenoh::Config zenoh_config;
     zenoh_config.use_binary_name_as_session_id = false;
-    zenoh_config.id = "ws_bridge";
+    zenoh_config.id = "websocket_bridge";
     zenoh_config.enable_shared_memory = false;
     zenoh_config.mode = heph::ipc::zenoh::Mode::PEER;
     zenoh_config.router = "";
