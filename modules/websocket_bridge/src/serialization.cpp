@@ -2,31 +2,6 @@
 
 namespace heph::ws_bridge {
 
-// void addTimestampFieldToFirstFileDescriptor(google::protobuf::FileDescriptorSet& fds) {
-//   if (fds.file_size() == 0) {
-//     std::cerr << "FileDescriptorSet is empty" << std::endl;
-//     return;
-//   }
-
-//   auto* file_descriptor_proto = fds.mutable_file(0);
-//   if (!file_descriptor_proto) {
-//     std::cerr << "Failed to get the first FileDescriptorProto" << std::endl;
-//     return;
-//   }
-
-//   auto* message_type = file_descriptor_proto->mutable_message_type(0);
-//   if (!message_type) {
-//     std::cerr << "Failed to get the first DescriptorProto" << std::endl;
-//     return;
-//   }
-
-//   auto* field = message_type->add_field();
-//   field->set_name("timestamp");
-//   field->set_number(message_type->field_size());
-//   field->set_label(google::protobuf::FieldDescriptorProto::LABEL_OPTIONAL);
-//   field->set_type(google::protobuf::FieldDescriptorProto::TYPE_INT64);
-// }
-
 std::string convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) {
   google::protobuf::FileDescriptorSet fds;
   if (!fds.ParseFromArray(schema.data(), static_cast<int>(schema.size()))) {
