@@ -38,6 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
 
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    session_config.id = "BOB_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     heph::ipc::zenoh::Publisher<heph::examples::types::Pose> publisher{ session, topic_config,

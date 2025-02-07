@@ -39,6 +39,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::log(heph::DEBUG, "opening session", "subscriber_name", topic_config.name);
 
+    session_config.id = "ALICE_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     auto session = heph::ipc::zenoh::createSession(std::move(session_config));
 
     auto cb = [topic = topic_config.name](const heph::ipc::zenoh::MessageMetadata& metadata,
