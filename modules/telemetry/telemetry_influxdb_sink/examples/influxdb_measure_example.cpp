@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <exception>
 #include <future>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -14,6 +15,8 @@
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -35,6 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
   (void)argc;
   (void)argv;
   const heph::utils::StackTrace stack;
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto influxdb_sink = heph::telemetry_sink::InfluxDBSink::create({ .url = "localhost:8099",

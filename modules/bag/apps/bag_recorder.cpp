@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -14,11 +15,14 @@
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("Record a bag from zenoh topics");
