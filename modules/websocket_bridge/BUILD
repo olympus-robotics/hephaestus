@@ -13,6 +13,7 @@ heph_cc_library(
     ]),
     hdrs = glob([
         "include/hephaestus/websocket_bridge/*.h",
+        "include/hephaestus/ipc/*.h",
     ]),
     includes = ["include"],
     linkopts = [

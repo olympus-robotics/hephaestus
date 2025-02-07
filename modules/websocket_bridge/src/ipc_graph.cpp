@@ -1,4 +1,4 @@
-#include "hephaestus/websocket_bridge/ipc_graph.h"
+#include "hephaestus/ipc/ipc_graph.h"
 
 #include <memory>
 #include <string>
@@ -13,12 +13,18 @@
 
 namespace heph::ws_bridge {
 
-IpcGraph::IpcGraph(const IpcGraphConfig& config)
-  : config_(config), topic_db_(ipc::createZenohTopicDatabase(config.session)) {
+IpcGraph::IpcGraph(const IpcGraphConfig& config) : config_(config) {
+}
+
+IpcGraph::~IpcGraph() {
+  stop();
 }
 
 void IpcGraph::start() {
   absl::MutexLock lock(&mutex_);
+
+  topic_db_ = ipc::createZenohTopicDatabase(config_.session);
+
   discovery_ = std::make_unique<ipc::zenoh::EndpointDiscovery>(
       config_.session, ipc::TopicConfig{ "**" },
       [this](const ipc::zenoh::EndpointInfo& info) { callback__EndPointInfoUpdate(info); });
@@ -27,6 +33,7 @@ void IpcGraph::start() {
 void IpcGraph::stop() {
   absl::MutexLock lock(&mutex_);
   discovery_.reset();
+  topic_db_.reset();
 }
 
 std::optional<heph::serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::string& topic) const {

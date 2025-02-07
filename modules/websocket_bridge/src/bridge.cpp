@@ -24,7 +24,7 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
 
   // Initialize IPC Interface
   {
-    // TODO(mfehr): Add implementation for the IPC interface
+    ipc_interface_ = std::make_unique<IpcInterface>(session, config_);
   }
 
   // Initialize WS Server
@@ -202,9 +202,9 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
   {
     state_.removeWsChannelToIpcTopicMapping(channel_id, topic);
 
-    // if (ipc_interface_->HasSubscriber(topic)) {
-    //   ipc_interface_->RemoveSubscriber(topic);
-    // }
+    if (ipc_interface_->hasSubscriber(topic)) {
+      ipc_interface_->removeSubscriber(topic);
+    }
   }
 
   // Clean up WS Server side
@@ -245,6 +245,39 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
 }
 
+/////////////////////////////
+// IPC Interface Callbacks //
+/////////////////////////////
+
+void WsBridge::callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
+                                              std::span<const std::byte> message_data,
+                                              const heph::serdes::TypeInfo& type_info) {
+  (void)type_info;
+  
+  CHECK(ws_server_);
+
+  const std::string topic = metadata.topic;
+  const WsServerChannelId channel_id = state_.getWsChannelForIpcTopic(topic);
+
+  auto clients = state_.getClientsForWsChannel(channel_id);
+  if (!clients.has_value()) {
+    return;
+  }
+
+  for (const auto& client_handle : clients.value()) {
+    if (client_handle.first.expired()) {
+      continue;
+    }
+
+    const uint64_t timestamp_now_ns =
+        static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                  std::chrono::system_clock::now().time_since_epoch())
+                                  .count());
+    ws_server_->sendMessage(client_handle.first, channel_id, timestamp_now_ns,
+                            reinterpret_cast<const uint8_t*>(message_data.data()), message_data.size());
+  }
+}
+
 ////////////////////////////////
 // Websocket Server Callbacks //
 ////////////////////////////////
@@ -269,22 +302,55 @@ void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) 
   }
 }
 
-void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_type,
+void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
                                              WsServerClientHandle client_handle) {
-  (void)channel_type;
-  (void)client_handle;
-  // Handle the subscription logic here
-  // Example:
-  // LOG(INFO) << "Client subscribed to channel: " << channel_type;
+  CHECK(ipc_graph_);
+  CHECK(ipc_interface_);
+  CHECK(ws_server_);
+
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
+  state_.addWsChannelToClientMapping(channel_id, client_handle, client_name);
+
+  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
+
+  if (ipc_interface_->hasSubscriber(topic)) {
+    return;
+  }
+
+  std::optional<heph::serdes::TypeInfo> topic_type_info = ipc_graph_->getTopicTypeInfo(topic);
+
+  if (!topic_type_info.has_value()) {
+    heph::log(
+        heph::ERROR,
+        fmt::format("[App Bridge] - '{}' ==> [{}] - Could not subscribe because failed to retrieve type!",
+                    topic, channel_id));
+    return;
+  }
+
+  ipc_interface_->addSubscriber(topic, topic_type_info.value(),
+                                [this](const heph::ipc::zenoh::MessageMetadata& metadata,
+                                       std::span<const std::byte> data,
+                                       const heph::serdes::TypeInfo& type_info) {
+                                  this->callback__Ipc__MessageReceived(metadata, data, type_info);
+                                });
 }
 
-void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_type,
+void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
                                                WsServerClientHandle client_handle) {
-  (void)channel_type;
-  (void)client_handle;
-  // Handle the unsubscription logic here
-  // Example:
-  // LOG(INFO) << "Client unsubscribed from channel: " << channel_type;
+  CHECK(ipc_interface_);
+  CHECK(ws_server_);
+
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
+  state_.removeWsChannelToClientMapping(channel_id, client_handle);
+
+  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
+  if (!state_.hasWsChannelWithClients(channel_id)) {
+    if (ipc_interface_->hasSubscriber(topic)) {
+      ipc_interface_->removeSubscriber(topic);
+    }
+  }
 }
 
 void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
@@ -296,13 +362,13 @@ void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdverti
   // LOG(INFO) << "Client advertised: " << advertisement.topic;
 }
 
-void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_type,
+void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_id,
                                                      WsServerClientHandle client_handle) {
-  (void)channel_type;
+  (void)channel_id;
   (void)client_handle;
   // Handle the client unadvertisement logic here
   // Example:
-  // LOG(INFO) << "Client unadvertised channel: " << channel_type;
+  // LOG(INFO) << "Client unadvertised channel: " << channel_id;
 }
 
 void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,

@@ -26,9 +26,10 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <websocketpp/common/connection_hdl.hpp>
 
+#include "hephaestus/ipc/ipc_graph.h"
+#include "hephaestus/ipc/ipc_interface.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
-#include "hephaestus/websocket_bridge/ipc_graph.h"
 #include "hephaestus/websocket_bridge/serialization.h"
 #include "hephaestus/websocket_bridge/server_utils.h"
 
@@ -84,12 +85,12 @@ private:
   void callback__IpcGraph__TopicDropped(const std::string& topic);
   void callback__IpcGraph__Updated(IpcGraphState ipc_graph_state);
 
-  // std::unique_ptr<IpcInterface> ipc_interface_;
+  std::unique_ptr<IpcInterface> ipc_interface_;
 
-  // // Callbacks triggered by the IPC interface
-  // void callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
-  //                                     std::span<const std::byte> data, const heph::serdes::TypeInfo&
-  //                                     type_info);
+  // Callbacks triggered by the IPC interface
+  void callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
+                                      std::span<const std::byte> data,
+                                      const heph::serdes::TypeInfo& type_info);
 };
 
 }  // namespace heph::ws_bridge
