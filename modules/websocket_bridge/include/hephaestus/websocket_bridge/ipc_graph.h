@@ -79,20 +79,19 @@ private:
 private:
   void addPublisher(const ipc::zenoh::EndpointInfo& info);
   void removePublisher(const ipc::zenoh::EndpointInfo& info);
-  bool hasPublisher(const std::string& topic);
+  bool hasPublisher(const std::string& topic) const;
 
   void addSubscriber(const ipc::zenoh::EndpointInfo& info);
   void removeSubscriber(const ipc::zenoh::EndpointInfo& info);
 
   bool addTopic(const std::string& topic);
   void removeTopic(const std::string& topic);
-  bool hasTopic(const std::string& topic_name);
+  bool hasTopic(const std::string& topic_name) const;
 
   IpcGraphState state_;
 
   std::unique_ptr<ipc::ITopicDatabase> topic_db_;
 
-private:
   TopicRemovalCallback topic_removal_cb_;
   TopicDiscoveryCallback topic_discovery_cb_;
 };
