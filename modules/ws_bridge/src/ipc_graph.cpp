@@ -5,6 +5,9 @@
 #include <vector>
 
 #include <absl/log/check.h>
+#include <absl/synchronization/mutex.h>
+#include <fmt/base.h>
+#include <fmt/core.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
 #include <hephaestus/telemetry/log.h>
 
@@ -15,6 +18,8 @@ IpcGraph::IpcGraph(const IpcGraphConfig& config)
 }
 
 void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
+  ipc::zenoh::printEndpointInfo(info);
+
   absl::MutexLock lock(&mutex_);
   bool graph_updated = false;
 
@@ -189,7 +194,7 @@ bool IpcGraph::addTopic(const std::string& topic) {
     return true;
   }
 
-  auto type_info = getTopicTypeInfo(topic);
+  auto type_info = topic_db_->getTypeInfo(topic);
   if (!type_info.has_value()) {
     heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic: '", topic, "'");
     return false;

@@ -21,10 +21,9 @@ class WsBridgeState {
 public:
   WsBridgeState() = default;
 
-private:
-  mutable absl::Mutex mutex_;
+  std::string toString() const;
 
-  // Topics <-> Channels
+  // Topics <-> Channels [protected by mutex_t2c_]
 public:
   std::string getIpcTopicForWsChannel(const WsServerChannelId& channel_id) const;
   WsServerChannelId getWsChannelForIpcTopic(const std::string& topic) const;
@@ -32,15 +31,17 @@ public:
   void removeWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
   bool hasWsChannelMapping(const WsServerChannelId& channel_id) const;
   bool hasIpcTopicMapping(const std::string& topic) const;
+  std::string topicChannelMappingToString() const;
 
 private:
-  std::string topicChannelMappingToString() const;
   using ChannelToTopicMap = std::unordered_map<WsServerChannelId, std::string>;
   using TopicToChannelMap = std::unordered_map<std::string, WsServerChannelId>;
+
+  mutable absl::Mutex mutex_t2c_;
   ChannelToTopicMap channel_to_topic_;
   TopicToChannelMap topic_to_channel_;
 
-  // Channels <-> Clients
+  // Channels <-> Clients [protected by mutex_c2c_]
 public:
   bool hasWsChannelWithClients(const WsServerChannelId& channel_id) const;
   void addWsChannelToClientMapping(const WsServerChannelId& channel_id, WsServerClientHandle client_handle,
@@ -49,13 +50,14 @@ public:
   void removeWsChannelToClientMapping(const WsServerChannelId& channel_id,
                                       WsServerClientHandle client_handle);
   std::optional<WsServerClientHandleSet> getClientsForWsChannel(const WsServerChannelId& channel_id) const;
-  std::string toString() const;
+
+  std::string channelClientMappingToString() const;
 
 private:
-  std::string channelClientMappingToString() const;
   void cleanUpChannelToClientMapping();
 
   using ChannelToClientMap = std::unordered_map<WsServerChannelId, WsServerClientHandleSet>;
+  mutable absl::Mutex mutex_c2c_;
   ChannelToClientMap channel_to_client_map_;
 };
 

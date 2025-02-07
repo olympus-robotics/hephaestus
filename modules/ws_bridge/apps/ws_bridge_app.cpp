@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
     // Create a Zenoh session
     heph::ipc::zenoh::Config zenoh_config;
     zenoh_config.use_binary_name_as_session_id = false;
-    zenoh_config.id = "ws_bridge_" + std::to_string(getpid());
+    zenoh_config.id = "ws_bridge";
     zenoh_config.enable_shared_memory = false;
     zenoh_config.mode = heph::ipc::zenoh::Mode::PEER;
     zenoh_config.router = "";

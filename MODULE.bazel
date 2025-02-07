@@ -92,4 +92,4 @@ bazel_dep(name = "zstd", version = "1.5.6")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "zenohc_builder", "ws_protocol")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "ws_protocol", "zenohc_builder")

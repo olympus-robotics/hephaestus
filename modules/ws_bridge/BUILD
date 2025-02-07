@@ -15,24 +15,27 @@ heph_cc_library(
         "include/hephaestus/ws_bridge/*.h",
     ]),
     includes = ["include"],
+    linkopts = [
+        "-lssl",
+        "-lcrypto",
+    ],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/ipc",
         "//modules/cli",
         "//modules/concurrency",
         "//modules/containers",
+        "//modules/ipc",
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/utils",
         "@fmt",
+        "@openssl",
+        "@websocketpp",
+        "@ws_protocol",
         "@yaml-cpp",
         "@zenohc_builder//:zenoh-c",
         "@zenohc_builder//:zenoh-cpp",
-        "@websocketpp",
-        "@ws_protocol",
-        "@openssl//:openssl",
     ],
-    linkopts = ["-lssl", "-lcrypto"],  # Add this line to link OpenSSL libraries
 )
 
 ############

@@ -87,7 +87,7 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
   {
     spinner_ =
         std::make_unique<concurrency::Spinner>(concurrency::Spinner::createNeverStoppingCallback(
-                                                   [this] { std::cout << state_.toString() << std::endl; }),
+                                                   [this] { fmt::print("{}\n", this->state_.toString()); }),
                                                config_.ipc_spin_rate_hz);
   }
 }
@@ -96,12 +96,11 @@ WsBridge::~WsBridge() {
   // Destructor implementation
 }
 
-//////////////////////////////////////
-// WsBridge Life-cycle [THREADSAFE] //
-//////////////////////////////////////
+/////////////////////////
+// WsBridge Life-cycle //
+/////////////////////////
 
 auto WsBridge::start() -> std::future<void> {
-  absl::MutexLock lock(&mutex_);
   CHECK(spinner_);
   CHECK(ws_server_);
   CHECK(ipc_graph_);
@@ -126,7 +125,6 @@ auto WsBridge::start() -> std::future<void> {
 }
 
 auto WsBridge::stop() -> std::future<void> {
-  absl::MutexLock lock(&mutex_);
   CHECK(spinner_);
   CHECK(ws_server_);
   CHECK(ipc_graph_);
@@ -139,17 +137,15 @@ auto WsBridge::stop() -> std::future<void> {
 }
 
 void WsBridge::wait() const {
-  absl::MutexLock lock(&mutex_);
   CHECK(spinner_);
   spinner_->wait();
 }
 
-//////////////////////////////////////
-// IPC Graph Callbacks [THREADSAFE] //
-//////////////////////////////////////
+/////////////////////////
+// IPC Graph Callbacks //
+/////////////////////////
 void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
                                               const heph::serdes::TypeInfo& type_info) {
-  absl::MutexLock lock(&mutex_);
   (void)topic;
   (void)type_info;
   // Handle the topic discovery logic here
@@ -159,7 +155,6 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
 }
 
 void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
-  absl::MutexLock lock(&mutex_);
   (void)topic;
   // Handle the topic removal logic here
   // For example, you might want to log the removal or update some internal state
@@ -168,8 +163,6 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
 }
 
 void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
-  absl::MutexLock lock(&mutex_);
-
   if (!ws_server_subscribed_to_connection_graph_) {
     return;
   }
@@ -205,9 +198,9 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
   heph::log(heph::INFO, "[WS WsBridge] - Updated IPC connection graph");
 }
 
-/////////////////////////////////////////////
-// Websocket Server Callbacks [THREADSAFE] //
-/////////////////////////////////////////////
+////////////////////////////////
+// Websocket Server Callbacks //
+////////////////////////////////
 
 void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) {
   switch (level) {
@@ -231,7 +224,6 @@ void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) 
 
 void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_type,
                                              WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the subscription logic here
@@ -241,7 +233,6 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_type,
 
 void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_type,
                                                WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the unsubscription logic here
@@ -251,7 +242,6 @@ void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_type,
 
 void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
                                                    WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)advertisement;
   (void)client_handle;
   // Handle the client advertisement logic here
@@ -261,7 +251,6 @@ void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdverti
 
 void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_type,
                                                      WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
   // Handle the client unadvertisement logic here
@@ -271,7 +260,6 @@ void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_t
 
 void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
                                                  WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)message;
   (void)client_handle;
   // Handle the client message logic here
@@ -281,7 +269,6 @@ void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& 
 
 void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
                                                   WsServerClientHandle client_handle) {
-  absl::MutexLock lock(&mutex_);
   (void)request;
   (void)client_handle;
   // Handle the service request logic here
@@ -290,7 +277,6 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
 }
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
-  absl::MutexLock lock(&mutex_);
   (void)subscribe;
   ws_server_subscribed_to_connection_graph_ = subscribe;
 

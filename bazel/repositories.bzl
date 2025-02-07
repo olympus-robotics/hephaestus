@@ -50,7 +50,7 @@ def foreign_cc_repositories():
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION + "-cmake-3.22.1",
         sha256 = "63fd52189f7df9c5648c5479e7af9377271a18f65a30a1a45fe160f8e0cf787a",
     )
-    
+
     WS_PROTOCOL_VERSION = "1.4.0"
     WS_PROTOCOL_TAG = "releases/cpp/v" + WS_PROTOCOL_VERSION
     http_archive(

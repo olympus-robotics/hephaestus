@@ -14,6 +14,7 @@
 
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
+#include <fmt/base.h>
 #include <fmt/core.h>
 #include <foxglove/websocket/callback_queue.hpp>
 #include <magic_enum.hpp>
@@ -42,8 +43,6 @@ public:
   void wait() const;
 
 private:
-  mutable absl::Mutex mutex_;
-
   WsBridgeConfig config_;
 
   std::unique_ptr<concurrency::Spinner> spinner_;
@@ -59,7 +58,7 @@ private:
   // WS Server - Connection Graph
   bool ws_server_subscribed_to_connection_graph_{ false };
 
-  // Callbacks triggered by WS Server [THREADSAFE]
+  // Callbacks triggered by WS Server
   void callback__WsServer__Log(WsServerLogLevel level, char const* msg);
   void callback__WsServer__Subscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
   void callback__WsServer__Unsubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
@@ -79,14 +78,14 @@ private:
 
   std::unique_ptr<IpcGraph> ipc_graph_;
 
-  // Callbacks triggered by the IPC Graph [THREADSAFE]
+  // Callbacks triggered by the IPC Graph
   void callback__IpcGraph__TopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info);
   void callback__IpcGraph__TopicDropped(const std::string& topic);
   void callback__IpcGraph__Updated(IpcGraphState ipc_graph_state);
 
   // std::unique_ptr<IpcInterface> ipc_interface_;
 
-  // // Callbacks triggered by the IPC interface [THREADSAFE]
+  // // Callbacks triggered by the IPC interface
   // void callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
   //                                     std::span<const std::byte> data, const heph::serdes::TypeInfo&
   //                                     type_info);
