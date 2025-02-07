@@ -19,11 +19,11 @@
 namespace heph::ws_bridge {
 
 struct BridgeConfig {
-  uint16_t ws_server_listening_port;
-  std::string ws_server_address;
-  std::vector<std::string> ws_server_client_topic_whitelist;
-  std::vector<std::string> ws_server_supported_encodings;
-  bool ws_server_use_compression;
+  uint16_t ws_server_listening_port = 8765;
+  std::string ws_server_address = "0.0.0.0";
+  std::vector<std::string> ws_server_client_topic_whitelist = { ".*" };
+  std::vector<std::string> ws_server_supported_encodings = { "protobuf", "json" };
+  bool ws_server_use_compression = true;
 
   // TODO(mfehr): REMOVE if not needed
   // be exposed.
@@ -36,10 +36,13 @@ struct BridgeConfig {
   // std::string ws_server_session_id;
 
   // IPC-side config
-  double ipc_spin_rate_hz;
+  double ipc_spin_rate_hz = 0.5;
 
-  std::vector<std::string> ipc_topic_whitelist;
-  std::vector<std::string> ipc_service_whitelist;
+  std::vector<std::string> ipc_topic_whitelist = { ".*" };
+  std::vector<std::string> ipc_topic_blacklist = {};
+
+  std::vector<std::string> ipc_service_whitelist = { ".*" };
+  std::vector<std::string> ipc_service_blacklist = {};
 
   // TODO(mfehr): REMOVE if not needed
   // std::vector<std::string> ipc_param_whitelist;
@@ -47,10 +50,16 @@ struct BridgeConfig {
   // uint8_t ipc_max_qos_depth;
 };
 
-std::vector<std::regex> ParseRegexStrings(const std::vector<std::string>& regex_string_vector);
+bool shouldBridgeIpcTopic(const std::string& topic, const BridgeConfig& config);
+bool shouldBridgeIpcService(const std::string& service, const BridgeConfig& config);
+bool shouldBridgeWsTopic(const std::string& topic, const BridgeConfig& config);
 
-BridgeConfig LoadBridgeConfigFromYaml(const std::string& yaml_file_path);
+bool isMatch(const std::string& topic, const std::vector<std::string>& whitelist);
 
-void SaveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_file_path);
+std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector);
+
+BridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
+
+void saveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_file_path);
 
 }  // namespace heph::ws_bridge

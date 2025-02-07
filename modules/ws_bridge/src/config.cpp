@@ -2,7 +2,7 @@
 
 namespace heph::ws_bridge {
 
-std::vector<std::regex> ParseRegexStrings(const std::vector<std::string>& regex_string_vector) {
+std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector) {
   std::vector<std::regex> regex_vector;
   regex_vector.reserve(regex_string_vector.size());
 
@@ -18,7 +18,7 @@ std::vector<std::regex> ParseRegexStrings(const std::vector<std::string>& regex_
   return regex_vector;
 }
 
-BridgeConfig LoadBridgeConfigFromYaml(const std::string& yaml_file_path) {
+BridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path) {
   std::ifstream file(yaml_file_path);
   if (!file.is_open()) {
     throw std::runtime_error("Could not open YAML file: " + yaml_file_path);
@@ -39,12 +39,14 @@ BridgeConfig LoadBridgeConfigFromYaml(const std::string& yaml_file_path) {
   const auto& ipc = yaml_data.at("ipc");
   config.ipc_spin_rate_hz = ipc.at("spin_rate_hz").get<double>();
   config.ipc_topic_whitelist = ipc.at("topic_whitelist").get<std::vector<std::string>>();
+  config.ipc_topic_blacklist = ipc.at("topic_blacklist").get<std::vector<std::string>>();
   config.ipc_service_whitelist = ipc.at("service_whitelist").get<std::vector<std::string>>();
+  config.ipc_service_blacklist = ipc.at("service_blacklist").get<std::vector<std::string>>();
 
   return config;
 }
 
-void SaveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_file_path) {
+void saveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_file_path) {
   nlohmann::json yaml_data;
 
   yaml_data["ws_server"]["listening_port"] = config.ws_server_listening_port;
@@ -55,7 +57,9 @@ void SaveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_
 
   yaml_data["ipc"]["spin_rate_hz"] = config.ipc_spin_rate_hz;
   yaml_data["ipc"]["topic_whitelist"] = config.ipc_topic_whitelist;
+  yaml_data["ipc"]["topic_blacklist"] = config.ipc_topic_blacklist;
   yaml_data["ipc"]["service_whitelist"] = config.ipc_service_whitelist;
+  yaml_data["ipc"]["service_blacklist"] = config.ipc_service_blacklist;
 
   std::ofstream file(yaml_file_path);
   if (!file.is_open()) {
@@ -63,6 +67,28 @@ void SaveBridgeConfigToYaml(const BridgeConfig& config, const std::string& yaml_
   }
 
   file << yaml_data.dump(4);  // Pretty print with 4 spaces indentation
+}
+
+bool isMatch(const std::string& topic, const std::vector<std::string>& regex_list) {
+  auto regexes = parseRegexStrings(regex_list);
+  for (const auto& regex : regexes) {
+    if (std::regex_match(topic, regex)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool shouldBridgeIpcTopic(const std::string& topic, const BridgeConfig& config) {
+  return isMatch(topic, config.ipc_topic_whitelist) && !isMatch(topic, config.ipc_service_blacklist);
+}
+
+bool shouldBridgeIpcService(const std::string& service, const BridgeConfig& config) {
+  return isMatch(service, config.ipc_service_whitelist) && !isMatch(service, config.ipc_service_blacklist);
+}
+
+bool shouldBridgeWsTopic(const std::string& topic, const BridgeConfig& config) {
+  return isMatch(topic, config.ws_server_client_topic_whitelist);
 }
 
 }  // namespace heph::ws_bridge

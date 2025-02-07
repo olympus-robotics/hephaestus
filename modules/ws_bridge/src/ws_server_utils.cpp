@@ -13,7 +13,7 @@ foxglove::ServerOptions GetWsServerOptions(const BridgeConfig& config) {
   foxglove::ServerOptions option;
 
   // Exposed parameters
-  option.clientTopicWhitelistPatterns = ParseRegexStrings(config.ws_server_client_topic_whitelist);
+  option.clientTopicWhitelistPatterns = parseRegexStrings(config.ws_server_client_topic_whitelist);
   option.supportedEncodings = config.ws_server_supported_encodings;
   option.useCompression = config.ws_server_use_compression;
 

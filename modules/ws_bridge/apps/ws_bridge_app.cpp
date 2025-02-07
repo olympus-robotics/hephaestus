@@ -32,7 +32,7 @@ auto main(int argc, const char* argv[]) -> int {
     if (args.hasOption("config")) {
       auto config_file_path = args.getOption<std::filesystem::path>("config");
       // Load configuration from a YAML file
-      config = heph::ws_bridge::LoadBridgeConfigFromYaml(config_file_path.string());
+      config = heph::ws_bridge::loadBridgeConfigFromYaml(config_file_path.string());
     } else {
       // Create a default configuration
       config = heph::ws_bridge::BridgeConfig();
