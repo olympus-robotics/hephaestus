@@ -216,10 +216,6 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
 }
 
 void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
-  if (!ws_server_subscribed_to_connection_graph_) {
-    return;
-  }
-
   foxglove::MapOfSets topic_to_pub_node_map;
   foxglove::MapOfSets topic_to_sub_node_map;
   for (const auto& [topic_name, topic_type] : state.topics_to_types_map) {
@@ -248,7 +244,7 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
 
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
 
-  heph::log(heph::INFO, "[WS WsBridge] - Updated IPC connection graph");
+  heph::log(heph::INFO, "[WS Bridge] - Updated IPC connection graph");
 }
 
 ////////////////////////////////
