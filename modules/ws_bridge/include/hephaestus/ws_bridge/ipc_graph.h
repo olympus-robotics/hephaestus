@@ -12,6 +12,7 @@
 
 // #define ZENOHCXX_ZENOHC
 
+#include <absl/synchronization/mutex.h>
 #include <hephaestus/ipc/topic_database.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
 
@@ -46,31 +47,33 @@ class IpcGraph {
 public:
   explicit IpcGraph(const IpcGraphConfig& config);
 
-  void Start();
-  void Stop();
+  void start();
+  void stop();
 
-  // Access function to query theinternal topic type db.
   [[nodiscard]] std::optional<heph::serdes::TypeInfo> getTopicTypeInfo(const std::string& topic) const;
 
   // Create a human readable, multi-line, console-optimized list of topics and
   // their types as they are stored in  topics_to_types_map_.
-  std::string GetTopicListString();
+  std::string getTopicListString();
 
-  TopicsToTypesMap GetTopicsToTypesMap() const;
+  TopicsToTypesMap getTopicsToTypesMap() const;
 
-  TopicsToTypesMap GetServicesToTypesMap() const;
+  TopicsToTypesMap getServicesToTypesMap() const;
 
-  TopicsToTypesMap GetServicesToNodesMap() const;
+  TopicsToTypesMap getServicesToNodesMap() const;
 
-  TopicToNodesMap GetTopicToSubscribersMap() const;
+  TopicToNodesMap getTopicToSubscribersMap() const;
 
-  TopicToNodesMap GetTopicToPublishersMap() const;
-
-private:
-  void CallbackLivelinessUpdate(const ipc::zenoh::EndpointInfo& info);
+  TopicToNodesMap getTopicToPublishersMap() const;
 
 private:
-  ipc::zenoh::SessionPtr session_;
+  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+
+private:
+  mutable absl::Mutex mutex_;
+
+  IpcGraphConfig config_;
+
   std::unique_ptr<ipc::zenoh::EndpointDiscovery> discovery_;
 
 private:

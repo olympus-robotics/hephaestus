@@ -5,7 +5,7 @@
 
 namespace heph::ws_bridge {
 
-foxglove::ServerOptions GetWsServerOptions(const WsBridgeConfig& config) {
+foxglove::ServerOptions getWsServerOptions(const WsBridgeConfig& config) {
   // NOTE: Unfortunately 'address' and 'port' are not part of
   // foxglove::ServerOptions and need to be passed to the server when calling
   // "start".

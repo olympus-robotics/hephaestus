@@ -14,10 +14,11 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
         .session = session,
         .topic_discovery_cb =
             [this](const std::string& topic, const heph::serdes::TypeInfo& type_info) {
-              this->CallbackIpcGraphTopicFound(topic, type_info);
+              this->callback__IpcGraph__TopicFound(topic, type_info);
             },
-        .topic_removal_cb = [this](const std::string& topic) { this->CallbackIpcGraphTopicDropped(topic); },
-        .graph_update_cb = [this](IpcGraphState state) { this->CallbackIpcGraphUpdated(state); },
+        .topic_removal_cb =
+            [this](const std::string& topic) { this->callback__IpcGraph__TopicDropped(topic); },
+        .graph_update_cb = [this](IpcGraphState state) { this->callback__IpcGraph__Updated(state); },
     });
   }
 
@@ -30,11 +31,11 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
   {
     // Log handler
     const auto ws_server_log_handler = [this](WsServerLogLevel level, char const* msg) {
-      this->CallbackWsServerLogHandler(level, msg);
+      this->callback__WsServer__Log(level, msg);
     };
 
     // Prepare server options
-    auto ws_server_options = GetWsServerOptions(config);
+    auto ws_server_options = getWsServerOptions(config);
 
     // Create server
     ws_server_ = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
@@ -46,31 +47,31 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
     // Implements foxglove::CAPABILITY_PUBLISH (this capability does not exist in the foxglove library, but it
     // would represent the basic ability to advertise and publish topics from the server side )
     ws_server_hdlrs.subscribeHandler = [this](auto&&... args) {
-      this->CallbackWsServerSubscribe(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__Subscribe(std::forward<decltype(args)>(args)...);
     };
     ws_server_hdlrs.unsubscribeHandler = [this](auto&&... args) {
-      this->CallbackWsServerUnsubscribe(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__Unsubscribe(std::forward<decltype(args)>(args)...);
     };
 
     // Implements foxglove::CAPABILITY_CONNECTION_GRAPH
     ws_server_hdlrs.subscribeConnectionGraphHandler = [this](auto&&... args) {
-      this->CallbackWsServerSubscribeConnectionGraph(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__SubscribeConnectionGraph(std::forward<decltype(args)>(args)...);
     };
 
     // Implements foxglove::CAPABILITY_CLIENT_PUBLISH
     ws_server_hdlrs.clientAdvertiseHandler = [this](auto&&... args) {
-      this->CallbackWsServerClientAdvertise(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__ClientAdvertise(std::forward<decltype(args)>(args)...);
     };
     ws_server_hdlrs.clientUnadvertiseHandler = [this](auto&&... args) {
-      this->CallbackWsServerClientUnadvertise(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__ClientUnadvertise(std::forward<decltype(args)>(args)...);
     };
     ws_server_hdlrs.clientMessageHandler = [this](auto&&... args) {
-      this->CallbackWsServerClientMessage(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__ClientMessage(std::forward<decltype(args)>(args)...);
     };
 
     // Implements foxglove::CAPABILITY_SERVICES
     ws_server_hdlrs.serviceRequestHandler = [this](auto&&... args) {
-      this->CallbackWsServerServiceRequest(std::forward<decltype(args)>(args)...);
+      this->callback__WsServer__ServiceRequest(std::forward<decltype(args)>(args)...);
     };
 
     // TODO(mfehr): Add implementation for the following capabilities:
@@ -86,7 +87,7 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
   {
     spinner_ =
         std::make_unique<concurrency::Spinner>(concurrency::Spinner::createNeverStoppingCallback(
-                                                   [this] { heph::log(heph::INFO, state_.toString()); }),
+                                                   [this] { std::cout << state_.toString() << std::endl; }),
                                                config_.ipc_spin_rate_hz);
   }
 }
@@ -105,9 +106,17 @@ auto WsBridge::start() -> std::future<void> {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
-  ipc_graph_->Start();
+  ipc_graph_->start();
 
-  StartWsServer(config_);
+  {
+    ws_server_->start(config_.ws_server_address, config_.ws_server_listening_port);
+
+    // This is a sanity check I found in the ros-foxglove bridge, so I assume under certain conditions
+    // (probably a port collision), this can actually happen.
+    // TODO(mfehr): Test this and verify.
+    const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
+    CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_listening_port);
+  }
 
   spinner_->start();
 
@@ -122,9 +131,9 @@ auto WsBridge::stop() -> std::future<void> {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
-  ipc_graph_->Stop();
+  ipc_graph_->stop();
 
-  StopWsServer();
+  ws_server_->stop();
 
   return spinner_->stop();
 }
@@ -135,36 +144,43 @@ void WsBridge::wait() const {
   spinner_->wait();
 }
 
-/////////////////////////////////////////////////
-// Websocket Server Interface [NOT THREADSAFE] //
-/////////////////////////////////////////////////
-
-void WsBridge::StartWsServer(const WsBridgeConfig& config) {
-  heph::log(heph::INFO, "[WS WsBridge] - Starting WS Server...");
-  ws_server_->start(config.ws_server_address, config.ws_server_listening_port);
-  heph::log(heph::INFO, "[WS WsBridge] - WS Server ONLINE");
-
-  const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
-  CHECK_EQ(ws_server_actual_listening_port, config.ws_server_listening_port);
+//////////////////////////////////////
+// IPC Graph Callbacks [THREADSAFE] //
+//////////////////////////////////////
+void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
+                                              const heph::serdes::TypeInfo& type_info) {
+  absl::MutexLock lock(&mutex_);
+  (void)topic;
+  (void)type_info;
+  // Handle the topic discovery logic here
+  // For example, you might want to log the discovery or update some internal state
+  // Example:
+  // LOG(INFO) << "Topic found: " << topic << " with type: " << type_info.name;
 }
 
-void WsBridge::StopWsServer() {
-  heph::log(heph::INFO, "[WS WsBridge] - Stopping WS Server...");
-  ws_server_->stop();
-  heph::log(heph::INFO, "[WS WsBridge] - WS Server OFFLINE");
+void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
+  absl::MutexLock lock(&mutex_);
+  (void)topic;
+  // Handle the topic removal logic here
+  // For example, you might want to log the removal or update some internal state
+  // Example:
+  // LOG(INFO) << "Topic dropped: " << topic;
 }
 
-void WsBridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_type,
-                                             const TopicsToTypesMap& services_to_nodes,
-                                             const TopicToNodesMap& topic_to_subs,
-                                             const TopicToNodesMap& topic_to_pubs) {
+void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
+  absl::MutexLock lock(&mutex_);
+
+  if (!ws_server_subscribed_to_connection_graph_) {
+    return;
+  }
+
   foxglove::MapOfSets topic_to_pub_node_map;
   foxglove::MapOfSets topic_to_sub_node_map;
-  for (const auto& [topic_name, topic_type] : topics_w_type) {
+  for (const auto& [topic_name, topic_type] : state.topics_to_types_map) {
     (void)topic_type;
 
-    auto subscriber_names = topic_to_subs.at(topic_name);
-    auto publisher_names = topic_to_pubs.at(topic_name);
+    auto subscriber_names = state.topic_to_subscribers_map.at(topic_name);
+    auto publisher_names = state.topic_to_publishers_map.at(topic_name);
 
     std::unordered_set<std::string> ws_server_pub_node_names;
     for (const auto& publisher_name : publisher_names) {
@@ -180,7 +196,7 @@ void WsBridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_ty
   }
 
   foxglove::MapOfSets service_to_node_map;
-  for (const auto& [service_name, node_name] : services_to_nodes) {
+  for (const auto& [service_name, node_name] : state.services_to_nodes_map) {
     service_to_node_map[service_name].insert(node_name);
   }
 
@@ -189,39 +205,11 @@ void WsBridge::UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_ty
   heph::log(heph::INFO, "[WS WsBridge] - Updated IPC connection graph");
 }
 
-//////////////////////////////////////
-// IPC Graph Callbacks [THREADSAFE] //
-//////////////////////////////////////
-void WsBridge::CallbackIpcGraphTopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info) {
-  absl::MutexLock lock(&mutex_);
-  (void)topic;
-  (void)type_info;
-  // Handle the topic discovery logic here
-  // For example, you might want to log the discovery or update some internal state
-  // Example:
-  // LOG(INFO) << "Topic found: " << topic << " with type: " << type_info.name;
-}
-
-void WsBridge::CallbackIpcGraphTopicDropped(const std::string& topic) {
-  absl::MutexLock lock(&mutex_);
-  (void)topic;
-  // Handle the topic removal logic here
-  // For example, you might want to log the removal or update some internal state
-  // Example:
-  // LOG(INFO) << "Topic dropped: " << topic;
-}
-
-void WsBridge::CallbackIpcGraphUpdated(IpcGraphState state) {
-  absl::MutexLock lock(&mutex_);
-  UpdateWsServerConnectionGraph(state.topics_to_types_map, state.services_to_nodes_map,
-                                state.topic_to_subscribers_map, state.topic_to_publishers_map);
-}
-
 /////////////////////////////////////////////
 // Websocket Server Callbacks [THREADSAFE] //
 /////////////////////////////////////////////
 
-void WsBridge::CallbackWsServerLogHandler(WsServerLogLevel level, char const* msg) {
+void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) {
   switch (level) {
     case WsServerLogLevel::Debug:
       heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
@@ -241,7 +229,8 @@ void WsBridge::CallbackWsServerLogHandler(WsServerLogLevel level, char const* ms
   }
 }
 
-void WsBridge::CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_type,
+                                             WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
@@ -250,8 +239,8 @@ void WsBridge::CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServe
   // LOG(INFO) << "Client subscribed to channel: " << channel_type;
 }
 
-void WsBridge::CallbackWsServerUnsubscribe(WsServerChannelId channel_type,
-                                           WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_type,
+                                               WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
@@ -260,8 +249,8 @@ void WsBridge::CallbackWsServerUnsubscribe(WsServerChannelId channel_type,
   // LOG(INFO) << "Client unsubscribed from channel: " << channel_type;
 }
 
-void WsBridge::CallbackWsServerClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
-                                               WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
+                                                   WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)advertisement;
   (void)client_handle;
@@ -270,8 +259,8 @@ void WsBridge::CallbackWsServerClientAdvertise(const foxglove::ClientAdvertiseme
   // LOG(INFO) << "Client advertised: " << advertisement.topic;
 }
 
-void WsBridge::CallbackWsServerClientUnadvertise(WsServerChannelId channel_type,
-                                                 WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_type,
+                                                     WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)channel_type;
   (void)client_handle;
@@ -280,8 +269,8 @@ void WsBridge::CallbackWsServerClientUnadvertise(WsServerChannelId channel_type,
   // LOG(INFO) << "Client unadvertised channel: " << channel_type;
 }
 
-void WsBridge::CallbackWsServerClientMessage(const foxglove::ClientMessage& message,
-                                             WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
+                                                 WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)message;
   (void)client_handle;
@@ -290,8 +279,8 @@ void WsBridge::CallbackWsServerClientMessage(const foxglove::ClientMessage& mess
   // LOG(INFO) << "Client sent message on channel: " << message.channel_id;
 }
 
-void WsBridge::CallbackWsServerServiceRequest(const foxglove::ServiceRequest& request,
-                                              WsServerClientHandle client_handle) {
+void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
+                                                  WsServerClientHandle client_handle) {
   absl::MutexLock lock(&mutex_);
   (void)request;
   (void)client_handle;
@@ -300,7 +289,7 @@ void WsBridge::CallbackWsServerServiceRequest(const foxglove::ServiceRequest& re
   // LOG(INFO) << "Service request received: " << request.service_id;
 }
 
-void WsBridge::CallbackWsServerSubscribeConnectionGraph(bool subscribe) {
+void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
   absl::MutexLock lock(&mutex_);
   (void)subscribe;
   ws_server_subscribed_to_connection_graph_ = subscribe;

@@ -1,6 +1,6 @@
 ws_server:
-  listening_port: 8080
-  address: "127.0.0.1"
+  listening_port: 8765
+  address: "0.0.0.0"
   client_topic_whitelist:
     - ".*"
   supported_encodings:

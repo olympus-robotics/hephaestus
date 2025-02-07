@@ -125,11 +125,16 @@ WsBridgeState::getClientsForWsChannel(const WsServerChannelId& channel_id) const
 
 std::string WsBridgeState::channelClientMappingToString() const {
   std::ostringstream oss;
-  oss << "WS Channel to WS Client Mapping:\n";
+  oss << "  WS Channel to WS Client Mapping:\n";
+
+  if (channel_to_client_map_.empty()) {
+    oss << "  \t∅\n";
+  }
+
   for (const auto& [channel_id, clients] : channel_to_client_map_) {
-    oss << " [" << channel_id << "]\n";
+    oss << "  \t[" << channel_id << "]\n";
     for (const auto& client : clients) {
-      oss << "  - '" << client.second << "'\n";
+      oss << "  \t  - '" << client.second << "' (" << (client.first.expired() ? "expired" : "valid") << ")\n";
     }
   }
   return oss.str();
@@ -167,9 +172,14 @@ std::string WsBridgeState::toString() const {
 
 std::string WsBridgeState::topicChannelMappingToString() const {
   std::ostringstream oss;
-  oss << "IPC Topic to WS Channel Mapping:\n";
+  oss << "  IPC Topic to WS Channel Mapping:\n";
+
+  if (channel_to_topic_.empty()) {
+    oss << "  \t∅\n";
+  }
+
   for (const auto& [channel_id, topic] : channel_to_topic_) {
-    oss << "Channel: " << channel_id << " -> Topic: " << topic << "\n";
+    oss << "  \t[" << channel_id << "] -> '" << topic << "'\n";
   }
   return oss.str();
 }

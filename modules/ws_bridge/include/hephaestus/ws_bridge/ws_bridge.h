@@ -48,35 +48,30 @@ private:
 
   std::unique_ptr<concurrency::Spinner> spinner_;
 
+  WsBridgeState state_;
+
   ////////////////////////////////
   // Websocket Server Interface //
   ////////////////////////////////
 
   WsServerInterfacePtr ws_server_;
 
-  void StartWsServer(const WsBridgeConfig& config);
-  void StopWsServer();
-
   // WS Server - Connection Graph
   bool ws_server_subscribed_to_connection_graph_{ false };
 
-  void UpdateWsServerConnectionGraph(const TopicsToTypesMap& topics_w_type,
-                                     const TopicsToTypesMap& services_to_nodes,
-                                     const TopicToNodesMap& topic_to_subs,
-                                     const TopicToNodesMap& topic_to_pubs);
-
-  // WS Server - Callbacks triggered by the server [THREADSAFE]
-  void CallbackWsServerLogHandler(WsServerLogLevel level, char const* msg);
-  void CallbackWsServerSubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
-  void CallbackWsServerUnsubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
-  void CallbackWsServerClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
-                                       WsServerClientHandle client_handle);
-  void CallbackWsServerClientUnadvertise(WsServerChannelId channel_type, WsServerClientHandle client_handle);
-  void CallbackWsServerClientMessage(const foxglove::ClientMessage& message,
-                                     WsServerClientHandle client_handle);
-  void CallbackWsServerServiceRequest(const foxglove::ServiceRequest& request,
-                                      WsServerClientHandle client_handle);
-  void CallbackWsServerSubscribeConnectionGraph(bool subscribe);
+  // Callbacks triggered by WS Server [THREADSAFE]
+  void callback__WsServer__Log(WsServerLogLevel level, char const* msg);
+  void callback__WsServer__Subscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
+  void callback__WsServer__Unsubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
+  void callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
+                                           WsServerClientHandle client_handle);
+  void callback__WsServer__ClientUnadvertise(WsServerChannelId channel_type,
+                                             WsServerClientHandle client_handle);
+  void callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
+                                         WsServerClientHandle client_handle);
+  void callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
+                                          WsServerClientHandle client_handle);
+  void callback__WsServer__SubscribeConnectionGraph(bool subscribe);
 
   ///////////////////
   // IPC Interface //
@@ -85,23 +80,16 @@ private:
   std::unique_ptr<IpcGraph> ipc_graph_;
 
   // Callbacks triggered by the IPC Graph [THREADSAFE]
-  void CallbackIpcGraphTopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info);
-  void CallbackIpcGraphTopicDropped(const std::string& topic);
-  void CallbackIpcGraphUpdated(IpcGraphState ipc_graph_state);
+  void callback__IpcGraph__TopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info);
+  void callback__IpcGraph__TopicDropped(const std::string& topic);
+  void callback__IpcGraph__Updated(IpcGraphState ipc_graph_state);
 
   // std::unique_ptr<IpcInterface> ipc_interface_;
 
   // // Callbacks triggered by the IPC interface [THREADSAFE]
-  // void CallbackIpcMessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
-  //                                 std::span<const std::byte> data, const heph::serdes::TypeInfo&
-  //                                 type_info);
-  // void CallbackPrintBridgeStatus() const;
-
-  ////////////////////////////////
-  // [WS Server <=> IPC] WsBridge //
-  ////////////////////////////////
-
-  WsBridgeState state_;
+  // void callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
+  //                                     std::span<const std::byte> data, const heph::serdes::TypeInfo&
+  //                                     type_info);
 };
 
 }  // namespace heph::ws_bridge
