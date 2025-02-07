@@ -174,7 +174,7 @@ set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION}-cmake-3.22.1)
 add_cmake_dependency(
   NAME reflectcpp
   DEPENDS ${REFLECT_CPP_DEPENDS}
-  GIT_REPOSITORY https://github.com/voliro-systems/reflect-cpp.git
+  GIT_REPOSITORY https://github.com/olympus-robotics/reflect-cpp.git
   GIT_TAG ${REFLECT_CPP_TAG}
   CMAKE_ARGS -DREFLECTCPP_YAML=ON -DCMAKE_BUILD_TYPE=Debug
 )
