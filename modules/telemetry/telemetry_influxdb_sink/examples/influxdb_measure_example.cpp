@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <exception>
 #include <future>
+#include <memory>
 #include <string>
 #include <utility>
 
