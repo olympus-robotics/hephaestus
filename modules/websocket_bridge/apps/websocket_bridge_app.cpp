@@ -15,8 +15,8 @@
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/websocket_bridge/bridge_config.h>
 #include <hephaestus/websocket_bridge/bridge.h>
+#include <hephaestus/websocket_bridge/bridge_config.h>
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;

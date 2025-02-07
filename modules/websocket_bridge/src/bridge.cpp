@@ -171,10 +171,10 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
 
   // debugPrintSchema(type_info.schema);
 
-  heph::log(heph::INFO, "[WS Bridge] - New Channel", "topic", new_ws_server_channel.topic, "encoding",
-            new_ws_server_channel.encoding, "schemaName", new_ws_server_channel.schemaName, "schema",
-            new_ws_server_channel.schema, "schemaEncoding",
-            new_ws_server_channel.schemaEncoding.value_or("N/A"));
+  // heph::log(heph::INFO, "[WS Bridge] - New Channel", "topic", new_ws_server_channel.topic, "encoding",
+  //           new_ws_server_channel.encoding, "schemaName", new_ws_server_channel.schemaName, "schema",
+  //           new_ws_server_channel.schema, "schemaEncoding",
+  //           new_ws_server_channel.schemaEncoding.value_or("N/A"));
 
   std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
   auto new_channel_ids = ws_server_->addChannels(new_ws_server_channels);
@@ -243,8 +243,6 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
   }
 
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
-
-  heph::log(heph::INFO, "[WS Bridge] - Updated IPC connection graph");
 }
 
 ////////////////////////////////
