@@ -58,18 +58,6 @@ public:
   // their types as they are stored in  topics_to_types_map_.
   std::string getTopicListString();
 
-  void addPublisher(const ipc::zenoh::EndpointInfo& info);
-  void removePublisher(const ipc::zenoh::EndpointInfo& info);
-  bool hasPublisher(const std::string& topic) const;
-
-  void addSubscriber(const ipc::zenoh::EndpointInfo& info);
-  void removeSubscriber(const ipc::zenoh::EndpointInfo& info);
-
-  bool addTopic(const std::string& topic);
-  void removeTopic(const std::string& topic);
-  bool hasTopic(const std::string& topic_name) const;
-
-public:
   TopicsToTypesMap getTopicsToTypesMap() const;
   TopicsToTypesMap getServicesToTypesMap() const;
   TopicsToTypesMap getServicesToNodesMap() const;
@@ -77,30 +65,29 @@ public:
   TopicToNodesMap getTopicToPublishersMap() const;
 
 private:
-  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+  void addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removePublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool hasPublisher(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  void addSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  bool addTopic(const std::string& topic) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeTopic(const std::string& topic) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool hasTopic(const std::string& topic_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
 private:
+  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+
   mutable absl::Mutex mutex_;
 
   IpcGraphConfig config_;
 
   std::unique_ptr<ipc::zenoh::EndpointDiscovery> discovery_;
 
-private:
-  void addPublisherImpl(const ipc::zenoh::EndpointInfo& info);
-  void removePublisherImpl(const ipc::zenoh::EndpointInfo& info);
-  bool hasPublisherImpl(const std::string& topic) const;
+  IpcGraphState state_ ABSL_GUARDED_BY(mutex_);
 
-  void addSubscriberImpl(const ipc::zenoh::EndpointInfo& info);
-  void removeSubscriberImpl(const ipc::zenoh::EndpointInfo& info);
-
-  bool addTopicImpl(const std::string& topic);
-  void removeTopicImpl(const std::string& topic);
-  bool hasTopicImpl(const std::string& topic_name) const;
-
-  IpcGraphState state_;
-
-  std::unique_ptr<ipc::ITopicDatabase> topic_db_;
+  std::unique_ptr<ipc::ITopicDatabase> topic_db_ ABSL_GUARDED_BY(mutex_);
 
   TopicRemovalCallback topic_removal_cb_;
   TopicDiscoveryCallback topic_discovery_cb_;

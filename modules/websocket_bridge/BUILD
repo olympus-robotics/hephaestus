@@ -29,6 +29,8 @@ heph_cc_library(
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "//modules/types",
+        "//modules/types_proto",
         "@fmt",
         "@openssl",
         "@websocketpp",
@@ -63,6 +65,15 @@ heph_cc_test(
     name = "test_bridge_config",
     srcs = [
         "tests/test_bridge_config.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "test_ipc_graph",
+    srcs = [
+        "tests/test_ipc_graph.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,

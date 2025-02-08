@@ -38,8 +38,8 @@ private:
   using TopicToChannelMap = std::unordered_map<std::string, WsServerChannelId>;
 
   mutable absl::Mutex mutex_t2c_;
-  ChannelToTopicMap channel_to_topic_;
-  TopicToChannelMap topic_to_channel_;
+  ChannelToTopicMap channel_to_topic_ ABSL_GUARDED_BY(mutex_t2c_);
+  TopicToChannelMap topic_to_channel_ ABSL_GUARDED_BY(mutex_t2c_);
 
   // Channels <-> Clients [protected by mutex_c2c_]
 public:
@@ -54,11 +54,11 @@ public:
   std::string channelClientMappingToString() const;
 
 private:
-  void cleanUpChannelToClientMapping();
+  void cleanUpChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_c2c_);
 
   using ChannelToClientMap = std::unordered_map<WsServerChannelId, WsServerClientHandleSet>;
   mutable absl::Mutex mutex_c2c_;
-  ChannelToClientMap channel_to_client_map_;
+  ChannelToClientMap channel_to_client_map_ ABSL_GUARDED_BY(mutex_c2c_);
 };
 
 }  // namespace heph::ws_bridge
