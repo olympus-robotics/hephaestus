@@ -10,7 +10,6 @@ std::string WsBridgeState::getIpcTopicForWsChannel(const WsServerChannelId& chan
   absl::MutexLock lock(&mutex_t2c_);
   auto it = channel_to_topic_.find(channel_id);
   if (it == channel_to_topic_.end()) {
-    heph::log(heph::ERROR, toString());
     heph::log(heph::ERROR, "[WS Bridge] - Could not convert channel id to topic. Something went wrong!",
               "channel id", std::to_string(channel_id));
     return "";
@@ -22,7 +21,6 @@ WsServerChannelId WsBridgeState::getWsChannelForIpcTopic(const std::string& topi
   absl::MutexLock lock(&mutex_t2c_);
   auto it = topic_to_channel_.find(topic);
   if (it == topic_to_channel_.end()) {
-    heph::log(heph::ERROR, toString());
     heph::log(heph::ERROR, "[WS Bridge] - Could not find channel id for topic. Something went wrong!",
               "topic", topic);
     return {};

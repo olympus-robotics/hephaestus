@@ -78,3 +78,12 @@ heph_cc_test(
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "test_bridge_state",
+    srcs = [
+        "tests/test_bridge_state.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)
