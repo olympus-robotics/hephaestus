@@ -25,4 +25,13 @@ struct TypeInfo {
   [[nodiscard]] auto operator==(const TypeInfo&) const -> bool = default;
 };
 
+struct ServiceTypeInfo {
+  TypeInfo request;
+  TypeInfo reply;
+
+  [[nodiscard]] auto toJson() const -> std::string;
+  [[nodiscard]] static auto fromJson(const std::string& info) -> ServiceTypeInfo;
+  [[nodiscard]] auto operator==(const ServiceTypeInfo&) const -> bool = default;
+};
+
 }  // namespace heph::serdes

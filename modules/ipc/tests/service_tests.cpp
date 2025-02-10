@@ -133,5 +133,33 @@ TEST(ZenohTests, TypesMismatch) {
   }
 }
 
+TEST(ZenohTests, ServiceTypeInfo) {
+  auto mt = random::createRNG();
+
+  const auto request_message = types::DummyType::random(mt);
+
+  const auto service_topic =
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
+
+  auto session = createSession(createLocalConfig());
+
+  auto service_server = Service<types::DummyType, std::string>(session, service_topic,
+                                                               [](const types::DummyType&) { return ""; });
+
+  auto type_info_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(service_topic.name) };
+  EXPECT_TRUE(isEndpointTypeInfoServiceTopic(type_info_service_topic.name));
+
+  auto service_client =
+      ServiceClient<std::string, std::string>(session, type_info_service_topic, std::chrono::seconds(1));
+  const auto replies = service_client.call("");
+  EXPECT_FALSE(replies.empty());
+  EXPECT_EQ(replies.size(), 1);
+  EXPECT_EQ(replies.front().topic, type_info_service_topic.name);
+
+  auto type_info = serdes::ServiceTypeInfo::fromJson(replies.front().value);
+  EXPECT_EQ(type_info.request, serdes::getSerializedTypeInfo<types::DummyType>());
+  EXPECT_EQ(type_info.reply, serdes::getSerializedTypeInfo<std::string>());
+}
+
 }  // namespace
 }  // namespace heph::ipc::zenoh::tests

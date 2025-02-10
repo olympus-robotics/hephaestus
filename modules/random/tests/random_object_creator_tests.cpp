@@ -48,6 +48,7 @@ struct TestStruct {
   double b;
   std::string c;
   std::vector<int> d;
+  std::byte e;
 
   [[nodiscard]] auto operator==(const TestStruct&) const -> bool = default;
 
@@ -55,7 +56,8 @@ struct TestStruct {
     return { .a = random::random<int>(mt),
              .b = random::random<double>(mt),
              .c = random::random<std::string>(mt),
-             .d = random::random<std::vector<int>>(mt) };
+             .d = random::random<std::vector<int>>(mt),
+             .e = random::random<std::byte>(mt) };
   }
 };
 

@@ -53,3 +53,16 @@ heph_cc_test(
         ":test_gen_proto",
     ],
 )
+
+heph_cc_test(
+    name = "type_info_tests",
+    srcs = [
+        "tests/test_proto_conversion.h",
+        "tests/type_info_tests.cpp",
+    ],
+    deps = [
+        ":serdes",
+        ":test_gen_proto",
+        "//modules/random",
+    ],
+)
