@@ -248,6 +248,10 @@ getServiceCallResponses(const ::zenoh::channels::FifoChannel::HandlerType<::zeno
 
 }  // namespace internal
 
+// -----------------------------------------------------------------------------------------------
+// Implementation - Service
+// -----------------------------------------------------------------------------------------------
+
 template <typename RequestT, typename ReplyT>
 Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback,
                                    FailureCallback&& failure_callback,
@@ -330,7 +334,7 @@ void Service<RequestT, ReplyT>::createTypeInfoService() {
 }
 
 // -----------------------------------------------------------------------------------------------
-//
+// Implementation - Call Service
 // -----------------------------------------------------------------------------------------------
 
 template <typename RequestT, typename ReplyT>

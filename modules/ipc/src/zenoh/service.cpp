@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
 #include <span>
 #include <string>
 #include <utility>
@@ -83,11 +84,10 @@ auto getEndpointTypeInfoServiceTopic(const std::string& topic) -> std::string {
 }
 
 auto isEndpointTypeInfoServiceTopic(const std::string& topic) -> bool {
-  std::vector<std::string> elements = absl::StrSplit(topic, '/');
-  if (elements.empty()) {
-    return false;
+  for (const auto& element : std::views::split(topic, '/')) {
+    return std::string_view(element.begin(), element.end()) == TOPIC_INFO_SERVICE_TOPIC_PREFIX;
   }
 
-  return elements.front() == TOPIC_INFO_SERVICE_TOPIC_PREFIX;
+  return false;
 }
 }  // namespace heph::ipc::zenoh
