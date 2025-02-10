@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -84,6 +85,10 @@ template <typename RequestT, typename ReplyT>
 auto callService(Session& session, const TopicConfig& topic_config, const RequestT& request,
                  std::chrono::milliseconds timeout) -> std::vector<ServiceResponse<ReplyT>>;
 
+auto callServiceRaw(Session& session, const TopicConfig& topic_config, std::span<const std::byte> buffer,
+                    std::chrono::milliseconds timeout)
+    -> std::vector<ServiceResponse<std::vector<std::byte>>>;
+
 // -----------------------------------------------------------------------------------------------
 // Implementation
 // -----------------------------------------------------------------------------------------------
@@ -113,9 +118,12 @@ constexpr void checkTemplatedTypes() {
 template <typename RequestT, typename ReplyT>
 [[nodiscard]] auto checkQueryTypeInfo(const ::zenoh::Query& query) -> bool {
   const auto attachment = query.get_attachment();
+  // If the attachment is missing the type info, we can't check for the type match.
+  // We return true as we do want to support query with missing type info.
   if (!attachment.has_value()) {
-    heph::log(heph::WARN, "query is missing attachments", "service", query.get_keyexpr().as_string_view());
-    return false;
+    heph::log(heph::WARN, "query is missing attachments, cannot check that the type matches", "service",
+              query.get_keyexpr().as_string_view());
+    return true;
   }
 
   auto attachment_data =
@@ -311,8 +319,10 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   static constexpr auto FIFO_QUEUE_SIZE = 100;
   auto replies = session.zenoh_session.get(keyexpr, "", ::zenoh::channels::FifoChannel(FIFO_QUEUE_SIZE),
                                            std::move(options), &result);
-  throwExceptionIf<FailedZenohOperation>(result != Z_OK,
-                                         fmt::format("Failed to call service on '{}'", topic_config.name));
+  if (result != Z_OK) {
+    heph::log(heph::ERROR, "failed to call service, server error", "topic", topic_config.name);
+    return {};
+  }
 
   return internal::getServiceCallResponses<ReplyT>(replies);
 }
