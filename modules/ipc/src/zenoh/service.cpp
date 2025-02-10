@@ -14,7 +14,6 @@
 #include <variant>
 #include <vector>
 
-#include <absl/strings/str_split.h>
 #include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
