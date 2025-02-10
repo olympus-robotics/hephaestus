@@ -2,9 +2,9 @@
 #include <memory>
 #include <string>
 #include <tuple>
-#include <utility>
 
 #include <fmt/format.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/ipc/topic.h"
@@ -17,6 +17,8 @@
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/exception.h"
+
+using namespace ::testing;  // NOLINT (google-build-using-namespace)
 
 namespace heph::ipc::zenoh::tests {
 
@@ -60,7 +62,7 @@ TEST(PublisherSubscriber, MessageExchange) {
 TEST(PublisherSubscriber, MismatchType) {
   auto mt = random::createRNG();
   Config config{};
-  auto session = createSession(std::move(config));
+  auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
@@ -84,6 +86,40 @@ TEST(PublisherSubscriber, MismatchType) {
         stop_flag.wait(false);
       },
       FailedZenohOperation, "");
+}
+
+TEST(PublisherSubscriber, PublisherTypeInfo) {
+  auto mt = random::createRNG();
+  auto session = createSession(createLocalConfig());
+  const auto topic =
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
+
+  Publisher<types::DummyType> publisher(session, topic);
+
+  auto type_info_json = callService<std::string, std::string>(
+      *session, TopicConfig{ getEndpointTypeInfoServiceTopic(topic.name) }, "", std::chrono::seconds{ 1 });
+
+  EXPECT_THAT(type_info_json, SizeIs(1));
+  auto type_info = serdes::TypeInfo::fromJson(type_info_json.front().value);
+
+  EXPECT_EQ(type_info, serdes::getSerializedTypeInfo<types::DummyType>());
+}
+
+TEST(PublisherSubscriber, SubscriberTypeInfo) {
+  auto mt = random::createRNG();
+  auto session = createSession(createLocalConfig());
+  const auto topic =
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
+
+  Subscriber<types::DummyType> subscriber(session, topic, [](const auto&, const auto&) {});
+
+  auto type_info_json = callService<std::string, std::string>(
+      *session, TopicConfig{ getEndpointTypeInfoServiceTopic(topic.name) }, "", std::chrono::seconds{ 1 });
+
+  EXPECT_THAT(type_info_json, SizeIs(1));
+  auto type_info = serdes::TypeInfo::fromJson(type_info_json.front().value);
+
+  EXPECT_EQ(type_info, serdes::getSerializedTypeInfo<types::DummyType>());
 }
 
 }  // namespace

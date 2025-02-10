@@ -43,7 +43,7 @@ public:
             serdes::deserialize(buffer, *data);
             callback(metadata, std::move(data));
           },
-          dedicated_callback_thread) {
+          serdes::getSerializedTypeInfo<T>(), dedicated_callback_thread) {
   }
 
 private:

@@ -89,6 +89,8 @@ auto callServiceRaw(Session& session, const TopicConfig& topic_config, std::span
                     std::chrono::milliseconds timeout)
     -> std::vector<ServiceResponse<std::vector<std::byte>>>;
 
+[[nodiscard]] auto getEndpointTypeInfoServiceTopic(const std::string& topic) -> std::string;
+
 // -----------------------------------------------------------------------------------------------
 // Implementation
 // -----------------------------------------------------------------------------------------------
