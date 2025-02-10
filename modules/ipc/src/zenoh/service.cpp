@@ -7,13 +7,13 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <ranges>
 #include <span>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include <absl/strings/str_split.h>
 #include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
@@ -83,10 +83,11 @@ auto getEndpointTypeInfoServiceTopic(const std::string& topic) -> std::string {
 }
 
 auto isEndpointTypeInfoServiceTopic(const std::string& topic) -> bool {
-  for (const auto& element : std::views::split(topic, '/')) {
-    return std::string_view(element.begin(), element.end()) == TOPIC_INFO_SERVICE_TOPIC_PREFIX;
+  std::vector<std::string> elements = absl::StrSplit(topic, '/');
+  if (elements.empty()) {
+    return false;
   }
 
-  return false;
+  return elements.front() == TOPIC_INFO_SERVICE_TOPIC_PREFIX;
 }
 }  // namespace heph::ipc::zenoh
