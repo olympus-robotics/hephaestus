@@ -54,7 +54,7 @@ struct ActionServerData {
                                            DummyActionServer::TriggerCallback&& trigger_cb,
                                            DummyActionServer::ExecuteCallback&& execute_cb)
     -> ActionServerData {
-  static constexpr int TOPIC_LENGTH = 10;
+  static constexpr int TOPIC_LENGTH = 20;
   auto service_topic = ipc::TopicConfig(
       fmt::format("test_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
@@ -102,17 +102,24 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
 
   auto request = types::DummyType::random(mt);
   types::DummyPrimitivesType received_status;
+  std::atomic_flag received_status_flag = ATOMIC_FLAG_INIT;
   static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 10000 };
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
-      [&received_status](const types::DummyPrimitivesType& status) { received_status = status; },
+      [&received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
+        received_status = status;
+        received_status_flag.test_and_set();
+        received_status_flag.notify_all();
+      },
       REPLY_SERVICE_DEFAULT_TIMEOUT);
 
   const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
   ASSERT_EQ(wait_res, std::future_status::ready);
 
-  const auto reply = reply_future.get();
+  received_status_flag.wait(false);
   EXPECT_EQ(status, received_status);
+
+  const auto reply = reply_future.get();
   EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
   EXPECT_EQ(reply.value, request);
 }
