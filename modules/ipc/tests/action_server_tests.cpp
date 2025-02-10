@@ -113,11 +113,11 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
       },
       REPLY_SERVICE_DEFAULT_TIMEOUT);
 
-  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(wait_res, std::future_status::ready);
-
   received_status_flag.wait(false);
   EXPECT_EQ(status, received_status);
+
+  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
+  ASSERT_EQ(wait_res, std::future_status::ready);
 
   const auto reply = reply_future.get();
   EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
