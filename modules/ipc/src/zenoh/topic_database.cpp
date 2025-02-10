@@ -6,19 +6,18 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {
