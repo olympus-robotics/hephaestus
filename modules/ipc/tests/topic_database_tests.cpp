@@ -68,12 +68,14 @@ TEST(ZenohTests, TopicDatabase) {
   EXPECT_EQ(subscriber_type_info, serdes::getSerializedTypeInfo<types::DummyType>());
 
   auto service_type_info = topic_database->getServiceTypeInfo(service_topic.name);
-  EXPECT_EQ(service_type_info.request, serdes::getSerializedTypeInfo<types::DummyType>());
-  EXPECT_EQ(service_type_info.reply, serdes::getSerializedTypeInfo<types::DummyPrimitivesType>());
+  EXPECT_TRUE(service_type_info.has_value());
+  EXPECT_EQ(service_type_info->request, serdes::getSerializedTypeInfo<types::DummyType>());
+  EXPECT_EQ(service_type_info->reply, serdes::getSerializedTypeInfo<types::DummyPrimitivesType>());
 
   auto service_string_type_info = topic_database->getServiceTypeInfo(service_string_topic.name);
-  EXPECT_EQ(service_string_type_info.request, serdes::getSerializedTypeInfo<std::string>());
-  EXPECT_EQ(service_string_type_info.reply, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_TRUE(service_string_type_info.has_value());
+  EXPECT_EQ(service_string_type_info->request, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_EQ(service_string_type_info->reply, serdes::getSerializedTypeInfo<std::string>());
 }
 
 }  // namespace

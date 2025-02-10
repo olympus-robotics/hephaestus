@@ -78,17 +78,24 @@ void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   }
 
   auto type_info = topic_db_->getTypeInfo(info.topic);
+  if (!type_info) {
+    // TODO(@fbrizzi): consider if we still want to allow for empty type info.
+    heph::log(heph::ERROR, "failed to get type info for topic, skipping", "topic", info.topic);
+    return;
+  }
+
   if (init_subscriber_cb_) {
-    init_subscriber_cb_(info.topic, type_info);
+    init_subscriber_cb_(info.topic, *type_info);
   }
 
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ info.topic },
-      [this, type_info](const MessageMetadata& metadata, std::span<const std::byte> data) {
+      [this, type_info = std::move(*type_info)](const MessageMetadata& metadata,
+                                                std::span<const std::byte> data) {
         subscriber_cb_(metadata, data, type_info);
       },
-      type_info);
+      *type_info);
 }
 
 void DynamicSubscriber::onPublisherDropped(const EndpointInfo& info) {
