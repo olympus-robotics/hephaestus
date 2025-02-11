@@ -70,7 +70,7 @@ template <typename CallbackT>
         heph::ERROR,
         "spinner state transition failed", "current_state",
                     magic_enum::enum_name(params.input_state), "expected_transition_state", magic_enum::enum_name(params.success_state), "actual_transition_state"
-                    magic_enum::enum_name(params.failure_state)), "error",
+                    magic_enum::enum_name(params.failure_state)),
         "exception", exception_message.what());
 
     return params.failure_state;
