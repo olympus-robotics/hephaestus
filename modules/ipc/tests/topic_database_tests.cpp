@@ -76,6 +76,11 @@ TEST(ZenohTests, TopicDatabase) {
   EXPECT_TRUE(service_string_type_info.has_value());
   EXPECT_EQ(service_string_type_info->request, serdes::getSerializedTypeInfo<std::string>());
   EXPECT_EQ(service_string_type_info->reply, serdes::getSerializedTypeInfo<std::string>());
+
+  auto result = topic_database->getTypeInfo("non_existent_topic");
+  EXPECT_FALSE(result.has_value());
+  auto service_result = topic_database->getServiceTypeInfo("non_existent_service");
+  EXPECT_FALSE(service_result.has_value());
 }
 
 }  // namespace
