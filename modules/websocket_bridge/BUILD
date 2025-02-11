@@ -83,3 +83,12 @@ heph_cc_test(
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "test_ipc_interface",
+    srcs = [
+        "tests/test_ipc_interface.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)

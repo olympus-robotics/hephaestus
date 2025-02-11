@@ -13,29 +13,36 @@
 
 namespace heph::ws_bridge {
 
-IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, WsBridgeConfig& config)
-  : session_(session), config_(config) {
+IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session) : session_(session) {
 }
 
 void IpcInterface::start() {
+  absl::MutexLock lock(&mutex_);
   // TODO(mfehr): implement or remove
 }
 
 std::future<void> IpcInterface::stop() {
+  absl::MutexLock lock(&mutex_);
   std::promise<void> promise;
   auto future = promise.get_future();
-  // Mock stop logic goes here
   promise.set_value();
   return future;
 }
 
-bool IpcInterface::hasSubscriber(const std::string& topic) const {
+bool IpcInterface::hasSubscriberImpl(const std::string& topic) const {
   return subscribers_.find(topic) != subscribers_.end();
+}
+
+bool IpcInterface::hasSubscriber(const std::string& topic) const {
+  absl::MutexLock lock(&mutex_);
+  return hasSubscriberImpl(topic);
 }
 
 void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
                                  TopicSubscriberWithTypeCallback subscriber_cb) {
-  if (hasSubscriber(topic)) {
+  absl::MutexLock lock(&mutex_);
+
+  if (hasSubscriberImpl(topic)) {
     heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
   }
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
@@ -48,7 +55,9 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
 }
 
 void IpcInterface::removeSubscriber(const std::string& topic) {
-  if (!hasSubscriber(topic)) {
+  absl::MutexLock lock(&mutex_);
+
+  if (!hasSubscriberImpl(topic)) {
     heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic does not exist!", "topic", topic);
   }
   subscribers_.erase(topic);

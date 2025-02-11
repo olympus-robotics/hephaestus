@@ -24,7 +24,7 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
 
   // Initialize IPC Interface
   {
-    ipc_interface_ = std::make_unique<IpcInterface>(session, config_);
+    ipc_interface_ = std::make_unique<IpcInterface>(session);
   }
 
   // Initialize WS Server
@@ -100,6 +100,8 @@ auto WsBridge::start() -> std::future<void> {
 
   ipc_graph_->start();
 
+  ipc_interface_->start();
+
   {
     ws_server_->start(config_.ws_server_address, config_.ws_server_listening_port);
 
@@ -120,6 +122,8 @@ auto WsBridge::stop() -> std::future<void> {
   CHECK(ipc_graph_);
 
   ipc_graph_->stop();
+
+  ipc_interface_->stop().get();
 
   ws_server_->stop();
 
