@@ -69,9 +69,9 @@ template <typename CallbackT>
   } catch (const std::exception& exception_message) {
     heph::log(
         heph::ERROR,
-        fmt::format("Spinner state transition from state {} to state {} failed, going to state {} instead",
-                    magic_enum::enum_name(params.input_state), magic_enum::enum_name(params.success_state),
-                    magic_enum::enum_name(params.failure_state)),
+        "spinner state transition failed", "current_state", 
+                    magic_enum::enum_name(params.input_state), "expected_transition_state", magic_enum::enum_name(params.success_state), "actual_transition_state"
+                    magic_enum::enum_name(params.failure_state)), "error",
         "exception", exception_message.what());
 
     return params.failure_state;
