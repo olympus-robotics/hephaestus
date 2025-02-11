@@ -31,7 +31,7 @@
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/websocket_bridge/serialization.h"
-#include "hephaestus/websocket_bridge/server_utils.h"
+#include "hephaestus/websocket_bridge/ws_server_utils.h"
 
 namespace heph::ws_bridge {
 
@@ -42,14 +42,13 @@ public:
 
   [[nodiscard]] auto start() -> std::future<void>;
   [[nodiscard]] auto stop() -> std::future<void>;
-  void wait() const;
 
 private:
   WsBridgeConfig config_;
 
-  std::unique_ptr<concurrency::Spinner> spinner_;
-
   WsBridgeState state_;
+
+  void printBridgeState() const;
 
   ////////////////////////////////
   // Websocket Server Interface //

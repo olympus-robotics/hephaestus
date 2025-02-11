@@ -34,12 +34,9 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
       this->callback__WsServer__Log(level, msg);
     };
 
-    // Prepare server options
-    auto ws_server_options = getWsServerOptions(config);
-
     // Create server
     ws_server_ = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
-        "WS Server", ws_server_log_handler, ws_server_options);
+        "WS Server", ws_server_log_handler, config.ws_server_config);
     CHECK(ws_server_);
 
     // Prepare server callbacks
@@ -83,17 +80,14 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
 
     ws_server_->setHandlers(std::move(ws_server_hdlrs));
   }
-
-  {
-    spinner_ =
-        std::make_unique<concurrency::Spinner>(concurrency::Spinner::createNeverStoppingCallback(
-                                                   [this] { fmt::print("{}\n", this->state_.toString()); }),
-                                               config_.ipc_spin_rate_hz);
-  }
 }
 
 WsBridge::~WsBridge() {
   // Destructor implementation
+}
+
+void WsBridge::printBridgeState() const {
+  fmt::print("{}\n", state_.toString());
 }
 
 /////////////////////////
@@ -101,7 +95,6 @@ WsBridge::~WsBridge() {
 /////////////////////////
 
 auto WsBridge::start() -> std::future<void> {
-  CHECK(spinner_);
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
@@ -117,15 +110,12 @@ auto WsBridge::start() -> std::future<void> {
     CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_listening_port);
   }
 
-  spinner_->start();
-
   std::promise<void> promise;
   promise.set_value();
   return promise.get_future();
 }
 
 auto WsBridge::stop() -> std::future<void> {
-  CHECK(spinner_);
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
@@ -133,12 +123,9 @@ auto WsBridge::stop() -> std::future<void> {
 
   ws_server_->stop();
 
-  return spinner_->stop();
-}
-
-void WsBridge::wait() const {
-  CHECK(spinner_);
-  spinner_->wait();
+  std::promise<void> promise;
+  promise.set_value();
+  return promise.get_future();
 }
 
 /////////////////////////
@@ -150,7 +137,7 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
   CHECK(ipc_graph_);
 
   if (state_.hasIpcTopicMapping(topic)) {
-    fmt::print("{}\n", state_.toString());
+    printBridgeState();
     heph::log(heph::WARN,
               fmt::format("[WS Bridge] - Topic is already advertized! There are likely multiple publishers!",
                           "topic", topic));
@@ -188,7 +175,7 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
 void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
   (void)topic;
   if (!state_.hasIpcTopicMapping(topic)) {
-    fmt::print("{}\n", state_.toString());
+    printBridgeState();
     heph::log(
         heph::WARN,
         fmt::format("[WS Bridge] - Topic is already unadvertized! There are likely multiple publishers!",
@@ -216,6 +203,8 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
 }
 
 void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
+  printBridgeState();
+
   foxglove::MapOfSets topic_to_pub_node_map;
   foxglove::MapOfSets topic_to_sub_node_map;
   for (const auto& [topic_name, topic_type] : state.topics_to_types_map) {
@@ -334,6 +323,8 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
                                        const heph::serdes::TypeInfo& type_info) {
                                   this->callback__Ipc__MessageReceived(metadata, data, type_info);
                                 });
+
+  printBridgeState();
 }
 
 void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
@@ -351,6 +342,8 @@ void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
       ipc_interface_->removeSubscriber(topic);
     }
   }
+
+  printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
@@ -360,6 +353,8 @@ void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdverti
   // Handle the client advertisement logic here
   // Example:
   // LOG(INFO) << "Client advertised: " << advertisement.topic;
+
+  printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_id,
@@ -369,6 +364,8 @@ void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_i
   // Handle the client unadvertisement logic here
   // Example:
   // LOG(INFO) << "Client unadvertised channel: " << channel_id;
+
+  printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,

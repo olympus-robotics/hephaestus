@@ -31,6 +31,4 @@ struct WsServerClientComparator {
 };
 using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
 
-foxglove::ServerOptions getWsServerOptions(const WsBridgeConfig& config);
-
 }  // namespace heph::ws_bridge

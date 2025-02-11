@@ -13,7 +13,7 @@
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/telemetry/log.h>
 
-#include "hephaestus/websocket_bridge/server_utils.h"
+#include "hephaestus/websocket_bridge/ws_server_utils.h"
 
 namespace heph::ws_bridge {
 

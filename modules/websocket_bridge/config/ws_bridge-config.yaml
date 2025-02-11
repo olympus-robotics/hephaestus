@@ -1,18 +1,38 @@
-ws_server:
-  listening_port: 8765
-  address: "0.0.0.0"
-  client_topic_whitelist:
-    - ".*"
-  supported_encodings:
-    - "json"
-    - "protobuf"
-  use_compression: true
-
-ipc:
-  spin_rate_hz: 0.5
-  topic_whitelist:
-    - ".*"
-  topic_blacklist: []
-  service_whitelist:
-    - ".*"
-  service_blacklist: []
+ws_server_config:
+  capabilities:
+    - connectionGraph
+  supportedEncodings:
+    - protobuf
+    - json
+  metadata:
+    {}
+  sendBufferLimitBytes: 10000000
+  useTls: false
+  certfile: ""
+  keyfile: ""
+  sessionId: session_1739314019009157
+  useCompression: true
+  clientTopicWhitelistPatterns:
+    - .*
+ws_server_listening_port: 8765
+ws_server_address: 0.0.0.0
+zenoh_config:
+  use_binary_name_as_session_id: false
+  id: websocket_bridge
+  enable_shared_memory: false
+  mode: PEER
+  router: ""
+  cache_size: 0
+  qos: false
+  real_time: false
+  protocol: ANY
+  multicast_scouting_enabled: false
+  multicast_scouting_interface: auto
+ipc_topic_whitelist:
+  - .*
+ipc_topic_blacklist:
+  []
+ipc_service_whitelist:
+  - .*
+ipc_service_blacklist:
+  []
