@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/containers",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "@fmt",
         "@magic_enum",
     ],
 )
