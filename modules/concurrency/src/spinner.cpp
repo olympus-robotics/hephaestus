@@ -16,7 +16,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/telemetry/log.h"
