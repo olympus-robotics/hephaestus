@@ -255,6 +255,18 @@ add_cmake_dependency(
 # )
 
 # --------------------------------------------------------------------------------------------------
+# BoringSSL
+set(BORINGSSL_VERSION "0.20250114.0")
+set(BORINGSSL_TAG "chromium-stable")
+add_cmake_dependency(
+  NAME boringssl
+  VERSION ${BORINGSSL_VERSION}
+  GIT_REPOSITORY "https://boringssl.googlesource.com/boringssl"
+  GIT_TAG ${BORINGSSL_TAG}
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja
+)
+
+# --------------------------------------------------------------------------------------------------
 # websocketpp
 set(WEBSOCKETPP_VERSION 0.8.2)
 set(WEBSOCKETPP_TAG v${WEBSOCKETPP_VERSION})

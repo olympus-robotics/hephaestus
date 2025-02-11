@@ -13,7 +13,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
 find_package(ws_protocol REQUIRED)
-find_package(OpenSSL REQUIRED)
+find_package(boringssl REQUIRED)
 
 # library target
 file(GLOB_RECURSE SOURCES src/*.cpp include/hephaestus/websocket_bridge/*.h)
@@ -32,8 +32,8 @@ define_module_library(
                 absl::log
                 fmt::fmt
                 yaml-cpp
-                OpenSSL::SSL
-                OpenSSL::Crypto
+                boringssl::ssl
+                boringssl::crypto
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES} README.md
         PUBLIC_INCLUDE_PATHS
