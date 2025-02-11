@@ -253,7 +253,7 @@ void WsBridge::callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMet
                                               std::span<const std::byte> message_data,
                                               const heph::serdes::TypeInfo& type_info) {
   (void)type_info;
-  
+
   CHECK(ws_server_);
 
   const std::string topic = metadata.topic;
