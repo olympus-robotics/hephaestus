@@ -86,7 +86,6 @@ void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info
   if (graph_updated) {
     fmt::print("[IPC Graph] - Graph updated!\n");
     if (config_.graph_update_cb) {
-      fmt::print("[IPC Graph] - Calling Graph Update Callback!\n");
       config_.graph_update_cb(state_);
     }
   }

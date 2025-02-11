@@ -27,9 +27,9 @@ protected:
   IpcGraphConfig config;
   std::unique_ptr<IpcGraph> graph;
 
-  std::shared_ptr<ipc::zenoh::Session> pub_session;
-  std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::Publisher<types::DummyType>>> pub_map;
-  std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawSubscriber>> sub_map;
+  std::unordered_map<std::string, std::vector<std::unique_ptr<ipc::zenoh::Publisher<types::DummyType>>>>
+      pub_map;
+  std::unordered_map<std::string, std::vector<std::unique_ptr<ipc::zenoh::RawSubscriber>>> sub_map;
 
   void startIpcGraph() {
     config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
@@ -38,15 +38,24 @@ protected:
   }
 
   void createTestPublisher(const std::string& topic) {
+    auto pub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
+
     const auto pub_topic = ipc::TopicConfig(topic);
-    pub_map[pub_topic.name] =
-        std::make_unique<ipc::zenoh::Publisher<types::DummyType>>(config.session, pub_topic);
+    pub_map[pub_topic.name].emplace_back(
+        std::make_unique<ipc::zenoh::Publisher<types::DummyType>>(std::move(pub_session), pub_topic));
   }
 
   void createTestSubscriber(const std::string& topic) {
+    auto sub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
+
     const auto sub_topic = ipc::TopicConfig(topic);
-    sub_map[sub_topic.name] = std::make_unique<ipc::zenoh::RawSubscriber>(
-        config.session, sub_topic, [](const ipc::zenoh::MessageMetadata&, std::span<const std::byte>) {});
+    sub_map[sub_topic.name].emplace_back(std::make_unique<ipc::zenoh::RawSubscriber>(
+        std::move(sub_session), sub_topic,
+        [](const ipc::zenoh::MessageMetadata&, std::span<const std::byte>) {}));
+  }
+
+  void sleepLongEnoughToSync() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
 };
 
@@ -54,117 +63,6 @@ TEST_F(IpcGraphTest, StartStop) {
   startIpcGraph();
 
   // Do nothing, especially not crash.
-}
-
-TEST_F(IpcGraphTest, PublisherEventTriggersCallbacksAndGraphUpdate) {
-  bool publisher_added = false;
-  bool publisher_removed = false;
-  bool graph_updated = false;
-  IpcGraphState last_state;
-
-  config.graph_update_cb = [&](const IpcGraphState& state) {
-    graph_updated = true;
-    last_state = state;
-  };
-
-  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
-    if (topic == "test_topic") {
-      publisher_added = true;
-    }
-  };
-
-  config.topic_removal_cb = [&](const std::string& topic) {
-    if (topic == "test_topic") {
-      publisher_removed = true;
-    }
-  };
-
-  startIpcGraph();
-
-  EXPECT_TRUE(last_state.topics_to_types_map.empty());
-  EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
-
-  EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
-
-  createTestPublisher("test_topic");
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_TRUE(publisher_added);
-  EXPECT_TRUE(graph_updated);
-  graph_updated = false;
-
-  EXPECT_FALSE(last_state.topics_to_types_map.empty());
-  EXPECT_EQ(last_state.topics_to_types_map["test_topic"], "heph.types.proto.DummyType");
-  EXPECT_FALSE(last_state.topic_to_publishers_map.empty());
-  EXPECT_EQ(last_state.topic_to_publishers_map["test_topic"].size(), 1);
-
-  EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
-
-  pub_map["test_topic"].reset();  // Simulate publisher removal
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_TRUE(publisher_removed);
-  EXPECT_TRUE(graph_updated);
-
-  EXPECT_TRUE(last_state.topics_to_types_map.empty());
-  EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
-
-  EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
-}
-
-TEST_F(IpcGraphTest, SubscriberEventTriggersGraphUpdate) {
-  bool graph_updated = false;
-  IpcGraphState last_state;
-
-  config.graph_update_cb = [&](const IpcGraphState& state) {
-    graph_updated = true;
-    last_state = state;
-  };
-
-  startIpcGraph();
-
-  EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
-
-  EXPECT_TRUE(last_state.topics_to_types_map.empty());
-  EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
-
-  createTestSubscriber("test_topic");
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_TRUE(graph_updated);
-  graph_updated = false;
-
-  EXPECT_FALSE(last_state.topic_to_subscribers_map.empty());
-  EXPECT_EQ(last_state.topic_to_subscribers_map["test_topic"].size(), 1);
-
-  EXPECT_TRUE(last_state.topics_to_types_map.empty());
-  EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
-
-  sub_map["test_topic"].reset();  // Simulate subscriber removal
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  EXPECT_TRUE(graph_updated);
-
-  EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
-
-  EXPECT_TRUE(last_state.topics_to_types_map.empty());
-  EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
-  EXPECT_TRUE(last_state.services_to_types_map.empty());
-  EXPECT_TRUE(last_state.services_to_nodes_map.empty());
 }
 
 TEST_F(IpcGraphTest, GetTopicTypeInfo) {
@@ -180,7 +78,7 @@ TEST_F(IpcGraphTest, GetTopicTypeInfo) {
 
   createTestPublisher("test_topic");
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
 
@@ -202,7 +100,7 @@ TEST_F(IpcGraphTest, GetTopicListString) {
 
   createTestPublisher("test_topic");
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
 
@@ -223,7 +121,7 @@ TEST_F(IpcGraphTest, GetMaps) {
 
   createTestPublisher("test_topic");
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
 
@@ -241,6 +139,111 @@ TEST_F(IpcGraphTest, GetMaps) {
 
   auto services_to_nodes = graph->getServicesToNodesMap();
   EXPECT_TRUE(services_to_nodes.empty());
+}
+
+TEST_F(IpcGraphTest, PubSubCreationAndDeletionEvents) {
+  const int num_iterations = 2;
+  const int num_topics = 3;
+  const std::string topic_prefix = "unique_test_topic_";
+
+  int event_counter_topic_discovery = 0;
+  int event_counter_topic_removal = 0;
+  int event_counter_graph_update = 0;
+
+  IpcGraphState last_state;
+
+  config.graph_update_cb = [&](const IpcGraphState& state) {
+    ++event_counter_graph_update;
+    last_state = state;
+  };
+
+  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+    if (topic.rfind(topic_prefix, 0) == 0) {
+      ++event_counter_topic_discovery;
+    }
+  };
+
+  config.topic_removal_cb = [&](const std::string& topic) {
+    if (topic.rfind(topic_prefix, 0) == 0) {
+      ++event_counter_topic_removal;
+    }
+  };
+
+  startIpcGraph();
+
+  sleepLongEnoughToSync();
+
+  for (int i = 0; i < num_iterations; ++i) {
+    const int num_discovery_events = event_counter_topic_discovery;
+    const int num_removal_events = event_counter_topic_removal;
+    const int num_graph_update_events = event_counter_graph_update;
+
+    // Create pubs & subs
+    for (int j = 0; j < num_topics; ++j) {
+      auto topic = topic_prefix + std::to_string(i) + "_" + std::to_string(j);
+
+      createTestPublisher(topic);
+      createTestPublisher(topic);
+      createTestSubscriber(topic);
+      createTestSubscriber(topic);
+    }
+
+    sleepLongEnoughToSync();
+
+    // Verify state after pub/sub Creation
+    {
+      // Should have caught a discovery and TWO graph update events for each topic
+      EXPECT_EQ(event_counter_graph_update, num_graph_update_events + (4 * num_topics));
+      EXPECT_EQ(event_counter_topic_discovery, num_discovery_events + num_topics);
+      EXPECT_EQ(event_counter_topic_removal, num_removal_events);
+
+      // There should now be pubs, sub and type mappings for each topic
+      EXPECT_EQ(last_state.topic_to_publishers_map.size(), num_topics);
+      EXPECT_EQ(last_state.topic_to_subscribers_map.size(), num_topics);
+      EXPECT_EQ(last_state.topics_to_types_map.size(), num_topics);
+    }
+
+    // Remove subs
+
+    {
+      sub_map.clear();
+    }
+
+    sleepLongEnoughToSync();
+
+    // Verify state after sub deletion
+    {
+      // Should have caught an additional graph update event for each topic and sub removed, no other events
+      EXPECT_EQ(event_counter_graph_update, num_graph_update_events + (6 * num_topics));
+      EXPECT_EQ(event_counter_topic_discovery, num_discovery_events + num_topics);
+      EXPECT_EQ(event_counter_topic_removal, num_removal_events);
+
+      // There should now no longer be subs, but everything else stays the same
+      EXPECT_EQ(last_state.topic_to_publishers_map.size(), num_topics);
+      EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
+      EXPECT_EQ(last_state.topics_to_types_map.size(), num_topics);
+    }
+
+    // Remove the pubs
+    {
+      pub_map.clear();
+    }
+
+    sleepLongEnoughToSync();
+
+    // Verify state after pub deletion
+    {
+      // Should have caught a removal and an additional graph update event for each topic
+      EXPECT_EQ(event_counter_graph_update, num_graph_update_events + (8 * num_topics));
+      EXPECT_EQ(event_counter_topic_discovery, num_discovery_events + num_topics);
+      EXPECT_EQ(event_counter_topic_removal, num_removal_events + num_topics);
+
+      // There should now no longer be any pub, sub or type mappings
+      EXPECT_TRUE(last_state.topic_to_publishers_map.empty());
+      EXPECT_TRUE(last_state.topic_to_subscribers_map.empty());
+      EXPECT_TRUE(last_state.topics_to_types_map.empty());
+    }
+  }
 }
 
 }  // namespace heph::ws_bridge::tests
