@@ -100,7 +100,7 @@ void RawPublisher::createTypeInfoService() {
     (void)request;
     return type_info_json;
   };
-  auto type_service_topic = TopicConfig{ getTypeInfoServiceTopic(topic_config_.name) };
+  auto type_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) };
   type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
                                                                       std::move(type_info_callback));
 }

@@ -16,6 +16,8 @@ public:
   virtual ~ITopicDatabase() = default;
 
   [[nodiscard]] virtual auto getTypeInfo(const std::string& topic) -> const serdes::TypeInfo& = 0;
+  [[nodiscard]] virtual auto getServiceTypeInfo(const std::string& topic)
+      -> const serdes::ServiceTypeInfo& = 0;
 };
 
 namespace zenoh {

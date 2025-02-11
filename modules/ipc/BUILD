@@ -134,3 +134,11 @@ heph_cc_test(
     ],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "topic_database_tests",
+    srcs = [
+        "tests/topic_database_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
