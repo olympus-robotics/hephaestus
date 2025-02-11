@@ -16,6 +16,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <magic_enum.hpp>
+
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
@@ -58,12 +60,16 @@ template <typename CallbackT>
 
   try {
     if constexpr (IsPolicyCallback<CallbackT>::value) {
+      // policy callbacks have a return value which is returned to the caller
       return params.operation() ? params.success_state : params.failure_state;
     }
 
     params.operation();
   } catch (const std::exception& exception_message) {
-    heph::log(heph::ERROR, "spinner state transition failed", "exception", exception_message.what());
+    heph::log(heph::ERROR, "spinner state transition failed", "current_state",
+              magic_enum::enum_name(params.input_state), "expected_transition_state",
+              magic_enum::enum_name(params.success_state), "actual_transition_state",
+              magic_enum::enum_name(params.failure_state), "exception", exception_message.what());
 
     return params.failure_state;
   }
