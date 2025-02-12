@@ -33,36 +33,40 @@
 
 namespace heph::ipc::zenoh {
 RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
-                           MatchCallback&& match_cb)
+                           MatchCallback&& match_cb, const PublisherConfig& config)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , type_info_(std::move(type_info))
   , match_cb_(std ::move(match_cb)) {
-  createTypeInfoService();
+  if (config.create_type_info_service) {
+    createTypeInfoService();
+  }
 
   auto pub_options = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::create_default();
   if (session_->config.real_time) {
     pub_options.publisher_options.priority = ::zenoh::Priority::Z_PRIORITY_REAL_TIME;
   }
 
-  if (session_->config.cache_size > 0) {
+  if (config.cache_size.has_value()) {
     pub_options.cache = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::CacheOptions::create_default();
-    pub_options.cache->max_samples = session_->config.cache_size;
+    pub_options.cache->max_samples = *config.cache_size;
   }
 
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   publisher_ = std::make_unique<::zenoh::ext::AdvancedPublisher>(
       session_->zenoh_session.ext().declare_advanced_publisher(keyexpr, std::move(pub_options)));
 
-  ::zenoh::ZResult result{};
-  liveliness_token_ =
-      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
-          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
-                                         EndpointType::PUBLISHER),
-          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  throwExceptionIf<FailedZenohOperation>(
-      result != Z_OK,
-      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
+  if (config.create_liveliness_token) {
+    ::zenoh::ZResult result{};
+    liveliness_token_ =
+        std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+            generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                           EndpointType::PUBLISHER),
+            ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+    throwExceptionIf<FailedZenohOperation>(
+        result != Z_OK, fmt::format("[Publisher {}] failed to create livelines token, result {}",
+                                    topic_config_.name, result));
+  }
 
   if (match_cb_ != nullptr) {
     matching_listener_ =

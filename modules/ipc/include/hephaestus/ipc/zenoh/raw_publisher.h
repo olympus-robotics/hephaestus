@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
@@ -27,6 +28,12 @@ struct MatchingStatus {
   bool matching{};  //! If true publisher is connect to at least one subscriber.
 };
 
+struct PublisherConfig {
+  std::optional<std::size_t> cache_size{ std::nullopt };
+  bool create_liveliness_token{ true };
+  bool create_type_info_service{ true };
+};
+
 /// - Create a Zenoh publisher on the topic specified in `config`.
 /// - Create a service that provides the schema used to serialize the data.
 ///   - the service is published on the topic created via `getTypeInfoServiceTopic(topic)`
@@ -39,7 +46,7 @@ public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
   RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
-               MatchCallback&& match_cb = nullptr);
+               MatchCallback&& match_cb = nullptr, const PublisherConfig& config = {});
   ~RawPublisher() = default;
   RawPublisher(const RawPublisher&) = delete;
   RawPublisher(RawPublisher&&) = delete;

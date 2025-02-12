@@ -47,6 +47,12 @@ class ServiceBase {
 public:
   virtual ~ServiceBase() = default;
 };
+
+struct ServiceConfig {
+  bool create_liveliness_token{ true };
+  bool create_type_info_service{ true };
+};
+
 template <typename RequestT, typename ReplyT>
 class Service : public ServiceBase {
 public:
@@ -60,7 +66,8 @@ public:
   ///   - This can be used to perform cleanup operations.
   Service(
       SessionPtr session, TopicConfig topic_config, Callback&& callback,
-      FailureCallback&& failure_callback = []() {}, PostReplyCallback&& post_reply_callback = []() {});
+      FailureCallback&& failure_callback = []() {}, PostReplyCallback&& post_reply_callback = []() {},
+      const ServiceConfig& config = {});
 
 private:
   void onQuery(const ::zenoh::Query& query);
@@ -255,7 +262,7 @@ getServiceCallResponses(const ::zenoh::channels::FifoChannel::HandlerType<::zeno
 template <typename RequestT, typename ReplyT>
 Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config, Callback&& callback,
                                    FailureCallback&& failure_callback,
-                                   PostReplyCallback&& post_reply_callback)
+                                   PostReplyCallback&& post_reply_callback, const ServiceConfig& config)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
@@ -266,7 +273,9 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   internal::checkTemplatedTypes<RequestT, ReplyT>();
   heph::log(heph::DEBUG, "started service", "name", topic_config_.name);
 
-  createTypeInfoService();
+  if (config.create_type_info_service) {
+    createTypeInfoService();
+  }
 
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable { onQuery(query); };
 
@@ -279,14 +288,16 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
       result != Z_OK,
       fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
 
-  liveliness_token_ =
-      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
-          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
-                                         EndpointType::SERVICE_SERVER),
-          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  throwExceptionIf<FailedZenohOperation>(
-      result != Z_OK,
-      fmt::format("[Publisher {}] failed to create livelines token, result {}", topic_config_.name, result));
+  if (config.create_liveliness_token) {
+    liveliness_token_ =
+        std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+            generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                           EndpointType::SERVICE_SERVER),
+            ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+    throwExceptionIf<FailedZenohOperation>(
+        result != Z_OK, fmt::format("[Publisher {}] failed to create livelines token, result {}",
+                                    topic_config_.name, result));
+  }
 }
 
 template <typename RequestT, typename ReplyT>

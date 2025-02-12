@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -26,12 +27,18 @@
 namespace heph::ipc::zenoh {
 
 struct MessageMetadata {
-  // TODO: convert this to a uuid
   std::string sender_id;
   std::string topic;
   std::string type_info;
   std::chrono::nanoseconds timestamp{};
   std::size_t sequence_id{};
+};
+
+struct SubscriberConfig {
+  std::optional<std::size_t> cache_size{ std::nullopt };
+  bool dedicated_callback_thread{ false };
+  bool create_liveliness_token{ true };
+  bool create_type_info_service{ true };
 };
 
 class RawSubscriber {
@@ -42,7 +49,7 @@ public:
   /// While this avoid blocking the Zenoh session thread to process other messages,
   /// it also introduce an overhead due to the message data being copied.
   RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                serdes::TypeInfo type_info, bool dedicated_callback_thread = false);
+                serdes::TypeInfo type_info, const SubscriberConfig& config = {});
   ~RawSubscriber();
   RawSubscriber(const RawSubscriber&) = delete;
   RawSubscriber(RawSubscriber&&) = delete;

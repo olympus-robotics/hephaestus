@@ -7,6 +7,7 @@
 #include <functional>
 #include <future>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -72,11 +73,16 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
         [status_update_cb = std::move(status_update_cb)](const MessageMetadata&,
                                                          const std::shared_ptr<StatusT>& status) mutable {
           status_update_cb(*status);
-        }))
+        },
+        { .cache_size = std::nullopt,
+          .create_type_info_service = false,
+          .create_liveliness_token = false,
+          .dedicated_callback_thread = false }))
   , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
         [this](const Response<ReplyT>& reply) { return serviceCallback(reply); }, [this]() { onFailure(); },
-        [this]() { postReplyServiceCallback(); })) {
+        [this]() { postReplyServiceCallback(); },
+        ServiceConfig{ .create_liveliness_token = false, .create_type_info_service = false })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>

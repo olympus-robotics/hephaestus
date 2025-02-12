@@ -24,6 +24,7 @@
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_proto.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
@@ -136,7 +137,12 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
   , action_trigger_cb_(std::move(action_trigger_cb))
   , execute_cb_(std::move(execute_cb))
   , request_service_(std::make_unique<Service<RequestT, RequestResponse>>(
-        session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }))
+        session_, topic_config_, [this](const RequestT& request) { return onRequest(request); }, []() {},
+        []() {},
+        ServiceConfig{
+            .create_liveliness_token = false,
+            .create_type_info_service = false,
+        }))
   , request_consumer_([this](const RequestT& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
   heph::log(heph::DEBUG, "started Action Server", "topic", topic_config_.name);
@@ -186,15 +192,24 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
   // This has the limit that that some status updates could be lost if the pub/sub are still discovering each
   // other, but has the great advantage that we do not risk receiving messages from other requests if our
   // request is rejected.
-  auto status_update_publisher =
-      Publisher<StatusT>{ session_, internal::getStatusPublisherTopic(topic_config_) };
+  PublisherConfig config;
+  config.create_liveliness_token = false;
+  config.create_type_info_service = false;
+  auto status_update_publisher = Publisher<StatusT>{
+    session_,
+    internal::getStatusPublisherTopic(topic_config_),
+    [](auto) {},
+    config,
+  };
 
   std::atomic_bool stop_requested{ false };  // NOLINT(misc-const-correctness) False positive
   auto stop_service = Service<std::string, std::string>(
-      session_, internal::getStopServiceTopic(topic_config_), [&stop_requested](const std::string&) {
+      session_, internal::getStopServiceTopic(topic_config_),
+      [&stop_requested](const std::string&) {
         stop_requested = true;
         return "stopped";
-      });
+      },
+      []() {}, []() {}, { .create_type_info_service = false, .create_liveliness_token = false });
 
   const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
     try {
