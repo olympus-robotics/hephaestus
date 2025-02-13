@@ -41,6 +41,11 @@ if(reflectcpp IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${REFLECT_CPP_DEPENDS})
 endif()
 
+if(ws_protocol IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(WS_PROTOCOL_DEPENDS nlohmann_json websocketpp)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${WS_PROTOCOL_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -165,11 +170,11 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # reflect-cpp
 set(REFLECT_CPP_VERSION 0.16.0)
-set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION})
+set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION}-cmake-3.22.1)
 add_cmake_dependency(
   NAME reflectcpp
   DEPENDS ${REFLECT_CPP_DEPENDS}
-  GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+  GIT_REPOSITORY https://github.com/voliro-systems/reflect-cpp.git
   GIT_TAG ${REFLECT_CPP_TAG}
   CMAKE_ARGS -DREFLECTCPP_YAML=ON -DCMAKE_BUILD_TYPE=Debug
 )
@@ -236,3 +241,42 @@ add_cmake_dependency(
   DEPENDS ${INFLUXDB_DEPENDS} URL https://github.com/offa/influxdb-cxx/archive/${INFLUXDB_GIT_TAG}.zip
   CMAKE_ARGS -DINFLUXCXX_WITH_BOOST=OFF -DINFLUXCXX_TESTING=OFF -DINFLUXCXX_SYSTEMTEST=OFF
 )
+
+# --------------------------------------------------------------------------------------------------
+# OpenSSL
+# set(OPENSSL_VERSION "1.1.1k")
+# set(OPENSSL_TAG "OpenSSL_1_1_1k")
+# add_cmake_dependency(
+#   NAME OpenSSL
+#   VERSION ${OPENSSL_VERSION}
+#   GIT_REPOSITORY "https://github.com/openssl/openssl.git"
+#   GIT_TAG ${OPENSSL_TAG}
+#   CMAKE_ARGS -DOPENSSL_USE_STATIC_LIBS=TRUE -DOPENSSL_BUILD_TESTS=OFF
+# )
+
+# --------------------------------------------------------------------------------------------------
+# websocketpp
+set(WEBSOCKETPP_VERSION 0.8.2)
+set(WEBSOCKETPP_TAG v${WEBSOCKETPP_VERSION})
+add_cmake_dependency(
+  NAME websocketpp
+  VERSION ${WEBSOCKETPP_VERSION}
+  GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
+  GIT_TAG ${WEBSOCKETPP_TAG}
+  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
+)
+
+# --------------------------------------------------------------------------------------------------
+# ws-protocol
+set(WS_PROTOCOL_VERSION 1.4.0)
+set(WS_PROTOCOL_TAG releases/cpp/v${WS_PROTOCOL_VERSION})
+add_cmake_dependency(
+  NAME ws_protocol
+  VERSION ${WS_PROTOCOL_VERSION}
+  DEPENDS ${WS_PROTOCOL_DEPENDS}
+  URL https://github.com/foxglove/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
+  GIT_TAG ${WS_PROTOCOL_TAG}
+  SOURCE_SUBDIR cpp/foxglove-websocket
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -G Ninja
+)
+
