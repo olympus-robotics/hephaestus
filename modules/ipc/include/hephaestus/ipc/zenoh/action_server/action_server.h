@@ -209,7 +209,11 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const RequestT& request) {
         stop_requested = true;
         return "stopped";
       },
-      []() {}, []() {}, { .create_type_info_service = false, .create_liveliness_token = false });
+      []() {}, []() {},
+      {
+          .create_liveliness_token = false,
+          .create_type_info_service = false,
+      });
 
   const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
     try {

@@ -74,10 +74,12 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
                                                          const std::shared_ptr<StatusT>& status) mutable {
           status_update_cb(*status);
         },
-        { .cache_size = std::nullopt,
-          .create_type_info_service = false,
-          .create_liveliness_token = false,
-          .dedicated_callback_thread = false }))
+        {
+            .cache_size = std::nullopt,
+            .dedicated_callback_thread = false,
+            .create_liveliness_token = false,
+            .create_type_info_service = false,
+        }))
   , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
         session_, internal::getResponseServiceTopic(topic_config_),
         [this](const Response<ReplyT>& reply) { return serviceCallback(reply); }, [this]() { onFailure(); },
