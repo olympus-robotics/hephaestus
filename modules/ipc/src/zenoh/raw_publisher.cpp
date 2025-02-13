@@ -14,7 +14,6 @@
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/encoding.hxx>
-#include <zenoh/api/enums.hxx>
 #include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/ext/serialization.hxx>
 #include <zenoh/api/ext/session_ext.hxx>
@@ -43,9 +42,7 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
   }
 
   auto pub_options = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::create_default();
-  if (session_->config.real_time) {
-    pub_options.publisher_options.priority = ::zenoh::Priority::Z_PRIORITY_REAL_TIME;
-  }
+  pub_options.publisher_options = config.zenoh_publisher_options;
 
   if (config.cache_size.has_value()) {
     pub_options.cache = ::zenoh::ext::SessionExt::AdvancedPublisherOptions::CacheOptions::create_default();

@@ -15,6 +15,7 @@
 #include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/matching.hxx>
+#include <zenoh/api/session.hxx>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
@@ -30,6 +31,9 @@ struct MatchingStatus {
 
 struct PublisherConfig {
   std::optional<std::size_t> cache_size{ std::nullopt };
+  ::zenoh::Session::PublisherOptions zenoh_publisher_options{
+    ::zenoh::Session::PublisherOptions::create_default()
+  };
   bool create_liveliness_token{ true };
   bool create_type_info_service{ true };
 };
