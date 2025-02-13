@@ -45,13 +45,14 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
   if (hasSubscriberImpl(topic)) {
     heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
   }
+
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ topic },
       [subscriber_cb, topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
                                        std::span<const std::byte> data) {
         subscriber_cb(metadata, data, topic_type_info);
       },
-      true);
+      topic_type_info);
 }
 
 void IpcInterface::removeSubscriber(const std::string& topic) {

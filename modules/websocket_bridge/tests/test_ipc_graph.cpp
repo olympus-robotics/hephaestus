@@ -5,8 +5,8 @@
 #include <hephaestus/ipc/ipc_graph.h>
 #include <hephaestus/ipc/topic.h>
 #include <hephaestus/ipc/zenoh/publisher.h>
-#include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/session.h>
+#include <hephaestus/ipc/zenoh/subscriber.h>
 #include <hephaestus/telemetry/log.h>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/types/dummy_type.h>
@@ -29,7 +29,8 @@ protected:
 
   std::unordered_map<std::string, std::vector<std::unique_ptr<ipc::zenoh::Publisher<types::DummyType>>>>
       pub_map;
-  std::unordered_map<std::string, std::vector<std::unique_ptr<ipc::zenoh::RawSubscriber>>> sub_map;
+  std::unordered_map<std::string, std::vector<std::unique_ptr<ipc::zenoh::Subscriber<types::DummyType>>>>
+      sub_map;
 
   void startIpcGraph() {
     config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
@@ -49,9 +50,13 @@ protected:
     auto sub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
 
     const auto sub_topic = ipc::TopicConfig(topic);
-    sub_map[sub_topic.name].emplace_back(std::make_unique<ipc::zenoh::RawSubscriber>(
-        std::move(sub_session), sub_topic,
-        [](const ipc::zenoh::MessageMetadata&, std::span<const std::byte>) {}));
+
+    sub_map[sub_topic.name].emplace_back(heph::ipc::zenoh::createSubscriber<types::DummyType>(
+        sub_session, sub_topic,
+        [](const heph::ipc::zenoh::MessageMetadata& metadata, const std::shared_ptr<types::DummyType>& pose) {
+          (void)metadata;
+          (void)pose;
+        }));
   }
 
   void sleepLongEnoughToSync() {
