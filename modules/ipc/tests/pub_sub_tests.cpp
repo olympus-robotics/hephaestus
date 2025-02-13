@@ -34,6 +34,8 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
 
   types::DummyType received_message;
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
+  SubscriberConfig config;
+  config.dedicated_callback_thread = subscriber_dedicated_callback_thread;
   auto subscriber = createSubscriber<types::DummyType>(
       session, topic,
       [&received_message, &stop_flag]([[maybe_unused]] const MessageMetadata& metadata,
@@ -42,7 +44,7 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
         stop_flag.test_and_set();
         stop_flag.notify_all();
       },
-      subscriber_dedicated_callback_thread);
+      config);
 
   const auto send_message = types::DummyType::random(mt);
   const auto success = publisher.publish(send_message);
@@ -78,7 +80,7 @@ TEST(PublisherSubscriber, MismatchType) {
         stop_flag.test_and_set();
         stop_flag.notify_all();
       },
-      false);
+      {});
 
   EXPECT_THROW_OR_DEATH(
       {

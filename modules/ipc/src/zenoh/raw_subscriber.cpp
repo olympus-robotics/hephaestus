@@ -66,13 +66,15 @@ namespace {
 }  // namespace
 
 RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                             serdes::TypeInfo type_info, bool dedicated_callback_thread /*= false*/)
+                             serdes::TypeInfo type_info, const SubscriberConfig& config)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
   , type_info_(std::move(type_info))
-  , dedicated_callback_thread_(dedicated_callback_thread) {
-  createTypeInfoService();
+  , dedicated_callback_thread_(config.dedicated_callback_thread) {
+  if (config.create_type_info_service) {
+    createTypeInfoService();
+  }
 
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
   if (session_->config.cache_size > 0) {
@@ -91,11 +93,13 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
       result != Z_OK,
       fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
 
-  liveliness_token_ =
-      std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
-          generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
-                                         EndpointType::SUBSCRIBER),
-          ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+  if (config.create_liveliness_token) {
+    liveliness_token_ =
+        std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+            generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                           EndpointType::SUBSCRIBER),
+            ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
+  }
 
   if (dedicated_callback_thread_) {
     callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(

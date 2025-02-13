@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
@@ -14,6 +15,7 @@
 #include <zenoh/api/ext/advanced_publisher.hxx>
 #include <zenoh/api/liveliness.hxx>
 #include <zenoh/api/matching.hxx>
+#include <zenoh/api/session.hxx>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
@@ -25,6 +27,15 @@ namespace heph::ipc::zenoh {
 
 struct MatchingStatus {
   bool matching{};  //! If true publisher is connect to at least one subscriber.
+};
+
+struct PublisherConfig {
+  std::optional<std::size_t> cache_size{ std::nullopt };
+  ::zenoh::Session::PublisherOptions zenoh_publisher_options{
+    ::zenoh::Session::PublisherOptions::create_default()
+  };
+  bool create_liveliness_token{ true };
+  bool create_type_info_service{ true };
 };
 
 /// - Create a Zenoh publisher on the topic specified in `config`.
@@ -39,7 +50,7 @@ public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
   RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
-               MatchCallback&& match_cb = nullptr);
+               MatchCallback&& match_cb = nullptr, const PublisherConfig& config = {});
   ~RawPublisher() = default;
   RawPublisher(const RawPublisher&) = delete;
   RawPublisher(RawPublisher&&) = delete;

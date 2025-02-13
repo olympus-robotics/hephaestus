@@ -21,9 +21,10 @@ public:
 template <class T>
 class Publisher : public PublisherBase {
 public:
-  Publisher(SessionPtr session, TopicConfig topic_config, RawPublisher::MatchCallback&& match_cb = nullptr)
+  Publisher(SessionPtr session, TopicConfig topic_config, RawPublisher::MatchCallback&& match_cb = nullptr,
+            const PublisherConfig& config = {})
     : publisher_(std::move(session), std::move(topic_config), serdes::getSerializedTypeInfo<T>(),
-                 std::move(match_cb)) {
+                 std::move(match_cb), config) {
   }
 
   [[nodiscard]] auto publish(const T& data) -> bool {
