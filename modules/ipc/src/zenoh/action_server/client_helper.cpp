@@ -9,18 +9,32 @@
 #include "hephaestus/ipc/topic.h"
 
 namespace heph::ipc::zenoh::action_server::internal {
-auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig {
-  static constexpr auto STATUS_TOPIC_FORMAT = "{}/status_update";
-  return TopicConfig{ fmt::format(STATUS_TOPIC_FORMAT, server_topic.name) };
+
+auto getActionServerInternalTopicPrefix() -> std::string {
+  return "action_server_internal";
 }
 
-auto getResponseServiceTopic(const TopicConfig& topic_config) -> TopicConfig {
-  static constexpr auto RESPONSE_TOPIC_FORMAT = "{}/response";
-  return TopicConfig{ fmt::format(RESPONSE_TOPIC_FORMAT, topic_config.name) };
+auto getRequestServiceTopic(const TopicConfig& server_topic) -> TopicConfig {
+  static constexpr auto REQUEST_TOPIC_FORMAT = "{}/{}/request";
+  return TopicConfig{ fmt::format(REQUEST_TOPIC_FORMAT, getActionServerInternalTopicPrefix(),
+                                  server_topic.name) };
+}
+
+auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig {
+  static constexpr auto STATUS_TOPIC_FORMAT = "{}/{}/status_update";
+  return TopicConfig{ fmt::format(STATUS_TOPIC_FORMAT, getActionServerInternalTopicPrefix(),
+                                  server_topic.name) };
+}
+
+auto getResponseServiceTopic(const TopicConfig& topic_config, std::string_view uid) -> TopicConfig {
+  static constexpr auto RESPONSE_TOPIC_FORMAT = "{}/{}/{}/response";
+  return TopicConfig{ fmt::format(RESPONSE_TOPIC_FORMAT, getActionServerInternalTopicPrefix(),
+                                  topic_config.name, uid) };
 }
 
 auto getStopServiceTopic(const TopicConfig& topic_config) -> TopicConfig {
-  static constexpr auto STOP_SERVICE_TOPIC_FORMAT = "{}/stop_request";
-  return TopicConfig{ fmt::format(STOP_SERVICE_TOPIC_FORMAT, topic_config.name) };
+  static constexpr auto STOP_SERVICE_TOPIC_FORMAT = "{}/{}/stop_request";
+  return TopicConfig{ fmt::format(STOP_SERVICE_TOPIC_FORMAT, getActionServerInternalTopicPrefix(),
+                                  topic_config.name) };
 }
 }  // namespace heph::ipc::zenoh::action_server::internal
