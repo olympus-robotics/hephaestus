@@ -56,11 +56,14 @@ private:
   SessionPtr session_;
   TopicConfig topic_config_;
 
-  std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
-  std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
-
+  // The reply and reply promise need to initialized before the response service
+  // otherwise, a data race between initialization and the response callbacks might
+  // occur
   Response<ReplyT> reply_;
   std::promise<Response<ReplyT>> reply_promise_;
+
+  std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
+  std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
 };
 
 template <typename RequestT, typename StatusT, typename ReplyT>

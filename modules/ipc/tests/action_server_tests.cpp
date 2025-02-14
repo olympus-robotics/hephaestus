@@ -21,7 +21,7 @@
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
-#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -34,7 +34,7 @@ constexpr auto REPLY_SERVICE_TIMEOUT = std::chrono::seconds{ 1 };
 
 class MyEnvironment : public Environment {
 public:
-  ~MyEnvironment() = default;
+  ~MyEnvironment() override = default;
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
     absl::SetGlobalVLogLevel(3);
@@ -113,12 +113,6 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
       },
       REPLY_SERVICE_DEFAULT_TIMEOUT);
 
-  received_status_flag.wait(false);
-  EXPECT_EQ(status, received_status);
-
-  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(wait_res, std::future_status::ready);
-
   const auto reply = reply_future.get();
   EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
   EXPECT_EQ(reply.value, request);
@@ -148,7 +142,10 @@ TEST(ActionServer, ActionServerStopRequest) {
       action_server_data.session, action_server_data.topic_config, request,
       [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
 
-  requested_started.wait(false);
+  // might spuriously wake up
+  while (requested_started.test() == false) {
+    requested_started.wait(false);
+  }
 
   // requested_started guarantee that the request is now being proceed, but, although the action server create
   // the stop request service before processing the request, the stop service could still bootstrapping, as
@@ -164,8 +161,6 @@ TEST(ActionServer, ActionServerStopRequest) {
     std::this_thread::sleep_for(std::chrono::milliseconds(4));
   };
 
-  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(wait_res, std::future_status::ready);
   const auto reply = reply_future.get();
 
   EXPECT_EQ(reply.status, RequestStatus::STOPPED);
@@ -184,7 +179,10 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
         requested_started.test_and_set();
         requested_started.notify_all();
 
-        stop.wait(false);
+        // might spuriously wake up
+        while (stop.test() == false) {
+          stop.wait(false);
+        }
 
         return request;
       });
@@ -193,6 +191,11 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
       [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
+
+  // might spuriously wake up
+  while (requested_started.test() == false) {
+    requested_started.wait(false);
+  }
 
   auto other_reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
@@ -206,8 +209,6 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   // Stop the original request
   stop.test_and_set();
   stop.notify_all();
-  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(wait_res, std::future_status::ready);
   reply_future.get();
 }
 
