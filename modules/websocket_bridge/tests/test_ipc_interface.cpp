@@ -13,6 +13,10 @@ protected:
     session_ = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
     ipc_interface_ = std::make_unique<heph::ws_bridge::IpcInterface>(session_);
   }
+
+  void TearDown() override {
+    ipc_interface_->stop();
+  }
 };
 
 TEST_F(IpcInterfaceTest, AddSubscriber) {
@@ -50,12 +54,6 @@ TEST_F(IpcInterfaceTest, HasSubscriber) {
       [](const ipc::zenoh::MessageMetadata&, std::span<const std::byte>, const serdes::TypeInfo&) {});
 
   EXPECT_TRUE(ipc_interface_->hasSubscriber(topic));
-}
-
-TEST_F(IpcInterfaceTest, Stop) {
-  auto future = ipc_interface_->stop();
-  future.wait();
-  EXPECT_EQ(future.wait_for(std::chrono::seconds(0)), std::future_status::ready);
 }
 
 }  // namespace heph::ws_bridge::tests

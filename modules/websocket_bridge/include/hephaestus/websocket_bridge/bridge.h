@@ -40,8 +40,8 @@ public:
   WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config);
   ~WsBridge();
 
-  [[nodiscard]] auto start() -> std::future<void>;
-  [[nodiscard]] auto stop() -> std::future<void>;
+  void start();
+  void stop();
 
 private:
   WsBridgeConfig config_;
@@ -55,9 +55,6 @@ private:
   ////////////////////////////////
 
   WsServerInterfacePtr ws_server_;
-
-  // WS Server - Connection Graph
-  bool ws_server_subscribed_to_connection_graph_{ false };
 
   // Callbacks triggered by WS Server
   void callback__WsServer__Log(WsServerLogLevel level, char const* msg);

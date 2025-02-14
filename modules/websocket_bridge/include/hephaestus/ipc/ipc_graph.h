@@ -79,6 +79,8 @@ public:
   TopicToNodesMap getTopicToSubscribersMap() const;
   TopicToNodesMap getTopicToPublishersMap() const;
 
+  void refreshConnectionGraph() const;
+
 private:
   void addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removePublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);

@@ -94,15 +94,14 @@ void WsBridge::printBridgeState() const {
 // WsBridge Life-cycle //
 /////////////////////////
 
-auto WsBridge::start() -> std::future<void> {
+void WsBridge::start() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
-  ipc_graph_->start();
-
-  ipc_interface_->start();
+  fmt::println("[WS Bridge] - Starting...");
 
   {
+    fmt::println("[WS Server] - Starting...");
     ws_server_->start(config_.ws_server_address, config_.ws_server_listening_port);
 
     // This is a sanity check I found in the ros-foxglove bridge, so I assume under certain conditions
@@ -110,26 +109,33 @@ auto WsBridge::start() -> std::future<void> {
     // TODO(mfehr): Test this and verify.
     const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
     CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_listening_port);
+    fmt::println("[WS Server] - ONLINE");
   }
 
-  std::promise<void> promise;
-  promise.set_value();
-  return promise.get_future();
+  ipc_graph_->start();
+
+  ipc_interface_->start();
+
+  fmt::println("[WS Bridge] - ONLINE");
 }
 
-auto WsBridge::stop() -> std::future<void> {
+void WsBridge::stop() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
+  fmt::println("[WS Bridge] - Stopping...");
+
+  ipc_interface_->stop();
+
   ipc_graph_->stop();
 
-  ipc_interface_->stop().get();
+  {
+    fmt::println("[WS Server] - Stopping...");
+    ws_server_->stop();
+    fmt::println("[WS Server] - OFFLINE...");
+  }
 
-  ws_server_->stop();
-
-  std::promise<void> promise;
-  promise.set_value();
-  return promise.get_future();
+  fmt::println("[WS Bridge] - OFFLINE");
 }
 
 /////////////////////////
@@ -281,7 +287,7 @@ void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) 
       heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
       break;
     case WsServerLogLevel::Info:
-      heph::log(heph::INFO, fmt::format("[WS Server] - {}", msg));
+      heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
       break;
     case WsServerLogLevel::Warn:
       heph::log(heph::WARN, fmt::format("[WS Server] - {}", msg));
@@ -391,11 +397,11 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
 }
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
-  (void)subscribe;
-  ws_server_subscribed_to_connection_graph_ = subscribe;
+  CHECK(ipc_graph_);
 
   if (subscribe) {
     heph::log(heph::INFO, "A client subscribed to the connection graph!");
+    ipc_graph_->refreshConnectionGraph();
   }
 }
 

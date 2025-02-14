@@ -28,7 +28,7 @@ public:
   IpcInterface(std::shared_ptr<ipc::zenoh::Session> session);
 
   void start();
-  [[nodiscard]] std::future<void> stop();
+  void stop();
 
   bool hasSubscriber(const std::string& topic) const;
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,

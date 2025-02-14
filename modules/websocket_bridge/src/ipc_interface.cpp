@@ -18,15 +18,21 @@ IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session) : sessi
 
 void IpcInterface::start() {
   absl::MutexLock lock(&mutex_);
-  // TODO(mfehr): implement or remove
+
+  fmt::println("[IPC Interface] - Starting...");
+
+  // Nothing todo so far.
+
+  fmt::println("[IPC Interface] - ONLINE");
 }
 
-std::future<void> IpcInterface::stop() {
+void IpcInterface::stop() {
   absl::MutexLock lock(&mutex_);
-  std::promise<void> promise;
-  auto future = promise.get_future();
-  promise.set_value();
-  return future;
+  fmt::println("[IPC Interface] - Starting...");
+
+  subscribers_.clear();
+
+  fmt::println("[IPC Interface] - OFFLINE");
 }
 
 bool IpcInterface::hasSubscriberImpl(const std::string& topic) const {

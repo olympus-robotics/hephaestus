@@ -23,17 +23,30 @@ IpcGraph::~IpcGraph() {
 void IpcGraph::start() {
   absl::MutexLock lock(&mutex_);
 
+  fmt::println("[IPC Graph] - Starting...");
+
   topic_db_ = ipc::createZenohTopicDatabase(config_.session);
 
   discovery_ = std::make_unique<ipc::zenoh::EndpointDiscovery>(
       config_.session, ipc::TopicConfig{ "**" },
       [this](const ipc::zenoh::EndpointInfo& info) { callback__EndPointInfoUpdate(info); });
+
+  fmt::println("[IPC Graph] - ONLINE");
 }
 
 void IpcGraph::stop() {
   absl::MutexLock lock(&mutex_);
-  discovery_.reset();
+  fmt::println("[IPC Graph] - Stopping...");
+
   topic_db_.reset();
+
+  config_.topic_discovery_cb = nullptr;
+  config_.topic_removal_cb = nullptr;
+  config_.graph_update_cb = nullptr;
+
+  discovery_.reset();
+
+  fmt::println("[IPC Graph] - OFFLINE");
 }
 
 std::optional<heph::serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::string& topic) const {
@@ -139,6 +152,13 @@ TopicToNodesMap IpcGraph::getTopicToSubscribersMap() const {
 TopicToNodesMap IpcGraph::getTopicToPublishersMap() const {
   absl::MutexLock lock(&mutex_);
   return state_.topic_to_publishers_map;
+}
+
+void IpcGraph::refreshConnectionGraph() const {
+  absl::MutexLock lock(&mutex_);
+  if (config_.graph_update_cb) {
+    config_.graph_update_cb(state_);
+  }
 }
 
 void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {

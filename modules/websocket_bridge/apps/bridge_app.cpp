@@ -43,11 +43,11 @@ auto main(int argc, const char* argv[]) -> int {
     auto session = heph::ipc::zenoh::createSession(config.zenoh_config);
     auto bridge = std::make_unique<heph::ws_bridge::WsBridge>(session, config);
 
-    bridge->start().get();
+    bridge->start();
 
     heph::utils::TerminationBlocker::waitForInterrupt();
 
-    bridge->stop().get();
+    bridge->stop();
 
   } catch (const std::exception& ex) {
     heph::log(heph::ERROR, "Failed with exception", "exception", ex.what());
