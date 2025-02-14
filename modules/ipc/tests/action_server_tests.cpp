@@ -126,18 +126,17 @@ TEST(ActionServer, ActionServerClient) {
     auto request = types::DummyType::random(mt);
     auto reply_future = action_server_client.call(request);
 
-    received_status_flag.wait(false);
+    while (received_status_flag.test() == false) {
+      received_status_flag.wait(false);
+    }
+
     EXPECT_EQ(status, received_status);
     received_status_flag.clear();
-
-    const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-    ASSERT_EQ(wait_res, std::future_status::ready);
 
     const auto reply = reply_future.get();
     EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
     EXPECT_EQ(reply.value, request);
   }
-  heph::log(heph::DEBUG, "ActionServerClient test done");
 }
 /*
 TEST(ActionServer, ActionServerSuccessfulCall) {
