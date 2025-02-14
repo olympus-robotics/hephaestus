@@ -52,7 +52,7 @@ using DummyActionServer = ActionServer<types::DummyType, types::DummyPrimitivesT
 struct ActionServerData {
   TopicConfig topic_config;
   SessionPtr session;
-  DummyActionServer action_server;
+  std::unique_ptr<DummyActionServer> action_server;
 };
 
 [[nodiscard]] auto createDummyActionServer(std::mt19937_64& mt,
@@ -68,8 +68,9 @@ struct ActionServerData {
   return {
     .topic_config = service_topic,
     .session = server_session,
-    .action_server = ActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-        server_session, service_topic, std::move(trigger_cb), std::move(execute_cb)),
+    .action_server =
+        std::make_unique<ActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>>(
+            server_session, service_topic, std::move(trigger_cb), std::move(execute_cb)),
   };
 }
 
@@ -98,7 +99,6 @@ TEST(ActionServer, RejectedCall) {
 
 TEST(ActionServer, ActionServerClient) {
   auto mt = random::createRNG();
-
   auto status = types::DummyPrimitivesType::random(mt);
   auto action_server_data = createDummyActionServer(
       mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
@@ -123,6 +123,7 @@ TEST(ActionServer, ActionServerClient) {
 
   // Test that the client can be reused multiple times.
   for (int i = 0; i < 3; ++i) {
+    heph::log(heph::DEBUG, "ActionServerClient test iteration ", "i", i);
     auto request = types::DummyType::random(mt);
     auto reply_future = action_server_client.call(request);
 
@@ -137,6 +138,10 @@ TEST(ActionServer, ActionServerClient) {
     EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
     EXPECT_EQ(reply.value, request);
   }
+
+  action_server_data.action_server.reset();
+
+  heph::log(heph::DEBUG, "ActionServerClient test done");
 }
 /*
 TEST(ActionServer, ActionServerSuccessfulCall) {
@@ -203,10 +208,10 @@ TEST(ActionServer, ActionServerStopRequest) {
     requested_started.wait(false);
   }
 
-  // requested_started guarantee that the request is now being proceed, but, although the action server create
-  // the stop request service before processing the request, the stop service could still bootstrapping, as
-  // this is controlled by Zenoh.
-  // For this reason there is the chance that we need to try multiple times to stop the action server.
+  // requested_started guarantee that the request is now being proceed, but, although the action server
+  // create the stop request service before processing the request, the stop service could still
+  // bootstrapping, as this is controlled by Zenoh. For this reason there is the chance that we need to try
+  // multiple times to stop the action server.
   while (true) {
     auto success =
         requestActionServerToStopExecution(*action_server_data.session, action_server_data.topic_config);
@@ -221,6 +226,8 @@ TEST(ActionServer, ActionServerStopRequest) {
 
   EXPECT_EQ(reply.status, RequestStatus::STOPPED);
   EXPECT_EQ(reply.value, request);
+
+  action_server_data.action_server.reset();
 
   heph::log(heph::DEBUG, "ActionServerStopRequest test done");
 }
@@ -273,6 +280,7 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   stop.notify_all();
   reply_future.get();
 
+  action_server_data.action_server.reset();
   heph::log(heph::DEBUG, "ActionServerRejectedAlreadyRunning test done");
 }
 
