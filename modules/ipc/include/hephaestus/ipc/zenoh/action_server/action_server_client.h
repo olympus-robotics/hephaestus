@@ -43,7 +43,7 @@ private:
   void postReplyServiceCallback();
 
 private:
-  static constexpr std::size_t UID_SIZE = 10;
+  static constexpr std::size_t UID_SIZE = 20;
 
   SessionPtr session_;
   TopicConfig topic_config_;
@@ -114,7 +114,6 @@ auto ActionServerClient<RequestT, StatusT, ReplyT>::call(const RequestT& request
   }
 
   return std::async(std::launch::async, [this]() {
-    // auto result = client_helper_.getResponse().get();
     auto result = reply_promise_.get_future().get();
     heph::log(heph::DEBUG, "received response from client helper, returning");
     is_running_ = false;
@@ -126,7 +125,6 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 auto ActionServerClient<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
     -> RequestResponse {
   heph::log(heph::WARN, "Received response from action server -> return successful to the server");
-  // reply_promise_.set_value(reply);
   reply_ = reply;
   return { .status = RequestStatus::SUCCESSFUL };
 }

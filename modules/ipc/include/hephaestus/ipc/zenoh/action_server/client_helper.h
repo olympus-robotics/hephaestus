@@ -92,11 +92,11 @@ private:
   TopicConfig topic_config_;
   std::string uid_;
 
-  std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
-  std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
-
   Response<ReplyT> reply_;
   std::promise<Response<ReplyT>> reply_promise_;
+
+  std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
+  std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
 };
 
 template <typename RequestT, typename StatusT, typename ReplyT>
