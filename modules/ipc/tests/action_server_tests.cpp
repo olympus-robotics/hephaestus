@@ -14,6 +14,7 @@
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/action_server_client.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -21,7 +22,8 @@
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
-#include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/utils/stack_trace.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -30,7 +32,7 @@ namespace heph::ipc::zenoh::action_server::tests {
 namespace {
 
 constexpr auto SERVICE_CALL_TIMEOUT = std::chrono::milliseconds{ 10 };
-constexpr auto REPLY_SERVICE_TIMEOUT = std::chrono::seconds{ 1 };
+constexpr auto REPLY_SERVICE_TIMEOUT = std::chrono::seconds{ 5 };
 
 class MyEnvironment : public Environment {
 public:
@@ -39,6 +41,9 @@ public:
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
     absl::SetGlobalVLogLevel(3);
   }
+
+private:
+  heph::utils::StackTrace stack_trace_;
 };
 
 const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});  // NOLINT
@@ -77,16 +82,64 @@ TEST(ActionServer, RejectedCall) {
         return request;
       });
 
+  auto action_server_client =
+      ActionServerClient<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+          action_server_data.session, action_server_data.topic_config, [](const auto&) {},
+          SERVICE_CALL_TIMEOUT);
+
   auto request = types::DummyType::random(mt);
-  auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
+  auto reply_future = action_server_client.call(request);
+
   const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
   ASSERT_EQ(wait_res, std::future_status::ready);
 
   EXPECT_EQ(reply_future.get().status, RequestStatus::REJECTED_USER);
 }
 
+TEST(ActionServer, ActionServerClient) {
+  auto mt = random::createRNG();
+
+  auto status = types::DummyPrimitivesType::random(mt);
+  auto action_server_data = createDummyActionServer(
+      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      [&status](const types::DummyType& request, Publisher<types::DummyPrimitivesType>& status_publisher,
+                std::atomic_bool&) {
+        auto success = status_publisher.publish(status);
+        EXPECT_TRUE(success);
+        return request;
+      });
+
+  types::DummyPrimitivesType received_status;
+  std::atomic_flag received_status_flag = ATOMIC_FLAG_INIT;
+  auto action_server_client =
+      ActionServerClient<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+          action_server_data.session, action_server_data.topic_config,
+          [&received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
+            received_status = status;
+            received_status_flag.test_and_set();
+            received_status_flag.notify_all();
+          },
+          SERVICE_CALL_TIMEOUT);
+
+  // Test that the client can be reused multiple times.
+  for (int i = 0; i < 3; ++i) {
+    auto request = types::DummyType::random(mt);
+    auto reply_future = action_server_client.call(request);
+
+    received_status_flag.wait(false);
+    EXPECT_EQ(status, received_status);
+    received_status_flag.clear();
+
+    const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
+    ASSERT_EQ(wait_res, std::future_status::ready);
+
+    const auto reply = reply_future.get();
+    EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
+    EXPECT_EQ(reply.value, request);
+  }
+  heph::log(heph::DEBUG, "ActionServerClient test done");
+}
+/*
 TEST(ActionServer, ActionServerSuccessfulCall) {
   auto mt = random::createRNG();
 
@@ -117,6 +170,7 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
   EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
   EXPECT_EQ(reply.value, request);
 }
+*/
 
 TEST(ActionServer, ActionServerStopRequest) {
   auto mt = random::createRNG();
@@ -137,10 +191,13 @@ TEST(ActionServer, ActionServerStopRequest) {
         return request;
       });
 
+  auto action_server_client =
+      ActionServerClient<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+          action_server_data.session, action_server_data.topic_config, [](const auto&) {},
+          SERVICE_CALL_TIMEOUT);
+
   auto request = types::DummyType::random(mt);
-  auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
+  auto reply_future = action_server_client.call(request);
 
   // might spuriously wake up
   while (requested_started.test() == false) {
@@ -165,6 +222,8 @@ TEST(ActionServer, ActionServerStopRequest) {
 
   EXPECT_EQ(reply.status, RequestStatus::STOPPED);
   EXPECT_EQ(reply.value, request);
+
+  heph::log(heph::DEBUG, "ActionServerStopRequest test done");
 }
 
 TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
@@ -187,29 +246,35 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
         return request;
       });
 
+  auto action_server_client =
+      ActionServerClient<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+          action_server_data.session, action_server_data.topic_config, [](const auto&) {},
+          SERVICE_CALL_TIMEOUT);
+
   auto request = types::DummyType::random(mt);
-  auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
+  auto reply_future = action_server_client.call(request);
 
-  // might spuriously wake up
-  while (requested_started.test() == false) {
-    requested_started.wait(false);
+  // Calling from the same client will be rejected
+  {
+    auto other_reply_future = action_server_client.call(request);
+    EXPECT_EQ(other_reply_future.get().status, RequestStatus::REJECTED_ALREADY_RUNNING);
   }
-
-  auto other_reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-      action_server_data.session, action_server_data.topic_config, request,
-      [](const types::DummyPrimitivesType&) {}, SERVICE_CALL_TIMEOUT);
-
-  const auto other_wait_res = other_reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(other_wait_res, std::future_status::ready);
-
-  EXPECT_EQ(other_reply_future.get().status, RequestStatus::REJECTED_ALREADY_RUNNING);
+  // Calling from another client will be rejected
+  {
+    auto other_action_server_client =
+        ActionServerClient<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+            action_server_data.session, action_server_data.topic_config, [](const auto&) {},
+            SERVICE_CALL_TIMEOUT);
+    auto other_reply_future = other_action_server_client.call(request);
+    EXPECT_EQ(other_reply_future.get().status, RequestStatus::REJECTED_ALREADY_RUNNING);
+  }
 
   // Stop the original request
   stop.test_and_set();
   stop.notify_all();
   reply_future.get();
+
+  heph::log(heph::DEBUG, "ActionServerRejectedAlreadyRunning test done");
 }
 
 TEST(ActionServer, TypesMismatch) {

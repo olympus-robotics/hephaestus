@@ -84,8 +84,8 @@ heph_cc_test(
         "tests/action_server_tests.cpp",
     ],
     tags = [
-        "exclusive",
-        "manual",  # This is currently flaky, so we need to improve it first
+        # "exclusive",
+        # "manual",  # This is currently flaky, so we need to improve it first
     ],
     deps = IPC_TEST_DEPS,
 )

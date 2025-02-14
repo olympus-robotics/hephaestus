@@ -21,9 +21,14 @@
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh::action_server::internal {
+[[nodiscard]] auto getActionServerInternalTopicPrefix() -> std::string;
+
+[[nodiscard]] auto getRequestServiceTopic(const TopicConfig& server_topic) -> TopicConfig;
+
 [[nodiscard]] auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig;
 
-[[nodiscard]] auto getResponseServiceTopic(const TopicConfig& topic_config) -> TopicConfig;
+[[nodiscard]] auto getResponseServiceTopic(const TopicConfig& topic_config, std::string_view uid)
+    -> TopicConfig;
 
 [[nodiscard]] auto getStopServiceTopic(const TopicConfig& topic_config) -> TopicConfig;
 
@@ -36,14 +41,44 @@ template <typename ReplyT>
   return promise.get_future();
 }
 
+template <typename ReplyT>
+[[nodiscard]] auto checkFailure(const std::vector<ServiceResponse<RequestResponse>>& responses,
+                                const std::string& topic_name)
+    -> std::optional<std::future<Response<ReplyT>>> {
+  if (responses.empty()) {
+    return internal::handleFailure<ReplyT>(topic_name, "no response", RequestStatus::INVALID);
+  }
+
+  if (responses.size() > 1) {
+    return internal::handleFailure<ReplyT>(
+        topic_name,
+        fmt::format(
+            "received more than one response ({}), make sure the topic matches a single action server",
+            responses.size()),
+        RequestStatus::INVALID);
+  }
+
+  const auto& server_response_status = responses.front().value.status;
+  if (server_response_status != RequestStatus::SUCCESSFUL) {
+    return internal::handleFailure<ReplyT>(
+        topic_name, fmt::format("request rejected {}", magic_enum::enum_name(server_response_status)),
+        server_response_status);
+  }
+
+  return std::nullopt;
+}
+
 /// If an action server is already serving a request it will reject the new request.
 template <typename RequestT, typename StatusT, typename ReplyT>
 class ClientHelper {
 public:
   using StatusUpdateCallback = std::function<void(const StatusT&)>;
   ClientHelper(
-      SessionPtr session, TopicConfig topic_config,
+      SessionPtr session, TopicConfig topic_config, std::string uid,
       StatusUpdateCallback&& status_update_cb);  // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
+
+  /// Must be call to be re-usable for a new request
+  void reset();
 
   [[nodiscard]] auto getResponse() -> std::future<Response<ReplyT>>;
 
@@ -55,6 +90,7 @@ private:
 private:
   SessionPtr session_;
   TopicConfig topic_config_;
+  std::string uid_;
 
   // The reply and reply promise need to initialized before the response service
   // otherwise, a data race between initialization and the response callbacks might
@@ -68,9 +104,11 @@ private:
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicConfig topic_config,
+                                                      std::string uid,
                                                       StatusUpdateCallback&& status_update_cb)
   : session_(std::move(session))
   , topic_config_(std::move(topic_config))
+  , uid_(std::move(uid))
   , status_subscriber_(createSubscriber<StatusT>(
         session_, internal::getStatusPublisherTopic(topic_config_),
         [status_update_cb = std::move(status_update_cb)](const MessageMetadata&,
@@ -84,7 +122,7 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
             .create_type_info_service = false,
         }))
   , response_service_(std::make_unique<Service<Response<ReplyT>, RequestResponse>>(
-        session_, internal::getResponseServiceTopic(topic_config_),
+        session_, internal::getResponseServiceTopic(topic_config_, uid_),
         [this](const Response<ReplyT>& reply) { return serviceCallback(reply); }, [this]() { onFailure(); },
         [this]() { postReplyServiceCallback(); },
         ServiceConfig{ .create_liveliness_token = false, .create_type_info_service = false })) {
@@ -92,24 +130,33 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::getResponse() -> std::future<Response<ReplyT>> {
+  heph::log(heph::WARN, "Get the response future");
   return reply_promise_.get_future();
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
     -> RequestResponse {
+  heph::log(heph::WARN, "Received response from action server -> return successful to the server");
   reply_ = reply;
   return { .status = RequestStatus::SUCCESSFUL };
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::onFailure() {
+  heph::log(heph::WARN, "Post reply service callback - FAILURE!!!!");
   reply_promise_.set_value({ .value = {}, .status = RequestStatus::INVALID });
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::postReplyServiceCallback() {
-  reply_promise_.set_value(std::move(reply_));
+  heph::log(heph::WARN, "Post reply service callback - setting promise value");
+  try {
+    reply_promise_.set_value(std::move(reply_));
+  } catch (std::exception& e) {
+    heph::log(heph::ERROR, "Failed to set promise value", "exception", e.what());
+  }
+  heph::log(heph::WARN, "Post reply service callback - promise value SET");
 }
 
 }  // namespace heph::ipc::zenoh::action_server::internal
