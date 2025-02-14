@@ -46,11 +46,11 @@ def foreign_cc_repositories():
     http_archive(
         name = "reflect-cpp",
         build_file = "//bazel/foreign_cc:reflect_cpp.BUILD",
-        urls = ["https://github.com/voliro-systems/reflect-cpp/archive/refs/tags/v{version}-cmake-3.22.1.zip".format(version = REFLECT_CPP_VERSION)],
+        urls = ["https://github.com/olympus-robotics/reflect-cpp/archive/refs/tags/v{version}-cmake-3.22.1.zip".format(version = REFLECT_CPP_VERSION)],
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION + "-cmake-3.22.1",
         sha256 = "63fd52189f7df9c5648c5479e7af9377271a18f65a30a1a45fe160f8e0cf787a",
     )
-    
+
     WS_PROTOCOL_VERSION = "1.4.0"
     WS_PROTOCOL_TAG = "releases/cpp/v" + WS_PROTOCOL_VERSION
     http_archive(

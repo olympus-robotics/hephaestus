@@ -50,7 +50,7 @@ struct EndpointInfo {
 [[nodiscard]] auto getListOfEndpoints(const Session& session, std::string_view topic = "**")
     -> std::vector<EndpointInfo>;
 
-void printActorInfo(const EndpointInfo& info);
+void printEndpointInfo(const EndpointInfo& info);
 
 /// Class to detect all the publisher present in the network.
 /// The publisher need to advertise their presence with the liveliness token.

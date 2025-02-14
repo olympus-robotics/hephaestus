@@ -117,6 +117,14 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
     zconfig.insert_json5("transport/unicast/lowlatency", "true");
   }
 
+  fmt::print("Heph Config\n===========\n - use_binary_name_as_session_id={}\n - id={}\n - "
+             "enable_shared_memory={}\n - mode={}\n - router='{}'\n - qos={}\n - real_time={}\n - "
+             "protocol={}\n - multicast_scouting_enabled={}\n - multicast_scouting_interface={}\n",
+             config.use_binary_name_as_session_id, config.id.value_or("null"), config.enable_shared_memory,
+             magic_enum::enum_name(config.mode), config.router, config.qos, config.real_time,
+             magic_enum::enum_name(config.protocol), config.multicast_scouting_enabled,
+             config.multicast_scouting_interface);
+
   return zconfig;
 }
 }  // namespace

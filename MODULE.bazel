@@ -82,8 +82,7 @@ git_override(
     commit = "7e6f34b1e820fb8321346888ef0558a0ec842b8e",
     remote = "https://github.com/ericniebler/range-v3",
 )
-
-bazel_dep(name = "openssl", version = "3.3.1.bcr.1")
+bazel_dep(name = "boringssl", version = "0.20250114.0")
 bazel_dep(name = "websocketpp", version = "0.8.2.bcr.3")
 bazel_dep(name = "zstd", version = "1.5.6")
 
@@ -92,4 +91,4 @@ bazel_dep(name = "zstd", version = "1.5.6")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "zenohc_builder", "ws_protocol")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "ws_protocol", "zenohc_builder")

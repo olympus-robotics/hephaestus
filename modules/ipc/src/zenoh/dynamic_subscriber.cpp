@@ -85,7 +85,7 @@ void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   }
 
   if (init_subscriber_cb_) {
-    init_subscriber_cb_(info.topic, *type_info);
+    init_subscriber_cb_(info.topic, type_info.value());
   }
 
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);

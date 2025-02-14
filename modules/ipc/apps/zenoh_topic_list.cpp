@@ -26,12 +26,12 @@
 namespace {
 void getListOfZenohEndpoints(const heph::ipc::zenoh::Session& session, std::string_view topic) {
   const auto publishers_info = heph::ipc::zenoh::getListOfEndpoints(session, topic);
-  std::ranges::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printActorInfo);
+  std::ranges::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printEndpointInfo);
 }
 
 void getLiveListOfZenohEndpoints(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicConfig topic_config) {
   const heph::ipc::zenoh::EndpointDiscovery discover{ std::move(session), std::move(topic_config),
-                                                      &heph::ipc::zenoh::printActorInfo };
+                                                      &heph::ipc::zenoh::printEndpointInfo };
 
   heph::utils::TerminationBlocker::waitForInterrupt();
 }
