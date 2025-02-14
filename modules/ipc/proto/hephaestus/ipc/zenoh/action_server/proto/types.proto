@@ -4,6 +4,11 @@ package heph.ipc.zenoh.action_server.proto;
 
 import "google/protobuf/any.proto";
 
+message Request {
+  google.protobuf.Any request = 1;
+  string response_service_topic = 2;
+}
+
 enum RequestStatus {
   REQUEST_STATUS_SUCCESSFUL = 0;
   REQUEST_STATUS_REJECTED_USER = 1;

@@ -5,8 +5,15 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace heph::ipc::zenoh::action_server {
+
+template <typename RequestT>
+struct Request {
+  RequestT request;
+  std::string response_service_topic;
+};
 
 enum class RequestStatus : uint8_t {
   SUCCESSFUL = 0,

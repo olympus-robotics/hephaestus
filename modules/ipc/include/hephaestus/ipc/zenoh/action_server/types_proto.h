@@ -10,6 +10,12 @@
 #include "hephaestus/serdes/protobuf/enums.h"
 
 namespace heph::serdes::protobuf {
+
+template <typename RequestT>
+struct ProtoAssociation<heph::ipc::zenoh::action_server::Request<RequestT>> {
+  using Type = heph::ipc::zenoh::action_server::proto::Request;
+};
+
 template <>
 struct ProtoAssociation<heph::ipc::zenoh::action_server::RequestResponse> {
   using Type = heph::ipc::zenoh::action_server::proto::RequestResponse;
@@ -24,6 +30,26 @@ struct ProtoAssociation<heph::ipc::zenoh::action_server::Response<ReplyT>> {
 }  // namespace heph::serdes::protobuf
 
 namespace heph::ipc::zenoh::action_server {
+
+template <typename RequestT>
+void toProto(proto::Request& proto_request, const Request<RequestT>& request) {
+  using ProtoT = heph::serdes::protobuf::ProtoAssociation<RequestT>::Type;
+  ProtoT proto_value{};
+  toProto(proto_value, request.request);
+  proto_request.mutable_request()->PackFrom(proto_value);
+
+  proto_request.set_response_service_topic(request.response_service_topic);
+}
+
+template <typename RequestT>
+void fromProto(const proto::Request& proto_request, Request<RequestT>& request) {
+  using ProtoT = heph::serdes::protobuf::ProtoAssociation<RequestT>::Type;
+  ProtoT proto_value{};
+  proto_request.request().UnpackTo(&proto_value);
+  fromProto(proto_value, request.request);
+
+  request.response_service_topic = proto_request.response_service_topic();
+}
 
 void toProto(proto::RequestResponse& proto_response, const RequestResponse& response);
 
