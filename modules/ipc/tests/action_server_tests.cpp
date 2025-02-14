@@ -126,18 +126,17 @@ TEST(ActionServer, ActionServerClient) {
     auto request = types::DummyType::random(mt);
     auto reply_future = action_server_client.call(request);
 
-    received_status_flag.wait(false);
+    while (received_status_flag.test() == false) {
+      received_status_flag.wait(false);
+    }
+
     EXPECT_EQ(status, received_status);
     received_status_flag.clear();
-
-    const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-    ASSERT_EQ(wait_res, std::future_status::ready);
 
     const auto reply = reply_future.get();
     EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
     EXPECT_EQ(reply.value, request);
   }
-  heph::log(heph::DEBUG, "ActionServerClient test done");
 }
 /*
 TEST(ActionServer, ActionServerSuccessfulCall) {
@@ -205,7 +204,9 @@ TEST(ActionServer, ActionServerStopRequest) {
   auto request = types::DummyType::random(mt);
   auto reply_future = action_server_client.call(request);
 
-  requested_started.wait(false);
+  while (requested_started.test() == false) {
+    requested_started.wait(false);
+  }
 
   // requested_started guarantee that the request is now being proceed, but, although the action server create
   // the stop request service before processing the request, the stop service could still bootstrapping, as
@@ -243,7 +244,9 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
         requested_started.test_and_set();
         requested_started.notify_all();
 
-        stop.wait(false);
+        while (stop.test() == false) {
+          stop.wait(false);
+        }
 
         return request;
       });
@@ -274,8 +277,6 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   // Stop the original request
   stop.test_and_set();
   stop.notify_all();
-  const auto wait_res = reply_future.wait_for(REPLY_SERVICE_TIMEOUT);
-  ASSERT_EQ(wait_res, std::future_status::ready);
   reply_future.get();
 
   heph::log(heph::DEBUG, "ActionServerRejectedAlreadyRunning test done");

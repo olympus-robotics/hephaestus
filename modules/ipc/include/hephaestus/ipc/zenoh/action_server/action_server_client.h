@@ -53,13 +53,13 @@ private:
   TopicConfig service_request_topic_;
   TopicConfig service_response_topic_;
 
-  // internal::ClientHelper<RequestT, StatusT, ReplyT> client_helper_;
+  Response<ReplyT> reply_;
+  std::promise<Response<ReplyT>> reply_promise_;
+
   std::unique_ptr<Subscriber<StatusT>> status_subscriber_;
   std::unique_ptr<Service<Response<ReplyT>, RequestResponse>> response_service_;
   std::chrono::milliseconds request_timeout_;
 
-  Response<ReplyT> reply_;
-  std::promise<Response<ReplyT>> reply_promise_;
   std::atomic_bool is_running_{ false };
 };
 
