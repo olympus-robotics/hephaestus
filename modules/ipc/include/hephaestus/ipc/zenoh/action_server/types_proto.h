@@ -38,8 +38,7 @@ void toProto(proto::Request& proto_request, const Request<RequestT>& request) {
   toProto(proto_value, request.request);
   proto_request.mutable_request()->PackFrom(proto_value);
 
-  proto_request.set_response_service_topic_name(request.response_service_topic_name);
-  proto_request.set_status_topic_name(request.status_topic_name);
+  proto_request.set_uid(request.uid);
 }
 
 template <typename RequestT>
@@ -49,8 +48,7 @@ void fromProto(const proto::Request& proto_request, Request<RequestT>& request) 
   proto_request.request().UnpackTo(&proto_value);
   fromProto(proto_value, request.request);
 
-  request.response_service_topic_name = proto_request.response_service_topic_name();
-  request.status_topic_name = proto_request.status_topic_name();
+  request.uid = proto_request.uid();
 }
 
 void toProto(proto::RequestResponse& proto_response, const RequestResponse& response);

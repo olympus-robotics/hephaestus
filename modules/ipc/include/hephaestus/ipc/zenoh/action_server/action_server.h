@@ -199,7 +199,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
   config.create_type_info_service = false;
   auto status_update_publisher = Publisher<StatusT>{
     session_,
-    TopicConfig{ request.status_topic_name },
+    internal::getStatusPublisherTopic(topic_config_, request.uid),
     nullptr,
     config,
   };
@@ -233,7 +233,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
     }
   }();
 
-  auto response_topic = TopicConfig{ request.response_service_topic_name };
+  auto response_topic = internal::getResponseServiceTopic(topic_config_, request.uid);
 
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
@@ -263,8 +263,7 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
 
   auto action_server_request = Request<RequestT>{
     .request = request,
-    .response_service_topic_name = internal::getResponseServiceTopic(topic_config, uid).name,
-    .status_topic_name = internal::getStatusPublisherTopic(topic_config, uid).name,
+    .uid = uid,
   };
   const auto server_responses = callService<Request<RequestT>, RequestResponse>(
       *session, request_topic, action_server_request, request_timeout);

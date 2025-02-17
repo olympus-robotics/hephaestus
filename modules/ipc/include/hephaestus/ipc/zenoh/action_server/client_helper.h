@@ -83,9 +83,6 @@ public:
       SessionPtr session, TopicConfig topic_config, std::string uid,
       StatusUpdateCallback&& status_update_cb);  // NOLINT(cppcoreguidelines-rvalue-reference-param-not-moved)
 
-  /// Must be call to be re-usable for a new request
-  void reset();
-
   [[nodiscard]] auto getResponse() -> std::future<Response<ReplyT>>;
 
 private:
