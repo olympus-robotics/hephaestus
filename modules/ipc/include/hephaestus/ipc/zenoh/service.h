@@ -335,13 +335,10 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
 
 template <typename RequestT, typename ReplyT>
 void Service<RequestT, ReplyT>::createTypeInfoService() {
-  if (isEndpointTypeInfoServiceTopic(topic_config_.name)) {
-    return;
-  }
-
   type_info_service_ = std::make_unique<Service<std::string, std::string>>(
       session_, TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) },
-      [this](const std::string&) { return this->type_info_.toJson(); });
+      [this](const std::string&) { return this->type_info_.toJson(); }, []() {}, []() {},
+      ServiceConfig{ .create_liveliness_token = false, .create_type_info_service = false });
 }
 
 // -----------------------------------------------------------------------------------------------

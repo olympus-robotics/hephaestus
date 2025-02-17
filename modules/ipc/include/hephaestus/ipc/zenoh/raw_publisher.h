@@ -81,7 +81,7 @@ private:
   std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;
 
-  MatchCallback match_cb_{ nullptr };
+  MatchCallback match_cb_;
   std::unique_ptr<::zenoh::MatchingListener<void>> matching_listener_;
 };
 

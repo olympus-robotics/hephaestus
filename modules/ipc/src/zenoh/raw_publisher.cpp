@@ -65,7 +65,7 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
                                     topic_config_.name, result));
   }
 
-  if (match_cb_ != nullptr) {
+  if (match_cb_) {
     matching_listener_ =
         std::make_unique<::zenoh::MatchingListener<void>>(publisher_->declare_matching_listener(
             [this](const ::zenoh::MatchingStatus& matching_status) {
