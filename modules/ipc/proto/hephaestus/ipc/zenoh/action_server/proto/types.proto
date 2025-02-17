@@ -6,7 +6,8 @@ import "google/protobuf/any.proto";
 
 message Request {
   google.protobuf.Any request = 1;
-  string response_service_topic = 2;
+  string response_service_topic_name = 2;
+  string status_topic_name = 3;
 }
 
 enum RequestStatus {

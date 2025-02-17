@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -14,9 +15,6 @@
 #include <optional>
 #include <string>
 #include <utility>
-
-#include <fmt/format.h>
-#include <magic_enum.hpp>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
@@ -201,8 +199,8 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
   config.create_type_info_service = false;
   auto status_update_publisher = Publisher<StatusT>{
     session_,
-    internal::getStatusPublisherTopic(topic_config_),
-    [](auto) {},
+    TopicConfig{ request.status_topic_name },
+    nullptr,
     config,
   };
 
@@ -235,7 +233,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
     }
   }();
 
-  auto response_topic = TopicConfig{ request.response_service_topic };
+  auto response_topic = TopicConfig{ request.response_service_topic_name };
 
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
@@ -260,8 +258,13 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
   auto mt = random::createRNG();
   const auto uid = random::random<std::string>(mt, UID_SIZE, false, true);
 
+  auto client_helper = std::make_unique<internal::ClientHelper<RequestT, StatusT, ReplyT>>(
+      session, topic_config, uid, std::move(status_update_cb));
+
   auto action_server_request = Request<RequestT>{
-    .request = request, .response_service_topic = internal::getResponseServiceTopic(topic_config, uid).name
+    .request = request,
+    .response_service_topic_name = internal::getResponseServiceTopic(topic_config, uid).name,
+    .status_topic_name = internal::getStatusPublisherTopic(topic_config, uid).name,
   };
   const auto server_responses = callService<Request<RequestT>, RequestResponse>(
       *session, request_topic, action_server_request, request_timeout);
@@ -271,16 +274,10 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
     return std::move(*failure);
   }
 
-  return std::async(
-      std::launch::async,
-      // NOLINTNEXTLINE(bugprone-exception-escape)
-      // TODO(@fbrizzi): Move this before making the call and understand  why this invalidate the promise
-      [session, topic_config, uid, status_update_cb = std::move(status_update_cb)]() mutable {
-        auto client_helper = internal::ClientHelper<RequestT, StatusT, ReplyT>{ session, topic_config, uid,
-                                                                                std::move(status_update_cb) };
-        auto response = client_helper.getResponse().get();
-        return response;
-      });
+  return std::async(std::launch::async, [client_helper = std::move(client_helper)]() mutable {
+    auto response = client_helper->getResponse().get();
+    return response;
+  });
 }
 
 }  // namespace heph::ipc::zenoh::action_server

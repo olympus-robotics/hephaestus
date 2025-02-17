@@ -12,7 +12,8 @@ namespace heph::ipc::zenoh::action_server {
 template <typename RequestT>
 struct Request {
   RequestT request;
-  std::string response_service_topic;
+  std::string response_service_topic_name;
+  std::string status_topic_name;
 };
 
 enum class RequestStatus : uint8_t {

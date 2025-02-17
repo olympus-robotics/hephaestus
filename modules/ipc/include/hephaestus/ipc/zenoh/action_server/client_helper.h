@@ -9,7 +9,12 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
+
+#include <fmt/format.h>
+#include <magic_enum.hpp>
 
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
@@ -25,7 +30,8 @@ namespace heph::ipc::zenoh::action_server::internal {
 
 [[nodiscard]] auto getRequestServiceTopic(const TopicConfig& server_topic) -> TopicConfig;
 
-[[nodiscard]] auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig;
+[[nodiscard]] auto getStatusPublisherTopic(const TopicConfig& server_topic, std::string_view uid)
+    -> TopicConfig;
 
 [[nodiscard]] auto getResponseServiceTopic(const TopicConfig& topic_config, std::string_view uid)
     -> TopicConfig;
@@ -110,7 +116,7 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
   , topic_config_(std::move(topic_config))
   , uid_(std::move(uid))
   , status_subscriber_(createSubscriber<StatusT>(
-        session_, internal::getStatusPublisherTopic(topic_config_),
+        session_, internal::getStatusPublisherTopic(topic_config_, uid_),
         [status_update_cb = std::move(status_update_cb)](const MessageMetadata&,
                                                          const std::shared_ptr<StatusT>& status) mutable {
           status_update_cb(*status);
@@ -130,33 +136,24 @@ ClientHelper<RequestT, StatusT, ReplyT>::ClientHelper(SessionPtr session, TopicC
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::getResponse() -> std::future<Response<ReplyT>> {
-  heph::log(heph::WARN, "Get the response future");
   return reply_promise_.get_future();
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<ReplyT>& reply)
     -> RequestResponse {
-  heph::log(heph::WARN, "Received response from action server -> return successful to the server");
   reply_ = reply;
   return { .status = RequestStatus::SUCCESSFUL };
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::onFailure() {
-  heph::log(heph::WARN, "Post reply service callback - FAILURE!!!!");
   reply_promise_.set_value({ .value = {}, .status = RequestStatus::INVALID });
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::postReplyServiceCallback() {
-  heph::log(heph::WARN, "Post reply service callback - setting promise value");
-  try {
-    reply_promise_.set_value(std::move(reply_));
-  } catch (std::exception& e) {
-    heph::log(heph::ERROR, "Failed to set promise value", "exception", e.what());
-  }
-  heph::log(heph::WARN, "Post reply service callback - promise value SET");
+  reply_promise_.set_value(std::move(reply_));
 }
 
 }  // namespace heph::ipc::zenoh::action_server::internal

@@ -4,6 +4,9 @@
 
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 
+#include <string>
+#include <string_view>
+
 #include <fmt/format.h>
 
 #include "hephaestus/ipc/topic.h"
@@ -20,10 +23,10 @@ auto getRequestServiceTopic(const TopicConfig& server_topic) -> TopicConfig {
                                   server_topic.name) };
 }
 
-auto getStatusPublisherTopic(const TopicConfig& server_topic) -> TopicConfig {
-  static constexpr auto STATUS_TOPIC_FORMAT = "{}/{}/status_update";
+auto getStatusPublisherTopic(const TopicConfig& server_topic, std::string_view uid) -> TopicConfig {
+  static constexpr auto STATUS_TOPIC_FORMAT = "{}/{}/{}/status_update";
   return TopicConfig{ fmt::format(STATUS_TOPIC_FORMAT, getActionServerInternalTopicPrefix(),
-                                  server_topic.name) };
+                                  server_topic.name, uid) };
 }
 
 auto getResponseServiceTopic(const TopicConfig& topic_config, std::string_view uid) -> TopicConfig {
