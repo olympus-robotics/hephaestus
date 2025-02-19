@@ -5,8 +5,11 @@ FROM ${BASE_IMAGE}
 
 # Here we can install developer tools if needed
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends zsh curl sudo openssh-client xz-utils && \
+    apt-get install -y --no-install-recommends zsh curl sudo openssh-client xz-utils fzf fd-find silversearcher-ag ripgrep && \
     rm -rf /var/lib/apt/lists/*
+
+# Install neovim
+RUN curl -L https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz | tar -xz -C /usr/share
 
 ARG USERNAME=hephaestus
 ARG PUID=1000

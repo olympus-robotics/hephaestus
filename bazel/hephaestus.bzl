@@ -9,6 +9,8 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
 def heph_basic_copts():
     return [
+        "-g3",  # Enable debugging symbols
+        "-fno-omit-frame-pointer",  # Increase debugging experience without sacrificing too much performance
         "-Wall",
         "-Wextra",
         "-Wpedantic",
@@ -54,7 +56,7 @@ def heph_copts():
     }) + heph_basic_copts()
 
 def heph_linkopts():
-    return select({
+    return ["-g3"] + select({
         "@hephaestus//bazel:clang_compiler": [],
         "@hephaestus//bazel:gcc_compiler": [],
     }) + select({

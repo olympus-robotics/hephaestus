@@ -23,25 +23,25 @@ services:
     depends_on:
       hephaestus-base:
         condition: service_completed_successfully
-    command:  tail -F /dev/null
+    command: tail -F /dev/null
     ports: []
-    privileged: true
     cap_add:
       - SYS_PTRACE
       - NET_ADMIN
     shm_size: 512
     security_opt:
       - seccomp:unconfined
-    network_mode: host
     environment:
       DISPLAY: ${DISPLAY:-}
       SCCACHE_SERVER_PORT: 4228
       HEPHAESTUS_PATH: /workspaces/hephaestus
     devices:
-      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri:/dev/dri
     working_dir: /workspaces/hephaestus
     volumes:
       - /dev:/dev
+      - ${HOME}/.config/nvim:/workspaces/.config/nvim
+      - ${HOME}/.local:/workspaces/.local
       - ${HOME}/.ssh:/workspaces/.ssh
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /tmp/.X11-unix:/tmp/.X11-unix

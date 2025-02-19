@@ -21,9 +21,12 @@ docker-exec:
 	fi
 
 # log into the container
-.PHONY: docker-attach
+.PHONY: docker-attach docker-vim
 docker-attach:
 	make docker-exec
+
+docker-nvim:
+	make docker-exec COMMAND=/usr/share/nvim-linux-x86_64/bin/nvim
 
 # Configure attach container for VSCode.
 # VSCode stores those in different places for different OSs.
