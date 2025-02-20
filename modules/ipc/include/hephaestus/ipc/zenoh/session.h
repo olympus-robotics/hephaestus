@@ -6,10 +6,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <zenoh/api/queryable.hxx>
 #include <zenoh/api/session.hxx>
@@ -22,10 +24,8 @@ enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
 /// There are a lot of options to configure a zenoh session,
 /// See  for more information https://zenoh.io/docs/manual/configuration/#configuration-files
 struct ZenohConfig {
-  ZenohConfig() {
-    zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
-  }
-  explicit ZenohConfig(std::string const& path) : zconfig(::zenoh::Config::from_file(path)) {
+  ZenohConfig();
+  explicit ZenohConfig(std::filesystem::path const& path) : zconfig(::zenoh::Config::from_file(path)) {
   }
 
   ~ZenohConfig() noexcept = default;
@@ -35,7 +35,6 @@ struct ZenohConfig {
   auto operator=(ZenohConfig&&) noexcept -> ZenohConfig& = default;
 
   ::zenoh::Config zconfig{ ::zenoh::Config::create_default() };
-  std::size_t cache_size{ 0 };
 };
 
 void setSessionId(ZenohConfig& config, std::string_view id);
@@ -52,7 +51,7 @@ void setMulticastScoutingInterface(ZenohConfig& config, std::string_view interfa
 struct Config {
   bool use_binary_name_as_session_id = false;
   std::optional<std::string> id{ std::nullopt };
-  std::string zenoh_config_path;
+  std::optional<std::filesystem::path> zenoh_config_path;
   bool enable_shared_memory = false;  //! NOTE: With shared-memory enabled, the publisher still uses the
                                       //! network transport layer to notify subscribers of the shared-memory
                                       //! segment to read. Therefore, for very small messages, shared -
@@ -71,7 +70,6 @@ struct Config {
 
 struct Session {
   ::zenoh::Session zenoh_session;
-  std::size_t cache_size;
 };
 
 /// Create configuration for a session that doesn't connect to any other session.
@@ -79,7 +77,7 @@ struct Session {
 [[nodiscard]] auto createLocalConfig() -> Config;
 
 using SessionPtr = std::shared_ptr<Session>;
-[[nodiscard]] auto createSession(Config config) -> SessionPtr;
+[[nodiscard]] auto createSession(const Config& config) -> SessionPtr;
 [[nodiscard]] auto createSession(ZenohConfig config) -> SessionPtr;
 
 }  // namespace heph::ipc::zenoh

@@ -67,8 +67,8 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
                                               "cannot specify both protocol and the router endpoint");
 
   auto zconfig = [&] {
-    if (!config.zenoh_config_path.empty()) {
-      return ZenohConfig{ config.zenoh_config_path };
+    if (config.zenoh_config_path.has_value()) {
+      return ZenohConfig{ *config.zenoh_config_path };
     }
     return ZenohConfig{};
   }();
@@ -114,6 +114,10 @@ auto toJsonArray(const std::vector<std::string>& values) -> std::string {
                                        ","));
 }
 }  // namespace
+
+ZenohConfig::ZenohConfig() {
+  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
+}
 
 void setSessionId(ZenohConfig& config, std::string_view id) {
   config.zconfig.insert_json5("id", fmt::format(R"("{}")", createSessionId(id)));
@@ -179,13 +183,12 @@ auto createLocalConfig() -> Config {
   return config;
 }
 
-auto createSession(Config config) -> SessionPtr {
+auto createSession(const Config& config) -> SessionPtr {
   auto zconfig = createZenohConfig(config);
-  return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)), config.cache_size);
+  return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)));
 }
 
 auto createSession(ZenohConfig config) -> SessionPtr {
-  return std::make_shared<Session>(::zenoh::Session::open(std::move(config.zconfig)), config.cache_size);
+  return std::make_shared<Session>(::zenoh::Session::open(std::move(config.zconfig)));
 }
-
 }  // namespace heph::ipc::zenoh

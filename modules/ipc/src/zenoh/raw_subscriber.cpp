@@ -77,10 +77,10 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   }
 
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
-  if (session_->cache_size > 0) {
+  if (config.cache_size.has_value() && *config.cache_size > 0) {
     sub_options.history =
         ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::HistoryOptions::create_default();
-    sub_options.history->max_samples = session_->cache_size;
+    sub_options.history->max_samples = *config.cache_size;
   }
 
   ::zenoh::ZResult result{};
