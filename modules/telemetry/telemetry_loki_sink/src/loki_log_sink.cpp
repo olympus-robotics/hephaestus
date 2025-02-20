@@ -22,7 +22,10 @@ struct Stream {
   std::vector<Value> values;
 };
 
-struct LokiPushRequest {
+/// The struct of the Json request to Loki
+/// The specification can be found here:
+/// https://grafana.com/docs/loki/latest/reference/loki-http-api/#ingest-logs
+struct PushRequest {
   std::vector<Stream> streams;
 };
 
@@ -36,43 +39,52 @@ struct LokiPushRequest {
   return fmt::format("{} | {}", entry.message, fmt::join(entry.fields, " "));
 }
 
+[[nodiscard]] auto createValue(const LogEntry& entry) -> Value {
+  Value value;
+
+  value.emplace_back(std::to_string(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(entry.time.time_since_epoch()).count()));
+  value.emplace_back(formatMessage(entry));
+
+  // Add metadata
+  value.emplace_back(std::map<std::string, std::string>{
+      { "location", fmt::format("{}:{}", entry.location.file_name(), entry.location.line()) },
+      { "thread_id", fmt::format("{}", fmt::streamed(entry.thread_id)) } });
+
+  return value;
+}
+
 [[nodiscard]] auto toStream(const LogEntry& entry, const std::map<std::string, std::string>& stream_labels)
     -> Stream {
   Stream stream;
   stream.stream = stream_labels;
   stream.stream["level"] = magic_enum::enum_name(entry.level);
 
-  Value value;
-  value.emplace_back(std::to_string(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(entry.time.time_since_epoch()).count()));
-  value.emplace_back(formatMessage(entry));
-  value.emplace_back(std::map<std::string, std::string>{
-      { "location", fmt::format("{}:{}", entry.location.file_name(), entry.location.line()) },
-      { "thread_id", fmt::format("{}", fmt::streamed(entry.thread_id)) } });
-
-  stream.values.push_back(std::move(value));
+  stream.values.push_back(createValue(entry));
   return stream;
 }
 
-[[nodiscard]] auto toLokiPushRequest(const LogEntry& entry,
-                                     const std::map<std::string, std::string>& stream_labels)
-    -> LokiPushRequest {
-  LokiPushRequest request;
+[[nodiscard]] auto createPushRequest(const LogEntry& entry,
+                                     const std::map<std::string, std::string>& stream_labels) -> PushRequest {
+  PushRequest request;
   request.streams.push_back(toStream(entry, stream_labels));
 
   return request;
 }
 
+[[nodiscard]] auto createStaticStreamLabels(const LokiLogSinkConfig& config)
+    -> std::map<std::string, std::string> {
+  return std::map<std::string, std::string>{ { "domain", config.domain },
+                                             { "service_name", createServiceNameFromBinaryName() },
+                                             { "pid", std::to_string(getpid()) },
+                                             { "hostname", utils::getHostName() } };
+}
 }  // namespace
 
 LokiLogSink::LokiLogSink(const LokiLogSinkConfig& config)
-  : min_log_level_(config.log_level)
-  , loki_url_(fmt::format(LOKI_URL_FORMAT, config.loki_host, config.loki_port))
-  , post_request_header_(cpr::Header{ { "Content-Type", "application/json" } })
-  , stream_labels_(std::map<std::string, std::string>{ { "domain", config.label },
-                                                       { "service_name", createServiceNameFromBinaryName() },
-                                                       { "pid", std::to_string(getpid()) },
-                                                       { "hostname", utils::getHostName() } }) {
+  : min_log_level_(config.log_level), stream_labels_(createStaticStreamLabels(config)) {
+  cpr_session_.SetUrl(fmt::format(LOKI_URL_FORMAT, config.loki_host, config.loki_port));
+  cpr_session_.SetHeader(cpr::Header{ { "Content-Type", "application/json" } });
 }
 
 void LokiLogSink::send(const LogEntry& entry) {
@@ -81,11 +93,11 @@ void LokiLogSink::send(const LogEntry& entry) {
   }
 
   // TODO(@fbrizzi): extend to support batching
-  auto request = toLokiPushRequest(entry, stream_labels_);
+  const auto request = createPushRequest(entry, stream_labels_);
   auto json_str = rfl::json::write(request);
 
-  auto response = cpr::Post(loki_url_, cpr::Body{ std::move(json_str) }, post_request_header_);
-
+  cpr_session_.SetBody(cpr::Body{ std::move(json_str) });
+  const auto response = cpr_session_.Post();
   if (response.status_code > cpr::status::HTTP_MULTIPLE_CHOICE) {
     fmt::println(stderr, "failed to send log to Loki, status code: {}", response.status_code);
   }

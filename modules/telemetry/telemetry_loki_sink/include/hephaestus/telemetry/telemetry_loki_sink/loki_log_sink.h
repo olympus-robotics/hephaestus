@@ -16,7 +16,7 @@ struct LokiLogSinkConfig {
   uint32_t loki_port = DEFAULT_LOKI_PORT;
   std::string loki_host = DEFAULT_LOKI_HOST;
   LogLevel log_level = LogLevel::TRACE;
-  std::string label;
+  std::string domain;  /// Used to group logs from different binaries.
 };
 
 /// @brief A simple sink that passes the logs to ABSL.
@@ -30,8 +30,7 @@ public:
 private:
   static constexpr auto LOKI_URL_FORMAT = "http://{}:{}/loki/api/v1/push";
   LogLevel min_log_level_;
-  cpr::Url loki_url_;
-  cpr::Header post_request_header_;
+  cpr::Session cpr_session_;
 
   std::map<std::string, std::string> stream_labels_;
 };

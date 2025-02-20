@@ -3,27 +3,21 @@
 # =================================================================================================
 
 declare_module(
-  NAME telemetry_influxdb_sink
-  DEPENDS_ON_MODULES concurrency random serdes telemetry
-  DEPENDS_ON_EXTERNAL_PROJECTS InfluxDB fmt
+  NAME telemetry_loki_sink
+  DEPENDS_ON_MODULES telemetry
+  DEPENDS_ON_EXTERNAL_PROJECTS cpr fmt
 )
 
-find_package(InfluxDB REQUIRED)
+find_package(cpr REQUIRED)
 find_package(fmt REQUIRED)
 
 # library sources
-set(SOURCES src/influxdb_metric_sink.cpp include/hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h)
+set(SOURCES src/loki_log_sink.cpp include/hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h)
 
 # library target
 define_module_library(
-  NAME telemetry_influxdb_sink
-  PUBLIC_LINK_LIBS
-    fmt::fmt
-    hephaestus::concurrency
-    hephaestus::random
-    hephaestus::serdes
-    hephaestus::telemetry
-    InfluxData::InfluxDB
+  NAME telemetry_loki_sink
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::telemetry cpr::cpr
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
