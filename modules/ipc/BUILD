@@ -127,6 +127,14 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "config_tests",
+    srcs = [
+        "tests/config_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
     name = "session_tests",
     srcs = [
         "tests/session_tests.cpp",
