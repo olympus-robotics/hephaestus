@@ -33,7 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(session_config);
 
     auto callback = [](const std::string& sample) {
       heph::log(heph::DEBUG, "received query", "query", sample);

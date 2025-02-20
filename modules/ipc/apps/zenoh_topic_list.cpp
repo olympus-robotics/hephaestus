@@ -50,7 +50,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
 
     fmt::println("Opening session...");
-    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(session_config);
 
     if (!args.getOption<bool>("live")) {
       getListOfZenohEndpoints(*session, topic_config.name);

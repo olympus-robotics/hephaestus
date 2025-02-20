@@ -5,13 +5,16 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <unistd.h>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
@@ -117,7 +120,10 @@ auto toJsonArray(const std::vector<std::string>& values) -> std::string {
 }  // namespace
 
 ZenohConfig::ZenohConfig() {
-  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");
+  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
+}
+
+ZenohConfig::ZenohConfig(std::filesystem::path const& path) : zconfig(::zenoh::Config::from_file(path)) {
 }
 
 void setSessionId(ZenohConfig& config, std::string_view id) {
@@ -135,13 +141,13 @@ void setSharedMemory(ZenohConfig& config, bool value) {
 void setMode(ZenohConfig& config, Mode mode) {
   switch (mode) {
     case Mode::PEER:
-      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("peer")");
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("peer")");  // NOLINT(misc-include-cleaner)
       break;
     case Mode::CLIENT:
-      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
       break;
     case Mode::ROUTER:
-      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("router")");
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("router")");  // NOLINT(misc-include-cleaner)
       break;
     default:
       std::abort();
@@ -149,11 +155,11 @@ void setMode(ZenohConfig& config, Mode mode) {
 }
 
 void connectToEndpoints(ZenohConfig& config, const std::vector<std::string>& endpoints) {
-  config.zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, toJsonArray(endpoints));
+  config.zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, toJsonArray(endpoints));  // NOLINT(misc-include-cleaner)
 }
 
 void listenToEndpoints(ZenohConfig& config, const std::vector<std::string>& endpoints) {
-  config.zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, toJsonArray(endpoints));
+  config.zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, toJsonArray(endpoints));  // NOLINT(misc-include-cleaner)
 }
 
 void setQos(ZenohConfig& config, bool value) {

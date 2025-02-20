@@ -25,8 +25,7 @@ enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
 /// See  for more information https://zenoh.io/docs/manual/configuration/#configuration-files
 struct ZenohConfig {
   ZenohConfig();
-  explicit ZenohConfig(std::filesystem::path const& path) : zconfig(::zenoh::Config::from_file(path)) {
-  }
+  explicit ZenohConfig(std::filesystem::path const& path);
 
   ~ZenohConfig() noexcept = default;
   ZenohConfig(const ZenohConfig&) = delete;
@@ -34,7 +33,7 @@ struct ZenohConfig {
   ZenohConfig(ZenohConfig&&) noexcept = default;
   auto operator=(ZenohConfig&&) noexcept -> ZenohConfig& = default;
 
-  ::zenoh::Config zconfig{ ::zenoh::Config::create_default() };
+  ::zenoh::Config zconfig{ ::zenoh::Config::create_default() };  // NOLINT(misc-include-cleaner)
 };
 
 void setSessionId(ZenohConfig& config, std::string_view id);

@@ -37,7 +37,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto value = args.getOption<std::string>("value");
 
     auto [config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
-    auto session = heph::ipc::zenoh::createSession(std::move(config));
+    auto session = heph::ipc::zenoh::createSession(config);
     heph::log(heph::DEBUG, "opening session", "id",
               heph::ipc::zenoh::toString(session->zenoh_session.get_zid()));
 
