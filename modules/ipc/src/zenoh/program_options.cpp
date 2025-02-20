@@ -33,7 +33,7 @@ void appendProgramOption(cli::ProgramDescription& program_description,
       .defineOption<std::string>("multicast_scouting_interface",
                                  "Interface to use for multicast, options: auto, <INTERFACE_NAME>", "auto")
       .defineFlag("shared_memory", "Enable shared memory")
-      .defineFlag("disable_multicast_scouting", "Enable multicast scouting")
+      .defineFlag("multicast_scouting_enabled", "Enable multicast scouting")
       .defineFlag("qos", "Enable QoS")
       .defineFlag("realtime", "Enable real-time communication");
 }
@@ -73,7 +73,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
 
   config.router = args.getOption<std::string>("router");
   config.enable_shared_memory = args.getOption<bool>("shared_memory");
-  config.multicast_scouting_enabled = !args.getOption<bool>("disable_multicast_scouting");
+  config.multicast_scouting_enabled = args.getOption<bool>("multicast_scouting_enabled");
   config.multicast_scouting_interface = args.getOption<std::string>("multicast_scouting_interface");
   config.qos = args.getOption<bool>("qos");
   config.real_time = args.getOption<bool>("realtime");
