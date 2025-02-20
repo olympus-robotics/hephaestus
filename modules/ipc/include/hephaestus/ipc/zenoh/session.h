@@ -60,7 +60,6 @@ struct Config {
   Mode mode = Mode::PEER;
   // NOLINTNEXTLINE(readability-redundant-string-init) otherwise we need to specify in constructor
   std::string router = "";  //! If specified connect to the given router endpoint.
-  std::size_t cache_size = 0;
   bool qos = false;
   bool real_time = false;
   Protocol protocol{ Protocol::ANY };

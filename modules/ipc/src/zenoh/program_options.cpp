@@ -50,8 +50,6 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
 
   config.zenoh_config_path = args.getOption<std::string>("zenoh_config");
 
-  config.cache_size = args.getOption<std::size_t>("cache");
-
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
     config.mode = Mode::PEER;

@@ -107,6 +107,7 @@ auto createZenohConfig(const Config& config) -> ::zenoh::Config {
 
   return std::move(zconfig.zconfig);
 }
+
 auto toJsonArray(const std::vector<std::string>& values) -> std::string {
   return fmt::format("[{}]", fmt::join(values | std::views::transform([](const std::string& value) {
                                          return fmt::format(R"("{}")", value);

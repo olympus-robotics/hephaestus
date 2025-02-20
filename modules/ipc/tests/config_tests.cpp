@@ -66,8 +66,6 @@ TEST(ZenohTests, ConnectToEndpoints) {
   nlohmann::json new_config = config.zconfig.to_string();
 
   ASSERT_NE(default_config, new_config);
-
-  // fmt::println("{}", fmt::join(new_config[Z_CONFIG_CONNECT_KEY]);
 }
 
 TEST(ZenohTests, ListenToEndpoints) {
