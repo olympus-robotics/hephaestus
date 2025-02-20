@@ -33,7 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto output_file = args.getOption<std::string>("output_bag");
 
     heph::bag::ZenohRecorderParams params{
-      .session = heph::ipc::zenoh::createSession(std::move(config)),
+      .session = heph::ipc::zenoh::createSession(config),
       .bag_writer = heph::bag::createMcapWriter({ .output_file = std::move(output_file) }),
       .topics_filter_params = heph::ipc::TopicFilterParams{ .include_topics_only = {},
                                                             .prefix = topic.name,

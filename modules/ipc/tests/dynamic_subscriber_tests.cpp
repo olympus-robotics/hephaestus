@@ -16,7 +16,7 @@ namespace heph::ipc::zenoh::tests {
 
 TEST(DynamicSubscriber, StartStop) {
   auto params = DynamicSubscriberParams{
-    .session = zenoh::createSession({}),
+    .session = zenoh::createSession(zenoh::createLocalConfig()),
     .topics_filter_params = {},
     .init_subscriber_cb = [](const auto&, const auto&) {},
     .subscriber_cb = [](const auto&, const auto&, const auto&) {},

@@ -53,7 +53,7 @@ auto main(int argc, const char* argv[]) -> int {
       std::exit(1);
     }
 
-    heph::bag::ZenohPlayerParams params{ .session = heph::ipc::zenoh::createSession(std::move(config)),
+    heph::bag::ZenohPlayerParams params{ .session = heph::ipc::zenoh::createSession(config),
                                          .bag_reader = std::move(bag_reader),
                                          .wait_for_readers_to_connect = wait_for_readers_to_connect };
     auto zenoh_player = heph::bag::ZenohPlayer::create(std::move(params));

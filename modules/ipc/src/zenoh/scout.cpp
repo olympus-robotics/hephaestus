@@ -68,8 +68,8 @@ private:
 };
 
 [[nodiscard]] auto getRouterInfoJson(const std::string& router_id) -> std::string {
-  heph::ipc::zenoh::Config config;
-  auto session = heph::ipc::zenoh::createSession(std::move(config));
+  const heph::ipc::zenoh::Config config;
+  auto session = heph::ipc::zenoh::createSession(config);
 
   static constexpr auto ROUTER_TOPIC = "@/router/{}";
   const auto query_topic = TopicConfig{ fmt::format(ROUTER_TOPIC, router_id) };

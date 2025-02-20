@@ -135,7 +135,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     fmt::println("Opening session...");
 
-    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(session_config);
 
     heph::ipc::zenoh::apps::TopicEcho topic_echo{ std::move(session), topic_config, noarr, max_array_length };
     topic_echo.start().wait();

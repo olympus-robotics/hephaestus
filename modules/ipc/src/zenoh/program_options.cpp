@@ -22,6 +22,10 @@ void appendProgramOption(cli::ProgramDescription& program_description,
   program_description.defineOption<std::string>("topic", "Key expression", default_topic)
       .defineFlag("use_binary_name_as_session_id", "Use the binary name as the session id")
       .defineOption<std::string>("session_id", "the session id", "")
+      .defineOption<std::string>("zenoh_config",
+                                 "path to a zenoh configuration file (either in yaml or json5 format). "
+                                 "Options set in here will get overriden by explicit command line options.",
+                                 "")
       .defineOption<std::size_t>("cache", "Cache size", 0)
       .defineOption<std::string>("mode", "Running mode: options: peer, client", "peer")
       .defineOption<std::string>("router", "Router endpoint", "")
@@ -44,7 +48,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
     config.id = std::move(session_id);
   }
 
-  config.cache_size = args.getOption<std::size_t>("cache");
+  config.zenoh_config_path = args.getOption<std::string>("zenoh_config");
 
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {

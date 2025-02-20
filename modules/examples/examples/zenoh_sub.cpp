@@ -39,7 +39,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::log(heph::DEBUG, "opening session", "subscriber_name", topic_config.name);
 
-    auto session = heph::ipc::zenoh::createSession(std::move(session_config));
+    auto session = heph::ipc::zenoh::createSession(session_config);
 
     auto cb = [topic = topic_config.name](const heph::ipc::zenoh::MessageMetadata& metadata,
                                           const std::shared_ptr<heph::examples::types::Pose>& pose) {
