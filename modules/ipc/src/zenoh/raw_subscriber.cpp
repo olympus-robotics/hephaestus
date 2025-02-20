@@ -73,7 +73,7 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   , type_info_(std::move(type_info))
   , dedicated_callback_thread_(config.dedicated_callback_thread) {
   if (config.create_type_info_service) {
-    createTypeInfoService();
+    // createTypeInfoService();
   }
 
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
@@ -93,7 +93,7 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
       result != Z_OK,
       fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name, result));
 
-  if (config.create_liveliness_token) {
+  if (config.create_liveliness_token && false) {
     liveliness_token_ =
         std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
