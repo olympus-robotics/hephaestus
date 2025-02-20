@@ -48,7 +48,10 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
     config.id = std::move(session_id);
   }
 
-  config.zenoh_config_path = args.getOption<std::string>("zenoh_config");
+  auto zenoh_config_path = args.getOption<std::string>("zenoh_config");
+  if (!zenoh_config_path.empty()) {
+    config.zenoh_config_path.emplace(std::move(zenoh_config_path));
+  }
 
   auto mode = args.getOption<std::string>("mode");
   if (mode == "peer") {
