@@ -7,32 +7,34 @@ load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
-    name = "ws_bridge",
+    name = "websocket_bridge",
     srcs = glob([
         "src/*.cpp",
     ]),
     hdrs = glob([
-        "include/hephaestus/ws_bridge/*.h",
+        "include/hephaestus/websocket_bridge/*.h",
+        "include/hephaestus/ipc/*.h",
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/ipc",
         "//modules/cli",
         "//modules/concurrency",
         "//modules/containers",
+        "//modules/ipc",
         "//modules/serdes",
         "//modules/telemetry/telemetry",
+        "//modules/types_proto",
+        "//modules/types",
         "//modules/utils",
         "@fmt",
-        "@nlohmann_json//:json",
-        "@zenohc_builder//:zenoh-c",
-        "@zenohc_builder//:zenoh-cpp",
+        "@boringssl//:ssl",
+        "@reflect-cpp",
         "@websocketpp",
         "@ws_protocol",
-        "@openssl//:openssl",
+        "@zenohc_builder//:zenoh-c",
+        "@zenohc_builder//:zenoh-cpp",
     ],
-    linkopts = ["-lssl", "-lcrypto"],  # Add this line to link OpenSSL libraries
 )
 
 ############
@@ -40,10 +42,10 @@ heph_cc_library(
 ############
 
 heph_cc_binary(
-    name = "ws_bridge_app",
-    srcs = ["apps/ws_bridge_app.cpp"],
+    name = "app",
+    srcs = ["apps/bridge_app.cpp"],
     deps = [
-        ":ws_bridge",
+        ":websocket_bridge",
     ],
 )
 
@@ -52,13 +54,40 @@ heph_cc_binary(
 #########
 
 IPC_TEST_DEPS = [
-    ":ws_bridge",
+    ":websocket_bridge",
 ]
 
 heph_cc_test(
-    name = "tests",
+    name = "test_bridge_config",
     srcs = [
-        "tests/tests.cpp",
+        "tests/test_bridge_config.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "test_ipc_graph",
+    srcs = [
+        "tests/test_ipc_graph.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "test_bridge_state",
+    srcs = [
+        "tests/test_bridge_state.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "test_ipc_interface",
+    srcs = [
+        "tests/test_ipc_interface.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,

@@ -174,7 +174,7 @@ set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION}-cmake-3.22.1)
 add_cmake_dependency(
   NAME reflectcpp
   DEPENDS ${REFLECT_CPP_DEPENDS}
-  GIT_REPOSITORY https://github.com/voliro-systems/reflect-cpp.git
+  GIT_REPOSITORY https://github.com/olympus-robotics/reflect-cpp.git
   GIT_TAG ${REFLECT_CPP_TAG}
   CMAKE_ARGS -DREFLECTCPP_YAML=ON -DCMAKE_BUILD_TYPE=Debug
 )
@@ -253,6 +253,18 @@ add_cmake_dependency(
 #   GIT_TAG ${OPENSSL_TAG}
 #   CMAKE_ARGS -DOPENSSL_USE_STATIC_LIBS=TRUE -DOPENSSL_BUILD_TESTS=OFF
 # )
+
+# --------------------------------------------------------------------------------------------------
+# BoringSSL
+set(BORINGSSL_VERSION "0.20250114.0")
+set(BORINGSSL_TAG "chromium-stable")
+add_cmake_dependency(
+  NAME boringssl
+  VERSION ${BORINGSSL_VERSION}
+  GIT_REPOSITORY "https://boringssl.googlesource.com/boringssl"
+  GIT_TAG ${BORINGSSL_TAG}
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja
+)
 
 # --------------------------------------------------------------------------------------------------
 # websocketpp

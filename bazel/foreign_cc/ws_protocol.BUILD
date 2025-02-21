@@ -7,14 +7,12 @@ cc_library(
     srcs = glob([
         "cpp/foxglove-websocket/src/*.cpp",
     ]),
-    hdrs = glob([
-        "cpp/foxglove-websocket/include/**/*.hpp",
-    ]),
+    hdrs = glob(["cpp/foxglove-websocket/include/foxglove/websocket/*.hpp"]),
     includes = ["cpp/foxglove-websocket/include"],
     visibility = ["//visibility:public"],
     deps = [
+        "@nlohmann_json//:json",
+        "@boringssl//:ssl",
         "@websocketpp",
-        "@openssl//:openssl",
     ],
-    linkopts = ["-lssl", "-lcrypto"],  # Add this line to link OpenSSL libraries
 )
