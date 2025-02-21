@@ -4,8 +4,7 @@ ws_server_config:
   supportedEncodings:
     - protobuf
     - json
-  metadata:
-    {}
+  metadata: {}
   sendBufferLimitBytes: 10000000
   useTls: false
   certfile: ""
@@ -19,10 +18,10 @@ ws_server_address: 0.0.0.0
 zenoh_config:
   use_binary_name_as_session_id: false
   id: websocket_bridge
+  zenoh_config_path: null
   enable_shared_memory: false
-  mode: PEER
-  router: ""
-  cache_size: 0
+  mode: CLIENT
+  router: localhost:7447
   qos: false
   real_time: false
   protocol: ANY
@@ -30,9 +29,7 @@ zenoh_config:
   multicast_scouting_interface: auto
 ipc_topic_whitelist:
   - .*
-ipc_topic_blacklist:
-  []
+ipc_topic_blacklist: []
 ipc_service_whitelist:
   - .*
-ipc_service_blacklist:
-  []
+ipc_service_blacklist: []

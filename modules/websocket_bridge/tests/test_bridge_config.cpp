@@ -97,7 +97,6 @@ TEST(LoadBridgeConfigFromYamlTest, SaveDefaultAndLoad) {
   EXPECT_EQ(original_config.zenoh_config.enable_shared_memory, config.zenoh_config.enable_shared_memory);
   EXPECT_EQ(original_config.zenoh_config.mode, config.zenoh_config.mode);
   EXPECT_EQ(original_config.zenoh_config.router, config.zenoh_config.router);
-  EXPECT_EQ(original_config.zenoh_config.cache_size, config.zenoh_config.cache_size);
   EXPECT_EQ(original_config.zenoh_config.qos, config.zenoh_config.qos);
   EXPECT_EQ(original_config.zenoh_config.real_time, config.zenoh_config.real_time);
   EXPECT_EQ(original_config.zenoh_config.protocol, config.zenoh_config.protocol);

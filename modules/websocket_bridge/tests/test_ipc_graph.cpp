@@ -33,13 +33,18 @@ protected:
       sub_map;
 
   void startIpcGraph() {
-    config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
+    // Note: We deliberately are not using createLocalConfig, because we want those
+    // sessions to talk to each other. Within a single session, only the first publisher/subscriber/service to
+    // start and the last to die of the same topic/type will create a observable liveliness event. Across
+    // multiple sessions, every new liveliness event is tracked.
+    // So we want multicast scouting enabled.
+    config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::Config());
     graph = std::make_unique<IpcGraph>(config);
     graph->start();
   }
 
   void createTestPublisher(const std::string& topic) {
-    auto pub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
+    auto pub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::Config());
 
     const auto pub_topic = ipc::TopicConfig(topic);
     pub_map[pub_topic.name].emplace_back(
@@ -47,7 +52,7 @@ protected:
   }
 
   void createTestSubscriber(const std::string& topic) {
-    auto sub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::createLocalConfig());
+    auto sub_session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::Config());
 
     const auto sub_topic = ipc::TopicConfig(topic);
 
