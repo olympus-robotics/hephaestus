@@ -68,12 +68,28 @@ void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info
 
   switch (info.type) {
     case ipc::zenoh::EndpointType::SERVICE_SERVER:
-      addServiceServer(info);
-      graph_updated = true;
+      switch (info.status) {
+        case ipc::zenoh::EndpointInfo::Status::ALIVE:
+          addServiceServer(info);
+          graph_updated = true;
+          break;
+        case ipc::zenoh::EndpointInfo::Status::DROPPED:
+          removeServiceServer(info);
+          graph_updated = true;
+          break;
+      }
       break;
     case ipc::zenoh::EndpointType::SERVICE_CLIENT:
-      addServiceClient(info);
-      graph_updated = true;
+      switch (info.status) {
+        case ipc::zenoh::EndpointInfo::Status::ALIVE:
+          addServiceClient(info);
+          graph_updated = true;
+          break;
+        case ipc::zenoh::EndpointInfo::Status::DROPPED:
+          removeServiceClient(info);
+          graph_updated = true;
+          break;
+      }
       break;
     case ipc::zenoh::EndpointType::ACTION_SERVER:
       // TODO: Implement action server handling
@@ -382,17 +398,36 @@ void IpcGraphState::printIpcGraphState() const {
 }
 
 [[nodiscard]] bool IpcGraphState::checkConsistency() const {
-  // Simple checks: ensure that each published/subscribed topic has a type
-  for (const auto& [topic, _] : topic_to_publishers_map) {
+  // Check that every publisher has a corresponding topic to type entry
+  for (const auto& [topic, publishers] : topic_to_publishers_map) {
     if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
       return false;
     }
   }
-  for (const auto& [topic, _] : topic_to_subscribers_map) {
-    if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
+
+  // Check that every topic to type entry has at least one publisher
+  for (const auto& [topic, type] : topics_to_types_map) {
+    if (topic_to_publishers_map.find(topic) == topic_to_publishers_map.end() ||
+        topic_to_publishers_map.at(topic).empty()) {
       return false;
     }
   }
+
+  // Check that every service server has a corresponding service to types entry
+  for (const auto& [service, servers] : services_to_server_map) {
+    if (services_to_types_map.find(service) == services_to_types_map.end()) {
+      return false;
+    }
+  }
+
+  // Check that every service to types entry has at least one service server
+  for (const auto& [service, types] : services_to_types_map) {
+    if (services_to_server_map.find(service) == services_to_server_map.end() ||
+        services_to_server_map.at(service).empty()) {
+      return false;
+    }
+  }
+
   return true;
 }
 

@@ -100,6 +100,8 @@ public:
 
   void refreshConnectionGraph() const;
 
+  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+
 private:
   // Publisher / Subscriber tracking
   //////////////////////////////////
@@ -140,8 +142,6 @@ private:
   bool hasService(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
 private:
-  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
-
   mutable absl::Mutex mutex_;
 
   IpcGraphConfig config_;

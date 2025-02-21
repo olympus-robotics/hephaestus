@@ -72,6 +72,7 @@ bool isMatch(const std::string& topic, const std::vector<std::string>& whitelist
 WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
 
 void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path);
+
 std::string convertBridgeConfigToString(const WsBridgeConfig& config);
 
 }  // namespace heph::ws_bridge
