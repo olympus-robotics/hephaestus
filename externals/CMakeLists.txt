@@ -171,7 +171,7 @@ add_cmake_dependency(
   DEPENDS ${REFLECT_CPP_DEPENDS}
   GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
   GIT_TAG ${REFLECT_CPP_TAG}
-  CMAKE_ARGS -DREFLECTCPP_YAML=ON -DCMAKE_BUILD_TYPE=Debug
+  CMAKE_ARGS -DREFLECTCPP_YAML=ON -DREFLECTCPP_JSON=ON -DCMAKE_BUILD_TYPE=Debug
 )
 
 # --------------------------------------------------------------------------------------------------
