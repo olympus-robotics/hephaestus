@@ -45,7 +45,8 @@ using ServiceRemovalCallback = std::function<void(const std::string& /*service_n
 using ServiceDiscoveryCallback = std::function<void(const std::string& /*service_name*/,
                                                     const serdes::ServiceTypeInfo& /*service_type_info*/)>;
 
-using GraphUpdateCallback = std::function<void(IpcGraphState /*state*/)>;
+using GraphUpdateCallback =
+    std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, IpcGraphState /*state*/)>;
 
 /**
  * @struct IpcGraphConfig

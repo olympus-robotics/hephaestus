@@ -123,7 +123,7 @@ void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info
   if (graph_updated) {
     fmt::print("[IPC Graph] - Graph updated!\n");
     if (config_.graph_update_cb) {
-      config_.graph_update_cb(state_);
+      config_.graph_update_cb(info, state_);
     }
   }
 }
@@ -186,7 +186,8 @@ TopicToSessionIdMap IpcGraph::getTopicToPublishersMap() const {
 void IpcGraph::refreshConnectionGraph() const {
   absl::MutexLock lock(&mutex_);
   if (config_.graph_update_cb) {
-    config_.graph_update_cb(state_);
+    ipc::zenoh::EndpointInfo info;
+    config_.graph_update_cb(info, state_);
   }
 }
 

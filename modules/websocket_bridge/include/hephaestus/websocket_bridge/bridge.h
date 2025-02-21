@@ -82,7 +82,7 @@ private:
                                         const heph::serdes::ServiceTypeInfo& type_info);
   void callback__IpcGraph__ServiceDropped(const std::string& service);
 
-  void callback__IpcGraph__Updated(IpcGraphState ipc_graph_state);
+  void callback__IpcGraph__Updated(const ipc::zenoh::EndpointInfo& info, IpcGraphState ipc_graph_state);
 
   std::unique_ptr<IpcInterface> ipc_interface_;
 

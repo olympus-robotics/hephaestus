@@ -4,6 +4,8 @@
 
 #include "hephaestus/websocket_bridge/bridge.h"
 
+#include <fstream>
+
 namespace heph::ws_bridge {
 
 WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config)
@@ -26,7 +28,8 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
         .service_removal_cb =
             [this](const std::string& service) { this->callback__IpcGraph__ServiceDropped(service); },
 
-        .graph_update_cb = [this](IpcGraphState state) { this->callback__IpcGraph__Updated(state); },
+        .graph_update_cb = [this](const ipc::zenoh::EndpointInfo& info,
+                                  IpcGraphState state) { this->callback__IpcGraph__Updated(info, state); },
     });
   }
 
@@ -241,8 +244,19 @@ void WsBridge::callback__IpcGraph__ServiceDropped(const std::string& service) {
   fmt::println("[WS Bridge] - Service '{}' dropped successfully.", service);
 }
 
-void WsBridge::callback__IpcGraph__Updated(IpcGraphState ipc_graph_state) {
-  fmt::println("[WS Bridge] - Updating connection graph ...");
+void WsBridge::callback__IpcGraph__Updated(const ipc::zenoh::EndpointInfo& info,
+                                           IpcGraphState ipc_graph_state) {
+  // TODO(mfehr): Not pretty but it works... Consider refactoring.
+  std::string update_origin = "refresh";
+  if (!info.topic.empty()) {
+    const std::string endpoint_type = std::string(magic_enum::enum_name(info.type));
+    update_origin = info.type == ipc::zenoh::EndpointType::PUBLISHER ||
+                            info.type == ipc::zenoh::EndpointType::SUBSCRIBER ?
+                        "topic '" + info.topic + "' [" + endpoint_type + "]" :
+                        "service '" + info.topic + "' [" + endpoint_type + "]";
+  }
+
+  fmt::println("[WS Bridge] - Updating connection graph due to {}...", update_origin);
 
   ipc_graph_state.printIpcGraphState();
   CHECK(ipc_graph_state.checkConsistency());
@@ -258,35 +272,37 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState ipc_graph_state) {
   for (const auto& [topic_name, topic_type] : ipc_graph_state.topics_to_types_map) {
     (void)topic_type;
 
-    auto subscriber_names = ipc_graph_state.topic_to_subscribers_map.at(topic_name);
-    auto publisher_names = ipc_graph_state.topic_to_publishers_map.at(topic_name);
-
-    std::unordered_set<std::string> ws_server_pub_node_names;
-    for (const auto& publisher_name : publisher_names) {
-      ws_server_pub_node_names.insert(publisher_name);
+    auto publisher_names_it = ipc_graph_state.topic_to_publishers_map.find(topic_name);
+    if (publisher_names_it != ipc_graph_state.topic_to_publishers_map.end()) {
+      std::unordered_set<std::string> ws_server_pub_node_names;
+      for (const auto& publisher_name : publisher_names_it->second) {
+        ws_server_pub_node_names.insert(publisher_name);
+      }
+      topic_to_pub_node_map.emplace(topic_name, ws_server_pub_node_names);
     }
-    topic_to_pub_node_map.emplace(topic_name, ws_server_pub_node_names);
 
-    std::unordered_set<std::string> ws_server_sub_node_names;
-    for (const auto& subscriber_name : subscriber_names) {
-      ws_server_sub_node_names.insert(subscriber_name);
+    auto subscriber_names_it = ipc_graph_state.topic_to_subscribers_map.find(topic_name);
+    if (subscriber_names_it != ipc_graph_state.topic_to_subscribers_map.end()) {
+      std::unordered_set<std::string> ws_server_sub_node_names;
+      for (const auto& subscriber_name : subscriber_names_it->second) {
+        ws_server_sub_node_names.insert(subscriber_name);
+      }
+      topic_to_sub_node_map.emplace(topic_name, ws_server_sub_node_names);
     }
-    topic_to_sub_node_map.emplace(topic_name, ws_server_sub_node_names);
   }
 
   // Fill in services to nodes
   for (const auto& [service_name, service_types] : ipc_graph_state.services_to_types_map) {
     (void)service_types;
 
-    auto server_names = ipc_graph_state.services_to_server_map.at(service_name);
-    // Clients are not used by the foxglove graph, so we ignore them here.
-    // auto client_names = ipc_graph_state.services_to_client_map.at(service_name);
-
-    std::unordered_set<std::string> ws_server_node_names;
-    for (const auto& server_name : server_names) {
-      ws_server_node_names.insert(server_name);
+    auto server_names_it = ipc_graph_state.services_to_server_map.find(service_name);
+    if (server_names_it != ipc_graph_state.services_to_server_map.end()) {
+      std::unordered_set<std::string> ws_server_node_names;
+      for (const auto& server_name : server_names_it->second) {
+        ws_server_node_names.insert(server_name);
+      }
+      service_to_node_map.emplace(service_name, ws_server_node_names);
     }
-    service_to_node_map.emplace(service_name, ws_server_node_names);
   }
 
   fmt::println("[WS Bridge] - Updating connection graph with the following data:");

@@ -142,10 +142,12 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
     }
   };
 
-  config.graph_update_cb = [&](IpcGraphState state) {
-    EXPECT_TRUE(state.checkConsistency());
-    state.printIpcGraphState();
-    graph_updated = true;
+  config.graph_update_cb = [&](auto info, IpcGraphState state) {
+    if (info.topic == TEST_TOPIC) {
+      EXPECT_TRUE(state.checkConsistency());
+      state.printIpcGraphState();
+      graph_updated = true;
+    }
   };
 
   startIpcGraph();
@@ -303,10 +305,12 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
     }
   };
 
-  config.graph_update_cb = [&](IpcGraphState state) {
-    EXPECT_TRUE(state.checkConsistency());
-    state.printIpcGraphState();
-    graph_updated = true;
+  config.graph_update_cb = [&](auto info, IpcGraphState state) {
+    if (info.topic == TEST_SERVICE) {
+      EXPECT_TRUE(state.checkConsistency());
+      state.printIpcGraphState();
+      graph_updated = true;
+    }
   };
 
   auto reset = [&]() {
