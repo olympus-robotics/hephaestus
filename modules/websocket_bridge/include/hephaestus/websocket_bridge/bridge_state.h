@@ -21,7 +21,12 @@ class WsBridgeState {
 public:
   WsBridgeState() = default;
 
+  // Full State [protected by mutex_t2c_ & mutex_c2c_]
+public:
   std::string toString() const;
+  void printBridgeState() const;
+
+  [[nodiscard]] bool checkConsistency() const;
 
   // Topics <-> Channels [protected by mutex_t2c_]
 public:

@@ -35,6 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
         heph::log(heph::ERROR, "Config file not found", "path", config_file_path.string());
         return EXIT_FAILURE;
       }
+
       config = heph::ws_bridge::loadBridgeConfigFromYaml(config_file_path.string());
     } else {
       heph::log(heph::INFO, "Using default WebSocket Bridge configuration");

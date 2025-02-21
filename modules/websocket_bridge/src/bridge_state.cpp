@@ -183,4 +183,48 @@ std::string WsBridgeState::toString() const {
   return ss.str();
 }
 
+void WsBridgeState::printBridgeState() const {
+  fmt::println("{}", toString());
+}
+
+bool WsBridgeState::checkConsistency() const {
+  bool consistent = true;
+  {
+    absl::MutexLock lock(&mutex_t2c_);
+    // Check channel -> topic consistency
+    for (const auto& [channel, topic] : channel_to_topic_) {
+      auto it = topic_to_channel_.find(topic);
+      if (it == topic_to_channel_.end() || it->second != channel) {
+        heph::log(heph::ERROR,
+                  "[WS Bridge] Inconsistent state between channel_to_topic_ and topic_to_channel_.",
+                  "channel", std::to_string(channel), "topic", topic);
+        consistent = false;
+      }
+    }
+    // Check topic -> channel consistency
+    for (const auto& [topic, channel] : topic_to_channel_) {
+      auto it = channel_to_topic_.find(channel);
+      if (it == channel_to_topic_.end() || it->second != topic) {
+        heph::log(heph::ERROR,
+                  "[WS Bridge] Inconsistent state between topic_to_channel_ and channel_to_topic_.",
+                  "channel", std::to_string(channel), "topic", topic);
+        consistent = false;
+      }
+    }
+  }
+
+  {
+    absl::MutexLock lock(&mutex_c2c_);
+    // Check for channels with empty client sets
+    for (const auto& [channel, clients] : channel_to_client_map_) {
+      if (clients.empty()) {
+        heph::log(heph::WARN, "[WS Bridge] A channel in channel_to_client_map_ has an empty client set.",
+                  "channel", std::to_string(channel));
+      }
+    }
+  }
+
+  return consistent;
+}
+
 }  // namespace heph::ws_bridge

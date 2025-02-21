@@ -135,7 +135,7 @@ TEST_F(IpcGraphTest, GetMaps) {
 
   EXPECT_TRUE(topic_discovered);
 
-  auto topics_to_types = graph->getTopicsToTypesMap();
+  auto topics_to_types = graph->getTopicsToTypeMap();
   EXPECT_FALSE(topics_to_types.empty());
 
   auto topic_to_publishers = graph->getTopicToPublishersMap();
@@ -147,7 +147,7 @@ TEST_F(IpcGraphTest, GetMaps) {
   auto services_to_types = graph->getServicesToTypesMap();
   EXPECT_TRUE(services_to_types.empty());
 
-  auto services_to_nodes = graph->getServicesToNodesMap();
+  auto services_to_nodes = graph->getServicesToServersMap();
   EXPECT_TRUE(services_to_nodes.empty());
 }
 

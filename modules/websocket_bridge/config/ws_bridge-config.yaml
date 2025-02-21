@@ -9,23 +9,26 @@ ws_server_config:
   useTls: false
   certfile: ""
   keyfile: ""
-  sessionId: session_1739314019009157
+  sessionId: websocket_bridge
   useCompression: true
   clientTopicWhitelistPatterns:
     - .*
 ws_server_listening_port: 8765
+# Note on websocket bridge address:
+# - 0.0.0.0 -> bridge visible on all interfaces, e.g. for local LAN access
+# - localhost or 127.0.0.1 -> bridge only accessible from within this machine
 ws_server_address: 0.0.0.0
 zenoh_config:
   use_binary_name_as_session_id: false
-  id: websocket_bridge
-  zenoh_config_path: null
+  id: "websocket_bridge"
+  # zenoh_config_path: ""
   enable_shared_memory: false
-  mode: CLIENT
-  router: localhost:7447
+  mode: PEER
+  router: "127.0.01:7447"
   qos: false
   real_time: false
   protocol: ANY
-  multicast_scouting_enabled: false
+  multicast_scouting_enabled: true
   multicast_scouting_interface: auto
 ipc_topic_whitelist:
   - .*

@@ -49,9 +49,15 @@ void IpcGraph::stop() {
   fmt::println("[IPC Graph] - OFFLINE");
 }
 
-std::optional<heph::serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::string& topic) const {
+std::optional<serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::string& topic) const {
   absl::MutexLock lock(&mutex_);
   return topic_db_->getTypeInfo(topic);
+}
+
+[[nodiscard]] std::optional<serdes::ServiceTypeInfo>
+IpcGraph::getServiceTypeInfo(const std::string& service_name) const {
+  absl::MutexLock lock(&mutex_);
+  return topic_db_->getServiceTypeInfo(service_name);
 }
 
 void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
@@ -62,11 +68,13 @@ void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info
 
   switch (info.type) {
     case ipc::zenoh::EndpointType::SERVICE_SERVER:
+      addServiceServer(info);
+      graph_updated = true;
       break;
-      // TODO: Implement service server handling
     case ipc::zenoh::EndpointType::SERVICE_CLIENT:
+      addServiceClient(info);
+      graph_updated = true;
       break;
-      // TODO: Implement service client handling
     case ipc::zenoh::EndpointType::ACTION_SERVER:
       // TODO: Implement action server handling
       break;
@@ -129,27 +137,32 @@ std::string IpcGraph::getTopicListString() {
   return result.str();
 }
 
-TopicsToTypesMap IpcGraph::getTopicsToTypesMap() const {
+TopicsToTypeMap IpcGraph::getTopicsToTypeMap() const {
   absl::MutexLock lock(&mutex_);
   return state_.topics_to_types_map;
 }
 
-TopicsToTypesMap IpcGraph::getServicesToTypesMap() const {
+TopicsToServiceTypesMap IpcGraph::getServicesToTypesMap() const {
   absl::MutexLock lock(&mutex_);
   return state_.services_to_types_map;
 }
 
-TopicsToTypesMap IpcGraph::getServicesToNodesMap() const {
+TopicToSessionIdMap IpcGraph::getServicesToServersMap() const {
   absl::MutexLock lock(&mutex_);
-  return state_.services_to_nodes_map;
+  return state_.services_to_server_map;
 }
 
-TopicToNodesMap IpcGraph::getTopicToSubscribersMap() const {
+TopicToSessionIdMap IpcGraph::getServicesToClientsMap() const {
+  absl::MutexLock lock(&mutex_);
+  return state_.services_to_client_map;
+}
+
+TopicToSessionIdMap IpcGraph::getTopicToSubscribersMap() const {
   absl::MutexLock lock(&mutex_);
   return state_.topic_to_subscribers_map;
 }
 
-TopicToNodesMap IpcGraph::getTopicToPublishersMap() const {
+TopicToSessionIdMap IpcGraph::getTopicToPublishersMap() const {
   absl::MutexLock lock(&mutex_);
   return state_.topic_to_publishers_map;
 }
@@ -162,7 +175,11 @@ void IpcGraph::refreshConnectionGraph() const {
 }
 
 void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
+  // A publisher means this topic is actually offered by someone and should be tracked.
   if (!addTopic(info.topic)) {
+    // TODO(mfehr): This can happen if type retrieval fails. We might want to consider retrying later, since
+    // we will not get another liveliness event for the same publisher and currently will never re-register
+    // this topic (unless the publisher is restarted or another publisher is added).
     return;
   }
 
@@ -172,6 +189,8 @@ void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
 void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
   auto& publishers = state_.topic_to_publishers_map[info.topic];
   publishers.erase(std::remove(publishers.begin(), publishers.end(), info.session_id), publishers.end());
+
+  // If the last publisher is removed, remove the topic altogether.
   if (publishers.empty()) {
     state_.topic_to_publishers_map.erase(info.topic);
     removeTopic(info.topic);
@@ -179,19 +198,46 @@ void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
 }
 
 bool IpcGraph::hasPublisher(const std::string& topic) const {
+  // Any publisher means the topic is offered.
   return state_.topic_to_publishers_map.find(topic) != state_.topic_to_publishers_map.end();
 }
 
 void IpcGraph::addSubscriber(const ipc::zenoh::EndpointInfo& info) {
+  // We are not tracking topics based on subscribers, but solely on publishers.
+  // Therefore, we do not need to add the topic here.
+
   state_.topic_to_subscribers_map[info.topic].push_back(info.session_id);
 }
 
 void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
   auto& subscribers = state_.topic_to_subscribers_map[info.topic];
   subscribers.erase(std::remove(subscribers.begin(), subscribers.end(), info.session_id), subscribers.end());
+
+  // If the last subscriber is removed, clean up, but DO NOT remove the topic.
   if (subscribers.empty()) {
     state_.topic_to_subscribers_map.erase(info.topic);
   }
+}
+
+bool IpcGraph::addTopic(const std::string& topic) {
+  if (hasTopic(topic)) {
+    heph::log(heph::WARN, "[IPC Graph] - topic is already known", "topic", topic);
+    return true;
+  }
+
+  auto type_info = topic_db_->getTypeInfo(topic);
+  if (!type_info.has_value()) {
+    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic", "topic", topic);
+    return false;
+  }
+
+  state_.topics_to_types_map[topic] = type_info->name;
+
+  if (config_.topic_discovery_cb) {
+    config_.topic_discovery_cb(topic, type_info.value());
+  }
+
+  return true;
 }
 
 void IpcGraph::removeTopic(const std::string& topic) {
@@ -208,24 +254,145 @@ bool IpcGraph::hasTopic(const std::string& topic_name) const {
   return state_.topics_to_types_map.find(topic_name) != state_.topics_to_types_map.end();
 }
 
-bool IpcGraph::addTopic(const std::string& topic) {
-  if (hasTopic(topic)) {
-    heph::log(heph::ERROR, "[IPC Graph] - Trying to add a topic twice", "topic", topic);
-    return true;
-  }
+bool IpcGraph::addServiceServer(const ipc::zenoh::EndpointInfo& info) {
+  // A server means this service is actually offered by someone and needs tracking.
+  if (!addService(info.topic)) {
+    // TODO(mfehr): This can happen if type retrieval fails. We might want to consider retrying later, since
+    // we will not get another liveliness event for the same service and currently will never re-register this
+    // service (unless the server is restarted or another server is added).
 
-  auto type_info = topic_db_->getTypeInfo(topic);
-  if (!type_info.has_value()) {
-    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic", "topic", topic);
+    // Note: multiple identical service servers should not exists, but we do not enforce this here.
     return false;
   }
 
-  state_.topics_to_types_map[topic] = type_info->name;
+  state_.services_to_server_map[info.topic].push_back(info.session_id);
+  return true;
+}
 
-  if (config_.topic_discovery_cb) {
-    config_.topic_discovery_cb(topic, type_info.value());
+void IpcGraph::removeServiceServer(const ipc::zenoh::EndpointInfo& info) {
+  auto& servers = state_.services_to_server_map[info.topic];
+  servers.erase(std::remove(servers.begin(), servers.end(), info.session_id), servers.end());
+
+  // If no more servers are available, remove the service altogether.
+  if (servers.empty()) {
+    state_.services_to_server_map.erase(info.topic);
+    removeService(info.topic);
+  }
+}
+
+bool IpcGraph::hasServiceServer(const std::string& service_name) const {
+  // Any server means the service is offered.
+  // Note: multiple identical service servers should not exists, but we do not enforce this here.
+  return state_.services_to_server_map.find(service_name) != state_.services_to_server_map.end();
+}
+
+bool IpcGraph::addServiceClient(const ipc::zenoh::EndpointInfo& info) {
+  // We are not tracking services based on clients, but solely on servers.
+  // Therefore, we do not need to add the service here.
+
+  state_.services_to_client_map[info.topic].push_back(info.session_id);
+  return true;
+}
+
+void IpcGraph::removeServiceClient(const ipc::zenoh::EndpointInfo& info) {
+  auto& clients = state_.services_to_client_map[info.topic];
+  clients.erase(std::remove(clients.begin(), clients.end(), info.session_id), clients.end());
+
+  // If no more clients are available, clean up, but DO NOT remove the service.
+  if (clients.empty()) {
+    state_.services_to_client_map.erase(info.topic);
+  }
+}
+
+bool IpcGraph::addService(const std::string& service_name) {
+  if (hasService(service_name)) {
+    heph::log(heph::WARN, "[IPC Graph] - service is already known", "service", service_name);
+    return true;
   }
 
+  auto service_type_info = topic_db_->getServiceTypeInfo(service_name);
+  if (!service_type_info.has_value()) {
+    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for service", "service", service_name);
+    return false;
+  }
+
+  const auto& request_type_name = service_type_info->request.name;
+  const auto& reply_type_name = service_type_info->reply.name;
+
+  state_.services_to_types_map[service_name] = std::make_pair(request_type_name, reply_type_name);
+
+  if (config_.service_discovery_cb) {
+    config_.service_discovery_cb(service_name, service_type_info.value());
+  }
+
+  return true;
+}
+
+void IpcGraph::removeService(const std::string& service_name) {
+  state_.services_to_types_map.erase(service_name);
+  state_.services_to_server_map.erase(service_name);
+  state_.services_to_client_map.erase(service_name);
+
+  if (config_.service_removal_cb) {
+    config_.service_removal_cb(service_name);
+  }
+}
+
+bool IpcGraph::hasService(const std::string& service_name) const {
+  return state_.services_to_types_map.find(service_name) != state_.services_to_types_map.end();
+}
+
+void IpcGraphState::printIpcGraphState() const {
+  fmt::println("[IpcGraphState] Topics to Types:");
+  for (const auto& [topic, type] : topics_to_types_map) {
+    fmt::println("  Topic: {} -> Type: {}", topic, type);
+  }
+
+  fmt::println("[IpcGraphState] Services to Types:");
+  for (const auto& [srv, srv_types] : services_to_types_map) {
+    fmt::println("  Service: {} -> Types: {}/{}", srv, srv_types.first, srv_types.second);
+  }
+
+  fmt::println("[IpcGraphState] Services to Nodes:");
+  for (const auto& [srv, nodes] : services_to_server_map) {
+    fmt::print("  Service: {} -> Nodes: ", srv);
+    for (const auto& node : nodes) {
+      fmt::print("{} ", node);
+    }
+    fmt::print("\n");
+  }
+
+  fmt::println("[IpcGraphState] Topic to Publishers:");
+  for (const auto& [topic, publishers] : topic_to_publishers_map) {
+    fmt::print("  {} -> ", topic);
+    for (const auto& publisher : publishers) {
+      fmt::print("{} ", publisher);
+    }
+    fmt::print("\n");
+  }
+
+  fmt::println("[IpcGraphState] Topic to Subscribers:");
+  for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
+    fmt::print("  {} -> ", topic);
+    for (const auto& subscriber : subscribers) {
+      fmt::print("{} ", subscriber);
+    }
+    fmt::print("\n");
+  }
+}
+
+[[nodiscard]] bool IpcGraphState::checkConsistency() const {
+  // Simple checks: ensure that each published/subscribed topic has a type
+  for (const auto& [topic, _] : topic_to_publishers_map) {
+    if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
+      return false;
+    }
+  }
+  for (const auto& [topic, _] : topic_to_subscribers_map) {
+    if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
+      return false;
+    }
+  }
   return true;
 }
 

@@ -52,30 +52,14 @@ struct WsBridgeConfig {
   /////////
   // IPC //
   /////////
-  heph::ipc::zenoh::Config zenoh_config = {
-    .use_binary_name_as_session_id = false,
-    .id = "websocket_bridge",  // Non-standard value
-    .zenoh_config_path = std::nullopt,
-    .enable_shared_memory = false,  //! NOTE: With shared-memory enabled, the publisher still uses the
-                                    //! network transport layer to notify subscribers of the shared-memory
-                                    //! segment to read. Therefore, for very small messages, shared -
-                                    //! memory transport could be less efficient than using the default
-                                    //! network transport to directly carry the payload.
-    .mode = heph::ipc::zenoh::Mode::CLIENT,  // Non-standard value
-    .router = "localhost:7447",              // Non-standard value
-    .qos = false,
-    .real_time = false,
-    .protocol = heph::ipc::zenoh::Protocol::ANY,
-    .multicast_scouting_enabled = false,  // Non-standard value
-    .multicast_scouting_interface = "auto",
-  };
+  heph::ipc::zenoh::Config zenoh_config;  // Default constructor is called here
 
   std::vector<std::string> ipc_topic_whitelist = { ".*" };
   std::vector<std::string> ipc_topic_blacklist = {};
 
   std::vector<std::string> ipc_service_whitelist = { ".*" };
   std::vector<std::string> ipc_service_blacklist = {};
-};
+};;
 ;
 
 bool shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config);
@@ -88,5 +72,6 @@ bool isMatch(const std::string& topic, const std::vector<std::string>& whitelist
 WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
 
 void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path);
+std::string convertBridgeConfigToString(const WsBridgeConfig& config);
 
 }  // namespace heph::ws_bridge

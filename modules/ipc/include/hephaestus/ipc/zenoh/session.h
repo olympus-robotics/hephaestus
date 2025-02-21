@@ -78,4 +78,6 @@ using SessionPtr = std::shared_ptr<Session>;
 [[nodiscard]] auto createSession(const Config& config) -> SessionPtr;
 [[nodiscard]] auto createSession(ZenohConfig config) -> SessionPtr;
 
+std::string configToSummaryString(const Config& config);
+
 }  // namespace heph::ipc::zenoh

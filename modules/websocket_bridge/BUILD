@@ -46,6 +46,7 @@ heph_cc_binary(
     srcs = ["apps/bridge_app.cpp"],
     deps = [
         ":websocket_bridge",
+        "@bazel_tools//tools/cpp/runfiles",
     ],
 )
 

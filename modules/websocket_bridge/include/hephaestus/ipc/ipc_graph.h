@@ -18,20 +18,33 @@
 
 namespace heph::ws_bridge {
 
-using TopicsToTypesMap = std::unordered_map<std::string, std::string>;
-using TopicToNodesMap = std::unordered_map<std::string, std::vector<std::string>>;
+using TopicsToTypeMap = std::unordered_map<std::string, std::string>;
+using TopicsToServiceTypesMap = std::unordered_map<std::string, std::pair<std::string, std::string>>;
+using TopicToSessionIdMap = std::unordered_map<std::string, std::vector<std::string>>;
 
 struct IpcGraphState {
-  TopicsToTypesMap topics_to_types_map;
-  TopicsToTypesMap services_to_types_map;
-  TopicsToTypesMap services_to_nodes_map;
-  TopicToNodesMap topic_to_publishers_map;
-  TopicToNodesMap topic_to_subscribers_map;
+  TopicsToTypeMap topics_to_types_map;
+
+  TopicToSessionIdMap topic_to_publishers_map;
+  TopicToSessionIdMap topic_to_subscribers_map;
+
+  TopicsToServiceTypesMap services_to_types_map;
+
+  TopicToSessionIdMap services_to_server_map;
+  TopicToSessionIdMap services_to_client_map;
+
+  void printIpcGraphState() const;
+  [[nodiscard]] bool checkConsistency() const;
 };
 
 using TopicRemovalCallback = std::function<void(const std::string& /*topic*/)>;
 using TopicDiscoveryCallback =
-    std::function<void(const std::string& /*topic*/, const heph::serdes::TypeInfo& /*type_info*/)>;
+    std::function<void(const std::string& /*topic*/, const serdes::TypeInfo& /*type_info*/)>;
+
+using ServiceRemovalCallback = std::function<void(const std::string& /*service_name*/)>;
+using ServiceDiscoveryCallback = std::function<void(const std::string& /*service_name*/,
+                                                    const serdes::ServiceTypeInfo& /*service_type_info*/)>;
+
 using GraphUpdateCallback = std::function<void(IpcGraphState /*state*/)>;
 
 /**
@@ -51,6 +64,9 @@ struct IpcGraphConfig {
   TopicDiscoveryCallback topic_discovery_cb;
   TopicRemovalCallback topic_removal_cb;
 
+  ServiceDiscoveryCallback service_discovery_cb;
+  ServiceRemovalCallback service_removal_cb;
+
   GraphUpdateCallback graph_update_cb;
 };
 
@@ -67,21 +83,27 @@ public:
   void start();
   void stop();
 
-  [[nodiscard]] std::optional<heph::serdes::TypeInfo> getTopicTypeInfo(const std::string& topic) const;
+  [[nodiscard]] std::optional<serdes::TypeInfo> getTopicTypeInfo(const std::string& topic) const;
+  [[nodiscard]] std::optional<serdes::ServiceTypeInfo>
+  getServiceTypeInfo(const std::string& service_name) const;
 
   // Create a human readable, multi-line, console-optimized list of topics and
   // their types as they are stored in  topics_to_types_map_.
   std::string getTopicListString();
 
-  TopicsToTypesMap getTopicsToTypesMap() const;
-  TopicsToTypesMap getServicesToTypesMap() const;
-  TopicsToTypesMap getServicesToNodesMap() const;
-  TopicToNodesMap getTopicToSubscribersMap() const;
-  TopicToNodesMap getTopicToPublishersMap() const;
+  TopicsToTypeMap getTopicsToTypeMap() const;
+  TopicsToServiceTypesMap getServicesToTypesMap() const;
+  TopicToSessionIdMap getServicesToServersMap() const;
+  TopicToSessionIdMap getServicesToClientsMap() const;
+  TopicToSessionIdMap getTopicToSubscribersMap() const;
+  TopicToSessionIdMap getTopicToPublishersMap() const;
 
   void refreshConnectionGraph() const;
 
 private:
+  // Publisher / Subscriber tracking
+  //////////////////////////////////
+
   void addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removePublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   bool hasPublisher(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -89,9 +111,33 @@ private:
   void addSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  bool addTopic(const std::string& topic) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  void removeTopic(const std::string& topic) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  // Topic Tracking
+  /////////////////
+  // The functions below are used to track topics and their types.
+  // Only publishers contribute to this tracking, subscribers are ignored.
+
+  bool addTopic(const std::string& topic_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeTopic(const std::string& topic_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   bool hasTopic(const std::string& topic_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // Service Server / Client tracking
+  ///////////////////////////////////
+
+  bool addServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool hasServiceServer(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  bool addServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // Services Tracking
+  ////////////////////
+  // The functions below are used to track services and their types.
+  // Only service servers contribute to this tracking, clients are ignored.
+
+  bool addService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void removeService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool hasService(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
 private:
   void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);

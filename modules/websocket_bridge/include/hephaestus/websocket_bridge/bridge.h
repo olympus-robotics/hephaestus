@@ -48,8 +48,6 @@ private:
 
   WsBridgeState state_;
 
-  void printBridgeState() const;
-
   ////////////////////////////////
   // Websocket Server Interface //
   ////////////////////////////////
@@ -79,6 +77,11 @@ private:
   // Callbacks triggered by the IPC Graph
   void callback__IpcGraph__TopicFound(const std::string& topic, const heph::serdes::TypeInfo& type_info);
   void callback__IpcGraph__TopicDropped(const std::string& topic);
+
+  void callback__IpcGraph__ServiceFound(const std::string& service,
+                                        const heph::serdes::ServiceTypeInfo& type_info);
+  void callback__IpcGraph__ServiceDropped(const std::string& service);
+
   void callback__IpcGraph__Updated(IpcGraphState ipc_graph_state);
 
   std::unique_ptr<IpcInterface> ipc_interface_;

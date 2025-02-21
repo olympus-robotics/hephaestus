@@ -18,6 +18,14 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
             },
         .topic_removal_cb =
             [this](const std::string& topic) { this->callback__IpcGraph__TopicDropped(topic); },
+
+        .service_discovery_cb =
+            [this](const std::string& service_name, const serdes::ServiceTypeInfo& service_type_info) {
+              this->callback__IpcGraph__ServiceFound(service_name, service_type_info);
+            },
+        .service_removal_cb =
+            [this](const std::string& service) { this->callback__IpcGraph__ServiceDropped(service); },
+
         .graph_update_cb = [this](IpcGraphState state) { this->callback__IpcGraph__Updated(state); },
     });
   }
@@ -86,10 +94,6 @@ WsBridge::~WsBridge() {
   // Destructor implementation
 }
 
-void WsBridge::printBridgeState() const {
-  fmt::print("{}\n", state_.toString());
-}
-
 /////////////////////////
 // WsBridge Life-cycle //
 /////////////////////////
@@ -98,10 +102,16 @@ void WsBridge::start() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
-  fmt::println("[WS Bridge] - Starting...");
+  fmt::println("[WS Bridge] - Config:\n"
+               "==========================================================\n"
+               "{}\n"
+               "==========================================================",
+               convertBridgeConfigToString(config_));
+
+  fmt::println("[WS Bridge] - Starting ...");
 
   {
-    fmt::println("[WS Server] - Starting...");
+    fmt::println("[WS Server] - Starting ...");
     ws_server_->start(config_.ws_server_address, config_.ws_server_listening_port);
 
     // This is a sanity check I found in the ros-foxglove bridge, so I assume under certain conditions
@@ -123,16 +133,16 @@ void WsBridge::stop() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
-  fmt::println("[WS Bridge] - Stopping...");
+  fmt::println("[WS Bridge] - Stopping ...");
 
   ipc_interface_->stop();
 
   ipc_graph_->stop();
 
   {
-    fmt::println("[WS Server] - Stopping...");
+    fmt::println("[WS Server] - Stopping ...");
     ws_server_->stop();
-    fmt::println("[WS Server] - OFFLINE...");
+    fmt::println("[WS Server] - OFFLINE ...");
   }
 
   fmt::println("[WS Bridge] - OFFLINE");
@@ -145,9 +155,10 @@ void WsBridge::stop() {
 void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
                                               const heph::serdes::TypeInfo& type_info) {
   CHECK(ipc_graph_);
+  fmt::println("[WS Bridge] - New topic '{}' [{}] will be added  ...", topic, type_info.name);
 
   if (state_.hasIpcTopicMapping(topic)) {
-    printBridgeState();
+    state_.printBridgeState();
     heph::log(heph::WARN,
               fmt::format("[WS Bridge] - Topic is already advertized! There are likely multiple publishers!",
                           "topic", topic));
@@ -180,12 +191,13 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
   const auto new_channel_id = new_channel_ids.front();
 
   state_.addWsChannelToIpcTopicMapping(new_channel_id, topic);
+  fmt::println("[WS Bridge] - New topic '{}' added successfully.", topic);
 }
 
 void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
-  (void)topic;
+  fmt::println("[WS Bridge] - Topic '{}' will be dropped  ...", topic);
   if (!state_.hasIpcTopicMapping(topic)) {
-    printBridgeState();
+    state_.printBridgeState();
     heph::log(
         heph::WARN,
         fmt::format("[WS Bridge] - Topic is already unadvertized! There are likely multiple publishers!",
@@ -210,18 +222,44 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
 
     ws_server_->removeChannels({ channel_id });
   }
+  fmt::println("[WS Bridge] - Topic '{}' dropped successfully.", topic);
 }
 
-void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
-  printBridgeState();
+void WsBridge::callback__IpcGraph__ServiceFound(const std::string& service,
+                                                const heph::serdes::ServiceTypeInfo& type_info) {
+  fmt::println("[WS Bridge] - Service '{}' [{}/{}] will be added  ...", service, type_info.request.name,
+               type_info.reply.name);
+
+  // TODO(mfehr): Implement this
+  fmt::println("[WS Bridge] - Service '{}' was added successfully.", service);
+}
+
+void WsBridge::callback__IpcGraph__ServiceDropped(const std::string& service) {
+  fmt::println("[WS Bridge] - Service '{}' will be dropped  ...", service);
+
+  // TODO(mfehr): Implement this
+  fmt::println("[WS Bridge] - Service '{}' dropped successfully.", service);
+}
+
+void WsBridge::callback__IpcGraph__Updated(IpcGraphState ipc_graph_state) {
+  fmt::println("[WS Bridge] - Updating connection graph ...");
+
+  ipc_graph_state.printIpcGraphState();
+  CHECK(ipc_graph_state.checkConsistency());
+
+  state_.printBridgeState();
+  CHECK(state_.checkConsistency());
 
   foxglove::MapOfSets topic_to_pub_node_map;
   foxglove::MapOfSets topic_to_sub_node_map;
-  for (const auto& [topic_name, topic_type] : state.topics_to_types_map) {
+  foxglove::MapOfSets service_to_node_map;
+
+  // Fill in topics to publishers and subscribers
+  for (const auto& [topic_name, topic_type] : ipc_graph_state.topics_to_types_map) {
     (void)topic_type;
 
-    auto subscriber_names = state.topic_to_subscribers_map.at(topic_name);
-    auto publisher_names = state.topic_to_publishers_map.at(topic_name);
+    auto subscriber_names = ipc_graph_state.topic_to_subscribers_map.at(topic_name);
+    auto publisher_names = ipc_graph_state.topic_to_publishers_map.at(topic_name);
 
     std::unordered_set<std::string> ws_server_pub_node_names;
     for (const auto& publisher_name : publisher_names) {
@@ -236,12 +274,49 @@ void WsBridge::callback__IpcGraph__Updated(IpcGraphState state) {
     topic_to_sub_node_map.emplace(topic_name, ws_server_sub_node_names);
   }
 
-  foxglove::MapOfSets service_to_node_map;
-  for (const auto& [service_name, node_name] : state.services_to_nodes_map) {
-    service_to_node_map[service_name].insert(node_name);
+  // Fill in services to nodes
+  for (const auto& [service_name, service_types] : ipc_graph_state.services_to_types_map) {
+    (void)service_types;
+
+    auto server_names = ipc_graph_state.services_to_server_map.at(service_name);
+    // Clients are not used by the foxglove graph, so we ignore them here.
+    // auto client_names = ipc_graph_state.services_to_client_map.at(service_name);
+
+    std::unordered_set<std::string> ws_server_node_names;
+    for (const auto& server_name : server_names) {
+      ws_server_node_names.insert(server_name);
+    }
+    service_to_node_map.emplace(service_name, ws_server_node_names);
+  }
+
+  fmt::println("[WS Bridge] - Updating connection graph with the following data:");
+  fmt::println("Topics to Publishers Map:");
+  for (const auto& [topic, publishers] : topic_to_pub_node_map) {
+    fmt::println("  Topic: {}", topic);
+    for (const auto& publisher : publishers) {
+      fmt::println("    Publisher: {}", publisher);
+    }
+  }
+
+  fmt::println("Topics to Subscribers Map:");
+  for (const auto& [topic, subscribers] : topic_to_sub_node_map) {
+    fmt::println("  Topic: {}", topic);
+    for (const auto& subscriber : subscribers) {
+      fmt::println("    Subscriber: {}", subscriber);
+    }
+  }
+
+  fmt::println("Services to Nodes Map:");
+  for (const auto& [service, nodes] : service_to_node_map) {
+    fmt::println("  Service: {}", service);
+    for (const auto& node : nodes) {
+      fmt::println("    Node: {}", node);
+    }
   }
 
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
+
+  fmt::println("[WS Bridge] - Connection graph updated successfully.");
 }
 
 /////////////////////////////
@@ -309,11 +384,15 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
+  fmt::println("[WS Bridge] - Client '{}' subscribes to channel [{}] ...", client_name, channel_id);
+
   state_.addWsChannelToClientMapping(channel_id, client_handle, client_name);
 
   const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
 
   if (ipc_interface_->hasSubscriber(topic)) {
+    fmt::println("[WS Bridge] - Client '{}' subcribed to channel [{}] successfully [IPC SUB EXISTS].",
+                 client_name, channel_id);
     return;
   }
 
@@ -334,7 +413,10 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
                                   this->callback__Ipc__MessageReceived(metadata, data, type_info);
                                 });
 
-  printBridgeState();
+  fmt::println("[WS Bridge] - Client '{}' subcribed to channel [{}] successfully. [IPC SUB ADDED]",
+               client_name, channel_id);
+
+  state_.printBridgeState();
 }
 
 void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
@@ -344,38 +426,66 @@ void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
+  fmt::println("[WS Bridge] - Client '{}' unsubscribes from channel [{}] ...", client_name, channel_id);
+
   state_.removeWsChannelToClientMapping(channel_id, client_handle);
 
   const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
   if (!state_.hasWsChannelWithClients(channel_id)) {
     if (ipc_interface_->hasSubscriber(topic)) {
       ipc_interface_->removeSubscriber(topic);
+      fmt::println("[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB REMOVED]",
+                   client_name, channel_id);
+    } else {
+      fmt::println(
+          "[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB NOT FOUND]",
+          client_name, channel_id);
     }
+  } else {
+    fmt::println(
+        "[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB STILL NEEDED]",
+        client_name, channel_id);
   }
 
-  printBridgeState();
+  state_.printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
                                                    WsServerClientHandle client_handle) {
   (void)advertisement;
   (void)client_handle;
+
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
+  fmt::println("[WS Bridge] - Client '{}' advertises channel/topic [{}]/'{}' ...", client_name,
+               advertisement.channelId, advertisement.topic);
+
   // Handle the client advertisement logic here
   // Example:
   // LOG(INFO) << "Client advertised: " << advertisement.topic;
 
-  printBridgeState();
+  fmt::println("[WS Bridge] - Client '{}' advertised channel/topic [{}]/'{}' successfully.", client_name,
+               advertisement.channelId, advertisement.topic);
+
+  state_.printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_id,
                                                      WsServerClientHandle client_handle) {
   (void)channel_id;
   (void)client_handle;
+
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
+  fmt::println("[WS Bridge] - Client '{}' unadvertises channel [{}] ...", client_name, channel_id);
+
   // Handle the client unadvertisement logic here
   // Example:
   // LOG(INFO) << "Client unadvertised channel: " << channel_id;
 
-  printBridgeState();
+  fmt::println("[WS Bridge] - Client '{}' unadvertised channel [{}] successfully.", client_name, channel_id);
+
+  state_.printBridgeState();
 }
 
 void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
@@ -391,17 +501,29 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
                                                   WsServerClientHandle client_handle) {
   (void)request;
   (void)client_handle;
+
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
+  fmt::println("[WS Bridge] - Client '{}' is sending a service request with service id [{}] ...", client_name,
+               request.serviceId);
+
   // Handle the service request logic here
   // Example:
   // LOG(INFO) << "Service request received: " << request.service_id;
+
+  fmt::println("[WS Bridge] - Client '{}' has sent a service request with service id [{}] successfully.",
+               client_name, request.serviceId);
 }
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
   CHECK(ipc_graph_);
 
   if (subscribe) {
-    heph::log(heph::INFO, "A client subscribed to the connection graph!");
+    fmt::println("[WS Bridge] - A client is subscribing to the connection graph ...");
     ipc_graph_->refreshConnectionGraph();
+    fmt::println("[WS Bridge] - A client has subscribed to the connection graph successfully.");
+  } else {
+    fmt::println("[WS Bridge] - A client has unsubscribed from the connection graph.");
   }
 }
 

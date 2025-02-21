@@ -58,7 +58,7 @@ WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path) {
 }
 
 void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path) {
-  auto yaml_str = rfl::yaml::write(config);
+  auto yaml_str = convertBridgeConfigToString(config);
   std::ofstream out(path);
   if (!out.is_open()) {
     throw std::runtime_error("Failed to open file for writing: " + path);
@@ -93,6 +93,10 @@ bool shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& co
 
 bool shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) {
   return isMatch(topic, config.ws_server_config.clientTopicWhitelistPatterns);
+}
+
+std::string convertBridgeConfigToString(const WsBridgeConfig& config) {
+  return rfl::yaml::write(config);
 }
 
 }  // namespace heph::ws_bridge
