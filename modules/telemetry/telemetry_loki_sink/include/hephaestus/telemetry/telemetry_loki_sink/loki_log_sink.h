@@ -4,7 +4,11 @@
 
 #pragma once
 
-#include <cpr/cpr.h>
+#include <cstdint>
+#include <map>
+#include <string>
+
+#include <cpr/session.h>
 
 #include "hephaestus/telemetry/log_sink.h"
 

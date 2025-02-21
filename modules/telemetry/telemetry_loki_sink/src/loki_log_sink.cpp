@@ -4,8 +4,22 @@
 
 #include "hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h"
 
+#include <chrono>
+#include <map>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include <cpr/cprtypes.h>
+#include <cpr/session.h>
+#include <cpr/status_codes.h>
+#include <fmt/base.h>
 #include <fmt/format.h>
-#include <rfl/json.hpp>  // NOLINT(misc-include-cleaner)
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
+#include <magic_enum.hpp>
+#include <rfl/json/write.hpp>
 #include <unistd.h>
 
 #include "hephaestus/telemetry/log_sink.h"
