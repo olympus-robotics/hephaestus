@@ -2,7 +2,10 @@
 
 ## Overview
 
-This module bridges Zenoh-based communication over a WebSocket interface, enabling real-time data exchange between distributed systems and browser-based clients. It supports secure connections and leverages the underlying Zenoh foundation for efficient message routing and management.
+This module offers a websocket interface to hephaestus, enabling foxglove studio or a similar websocket-capable client to connect to hephaestus nodes and:
+  - Publish and subscribe to hephaestus topics
+  - Trigger hephaestus service calls
+  - Monitor the hephaestus node graph (Foxglove has a built in node graph visualizer)
 
 ## Build
 
@@ -22,4 +25,14 @@ bazel run //modules/websocket_bridge::app -- -c <path to config file>
 
 ## Detailed description
 
-Provide more details on the functionality, API usage, etc
+
+
+## TODOs
+
+ - [ ] Fix deadlock in IPCGraph when shutting down
+ - [ ] Add support for client-side service calls
+ - [ ] Add support for client-side topic publishing
+ - [ ] Test advanced websocket interface functions:
+    - [ ] TLS
+    - [ ] Whitelisting/blacklisting
+    - [ ] Compression
