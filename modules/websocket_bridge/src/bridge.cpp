@@ -4,8 +4,6 @@
 
 #include "hephaestus/websocket_bridge/bridge.h"
 
-#include <fstream>
-
 namespace heph::ws_bridge {
 
 WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config)
@@ -194,7 +192,7 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
   const auto new_channel_id = new_channel_ids.front();
 
   state_.addWsChannelToIpcTopicMapping(new_channel_id, topic);
-  fmt::println("[WS Bridge] - New topic '{}' added successfully.", topic);
+  fmt::println("[WS Bridge] - New topic '{}' [{}] added successfully.", topic, new_channel_id);
 }
 
 void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
@@ -228,20 +226,62 @@ void WsBridge::callback__IpcGraph__TopicDropped(const std::string& topic) {
   fmt::println("[WS Bridge] - Topic '{}' dropped successfully.", topic);
 }
 
-void WsBridge::callback__IpcGraph__ServiceFound(const std::string& service,
+void WsBridge::callback__IpcGraph__ServiceFound(const std::string& service_name,
                                                 const heph::serdes::ServiceTypeInfo& type_info) {
-  fmt::println("[WS Bridge] - Service '{}' [{}/{}] will be added  ...", service, type_info.request.name,
+  fmt::println("[WS Bridge] - Service '{}' [{}/{}] will be added  ...", service_name, type_info.request.name,
                type_info.reply.name);
 
-  // TODO(mfehr): Implement this
-  fmt::println("[WS Bridge] - Service '{}' was added successfully.", service);
+  WsServerServiceInfo new_ws_server_service = {
+    .name = service_name,
+    // This interface was built with the ROS2 convention in mind, that the request and reply types are two
+    // pieces of a common type, hence the type name is the same with a _Request or _Reply suffix. This is not
+    // the case for hephaestus. So we just chose the request type name.
+    .type = type_info.request.name,
+
+    .request = std::make_optional<WsServerServiceDefinition>(
+        convertSerializationTypeToString(type_info.request.serialization), type_info.request.name,
+        convertSerializationTypeToString(type_info.request.serialization),
+        convertProtoBytesToFoxgloveBase64String(type_info.request.schema)),
+
+    .response = std::make_optional<WsServerServiceDefinition>(
+        convertSerializationTypeToString(type_info.reply.serialization), type_info.reply.name,
+        convertSerializationTypeToString(type_info.reply.serialization),
+        convertProtoBytesToFoxgloveBase64String(type_info.reply.schema)),
+
+    // NOTE: These seem to be legacy fields that are not used (anymore) in the foxglove library.
+    .requestSchema = std::nullopt,
+    .responseSchema = std::nullopt,
+  };
+
+  std::vector<WsServerServiceInfo> new_ws_server_services{ new_ws_server_service };
+  auto new_service_ids = ws_server_->addServices(new_ws_server_services);
+
+  CHECK_EQ(new_service_ids.size(), 1);
+  const auto new_service_id = new_service_ids.front();
+
+  state_.addWsServiceToIpcServiceMapping(new_service_id, service_name);
+
+  fmt::println("[WS Bridge] - Service '{}' [{}] was added successfully.", service_name, new_service_id);
 }
 
-void WsBridge::callback__IpcGraph__ServiceDropped(const std::string& service) {
-  fmt::println("[WS Bridge] - Service '{}' will be dropped  ...", service);
+void WsBridge::callback__IpcGraph__ServiceDropped(const std::string& service_name) {
+  fmt::println("[WS Bridge] - Service '{}' will be dropped  ...", service_name);
 
-  // TODO(mfehr): Implement this
-  fmt::println("[WS Bridge] - Service '{}' dropped successfully.", service);
+  if (!state_.hasIpcServiceMapping(service_name)) {
+    state_.printBridgeState();
+    heph::log(heph::WARN,
+              fmt::format(
+                  "[WS Bridge] - Service is already unadvertized! There are likely multiple service servers!",
+                  "service_name", service_name));
+    return;
+  }
+
+  const auto service_id = state_.getWsServiceForIpcService(service_name);
+  state_.removeWsServiceToIpcServiceMapping(service_id, service_name);
+
+  ws_server_->removeServices({ service_id });
+
+  fmt::println("[WS Bridge] - Service '{}' dropped successfully.", service_name);
 }
 
 void WsBridge::callback__IpcGraph__Updated(const ipc::zenoh::EndpointInfo& info,
