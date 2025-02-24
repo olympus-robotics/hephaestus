@@ -415,7 +415,7 @@ void IpcGraphState::printIpcGraphState() const {
         if (std::next(it) != publishers.end()) {
           ss << ", ";
         }
-      }
+    }
       ss << "]\n";
     }
   }
