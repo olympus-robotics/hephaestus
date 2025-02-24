@@ -58,12 +58,36 @@ public:
 
   std::string channelClientMappingToString() const;
 
+  // Note: We do not need to have an equivalent services to clients mapping.
+  // since each service call is treated as a one-shot interaction and
+  // we don't need to remember who to send the reply to.
+
 private:
   void cleanUpChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_c2c_);
 
   using ChannelToClientMap = std::unordered_map<WsServerChannelId, WsServerClientHandleSet>;
   mutable absl::Mutex mutex_c2c_;
   ChannelToClientMap channel_to_client_map_ ABSL_GUARDED_BY(mutex_c2c_);
+
+  // IPC Services <-> WS Service [protected by mutex_s2s_]
+public:
+  std::string getIpcServiceForWsService(const WsServerServiceId& service_id) const;
+  WsServerChannelId getWsServiceForIpcService(const std::string& service_name) const;
+  void addWsServiceToIpcServiceMapping(const WsServerServiceId& service_id, const std::string& service_name);
+  void removeWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
+                                          const std::string& service_name);
+  bool hasWsServiceMapping(const WsServerChannelId& service_id) const;
+  bool hasIpcServiceMapping(const std::string& service_name) const;
+  std::string servicMappingToString() const;
+
+private:
+  using ServiceNameToServiceIdMap = std::unordered_map<std::string, WsServerServiceId>;
+  using ServiceIdToServiceNameMap = std::unordered_map<WsServerServiceId, std::string>;
+
+  mutable absl::Mutex mutex_s2s_;
+
+  ServiceNameToServiceIdMap service_name_to_service_id_map_ ABSL_GUARDED_BY(mutex_s2s_);
+  ServiceIdToServiceNameMap service_id_to_service_name_map_ ABSL_GUARDED_BY(mutex_s2s_);
 };
 
 }  // namespace heph::ws_bridge

@@ -59,6 +59,7 @@ std::string WsBridgeState::topicChannelMappingToString() const {
 
   if (channel_to_topic_.empty()) {
     oss << "  \t∅\n";
+    return oss.str();
   }
 
   for (const auto& [channel_id, topic] : channel_to_topic_) {
@@ -143,6 +144,7 @@ std::string WsBridgeState::channelClientMappingToString() const {
 
   if (channel_to_client_map_.empty()) {
     oss << "  \t∅\n";
+    return oss.str();
   }
 
   for (const auto& [channel_id, clients] : channel_to_client_map_) {
@@ -179,7 +181,8 @@ std::string WsBridgeState::toString() const {
   ss << "[WS Bridge] - State:\n"
      << "\n"
      << topicChannelMappingToString() << "\n"
-     << channelClientMappingToString();
+     << channelClientMappingToString() << "\n"
+     << servicMappingToString() << "\n";
   return ss.str();
 }
 
@@ -225,6 +228,69 @@ bool WsBridgeState::checkConsistency() const {
   }
 
   return consistent;
+}
+
+std::string WsBridgeState::getIpcServiceForWsService(const WsServerServiceId& service_id) const {
+  absl::MutexLock lock(&mutex_s2s_);
+  auto it = service_id_to_service_name_map_.find(service_id);
+  if (it == service_id_to_service_name_map_.end()) {
+    heph::log(heph::ERROR,
+              "[WS Bridge] - Could not convert service id to service name. Something went wrong!",
+              "service id", std::to_string(service_id));
+    return "";
+  }
+  return it->second;
+}
+
+WsServerChannelId WsBridgeState::getWsServiceForIpcService(const std::string& service_name) const {
+  absl::MutexLock lock(&mutex_s2s_);
+  auto it = service_name_to_service_id_map_.find(service_name);
+  if (it == service_name_to_service_id_map_.end()) {
+    heph::log(heph::ERROR, "[WS Bridge] - Could not find service id for service name. Something went wrong!",
+              "service name", service_name);
+    return {};
+  }
+  return it->second;
+}
+
+void WsBridgeState::addWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
+                                                    const std::string& service_name) {
+  absl::MutexLock lock(&mutex_s2s_);
+  service_id_to_service_name_map_[service_id] = service_name;
+  service_name_to_service_id_map_[service_name] = service_id;
+}
+
+void WsBridgeState::removeWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
+                                                       const std::string& service_name) {
+  absl::MutexLock lock(&mutex_s2s_);
+  service_id_to_service_name_map_.erase(service_id);
+  service_name_to_service_id_map_.erase(service_name);
+}
+
+bool WsBridgeState::hasWsServiceMapping(const WsServerChannelId& service_id) const {
+  absl::MutexLock lock(&mutex_s2s_);
+  return service_id_to_service_name_map_.find(service_id) != service_id_to_service_name_map_.end();
+}
+
+bool WsBridgeState::hasIpcServiceMapping(const std::string& service_name) const {
+  absl::MutexLock lock(&mutex_s2s_);
+  return service_name_to_service_id_map_.find(service_name) != service_name_to_service_id_map_.end();
+}
+
+std::string WsBridgeState::servicMappingToString() const {
+  absl::MutexLock lock(&mutex_s2s_);
+  std::ostringstream oss;
+  oss << "  IPC Service to WS Service Mapping:\n";
+
+  if (service_id_to_service_name_map_.empty()) {
+    oss << "  \t∅\n";
+    return oss.str();
+  }
+
+  for (const auto& [service_id, service_name] : service_id_to_service_name_map_) {
+    oss << "  \t'" << service_name << "' -> [" << service_id << "]\n";
+  }
+  return oss.str();
 }
 
 }  // namespace heph::ws_bridge
