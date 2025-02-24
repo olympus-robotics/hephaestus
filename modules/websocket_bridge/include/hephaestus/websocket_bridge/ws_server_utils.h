@@ -22,6 +22,8 @@ using WsServerChannelInfo = foxglove::ChannelWithoutId;
 using WsServerServiceId = foxglove::ServiceId;
 using WsServerServiceInfo = foxglove::ServiceWithoutId;
 using WsServerServiceDefinition = foxglove::ServiceRequestDefinition;
+using WsServerServiceRequest = foxglove::ServiceRequest;
+using WsServerServiceResponse = foxglove::ServiceRequest;
 
 using ClientHandleWithName = std::pair<WsServerClientHandle, std::string>;
 

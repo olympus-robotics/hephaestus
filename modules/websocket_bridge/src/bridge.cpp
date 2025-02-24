@@ -4,6 +4,9 @@
 
 #include "hephaestus/websocket_bridge/bridge.h"
 
+#include <cstddef>
+#include <iterator>
+
 namespace heph::ws_bridge {
 
 WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config)
@@ -530,20 +533,84 @@ void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& 
 
 void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
                                                   WsServerClientHandle client_handle) {
-  (void)request;
-  (void)client_handle;
+  CHECK(ipc_interface_);
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
   fmt::println("[WS Bridge] - Client '{}' is sending a service request with service id [{}] ...", client_name,
                request.serviceId);
 
-  // Handle the service request logic here
-  // Example:
-  // LOG(INFO) << "Service request received: " << request.service_id;
+  if (!state_.hasWsServiceMapping(request.serviceId)) {
+    heph::log(
+        heph::ERROR,
+        fmt::format("[WS Bridge] - Client '{}' is sending a service request with service id [{}] but the "
+                    "service is not advertised!",
+                    client_name, request.serviceId));
+    return;
+  }
 
-  fmt::println("[WS Bridge] - Client '{}' has sent a service request with service id [{}] successfully.",
-               client_name, request.serviceId);
+  // TODO(mfehr): make this a bit more generic and in sync with the encoding settings in the server
+  // config. We should support json as well.
+  if (request.encoding != "protobuf") {
+    heph::log(
+        heph::ERROR,
+        fmt::format("[WS Bridge] - Client '{}' is sending a service request with service id [{}] but the "
+                    "encoding is not supported!",
+                    client_name, request.serviceId));
+    return;
+  }
+
+  auto service_name = state_.getIpcServiceForWsService(request.serviceId);
+
+  ipc::TopicConfig topic_config(service_name);
+
+  std::span<const std::byte> buffer = std::span<const std::byte>(
+      reinterpret_cast<const std::byte*>(request.data.data()), request.data.size());
+
+  const std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(config_.ipc_service_call_timeout_ms);
+
+  // TODO(mfehr): IMPORTANT - MAKE THIS ASYNC!
+  // -> track service request to client mapping in BridgeState.
+  auto responses = ipc_interface_->callService(topic_config, buffer, timeout_ms);
+
+  if (responses.empty()) {
+    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Service response is empty for service '{}' [{}]",
+                                       service_name, request.serviceId));
+    return;
+  }
+
+  size_t answer_idx = 1;
+  for (const auto& response : responses) {
+    if (response.topic != service_name) {
+      heph::log(
+          heph::ERROR,
+          fmt::format("[WS Bridge] - Response service name '{}' does not match request service name '{}'",
+                      response.topic, service_name));
+      return;
+    }
+
+    if (response.value.empty()) {
+      heph::log(heph::ERROR, fmt::format("[WS Bridge] - Service response is empty for service '{}' [{}]",
+                                         service_name, request.serviceId));
+      return;
+    }
+
+    WsServerServiceResponse ws_server_response = {
+      .serviceId = request.serviceId,
+      .callId = request.callId,
+      .encoding = "protobuf",
+      .data = std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(response.value.data()),
+                                   reinterpret_cast<const uint8_t*>(response.value.data()) +
+                                       response.value.size()),
+    };
+
+    ws_server_->sendServiceResponse(client_handle, ws_server_response);
+
+    fmt::println("[WS Bridge] - Client '{}' has received answer {}/{} to his service request with service "
+                 "'{}' [{}] successfully.",
+                 client_name, answer_idx, responses.size(), service_name, request.serviceId);
+    ++answer_idx;
+  }
 }
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
