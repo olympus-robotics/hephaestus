@@ -36,11 +36,10 @@ struct WsBridgeConfig {
                                "session_" +
                                std::to_string(std::chrono::system_clock::now().time_since_epoch().count()),
                            .capabilities = {
-                               // foxglove::CAPABILITY_CLIENT_PUBLISH,
+                               foxglove::CAPABILITY_CLIENT_PUBLISH,
                                // foxglove::CAPABILITY_PARAMETERS,
                                // foxglove::CAPABILITY_PARAMETERS_SUBSCRIBE,
-                               // foxglove::CAPABILITY_SERVICES,
-                               foxglove::CAPABILITY_CONNECTION_GRAPH,
+                               foxglove::CAPABILITY_SERVICES, foxglove::CAPABILITY_CONNECTION_GRAPH,
                                // foxglove::CAPABILITY_ASSETS
                            } };
   // NOTE: Unfortunately 'address' and 'port' are not part of
@@ -59,7 +58,8 @@ struct WsBridgeConfig {
 
   std::vector<std::string> ipc_service_whitelist = { ".*" };
   std::vector<std::string> ipc_service_blacklist = {};
-};;
+};
+;
 ;
 
 bool shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config);

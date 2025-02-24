@@ -14,6 +14,8 @@
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
 #include <hephaestus/ipc/zenoh/dynamic_subscriber.h>
+#include <hephaestus/ipc/zenoh/service.h>
+#include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 
 #include "hephaestus/websocket_bridge/bridge_config.h"
@@ -22,6 +24,8 @@ namespace heph::ws_bridge {
 
 using TopicSubscriberWithTypeCallback = std::function<void(
     const ipc::zenoh::MessageMetadata&, std::span<const std::byte>, const serdes::TypeInfo&)>;
+
+using RawServiceResponses = std::vector<ipc::zenoh::ServiceResponse<std::vector<std::byte>>>;
 
 class IpcInterface {
 public:
@@ -34,6 +38,9 @@ public:
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
                      TopicSubscriberWithTypeCallback callback);
   void removeSubscriber(const std::string& topic);
+
+  auto callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
+                   std::chrono::milliseconds timeout) -> RawServiceResponses;
 
 private:
   bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);

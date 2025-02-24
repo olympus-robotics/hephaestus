@@ -86,4 +86,9 @@ void IpcInterface::callback_PublisherMatchingStatus(const std::string& topic,
             status.matching);
 }
 
+auto IpcInterface::callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
+                               std::chrono::milliseconds timeout) -> RawServiceResponses {
+  return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+}
+
 }  // namespace heph::ws_bridge
