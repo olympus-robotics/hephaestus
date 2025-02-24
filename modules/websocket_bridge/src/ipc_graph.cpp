@@ -360,42 +360,83 @@ bool IpcGraph::hasService(const std::string& service_name) const {
 }
 
 void IpcGraphState::printIpcGraphState() const {
-  fmt::println("[IpcGraphState] Topics to Types:");
-  for (const auto& [topic, type] : topics_to_types_map) {
-    fmt::println("  Topic: {} -> Type: {}", topic, type);
-  }
+  std::stringstream ss;
 
-  fmt::println("[IpcGraphState] Services to Types:");
-  for (const auto& [srv, srv_types] : services_to_types_map) {
-    fmt::println("  Service: {} -> Types: {}/{}", srv, srv_types.first, srv_types.second);
-  }
+  ss << "[IPC Graph] - State\n\n";
 
-  fmt::println("[IpcGraphState] Services to Nodes:");
-  for (const auto& [srv, nodes] : services_to_server_map) {
-    fmt::print("  Service: {} -> Nodes: ", srv);
-    for (const auto& node : nodes) {
-      fmt::print("{} ", node);
+  if (!topics_to_types_map.empty()) {
+    ss << "  Topics:\n";
+    for (const auto& [topic, type] : topics_to_types_map) {
+      ss << "    '" << topic << "' [" << type << "]\n";
     }
-    fmt::print("\n");
   }
 
-  fmt::println("[IpcGraphState] Topic to Publishers:");
-  for (const auto& [topic, publishers] : topic_to_publishers_map) {
-    fmt::print("  {} -> ", topic);
-    for (const auto& publisher : publishers) {
-      fmt::print("{} ", publisher);
+  if (!services_to_types_map.empty()) {
+    ss << "  Services:\n";
+    for (const auto& [srv, srv_types] : services_to_types_map) {
+      ss << "    '" << srv << "' [" << srv_types.first << "/" << srv_types.second << "]\n";
     }
-    fmt::print("\n");
   }
 
-  fmt::println("[IpcGraphState] Topic to Subscribers:");
-  for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
-    fmt::print("  {} -> ", topic);
-    for (const auto& subscriber : subscribers) {
-      fmt::print("{} ", subscriber);
+  if (!services_to_server_map.empty()) {
+    ss << "  Service Servers:\n";
+    for (const auto& [srv, nodes] : services_to_server_map) {
+      ss << "    '" << srv << "' [";
+      for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != nodes.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
     }
-    fmt::print("\n");
   }
+
+  if (!services_to_client_map.empty()) {
+    ss << "  Service Clients:\n";
+    for (const auto& [srv, nodes] : services_to_client_map) {
+      ss << "    '" << srv << "' [";
+      for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != nodes.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
+    }
+  }
+
+  if (!topic_to_publishers_map.empty()) {
+    ss << "  Publishers:\n";
+    for (const auto& [topic, publishers] : topic_to_publishers_map) {
+      ss << "    '" << topic << "' <- [";
+      for (auto it = publishers.begin(); it != publishers.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != publishers.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
+    }
+  }
+
+  if (!topic_to_subscribers_map.empty()) {
+    ss << "  Subscribers:\n";
+    for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
+      ss << "    '" << topic << "' -> [";
+      for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != subscribers.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
+    }
+  }
+
+  ss << "\n";
+
+  fmt::print("{}", ss.str());
 }
 
 [[nodiscard]] bool IpcGraphState::checkConsistency() const {

@@ -305,31 +305,6 @@ void WsBridge::callback__IpcGraph__Updated(const ipc::zenoh::EndpointInfo& info,
     }
   }
 
-  fmt::println("[WS Bridge] - Updating connection graph with the following data:");
-  fmt::println("Topics to Publishers Map:");
-  for (const auto& [topic, publishers] : topic_to_pub_node_map) {
-    fmt::println("  Topic: {}", topic);
-    for (const auto& publisher : publishers) {
-      fmt::println("    Publisher: {}", publisher);
-    }
-  }
-
-  fmt::println("Topics to Subscribers Map:");
-  for (const auto& [topic, subscribers] : topic_to_sub_node_map) {
-    fmt::println("  Topic: {}", topic);
-    for (const auto& subscriber : subscribers) {
-      fmt::println("    Subscriber: {}", subscriber);
-    }
-  }
-
-  fmt::println("Services to Nodes Map:");
-  for (const auto& [service, nodes] : service_to_node_map) {
-    fmt::println("  Service: {}", service);
-    for (const auto& node : nodes) {
-      fmt::println("    Node: {}", node);
-    }
-  }
-
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
 
   fmt::println("[WS Bridge] - Connection graph updated successfully.");
