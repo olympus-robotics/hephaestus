@@ -1,4 +1,4 @@
-#include "hephaestus/websocket_bridge/protobuf_test_helpers.h"
+#include "hephaestus/websocket_bridge/protobuf_utils.h"
 
 namespace heph::ws_bridge {
 

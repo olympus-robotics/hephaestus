@@ -13,7 +13,7 @@
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
 #include <google/protobuf/util/json_util.h>
-#include <hephaestus/websocket_bridge/protobuf_test_helpers.h>
+#include <hephaestus/websocket_bridge/protobuf_utils.h>
 #include <hephaestus/websocket_bridge/serialization.h>
 #include <nlohmann/json.hpp>
 
@@ -36,9 +36,9 @@ using ResponsesWithTimingMap =
 
 void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint32_t B) {
   constexpr uint32_t max_columns = 5;
-  uint32_t range = B - A + 1;
-  uint32_t width = std::min(range, max_columns);
-  uint32_t height = (range + width - 1) / width;
+  const uint32_t range = B - A + 1;
+  const uint32_t width = std::min(range, max_columns);
+  const uint32_t height = (range + width - 1) / width;
 
   fmt::print("Checking presence of keys from {} to {}:\n", A, B);
   fmt::print("+");
@@ -50,7 +50,7 @@ void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint3
   for (uint32_t row = 0; row < height; ++row) {
     fmt::print("|");
     for (uint32_t col = 0; col < width; ++col) {
-      uint32_t value = A + row * width + col;
+      const uint32_t value = A + row * width + col;
       if (value > B) {
         fmt::print("       |");
       } else {
@@ -83,16 +83,9 @@ void handleBinaryMessage(
     return;
   }
 
-  if (data[0] != static_cast<uint8_t>(foxglove::BinaryOpcode::SERVICE_CALL_RESPONSE)) {
-    fmt::print("Received message with opcode {} is not a service call response.\n", data[0]);
-    return;
-  }
-
   const uint8_t opcode = data[0];
-  fmt::print("Received opcode: {}\n", opcode);
-
   if (opcode != static_cast<uint8_t>(foxglove::BinaryOpcode::SERVICE_CALL_RESPONSE)) {
-    fmt::print("Received message with opcode {} , which is not SERVICE_CALL_RESPONSE.\n", opcode);
+    fmt::print("Received message with opcode {} is not a service call response.\n", opcode);
     return;
   }
 
@@ -107,7 +100,7 @@ void handleBinaryMessage(
     return;
   }
 
-  auto schema_names = heph::ws_bridge::retrieveSchemaNamesFromServiceId(response.serviceId, schema_db);
+  const auto schema_names = heph::ws_bridge::retrieveSchemaNamesFromServiceId(response.serviceId, schema_db);
   fmt::print("Schema names for service id {}: [{}|{}]\n", response.serviceId, schema_names.first,
              schema_names.second);
 
@@ -122,17 +115,17 @@ void handleBinaryMessage(
   }
 
   std::string json_string;
-  auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
+  const auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
   if (!status.ok()) {
     fmt::print("Failed to convert message to JSON: {}\n", status.ToString());
     return;
   }
   fmt::print("Parsed service response of call ID {}:\n'''\n{}\n'''\n", response.callId, json_string);
 
-  auto it = call_id_to_start_time.find(response.callId);
+  const auto it = call_id_to_start_time.find(response.callId);
   if (it != call_id_to_start_time.end()) {
-    auto end_time = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - it->second);
+    const auto end_time = std::chrono::steady_clock::now();
+    const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - it->second);
     fmt::print("Service call {} took {} ms\n", response.callId, duration);
 
     responses[response.callId] = std::make_pair(response, duration);
@@ -144,9 +137,9 @@ void handleBinaryMessage(
 void handleTextMessage(const std::string& jsonMsg, std::map<foxglove::ChannelId, foxglove::Channel>& channels,
                        std::map<foxglove::ServiceId, foxglove::Service>& services) {
   try {
-    auto msg = nlohmann::json::parse(jsonMsg);
+    const auto msg = nlohmann::json::parse(jsonMsg);
 
-    std::string fileName = "/tmp/received_message_" + msg["op"].get<std::string>() + ".json";
+    const std::string fileName = "/tmp/received_message_" + msg["op"].get<std::string>() + ".json";
     std::ofstream outFile(fileName);
     if (outFile.is_open()) {
       outFile << msg.dump(4);
@@ -224,15 +217,15 @@ int main(int argc, char** argv) {
   std::unordered_map<uint32_t, std::chrono::steady_clock::time_point> call_id_to_start_time;
   heph::ws_bridge::ProtobufSchemaDatabase schema_db;
 
-  auto binary_message_handler = [&](const uint8_t* data, size_t length) {
+  const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, call_id_to_start_time, schema_db, responses);
   };
-  auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::print("Connected to {}\n", url); };
-  auto on_close_handler = [&](websocketpp::connection_hdl) {
+  const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::print("Connected to {}\n", url); };
+  const auto on_close_handler = [&](websocketpp::connection_hdl) {
     fmt::print("Connection closed\n");
     g_abort = true;
   };
-  auto text_message_handler = [&](const std::string& jsonMsg) {
+  const auto text_message_handler = [&](const std::string& jsonMsg) {
     handleTextMessage(jsonMsg, channels, services);
   };
 
@@ -272,7 +265,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  auto foxglove_service_pair = std::find_if(services.begin(), services.end(), [](const auto& pair) {
+  const auto foxglove_service_pair = std::find_if(services.begin(), services.end(), [](const auto& pair) {
     return !pair.second.name.starts_with("topic_info");
   });
 
@@ -316,7 +309,7 @@ int main(int argc, char** argv) {
     }
 
     std::string json_string;
-    auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
+    const auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
     if (!status.ok()) {
       fmt::print("Failed to convert request message to JSON: {}\n", status.ToString());
       break;
