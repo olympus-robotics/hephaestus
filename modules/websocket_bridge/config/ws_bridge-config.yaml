@@ -1,9 +1,14 @@
 ws_server_config:
   capabilities:
     - connectionGraph
+    - clientPublish
+    - services
+    # - time
+    # - parameters
+    # - parametersSubscribe
+    # - assets
   supportedEncodings:
     - protobuf
-    - json
   metadata: {}
   sendBufferLimitBytes: 10000000
   useTls: false

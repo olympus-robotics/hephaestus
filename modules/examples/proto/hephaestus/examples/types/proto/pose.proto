@@ -7,6 +7,9 @@ import "hephaestus/examples/types/proto/geometry.proto";
 message Pose {
   Vector3d position = 1;
   Quaterniond orientation = 2;
+  double confidence = 3;
+  string frame = 4;
+  double timestamp = 5;
 }
 
 message FramedPose {

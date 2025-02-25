@@ -50,6 +50,15 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "test_client",
+    srcs = ["apps/client_performance_test.cpp"],
+    deps = [
+        ":websocket_bridge",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+)
+
 #########
 # Tests #
 #########
