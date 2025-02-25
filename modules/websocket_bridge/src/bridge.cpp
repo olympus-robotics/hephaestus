@@ -595,14 +595,44 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
       return;
     }
 
+    std::vector<uint8_t> response_data(response.value.size());
+    std::transform(response.value.begin(), response.value.end(), response_data.begin(),
+                   [](std::byte b) { return static_cast<uint8_t>(b); });
+
     WsServerServiceResponse ws_server_response = {
       .serviceId = request.serviceId,
       .callId = request.callId,
-      .encoding = "protobuf",
-      .data = std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(response.value.data()),
-                                   reinterpret_cast<const uint8_t*>(response.value.data()) +
-                                       response.value.size()),
+      .encoding = std::string("protobuf", 8),
+      .data = std::move(response_data),
     };
+
+    const std::string encoded_data = foxglove::base64Encode(std::string(
+        reinterpret_cast<const char*>(ws_server_response.data.data()), ws_server_response.data.size()));
+    fmt::println("[WS Bridge] - Service Response:\n"
+                 "  Service ID: {}\n"
+                 "  Call ID: {}\n"
+                 "  Encoding: {}\n"
+                 "  Encoding Length: {}\n"
+                 "  Data Size: {} bytes\n"
+                 "  Data (Base64): `{}`",
+                 ws_server_response.serviceId, ws_server_response.callId, ws_server_response.encoding,
+                 static_cast<uint32_t>(ws_server_response.encoding.size()), ws_server_response.data.size(),
+                 encoded_data);
+
+    // Serialize the response to a payload
+    std::vector<uint8_t> payload(ws_server_response.size());
+    ws_server_response.write(payload.data());
+
+    // Deserialize the payload back to a ServiceResponse
+    foxglove::ServiceResponse deserialized_response;
+    deserialized_response.read(payload.data(), payload.size());
+
+    // Compare the original and deserialized responses
+    if (ws_server_response == deserialized_response) {
+      fmt::println("[WS Bridge] - Serialization test passed.");
+    } else {
+      fmt::println("[WS Bridge] - Serialization test failed.");
+    }
 
     ws_server_->sendServiceResponse(client_handle, ws_server_response);
 
@@ -611,7 +641,7 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
                  client_name, answer_idx, responses.size(), service_name, request.serviceId);
     ++answer_idx;
   }
-}
+}  // namespace heph::ws_bridge
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
   CHECK(ipc_graph_);

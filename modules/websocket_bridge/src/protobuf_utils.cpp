@@ -161,7 +161,7 @@ generateRandomProtobufMessageFromSchema(const foxglove::ServiceRequestDefinition
     return {};
   }
 
-  fmt::print("Descriptor:\n```\n{}\n```\n", descriptor->DebugString());
+  //   fmt::print("Descriptor:\n```\n{}\n```\n", descriptor->DebugString());
 
   google::protobuf::DynamicMessageFactory proto_factory(&proto_pool);
   std::unique_ptr<google::protobuf::Message> message =
@@ -214,10 +214,8 @@ generateRandomProtobufMessageFromSchema(const foxglove::ServiceRequestDefinition
   fillMessageWithRandomValues(message.get());
 
   // Print the message for debugging
-  // std::string debugString;
-  // google::protobuf::TextFormat::PrintToString(*message, &debugString);
-  fmt::print("Generated message:\n```\n{}\n```\n", message->DebugString());
-  fmt::print("Generated message size:\n```\n{}\n```\n", message->ByteSizeLong());
+  //   fmt::print("Generated message:\n```\n{}\n```\n", message->DebugString());
+  //   fmt::print("Generated message size:\n```\n{}\n```\n", message->ByteSizeLong());
 
   // Serialize the message to a byte vector
   std::vector<uint8_t> buffer(message->ByteSizeLong());

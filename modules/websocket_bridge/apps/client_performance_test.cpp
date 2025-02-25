@@ -3,18 +3,18 @@
 #include <csignal>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
-#include <random>
-#include <regex>
-#include <thread>
-#include <unordered_map>
+
+// #include <iostream>
+// #include <random>
+// #include <regex>
+// #include <thread>
+// #include <unordered_map>
 
 #include <fmt/core.h>
 #include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
-#include <foxglove/websocket/websocket_notls.hpp>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
@@ -33,6 +33,64 @@ void signalHandler(int) {
   g_abort = true;
 }
 
+template <typename T>
+void printOverviewTable(const std::unordered_map<uint32_t, T>& responses, uint32_t A, uint32_t B) {
+  uint32_t range = B - A + 1;
+  uint32_t side_length = static_cast<uint32_t>(std::ceil(std::sqrt(range)));
+
+  fmt::print("Kecking presence of keys from {} to {}:\n", A, B);
+  fmt::print("+");
+  for (uint32_t i = 0; i < side_length; ++i) {
+    fmt::print("--------+");
+  }
+  fmt::print("\n");
+
+  for (uint32_t row = 0; row < side_length; ++row) {
+    fmt::print("|");
+    for (uint32_t col = 0; col < side_length; ++col) {
+      uint32_t value = A + row * side_length + col;
+      if (value > B) {
+        fmt::print("       |");
+      } else {
+        fmt::print(" {:4}{} |", value, responses.count(value) ? " ✔" : " ∅");
+      }
+    }
+    fmt::print("\n+");
+    for (uint32_t i = 0; i < side_length; ++i) {
+      fmt::print("--------+");
+    }
+    fmt::print("\n");
+  }
+}
+
+void printBinary(const uint8_t* data, size_t length) {
+  if (data == nullptr || length == 0) {
+    fmt::print("No data to print.\n");
+    return;
+  }
+
+  std::stringstream ss;
+  for (size_t i = 0; i < length; ++i) {
+    for (int bit = 7; bit >= 0; --bit) {
+      ss << ((data[i] >> bit) & 1);
+      if (bit == 4) {
+        ss << " | ";
+      }
+    }
+    if ((i + 1) % 4 == 0) {
+      uint32_t uint32_value = foxglove::ReadUint32LE(data + i - 3);
+      ss << " ==> " << uint32_value << "\n";
+    } else if (i < length - 1) {
+      ss << " || ";
+    }
+  }
+  if (length % 4 != 0) {
+    ss << "\n";
+  }
+
+  fmt::print("{}", ss.str());
+}
+
 int main(int argc, char** argv) {
   if (argc < 2) {
     fmt::print("Usage: {} <url>\n", argv[0]);
@@ -43,15 +101,88 @@ int main(int argc, char** argv) {
   foxglove::Client<foxglove::WebSocketNoTls> client;
 
   // Collect advertisement data
-  std::unordered_map<foxglove::ChannelId, foxglove::Channel> channels;
-  std::unordered_map<foxglove::ServiceId, foxglove::Service> services;
+  std::map<foxglove::ChannelId, foxglove::Channel> channels;
+  std::map<foxglove::ServiceId, foxglove::Service> services;
+  std::unordered_map<uint32_t, foxglove::ServiceResponse> responses;
+  std::unordered_map<uint32_t, std::chrono::steady_clock::time_point> call_id_to_start_time;
 
   // Binary handler for receiving data
   client.setBinaryMessageHandler([&](const uint8_t* data, size_t length) {
-    (void)data;
-    if (length < 1)
+    if (data == nullptr || length == 0) {
+      fmt::print("Received invalid message.\n");
       return;
-    fmt::print("Received binary message of length: {}\n", length);
+    }
+
+    if (length < 12u) {
+      fmt::print("Received message with length {} is too short. (min 12 bytes)\n", length);
+      return;
+    }
+
+    if (data[0] != static_cast<uint8_t>(foxglove::BinaryOpcode::SERVICE_CALL_RESPONSE)) {
+      fmt::print("Received message with opcode {} is not a service call response.\n", data[0]);
+      return;
+    }
+
+    printBinary(data, length);
+
+    foxglove::ServiceResponse response;
+    try {
+      {
+        // TODO(mfehr): This random 1 byte offset at the start does not make an aweful lot of sense and likely
+        // is a bug in the ws-protocol library.
+        const uint8_t* payload = data;
+        const size_t payload_size = length;
+        fmt::print("Payload size: {}\n", payload_size);
+        size_t offset = 1;
+        response.serviceId = foxglove::ReadUint32LE(payload + offset);
+        offset += 4;
+        response.callId = foxglove::ReadUint32LE(payload + offset);
+        offset += 4;
+        const size_t encoding_length = static_cast<size_t>(foxglove::ReadUint32LE(payload + offset));
+        offset += 4;
+        fmt::print("Offset: {}, encoding_length: {}\n", offset, encoding_length);
+        response.encoding = std::string(reinterpret_cast<const char*>(payload + offset), encoding_length);
+        offset += encoding_length;
+        fmt::print("Offset: {}, Payload size: {}\n", offset, payload_size);
+        const auto data_size = payload_size - offset;
+        if (data_size > 0) {
+          fmt::print("Data size: {}\n", data_size);
+          response.data.resize(data_size);
+          std::memcpy(response.data.data(), payload + offset, data_size);
+        } else {
+          fmt::print("No data to copy.\n");
+        }
+      }
+      // response.read(data, length);
+    } catch (const std::exception& e) {
+      fmt::print("Failed to deserialize service response: {}\n", e.what());
+      return;
+    }
+
+    try {
+      responses[response.callId] = response;
+    } catch (const std::exception& e) {
+      fmt::print("Failed to store service response: {}\n", e.what());
+      return;
+    }
+
+    fmt::print("Service Response:\n");
+    fmt::print("  Service ID: {}\n", response.serviceId);
+    fmt::print("  Call ID: {}\n", response.callId);
+    fmt::print("  Encoding: {}\n", response.encoding);
+    fmt::print("  Data (Base64): '{}'\n",
+               foxglove::base64Encode(std::string_view(reinterpret_cast<const char*>(response.data.data()),
+                                                       response.data.size())));
+
+    auto it = call_id_to_start_time.find(response.callId);
+    if (it != call_id_to_start_time.end()) {
+      auto end_time = std::chrono::steady_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - it->second).count();
+      fmt::print("Service call {} took {} ms\n", response.callId, duration);
+      call_id_to_start_time.erase(it);
+    } else {
+      fmt::print("Start time for call ID {} not found.\n", response.callId);
+    }
   });
 
   client.setTextMessageHandler([&](const std::string& jsonMsg) {
@@ -145,8 +276,19 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // Pick the first advertised service as target
-  const auto foxglove_service_pair = services.begin();
+  // Pick the first advertised service as target, unless its name starts with "topic_info"
+  auto foxglove_service_pair = services.begin();
+  while (foxglove_service_pair != services.end() &&
+         foxglove_service_pair->second.name.starts_with("topic_info")) {
+    ++foxglove_service_pair;
+  }
+
+  if (foxglove_service_pair == services.end()) {
+    fmt::print("No suitable service found.\n");
+    g_abort = true;
+    return 1;
+  }
+
   const auto foxglove_service_id = foxglove_service_pair->first;
   const auto& foxglove_service = foxglove_service_pair->second;
 
@@ -158,38 +300,9 @@ int main(int argc, char** argv) {
 
   fmt::print("\nTargeting Service '{}' for stress testing\n", foxglove_service.name);
 
-  fmt::print("Service Details:\n");
-  fmt::print("  ID: {}\n", foxglove_service.id);
-  fmt::print("  Name: {}\n", foxglove_service.name);
-  fmt::print("  Type: {}\n", foxglove_service.type);
-
-  if (foxglove_service.request.has_value()) {
-    fmt::print("  Request:\n");
-    fmt::print("    Encoding: {}\n", foxglove_service.request->encoding);
-    fmt::print("    Schema Name: {}\n", foxglove_service.request->schemaName);
-    fmt::print("    Schema Encoding: {}\n", foxglove_service.request->schemaEncoding);
-    fmt::print("    Schema: {}\n", foxglove_service.request->schema);
-  } else {
-    fmt::print("  Request: Not available\n");
-  }
-
-  if (foxglove_service.response.has_value()) {
-    fmt::print("  Response:\n");
-    fmt::print("    Encoding: {}\n", foxglove_service.response->encoding);
-    fmt::print("    Schema Name: {}\n", foxglove_service.response->schemaName);
-    fmt::print("    Schema Encoding: {}\n", foxglove_service.response->schemaEncoding);
-    fmt::print("    Schema: {}\n", foxglove_service.response->schema);
-  } else {
-    fmt::print("  Response: Not available\n");
-  }
-
-  // Example stress: repeatedly call a service
-  const auto startTime = std::chrono::steady_clock::now();
-  std::vector<std::chrono::milliseconds> callDurations;
-
-    for (int i = 0; i < 100 && !g_abort; ++i) {
+  for (int i = 0; i < 100 && !g_abort; ++i) {
     foxglove::ServiceRequest request;
-    request.callId = static_cast<uint32_t>(i + 1);  // Increment or generate unique call ID as needed
+    request.callId = static_cast<uint32_t>(i) + 1;  // Increment or generate unique call ID as needed
     request.serviceId = foxglove_service_id;
 
     // Generate a random protobuf message based on the service definition
@@ -205,23 +318,19 @@ int main(int argc, char** argv) {
     request.encoding = "protobuf";
 
     fmt::print("Sending service request {}...\n", request.callId);
-    const auto callStartTime = std::chrono::steady_clock::now();
+    call_id_to_start_time[request.callId] = std::chrono::steady_clock::now();
     client.sendServiceRequest(request);
-    const auto callEndTime = std::chrono::steady_clock::now();
-    callDurations.push_back(
-        std::chrono::duration_cast<std::chrono::milliseconds>(callEndTime - callStartTime));
     fmt::print("Service request {} sent.\n", request.callId);
+  }
+
+  fmt::print("Waiting for responses...\n");
+  while (responses.size() < 100 && !g_abort) {
+    std::this_thread::sleep_for(1s);
+    printOverviewTable(responses, 1, 100);
   }
 
   fmt::print("Closing client...\n");
   client.close();
-  const auto endTime = std::chrono::steady_clock::now();
-  const auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-
-  fmt::print("Test duration: {} ms\n", durationMs);
-  for (size_t i = 0; i < callDurations.size(); ++i) {
-    fmt::print("Call {} duration: {} ms\n", i + 1, callDurations[i].count());
-  }
   fmt::print("Done.\n");
   return 0;
 }
