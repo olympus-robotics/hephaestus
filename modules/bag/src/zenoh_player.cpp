@@ -128,7 +128,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
         }
       });
 
-  heph::log(heph::DEBUG, "created publisher for topic", "name", channel.topic);
+  heph::log(heph::INFO, "created publisher for topic", "name", channel.topic);
 }
 
 void ZenohPlayer::Impl::run() {
