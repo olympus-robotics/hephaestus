@@ -4,12 +4,12 @@ namespace heph::ws_bridge {
 
 RandomGenerators::RandomGenerators()
   : gen(std::random_device{}())
-  , int32_dist(std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max())
-  , int64_dist(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max())
-  , uint32_dist(std::numeric_limits<uint32_t>::min(), std::numeric_limits<uint32_t>::max())
-  , uint64_dist(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max())
-  , float_dist(std::numeric_limits<float>::min(), std::numeric_limits<float>::max())
-  , double_dist(std::numeric_limits<double>::min(), std::numeric_limits<double>::max()) {
+  , int32_dist(-10, 10)
+  , int64_dist(-10, 10)
+  , uint32_dist(0, 10)
+  , uint64_dist(0, 10)
+  , float_dist(-10.0f, 10.0f)
+  , double_dist(-10.0, 10.0) {
 }
 
 void fillRepeatedField(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
@@ -125,34 +125,88 @@ bool loadSchema(const std::vector<std::byte>& schema_bytes,
   return true;
 }
 
-std::vector<uint8_t>
-generateRandomProtobufMessageFromSchema(const foxglove::ServiceRequestDefinition& service_definition) {
+bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db) {
+  if (!service_definition.request.has_value() || !service_definition.response.has_value()) {
+    fmt::print("Service definition is missing request or response schema\n");
+    return false;
+  }
+
+  schema_db.service_id_to_schema_names[service_definition.id] = { service_definition.request->schemaName,
+                                                                  service_definition.response->schemaName };
+
+  return saveSchemaToDatabase(service_definition.request.value(), schema_db) &&
+         saveSchemaToDatabase(service_definition.response.value(), schema_db);
+}
+
+bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
+                          ProtobufSchemaDatabase& schema_db) {
   // Decode the base64 string into binary schema.
-  std::vector<unsigned char> schema_char_vector = foxglove::base64Decode(service_definition.schema);
+  std::vector<unsigned char> schema_char_vector = foxglove::base64Decode(service_request_definition.schema);
 
   std::vector<std::byte> schema_bytes(schema_char_vector.size());
   std::transform(schema_char_vector.begin(), schema_char_vector.end(), schema_bytes.begin(),
                  [](unsigned char c) { return static_cast<std::byte>(c); });
 
-  google::protobuf::SimpleDescriptorDatabase proto_db;
-  loadSchema(schema_bytes, &proto_db);
+  return saveSchemaToDatabase(schema_bytes, schema_db);
+}
 
-  google::protobuf::DescriptorPool proto_pool(&proto_db);
-
-  const google::protobuf::Descriptor* descriptor =
-      proto_pool.FindMessageTypeByName(service_definition.schemaName);
-  if (!descriptor) {
-    fmt::print("Message type '{}' not found in schema\n", service_definition.schemaName);
+bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db) {
+  if (!loadSchema(schema_bytes, schema_db.proto_db.get())) {
+    fmt::print("Failed to load schema into database\n");
     heph::ws_bridge::debugPrintSchema(schema_bytes);
-    return {};
+    return false;
+  }
+  return true;
+}
+
+std::unique_ptr<google::protobuf::Message>
+retreiveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db) {
+  const google::protobuf::Descriptor* descriptor = schema_db.proto_pool->FindMessageTypeByName(schema_name);
+  if (!descriptor) {
+    fmt::print("Message type '{}' not found in schema database\n", schema_name);
+    return nullptr;
   }
 
-  google::protobuf::DynamicMessageFactory proto_factory(&proto_pool);
-  std::unique_ptr<google::protobuf::Message> message =
-      std::unique_ptr<google::protobuf::Message>(proto_factory.GetPrototype(descriptor)->New());
+  const google::protobuf::Message* prototype = schema_db.proto_factory->GetPrototype(descriptor);
+  if (!prototype) {
+    fmt::print("Failed to get prototype for message type '{}'\n", schema_name);
+    return nullptr;
+  }
+
+  return std::unique_ptr<google::protobuf::Message>(prototype->New());
+}
+
+std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(
+    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+  auto it = schema_db.service_id_to_schema_names.find(service_id);
+  if (it != schema_db.service_id_to_schema_names.end()) {
+    return it->second;
+  }
+  return {};
+}
+
+std::string retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
+                                            const ProtobufSchemaDatabase& schema_db) {
+  auto it = schema_db.channel_id_to_schema_name.find(channel_id);
+  if (it != schema_db.channel_id_to_schema_name.end()) {
+    return it->second;
+  }
+  return {};
+}
+
+// Ensure ProtobufSchemaDatabase member variables are properly initialized
+ProtobufSchemaDatabase::ProtobufSchemaDatabase()
+  : proto_db(std::make_unique<google::protobuf::SimpleDescriptorDatabase>())
+  , proto_pool(std::make_unique<google::protobuf::DescriptorPool>(proto_db.get()))
+  , proto_factory(std::make_unique<google::protobuf::DynamicMessageFactory>(proto_pool.get())) {
+}
+
+std::unique_ptr<google::protobuf::Message>
+generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db) {
+  // Retrieve the message from the database
+  auto message = retreiveMessageFromDatabase(schema_name, schema_db);
   if (!message) {
-    fmt::print("Failed to create message for type '{}'\n", service_definition.schemaName);
-    heph::ws_bridge::debugPrintSchema(schema_bytes);
+    fmt::print("Failed to retrieve message from database\n");
     return {};
   }
 
@@ -160,14 +214,7 @@ generateRandomProtobufMessageFromSchema(const foxglove::ServiceRequestDefinition
   RandomGenerators generators;
   fillMessageWithRandomValues(message.get(), generators);
 
-  // Serialize the message to a byte vector
-  std::vector<uint8_t> buffer(message->ByteSizeLong());
-  if (!message->SerializeToArray(buffer.data(), static_cast<int>(buffer.size()))) {
-    fmt::print("Failed to serialize message\n");
-    return {};
-  }
-
-  return buffer;
+  return message;
 }
 
 }  // namespace heph::ws_bridge

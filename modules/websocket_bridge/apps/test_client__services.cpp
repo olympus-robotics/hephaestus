@@ -72,7 +72,7 @@ void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint3
 void handleBinaryMessage(
     const uint8_t* data, size_t length,
     std::unordered_map<uint32_t, std::chrono::steady_clock::time_point>& call_id_to_start_time,
-    ResponsesWithTimingMap& responses) {
+    const heph::ws_bridge::ProtobufSchemaDatabase& schema_db, ResponsesWithTimingMap& responses) {
   if (data == nullptr || length == 0) {
     fmt::print("Received invalid message.\n");
     return;
@@ -107,13 +107,27 @@ void handleBinaryMessage(
     return;
   }
 
-  fmt::print("Service Response:\n");
-  fmt::print("  Service ID: {}\n", response.serviceId);
-  fmt::print("  Call ID: {}\n", response.callId);
-  fmt::print("  Encoding: {}\n", response.encoding);
-  fmt::print("  Data (Base64): '{}'\n",
-             foxglove::base64Encode(std::string_view(reinterpret_cast<const char*>(response.data.data()),
-                                                     response.data.size())));
+  auto schema_names = heph::ws_bridge::retrieveSchemaNamesFromServiceId(response.serviceId, schema_db);
+  fmt::print("Schema names for service id {}: [{}|{}]\n", response.serviceId, schema_names.first,
+             schema_names.second);
+
+  auto message = heph::ws_bridge::retreiveMessageFromDatabase(schema_names.second, schema_db);
+  if (!message) {
+    fmt::print("Failed to retrieve message from database\n");
+    return;
+  }
+  if (!message->ParseFromArray(response.data.data(), static_cast<int>(response.data.size()))) {
+    fmt::print("Failed to parse message from response data\n");
+    return;
+  }
+
+  std::string json_string;
+  auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
+  if (!status.ok()) {
+    fmt::print("Failed to convert message to JSON: {}\n", status.ToString());
+    return;
+  }
+  fmt::print("Parsed service response of call ID {}:\n'''\n{}\n'''\n", response.callId, json_string);
 
   auto it = call_id_to_start_time.find(response.callId);
   if (it != call_id_to_start_time.end()) {
@@ -208,9 +222,10 @@ int main(int argc, char** argv) {
   std::map<foxglove::ServiceId, foxglove::Service> services;
   ResponsesWithTimingMap responses;
   std::unordered_map<uint32_t, std::chrono::steady_clock::time_point> call_id_to_start_time;
+  heph::ws_bridge::ProtobufSchemaDatabase schema_db;
 
   auto binary_message_handler = [&](const uint8_t* data, size_t length) {
-    handleBinaryMessage(data, length, call_id_to_start_time, responses);
+    handleBinaryMessage(data, length, call_id_to_start_time, schema_db, responses);
   };
   auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::print("Connected to {}\n", url); };
   auto on_close_handler = [&](websocketpp::connection_hdl) {
@@ -276,6 +291,14 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  if (heph::ws_bridge::saveSchemaToDatabase(foxglove_service, schema_db)) {
+    fmt::print("Service schemas saved to database successfully.\n");
+  } else {
+    fmt::print("Failed to save schema to database.\n");
+    g_abort = true;
+    return 1;
+  }
+
   fmt::print("\nTargeting Service '{}' testing\n", foxglove_service.name);
 
   for (int i = 0; i < SERVICE_REQUEST_COUNT && !g_abort; ++i) {
@@ -283,15 +306,35 @@ int main(int argc, char** argv) {
     request.callId = static_cast<uint32_t>(i) + 1;
     request.serviceId = foxglove_service_id;
 
-    auto message = heph::ws_bridge::generateRandomProtobufMessageFromSchema(foxglove_service.request.value());
+    auto message =
+        heph::ws_bridge::generateRandomMessageFromSchemaName(foxglove_service.request->schemaName, schema_db);
 
-    if (message.empty()) {
+    if (!message) {
       fmt::print("Failed to generate random protobuf message for service '{}'\n", foxglove_service.name);
       g_abort = true;
       break;
     }
 
-    request.data.assign(message.begin(), message.end());
+    std::string json_string;
+    auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
+    if (!status.ok()) {
+      fmt::print("Failed to convert request message to JSON: {}\n", status.ToString());
+      break;
+    }
+    fmt::print("Sending service request with call ID {}:\n'''\n{}\n'''\n", request.callId, json_string);
+
+    // Prepare message for sending.
+    std::vector<uint8_t> message_buffer(message->ByteSizeLong());
+    if (!message->SerializeToArray(message_buffer.data(), static_cast<int>(message_buffer.size()))) {
+      fmt::print("Failed to serialize message\n");
+      break;
+    }
+    if (message_buffer.empty()) {
+      fmt::print("Failed to generate random protobuf message for service '{}'\n", foxglove_service.name);
+      g_abort = true;
+      break;
+    }
+    request.data.assign(message_buffer.begin(), message_buffer.end());
     request.encoding = "protobuf";
 
     call_id_to_start_time[request.callId] = std::chrono::steady_clock::now();
