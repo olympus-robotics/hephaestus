@@ -11,6 +11,7 @@
 #include <absl/strings/ascii.h>
 #include <fmt/base.h>
 #include <foxglove/websocket/base64.hpp>
+#include <foxglove/websocket/serialization.hpp>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
@@ -25,5 +26,7 @@ std::string convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>
 std::string convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization);
 
 void debugPrintSchema(const std::vector<std::byte>& schema);
+
+void printBinary(const uint8_t* data, size_t length);
 
 }  // namespace heph::ws_bridge

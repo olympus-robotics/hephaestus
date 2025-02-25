@@ -606,34 +606,6 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
       .data = std::move(response_data),
     };
 
-    const std::string encoded_data = foxglove::base64Encode(std::string(
-        reinterpret_cast<const char*>(ws_server_response.data.data()), ws_server_response.data.size()));
-    fmt::println("[WS Bridge] - Service Response:\n"
-                 "  Service ID: {}\n"
-                 "  Call ID: {}\n"
-                 "  Encoding: {}\n"
-                 "  Encoding Length: {}\n"
-                 "  Data Size: {} bytes\n"
-                 "  Data (Base64): `{}`",
-                 ws_server_response.serviceId, ws_server_response.callId, ws_server_response.encoding,
-                 static_cast<uint32_t>(ws_server_response.encoding.size()), ws_server_response.data.size(),
-                 encoded_data);
-
-    // Serialize the response to a payload
-    std::vector<uint8_t> payload(ws_server_response.size());
-    ws_server_response.write(payload.data());
-
-    // Deserialize the payload back to a ServiceResponse
-    foxglove::ServiceResponse deserialized_response;
-    deserialized_response.read(payload.data(), payload.size());
-
-    // Compare the original and deserialized responses
-    if (ws_server_response == deserialized_response) {
-      fmt::println("[WS Bridge] - Serialization test passed.");
-    } else {
-      fmt::println("[WS Bridge] - Serialization test failed.");
-    }
-
     ws_server_->sendServiceResponse(client_handle, ws_server_response);
 
     fmt::println("[WS Bridge] - Client '{}' has received answer {}/{} to his service request with service "

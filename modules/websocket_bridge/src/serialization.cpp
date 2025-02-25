@@ -1,5 +1,8 @@
 #include "hephaestus/websocket_bridge/serialization.h"
 
+#include <foxglove/websocket/base64.hpp>
+#include <foxglove/websocket/serialization.hpp>
+
 namespace heph::ws_bridge {
 
 std::string convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) {
@@ -25,6 +28,34 @@ std::string convertSerializationTypeToString(const serdes::TypeInfo::Serializati
   auto schema_type = std::string{ magic_enum::enum_name(serialization) };
   absl::AsciiStrToLower(&schema_type);
   return schema_type;
+}
+
+void printBinary(const uint8_t* data, size_t length) {
+  if (data == nullptr || length == 0) {
+    fmt::print("No data to print.\n");
+    return;
+  }
+
+  std::stringstream ss;
+  for (size_t i = 0; i < length; ++i) {
+    for (int bit = 7; bit >= 0; --bit) {
+      ss << ((data[i] >> bit) & 1);
+      if (bit == 4) {
+        ss << " | ";
+      }
+    }
+    if ((i + 1) % 4 == 0) {
+      uint32_t uint32_value = foxglove::ReadUint32LE(data + i - 3);
+      ss << " ==> " << uint32_value << "\n";
+    } else if (i < length - 1) {
+      ss << " || ";
+    }
+  }
+  if (length % 4 != 0) {
+    ss << "\n";
+  }
+
+  fmt::print("{}", ss.str());
 }
 
 }  // namespace heph::ws_bridge
