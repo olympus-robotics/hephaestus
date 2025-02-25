@@ -91,6 +91,11 @@ void handleBinaryMessage(
   const uint8_t opcode = data[0];
   fmt::print("Received opcode: {}\n", opcode);
 
+  if (opcode != static_cast<uint8_t>(foxglove::BinaryOpcode::SERVICE_CALL_RESPONSE)) {
+    fmt::print("Received message with opcode {} , which is not SERVICE_CALL_RESPONSE.\n", opcode);
+    return;
+  }
+
   const uint8_t* payload = data + 1;
   const size_t payload_size = length - 1;
 
@@ -192,7 +197,7 @@ void handleTextMessage(const std::string& jsonMsg, std::map<foxglove::ChannelId,
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    fmt::print("Usage: {} <url>\n", argv[0]);
+    fmt::print("Usage: {} <url> (e.g. ws://localhost:8765)\n", argv[0]);
     return 1;
   }
 
