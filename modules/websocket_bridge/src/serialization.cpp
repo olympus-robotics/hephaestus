@@ -58,4 +58,19 @@ void printBinary(const uint8_t* data, size_t length) {
   fmt::print("{}", ss.str());
 }
 
+std::string getTimestampString() {
+  auto now = std::chrono::system_clock::now();
+  auto now_time_t = std::chrono::system_clock::to_time_t(now);
+  auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+  std::tm now_tm;
+  localtime_r(&now_time_t, &now_tm);
+
+  std::ostringstream oss;
+  oss << "" << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "." << std::setfill('0') << std::setw(3)
+      << now_ms.count();
+
+  return oss.str();
+}
+
 }  // namespace heph::ws_bridge

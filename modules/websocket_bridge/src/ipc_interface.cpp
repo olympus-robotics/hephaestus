@@ -13,7 +13,9 @@
 
 namespace heph::ws_bridge {
 
-IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session) : session_(session) {
+IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config)
+  : session_(session), config_(config) {
+  CHECK(session_);
 }
 
 void IpcInterface::start() {
@@ -93,6 +95,20 @@ auto IpcInterface::callService(const ipc::TopicConfig& topic_config, std::span<c
   return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
 }
 
+void IpcInterface::callback_ServiceResponse(const std::string& service_name,
+                                            const RawServiceResponses& responses) {
+  absl::MutexLock lock(&mutex_);
+
+  auto it = async_service_callbacks_.find(service_name);
+  if (it != async_service_callbacks_.end()) {
+    fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' to bridge [ASYNC]",
+                 responses.size(), service_name);
+
+    it->second({ responses });
+    async_service_callbacks_.erase(it);
+  }
+}
+
 std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_config,
                                                  std::span<const std::byte> buffer,
                                                  std::chrono::milliseconds timeout,
@@ -101,13 +117,27 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
 
   try {
     auto future = std::async(std::launch::async, [this, topic_config, buffer, timeout]() {
-      auto responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
-      absl::MutexLock lock(&mutex_);
-      auto it = async_service_callbacks_.find(topic_config.name);
-      if (it != async_service_callbacks_.end()) {
-        it->second(responses);
-        async_service_callbacks_.erase(it);
+      // Note: we need to create a new session here, because otherwise the session will block subsequent
+      // service calls until this one has finished.
+      CHECK(session_);
+
+      RawServiceResponses responses;
+
+      try {
+        // TODO(mfehr): This does currently not work / or rather it works, but not asynchronously.
+        fmt::println("[IPC Interface] - Sending service request for service '{}' [ASYNC]", topic_config.name);
+
+        responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+      } catch (const std::exception& e) {
+        heph::log(heph::ERROR, "[IPC Interface] - Exception during async service call", "topic",
+                  topic_config.name, "error", e.what());
+        throw;
       }
+
+      fmt::println("[IPC Interface] - Received service response (#{}) for service '{}' [ASYNC]",
+                   responses.size(), topic_config.name);
+
+      callback_ServiceResponse(topic_config.name, responses);
     });
 
     async_service_callbacks_[topic_config.name] = callback;

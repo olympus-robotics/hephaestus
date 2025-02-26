@@ -29,4 +29,6 @@ void debugPrintSchema(const std::vector<std::byte>& schema);
 
 void printBinary(const uint8_t* data, size_t length);
 
+std::string getTimestampString();
+
 }  // namespace heph::ws_bridge

@@ -41,6 +41,8 @@ getServiceCallResponses(const ::zenoh::channels::FifoChannel::HandlerType<::zeno
        res = service_replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
+      heph::log(heph::ERROR, "Service call response contained error", "error",
+                reply.get_err().get_payload().as_string());
       continue;
     }
 
@@ -70,6 +72,7 @@ auto callServiceRaw(Session& session, const TopicConfig& topic_config, std::span
   static constexpr auto FIFO_QUEUE_SIZE = 100;
   auto replies = session.zenoh_session.get(keyexpr, "", ::zenoh::channels::FifoChannel(FIFO_QUEUE_SIZE),
                                            std::move(options), &result);
+
   if (result != Z_OK) {
     heph::log(heph::ERROR, "failed to call service, server error", "topic", topic_config.name);
     return {};

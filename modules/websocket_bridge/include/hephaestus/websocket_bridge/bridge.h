@@ -94,7 +94,7 @@ private:
                                       const heph::serdes::TypeInfo& type_info);
 
   void callback__Ipc__ServiceResponsesReceived(
-      WsServerServiceRequest request, const RawServiceResponses& responses,
+      WsServerServiceId service_id, WsServerServiceCallId call_id, const RawServiceResponses& responses,
       std::optional<ClientHandleWithName> client_handle_opt = std::nullopt);
 };
 

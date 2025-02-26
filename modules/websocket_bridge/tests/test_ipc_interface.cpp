@@ -32,7 +32,7 @@ protected:
 
     config_ = heph::ipc::zenoh::createLocalConfig();
     session_ = heph::ipc::zenoh::createSession(config_);
-    ipc_interface_ = std::make_unique<heph::ws_bridge::IpcInterface>(session_);
+    ipc_interface_ = std::make_unique<heph::ws_bridge::IpcInterface>(session_, config_);
 
     // Set up a service server
     heph::ipc::TopicConfig service_config{ "test_service" };

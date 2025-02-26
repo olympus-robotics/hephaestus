@@ -20,9 +20,9 @@
 using namespace std::chrono_literals;
 
 constexpr size_t MIN_MESSAGE_LENGTH = 12u;
-constexpr int SERVICE_REQUEST_COUNT = 10000;
+constexpr int SERVICE_REQUEST_COUNT = 2;
 constexpr int SPINNING_SLEEP_DURATION_MS = 100;
-constexpr int LAUNCHING_SLEEP_DURATION_MS = 5;
+constexpr int LAUNCHING_SLEEP_DURATION_MS = 0;
 constexpr int RESPONSE_WAIT_DURATION_S = 1;
 
 static std::atomic<bool> g_abort{ false };
@@ -34,8 +34,9 @@ void sigintHandler(int signal) {
 
 using ResponsesWithTimingMap =
     std::unordered_map<uint32_t, std::pair<foxglove::ServiceResponse, std::chrono::milliseconds>>;
+using CallIdToStartTimeMap = std::unordered_map<uint32_t, std::chrono::steady_clock::time_point>;
 
-void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint32_t B) {
+void printResultTable(ResponsesWithTimingMap& responses, uint32_t A, uint32_t B) {
   constexpr uint32_t max_columns = 5;
   const uint32_t range = B - A + 1;
   const uint32_t width = std::min(range, max_columns);
@@ -51,14 +52,20 @@ void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint3
   for (uint32_t row = 0; row < height; ++row) {
     fmt::print("|");
     for (uint32_t col = 0; col < width; ++col) {
-      const uint32_t value = A + row * width + col;
-      if (value > B) {
+      const uint32_t call_id = A + row * width + col;
+      if (call_id > B) {
         fmt::print("       |");
       } else {
-        if (responses.count(value)) {
-          fmt::print(" {:4} ✔ {:4}ms |", value, responses.at(value).second.count());
+        bool has_response = responses.count(call_id);
+        if (has_response) {
+          bool has_error = responses[call_id].first.data.empty();
+          if (has_error) {
+            fmt::print(" {:4} ✖ {:4}ms |", call_id, responses[call_id].second.count());
+          } else {
+            fmt::print(" {:4} ✔ {:4}ms |", call_id, responses[call_id].second.count());
+          }
         } else {
-          fmt::print(" {:4} ∅      |", value);
+          fmt::print(" {:4} ∅      |", call_id);
         }
       }
     }
@@ -70,10 +77,9 @@ void printResultTable(const ResponsesWithTimingMap& responses, uint32_t A, uint3
   }
 }
 
-void handleBinaryMessage(
-    const uint8_t* data, size_t length,
-    std::unordered_map<uint32_t, std::chrono::steady_clock::time_point>& call_id_to_start_time,
-    const heph::ws_bridge::ProtobufSchemaDatabase& schema_db, ResponsesWithTimingMap& responses) {
+void handleBinaryMessage(const uint8_t* data, size_t length, CallIdToStartTimeMap& call_id_to_start_time,
+                         const heph::ws_bridge::ProtobufSchemaDatabase& schema_db,
+                         ResponsesWithTimingMap& responses) {
   if (data == nullptr || length == 0) {
     fmt::print("Received invalid message.\n");
     return;
@@ -136,7 +142,9 @@ void handleBinaryMessage(
 }
 
 void handleTextMessage(const std::string& jsonMsg, std::map<foxglove::ChannelId, foxglove::Channel>& channels,
-                       std::map<foxglove::ServiceId, foxglove::Service>& services) {
+                       std::map<foxglove::ServiceId, foxglove::Service>& services,
+                       ResponsesWithTimingMap& call_id_to_response_map,
+                       CallIdToStartTimeMap& call_id_to_start_time) {
   try {
     const auto msg = nlohmann::json::parse(jsonMsg);
 
@@ -191,10 +199,38 @@ void handleTextMessage(const std::string& jsonMsg, std::map<foxglove::ChannelId,
           fmt::print("Advertised service: {}\n", foxglove_service.name);
           services[foxglove_service.id] = foxglove_service;
         }
+      } else if (op == "serviceCallFailure") {
+        uint32_t callId = 0;
+
+        // Expected: {"callId":1,"message":"[WS Bridge] - Service response is empty for service 'srv/test1'
+        // [1]","op":"serviceCallFailure","serviceId":1}
+
+        if (msg.contains("callId") && msg.contains("message")) {
+          callId = msg["callId"];
+          const std::string errorMessage = msg["message"].get<std::string>();
+          fmt::print("Service call {} failed with error: {}\n", callId, errorMessage);
+        } else {
+          fmt::print("Received serviceCallFailure message without callId or error\n");
+        }
+
+        const auto it = call_id_to_start_time.find(callId);
+        if (it != call_id_to_start_time.end()) {
+          const auto end_time = std::chrono::steady_clock::now();
+          const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - it->second);
+          fmt::print("Service call {} failed after {}\n", callId, duration);
+
+          foxglove::ServiceResponse response;
+          response.callId = callId;
+          response.serviceId = 0;  // Assuming 0 for failure case
+          response.data = {};      // Empty data for failure case
+
+          call_id_to_response_map[callId] = std::make_pair(response, duration);
+        } else {
+          fmt::print("Failed to measure response time for call ID {}.\n", callId);
+        }
       } else {
         fmt::print("Unknown operation: {}\n", op);
         fmt::print("Raw Message: {}\n", jsonMsg);
-        g_abort = true;
       }
     }
   } catch (const nlohmann::json::parse_error& e) {
@@ -215,7 +251,7 @@ int main(int argc, char** argv) {
   std::map<foxglove::ChannelId, foxglove::Channel> channels;
   std::map<foxglove::ServiceId, foxglove::Service> services;
   ResponsesWithTimingMap responses;
-  std::unordered_map<uint32_t, std::chrono::steady_clock::time_point> call_id_to_start_time;
+  CallIdToStartTimeMap call_id_to_start_time;
   heph::ws_bridge::ProtobufSchemaDatabase schema_db;
 
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
@@ -227,7 +263,7 @@ int main(int argc, char** argv) {
     g_abort = true;
   };
   const auto text_message_handler = [&](const std::string& jsonMsg) {
-    handleTextMessage(jsonMsg, channels, services);
+    handleTextMessage(jsonMsg, channels, services, responses, call_id_to_start_time);
   };
 
   std::signal(SIGINT, sigintHandler);
@@ -333,6 +369,8 @@ int main(int argc, char** argv) {
 
     call_id_to_start_time[request.callId] = std::chrono::steady_clock::now();
     client.sendServiceRequest(request);
+
+    fmt::print("Service request with call ID {} dispatched", request.callId);
 
     if (LAUNCHING_SLEEP_DURATION_MS > 0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(LAUNCHING_SLEEP_DURATION_MS));

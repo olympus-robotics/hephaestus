@@ -30,7 +30,7 @@ using AsyncServiceResponseCallback = std::function<void(const RawServiceResponse
 
 class IpcInterface {
 public:
-  IpcInterface(std::shared_ptr<ipc::zenoh::Session> session);
+  IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config);
 
   void start();
   void stop();
@@ -52,7 +52,10 @@ private:
 
   void callback_PublisherMatchingStatus(const std::string& topic, const zenoh::MatchingStatus& status);
 
+  void callback_ServiceResponse(const std::string& service_name, const RawServiceResponses& responses);
+
   std::shared_ptr<ipc::zenoh::Session> session_;
+  ipc::zenoh::Config config_;
 
   mutable absl::Mutex mutex_;
 

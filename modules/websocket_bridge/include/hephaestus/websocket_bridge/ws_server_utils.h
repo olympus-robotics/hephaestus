@@ -21,6 +21,7 @@ using WsServerChannelId = foxglove::ChannelId;
 using WsServerChannelInfo = foxglove::ChannelWithoutId;
 
 using WsServerServiceId = foxglove::ServiceId;
+using WsServerServiceCallId = uint32_t;
 using WsServerServiceInfo = foxglove::ServiceWithoutId;
 using WsServerServiceDefinition = foxglove::ServiceRequestDefinition;
 using WsServerServiceRequest = foxglove::ServiceRequest;
@@ -36,7 +37,7 @@ struct WsServerClientComparator {
 using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
 
 bool convertIpcRawServiceResponseToWsServiceResponse(
-    const WsServerServiceRequest& request,
+    WsServerServiceId service_id, WsServerServiceCallId call_id,
     const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
     WsServerServiceResponse& ws_response);
 

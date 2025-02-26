@@ -38,10 +38,10 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto callback = [](const heph::examples::types::Pose& sample) {
       fmt::println("received query: pose = {}", sample);
-      return heph::examples::types::Pose{
-        .orientation = Eigen::Quaterniond{ 1., 0.1, 0.2, 0.3 },  // NOLINT
-        .position = Eigen::Vector3d{ 1, 2, 3 },                  // NOLINT
-      };
+
+      auto perturbed_pose = sample;
+      perturbed_pose.position.z() += 1.0;
+      return perturbed_pose;
     };
 
     const heph::ipc::zenoh::Service<heph::examples::types::Pose, heph::examples::types::Pose> server(
