@@ -538,7 +538,7 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
   fmt::println("[WS Bridge] - Client '{}' is sending a service request with service id [{}] ...", client_name,
-               request.serviceId);
+    request.serviceId);
 
   if (!state_.hasWsServiceMapping(request.serviceId)) {
     heph::log(

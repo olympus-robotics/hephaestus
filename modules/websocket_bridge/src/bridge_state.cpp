@@ -182,7 +182,10 @@ std::string WsBridgeState::toString() const {
      << "\n"
      << topicChannelMappingToString() << "\n"
      << channelClientMappingToString() << "\n"
-     << servicMappingToString() << "\n";
+     << servicMappingToString() << "\n"
+     << callIdToClientMappingToString() << "\n"
+     << "  CONSISTENCY CHECK: " << (checkConsistency() ? "PASS" : "FAIL") << "\n";
+
   return ss.str();
 }
 
@@ -291,6 +294,71 @@ std::string WsBridgeState::servicMappingToString() const {
     oss << "  \t'" << service_name << "' -> [" << service_id << "]\n";
   }
   return oss.str();
+}
+
+bool WsBridgeState::hasCallIdToClientMapping(const uint32_t& call_id) const {
+  absl::MutexLock lock(&mutex_sc2c_);
+  return call_id_to_client_map_.find(call_id) != call_id_to_client_map_.end();
+}
+
+void WsBridgeState::addCallIdToClientMapping(const uint32_t& call_id, WsServerClientHandle client_handle,
+                                             const std::string& client_name) {
+  absl::MutexLock lock(&mutex_sc2c_);
+  call_id_to_client_map_[call_id] = { client_handle, client_name };
+
+  if (client_handle.expired()) {
+    heph::log(heph::WARN, "[App Bridge] Client hung up unexpectedly.");
+  }
+
+  cleanUpCallIdToClientMapping();
+}
+
+void WsBridgeState::removeCallIdToClientMapping(const uint32_t& call_id) {
+  absl::MutexLock lock(&mutex_sc2c_);
+  call_id_to_client_map_.erase(call_id);
+}
+
+std::optional<ClientHandleWithName> WsBridgeState::getClientForCallId(const uint32_t& call_id) const {
+  absl::MutexLock lock(&mutex_sc2c_);
+  auto it = call_id_to_client_map_.find(call_id);
+  if (it == call_id_to_client_map_.end()) {
+    return std::nullopt;
+  }
+
+  if (it->second.first.expired()) {
+    heph::log(heph::ERROR, "If a call ID is in the map, it must have a valid client handle!", "call id",
+              std::to_string(call_id));
+  }
+
+  return it->second;
+}
+
+std::string WsBridgeState::callIdToClientMappingToString() const {
+  absl::MutexLock lock(&mutex_sc2c_);
+  std::ostringstream oss;
+  oss << "  WS Service Call ID to WS Client Mapping:\n";
+
+  if (call_id_to_client_map_.empty()) {
+    oss << "  \t∅\n";
+    return oss.str();
+  }
+
+  for (const auto& [call_id, client_handle_w_name] : call_id_to_client_map_) {
+    oss << "  \t[" << call_id << "] -> '" << client_handle_w_name.second << "' ("
+        << (client_handle_w_name.first.expired() ? "expired" : "valid") << ")\n";
+  }
+  return oss.str();
+}
+
+void WsBridgeState::cleanUpCallIdToClientMapping() {
+  // Remove all expired client handles from the call ID to client map
+  for (auto it = call_id_to_client_map_.begin(); it != call_id_to_client_map_.end();) {
+    if (it->second.first.expired()) {
+      it = call_id_to_client_map_.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 }  // namespace heph::ws_bridge

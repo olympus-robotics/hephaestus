@@ -37,7 +37,6 @@ protected:
   void TearDown() override {
   }
 };
-;
 
 TEST_F(WsBridgeStateTest, AddAndGetIpcTopicForWsChannel) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
@@ -129,6 +128,78 @@ TEST_F(WsBridgeStateTest, ToString) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_NE(state.toString().find("[1]"), std::string::npos);
   EXPECT_NE(state.toString().find("client1"), std::string::npos);
+}
+
+TEST_F(WsBridgeStateTest, AddAndRetrieveServiceMapping) {
+  WsServerServiceId serviceId = 101;
+  std::string serviceName = "test_service";
+  state.addWsServiceToIpcServiceMapping(serviceId, serviceName);
+
+  EXPECT_EQ(state.getIpcServiceForWsService(serviceId), serviceName);
+  EXPECT_EQ(state.getWsServiceForIpcService(serviceName), serviceId);
+}
+
+TEST_F(WsBridgeStateTest, RemoveServiceMapping) {
+  WsServerServiceId serviceId = 202;
+  std::string serviceName = "removable_service";
+  state.addWsServiceToIpcServiceMapping(serviceId, serviceName);
+  state.removeWsServiceToIpcServiceMapping(serviceId, serviceName);
+
+  EXPECT_FALSE(state.hasWsServiceMapping(serviceId));
+  EXPECT_FALSE(state.hasIpcServiceMapping(serviceName));
+}
+
+TEST_F(WsBridgeStateTest, ServiceMappingToString) {
+  WsServerServiceId serviceId = 303;
+  std::string serviceName = "string_service";
+  state.addWsServiceToIpcServiceMapping(serviceId, serviceName);
+
+  auto mappingStr = state.servicMappingToString();
+  EXPECT_NE(mappingStr.find(serviceName), std::string::npos);
+}
+
+TEST_F(WsBridgeStateTest, CheckConsistency) {
+  EXPECT_TRUE(state.checkConsistency());
+}
+
+TEST_F(WsBridgeStateTest, AddAndRetrieveCallIdToClientMapping) {
+  uint32_t call_id = 1;
+  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
+
+  auto client = state.getClientForCallId(call_id);
+  ASSERT_TRUE(client.has_value());
+  EXPECT_EQ(client->second, client_name1);
+}
+
+TEST_F(WsBridgeStateTest, RemoveCallIdToClientMapping) {
+  uint32_t call_id = 2;
+  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
+  state.removeCallIdToClientMapping(call_id);
+
+  EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
+}
+
+TEST_F(WsBridgeStateTest, CallIdToClientMappingToString) {
+  uint32_t call_id = 3;
+  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
+
+  auto mappingStr = state.callIdToClientMappingToString();
+  EXPECT_NE(mappingStr.find("client1"), std::string::npos);
+}
+
+TEST_F(WsBridgeStateTest, PrintBridgeState) {
+  state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
+  state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
+  state.addWsServiceToIpcServiceMapping(101, "test_service");
+  state.addCallIdToClientMapping(1, client_handle1, client_name1);
+
+  testing::internal::CaptureStdout();
+  state.printBridgeState();
+  std::string output = testing::internal::GetCapturedStdout();
+
+  EXPECT_NE(output.find("[1]"), std::string::npos);
+  EXPECT_NE(output.find("client1"), std::string::npos);
+  EXPECT_NE(output.find("test_service"), std::string::npos);
 }
 
 }  // namespace heph::ws_bridge::tests
