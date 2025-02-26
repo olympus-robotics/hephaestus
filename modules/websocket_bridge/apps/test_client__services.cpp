@@ -20,8 +20,9 @@
 using namespace std::chrono_literals;
 
 constexpr size_t MIN_MESSAGE_LENGTH = 12u;
-constexpr int SERVICE_REQUEST_COUNT = 100;
-constexpr int SLEEP_DURATION_MS = 100;
+constexpr int SERVICE_REQUEST_COUNT = 10000;
+constexpr int SPINNING_SLEEP_DURATION_MS = 100;
+constexpr int LAUNCHING_SLEEP_DURATION_MS = 5;
 constexpr int RESPONSE_WAIT_DURATION_S = 1;
 
 static std::atomic<bool> g_abort{ false };
@@ -126,7 +127,7 @@ void handleBinaryMessage(
   if (it != call_id_to_start_time.end()) {
     const auto end_time = std::chrono::steady_clock::now();
     const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - it->second);
-    fmt::print("Service call {} took {} ms\n", response.callId, duration);
+    fmt::print("Service call {} took {}\n", response.callId, duration);
 
     responses[response.callId] = std::make_pair(response, duration);
   } else {
@@ -239,7 +240,7 @@ int main(int argc, char** argv) {
 
   fmt::print("Waiting for services to be advertised...\n");
   while (services.empty() && !g_abort) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION_MS));
+    std::this_thread::sleep_for(std::chrono::milliseconds(SPINNING_SLEEP_DURATION_MS));
   }
 
   fmt::print("Advertised services:\n");
@@ -332,6 +333,10 @@ int main(int argc, char** argv) {
 
     call_id_to_start_time[request.callId] = std::chrono::steady_clock::now();
     client.sendServiceRequest(request);
+
+    if (LAUNCHING_SLEEP_DURATION_MS > 0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(LAUNCHING_SLEEP_DURATION_MS));
+    }
   }
 
   while (responses.size() < SERVICE_REQUEST_COUNT && !g_abort) {
@@ -339,6 +344,10 @@ int main(int argc, char** argv) {
     std::this_thread::sleep_for(std::chrono::seconds(RESPONSE_WAIT_DURATION_S));
     printResultTable(responses, 1, SERVICE_REQUEST_COUNT);
   }
+
+  // IF we wait between launching the requests (LAUNCHING_SLEEP_DURATION_MS), the above loop will not even
+  // execute, so we print here again.
+  printResultTable(responses, 1, SERVICE_REQUEST_COUNT);
 
   fmt::print("Closing client...\n");
   client.close();

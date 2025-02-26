@@ -28,9 +28,11 @@ void IpcInterface::start() {
 
 void IpcInterface::stop() {
   absl::MutexLock lock(&mutex_);
-  fmt::println("[IPC Interface] - Starting...");
+  fmt::println("[IPC Interface] - Stopping...");
 
   subscribers_.clear();
+
+  async_service_callbacks_.clear();
 
   fmt::println("[IPC Interface] - OFFLINE");
 }
@@ -89,6 +91,34 @@ void IpcInterface::callback_PublisherMatchingStatus(const std::string& topic,
 auto IpcInterface::callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                                std::chrono::milliseconds timeout) -> RawServiceResponses {
   return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+}
+
+std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_config,
+                                                 std::span<const std::byte> buffer,
+                                                 std::chrono::milliseconds timeout,
+                                                 AsyncServiceResponseCallback callback) {
+  absl::MutexLock lock(&mutex_);
+
+  try {
+    auto future = std::async(std::launch::async, [this, topic_config, buffer, timeout]() {
+      auto responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+      absl::MutexLock lock(&mutex_);
+      auto it = async_service_callbacks_.find(topic_config.name);
+      if (it != async_service_callbacks_.end()) {
+        it->second(responses);
+        async_service_callbacks_.erase(it);
+      }
+    });
+
+    async_service_callbacks_[topic_config.name] = callback;
+    return future;
+  } catch (const std::exception& e) {
+    heph::log(heph::ERROR, "[IPC Interface] - Failed to dispatch async service call", "topic",
+              topic_config.name, "error", e.what());
+    std::promise<void> promise;
+    promise.set_exception(std::make_exception_ptr(e));
+    return promise.get_future();
+  }
 }
 
 }  // namespace heph::ws_bridge

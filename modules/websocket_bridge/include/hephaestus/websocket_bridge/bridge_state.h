@@ -104,10 +104,8 @@ private:
   // NOTE: This will not be used if services are configured to called synchronous.
   // Assumptions:
   // - One service call ID, one client and vice versa
-  // - Call IDs are unique
+  // - Call IDs are unique (TODO(mfehr): probably not a great idea because the caller can set it!)
   // - Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
-  // - Mapping only exists in the (hopefully) brief moment of time between sending the request and receiving
-  // the response.
 public:
   bool hasCallIdToClientMapping(const uint32_t& call_id) const;
   void addCallIdToClientMapping(const uint32_t& call_id, WsServerClientHandle client_handle,

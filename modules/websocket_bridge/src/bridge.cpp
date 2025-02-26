@@ -386,6 +386,80 @@ void WsBridge::callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMet
   }
 }
 
+void WsBridge::callback__Ipc__ServiceResponsesReceived(
+    WsServerServiceRequest request, const RawServiceResponses& responses,
+    std::optional<ClientHandleWithName> client_handle_w_name_opt) {
+  CHECK(ws_server_);
+
+  if (!state_.hasWsServiceMapping(request.serviceId)) {
+    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Received service response with service id [{}] but the "
+                                       "service is not advertised!",
+                                       request.serviceId));
+    return;
+  }
+
+  const std::string service_name = state_.getIpcServiceForWsService(request.serviceId);
+
+  bool sync_service_call = false;
+
+  ClientHandleWithName client_handle_w_name;
+
+  if (client_handle_w_name_opt.has_value()) {
+    client_handle_w_name = client_handle_w_name_opt.value();
+    sync_service_call = true;
+  } else {
+    // Look up client handle by call id
+    const auto client_handle_w_name_lookup = state_.getClientForCallId(request.callId);
+    if (!client_handle_w_name_lookup.has_value()) {
+      heph::log(
+          heph::ERROR,
+          fmt::format("[WS Bridge] - No client handle found for call id [{}], dropping service respose.",
+                      request.callId));
+      return;
+    }
+    client_handle_w_name = client_handle_w_name_lookup.value();
+    state_.removeCallIdToClientMapping(request.callId);
+  }
+
+  if (responses.empty()) {
+    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Service response is empty for service "
+                                       "'{}' [{}]",
+                                       service_name, request.serviceId));
+    return;
+  }
+
+  const std::string client_name = client_handle_w_name.second;
+  const auto client_handle = client_handle_w_name.first;
+
+  if (responses.size() > 1) {
+    heph::log(heph::WARN, fmt::format("[WS Bridge] - Multiple responses received for service "
+                                      "'{}' [{}], only the first response was forwarded.",
+                                      service_name, request.serviceId));
+  }
+
+  const auto& response = responses.front();
+  if (response.topic != service_name) {
+    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Response and request names do not "
+                                       "match! '{}' vs '{}'",
+                                       response.topic, service_name));
+    return;
+  }
+
+  WsServerServiceResponse ws_server_response;
+  if (!convertIpcRawServiceResponseToWsServiceResponse(request, response, ws_server_response)) {
+    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Failed to convert IPC service response "
+                                       "to WS service response for service '{}' [{}]",
+                                       service_name, request.serviceId));
+    return;
+  }
+
+  ws_server_->sendServiceResponse(client_handle, ws_server_response);
+
+  fmt::println("[WS Bridge] - Client '{}' has received the response to their "
+               "service request with service '{}' [{}] successfully. {}",
+               client_name, service_name, request.serviceId, sync_service_call ? "[SYNC]" : "[ASYNC]");
+}
+
 ////////////////////////////////
 // Websocket Server Callbacks //
 ////////////////////////////////
@@ -538,7 +612,7 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
   fmt::println("[WS Bridge] - Client '{}' is sending a service request with service id [{}] ...", client_name,
-    request.serviceId);
+               request.serviceId);
 
   if (!state_.hasWsServiceMapping(request.serviceId)) {
     heph::log(
@@ -549,14 +623,12 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
     return;
   }
 
-  // TODO(mfehr): make this a bit more generic and in sync with the encoding settings in the server
-  // config. We should support json as well.
   if (request.encoding != "protobuf") {
     heph::log(
         heph::ERROR,
         fmt::format("[WS Bridge] - Client '{}' is sending a service request with service id [{}] but the "
-                    "encoding is not supported!",
-                    client_name, request.serviceId));
+                    "encoding ({}) is not supported!",
+                    client_name, request.serviceId, request.encoding));
     return;
   }
 
@@ -569,51 +641,27 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
 
   const std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(config_.ipc_service_call_timeout_ms);
 
-  // TODO(mfehr): IMPORTANT - MAKE THIS ASYNC!
-  // -> track service request to client mapping in BridgeState.
-  auto responses = ipc_interface_->callService(topic_config, buffer, timeout_ms);
+  if (config_.ipc_service_service_request_async) {
+    ///////////
+    // ASYNC //
+    ///////////
 
-  if (responses.empty()) {
-    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Service response is empty for service '{}' [{}]",
-                                       service_name, request.serviceId));
-    return;
+    state_.addCallIdToClientMapping(request.callId, client_handle, client_name);
+
+    ipc_interface_->callServiceAsync(topic_config, buffer, timeout_ms,
+                                     [this, request](const RawServiceResponses& responses) -> void {
+                                       callback__Ipc__ServiceResponsesReceived(request, responses);
+                                     });
+  } else {
+    //////////
+    // SYNC //
+    //////////
+    auto responses = ipc_interface_->callService(topic_config, buffer, timeout_ms);
+
+    callback__Ipc__ServiceResponsesReceived(
+        request, responses, std::make_optional<ClientHandleWithName>(client_handle, client_name));
   }
-
-  size_t answer_idx = 1;
-  for (const auto& response : responses) {
-    if (response.topic != service_name) {
-      heph::log(
-          heph::ERROR,
-          fmt::format("[WS Bridge] - Response service name '{}' does not match request service name '{}'",
-                      response.topic, service_name));
-      return;
-    }
-
-    if (response.value.empty()) {
-      heph::log(heph::ERROR, fmt::format("[WS Bridge] - Service response is empty for service '{}' [{}]",
-                                         service_name, request.serviceId));
-      return;
-    }
-
-    std::vector<uint8_t> response_data(response.value.size());
-    std::transform(response.value.begin(), response.value.end(), response_data.begin(),
-                   [](std::byte b) { return static_cast<uint8_t>(b); });
-
-    WsServerServiceResponse ws_server_response = {
-      .serviceId = request.serviceId,
-      .callId = request.callId,
-      .encoding = std::string("protobuf", 8),
-      .data = std::move(response_data),
-    };
-
-    ws_server_->sendServiceResponse(client_handle, ws_server_response);
-
-    fmt::println("[WS Bridge] - Client '{}' has received answer {}/{} to his service request with service "
-                 "'{}' [{}] successfully.",
-                 client_name, answer_idx, responses.size(), service_name, request.serviceId);
-    ++answer_idx;
-  }
-}  // namespace heph::ws_bridge
+}
 
 void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
   CHECK(ipc_graph_);

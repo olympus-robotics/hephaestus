@@ -26,6 +26,7 @@ using TopicSubscriberWithTypeCallback = std::function<void(
     const ipc::zenoh::MessageMetadata&, std::span<const std::byte>, const serdes::TypeInfo&)>;
 
 using RawServiceResponses = std::vector<ipc::zenoh::ServiceResponse<std::vector<std::byte>>>;
+using AsyncServiceResponseCallback = std::function<void(const RawServiceResponses&)>;
 
 class IpcInterface {
 public:
@@ -42,6 +43,10 @@ public:
   auto callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                    std::chrono::milliseconds timeout) -> RawServiceResponses;
 
+  std::future<void> callServiceAsync(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
+                                     std::chrono::milliseconds timeout,
+                                     AsyncServiceResponseCallback callback);
+
 private:
   bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
@@ -53,6 +58,8 @@ private:
 
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawSubscriber>>
       subscribers_ ABSL_GUARDED_BY(mutex_);
+
+  std::unordered_map<std::string, AsyncServiceResponseCallback> async_service_callbacks_;
 };
 
 }  // namespace heph::ws_bridge

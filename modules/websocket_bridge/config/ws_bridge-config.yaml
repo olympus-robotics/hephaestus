@@ -37,6 +37,8 @@ zenoh_config:
   multicast_scouting_interface: auto
 
 ipc_service_call_timeout_ms: 5000
+ipc_service_service_request_async: true
+
 ipc_topic_whitelist:
   - .*
 ipc_topic_blacklist: []

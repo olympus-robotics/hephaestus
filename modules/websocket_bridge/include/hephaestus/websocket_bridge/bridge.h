@@ -32,6 +32,7 @@
 #include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/websocket_bridge/serialization.h"
 #include "hephaestus/websocket_bridge/ws_server_utils.h"
+#include "ws_server_utils.h"
 
 namespace heph::ws_bridge {
 
@@ -66,6 +67,7 @@ private:
                                          WsServerClientHandle client_handle);
   void callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
                                           WsServerClientHandle client_handle);
+
   void callback__WsServer__SubscribeConnectionGraph(bool subscribe);
 
   ///////////////////
@@ -90,6 +92,10 @@ private:
   void callback__Ipc__MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
                                       std::span<const std::byte> data,
                                       const heph::serdes::TypeInfo& type_info);
+
+  void callback__Ipc__ServiceResponsesReceived(
+      WsServerServiceRequest request, const RawServiceResponses& responses,
+      std::optional<ClientHandleWithName> client_handle_opt = std::nullopt);
 };
 
 }  // namespace heph::ws_bridge

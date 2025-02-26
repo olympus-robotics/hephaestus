@@ -54,6 +54,7 @@ struct WsBridgeConfig {
   heph::ipc::zenoh::Config zenoh_config;  // Default constructor is called here
 
   int ipc_service_call_timeout_ms = 5000;
+  bool ipc_service_service_request_async = true;
 
   std::vector<std::string> ipc_topic_whitelist = { ".*" };
   std::vector<std::string> ipc_topic_blacklist = {};

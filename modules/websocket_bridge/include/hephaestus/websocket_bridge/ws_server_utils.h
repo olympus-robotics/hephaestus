@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <foxglove/websocket/server_interface.hpp>
+#include <hephaestus/ipc/zenoh/service.h>
 #include <websocketpp/common/connection_hdl.hpp>
 
 #include "hephaestus/websocket_bridge/bridge_config.h"
@@ -33,5 +34,10 @@ struct WsServerClientComparator {
   }
 };
 using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
+
+bool convertIpcRawServiceResponseToWsServiceResponse(
+    const WsServerServiceRequest& request,
+    const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
+    WsServerServiceResponse& ws_response);
 
 }  // namespace heph::ws_bridge

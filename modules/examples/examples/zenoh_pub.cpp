@@ -52,7 +52,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     fmt::println("[Session: '{}'] declaring RawPublisher on '{}'", publisher.sessionId(), topic_config.name);
 
-    static constexpr auto LOOP_WAIT = std::chrono::milliseconds(10);
+    static constexpr auto LOOP_WAIT = std::chrono::milliseconds(1000);
     double count = 0;
     while (!heph::utils::TerminationBlocker::stopRequested()) {
       heph::examples::types::Pose pose;
