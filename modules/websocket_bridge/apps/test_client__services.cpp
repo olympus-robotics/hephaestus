@@ -111,7 +111,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, CallIdToStartTimeMa
   fmt::print("Schema names for service id {}: [{}|{}]\n", response.serviceId, schema_names.first,
              schema_names.second);
 
-  auto message = heph::ws_bridge::retreiveMessageFromDatabase(schema_names.second, schema_db);
+  auto message = heph::ws_bridge::retrieveMessageFromDatabase(schema_names.second, schema_db);
   if (!message) {
     fmt::print("Failed to retrieve message from database\n");
     return;

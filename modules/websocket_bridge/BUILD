@@ -102,3 +102,12 @@ heph_cc_test(
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "test_protobuf_utils",
+    srcs = [
+        "tests/test_protobuf_utils.cpp",
+    ],
+    tags = ["exclusive"],
+    deps = IPC_TEST_DEPS,
+)

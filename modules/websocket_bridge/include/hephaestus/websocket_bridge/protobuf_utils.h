@@ -60,7 +60,7 @@ bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db);
 std::unique_ptr<google::protobuf::Message>
 
-retreiveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db);
+retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db);
 
 std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
                                                                      const ProtobufSchemaDatabase& schema_db);
@@ -80,7 +80,8 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 bool loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db);
 
-std::unique_ptr<google::protobuf::Message>
+
+                std::unique_ptr<google::protobuf::Message>
 generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db);
 
 template <typename T>

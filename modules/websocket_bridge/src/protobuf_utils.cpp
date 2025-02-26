@@ -108,6 +108,11 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 
 bool loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db) {
+  if (schema_bytes.empty()) {
+    fmt::println("Cannot loadSchema -> Schema bytes are empty");
+    return false;
+  }
+
   google::protobuf::FileDescriptorSet descriptor_set;
   if (!descriptor_set.ParseFromArray(static_cast<const void*>(schema_bytes.data()),
                                      static_cast<int>(schema_bytes.size()))) {
@@ -160,7 +165,7 @@ bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSc
 }
 
 std::unique_ptr<google::protobuf::Message>
-retreiveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db) {
+retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db) {
   const google::protobuf::Descriptor* descriptor = schema_db.proto_pool->FindMessageTypeByName(schema_name);
   if (!descriptor) {
     fmt::print("Message type '{}' not found in schema database\n", schema_name);
@@ -204,7 +209,7 @@ ProtobufSchemaDatabase::ProtobufSchemaDatabase()
 std::unique_ptr<google::protobuf::Message>
 generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db) {
   // Retrieve the message from the database
-  auto message = retreiveMessageFromDatabase(schema_name, schema_db);
+  auto message = retrieveMessageFromDatabase(schema_name, schema_db);
   if (!message) {
     fmt::print("Failed to retrieve message from database\n");
     return {};
