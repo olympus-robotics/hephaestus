@@ -38,7 +38,7 @@ zenoh_config:
 
 ipc_service_call_timeout_ms: 10000
 # Async service calls are currently not supported.
-ipc_service_service_request_async: true
+ipc_service_service_request_async: false
 
 ipc_topic_whitelist:
   - .*

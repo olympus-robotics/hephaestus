@@ -109,7 +109,7 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 bool loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db) {
   if (schema_bytes.empty()) {
-    fmt::println("Cannot loadSchema -> Schema bytes are empty");
+    heph::log(heph::ERROR, "Cannot loadSchema -> Schema bytes are empty");
     return false;
   }
 
@@ -130,9 +130,25 @@ bool loadSchema(const std::vector<std::byte>& schema_bytes,
   return true;
 }
 
+bool saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db) {
+  if (channel_definition.schemaEncoding == "protobuf") {
+    schema_db.channel_id_to_schema_name[channel_definition.id] = channel_definition.schemaName;
+
+    // Decode the base64 string into binary schema.
+    std::vector<unsigned char> schema_char_vector = foxglove::base64Decode(channel_definition.schema);
+
+    std::vector<std::byte> schema_bytes(schema_char_vector.size());
+    std::transform(schema_char_vector.begin(), schema_char_vector.end(), schema_bytes.begin(),
+                   [](unsigned char c) { return static_cast<std::byte>(c); });
+
+    return saveSchemaToDatabase(schema_bytes, schema_db);
+  }
+  return true;
+}
+
 bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db) {
   if (!service_definition.request.has_value() || !service_definition.response.has_value()) {
-    fmt::print("Service definition is missing request or response schema\n");
+    heph::log(heph::ERROR, "Service definition is missing request or response schema");
     return false;
   }
 
@@ -145,6 +161,11 @@ bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufS
 
 bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
                           ProtobufSchemaDatabase& schema_db) {
+  if (service_request_definition.schemaEncoding != "protobuf") {
+    heph::log(heph::ERROR, "Service request schema encoding is not protobuf");
+    return false;
+  }
+
   // Decode the base64 string into binary schema.
   std::vector<unsigned char> schema_char_vector = foxglove::base64Decode(service_request_definition.schema);
 
@@ -157,24 +178,52 @@ bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 
 bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db) {
   if (!loadSchema(schema_bytes, schema_db.proto_db.get())) {
-    fmt::print("Failed to load schema into database\n");
+    heph::log(heph::ERROR, "Failed to load schema into database");
     heph::ws_bridge::debugPrintSchema(schema_bytes);
     return false;
   }
   return true;
 }
 
+std::unique_ptr<google::protobuf::Message> retrieveResponseMessageFromDatabase(
+    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+  auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
+
+  if (!schema_names.second.empty()) {
+    auto response_message = retrieveMessageFromDatabase(schema_names.second, schema_db);
+    return response_message;
+  }
+
+  heph::log(heph::ERROR, "Service id was not found in service to schema names map!", "service_id",
+            service_id);
+  return nullptr;
+}
+
+std::unique_ptr<google::protobuf::Message> retrieveRequestMessageFromDatabase(
+    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+  auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
+
+  if (!schema_names.first.empty()) {
+    auto request_message = retrieveMessageFromDatabase(schema_names.first, schema_db);
+    return request_message;
+  }
+
+  heph::log(heph::ERROR, "Service id was not found in service to schema names map!", "service_id",
+            service_id);
+  return nullptr;
+}
+
 std::unique_ptr<google::protobuf::Message>
 retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db) {
   const google::protobuf::Descriptor* descriptor = schema_db.proto_pool->FindMessageTypeByName(schema_name);
   if (!descriptor) {
-    fmt::print("Message type '{}' not found in schema database\n", schema_name);
+    heph::log(heph::ERROR, "Message type not found in schema database", "schema_name", schema_name);
     return nullptr;
   }
 
   const google::protobuf::Message* prototype = schema_db.proto_factory->GetPrototype(descriptor);
   if (!prototype) {
-    fmt::print("Failed to get prototype for message type '{}'\n", schema_name);
+    heph::log(heph::ERROR, "Failed to get prototype for message", "schema_name", schema_name);
     return nullptr;
   }
 
@@ -211,7 +260,7 @@ generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchem
   // Retrieve the message from the database
   auto message = retrieveMessageFromDatabase(schema_name, schema_db);
   if (!message) {
-    fmt::print("Failed to retrieve message from database\n");
+    heph::log(heph::ERROR, "Failed to retrieve message from database");
     return {};
   }
 

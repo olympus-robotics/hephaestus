@@ -1,5 +1,5 @@
 #=================================================================================================
-# Copyright (C) 2023-2024 HEPHAESTUS Contributors
+# Copyright (C) 2025 HEPHAESTUS Contributors
 #=================================================================================================
 
 declare_module(
@@ -45,3 +45,4 @@ define_module_library(
 # Subprojects
 add_subdirectory(tests)
 add_subdirectory(apps)
+add_subdirectory(examples)

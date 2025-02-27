@@ -23,6 +23,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
+#include <hephaestus/telemetry/log.h>
 #include <hephaestus/websocket_bridge/serialization.h>
 #include <nlohmann/json.hpp>
 
@@ -52,14 +53,22 @@ struct ProtobufSchemaDatabase {
   ~ProtobufSchemaDatabase() = default;
 };
 
+bool saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db);
+
 bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db);
 
 bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
                           ProtobufSchemaDatabase& schema_db);
 
 bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db);
-std::unique_ptr<google::protobuf::Message>
 
+std::unique_ptr<google::protobuf::Message>
+retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+
+std::unique_ptr<google::protobuf::Message>
+retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+
+std::unique_ptr<google::protobuf::Message>
 retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db);
 
 std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
@@ -80,8 +89,7 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 bool loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db);
 
-
-                std::unique_ptr<google::protobuf::Message>
+std::unique_ptr<google::protobuf::Message>
 generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db);
 
 template <typename T>

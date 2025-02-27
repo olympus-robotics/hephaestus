@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 HEPHAESTUS Contributors
+# Copyright (C) 2025 HEPHAESTUS Contributors
 # =================================================================================================
 
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
@@ -52,7 +52,16 @@ heph_cc_binary(
 
 heph_cc_binary(
     name = "test_client__services",
-    srcs = ["apps/test_client__services.cpp"],
+    srcs = ["examples/test_client__services.cpp"],
+    deps = [
+        ":websocket_bridge",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+)
+
+heph_cc_binary(
+    name = "test_client__topics",
+    srcs = ["examples/test_client__topics.cpp"],
     deps = [
         ":websocket_bridge",
         "@bazel_tools//tools/cpp/runfiles",
