@@ -18,7 +18,7 @@
 #include <hephaestus/types/dummy_type.h>
 #include <hephaestus/types_proto/dummy_type.h>  // NOLINT(misc-include-cleaner)
 
-namespace heph::ws_bridge::tests {
+namespace heph::ws::tests {
 
 class IpcGraphTest : public ::testing::Test {
 protected:
@@ -491,4 +491,4 @@ TEST_F(IpcGraphTest, GetTopicListString) {
   EXPECT_FALSE(topic_list.empty());
 }
 
-}  // namespace heph::ws_bridge::tests
+}  // namespace heph::ws::tests

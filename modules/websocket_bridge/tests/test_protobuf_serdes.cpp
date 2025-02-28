@@ -10,7 +10,7 @@
 
 #include "hephaestus/utils/protobuf_serdes.h"
 
-namespace heph::ws_bridge::tests {
+namespace heph::ws::tests {
 
 class ProtobufUtilsTest : public ::testing::Test {
 protected:
@@ -130,4 +130,4 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   EXPECT_NE(json_output, "{}");
 }
 
-}  // namespace heph::ws_bridge::tests
+}  // namespace heph::ws::tests

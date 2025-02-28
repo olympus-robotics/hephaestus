@@ -41,7 +41,7 @@
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 struct RandomGenerators {
   std::mt19937 gen;
@@ -141,4 +141,4 @@ void printBinary(const uint8_t* data, size_t length);
 
 std::string getTimestampString();
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

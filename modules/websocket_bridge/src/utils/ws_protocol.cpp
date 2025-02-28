@@ -4,7 +4,7 @@
 
 #include "hephaestus/utils/ws_protocol.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 bool convertIpcRawServiceResponseToWsServiceResponse(
     WsServerServiceId service_id, WsServerServiceCallId call_id,
@@ -250,4 +250,4 @@ bool parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
   }
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

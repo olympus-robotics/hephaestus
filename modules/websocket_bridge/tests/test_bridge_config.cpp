@@ -6,7 +6,7 @@
 
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 TEST(ParseRegexStringsTest, ValidRegex) {
   std::vector<std::string> regex_strings = { ".*", "^test$", "a+b*" };
@@ -130,4 +130,4 @@ TEST(LoadBridgeConfigFromYamlTest, LoadInvalidPath) {
   EXPECT_THROW(loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

@@ -4,7 +4,7 @@
 
 #include "hephaestus/websocket_bridge/bridge_state.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 std::string WsBridgeState::getIpcTopicForWsChannel(const WsServerChannelId& channel_id) const {
   absl::MutexLock lock(&mutex_t2c_);
@@ -361,4 +361,4 @@ void WsBridgeState::cleanUpCallIdToClientMapping() {
   }
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

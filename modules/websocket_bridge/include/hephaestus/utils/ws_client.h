@@ -22,7 +22,7 @@
 #include <hephaestus/utils/ws_protocol.h>
 #include <nlohmann/json.hpp>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 struct ServiceCallState {
   enum class Status { DISPATCHED, FAILED, SUCCESS };
@@ -61,4 +61,4 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads);
 
 void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads);
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

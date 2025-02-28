@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #pragma once
@@ -16,7 +16,7 @@
 #include <hephaestus/ipc/topic_database.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 using TopicsToTypeMap = std::unordered_map<std::string, std::string>;
 using TopicsToServiceTypesMap = std::unordered_map<std::string, std::pair<std::string, std::string>>;
@@ -157,4 +157,4 @@ private:
   TopicDiscoveryCallback topic_discovery_cb_;
 };
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

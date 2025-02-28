@@ -15,7 +15,7 @@
 
 #include "hephaestus/utils/ws_protocol.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 class WsBridgeState {
 public:
@@ -123,4 +123,4 @@ private:
   CallIdToClientMap call_id_to_client_map_ ABSL_GUARDED_BY(mutex_sc2c_);
 };
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

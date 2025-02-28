@@ -20,7 +20,7 @@
 
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 using TopicSubscriberWithTypeCallback = std::function<void(
     const ipc::zenoh::MessageMetadata&, std::span<const std::byte>, const serdes::TypeInfo&)>;
@@ -65,4 +65,4 @@ private:
   std::unordered_map<std::string, AsyncServiceResponseCallback> async_service_callbacks_;
 };
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

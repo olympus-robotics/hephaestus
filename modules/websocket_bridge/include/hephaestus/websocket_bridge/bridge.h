@@ -33,7 +33,7 @@
 #include "hephaestus/utils/protobuf_serdes.h"
 #include "hephaestus/utils/ws_protocol.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 class WsBridge {
 public:
@@ -97,4 +97,4 @@ private:
       std::optional<ClientHandleWithName> client_handle_opt = std::nullopt);
 };
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

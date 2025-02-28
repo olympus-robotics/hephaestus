@@ -22,13 +22,13 @@
 #include "hephaestus/ipc/ipc_interface.h"
 #include "hephaestus/types/proto/dummy_type.pb.h"
 
-namespace heph::ws_bridge::tests {
+namespace heph::ws::tests {
 
 class IpcInterfaceTest : public testing::Test {
 protected:
   std::shared_ptr<heph::ipc::zenoh::Session> session_;
   heph::ipc::zenoh::Config config_;
-  std::unique_ptr<heph::ws_bridge::IpcInterface> ipc_interface_;
+  std::unique_ptr<heph::ws::IpcInterface> ipc_interface_;
   std::unique_ptr<heph::ipc::zenoh::Service<types::DummyType, types::DummyType>> service_server_;
 
   void SetUp() override {
@@ -36,7 +36,7 @@ protected:
 
     config_ = heph::ipc::zenoh::createLocalConfig();
     session_ = heph::ipc::zenoh::createSession(config_);
-    ipc_interface_ = std::make_unique<heph::ws_bridge::IpcInterface>(session_, config_);
+    ipc_interface_ = std::make_unique<heph::ws::IpcInterface>(session_, config_);
 
     // Set up a service server
     heph::ipc::TopicConfig service_config{ "test_service" };
@@ -147,4 +147,4 @@ TEST_F(IpcInterfaceTest, CallServiceAsync) {
   EXPECT_TRUE(callback_called);
 }
 
-}  // namespace heph::ws_bridge::tests
+}  // namespace heph::ws::tests

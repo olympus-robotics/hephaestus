@@ -15,7 +15,7 @@
 #include <hephaestus/serdes/dynamic_deserializer.h>
 #include <hephaestus/utils/stack_trace.h>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config)
   : session_(session), config_(config) {
@@ -155,4 +155,4 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
   }
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

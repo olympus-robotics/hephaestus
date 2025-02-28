@@ -4,7 +4,7 @@
 
 #include "hephaestus/utils/protobuf_serdes.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 RandomGenerators::RandomGenerators()
   : gen(std::random_device{}())
@@ -183,7 +183,7 @@ bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db) {
   if (!loadSchema(schema_bytes, schema_db.proto_db.get())) {
     heph::log(heph::ERROR, "Failed to load schema into database");
-    heph::ws_bridge::debugPrintSchema(schema_bytes);
+    heph::ws::debugPrintSchema(schema_bytes);
     return false;
   }
   return true;
@@ -353,4 +353,4 @@ std::string getTimestampString() {
   return oss.str();
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

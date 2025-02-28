@@ -28,7 +28,7 @@ auto main(int argc, const char* argv[]) -> int {
     desc.defineOption<std::filesystem::path>("config", 'c', "Path to the configuration YAML file");
 
     const auto args = std::move(desc).parse(argc, argv);
-    heph::ws_bridge::WsBridgeConfig config;
+    heph::ws::WsBridgeConfig config;
 
     if (args.hasOption("config")) {
       auto config_file_path = args.getOption<std::filesystem::path>("config");
@@ -37,13 +37,13 @@ auto main(int argc, const char* argv[]) -> int {
         return EXIT_FAILURE;
       }
 
-      config = heph::ws_bridge::loadBridgeConfigFromYaml(config_file_path.string());
+      config = heph::ws::loadBridgeConfigFromYaml(config_file_path.string());
     } else {
       heph::log(heph::INFO, "Using default WebSocket Bridge configuration");
     }
 
     auto session = heph::ipc::zenoh::createSession(config.zenoh_config);
-    auto bridge = std::make_unique<heph::ws_bridge::WsBridge>(session, config);
+    auto bridge = std::make_unique<heph::ws::WsBridge>(session, config);
 
     bridge->start();
 

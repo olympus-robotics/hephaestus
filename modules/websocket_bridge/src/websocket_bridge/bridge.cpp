@@ -9,7 +9,7 @@
 
 #include <hephaestus/utils/protobuf_serdes.h>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeConfig& config)
   : config_(config), ws_server_(nullptr), ipc_graph_(nullptr) {
@@ -689,4 +689,4 @@ void WsBridge::callback__WsServer__SubscribeConnectionGraph(bool subscribe) {
   }
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

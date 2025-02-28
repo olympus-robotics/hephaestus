@@ -16,7 +16,7 @@
 #include "hephaestus/utils/protobuf_serdes.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 using WsServerClientHandle = websocketpp::connection_hdl;
 using WsServerInterface = foxglove::ServerInterface<WsServerClientHandle>;
@@ -73,4 +73,4 @@ struct WsServerServiceFailure {
 bool parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
                                  WsServerServiceFailure& service_failure);
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

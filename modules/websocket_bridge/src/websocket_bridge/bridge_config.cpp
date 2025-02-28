@@ -24,7 +24,7 @@ struct Reflector<std::regex> {
 };
 }  // namespace rfl
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector) {
   std::vector<std::regex> regex_vector;
@@ -103,4 +103,4 @@ std::string convertBridgeConfigToString(const WsBridgeConfig& config) {
   return rfl::yaml::write(config);
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

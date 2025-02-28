@@ -4,7 +4,7 @@
 
 #include "hephaestus/utils/ws_client.h"
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 ServiceCallState::ServiceCallState(uint32_t call_id)
   : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
@@ -195,4 +195,4 @@ bool allServiceCallsFinished(const ServiceCallStateMap& state) {
   return true;
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

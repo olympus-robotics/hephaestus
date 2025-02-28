@@ -30,7 +30,7 @@ void sigintHandler(int signal) {
   g_abort = true;
 }
 
-void handleJsonMessage(const std::string& json_msg, heph::ws_bridge::WsServerAdvertisements& ws_server_ads) {
+void handleJsonMessage(const std::string& json_msg, heph::ws::WsServerAdvertisements& ws_server_ads) {
   nlohmann::json msg;
   try {
     msg = nlohmann::json::parse(json_msg);
@@ -41,7 +41,7 @@ void handleJsonMessage(const std::string& json_msg, heph::ws_bridge::WsServerAdv
   }
 
   // Handle Advertisements
-  if (heph::ws_bridge::parseWsServerAdvertisements(msg, ws_server_ads)) {
+  if (heph::ws::parseWsServerAdvertisements(msg, ws_server_ads)) {
     fmt::print("Received WS server advertisements.\n");  // Add this line
     return;
   }
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   const std::string url = argv[1];
   foxglove::Client<foxglove::WebSocketNoTls> client;
 
-  heph::ws_bridge::WsServerAdvertisements ws_server_ads;
+  heph::ws::WsServerAdvertisements ws_server_ads;
 
   const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
 
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     std::this_thread::sleep_for(1s);
   }
 
-  heph::ws_bridge::printAdvertisedTopics(ws_server_ads);
+  heph::ws::printAdvertisedTopics(ws_server_ads);
 
   fmt::println("Closing client...");
   client.close();

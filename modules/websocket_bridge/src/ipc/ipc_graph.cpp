@@ -15,7 +15,7 @@
 #include <hephaestus/ipc/zenoh/liveliness.h>
 #include <hephaestus/telemetry/log.h>
 
-namespace heph::ws_bridge {
+namespace heph::ws {
 
 IpcGraph::IpcGraph(const IpcGraphConfig& config) : config_(config) {
 }
@@ -477,4 +477,4 @@ void IpcGraphState::printIpcGraphState() const {
   return true;
 }
 
-}  // namespace heph::ws_bridge
+}  // namespace heph::ws

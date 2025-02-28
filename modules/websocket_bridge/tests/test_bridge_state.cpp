@@ -10,7 +10,7 @@
 
 #include "hephaestus/websocket_bridge/bridge_state.h"
 
-namespace heph::ws_bridge::tests {
+namespace heph::ws::tests {
 
 class WsBridgeStateTest : public ::testing::Test {
 protected:
@@ -206,4 +206,4 @@ TEST_F(WsBridgeStateTest, PrintBridgeState) {
   EXPECT_NE(output.find("test_service"), std::string::npos);
 }
 
-}  // namespace heph::ws_bridge::tests
+}  // namespace heph::ws::tests
