@@ -45,7 +45,7 @@ struct WsBridgeConfig {
   // NOTE: Unfortunately 'address' and 'port' are not part of
   // foxglove::ServerOptions and need to be passed to the server when calling
   // "start".
-  uint16_t ws_server_listening_port = 8765;
+  uint16_t ws_server_port = 8765;
   std::string ws_server_address = "0.0.0.0";
 
   /////////

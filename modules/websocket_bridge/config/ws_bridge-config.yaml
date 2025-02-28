@@ -18,7 +18,7 @@ ws_server_config:
   useCompression: true
   clientTopicWhitelistPatterns:
     - .*
-ws_server_listening_port: 8765
+ws_server_port: 8765
 # Note on websocket bridge address:
 # - 0.0.0.0 -> bridge visible on all interfaces, e.g. for local LAN access
 # - localhost or 127.0.0.1 -> bridge only accessible from within this machine

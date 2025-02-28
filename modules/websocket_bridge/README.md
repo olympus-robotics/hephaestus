@@ -23,16 +23,106 @@ To run the WebSocket bridge, execute the following command:
 bazel run //modules/websocket_bridge::app -- -c <path to config file>
 ```
 
-## Detailed description
+## Bridge Structure
 
+```mermaid
+classDiagram
+class WsBridge {
+    - WsBridgeConfig
+    - WsBridgeState
+    - IpcGraph
+    - IpcInterface
 
+    - Foxglove WebSocket Server
+    
+    + start()
+    + stop()
+
+    + callback__WsServer__*()
+    + callback__IpcGraph__*()
+    + callback__Ipc__*()
+}
+
+class WsBridgeConfig {
+    - WS Server Config
+    - IPC Config
+    - Topic/Service Whitelists/Blacklists
+}
+
+class WsBridgeState {
+   - Map: IPC Topics <-> WS Channels
+   - Map: WS Channels <-> WS Clients
+   - Map: IPC Services <-> WS Services
+   - Map: WS Services <-> WS Clients
+
+   + add/remove/has...()
+}
+
+class IpcGraph {
+    - Topic/Type Database
+    - Discovery
+
+    + start()
+    + stop()
+
+    + callback__EndPointInfoUpdate()
+
+    + add/remove/hasPublisher()
+    + add/remove/hasSubscriber()
+    + add/remove/hasTopic()
+
+    + add/remove/hasServiceServer()
+    + add/remove/hasServiceClient()
+    + add/remove/hasService()
+}
+
+class IpcInterface {
+    - Subscribers
+    - Publishers
+    - ServiceClients
+
+    + start()
+    + stop()
+
+    + add/remove/hasSubscriber()
+    + add/remove/hasPublisher()
+
+    + callService()
+    + callServiceAsync()
+
+    + callback__ServiceResponse()
+}
+
+class Foxglove WebSocket Server {
+    - State/Clients
+    - Config
+
+    + start()
+    + stop()
+
+    + add/removeChannels()    
+    + sendMessage()
+
+    + add/removeServices()    
+    + sendServiceResponse()
+    + sendServiceError()
+
+    + updateConnectionGraph()    
+}
+
+WsBridge --> WsBridgeConfig
+WsBridge --> WsBridgeState
+WsBridge --> IpcGraph
+WsBridge --> IpcInterface
+WsBridge --> Foxglove WebSocket Server
+```
 
 ## TODOs
 
- - [ ] Fix deadlock in IPCGraph when shutting down
- - [ ] Add support for client-side topic publishing
- - [ ] Implement async service calls -> needs hephaestus to support async service calls
- - [ ] Test advanced websocket interface functions:
-    - [ ] TLS
-    - [ ] Whitelisting/blacklisting
-    - [ ] Compression
+- [ ] Fix deadlock in IPCGraph when shutting down
+- [ ] Add support for client-side topic publishing
+- [ ] Implement async service calls (needs hephaestus to support async service calls)
+- [ ] Test advanced websocket interface functions:
+  - [ ] TLS
+  - [ ] Whitelisting/blacklisting
+  - [ ] Compression

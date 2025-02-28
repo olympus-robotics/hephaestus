@@ -75,7 +75,7 @@ TEST(LoadBridgeConfigFromYamlTest, SaveDefaultAndLoad) {
 
   auto config = loadBridgeConfigFromYaml("/tmp/default.yaml");
 
-  EXPECT_EQ(original_config.ws_server_listening_port, config.ws_server_listening_port);
+  EXPECT_EQ(original_config.ws_server_port, config.ws_server_port);
   EXPECT_EQ(original_config.ws_server_address, config.ws_server_address);
   EXPECT_EQ(original_config.zenoh_config.id, config.zenoh_config.id);
   EXPECT_EQ(original_config.zenoh_config.router, config.zenoh_config.router);

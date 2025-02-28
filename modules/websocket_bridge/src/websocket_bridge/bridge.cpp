@@ -118,13 +118,13 @@ void WsBridge::start() {
 
   {
     fmt::println("[WS Server] - Starting ...");
-    ws_server_->start(config_.ws_server_address, config_.ws_server_listening_port);
+    ws_server_->start(config_.ws_server_address, config_.ws_server_port);
 
     // This is a sanity check I found in the ros-foxglove bridge, so I assume under certain conditions
     // (probably a port collision), this can actually happen.
     // TODO(mfehr): Test this and verify.
     const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
-    CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_listening_port);
+    CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_port);
     fmt::println("[WS Server] - ONLINE");
   }
 

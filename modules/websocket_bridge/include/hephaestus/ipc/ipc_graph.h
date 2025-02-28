@@ -48,17 +48,6 @@ using ServiceDiscoveryCallback = std::function<void(const std::string& /*service
 using GraphUpdateCallback =
     std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, IpcGraphState /*state*/)>;
 
-/**
- * @struct IpcGraphConfig
- * @brief Configuration structure for IPC graph.
- *
- * @note Pub/sub additions / removal events within a single sessions are
- * only triggering a liveliness token update once per topic/typename/endpoint_type
- * This means that multiple pubs / subs of same topic/type within a session will not
- * trigger multiple liveliness updates and with that not multiple callback events.
- * If across sessions, the liveliness token will be updated for each new publisher/subscriber,
- * even if the topic/type is the same as in another session.
- */
 struct IpcGraphConfig {
   ipc::zenoh::SessionPtr session;
 
@@ -71,10 +60,6 @@ struct IpcGraphConfig {
   GraphUpdateCallback graph_update_cb;
 };
 
-/**
- * @class IpcGraph
- * @brief Class to monitor the IPC graph and trigger callbacks in case of changes.
- */
 class IpcGraph {
 public:
   explicit IpcGraph(const IpcGraphConfig& config);
