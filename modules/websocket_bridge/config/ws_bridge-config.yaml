@@ -25,7 +25,7 @@ ws_server_port: 8765
 ws_server_address: 0.0.0.0
 zenoh_config:
   use_binary_name_as_session_id: false
-  id: "websocket_bridge"
+  id: "ws_bridge"
   # zenoh_config_path: ""
   enable_shared_memory: false
   mode: PEER

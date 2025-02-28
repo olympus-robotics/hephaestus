@@ -13,7 +13,8 @@
 
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
-#include <hephaestus/ipc/zenoh/dynamic_subscriber.h>
+#include <hephaestus/ipc/zenoh/raw_publisher.h>
+#include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
@@ -35,14 +36,23 @@ public:
   void start();
   void stop();
 
+  // Subsribers
+  /////////////
   bool hasSubscriber(const std::string& topic) const;
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
                      TopicSubscriberWithTypeCallback callback);
   void removeSubscriber(const std::string& topic);
 
+  // Publishers
+  /////////////
+  bool hasPublisher(const std::string& topic) const;
+  void addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info);
+  void removePublisher(const std::string& topic);
+
+  // Services
+  ///////////
   auto callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                    std::chrono::milliseconds timeout) -> RawServiceResponses;
-
   std::future<void> callServiceAsync(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                                      std::chrono::milliseconds timeout,
                                      AsyncServiceResponseCallback callback);
@@ -50,11 +60,16 @@ public:
 private:
   bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  void callback_PublisherMatchingStatus(const std::string& topic, const zenoh::MatchingStatus& status);
+  void callback_PublisherMatchingStatus(const std::string& topic, const ipc::zenoh::MatchingStatus& status);
 
   void callback_ServiceResponse(const std::string& service_name, const RawServiceResponses& responses);
 
-  std::shared_ptr<ipc::zenoh::Session> session_;
+  std::shared_ptr<ipc::zenoh::Session> session_master_;
+
+  std::shared_ptr<ipc::zenoh::Session> session_pub_;
+  std::shared_ptr<ipc::zenoh::Session> session_sub_;
+  std::shared_ptr<ipc::zenoh::Session> session_srv_;
+
   ipc::zenoh::Config config_;
 
   mutable absl::Mutex mutex_;
@@ -62,7 +77,11 @@ private:
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawSubscriber>>
       subscribers_ ABSL_GUARDED_BY(mutex_);
 
-  std::unordered_map<std::string, AsyncServiceResponseCallback> async_service_callbacks_;
+  std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawPublisher>>
+      publishers_ ABSL_GUARDED_BY(mutex_);
+
+  std::unordered_map<std::string, AsyncServiceResponseCallback>
+      async_service_callbacks_ ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace heph::ws

@@ -10,7 +10,10 @@
 #include <absl/log/check.h>
 #include <hephaestus/ipc/zenoh/dynamic_subscriber.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
+#include <hephaestus/ipc/zenoh/raw_publisher.h>
+#include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/scout.h>
+#include <hephaestus/ipc/zenoh/service.h>
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/dynamic_deserializer.h>
 #include <hephaestus/utils/stack_trace.h>
@@ -18,8 +21,23 @@
 namespace heph::ws {
 
 IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config)
-  : session_(session), config_(config) {
-  CHECK(session_);
+  : session_master_(session), config_(config) {
+  CHECK(session_master_);
+
+  auto pub_config = config;
+  pub_config.id = config.id.value() + "_pub";
+  session_pub_ = ipc::zenoh::createSession(pub_config);
+  CHECK(session_pub_);
+
+  auto sub_config = config;
+  sub_config.id = config.id.value() + "_sub";
+  session_sub_ = ipc::zenoh::createSession(sub_config);
+  CHECK(session_sub_);
+
+  auto srv_config = config;
+  srv_config.id = config.id.value() + "_srv";
+  session_srv_ = ipc::zenoh::createSession(srv_config);
+  CHECK(session_srv_);
 }
 
 void IpcInterface::start() {
@@ -71,7 +89,7 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
                                     .create_type_info_service = false };
 
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
-      session_, ipc::TopicConfig{ topic },
+      session_sub_, ipc::TopicConfig{ topic },
       [subscriber_cb, topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
                                        std::span<const std::byte> data) {
         subscriber_cb(metadata, data, topic_type_info);
@@ -89,14 +107,14 @@ void IpcInterface::removeSubscriber(const std::string& topic) {
 }
 
 void IpcInterface::callback_PublisherMatchingStatus(const std::string& topic,
-                                                    const zenoh::MatchingStatus& status) {
+                                                    const ipc::zenoh::MatchingStatus& status) {
   heph::log(heph::INFO, "[IPC Interface]: The topic has changed matching status!", "topic", topic, "matching",
             status.matching);
 }
 
 auto IpcInterface::callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                                std::chrono::milliseconds timeout) -> RawServiceResponses {
-  return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+  return ipc::zenoh::callServiceRaw(*session_srv_, topic_config, buffer, timeout);
 }
 
 void IpcInterface::callback_ServiceResponse(const std::string& service_name,
@@ -121,9 +139,7 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
 
   try {
     auto future = std::async(std::launch::async, [this, topic_config, buffer, timeout]() {
-      // Note: we need to create a new session here, because otherwise the session will block subsequent
-      // service calls until this one has finished.
-      CHECK(session_);
+      CHECK(session_srv_);
 
       RawServiceResponses responses;
 
@@ -131,7 +147,7 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
         // TODO(mfehr): This does currently not work / or rather it works, but not asynchronously.
         fmt::println("[IPC Interface] - Sending service request for service '{}' [ASYNC]", topic_config.name);
 
-        responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
+        responses = ipc::zenoh::callServiceRaw(*session_srv_, topic_config, buffer, timeout);
       } catch (const std::exception& e) {
         heph::log(heph::ERROR, "[IPC Interface] - Exception during async service call", "topic",
                   topic_config.name, "error", e.what());
@@ -153,6 +169,40 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
     promise.set_exception(std::make_exception_ptr(e));
     return promise.get_future();
   }
+}
+
+bool IpcInterface::hasPublisher(const std::string& topic) const {
+  absl::MutexLock lock(&mutex_);
+  return publishers_.find(topic) != publishers_.end();
+}
+
+void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
+  absl::MutexLock lock(&mutex_);
+
+  if (publishers_.find(topic) != publishers_.end()) {
+    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic already exists!", "topic", topic);
+  }
+
+  auto publisher_config = ipc::zenoh::PublisherConfig{ .cache_size = std::nullopt,
+                                                       .create_liveliness_token = true,
+                                                       .create_type_info_service = true };
+
+  publishers_[topic] = std::make_unique<ipc::zenoh::RawPublisher>(
+      session_pub_, ipc::TopicConfig{ topic }, topic_type_info,
+      [this, topic](const ipc::zenoh::MatchingStatus& status) {
+        this->callback_PublisherMatchingStatus(topic, status);
+      },
+      publisher_config);
+}
+
+void IpcInterface::removePublisher(const std::string& topic) {
+  absl::MutexLock lock(&mutex_);
+
+  if (publishers_.find(topic) == publishers_.end()) {
+    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
+  }
+
+  publishers_.erase(topic);
 }
 
 }  // namespace heph::ws
