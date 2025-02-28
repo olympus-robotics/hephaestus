@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #pragma once
 
 #include <memory>
@@ -9,8 +13,8 @@
 #include <nlohmann/json.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
+#include "hephaestus/utils/protobuf_serdes.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
-#include "hephaestus/websocket_bridge/protobuf_utils.h"
 
 namespace heph::ws_bridge {
 

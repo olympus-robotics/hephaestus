@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #pragma once
@@ -13,7 +13,7 @@
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/telemetry/log.h>
 
-#include "hephaestus/websocket_bridge/ws_server_utils.h"
+#include "hephaestus/utils/ws_protocol.h"
 
 namespace heph::ws_bridge {
 

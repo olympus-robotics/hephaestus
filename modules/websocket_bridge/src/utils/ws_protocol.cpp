@@ -1,4 +1,8 @@
-#include "hephaestus/websocket_bridge/ws_server_utils.h"
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
+#include "hephaestus/utils/ws_protocol.h"
 
 namespace heph::ws_bridge {
 

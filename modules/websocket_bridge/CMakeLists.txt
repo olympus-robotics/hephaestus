@@ -16,7 +16,15 @@ find_package(ws_protocol REQUIRED)
 find_package(boringssl REQUIRED)
 
 # library target
-file(GLOB_RECURSE SOURCES src/*.cpp include/hephaestus/websocket_bridge/*.h)
+file(GLOB_RECURSE SOURCES 
+        src/websocket_bridge/*.cpp
+        src/ipc/*.cpp
+        src/utils/*.cpp
+        include/hephaestus/websocket_bridge/*.h
+        include/hephaestus/ipc/*.h
+        include/hephaestus/utils/*.h
+)
+
 define_module_library(
         NAME websocket_bridge
         PUBLIC_LINK_LIBS

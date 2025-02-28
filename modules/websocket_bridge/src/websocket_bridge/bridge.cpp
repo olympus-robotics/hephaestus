@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #include "hephaestus/websocket_bridge/bridge.h"
@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <iterator>
 
-#include <hephaestus/websocket_bridge/serialization.h>
+#include <hephaestus/utils/protobuf_serdes.h>
 
 namespace heph::ws_bridge {
 
@@ -394,9 +394,8 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
   CHECK(ws_server_);
 
   if (!state_.hasWsServiceMapping(service_id)) {
-    heph::log(heph::ERROR, fmt::format("[WS Bridge] - Received service response with service id [{}] but the "
-                                       "service is not advertised!",
-                                       service_id));
+    heph::log(heph::ERROR, "[WS Bridge] - Received service response for unknown or dropped service id!",
+              "call_id", call_id, "service_id", service_id);
     return;
   }
 
@@ -413,10 +412,9 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
     // Look up client handle by call id
     const auto client_handle_w_name_lookup = state_.getClientForCallId(call_id);
     if (!client_handle_w_name_lookup.has_value()) {
-      heph::log(
-          heph::ERROR,
-          fmt::format("[WS Bridge] - No client handle found for call id [{}], dropping service respose.",
-                      call_id));
+      heph::log(heph::ERROR,
+                "[WS Bridge] - No client handle found for service call id. Dropping service respose.",
+                "call_id", call_id, "service_id", service_id);
       return;
     }
     client_handle_w_name = client_handle_w_name_lookup.value();
@@ -427,17 +425,15 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
   const auto client_handle = client_handle_w_name.first;
 
   if (responses.empty()) {
-    auto msg = fmt::format("[WS Bridge] - Service response is empty for service '{}' [{}]", service_name,
-                           service_id);
-    heph::log(heph::ERROR, msg);
+    auto msg = fmt::format("[WS Bridge] - Empty service resonse '{}' [{}]", service_name, service_id);
+    heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
 
   if (responses.size() > 1) {
-    heph::log(heph::WARN, fmt::format("[WS Bridge] - Multiple responses received for service "
-                                      "'{}' [{}], only the first response was forwarded.",
-                                      service_name, service_id));
+    heph::log(heph::WARN, "[WS Bridge] - Multiple service responses received. Forwarding first only.",
+              "response_count", responses.size(), "service_name", service_name, "service_id", service_id);
   }
 
   const auto& response = responses.front();
@@ -446,7 +442,8 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
                            "match! '{}' vs '{}'",
                            response.topic, service_name);
 
-    heph::log(heph::ERROR, msg);
+    heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id, "response_topic",
+              response.topic, "service_name", service_name);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
@@ -456,17 +453,15 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
     auto msg = fmt::format("[WS Bridge] - Failed to convert IPC service response "
                            "to WS service response for service '{}' [{}]",
                            service_name, service_id);
-    heph::log(heph::ERROR, msg);
+    heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id, "service_name", service_name);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
 
   ws_server_->sendServiceResponse(client_handle, ws_server_response);
 
-  fmt::println("[WS Bridge] - [{}] Client '{}' has received the response to their "
-               "service request with service '{}' [{}/{}] successfully. {}",
-               getTimestampString(), client_name, service_name, service_id, call_id,
-               sync_service_call ? "[SYNC]" : "[ASYNC]");
+  fmt::println("[WS Bridge] - Client '{}' received service response '{}' [{}/{}] successfully. {}",
+               client_name, service_name, service_id, call_id, sync_service_call ? "[SYNC]" : "[ASYNC]");
 }
 
 ////////////////////////////////
@@ -488,7 +483,7 @@ void WsBridge::callback__WsServer__Log(WsServerLogLevel level, char const* msg) 
       heph::log(heph::ERROR, fmt::format("[WS Server] - {}", msg));
       break;
     case WsServerLogLevel::Critical:
-      heph::log(heph::ERROR, fmt::format("[WS Server] - CRITICAL - {}", msg));
+      heph::log(heph::FATAL, fmt::format("[WS Server] - {}", msg));
       break;
   }
 }
@@ -516,10 +511,8 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
   std::optional<heph::serdes::TypeInfo> topic_type_info = ipc_graph_->getTopicTypeInfo(topic);
 
   if (!topic_type_info.has_value()) {
-    heph::log(
-        heph::ERROR,
-        fmt::format("[App Bridge] - '{}' ==> [{}] - Could not subscribe because failed to retrieve type!",
-                    topic, channel_id));
+    heph::log(heph::ERROR, "[WS Bridge] - Could not subscribe because failed to retrieve type", "topic",
+              topic, "channel_id", channel_id);
     return;
   }
 
@@ -621,22 +614,21 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
   if (!state_.hasWsServiceMapping(request.serviceId)) {
-    heph::log(
-        heph::ERROR,
-        fmt::format(
-            "[WS Bridge] - Client '{}' is sending a service request with service/call id [{}/{}] but the "
-            "service is not advertised!",
-            client_name, request.serviceId, request.callId));
+    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request for unadvertised service [{}/{}]!",
+                           client_name, request.serviceId, request.callId);
+    heph::log(heph::ERROR, msg, "service_id", request.serviceId, "call_id", request.callId, "client_name",
+              client_name);
+    ws_server_->sendServiceFailure(client_handle, request.serviceId, request.callId, msg);
     return;
   }
 
   if (request.encoding != "protobuf") {
-    heph::log(
-        heph::ERROR,
-        fmt::format(
-            "[WS Bridge] - Client '{}' is sending a service request with service/call id [{}/{}] but the "
-            "encoding ({}) is not supported!",
-            client_name, request.serviceId, request.callId, request.encoding));
+    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request [{}/{}] with unsuported "
+                           "encoding ({})!",
+                           client_name, request.serviceId, request.callId, request.encoding);
+    heph::log(heph::ERROR, msg, "service_id", request.serviceId, "call_id", request.callId, "client_name",
+              client_name);
+    ws_server_->sendServiceFailure(client_handle, request.serviceId, request.callId, msg);
     return;
   }
 
@@ -644,8 +636,8 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
   const WsServerServiceId service_id = request.serviceId;
   const WsServerServiceCallId call_id = request.callId;
 
-  fmt::println("[WS Bridge] - [{}] Client '{}' is sending a service request for service '{}' [{}/{}] ...",
-               getTimestampString(), client_name, service_name, service_id, call_id);
+  fmt::println("[WS Bridge] - Client '{}' sent service request '{}' [{}/{}] ...", client_name, service_name,
+               service_id, call_id);
 
   ipc::TopicConfig topic_config(service_name);
 
@@ -672,9 +664,8 @@ void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest
 
     // NOTE: We do not wait for the future here, but we could, turning it into a synchronous call again.
 
-    fmt::println(
-        "[WS Bridge] - [{}] Client '{}' service request for service '{}' [{}/{}] was dispached [ASYNC]",
-        getTimestampString(), client_name, service_name, service_id, call_id);
+    fmt::println("[WS Bridge] - Client '{}' service request for service '{}' [{}/{}] was dispached [ASYNC]",
+                 client_name, service_name, service_id, call_id);
   } else {
     //////////
     // SYNC //

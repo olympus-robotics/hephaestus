@@ -1,9 +1,14 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
-#include <hephaestus/websocket_bridge/protobuf_utils.h>
+
+#include "hephaestus/utils/protobuf_serdes.h"
 
 namespace heph::ws_bridge::tests {
 

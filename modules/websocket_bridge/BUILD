@@ -9,11 +9,14 @@ package(default_visibility = ["//visibility:public"])
 heph_cc_library(
     name = "websocket_bridge",
     srcs = glob([
-        "src/*.cpp",
+        "src/utils/*.cpp",
+        "src/ipc/*.cpp",
+        "src/websocket_bridge/*.cpp",
     ]),
     hdrs = glob([
         "include/hephaestus/websocket_bridge/*.h",
         "include/hephaestus/ipc/*.h",
+        "include/hephaestus/utils/*.h",
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -113,9 +116,9 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "test_protobuf_utils",
+    name = "test_protobuf_serdes",
     srcs = [
-        "tests/test_protobuf_utils.cpp",
+        "tests/test_protobuf_serdes.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,

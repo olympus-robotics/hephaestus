@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include "hephaestus/ipc/ipc_graph.h"
 
 #include <memory>
@@ -362,24 +366,24 @@ bool IpcGraph::hasService(const std::string& service_name) const {
 void IpcGraphState::printIpcGraphState() const {
   std::stringstream ss;
 
-  ss << "[IPC Graph] - State\n\n";
+  ss << "[IPC Graph] - State:\n";
 
   if (!topics_to_types_map.empty()) {
-    ss << "  Topics:\n";
+    ss << "\n  Topics:\n";
     for (const auto& [topic, type] : topics_to_types_map) {
       ss << "    '" << topic << "' [" << type << "]\n";
     }
   }
 
   if (!services_to_types_map.empty()) {
-    ss << "  Services:\n";
+    ss << "\n  Services:\n";
     for (const auto& [srv, srv_types] : services_to_types_map) {
       ss << "    '" << srv << "' [" << srv_types.first << "/" << srv_types.second << "]\n";
     }
   }
 
   if (!services_to_server_map.empty()) {
-    ss << "  Service Servers:\n";
+    ss << "\n  Service Servers:\n";
     for (const auto& [srv, nodes] : services_to_server_map) {
       ss << "    '" << srv << "' [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
@@ -393,7 +397,7 @@ void IpcGraphState::printIpcGraphState() const {
   }
 
   if (!services_to_client_map.empty()) {
-    ss << "  Service Clients:\n";
+    ss << "\n  Service Clients:\n";
     for (const auto& [srv, nodes] : services_to_client_map) {
       ss << "    '" << srv << "' [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
@@ -407,7 +411,7 @@ void IpcGraphState::printIpcGraphState() const {
   }
 
   if (!topic_to_publishers_map.empty()) {
-    ss << "  Publishers:\n";
+    ss << "\n  Publishers:\n";
     for (const auto& [topic, publishers] : topic_to_publishers_map) {
       ss << "    '" << topic << "' <- [";
       for (auto it = publishers.begin(); it != publishers.end(); ++it) {
@@ -421,7 +425,7 @@ void IpcGraphState::printIpcGraphState() const {
   }
 
   if (!topic_to_subscribers_map.empty()) {
-    ss << "  Subscribers:\n";
+    ss << "\n  Subscribers:\n";
     for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
       ss << "    '" << topic << "' -> [";
       for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {

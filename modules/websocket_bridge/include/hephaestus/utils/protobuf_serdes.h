@@ -1,30 +1,44 @@
-#ifndef HEPHAESTUS_WEBSOCKET_BRIDGE_PROTOBUF_UTILS_H_
-#define HEPHAESTUS_WEBSOCKET_BRIDGE_PROTOBUF_UTILS_H_
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
+#pragma once
 
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <queue>
 #include <random>
 #include <regex>
+#include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
+#include <absl/log/check.h>
+#include <absl/log/log.h>
+#include <absl/strings/ascii.h>
+#include <fmt/base.h>
 #include <fmt/core.h>
 #include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
+#include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/message.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
+#include <hephaestus/serdes/type_info.h>
 #include <hephaestus/telemetry/log.h>
-#include <hephaestus/websocket_bridge/serialization.h>
+#include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
 namespace heph::ws_bridge {
@@ -62,11 +76,11 @@ bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 
 bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db);
 
-std::unique_ptr<google::protobuf::Message>
-retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+std::unique_ptr<google::protobuf::Message> retrieveRequestMessageFromDatabase(
+    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
 
-std::unique_ptr<google::protobuf::Message>
-retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+std::unique_ptr<google::protobuf::Message> retrieveResponseMessageFromDatabase(
+    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
 
 std::unique_ptr<google::protobuf::Message>
 retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db);
@@ -115,6 +129,16 @@ void setRandomValue(google::protobuf::Message* message, const google::protobuf::
   }
 }
 
-}  // namespace heph::ws_bridge
+std::string convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data);
 
-#endif  // HEPHAESTUS_WEBSOCKET_BRIDGE_PROTOBUF_UTILS_H_
+std::string convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization);
+
+void debugPrintSchema(const std::vector<std::byte>& schema);
+
+void debugPrintMessage(const google::protobuf::Message& message);
+
+void printBinary(const uint8_t* data, size_t length);
+
+std::string getTimestampString();
+
+}  // namespace heph::ws_bridge

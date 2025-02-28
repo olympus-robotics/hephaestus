@@ -14,11 +14,11 @@
 #include <foxglove/websocket/websocket_client.hpp>
 #include <google/protobuf/util/json_util.h>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
+#include <hephaestus/utils/protobuf_serdes.h>
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/websocket_bridge/protobuf_utils.h>
-#include <hephaestus/websocket_bridge/serialization.h>
-#include <hephaestus/websocket_bridge/ws_server_utils.h>
+#include <hephaestus/utils/ws_client.h>
+#include <hephaestus/utils/ws_protocol.h>
 #include <nlohmann/json.hpp>
 
 using namespace std::chrono_literals;
@@ -47,23 +47,6 @@ void handleJsonMessage(const std::string& json_msg, heph::ws_bridge::WsServerAdv
   }
 
   fmt::println("Received unhandled JSON message: \n'''\n{}\n'''", json_msg);
-}
-
-void printAdvertisedTopics(const heph::ws_bridge::WsServerAdvertisements& ws_server_ads) {
-  fmt::println("Advertised topics:");
-  fmt::println("--------------------------------------------------");
-  if (ws_server_ads.channels.empty()) {
-    fmt::println("No topics advertised.");
-    fmt::println("--------------------------------------------------");
-    return;
-  }
-  for (const auto& [channelId, channel] : ws_server_ads.channels) {
-    fmt::println("Channel ID : {}", channelId);
-    fmt::println("Topic      : {}", channel.topic);
-    fmt::println("Encoding   : {}", channel.encoding);
-    fmt::println("Schema Name: {}", channel.schemaName);
-    fmt::println("--------------------------------------------------");
-  }
 }
 
 int main(int argc, char** argv) {
@@ -104,7 +87,7 @@ int main(int argc, char** argv) {
     std::this_thread::sleep_for(1s);
   }
 
-  printAdvertisedTopics(ws_server_ads);
+  heph::ws_bridge::printAdvertisedTopics(ws_server_ads);
 
   fmt::println("Closing client...");
   client.close();

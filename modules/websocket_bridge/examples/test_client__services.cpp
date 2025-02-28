@@ -14,11 +14,11 @@
 #include <foxglove/websocket/websocket_client.hpp>
 #include <google/protobuf/util/json_util.h>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
+#include <hephaestus/utils/protobuf_serdes.h>
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/websocket_bridge/protobuf_utils.h>
-#include <hephaestus/websocket_bridge/serialization.h>
-#include <hephaestus/websocket_bridge/ws_server_utils.h>
+#include <hephaestus/utils/ws_client.h>
+#include <hephaestus/utils/ws_protocol.h>
 #include <nlohmann/json.hpp>
 
 using namespace std::chrono_literals;
@@ -35,164 +35,9 @@ void sigintHandler(int signal) {
   g_abort = true;
 }
 
-struct ServiceCallState {
-  enum class Status { DISPATCHED, FAILED, SUCCESS };
-
-  uint32_t call_id;
-  Status status;
-  std::chrono::steady_clock::time_point dispatch_time;
-  std::chrono::steady_clock::time_point response_time;
-
-  std::optional<heph::ws_bridge::WsServerServiceResponse> response;
-  std::string error_message;
-
-  explicit ServiceCallState(uint32_t call_id)
-    : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
-  }
-
-  std::optional<std::unique_ptr<google::protobuf::Message>>
-  receiveResponse(const heph::ws_bridge::WsServerServiceResponse _response,
-                  heph::ws_bridge::WsServerAdvertisements& ws_server_ads) {
-    if (_response.callId != call_id) {
-      heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", call_id, "received_call_id",
-                _response.callId);
-      return std::nullopt;
-    }
-
-    if (_response.encoding != "protobuf") {
-      heph::log(heph::ERROR, "Unexpected encoding in service response", "expected", "protobuf", "received",
-                _response.encoding);
-      status = Status::FAILED;
-      return std::nullopt;
-    }
-
-    auto message =
-        heph::ws_bridge::retrieveResponseMessageFromDatabase(_response.serviceId, ws_server_ads.schema_db);
-    if (!message) {
-      heph::log(heph::ERROR, "Failed to response retrieve message from database", "call_id", call_id,
-                "service_id", _response.serviceId);
-      status = Status::FAILED;
-      return std::nullopt;
-    }
-
-    if (!message->ParseFromArray(_response.data.data(), static_cast<int>(_response.data.size()))) {
-      heph::log(heph::ERROR, "Failed to parse response data with proto schema", "call_id", call_id,
-                "data_size", _response.data.size(), "schema_name", message->GetDescriptor()->full_name());
-
-      status = Status::FAILED;
-      return std::nullopt;
-    }
-
-    response = _response;
-    response_time = std::chrono::steady_clock::now();
-    status = Status::SUCCESS;
-
-    return message;
-  }
-
-  void receiveFailureResponse(const std::string& error_msg) {
-    response_time = std::chrono::steady_clock::now();
-    error_message = error_msg;
-    status = Status::FAILED;
-  }
-
-  bool hasResponse() const {
-    const bool has_response = (status == Status::SUCCESS || status == Status::FAILED);
-
-    if (has_response && (!response.has_value() && error_message.empty())) {
-      heph::log(heph::ERROR, "Service call has terminated, but neither has a response nor an error msg.",
-                "call_id", call_id);
-      return false;
-    }
-
-    return has_response;
-  }
-
-  bool wasSuccessful() const {
-    return status == Status::SUCCESS;
-  }
-
-  bool hasFailed() const {
-    return status == Status::FAILED;
-  }
-
-  std::optional<std::chrono::milliseconds> getDurationMs() const {
-    if (!hasResponse()) {
-      return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
-                                                                   dispatch_time);
-    }
-    return std::chrono::duration_cast<std::chrono::milliseconds>(response_time - dispatch_time);
-  }
-};
-
-using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
-
-bool allServiceCallsFinished(const ServiceCallStateMap& state) {
-  for (const auto& [call_id, service_call_state] : state) {
-    if (!service_call_state.hasResponse()) {
-      return false;
-    }
-  }
-  return true;
-}
-
-std::string horizontalLine(uint32_t cell_content_width, uint32_t columns) {
-  std::stringstream ss;
-  ss << "+";
-  for (uint32_t col = 0; col < columns; ++col) {
-    for (uint32_t i = 0; i < cell_content_width; ++i) {
-      ss << "-";
-    }
-    ss << "+";
-  }
-  ss << "\n";
-  return ss.str();
-}
-
-void printServiceCallStateMap(ServiceCallStateMap& state) {
-  constexpr uint32_t max_columns = 5;
-  constexpr uint32_t cell_content_width = 17;
-
-  const uint32_t num_service_calls = static_cast<uint32_t>(state.size());
-  const uint32_t width = std::min(num_service_calls, max_columns);
-  const uint32_t height = (num_service_calls + width - 1) / width;
-
-  fmt::println("Service Call States");
-
-  auto horizontal_line = horizontalLine(cell_content_width, width);
-  fmt::print("{}", horizontal_line);
-
-  auto it = state.begin();
-
-  for (uint32_t row_idx = 0; row_idx < height && it != state.end(); ++row_idx) {
-    fmt::print("|");
-    for (uint32_t col_idx = 0; col_idx < width; ++col_idx) {
-      // If we already reached the end of the map, print empty cell.
-      if (it == state.end()) {
-        fmt::print("{:<{}}|", " ", cell_content_width);
-        continue;
-      }
-
-      // Print the valid cell content.
-      const auto& service_call_state = it->second;
-      const uint32_t call_id = service_call_state.call_id;
-
-      const std::string status_str =
-          service_call_state.hasResponse() ? (service_call_state.wasSuccessful() ? "✔" : "✖") : "∅";
-
-      fmt::print("{:<{}}|",
-                 fmt::format(" {:03}  {:1}  {:4}ms ", call_id, status_str,
-                             service_call_state.getDurationMs().value().count()),
-                 cell_content_width);
-
-      ++it;
-    }
-    fmt::print("\n{}", horizontal_line);
-  }
-}
-
 void handleBinaryMessage(const uint8_t* data, size_t length,
-                         heph::ws_bridge::WsServerAdvertisements& ws_server_ads, ServiceCallStateMap& state) {
+                         heph::ws_bridge::WsServerAdvertisements& ws_server_ads,
+                         heph::ws_bridge::ServiceCallStateMap& state) {
   if (data == nullptr || length == 0) {
     fmt::print("Received invalid message.\n");
     return;
@@ -205,7 +50,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length,
     const uint8_t* payload = data + 1;
     const size_t payload_size = length - 1;
 
-    foxglove::ServiceResponse response;
+    heph::ws_bridge::WsServerServiceResponse response;
     try {
       response.read(payload, payload_size);
     } catch (const std::exception& e) {
@@ -223,22 +68,16 @@ void handleBinaryMessage(const uint8_t* data, size_t length,
     // Receive, parse and convert response to Protobuf message.
     auto msg = state_it->second.receiveResponse(response, ws_server_ads);
 
-    // DEBUG PRINT ONLY
+    // TODO(mfehr): REMOVE
     if (msg.has_value()) {
-      std::string json_string;
-      const auto status = google::protobuf::util::MessageToJsonString(**msg, &json_string);
-      if (!status.ok()) {
-        fmt::print("Failed to convert message to JSON: {}\n", status.ToString());
-        return;
-      }
-      fmt::print("Service response for call ID {}:\n'''\n{}\n'''\n", response.callId, json_string);
+      heph::ws_bridge::debugPrintMessage(**msg);
     }
     return;
   }
 }
 
 void handleJsonMessage(const std::string& json_msg, heph::ws_bridge::WsServerAdvertisements& ws_server_ads,
-                       ServiceCallStateMap& state) {
+                       heph::ws_bridge::ServiceCallStateMap& state) {
   // Parse the JSON message
   nlohmann::json msg;
   try {
@@ -271,42 +110,10 @@ void handleJsonMessage(const std::string& json_msg, heph::ws_bridge::WsServerAdv
   }
 }
 
-void printAdvertisedServices(const heph::ws_bridge::WsServerAdvertisements& ws_server_ads) {
-  fmt::println("Advertised services:");
-  fmt::println("--------------------------------------------------");
-  if (ws_server_ads.services.empty()) {
-    fmt::println("No services advertised.");
-    fmt::println("--------------------------------------------------");
-    return;
-  }
-  for (const auto& [service_id, service] : ws_server_ads.services) {
-    fmt::println("Service ID   : {}", service_id);
-    fmt::println("Name         : {}", service.name);
-    fmt::println("Type         : {}", service.type);
-    if (service.request.has_value()) {
-      fmt::println("Request:");
-      fmt::println("  Encoding      : {}", service.request->encoding);
-      fmt::println("  Schema Name   : {}", service.request->schemaName);
-      fmt::println("  Schema Enc.   : {}", service.request->schemaEncoding);
-    } else {
-      fmt::println("Request      : None");
-    }
-    if (service.response.has_value()) {
-      fmt::println("Response:");
-      fmt::println("  Encoding      : {}", service.response->encoding);
-      fmt::println("  Schema Name   : {}", service.response->schemaName);
-      fmt::println("  Schema Enc.   : {}", service.response->schemaEncoding);
-    } else {
-      fmt::println("Response     : None");
-    }
-    fmt::println("--------------------------------------------------");
-  }
-}
-
 void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
                              const foxglove::Service& foxglove_service,
                              heph::ws_bridge::WsServerAdvertisements& ws_server_ads,
-                             ServiceCallStateMap& state) {
+                             heph::ws_bridge::ServiceCallStateMap& state) {
   auto foxglove_service_id = foxglove_service.id;
 
   for (int i = 1; i <= SERVICE_REQUEST_COUNT && !g_abort; ++i) {
@@ -322,16 +129,8 @@ void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
       break;
     }
 
-    // DEBUG PRINT ONLY
-    {
-      std::string json_string;
-      const auto status = google::protobuf::util::MessageToJsonString(*message, &json_string);
-      if (!status.ok()) {
-        fmt::println("Failed to convert request message to JSON: {}", status.ToString());
-        break;
-      }
-      fmt::println("Sending service request with call ID {}:\n'''\n{}\n'''", request.callId, json_string);
-    }
+    // TODO(mfehr): REMOVE
+    heph::ws_bridge::debugPrintMessage(*message);
 
     // Prepare message for sending.
     std::vector<uint8_t> message_buffer(message->ByteSizeLong());
@@ -348,7 +147,7 @@ void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
     request.encoding = "protobuf";
 
     // Init the service call as dispatched.
-    state.emplace(request.callId, ServiceCallState(request.callId));
+    state.emplace(request.callId, heph::ws_bridge::ServiceCallState(request.callId));
 
     // Dispatch the service request.
     client.sendServiceRequest(request);
@@ -376,7 +175,7 @@ int main(int argc, char** argv) {
   foxglove::Client<foxglove::WebSocketNoTls> client;
 
   heph::ws_bridge::WsServerAdvertisements ws_server_ads;
-  ServiceCallStateMap state;
+  heph::ws_bridge::ServiceCallStateMap state;
 
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, ws_server_ads, state);

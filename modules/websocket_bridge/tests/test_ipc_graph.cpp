@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <optional>
 #include <string>
 
@@ -50,7 +54,8 @@ protected:
     // sessions to talk to each other. Per session only the first to create and last to delete a liveliness
     // token will trigger an update. This is a limitation of hephaestus, not the IPC Graph class due to the
     // way the liveliness tokens are created. So we need one session per publisher and subscriber. So we want
-    // multicast scouting enabled.
+    // multicast scouting enabled to simulate a real world scenario where endpoints are very likely in
+    // different sessions.
     config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::Config());
     graph = std::make_unique<IpcGraph>(config);
     graph->start();

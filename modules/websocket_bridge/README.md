@@ -30,8 +30,8 @@ bazel run //modules/websocket_bridge::app -- -c <path to config file>
 ## TODOs
 
  - [ ] Fix deadlock in IPCGraph when shutting down
- - [ ] Add support for client-side service calls
  - [ ] Add support for client-side topic publishing
+ - [ ] Implement async service calls -> needs hephaestus to support async service calls
  - [ ] Test advanced websocket interface functions:
     - [ ] TLS
     - [ ] Whitelisting/blacklisting

@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #pragma once
@@ -30,9 +30,8 @@
 #include "hephaestus/ipc/ipc_interface.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
-#include "hephaestus/websocket_bridge/serialization.h"
-#include "hephaestus/websocket_bridge/ws_server_utils.h"
-#include "ws_server_utils.h"
+#include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/utils/ws_protocol.h"
 
 namespace heph::ws_bridge {
 
