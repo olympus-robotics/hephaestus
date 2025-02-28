@@ -138,13 +138,25 @@ void IpcInterface::callback_ServiceResponse(const std::string& service_name,
                                             const RawServiceResponses& responses) {
   absl::MutexLock lock(&mutex_srv_);
 
-  auto it = async_service_callbacks_.find(service_name);
-  if (it != async_service_callbacks_.end()) {
-    fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' to bridge [ASYNC]",
-                 responses.size(), service_name);
+  AsyncServiceResponseCallback callback;
 
-    it->second({ responses });
-    async_service_callbacks_.erase(it);
+  {
+    absl::MutexLock lock(&mutex_srv_);
+    auto it = async_service_callbacks_.find(service_name);
+    if (it != async_service_callbacks_.end()) {
+      fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' to bridge [ASYNC]",
+                   responses.size(), service_name);
+
+      callback = it->second;
+      async_service_callbacks_.erase(it);
+    }
+  }
+
+  if (callback) {
+    callback(responses);
+  } else {
+    heph::log(heph::ERROR, "[IPC Interface] - No callback found for service response", "service_name",
+              service_name);
   }
 }
 
