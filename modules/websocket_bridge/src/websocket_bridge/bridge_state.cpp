@@ -334,6 +334,11 @@ void WsBridgeState::cleanUpCallIdToClientMapping() {
   }
 }
 
+bool WsBridgeState::hasClientChannelsForTopic(const std::string& topic) const {
+  absl::ReaderMutexLock lock(&mutex_cc2t_);
+  return topic_to_client_channels_.find(topic) != topic_to_client_channels_.end();
+}
+
 std::string WsBridgeState::getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const {
   absl::ReaderMutexLock lock(&mutex_cc2t_);
   auto it = client_channel_to_topic_.find(client_channel_id);

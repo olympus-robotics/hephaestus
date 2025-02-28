@@ -40,6 +40,7 @@ public:
   void removeWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
   bool hasWsChannelMapping(const WsServerChannelId& channel_id) const;
   bool hasIpcTopicMapping(const std::string& topic) const;
+
   std::string topicChannelMappingToString() const;
 
 private:
@@ -126,6 +127,7 @@ private:
   // - one IPC topic can be served by multiple WS client-advertised channels
   // - IPC Topic names and WS client-advertised channel IDs are unique
 public:
+  bool hasClientChannelsForTopic(const std::string& topic) const;
   std::string getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const;
   WsServerClientChannelIdSet getClientChannelsForTopic(const std::string& topic) const;
   void addClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id,

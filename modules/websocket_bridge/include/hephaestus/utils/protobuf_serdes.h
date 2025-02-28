@@ -141,4 +141,10 @@ void printBinary(const uint8_t* data, size_t length);
 
 std::string getTimestampString();
 
+foxglove::ChannelWithoutId convertIpcTypeInfoToWsChannelInfo(const std::string& topic,
+                                                             const serdes::TypeInfo& type_info);
+
+std::optional<serdes::TypeInfo>
+convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info);
+
 }  // namespace heph::ws

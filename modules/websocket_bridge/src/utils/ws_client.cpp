@@ -154,8 +154,12 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       fmt::println("  Encoding      : {}", service.request->encoding);
       fmt::println("  Schema Name   : {}", service.request->schemaName);
       fmt::println("  Schema Enc.   : {}", service.request->schemaEncoding);
-      fmt::println("  Schema      : {}...{}", service.request->schema.substr(0, 10),
-                   service.request->schema.substr(service.request->schema.size() - 10));
+      if (service.request->schema.empty()) {
+        fmt::println("Schema     : None");
+      } else {
+        fmt::println("Schema     : {}...{}", service.request->schema.substr(0, 10),
+                     service.request->schema.substr(service.request->schema.size() - 10));
+      }
     } else {
       fmt::println("Request      : None");
     }
@@ -164,8 +168,12 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       fmt::println("  Encoding      : {}", service.response->encoding);
       fmt::println("  Schema Name   : {}", service.response->schemaName);
       fmt::println("  Schema Enc.   : {}", service.response->schemaEncoding);
-      fmt::println("  Schema      : {}...{}", service.response->schema.substr(0, 10),
-                   service.response->schema.substr(service.response->schema.size() - 10));
+      if (service.response->schema.empty()) {
+        fmt::println("Schema     : None");
+      } else {
+        fmt::println("Schema     : {}...{}", service.response->schema.substr(0, 10),
+                     service.response->schema.substr(service.response->schema.size() - 10));
+      }
     } else {
       fmt::println("Response     : None");
     }
@@ -182,12 +190,49 @@ void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
     return;
   }
   for (const auto& [channelId, channel] : ws_server_ads.channels) {
-    fmt::println("Channel ID : {}", channelId);
-    fmt::println("Topic      : {}", channel.topic);
-    fmt::println("Encoding   : {}", channel.encoding);
-    fmt::println("Schema Name: {}", channel.schemaName);
-    fmt::println("Schema     : {}...{}", channel.schema.substr(0, 10),
-                 channel.schema.substr(channel.schema.size() - 10));
+    fmt::println("Channel ID     : {}", channelId);
+    fmt::println("Topic          : {}", channel.topic);
+    fmt::println("Encoding       : {}", channel.encoding);
+    fmt::println("Schema Name    : {}", channel.schemaName);
+    if (channel.schemaEncoding.has_value()) {
+      fmt::println("Schema Enc.    : {}", channel.schemaEncoding.value());
+    } else {
+      fmt::println("Schema Enc.    : None");
+    }
+    if (channel.schema.empty()) {
+      fmt::println("Schema         : None");
+    } else {
+      fmt::println("Schema         : {}...{}", channel.schema.substr(0, 10),
+                   channel.schema.substr(channel.schema.size() - 10));
+    }
+    fmt::println("--------------------------------------------------");
+  }
+}
+
+void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ads) {
+  fmt::println("Client Channel Advertisements:");
+  fmt::println("--------------------------------------------------");
+  if (client_ads.empty()) {
+    fmt::println("No client channels advertised.");
+    fmt::println("--------------------------------------------------");
+    return;
+  }
+  for (const auto& ad : client_ads) {
+    fmt::println("Client Channel ID : {}", ad.channelId);
+    fmt::println("Topic             : {}", ad.topic);
+    fmt::println("Encoding          : {}", ad.encoding);
+    fmt::println("Schema Name       : {}", ad.schemaName);
+    if (ad.schemaEncoding.has_value()) {
+      fmt::println("Schema Enc.       : {}", ad.schemaEncoding.value());
+    } else {
+      fmt::println("Schema Enc.       : None");
+    }
+    if (ad.schema.has_value()) {
+      fmt::println("Schema            : {}...{}", ad.schema->substr(0, 10),
+                   ad.schema->substr(ad.schema->size() - 10));
+    } else {
+      fmt::println("Schema            : None");
+    }
     fmt::println("--------------------------------------------------");
   }
 }

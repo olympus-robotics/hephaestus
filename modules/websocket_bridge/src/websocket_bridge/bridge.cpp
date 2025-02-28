@@ -171,24 +171,7 @@ void WsBridge::callback__IpcGraph__TopicFound(const std::string& topic,
     return;
   }
 
-  const std::string schema_str = convertProtoBytesToFoxgloveBase64String(type_info.schema);
-
-  const std::string schema_encoding_str = convertSerializationTypeToString(type_info.serialization);
-
-  WsServerChannelInfo new_ws_server_channel{
-    .topic = topic,
-    .encoding = schema_encoding_str,
-    .schemaName = type_info.name,
-    .schema = schema_str,
-    .schemaEncoding = schema_encoding_str,
-  };
-
-  // debugPrintSchema(type_info.schema);
-
-  // heph::log(heph::INFO, "[WS Bridge] - New Channel", "topic", new_ws_server_channel.topic, "encoding",
-  //           new_ws_server_channel.encoding, "schemaName", new_ws_server_channel.schemaName, "schema",
-  //           new_ws_server_channel.schema, "schemaEncoding",
-  //           new_ws_server_channel.schemaEncoding.value_or("N/A"));
+  WsServerChannelInfo new_ws_server_channel = convertIpcTypeInfoToWsChannelInfo(topic, type_info);
 
   std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
   auto new_channel_ids = ws_server_->addChannels(new_ws_server_channels);
@@ -563,35 +546,49 @@ void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
 
 void WsBridge::callback__WsServer__ClientAdvertise(const WsServerClientChannelAd& advertisement,
                                                    WsServerClientHandle client_handle) {
+  CHECK(ipc_graph_);
+  CHECK(ipc_interface_);
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+  const auto& topic = advertisement.topic;
+  const auto& channel_id = advertisement.channelId;
 
-  fmt::println("[WS Bridge] - Client '{}' advertises topic  '{}' [{}] ...", client_name, advertisement.topic,
-               advertisement.channelId);
+  fmt::println("[WS Bridge] - Client '{}' advertises topic  '{}' [{}] ...", client_name, topic, channel_id);
 
-  if (state_.hasClientChannelMapping(advertisement.channelId)) {
+  if (state_.hasClientChannelMapping(channel_id)) {
     heph::log(heph::ERROR, "[WS Bridge] - Client tried to advertise topic but the channel already exists!",
-              "client_name", client_name, "channel_id", advertisement.channelId, "topic",
-              advertisement.topic);
+              "client_name", client_name, "channel_id", channel_id, "topic", topic);
     return;
   }
 
-  if (state_.hasTopicToClientChannelMapping(advertisement.topic)) {
-    auto other_channels = state_.getClientChannelsForTopic(advertisement.topic);
+  if (state_.hasTopicToClientChannelMapping(topic)) {
+    auto other_channels = state_.getClientChannelsForTopic(topic);
     const std::string other_channels_str = std::accumulate(
         std::next(other_channels.begin()), other_channels.end(), std::to_string(*other_channels.begin()),
         [](std::string a, int b) { return std::move(a) + ", " + std::to_string(b); });
     heph::log(heph::WARN, "[WS Bridge] - Multiple clients advertise the same topic!", "client_name",
-              client_name, "channel_id", advertisement.channelId, "topic", advertisement.topic, "num_clients",
+              client_name, "channel_id", channel_id, "topic", topic, "num_clients",
               (other_channels.size() + 1), "other_channel_ids", other_channels_str);
   }
 
-  state_.addClientChannelToTopicMapping(advertisement.channelId, advertisement.topic);
-  state_.addClientChannelToClientMapping(advertisement.channelId, client_handle, client_name);
+  state_.addClientChannelToTopicMapping(channel_id, topic);
+  state_.addClientChannelToClientMapping(channel_id, client_handle, client_name);
 
-  // TODO(mfehr): Add IPC publisher here.
+  auto type_info = convertWsChannelInfoToIpcTypeInfo(advertisement);
 
-  fmt::println("[WS Bridge] - Client '{}' advertised topic '{}' [{}] successfully.", client_name,
-               advertisement.topic, advertisement.channelId);
+  if (!type_info.has_value()) {
+    heph::log(heph::ERROR, "[WS Bridge] - Failed to convert client advertisement to valid IPC type info!",
+              "topic", topic, "channel_id", channel_id);
+    return;
+  }
+
+  if (!ipc_interface_->hasPublisher(topic)) {
+    ipc_interface_->addPublisher(topic, type_info.value());
+    fmt::println("[WS Bridge] - Client '{}' advertised topic '{}' [{}] successfully [IPC PUB ADDED].",
+                 client_name, topic, channel_id);
+  } else {
+    fmt::println("[WS Bridge] - Client '{}' advertised topic '{}' [{}] successfully [IPC PUB EXISTS].",
+                 client_name, topic, channel_id);
+  }
 
   state_.printBridgeState();
 }
@@ -623,10 +620,20 @@ void WsBridge::callback__WsServer__ClientUnadvertise(WsServerClientChannelId cli
   state_.removeClientChannelToTopicMapping(client_channel_id);
   state_.removeClientChannelToClientMapping(client_channel_id);
 
-  // TODO(mfehr): Remove IPC publisher here.
-
-  fmt::println("[WS Bridge] - Client '{}' unadvertised topic '{}' [{}] successfully.", client_name, topic,
-               client_channel_id);
+  if (!state_.hasClientChannelsForTopic(topic)) {
+    if (ipc_interface_->hasPublisher(topic)) {
+      ipc_interface_->removePublisher(topic);
+      fmt::println("[WS Bridge] - Client '{}' unadvertised topic '{}' [{}] successfully. [IPC PUB REMOVED]",
+                   client_name, topic, client_channel_id);
+    } else {
+      fmt::println("[WS Bridge] - Client '{}' unadvertised topic '{}' [{}] successfully. [IPC PUB NOT FOUND]",
+                   client_name, topic, client_channel_id);
+    }
+  } else {
+    fmt::println(
+        "[WS Bridge] - Client '{}' unadvertised topic '{}' [{}] successfully. [IPC PUB STILL NEEDED]",
+        client_name, topic, client_channel_id);
+  }
 
   state_.printBridgeState();
 }
@@ -634,14 +641,53 @@ void WsBridge::callback__WsServer__ClientUnadvertise(WsServerClientChannelId cli
 void WsBridge::callback__WsServer__ClientMessage(const WsServerClientMessage& message,
                                                  WsServerClientHandle client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+  const auto& topic = message.advertisement.topic;
+  const auto& channel_id = message.advertisement.channelId;
 
-  (void)message;
-  (void)client_name;
+  if (!ipc_interface_->hasPublisher(topic)) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent message for unadvertised topic!", "client_name",
+              client_name, "topic", topic);
+    return;
+  }
 
-  // TODO(mfehr): Convert and forward message to IPC interface.
+  if (message.data.empty()) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent empty message!", "client_name", client_name, "topic",
+              topic, "channel_id", channel_id);
+    return;
+  }
 
-  // fmt::println("Client '{}' sent message on topic '{}' [{}]", client_name, message.advertisement.topic,
-  //              message.advertisement.channelId);
+  // Check if the message has enough data for opcode (1 byte) + channel ID (4 bytes)
+  if (message.data.size() < 5) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent message with insufficient data!", "client_name",
+              client_name, "topic", topic, "channel_id", channel_id, "message_size", message.data.size());
+    return;
+  }
+
+  // 1 byte opcode + 4 bytes channel ID
+  // The rest of the message is the payload
+  const auto opcode = static_cast<uint8_t>(message.data[0]);
+  const auto parsed_channel_id =
+      static_cast<WsServerChannelId>(foxglove::ReadUint32LE(message.data.data() + 1));
+
+  if (opcode != static_cast<uint8_t>(WsServerClientBinaryOpCode::MESSAGE_DATA)) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent message with unexpected opcode!", "client_name",
+              client_name, "topic", topic, "channel_id", channel_id, "opcode", static_cast<int>(opcode));
+    return;
+  }
+  if (parsed_channel_id != channel_id) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent message with unexpected channel id!", "client_name",
+              client_name, "topic", topic, "channel_id", channel_id, "parsed_channel_id", parsed_channel_id);
+    return;
+  }
+
+  // Forward only the payload (skip the bytes we extracted above)
+  std::span<const std::byte> message_data = std::span<const std::byte>(
+      reinterpret_cast<const std::byte*>(message.data.data() + (1 + 4)), message.data.size() - (1 + 4));
+
+  if (!ipc_interface_->publishMessage(topic, message_data)) {
+    heph::log(heph::ERROR, "[WS Bridge] - Failed to publish client message!", "client_name", client_name,
+              "topic", topic, "channel_id", channel_id);
+  }
 }
 
 void WsBridge::callback__WsServer__ServiceRequest(const WsServerServiceRequest& request,

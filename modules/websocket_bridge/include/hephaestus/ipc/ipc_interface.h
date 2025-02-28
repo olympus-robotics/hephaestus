@@ -48,6 +48,7 @@ public:
   bool hasPublisher(const std::string& topic) const;
   void addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info);
   void removePublisher(const std::string& topic);
+  bool publishMessage(const std::string& topic, std::span<const std::byte> data);
 
   // Services
   ///////////
@@ -58,7 +59,7 @@ public:
                                      AsyncServiceResponseCallback callback);
 
 private:
-  bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_sub_);
 
   void callback_PublisherMatchingStatus(const std::string& topic, const ipc::zenoh::MatchingStatus& status);
 
@@ -66,22 +67,22 @@ private:
 
   std::shared_ptr<ipc::zenoh::Session> session_master_;
 
-  std::shared_ptr<ipc::zenoh::Session> session_pub_;
-  std::shared_ptr<ipc::zenoh::Session> session_sub_;
-  std::shared_ptr<ipc::zenoh::Session> session_srv_;
-
   ipc::zenoh::Config config_;
 
-  mutable absl::Mutex mutex_;
-
+  mutable absl::Mutex mutex_sub_;
+  std::shared_ptr<ipc::zenoh::Session> session_sub_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawSubscriber>>
-      subscribers_ ABSL_GUARDED_BY(mutex_);
+      subscribers_ ABSL_GUARDED_BY(mutex_sub_);
 
+  mutable absl::Mutex mutex_pub_;
+  std::shared_ptr<ipc::zenoh::Session> session_pub_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawPublisher>>
-      publishers_ ABSL_GUARDED_BY(mutex_);
+      publishers_ ABSL_GUARDED_BY(mutex_pub_);
 
+  mutable absl::Mutex mutex_srv_;
+  std::shared_ptr<ipc::zenoh::Session> session_srv_;
   std::unordered_map<std::string, AsyncServiceResponseCallback>
-      async_service_callbacks_ ABSL_GUARDED_BY(mutex_);
+      async_service_callbacks_ ABSL_GUARDED_BY(mutex_srv_);
 };
 
 }  // namespace heph::ws

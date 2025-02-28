@@ -166,7 +166,7 @@ bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufS
 bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
                           ProtobufSchemaDatabase& schema_db) {
   if (service_request_definition.schemaEncoding != "protobuf") {
-    heph::log(heph::ERROR, "Service request schema encoding is not protobuf");
+    heph::log(heph::WARN, "Service request schema encoding is not protobuf. Will not add to database.");
     return false;
   }
 
@@ -316,6 +316,8 @@ void printBinary(const uint8_t* data, size_t length) {
     return;
   }
 
+  fmt::println("BINRARY ({} bytes)", length);
+
   std::stringstream ss;
   for (size_t i = 0; i < length; ++i) {
     for (int bit = 7; bit >= 0; --bit) {
@@ -351,6 +353,69 @@ std::string getTimestampString() {
       << now_ms.count();
 
   return oss.str();
+}
+
+foxglove::ChannelWithoutId convertIpcTypeInfoToWsChannelInfo(const std::string& topic,
+                                                             const serdes::TypeInfo& type_info) {
+  foxglove::ChannelWithoutId channel_info;
+  channel_info.topic = topic;
+  channel_info.encoding = convertSerializationTypeToString(type_info.serialization);
+  channel_info.schemaName = type_info.name;
+  channel_info.schema = convertProtoBytesToFoxgloveBase64String(type_info.schema);
+  channel_info.schemaEncoding = channel_info.encoding;
+  return channel_info;
+}
+
+std::optional<serdes::TypeInfo>
+convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info) {
+  // Check if the channel info is valid. Since this is completely at the mercy
+  // of whoever writes the client, we need to check this thoroughly.
+  if (!channel_info.schemaEncoding.has_value() || !channel_info.schema.has_value()) {
+    heph::log(heph::ERROR, "Schema or schema encoding is not set in client advertisement!");
+    return std::nullopt;
+  }
+  if (channel_info.schemaEncoding->empty()) {
+    heph::log(heph::ERROR, "Schema encoding is empty!");
+    return std::nullopt;
+  }
+  if (channel_info.schemaEncoding.value() != "protobuf") {
+    heph::log(heph::ERROR, "Schema encoding is not protobuf!");
+    return std::nullopt;
+  }
+  if (channel_info.encoding.empty()) {
+    heph::log(heph::ERROR, "Encoding is empty!");
+    return std::nullopt;
+  }
+  if (channel_info.encoding != "protobuf") {
+    heph::log(heph::ERROR, "Encoding is not protobuf!");
+    return std::nullopt;
+  }
+  if (channel_info.schemaName.empty()) {
+    heph::log(heph::ERROR, "Schema name is empty!");
+    return std::nullopt;
+  }
+  if (channel_info.schema->empty()) {
+    heph::log(heph::ERROR, "Schema is empty!");
+    return std::nullopt;
+  }
+
+  std::string encoding_upper = channel_info.encoding;
+  std::transform(encoding_upper.begin(), encoding_upper.end(), encoding_upper.begin(), ::toupper);
+
+  auto schema_bytes_as_chars = foxglove::base64Decode(channel_info.schema.value());
+
+  serdes::TypeInfo type_info;
+  type_info.serialization = magic_enum::enum_cast<serdes::TypeInfo::Serialization>(encoding_upper).value();
+  type_info.name = channel_info.schemaName;
+  type_info.schema = std::vector<std::byte>(
+      reinterpret_cast<std::byte*>(schema_bytes_as_chars.data()),
+      reinterpret_cast<std::byte*>(schema_bytes_as_chars.data() + schema_bytes_as_chars.size()));
+
+  fmt::print("'''\n{}\n'''", type_info.toJson());
+
+  debugPrintSchema(type_info.schema);
+
+  return type_info;
 }
 
 }  // namespace heph::ws

@@ -46,7 +46,7 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
 
   // Handle Advertisements
   if (parseWsServerAdvertisements(msg, ws_server_ads)) {
-    fmt::print("Received WS server advertisements.\n");  // Add this line
+    printAdvertisedTopics(ws_server_ads);
     return;
   }
 
@@ -57,24 +57,20 @@ void handleBinaryMessage(
     const uint8_t* data, size_t length, WsClient& client,
     std::map<WsServerChannelId, WsServerChannelId>& sub_to_pub_channel_map,
     std::map<WsServerSubscriptionId, WsServerChannelId>& subscription_id_to_channel_id_map) {
-  if (data == nullptr || length == 0) {
+  if (data == nullptr || length < (1 + 4 + 8)) {
     fmt::print("Received invalid message.\n");
     g_abort = true;
     return;
   }
 
   const uint8_t opcode = data[0];
+  const auto subscription_id = foxglove::ReadUint32LE(data + 1);
 
-  if (opcode != static_cast<uint8_t>(WsServerBinaryOpCode::MESSAGE_DATA)) {
-    fmt::println("Received unhandled binary message with op code {}", opcode);
+  if (opcode != static_cast<uint8_t>(WsServerClientBinaryOpCode::MESSAGE_DATA)) {
+    fmt::print("Received unhandled binary message with op code {}\n", std::to_string(opcode));
     g_abort = true;
     return;
   }
-
-  // Skipping the first byte (opcode)
-  const uint8_t* payload = data + 1;
-
-  const auto subscription_id = foxglove::ReadUint32LE(payload);
 
   // Find the server-side channel ID for this subscription ID.
   auto sub_id_it = subscription_id_to_channel_id_map.find(subscription_id);
@@ -94,9 +90,9 @@ void handleBinaryMessage(
   }
   const auto client_channel_id = channel_it->second;
 
-  // 1 byte for the opcode, 4 bytes for the subscription ID
-  const uint8_t* message_data_start = data + 1 + 5;
-  const size_t message_data_size = length - 1 - 4;
+  // 1 byte for the opcode, 4 bytes for the subscription ID, 8 bytes for the timestamp
+  const uint8_t* message_data_start = data + 1 + 4 + 8;
+  const size_t message_data_size = length - 1 - 4 - 8;
 
   client.publish(client_channel_id, message_data_start, message_data_size);
 }
@@ -146,8 +142,6 @@ int main(int argc, char** argv) {
     std::this_thread::sleep_for(1s);
   }
 
-  printAdvertisedTopics(ws_server_ads);
-
   fmt::println("Advertise a client-side topic for each server-side topic, just with the prefix: 'mirror/'");
   {
     std::random_device rd;
@@ -158,15 +152,18 @@ int main(int argc, char** argv) {
     std::vector<WsServerClientChannelAd> client_ads;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {
       client_ads.emplace_back(WsServerClientChannelAd{
-          channel_id + MIRROR_CHANNEL_ID_OFFSET,
-          "mirror/" + channel.topic,
-          channel.encoding,
-          channel.schemaName,
-          channel.schema,
-          channel.schemaEncoding,
+          .channelId = channel_id + MIRROR_CHANNEL_ID_OFFSET,
+          .topic = "mirror/" + channel.topic,
+          .encoding = channel.encoding,
+          .schemaName = channel.schemaName,
+          .schema = channel.schema,
+          .schemaEncoding = channel.schemaEncoding,
       });
       sub_to_pub_channel_map[channel_id] = channel_id + MIRROR_CHANNEL_ID_OFFSET;
     }
+
+    printClientChannelAds(client_ads);
+
     client.advertise(client_ads);
   }
 
