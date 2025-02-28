@@ -24,6 +24,7 @@
 
 namespace heph::ws {
 
+using WsClient = foxglove::Client<foxglove::WebSocketNoTls>;
 struct ServiceCallState {
   enum class Status { DISPATCHED, FAILED, SUCCESS };
 

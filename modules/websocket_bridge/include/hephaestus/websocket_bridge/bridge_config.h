@@ -16,6 +16,9 @@
 #include <hephaestus/telemetry/log.h>
 #include <magic_enum.hpp>
 
+#include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/utils/ws_protocol.h"
+
 namespace heph::ws {
 
 std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector);
@@ -24,26 +27,26 @@ struct WsBridgeConfig {
   ///////////////
   // WS Server //
   ///////////////
-  foxglove::ServerOptions
-      ws_server_config = { .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
-                           .supportedEncodings = { "protobuf", "json" },
-                           .useCompression = true,
-                           .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
-                           .useTls = false,
-                           .certfile = "",
-                           .keyfile = "",
-                           .sessionId =
-                               "session_" +
-                               std::to_string(std::chrono::system_clock::now().time_since_epoch().count()),
-                           .capabilities = {
-                               foxglove::CAPABILITY_CLIENT_PUBLISH,
-                               // foxglove::CAPABILITY_PARAMETERS,
-                               // foxglove::CAPABILITY_PARAMETERS_SUBSCRIBE,
-                               foxglove::CAPABILITY_SERVICES, foxglove::CAPABILITY_CONNECTION_GRAPH,
-                               // foxglove::CAPABILITY_ASSETS
-                           } };
+  WsServerInfo ws_server_config = { .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
+                                    .supportedEncodings = { "protobuf", "json" },
+                                    .useCompression = true,
+                                    .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
+                                    .useTls = false,
+                                    .certfile = "",
+                                    .keyfile = "",
+                                    .sessionId =
+                                        "session_" +
+                                        std::to_string(
+                                            std::chrono::system_clock::now().time_since_epoch().count()),
+                                    .capabilities = {
+                                        foxglove::CAPABILITY_CLIENT_PUBLISH,
+                                        // foxglove::CAPABILITY_PARAMETERS,
+                                        // foxglove::CAPABILITY_PARAMETERS_SUBSCRIBE,
+                                        foxglove::CAPABILITY_SERVICES, foxglove::CAPABILITY_CONNECTION_GRAPH,
+                                        // foxglove::CAPABILITY_ASSETS
+                                    } };
   // NOTE: Unfortunately 'address' and 'port' are not part of
-  // foxglove::ServerOptions and need to be passed to the server when calling
+  // WsServerInfo and need to be passed to the server when calling
   // "start".
   uint16_t ws_server_port = 8765;
   std::string ws_server_address = "0.0.0.0";

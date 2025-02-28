@@ -81,8 +81,10 @@ TEST_F(WsBridgeStateTest, HasIpcTopicMapping) {
 
 TEST_F(WsBridgeStateTest, TopicChannelMappingToString) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
-  std::string expected = "  IPC Topic to WS Channel Mapping:\n  \t'topic1' -> [1]\n";
-  EXPECT_EQ(state.topicChannelMappingToString(), expected);
+  state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
+  EXPECT_NE(state.topicChannelMappingToString().find("[1]"), std::string::npos);
+  EXPECT_NE(state.topicChannelMappingToString().find("client1"), std::string::npos);
+  EXPECT_NE(state.topicChannelMappingToString().find("topic1"), std::string::npos);
 }
 
 TEST_F(WsBridgeStateTest, AddAndGetClientsForWsChannel) {
@@ -119,12 +121,6 @@ TEST_F(WsBridgeStateTest, HasWsChannelWithClients) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_TRUE(state.hasWsChannelWithClients(channel_id1));
   EXPECT_FALSE(state.hasWsChannelWithClients(channel_id2));
-}
-
-TEST_F(WsBridgeStateTest, ChannelClientMappingToString) {
-  state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
-  EXPECT_NE(state.channelClientMappingToString().find("[1]"), std::string::npos);
-  EXPECT_NE(state.channelClientMappingToString().find("client1"), std::string::npos);
 }
 
 TEST_F(WsBridgeStateTest, ToString) {

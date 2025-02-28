@@ -58,13 +58,13 @@ private:
   void callback__WsServer__Log(WsServerLogLevel level, char const* msg);
   void callback__WsServer__Subscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
   void callback__WsServer__Unsubscribe(WsServerChannelId channel_type, WsServerClientHandle client_handle);
-  void callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
+  void callback__WsServer__ClientAdvertise(const WsServerClientChannelAd& advertisement,
                                            WsServerClientHandle client_handle);
-  void callback__WsServer__ClientUnadvertise(WsServerChannelId channel_type,
+  void callback__WsServer__ClientUnadvertise(WsServerClientChannelId client_channel_id,
                                              WsServerClientHandle client_handle);
-  void callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
+  void callback__WsServer__ClientMessage(const WsServerClientMessage& message,
                                          WsServerClientHandle client_handle);
-  void callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
+  void callback__WsServer__ServiceRequest(const WsServerServiceRequest& request,
                                           WsServerClientHandle client_handle);
 
   void callback__WsServer__SubscribeConnectionGraph(bool subscribe);

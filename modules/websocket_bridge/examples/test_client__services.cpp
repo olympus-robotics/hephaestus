@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 
 using namespace std::chrono_literals;
+using namespace heph::ws;
 
 constexpr int SERVICE_REQUEST_COUNT = 10;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
@@ -35,9 +36,8 @@ void sigintHandler(int signal) {
   g_abort = true;
 }
 
-void handleBinaryMessage(const uint8_t* data, size_t length,
-                         heph::ws::WsServerAdvertisements& ws_server_ads,
-                         heph::ws::ServiceCallStateMap& state) {
+void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertisements& ws_server_ads,
+                         ServiceCallStateMap& state) {
   if (data == nullptr || length == 0) {
     fmt::print("Received invalid message.\n");
     return;
@@ -45,12 +45,12 @@ void handleBinaryMessage(const uint8_t* data, size_t length,
 
   const uint8_t opcode = data[0];
 
-  if (opcode == static_cast<uint8_t>(foxglove::BinaryOpcode::SERVICE_CALL_RESPONSE)) {
+  if (opcode == static_cast<uint8_t>(WsServerBinaryOpCode::SERVICE_CALL_RESPONSE)) {
     // Skipping the first byte (opcode)
     const uint8_t* payload = data + 1;
     const size_t payload_size = length - 1;
 
-    heph::ws::WsServerServiceResponse response;
+    WsServerServiceResponse response;
     try {
       response.read(payload, payload_size);
     } catch (const std::exception& e) {
@@ -70,14 +70,14 @@ void handleBinaryMessage(const uint8_t* data, size_t length,
 
     // TODO(mfehr): REMOVE
     if (msg.has_value()) {
-      heph::ws::debugPrintMessage(**msg);
+      debugPrintMessage(**msg);
     }
     return;
   }
 }
 
-void handleJsonMessage(const std::string& json_msg, heph::ws::WsServerAdvertisements& ws_server_ads,
-                       heph::ws::ServiceCallStateMap& state) {
+void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_server_ads,
+                       ServiceCallStateMap& state) {
   // Parse the JSON message
   nlohmann::json msg;
   try {
@@ -89,13 +89,13 @@ void handleJsonMessage(const std::string& json_msg, heph::ws::WsServerAdvertisem
   }
 
   // Handle Advertisements
-  if (heph::ws::parseWsServerAdvertisements(msg, ws_server_ads)) {
+  if (parseWsServerAdvertisements(msg, ws_server_ads)) {
     // Everything is alright.
     return;
   }
 
   // Handle Service Failures
-  heph::ws::WsServerServiceFailure service_failure;
+  WsServerServiceFailure service_failure;
   if (parseWsServerServiceFailure(msg, service_failure)) {
     heph::log(heph::ERROR, "Service call failed with error.", "call_id", service_failure.call_id,
               "error_message", service_failure.error_message);
@@ -110,19 +110,18 @@ void handleJsonMessage(const std::string& json_msg, heph::ws::WsServerAdvertisem
   }
 }
 
-void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
-                             const foxglove::Service& foxglove_service,
-                             heph::ws::WsServerAdvertisements& ws_server_ads,
-                             heph::ws::ServiceCallStateMap& state) {
+void sendTestServiceRequests(WsClient& client,
+                             const WsServerServiceAd& foxglove_service, WsServerAdvertisements& ws_server_ads,
+                             ServiceCallStateMap& state) {
   auto foxglove_service_id = foxglove_service.id;
 
   for (int i = 1; i <= SERVICE_REQUEST_COUNT && !g_abort; ++i) {
-    foxglove::ServiceRequest request;
+    WsServerServiceRequest request;
     request.callId = static_cast<uint32_t>(i);
     request.serviceId = foxglove_service_id;
 
-    auto message = heph::ws::generateRandomMessageFromSchemaName(foxglove_service.request->schemaName,
-                                                                        ws_server_ads.schema_db);
+    auto message =
+        generateRandomMessageFromSchemaName(foxglove_service.request->schemaName, ws_server_ads.schema_db);
     if (!message) {
       fmt::println("Failed to generate random protobuf message for service '{}'", foxglove_service.name);
       g_abort = true;
@@ -130,7 +129,7 @@ void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
     }
 
     // TODO(mfehr): REMOVE
-    heph::ws::debugPrintMessage(*message);
+    debugPrintMessage(*message);
 
     // Prepare message for sending.
     std::vector<uint8_t> message_buffer(message->ByteSizeLong());
@@ -147,7 +146,7 @@ void sendTestServiceRequests(foxglove::Client<foxglove::WebSocketNoTls>& client,
     request.encoding = "protobuf";
 
     // Init the service call as dispatched.
-    state.emplace(request.callId, heph::ws::ServiceCallState(request.callId));
+    state.emplace(request.callId, ServiceCallState(request.callId));
 
     // Dispatch the service request.
     client.sendServiceRequest(request);
@@ -172,10 +171,10 @@ int main(int argc, char** argv) {
   }
 
   const std::string url = argv[1];
-  foxglove::Client<foxglove::WebSocketNoTls> client;
+  WsClient client;
 
-  heph::ws::WsServerAdvertisements ws_server_ads;
-  heph::ws::ServiceCallStateMap state;
+  WsServerAdvertisements ws_server_ads;
+  ServiceCallStateMap state;
 
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, ws_server_ads, state);

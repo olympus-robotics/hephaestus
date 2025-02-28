@@ -66,8 +66,6 @@ public:
                                       WsServerClientHandle client_handle);
   std::optional<WsServerClientHandleSet> getClientsForWsChannel(const WsServerChannelId& channel_id) const;
 
-  std::string channelClientMappingToString() const;
-
 private:
   void cleanUpChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_c2c_);
 
@@ -121,6 +119,50 @@ private:
   using CallIdToClientMap = std::unordered_map<uint32_t, ClientHandleWithName>;
   mutable absl::Mutex mutex_sc2c_;
   CallIdToClientMap call_id_to_client_map_ ABSL_GUARDED_BY(mutex_sc2c_);
+
+  // WS Client Channel ID <-> IPC Topic [protected by mutex_cc2t_]
+  // Keeps track of which WS client-advertised channel maps to which IPC topic
+  // Assumptions:
+  // - one IPC topic can be served by multiple WS client-advertised channels
+  // - IPC Topic names and WS client-advertised channel IDs are unique
+public:
+  std::string getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+  WsServerClientChannelIdSet getClientChannelsForTopic(const std::string& topic) const;
+  void addClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id,
+                                      const std::string& topic);
+  void removeClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id);
+  bool hasClientChannelMapping(const WsServerClientChannelId& client_channel_id) const;
+  bool hasTopicToClientChannelMapping(const std::string& topic) const;
+  
+  std::string clientChannelMappingToString() const;
+
+private:
+  using ClientChannelToTopicMap = std::unordered_map<WsServerClientChannelId, std::string>;
+  using TopicToClientChannelMap = std::unordered_map<std::string, WsServerClientChannelIdSet>;
+
+  mutable absl::Mutex mutex_cc2t_;
+  ClientChannelToTopicMap client_channel_to_topic_ ABSL_GUARDED_BY(mutex_cc2t_);
+  TopicToClientChannelMap topic_to_client_channels_ ABSL_GUARDED_BY(mutex_cc2t_);
+
+  // WS Client Channels <-> WS Clients [protected by mutex_cc2c_]
+  // Keeps track of which client channel was advertised by which client.
+  // Assumptions:
+  // - One WS client-advertised channel, One WS client
+  // - IPC Topic names and WS client-advertised channel IDs are unique
+  // - WS Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
+public:
+  bool hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+  void addClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id,
+                                       WsServerClientHandle client_handle, const std::string& client_name);
+  void removeClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id);
+  std::optional<ClientHandleWithName>
+  getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+private:
+  void cleanUpClientChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_cc2c_);
+
+  using ClientChannelToClientMap = std::unordered_map<WsServerClientChannelId, ClientHandleWithName>;
+  mutable absl::Mutex mutex_cc2c_;
+  ClientChannelToClientMap client_channel_to_client_map_ ABSL_GUARDED_BY(mutex_cc2c_);
 };
 
 }  // namespace heph::ws

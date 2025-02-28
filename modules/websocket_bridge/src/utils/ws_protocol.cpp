@@ -27,7 +27,7 @@ bool convertIpcRawServiceResponseToWsServiceResponse(
   return true;
 }
 
-std::optional<foxglove::Channel> convertWsJsonMsgToChannel(const nlohmann::json& channel_json) {
+std::optional<WsServerChannelAd> convertWsJsonMsgToChannel(const nlohmann::json& channel_json) {
   // Example JSON:
   // {
   //   "channels": [
@@ -43,7 +43,7 @@ std::optional<foxglove::Channel> convertWsJsonMsgToChannel(const nlohmann::json&
   //   "op": "advertise"
   // }
   try {
-    foxglove::Channel channel;
+    WsServerChannelAd channel;
     channel.id = channel_json.at("id").get<uint32_t>();
     channel.topic = channel_json.at("topic").get<std::string>();
     channel.encoding = channel_json.at("encoding").get<std::string>();
@@ -60,8 +60,7 @@ std::optional<foxglove::Channel> convertWsJsonMsgToChannel(const nlohmann::json&
   }
 }
 
-std::optional<foxglove::ServerOptions>
-convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) {
+std::optional<WsServerInfo> convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) {
   // Example JSON:
   // {
   //   "capabilities": ["connectionGraph", "clientPublish", "services"],
@@ -72,7 +71,7 @@ convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) {
   //   "supportedEncodings": ["protobuf"]
   // }
   try {
-    foxglove::ServerOptions server_options;
+    WsServerInfo server_options;
     if (server_options_json.contains("capabilities")) {
       const auto& capabilities_json = server_options_json.at("capabilities");
       if (!capabilities_json.is_array()) {
@@ -95,7 +94,7 @@ convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) {
   }
 }
 
-std::optional<foxglove::Service> convertWsJsonMsgToService(const nlohmann::json& service_json) {
+std::optional<WsServerServiceAd> convertWsJsonMsgToService(const nlohmann::json& service_json) {
   // Example JSON:
   // {
   //   "op": "advertiseServices",
@@ -137,13 +136,13 @@ std::optional<foxglove::Service> convertWsJsonMsgToService(const nlohmann::json&
   //   ]
   // }
   try {
-    foxglove::Service service;
+    WsServerServiceAd service;
     service.id = service_json.at("id").get<uint32_t>();
     service.name = service_json.at("name").get<std::string>();
     service.type = service_json.at("type").get<std::string>();
     if (service_json.contains("request")) {
       const auto& request_json = service_json.at("request");
-      foxglove::ServiceRequestDefinition request_def;
+      WsServerServiceRequestDefinition request_def;
       request_def.encoding = request_json.at("encoding").get<std::string>();
       request_def.schemaName = request_json.at("schemaName").get<std::string>();
       request_def.schemaEncoding = request_json.at("schemaEncoding").get<std::string>();
@@ -152,7 +151,7 @@ std::optional<foxglove::Service> convertWsJsonMsgToService(const nlohmann::json&
     }
     if (service_json.contains("response")) {
       const auto& response_json = service_json.at("response");
-      foxglove::ServiceResponseDefinition response_def;
+      WsServerServiceResponseDefinition response_def;
       response_def.encoding = response_json.at("encoding").get<std::string>();
       response_def.schemaName = response_json.at("schemaName").get<std::string>();
       response_def.schemaEncoding = response_json.at("schemaEncoding").get<std::string>();
@@ -194,7 +193,8 @@ bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg,
           ws_server_ads.channels[channel_ad->id] = *channel_ad;
         } else {
           heph::log(heph::ERROR, "Failed to save schema to database for channel.", "channel_id",
-                    channel_ad->id, "topic", channel_ad->topic);
+                    channel_ad->id, "topic", channel_ad->topic, "encoding", channel_ad->encoding);
+          continue;
         }
       }
     } else if (op_code == "advertiseServices") {
@@ -209,8 +209,9 @@ bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg,
         if (saveSchemaToDatabase(*service_ad, ws_server_ads.schema_db)) {
           ws_server_ads.services[service_ad->id] = *service_ad;
         } else {
-          heph::log(heph::ERROR, "Failed to save service schemas to database.", "service_id", service_ad->id,
-                    "service_name", service_ad->name);
+          heph::log(heph::WARN, "Failed to save service schemas to database.", "service_id", service_ad->id,
+                    "service_name", service_ad->name, "service_type", service_ad->type);
+          continue;
         }
       }
     } else {

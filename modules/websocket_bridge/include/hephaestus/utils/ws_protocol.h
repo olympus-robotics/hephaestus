@@ -8,34 +8,49 @@
 #include <set>
 #include <unordered_map>
 
+#include <foxglove/websocket/common.hpp>
+#include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/server_interface.hpp>
+#include <foxglove/websocket/websocket_client.hpp>
+#include <foxglove/websocket/websocket_notls.hpp>
+#include <foxglove/websocket/websocket_server.hpp>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <nlohmann/json.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
 #include "hephaestus/utils/protobuf_serdes.h"
-#include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws {
 
 using WsServerClientHandle = websocketpp::connection_hdl;
 using WsServerInterface = foxglove::ServerInterface<WsServerClientHandle>;
 using WsServerInterfacePtr = std::unique_ptr<WsServerInterface>;
+using WsServerHandlers = foxglove::ServerHandlers<WsServerClientHandle>;
+using WsServerFactory = foxglove::ServerFactory;
+using WsServerInfo = foxglove::ServerOptions;
 using WsServerLogLevel = foxglove::WebSocketLogLevel;
 
 using WsServerChannelId = foxglove::ChannelId;
 using WsServerChannelInfo = foxglove::ChannelWithoutId;
 using WsServerChannelAd = foxglove::Channel;
 
+using WsServerClientChannelId = foxglove::ClientChannelId;
+using WsServerClientChannelIdSet = std::unordered_set<WsServerClientChannelId>;
+using WsServerClientChannelAd = foxglove::ClientAdvertisement;
+using WsServerSubscriptionId = foxglove::SubscriptionId;
+using WsServerClientMessage = foxglove::ClientMessage;
+
 using WsServerServiceId = foxglove::ServiceId;
 using WsServerServiceCallId = uint32_t;
 using WsServerServiceInfo = foxglove::ServiceWithoutId;
 using WsServerServiceAd = foxglove::Service;
-using WsServerServiceDefinition = foxglove::ServiceRequestDefinition;
+using WsServerServiceRequestDefinition = foxglove::ServiceRequestDefinition;
+using WsServerServiceResponseDefinition = foxglove::ServiceResponseDefinition;
 using WsServerServiceRequest = foxglove::ServiceRequest;
 using WsServerServiceResponse = foxglove::ServiceResponse;
 
-using WsServerInfo = foxglove::ServerOptions;
+using WsServerBinaryOpCode = foxglove::BinaryOpcode;
+using WsServerClientBinaryOpCode = foxglove::ClientBinaryOpcode;
 
 using ClientHandleWithName = std::pair<WsServerClientHandle, std::string>;
 

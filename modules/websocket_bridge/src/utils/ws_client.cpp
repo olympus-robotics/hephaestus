@@ -154,6 +154,8 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       fmt::println("  Encoding      : {}", service.request->encoding);
       fmt::println("  Schema Name   : {}", service.request->schemaName);
       fmt::println("  Schema Enc.   : {}", service.request->schemaEncoding);
+      fmt::println("  Schema      : {}...{}", service.request->schema.substr(0, 10),
+                   service.request->schema.substr(service.request->schema.size() - 10));
     } else {
       fmt::println("Request      : None");
     }
@@ -162,6 +164,8 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       fmt::println("  Encoding      : {}", service.response->encoding);
       fmt::println("  Schema Name   : {}", service.response->schemaName);
       fmt::println("  Schema Enc.   : {}", service.response->schemaEncoding);
+      fmt::println("  Schema      : {}...{}", service.response->schema.substr(0, 10),
+                   service.response->schema.substr(service.response->schema.size() - 10));
     } else {
       fmt::println("Response     : None");
     }
@@ -182,6 +186,8 @@ void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
     fmt::println("Topic      : {}", channel.topic);
     fmt::println("Encoding   : {}", channel.encoding);
     fmt::println("Schema Name: {}", channel.schemaName);
+    fmt::println("Schema     : {}...{}", channel.schema.substr(0, 10),
+                 channel.schema.substr(channel.schema.size() - 10));
     fmt::println("--------------------------------------------------");
   }
 }

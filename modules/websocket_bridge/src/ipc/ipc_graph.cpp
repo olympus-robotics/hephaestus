@@ -369,21 +369,49 @@ void IpcGraphState::printIpcGraphState() const {
   ss << "[IPC Graph] - State:\n";
 
   if (!topics_to_types_map.empty()) {
-    ss << "\n  Topics:\n";
+    ss << "\n  TOPICS:\n";
     for (const auto& [topic, type] : topics_to_types_map) {
       ss << "    '" << topic << "' [" << type << "]\n";
     }
   }
 
+  if (!topic_to_publishers_map.empty()) {
+    ss << "\n  PUBLISHERS:\n";
+    for (const auto& [topic, publishers] : topic_to_publishers_map) {
+      ss << "    '" << topic << "' <- [";
+      for (auto it = publishers.begin(); it != publishers.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != publishers.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
+    }
+  }
+
+  if (!topic_to_subscribers_map.empty()) {
+    ss << "\n  SUBSCRIBERS:\n";
+    for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
+      ss << "    '" << topic << "' -> [";
+      for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {
+        ss << *it;
+        if (std::next(it) != subscribers.end()) {
+          ss << ", ";
+        }
+      }
+      ss << "]\n";
+    }
+  }
+
   if (!services_to_types_map.empty()) {
-    ss << "\n  Services:\n";
+    ss << "\n  SERVICES:\n";
     for (const auto& [srv, srv_types] : services_to_types_map) {
       ss << "    '" << srv << "' [" << srv_types.first << "/" << srv_types.second << "]\n";
     }
   }
 
   if (!services_to_server_map.empty()) {
-    ss << "\n  Service Servers:\n";
+    ss << "\n  SERVERS:\n";
     for (const auto& [srv, nodes] : services_to_server_map) {
       ss << "    '" << srv << "' [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
@@ -397,40 +425,12 @@ void IpcGraphState::printIpcGraphState() const {
   }
 
   if (!services_to_client_map.empty()) {
-    ss << "\n  Service Clients:\n";
+    ss << "\n  CLIENTS:\n";
     for (const auto& [srv, nodes] : services_to_client_map) {
       ss << "    '" << srv << "' [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
         ss << *it;
         if (std::next(it) != nodes.end()) {
-          ss << ", ";
-        }
-      }
-      ss << "]\n";
-    }
-  }
-
-  if (!topic_to_publishers_map.empty()) {
-    ss << "\n  Publishers:\n";
-    for (const auto& [topic, publishers] : topic_to_publishers_map) {
-      ss << "    '" << topic << "' <- [";
-      for (auto it = publishers.begin(); it != publishers.end(); ++it) {
-        ss << *it;
-        if (std::next(it) != publishers.end()) {
-          ss << ", ";
-        }
-    }
-      ss << "]\n";
-    }
-  }
-
-  if (!topic_to_subscribers_map.empty()) {
-    ss << "\n  Subscribers:\n";
-    for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
-      ss << "    '" << topic << "' -> [";
-      for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {
-        ss << *it;
-        if (std::next(it) != subscribers.end()) {
           ss << ", ";
         }
       }

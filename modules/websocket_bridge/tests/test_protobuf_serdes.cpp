@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/utils/ws_protocol.h"
 
 namespace heph::ws::tests {
 
@@ -44,12 +45,12 @@ TEST_F(ProtobufUtilsTest, LoadSchemaInvalid) {
 }
 
 TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
-  foxglove::Service service_definition;
+  WsServerServiceAd service_definition;
   service_definition.id = 42;
   service_definition.name = "Poser";
   service_definition.type = "";
 
-  service_definition.request = foxglove::ServiceRequestDefinition{
+  service_definition.request = WsServerServiceRequestDefinition{
     .encoding = "protobuf",
     .schemaName = "heph.examples.types.proto.Pose",
     .schemaEncoding = "protobuf",
@@ -65,7 +66,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
         "cxgCIAEoDRIMCgRkYXRhGAMgAygBIjQKCE1hdHJpeFhmEgwKBHJvd3MYASABKA0SDAoEY29scxgCIAEoDRIMCgRkYXRhGAMgAygC"
         "IhgKCFZlY3RvclhmEgwKBGRhdGEYASADKAIiIAoIVmVjdG9yMmYSCQoBeBgBIAEoAhIJCgF5GAIgASgCYgZwcm90bzM=",
   };
-  service_definition.response = foxglove::ServiceResponseDefinition{
+  service_definition.response = WsServerServiceResponseDefinition{
     .encoding = "protobuf",
     .schemaName = "heph.examples.types.proto.Pose",
     .schemaEncoding = "protobuf",

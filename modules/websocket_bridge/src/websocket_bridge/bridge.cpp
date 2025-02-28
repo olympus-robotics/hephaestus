@@ -49,12 +49,12 @@ WsBridge::WsBridge(std::shared_ptr<ipc::zenoh::Session> session, const WsBridgeC
     };
 
     // Create server
-    ws_server_ = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
-        "WS Server", ws_server_log_handler, config.ws_server_config);
+    ws_server_ = WsServerFactory::createServer<WsServerClientHandle>("WS Server", ws_server_log_handler,
+                                                                     config.ws_server_config);
     CHECK(ws_server_);
 
     // Prepare server callbacks
-    foxglove::ServerHandlers<websocketpp::connection_hdl> ws_server_hdlrs;
+    WsServerHandlers ws_server_hdlrs;
     // Implements foxglove::CAPABILITY_PUBLISH (this capability does not exist in the foxglove library, but it
     // would represent the basic ability to advertise and publish topics from the server side )
     ws_server_hdlrs.subscribeHandler = [this](auto&&... args) {
@@ -243,12 +243,12 @@ void WsBridge::callback__IpcGraph__ServiceFound(const std::string& service_name,
     // the case for hephaestus. So we just chose the request type name.
     .type = type_info.request.name,
 
-    .request = std::make_optional<WsServerServiceDefinition>(
+    .request = std::make_optional<WsServerServiceRequestDefinition>(
         convertSerializationTypeToString(type_info.request.serialization), type_info.request.name,
         convertSerializationTypeToString(type_info.request.serialization),
         convertProtoBytesToFoxgloveBase64String(type_info.request.schema)),
 
-    .response = std::make_optional<WsServerServiceDefinition>(
+    .response = std::make_optional<WsServerServiceResponseDefinition>(
         convertSerializationTypeToString(type_info.reply.serialization), type_info.reply.name,
         convertSerializationTypeToString(type_info.reply.serialization),
         convertProtoBytesToFoxgloveBase64String(type_info.reply.schema)),
@@ -495,16 +495,15 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
   CHECK(ws_server_);
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
 
-  fmt::println("[WS Bridge] - Client '{}' subscribes to channel [{}] ...", client_name, channel_id);
+  fmt::println("[WS Bridge] - Client '{}' subscribes to topic '{}' [{}] ...", client_name, topic, channel_id);
 
   state_.addWsChannelToClientMapping(channel_id, client_handle, client_name);
 
-  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
-
   if (ipc_interface_->hasSubscriber(topic)) {
-    fmt::println("[WS Bridge] - Client '{}' subcribed to channel [{}] successfully [IPC SUB EXISTS].",
-                 client_name, channel_id);
+    fmt::println("[WS Bridge] - Client '{}' subcribed to topic '{}' [{}] successfully [IPC SUB EXISTS].",
+                 client_name, topic, channel_id);
     return;
   }
 
@@ -523,8 +522,8 @@ void WsBridge::callback__WsServer__Subscribe(WsServerChannelId channel_id,
                                   this->callback__Ipc__MessageReceived(metadata, data, type_info);
                                 });
 
-  fmt::println("[WS Bridge] - Client '{}' subcribed to channel [{}] successfully. [IPC SUB ADDED]",
-               client_name, channel_id);
+  fmt::println("[WS Bridge] - Client '{}' subcribed to topic '{}' [{}] successfully. [IPC SUB ADDED]",
+               client_name, topic, channel_id);
 
   state_.printBridgeState();
 }
@@ -535,79 +534,117 @@ void WsBridge::callback__WsServer__Unsubscribe(WsServerChannelId channel_id,
   CHECK(ws_server_);
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
 
-  fmt::println("[WS Bridge] - Client '{}' unsubscribes from channel [{}] ...", client_name, channel_id);
+  fmt::println("[WS Bridge] - Client '{}' unsubscribes from topic '{}' [{}] ...", client_name, topic,
+               channel_id);
 
   state_.removeWsChannelToClientMapping(channel_id, client_handle);
 
-  const std::string topic = state_.getIpcTopicForWsChannel(channel_id);
   if (!state_.hasWsChannelWithClients(channel_id)) {
     if (ipc_interface_->hasSubscriber(topic)) {
       ipc_interface_->removeSubscriber(topic);
-      fmt::println("[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB REMOVED]",
-                   client_name, channel_id);
+      fmt::println(
+          "[WS Bridge] - Client '{}' unsubscribed from topic '{}' [{}] successfully. [IPC SUB REMOVED]",
+          client_name, topic, channel_id);
     } else {
       fmt::println(
-          "[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB NOT FOUND]",
-          client_name, channel_id);
+          "[WS Bridge] - Client '{}' unsubscribed from topic '{}' [{}] successfully. [IPC SUB NOT FOUND]",
+          client_name, topic, channel_id);
     }
   } else {
     fmt::println(
-        "[WS Bridge] - Client '{}' unsubscribed from channel [{}] successfully. [IPC SUB STILL NEEDED]",
-        client_name, channel_id);
+        "[WS Bridge] - Client '{}' unsubscribed from topic '{}' [{}] successfully. [IPC SUB STILL NEEDED]",
+        client_name, topic, channel_id);
   }
 
   state_.printBridgeState();
 }
 
-void WsBridge::callback__WsServer__ClientAdvertise(const foxglove::ClientAdvertisement& advertisement,
+void WsBridge::callback__WsServer__ClientAdvertise(const WsServerClientChannelAd& advertisement,
                                                    WsServerClientHandle client_handle) {
-  (void)advertisement;
-  (void)client_handle;
-
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
-  fmt::println("[WS Bridge] - Client '{}' advertises channel/topic [{}]/'{}' ...", client_name,
-               advertisement.channelId, advertisement.topic);
+  fmt::println("[WS Bridge] - Client '{}' advertises topic  '{}' [{}] ...", client_name, advertisement.topic,
+               advertisement.channelId);
 
-  // Handle the client advertisement logic here
-  // Example:
-  // LOG(INFO) << "Client advertised: " << advertisement.topic;
+  if (state_.hasClientChannelMapping(advertisement.channelId)) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client tried to advertise topic but the channel already exists!",
+              "client_name", client_name, "channel_id", advertisement.channelId, "topic",
+              advertisement.topic);
+    return;
+  }
 
-  fmt::println("[WS Bridge] - Client '{}' advertised channel/topic [{}]/'{}' successfully.", client_name,
-               advertisement.channelId, advertisement.topic);
+  if (state_.hasTopicToClientChannelMapping(advertisement.topic)) {
+    auto other_channels = state_.getClientChannelsForTopic(advertisement.topic);
+    const std::string other_channels_str = std::accumulate(
+        std::next(other_channels.begin()), other_channels.end(), std::to_string(*other_channels.begin()),
+        [](std::string a, int b) { return std::move(a) + ", " + std::to_string(b); });
+    heph::log(heph::WARN, "[WS Bridge] - Multiple clients advertise the same topic!", "client_name",
+              client_name, "channel_id", advertisement.channelId, "topic", advertisement.topic, "num_clients",
+              (other_channels.size() + 1), "other_channel_ids", other_channels_str);
+  }
+
+  state_.addClientChannelToTopicMapping(advertisement.channelId, advertisement.topic);
+  state_.addClientChannelToClientMapping(advertisement.channelId, client_handle, client_name);
+
+  // TODO(mfehr): Add IPC publisher here.
+
+  fmt::println("[WS Bridge] - Client '{}' advertised topic '{}' [{}] successfully.", client_name,
+               advertisement.topic, advertisement.channelId);
 
   state_.printBridgeState();
 }
 
-void WsBridge::callback__WsServer__ClientUnadvertise(WsServerChannelId channel_id,
+void WsBridge::callback__WsServer__ClientUnadvertise(WsServerClientChannelId client_channel_id,
                                                      WsServerClientHandle client_handle) {
-  (void)channel_id;
-  (void)client_handle;
-
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+  auto topic = state_.getTopicForClientChannel(client_channel_id);
 
-  fmt::println("[WS Bridge] - Client '{}' unadvertises channel [{}] ...", client_name, channel_id);
+  fmt::println("[WS Bridge] - Client '{}' unadvertises topic '{}' [{}] ...", client_name, topic,
+               client_channel_id);
 
-  // Handle the client unadvertisement logic here
-  // Example:
-  // LOG(INFO) << "Client unadvertised channel: " << channel_id;
+  if (topic.empty()) {
+    heph::log(heph::ERROR, "[WS Bridge] - Client tried to unadvertise channel but the channel is unknown!",
+              "client_name", client_name, "channel_id", client_channel_id);
+    return;
+  }
 
-  fmt::println("[WS Bridge] - Client '{}' unadvertised channel [{}] successfully.", client_name, channel_id);
+  auto client_handle_with_name = state_.getClientForClientChannel(client_channel_id);
+
+  if (!client_handle_with_name.has_value()) {
+    heph::log(heph::ERROR,
+              "[WS Bridge] - Client tried to unadvertise topic but the channel is not owned by this client!",
+              "client_name", client_name, "channel_id", client_channel_id, "topic", topic,
+              "owner_client_name", client_handle_with_name.value().second);
+    return;
+  }
+
+  state_.removeClientChannelToTopicMapping(client_channel_id);
+  state_.removeClientChannelToClientMapping(client_channel_id);
+
+  // TODO(mfehr): Remove IPC publisher here.
+
+  fmt::println("[WS Bridge] - Client '{}' unadvertised topic '{}' [{}] successfully.", client_name, topic,
+               client_channel_id);
 
   state_.printBridgeState();
 }
 
-void WsBridge::callback__WsServer__ClientMessage(const foxglove::ClientMessage& message,
+void WsBridge::callback__WsServer__ClientMessage(const WsServerClientMessage& message,
                                                  WsServerClientHandle client_handle) {
+  const std::string client_name = ws_server_->remoteEndpointString(client_handle);
+
   (void)message;
-  (void)client_handle;
-  // Handle the client message logic here
-  // Example:
-  // LOG(INFO) << "Client sent message on channel: " << message.channel_id;
+  (void)client_name;
+
+  // TODO(mfehr): Convert and forward message to IPC interface.
+
+  // fmt::println("Client '{}' sent message on topic '{}' [{}]", client_name, message.advertisement.topic,
+  //              message.advertisement.channelId);
 }
 
-void WsBridge::callback__WsServer__ServiceRequest(const foxglove::ServiceRequest& request,
+void WsBridge::callback__WsServer__ServiceRequest(const WsServerServiceRequest& request,
                                                   WsServerClientHandle client_handle) {
   CHECK(ipc_interface_);
 
