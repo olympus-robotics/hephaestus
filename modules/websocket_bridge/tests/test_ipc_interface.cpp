@@ -35,7 +35,9 @@ protected:
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
-    config_ = heph::ipc::zenoh::createLocalConfig();
+    config_.id = "ws_bridge";
+    config_.multicast_scouting_enabled = true;
+
     session_ = heph::ipc::zenoh::createSession(config_);
     ipc_interface_ = std::make_unique<heph::ws::IpcInterface>(session_, config_);
 

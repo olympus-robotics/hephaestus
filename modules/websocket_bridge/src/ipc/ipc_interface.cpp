@@ -24,10 +24,13 @@ IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const i
   : session_master_(session), config_(config) {
   CHECK(session_master_);
 
+  // Get base ID safely, handling nullopt case
+  std::string base_id = config.id.has_value() ? config.id.value() : "ws_bridge";
+
   {
     absl::MutexLock lock(&mutex_pub_);
     auto pub_config = config;
-    pub_config.id = config.id.value() + "_pub";
+    pub_config.id = base_id + "_pub";
     session_pub_ = ipc::zenoh::createSession(pub_config);
     CHECK(session_pub_);
   }
@@ -35,7 +38,7 @@ IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const i
   {
     absl::MutexLock lock(&mutex_sub_);
     auto sub_config = config;
-    sub_config.id = config.id.value() + "_sub";
+    sub_config.id = base_id + "_sub";
     session_sub_ = ipc::zenoh::createSession(sub_config);
     CHECK(session_sub_);
   }
@@ -43,7 +46,7 @@ IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const i
   {
     absl::MutexLock lock(&mutex_srv_);
     auto srv_config = config;
-    srv_config.id = config.id.value() + "_srv";
+    srv_config.id = base_id + "_srv";
     session_srv_ = ipc::zenoh::createSession(srv_config);
     CHECK(session_srv_);
   }
