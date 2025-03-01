@@ -26,6 +26,7 @@ public:
   ~ZenohTopicDatabase() override = default;
 
   [[nodiscard]] auto getTypeInfo(const std::string& topic) -> std::optional<serdes::TypeInfo> override;
+
   [[nodiscard]] auto getServiceTypeInfo(const std::string& topic)
       -> std::optional<serdes::ServiceTypeInfo> override;
 
@@ -59,11 +60,6 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   if (response.empty()) {
     heph::log(heph::ERROR, "failed to get type info, no response from service", "topic", topic);
     return std::nullopt;
-  }
-
-  if (response.size() > 1) {
-    heph::log(heph::WARN, "received multiple type info responses for service", "responses", response.size(),
-              "topic", topic, "query_topic", query_topic);
   }
 
   const absl::MutexLock lock{ &topic_mutex_ };

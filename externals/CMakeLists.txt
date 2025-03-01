@@ -243,18 +243,6 @@ add_cmake_dependency(
 )
 
 # --------------------------------------------------------------------------------------------------
-# OpenSSL
-# set(OPENSSL_VERSION "1.1.1k")
-# set(OPENSSL_TAG "OpenSSL_1_1_1k")
-# add_cmake_dependency(
-#   NAME OpenSSL
-#   VERSION ${OPENSSL_VERSION}
-#   GIT_REPOSITORY "https://github.com/openssl/openssl.git"
-#   GIT_TAG ${OPENSSL_TAG}
-#   CMAKE_ARGS -DOPENSSL_USE_STATIC_LIBS=TRUE -DOPENSSL_BUILD_TESTS=OFF
-# )
-
-# --------------------------------------------------------------------------------------------------
 # BoringSSL
 set(BORINGSSL_VERSION "0.20250114.0")
 set(BORINGSSL_TAG "chromium-stable")

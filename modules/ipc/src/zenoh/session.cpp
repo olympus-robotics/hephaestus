@@ -191,32 +191,11 @@ auto createLocalConfig() -> Config {
 }
 
 auto createSession(const Config& config) -> SessionPtr {
-  fmt::println("{}", configToSummaryString(config));
-
   auto zconfig = createZenohConfig(config);
   return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)));
 }
 
 auto createSession(ZenohConfig config) -> SessionPtr {
   return std::make_shared<Session>(::zenoh::Session::open(std::move(config.zconfig)));
-}
-
-std::string configToSummaryString(const Config& config) {
-  std::stringstream ss;
-  ss << "============= Zenoh Config =============\n";
-  ss << "use_binary_name_as_session_id: " << config.use_binary_name_as_session_id << "\n";
-  ss << "id: " << (config.id ? *config.id : "nullopt") << "\n";
-  ss << "zenoh_config_path: " << (config.zenoh_config_path ? config.zenoh_config_path->string() : "nullopt")
-     << "\n";
-  ss << "enable_shared_memory: " << config.enable_shared_memory << "\n";
-  ss << "mode: " << static_cast<int>(config.mode) << "\n";
-  ss << "router: " << config.router << "\n";
-  ss << "qos: " << config.qos << "\n";
-  ss << "real_time: " << config.real_time << "\n";
-  ss << "protocol: " << static_cast<int>(config.protocol) << "\n";
-  ss << "multicast_scouting_enabled: " << config.multicast_scouting_enabled << "\n";
-  ss << "multicast_scouting_interface: " << config.multicast_scouting_interface << "\n";
-  ss << "========================================\n";
-  return ss.str();
 }
 }  // namespace heph::ipc::zenoh
