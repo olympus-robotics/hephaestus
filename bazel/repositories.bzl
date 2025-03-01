@@ -51,12 +51,12 @@ def foreign_cc_repositories():
         sha256 = "63fd52189f7df9c5648c5479e7af9377271a18f65a30a1a45fe160f8e0cf787a",
     )
 
-    WS_PROTOCOL_VERSION = "1.4.0"
+    WS_PROTOCOL_VERSION = "1.4.0-dev"
     WS_PROTOCOL_TAG = "releases/cpp/v" + WS_PROTOCOL_VERSION
     http_archive(
         name = "ws_protocol",
         build_file = ":foreign_cc/ws_protocol.BUILD",
-        urls = ["https://github.com/foxglove/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
+        urls = ["https://github.com/mfehr/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
         strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
-        sha256 = "ae2efd02bb3ace0a570fdabab4efaaf6e153d91e35185c268ee256457e598885",
+        sha256 = "ee979704fa2c474cd1100026bd4aca8427a718172ed725aa03f4ebff4911431a",
     )
