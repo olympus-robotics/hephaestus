@@ -7,32 +7,52 @@ define_module_test(
         SOURCES test_bridge_config.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS 
+                hephaestus::websocket_bridge
+                hephaestus::types
+                hephaestus::types_proto
+)
 
 define_module_test(
         NAME test_bridge_state
         SOURCES test_bridge_state.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS 
+                hephaestus::websocket_bridge
+                hephaestus::types
+                hephaestus::types_proto
+)
 
 define_module_test(
         NAME test_ipc_graph
         SOURCES test_ipc_graph.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS 
+                hephaestus::websocket_bridge
+                hephaestus::types
+                hephaestus::types_proto
+)
 
 define_module_test(
         NAME test_ipc_interface
         SOURCES test_ipc_interface.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS 
+                hephaestus::websocket_bridge
+                hephaestus::types
+                hephaestus::types_proto
+)
 
 define_module_test(
         NAME test_protobuf_serdes
         SOURCES test_protobuf_serdes.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS "")
+        PUBLIC_LINK_LIBS 
+                hephaestus::websocket_bridge
+                hephaestus::types
+                hephaestus::types_proto
+)

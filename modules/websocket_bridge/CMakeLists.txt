@@ -5,15 +5,17 @@
 declare_module(
         NAME websocket_bridge
         DEPENDS_ON_MODULES ipc cli concurrency containers utils serdes telemetry
-        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt yaml-cpp zenohc zenohcxx ws_protocol)
+        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt yaml-cpp zenohc zenohcxx ws_protocol reflectcpp)
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
-find_package(ws_protocol REQUIRED)
-find_package(boringssl REQUIRED)
+find_package(foxglove_websocket REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(reflectcpp REQUIRED)
+find_package(ZLIB REQUIRED)
 
 # library target
 file(GLOB_RECURSE SOURCES 
@@ -28,20 +30,23 @@ file(GLOB_RECURSE SOURCES
 define_module_library(
         NAME websocket_bridge
         PUBLIC_LINK_LIBS
+                absl::base
+                absl::log
+                fmt::fmt
+                foxglove::foxglove_websocket
                 hephaestus::action_server_types_proto
                 hephaestus::cli
                 hephaestus::concurrency
                 hephaestus::containers
+                hephaestus::ipc
                 hephaestus::serdes
                 hephaestus::telemetry
                 hephaestus::utils
-                ws_protocol::foxglove_websocket
-                absl::base
-                absl::log
-                fmt::fmt
+                OpenSSL::Crypto
+                OpenSSL::SSL
+                reflectcpp::reflectcpp
                 yaml-cpp
-                boringssl::ssl
-                boringssl::crypto
+                ZLIB::ZLIB
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES} README.md
         PUBLIC_INCLUDE_PATHS

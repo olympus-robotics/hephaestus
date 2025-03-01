@@ -133,13 +133,3 @@ This client tests the websocket bridge by subscribing to all topics and then adv
 ```bash
 bazel run //modules/websocket_bridge:test_client__topics ws://localhost:8765
 ```
-
-## TODOs
-
-- [ ] Implement async service calls (needs hephaestus to support async service calls)
-- [ ] Merge back the changes to ws-protocol or agree on place for fork to live
-- [ ] Check if client-side messages have an out-of-order issue. Pretty sure they do when using more than one server worker thread
-- [ ] Test advanced websocket interface functions:
-  - [ ] TLS
-  - [ ] Whitelisting/blacklisting
-  - [ ] Compression

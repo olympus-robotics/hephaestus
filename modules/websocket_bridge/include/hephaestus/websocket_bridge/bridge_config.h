@@ -27,25 +27,28 @@ struct WsBridgeConfig {
   ///////////////
   // WS Server //
   ///////////////
-  WsServerInfo ws_server_config = { .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
-                                    .supportedEncodings = {},
-                                    .useCompression = true,
-                                    .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
-                                    .useTls = false,
-                                    .certfile = "",
-                                    .keyfile = "",
-                                    .sessionId =
-                                        "session_" +
-                                        std::to_string(
-                                            std::chrono::system_clock::now().time_since_epoch().count()),
-                                    .numWorkerThreads = 1,
-                                    .capabilities = {
-                                        foxglove::CAPABILITY_CLIENT_PUBLISH,
-                                        // foxglove::CAPABILITY_PARAMETERS,
-                                        // foxglove::CAPABILITY_PARAMETERS_SUBSCRIBE,
-                                        foxglove::CAPABILITY_SERVICES, foxglove::CAPABILITY_CONNECTION_GRAPH,
-                                        // foxglove::CAPABILITY_ASSETS
-                                    } };
+  WsServerInfo ws_server_config = {
+    .capabilities = {
+      foxglove::CAPABILITY_CLIENT_PUBLISH,
+      // foxglove::CAPABILITY_PARAMETERS,
+      // foxglove::CAPABILITY_PARAMETERS_SUBSCRIBE,
+      foxglove::CAPABILITY_SERVICES,
+      foxglove::CAPABILITY_CONNECTION_GRAPH,
+      // foxglove::CAPABILITY_ASSETS
+    },
+    .supportedEncodings = {},
+    .metadata = {},
+    .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
+    .useTls = false,
+    .certfile = "",
+    .keyfile = "",
+    .sessionId =
+        "session_" +
+        std::to_string(std::chrono::system_clock::now().time_since_epoch().count()),
+    .numWorkerThreads = 1,
+    .useCompression = true,
+    .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
+  };
   // NOTE: Unfortunately 'address' and 'port' are not part of
   // WsServerInfo and need to be passed to the server when calling
   // "start".

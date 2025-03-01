@@ -58,5 +58,5 @@ def foreign_cc_repositories():
         build_file = ":foreign_cc/ws_protocol.BUILD",
         urls = ["https://github.com/mfehr/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
         strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
-        sha256 = "ee979704fa2c474cd1100026bd4aca8427a718172ed725aa03f4ebff4911431a",
+        sha256 = "c13877cbef4a9e8c48e6104ae05e2081534d34755aebf48ab50f4568f4760026",
     )
