@@ -20,10 +20,6 @@ namespace heph::ws {
 IpcGraph::IpcGraph(const IpcGraphConfig& config) : config_(config) {
 }
 
-IpcGraph::~IpcGraph() {
-  stop();
-}
-
 void IpcGraph::start() {
   absl::MutexLock lock(&mutex_);
 
@@ -39,14 +35,16 @@ void IpcGraph::start() {
 }
 
 void IpcGraph::stop() {
-  absl::MutexLock lock(&mutex_);
   fmt::println("[IPC Graph] - Stopping...");
+  {
+    absl::MutexLock lock(&mutex_);
 
-  topic_db_.reset();
+    topic_db_.reset();
 
-  config_.topic_discovery_cb = nullptr;
-  config_.topic_removal_cb = nullptr;
-  config_.graph_update_cb = nullptr;
+    config_.topic_discovery_cb = nullptr;
+    config_.topic_removal_cb = nullptr;
+    config_.graph_update_cb = nullptr;
+  }
 
   discovery_.reset();
 

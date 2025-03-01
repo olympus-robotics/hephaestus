@@ -64,8 +64,6 @@ class IpcGraph {
 public:
   explicit IpcGraph(const IpcGraphConfig& config);
 
-  ~IpcGraph();
-
   void start();
   void stop();
 

@@ -68,22 +68,19 @@ private:
   void callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
                                 const RawServiceResponses& responses);
 
-  std::shared_ptr<ipc::zenoh::Session> session_master_;
+  std::shared_ptr<ipc::zenoh::Session> session_;
 
   ipc::zenoh::Config config_;
 
   mutable absl::Mutex mutex_sub_;
-  std::shared_ptr<ipc::zenoh::Session> session_sub_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawSubscriber>>
       subscribers_ ABSL_GUARDED_BY(mutex_sub_);
 
   mutable absl::Mutex mutex_pub_;
-  std::shared_ptr<ipc::zenoh::Session> session_pub_;
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawPublisher>>
       publishers_ ABSL_GUARDED_BY(mutex_pub_);
 
   mutable absl::Mutex mutex_srv_;
-  std::shared_ptr<ipc::zenoh::Session> session_srv_;
   std::unordered_map<uint32_t, AsyncServiceResponseCallback>
       async_service_callbacks_ ABSL_GUARDED_BY(mutex_srv_);
 };

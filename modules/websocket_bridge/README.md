@@ -136,7 +136,6 @@ bazel run //modules/websocket_bridge:test_client__topics ws://localhost:8765
 
 ## TODOs
 
-- [ ] Fix deadlock in IPCGraph when shutting down
 - [ ] Implement async service calls (needs hephaestus to support async service calls)
 - [ ] Merge back the changes to ws-protocol or agree on place for fork to live
 - [ ] Check if client-side messages have an out-of-order issue. Pretty sure they do when using more than one server worker thread

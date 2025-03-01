@@ -21,35 +21,8 @@
 namespace heph::ws {
 
 IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config)
-  : session_master_(session), config_(config) {
-  CHECK(session_master_);
-
-  // Get base ID safely, handling nullopt case
-  std::string base_id = config.id.has_value() ? config.id.value() : "ws_bridge";
-
-  {
-    absl::MutexLock lock(&mutex_pub_);
-    auto pub_config = config;
-    pub_config.id = base_id + "_pub";
-    session_pub_ = ipc::zenoh::createSession(pub_config);
-    CHECK(session_pub_);
-  }
-
-  {
-    absl::MutexLock lock(&mutex_sub_);
-    auto sub_config = config;
-    sub_config.id = base_id + "_sub";
-    session_sub_ = ipc::zenoh::createSession(sub_config);
-    CHECK(session_sub_);
-  }
-
-  {
-    absl::MutexLock lock(&mutex_srv_);
-    auto srv_config = config;
-    srv_config.id = base_id + "_srv";
-    session_srv_ = ipc::zenoh::createSession(srv_config);
-    CHECK(session_srv_);
-  }
+  : session_(session), config_(config) {
+  CHECK(session_);
 }
 
 IpcInterface::~IpcInterface() {
@@ -113,7 +86,7 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
                                     .create_type_info_service = false };
 
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
-      session_sub_, ipc::TopicConfig{ topic },
+      session_, ipc::TopicConfig{ topic },
       [subscriber_cb, topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
                                        std::span<const std::byte> data) {
         subscriber_cb(metadata, data, topic_type_info);
@@ -140,7 +113,7 @@ auto IpcInterface::callService(uint32_t call_id, const ipc::TopicConfig& topic_c
                                std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
     -> RawServiceResponses {
   (void)call_id;
-  return ipc::zenoh::callServiceRaw(*session_srv_, topic_config, buffer, timeout);
+  return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
 }
 
 void IpcInterface::callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
@@ -174,7 +147,7 @@ std::future<void> IpcInterface::callServiceAsync(uint32_t call_id, const ipc::To
                                                  AsyncServiceResponseCallback callback) {
   try {
     auto future = std::async(std::launch::async, [this, call_id, topic_config, buffer, timeout]() {
-      CHECK(session_srv_);
+      CHECK(session_);
 
       RawServiceResponses responses;
 
@@ -182,7 +155,7 @@ std::future<void> IpcInterface::callServiceAsync(uint32_t call_id, const ipc::To
         // TODO(mfehr): This does currently not work / or rather it works, but not asynchronously.
         fmt::println("[IPC Interface] - Sending service request for service '{}' [ASYNC]", topic_config.name);
 
-        responses = ipc::zenoh::callServiceRaw(*session_srv_, topic_config, buffer, timeout);
+        responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
       } catch (const std::exception& e) {
         heph::log(heph::ERROR, "[IPC Interface] - Exception during async service call", "topic",
                   topic_config.name, "error", e.what());
@@ -227,7 +200,7 @@ void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo
                                                        .create_type_info_service = true };
 
   publishers_[topic] = std::make_unique<ipc::zenoh::RawPublisher>(
-      session_pub_, ipc::TopicConfig{ topic }, topic_type_info,
+      session_, ipc::TopicConfig{ topic }, topic_type_info,
       [this, topic](const ipc::zenoh::MatchingStatus& status) {
         this->callback_PublisherMatchingStatus(topic, status);
       },
