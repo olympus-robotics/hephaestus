@@ -49,6 +49,10 @@ IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const i
   }
 }
 
+IpcInterface::~IpcInterface() {
+  stop();
+}
+
 void IpcInterface::start() {
   fmt::println("[IPC Interface] - Starting...");
 
@@ -97,7 +101,7 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
 
   auto subscriber_config =
       ipc::zenoh::SubscriberConfig{ .cache_size = std::nullopt,
-                                    .dedicated_callback_thread = false,
+                                    .dedicated_callback_thread = true,
                                     // We do want to make the bridge subscriber discoverable.
                                     .create_liveliness_token = true,
                                     // We do not want this subscriber to advertise the type as it is anyways
@@ -129,23 +133,24 @@ void IpcInterface::callback_PublisherMatchingStatus(const std::string& topic,
             status.matching);
 }
 
-auto IpcInterface::callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
-                               std::chrono::milliseconds timeout) -> RawServiceResponses {
+auto IpcInterface::callService(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                               std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
+    -> RawServiceResponses {
+  (void)call_id;
   return ipc::zenoh::callServiceRaw(*session_srv_, topic_config, buffer, timeout);
 }
 
-void IpcInterface::callback_ServiceResponse(const std::string& service_name,
+void IpcInterface::callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
                                             const RawServiceResponses& responses) {
-  absl::MutexLock lock(&mutex_srv_);
-
   AsyncServiceResponseCallback callback;
 
   {
     absl::MutexLock lock(&mutex_srv_);
-    auto it = async_service_callbacks_.find(service_name);
+    auto it = async_service_callbacks_.find(call_id);
     if (it != async_service_callbacks_.end()) {
-      fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' to bridge [ASYNC]",
-                   responses.size(), service_name);
+      fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' and call id [{}] to "
+                   "bridge [ASYNC]",
+                   responses.size(), service_name, call_id);
 
       callback = it->second;
       async_service_callbacks_.erase(it);
@@ -160,12 +165,12 @@ void IpcInterface::callback_ServiceResponse(const std::string& service_name,
   }
 }
 
-std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_config,
+std::future<void> IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
                                                  std::span<const std::byte> buffer,
                                                  std::chrono::milliseconds timeout,
                                                  AsyncServiceResponseCallback callback) {
   try {
-    auto future = std::async(std::launch::async, [this, topic_config, buffer, timeout]() {
+    auto future = std::async(std::launch::async, [this, call_id, topic_config, buffer, timeout]() {
       CHECK(session_srv_);
 
       RawServiceResponses responses;
@@ -184,12 +189,12 @@ std::future<void> IpcInterface::callServiceAsync(const ipc::TopicConfig& topic_c
       fmt::println("[IPC Interface] - Received service response (#{}) for service '{}' [ASYNC]",
                    responses.size(), topic_config.name);
 
-      callback_ServiceResponse(topic_config.name, responses);
+      callback_ServiceResponse(call_id, topic_config.name, responses);
     });
 
     {
       absl::MutexLock lock(&mutex_srv_);
-      async_service_callbacks_[topic_config.name] = callback;
+      async_service_callbacks_[call_id] = callback;
     }
 
     return future;

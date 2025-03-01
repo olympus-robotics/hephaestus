@@ -24,7 +24,7 @@
 using namespace std::chrono_literals;
 using namespace heph::ws;
 
-constexpr int SERVICE_REQUEST_COUNT = 10;
+constexpr int SERVICE_REQUEST_COUNT = 8;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
 constexpr int LAUNCHING_SLEEP_DURATION_MS = 0;
 constexpr int RESPONSE_WAIT_DURATION_S = 1;

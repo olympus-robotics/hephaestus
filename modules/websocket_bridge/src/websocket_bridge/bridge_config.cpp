@@ -63,13 +63,15 @@ WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path) {
 
 void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path) {
   auto yaml_str = convertBridgeConfigToString(config);
-  std::ofstream out(path);
-  if (!out.is_open()) {
-    throw std::runtime_error("Failed to open file for writing: " + path);
-  }
-  out << yaml_str;
-  if (!out.good()) {
-    throw std::runtime_error("Error while writing YAML to: " + path);
+  {
+    std::ofstream out(path);
+    if (!out.is_open()) {
+      throw std::runtime_error("Failed to open file for writing: " + path);
+    }
+    out << yaml_str;
+    if (!out.good()) {
+      throw std::runtime_error("Error while writing YAML to: " + path);
+    }
   }
 }
 

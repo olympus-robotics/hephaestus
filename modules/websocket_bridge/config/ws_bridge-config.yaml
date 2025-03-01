@@ -15,6 +15,7 @@ ws_server_config:
   certfile: ""
   keyfile: ""
   sessionId: websocket_bridge
+  numWorkerThreads: 10
   useCompression: true
   clientTopicWhitelistPatterns:
     - .*

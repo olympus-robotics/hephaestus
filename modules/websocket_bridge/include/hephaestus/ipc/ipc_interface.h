@@ -33,6 +33,8 @@ class IpcInterface {
 public:
   IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config);
 
+  ~IpcInterface();
+
   void start();
   void stop();
 
@@ -52,10 +54,10 @@ public:
 
   // Services
   ///////////
-  auto callService(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
+  auto callService(uint32_t call_id, const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
                    std::chrono::milliseconds timeout) -> RawServiceResponses;
-  std::future<void> callServiceAsync(const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
-                                     std::chrono::milliseconds timeout,
+  std::future<void> callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                                     std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
                                      AsyncServiceResponseCallback callback);
 
 private:
@@ -63,7 +65,8 @@ private:
 
   void callback_PublisherMatchingStatus(const std::string& topic, const ipc::zenoh::MatchingStatus& status);
 
-  void callback_ServiceResponse(const std::string& service_name, const RawServiceResponses& responses);
+  void callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
+                                const RawServiceResponses& responses);
 
   std::shared_ptr<ipc::zenoh::Session> session_master_;
 
@@ -81,7 +84,7 @@ private:
 
   mutable absl::Mutex mutex_srv_;
   std::shared_ptr<ipc::zenoh::Session> session_srv_;
-  std::unordered_map<std::string, AsyncServiceResponseCallback>
+  std::unordered_map<uint32_t, AsyncServiceResponseCallback>
       async_service_callbacks_ ABSL_GUARDED_BY(mutex_srv_);
 };
 

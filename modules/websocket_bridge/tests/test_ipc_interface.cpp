@@ -3,6 +3,7 @@
 //=================================================================================================
 
 #include <chrono>
+#include <cstdint>
 #include <span>
 #include <thread>
 #include <vector>
@@ -103,7 +104,9 @@ TEST_F(IpcInterfaceTest, CallService) {
 
   std::chrono::milliseconds timeout(1000);
 
-  auto responses = ipc_interface_->callService(topic_config, request_buffer, timeout);
+  const uint32_t call_id = 42;
+
+  auto responses = ipc_interface_->callService(call_id, topic_config, request_buffer, timeout);
 
   EXPECT_FALSE(responses.empty());
   ASSERT_EQ(responses.size(), 1);
@@ -127,7 +130,9 @@ TEST_F(IpcInterfaceTest, CallServiceAsync) {
   std::chrono::milliseconds timeout(1000);
   bool callback_called = false;
   heph::log(heph::INFO, "[IPC Interface TEST] - Calling ASYNC service", "topic", topic);
-  auto future = ipc_interface_->callServiceAsync(topic_config, request_buffer, timeout,
+
+  const uint32_t call_id = 42;
+  auto future = ipc_interface_->callServiceAsync(call_id, topic_config, request_buffer, timeout,
                                                  [&](const RawServiceResponses& responses) {
                                                    callback_called = true;
                                                    EXPECT_FALSE(responses.empty());

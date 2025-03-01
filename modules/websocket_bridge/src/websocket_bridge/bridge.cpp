@@ -408,7 +408,8 @@ void WsBridge::callback__Ipc__ServiceResponsesReceived(
   const auto client_handle = client_handle_w_name.first;
 
   if (responses.empty()) {
-    auto msg = fmt::format("[WS Bridge] - Empty service resonse '{}' [{}]", service_name, service_id);
+    auto msg = fmt::format("[WS Bridge] - Timeout - no service responses received '{}' [{}]", service_name,
+                           service_id);
     heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
@@ -743,7 +744,8 @@ void WsBridge::callback__WsServer__ServiceRequest(const WsServerServiceRequest& 
       callback__Ipc__ServiceResponsesReceived(service_id, call_id, responses);
     };
 
-    auto future = ipc_interface_->callServiceAsync(topic_config, buffer, timeout_ms, response_callback);
+    auto future =
+        ipc_interface_->callServiceAsync(call_id, topic_config, buffer, timeout_ms, response_callback);
 
     // NOTE: We do not wait for the future here, but we could, turning it into a synchronous call again.
 
@@ -753,7 +755,7 @@ void WsBridge::callback__WsServer__ServiceRequest(const WsServerServiceRequest& 
     //////////
     // SYNC //
     //////////
-    auto responses = ipc_interface_->callService(topic_config, buffer, timeout_ms);
+    auto responses = ipc_interface_->callService(call_id, topic_config, buffer, timeout_ms);
 
     callback__Ipc__ServiceResponsesReceived(
         service_id, call_id, responses, std::make_optional<ClientHandleWithName>(client_handle, client_name));

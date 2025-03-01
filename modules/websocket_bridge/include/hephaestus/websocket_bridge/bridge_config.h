@@ -28,7 +28,7 @@ struct WsBridgeConfig {
   // WS Server //
   ///////////////
   WsServerInfo ws_server_config = { .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
-                                    .supportedEncodings = { "protobuf", "json" },
+                                    .supportedEncodings = {},
                                     .useCompression = true,
                                     .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
                                     .useTls = false,
@@ -38,6 +38,7 @@ struct WsBridgeConfig {
                                         "session_" +
                                         std::to_string(
                                             std::chrono::system_clock::now().time_since_epoch().count()),
+                                    .numWorkerThreads = 1,
                                     .capabilities = {
                                         foxglove::CAPABILITY_CLIENT_PUBLISH,
                                         // foxglove::CAPABILITY_PARAMETERS,
