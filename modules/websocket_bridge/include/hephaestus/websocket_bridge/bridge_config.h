@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <fstream>
 #include <regex>
 #include <string>
 #include <vector>
@@ -16,18 +15,19 @@
 #include <hephaestus/telemetry/log.h>
 #include <magic_enum.hpp>
 
-#include "hephaestus/utils/protobuf_serdes.h"
 #include "hephaestus/utils/ws_protocol.h"
 
 namespace heph::ws {
 
-std::vector<std::regex> parseRegexStrings(const std::vector<std::string>& regex_string_vector);
+[[nodiscard]] auto parseRegexStrings(const std::vector<std::string>& regex_string_vector)
+    -> std::vector<std::regex>;
 
 struct WsBridgeConfig {
   ///////////////
   // WS Server //
   ///////////////
   WsServerInfo ws_server_config = {
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     .capabilities = {
       foxglove::CAPABILITY_CLIENT_PUBLISH,
       // foxglove::CAPABILITY_PARAMETERS,
@@ -36,6 +36,7 @@ struct WsBridgeConfig {
       foxglove::CAPABILITY_CONNECTION_GRAPH,
       // foxglove::CAPABILITY_ASSETS
     },
+    // NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     .supportedEncodings = {},
     .metadata = {},
     .sendBufferLimitBytes = foxglove::DEFAULT_SEND_BUFFER_LIMIT_BYTES,
@@ -52,7 +53,8 @@ struct WsBridgeConfig {
   // NOTE: Unfortunately 'address' and 'port' are not part of
   // WsServerInfo and need to be passed to the server when calling
   // "start".
-  uint16_t ws_server_port = 8765;
+  static constexpr uint16_t DEFAULT_WS_SERVER_PORT = 8765;
+  uint16_t ws_server_port = DEFAULT_WS_SERVER_PORT;
   std::string ws_server_address = "0.0.0.0";
 
   /////////
@@ -60,29 +62,28 @@ struct WsBridgeConfig {
   /////////
   heph::ipc::zenoh::Config zenoh_config;  // Default constructor is called here
 
-  int ipc_service_call_timeout_ms = 5000;
+  static constexpr int DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS = 5000;
+  int ipc_service_call_timeout_ms = DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS;
   bool ipc_service_service_request_async = true;
 
   std::vector<std::string> ipc_topic_whitelist = { ".*" };
-  std::vector<std::string> ipc_topic_blacklist = {};
+  std::vector<std::string> ipc_topic_blacklist;
 
   std::vector<std::string> ipc_service_whitelist = { ".*" };
-  std::vector<std::string> ipc_service_blacklist = {};
+  std::vector<std::string> ipc_service_blacklist;
 };
-;
-;
 
-bool shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config);
-bool shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config);
-bool shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config);
+[[nodiscard]] auto shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) -> bool;
 
-bool isMatch(const std::string& topic, const std::vector<std::regex>& regex_list);
-bool isMatch(const std::string& topic, const std::vector<std::string>& whitelist);
+[[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) -> bool;
+[[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::string>& regex_string_list) -> bool;
 
-WsBridgeConfig loadBridgeConfigFromYaml(const std::string& yaml_file_path);
+[[nodiscard]] auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConfig;
 
 void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path);
 
-std::string convertBridgeConfigToString(const WsBridgeConfig& config);
+auto convertBridgeConfigToString(const WsBridgeConfig& config) -> std::string;
 
 }  // namespace heph::ws

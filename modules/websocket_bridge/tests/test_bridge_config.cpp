@@ -140,7 +140,7 @@ TEST_F(BridgeConfigTest, LoadInvalidYaml) {
   yaml_file << yaml_content;
   yaml_file.close();
 
-  EXPECT_THROW(loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"), std::runtime_error);
+  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"), std::runtime_error);
 }
 
 TEST_F(BridgeConfigTest, SaveInvalidPath) {
@@ -149,7 +149,7 @@ TEST_F(BridgeConfigTest, SaveInvalidPath) {
 }
 
 TEST_F(BridgeConfigTest, LoadInvalidPath) {
-  EXPECT_THROW(loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
+  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
 }
 
 }  // namespace heph::ws

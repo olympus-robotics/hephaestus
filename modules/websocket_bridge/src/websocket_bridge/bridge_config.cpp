@@ -75,33 +75,29 @@ void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& pat
   }
 }
 
-bool isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) {
-  for (const auto& regex : regex_list) {
-    if (std::regex_match(topic, regex)) {
-      return true;
-    }
-  }
-  return false;
+auto isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) -> bool {
+  return std::ranges::any_of(regex_list,
+                             [&topic](const std::regex& regex) { return std::regex_match(topic, regex); });
 }
 
-bool isMatch(const std::string& topic, const std::vector<std::string>& regex_list) {
-  auto regexes = parseRegexStrings(regex_list);
-  return isMatch(topic, regexes);
+auto isMatch(const std::string& topic, const std::vector<std::string>& regex_string_list) -> bool {
+  auto regex_list = parseRegexStrings(regex_string_list);
+  return isMatch(topic, regex_list);
 }
 
-bool shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config) {
+auto shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config) -> bool {
   return isMatch(topic, config.ipc_topic_whitelist) && !isMatch(topic, config.ipc_topic_blacklist);
 }
 
-bool shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config) {
+auto shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config) -> bool {
   return isMatch(service, config.ipc_service_whitelist) && !isMatch(service, config.ipc_service_blacklist);
 }
 
-bool shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) {
+auto shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) -> bool {
   return isMatch(topic, config.ws_server_config.clientTopicWhitelistPatterns);
 }
 
-std::string convertBridgeConfigToString(const WsBridgeConfig& config) {
+auto convertBridgeConfigToString(const WsBridgeConfig& config) -> std::string {
   return rfl::yaml::write(config);
 }
 
