@@ -72,21 +72,23 @@ auto saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db)
     -> bool;
 
-auto retrieveRequestMessageFromDatabase(foxglove::ServiceId service_id,
-                                        const ProtobufSchemaDatabase& schema_db)
+[[nodiscard]] auto retrieveRequestMessageFromDatabase(foxglove::ServiceId service_id,
+                                                      const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
-auto retrieveResponseMessageFromDatabase(foxglove::ServiceId service_id,
-                                         const ProtobufSchemaDatabase& schema_db)
+[[nodiscard]] auto retrieveResponseMessageFromDatabase(foxglove::ServiceId service_id,
+                                                       const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
-auto retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db)
+[[nodiscard]] auto retrieveMessageFromDatabase(const std::string& schema_name,
+                                               const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
-auto retrieveSchemaNamesFromServiceId(foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db)
+[[nodiscard]] auto retrieveSchemaNamesFromServiceId(foxglove::ServiceId service_id,
+                                                    const ProtobufSchemaDatabase& schema_db)
     -> std::pair<std::string, std::string>;
-auto retrieveSchemaNameFromChannelId(foxglove::ChannelId channel_id, const ProtobufSchemaDatabase& schema_db)
-    -> std::string;
+[[nodiscard]] auto retrieveSchemaNameFromChannelId(foxglove::ChannelId channel_id,
+                                                   const ProtobufSchemaDatabase& schema_db) -> std::string;
 
 template <typename T>
 void setRandomValue(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
@@ -101,7 +103,8 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 auto loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db) -> bool;
 
-auto generateRandomMessageFromSchemaName(const std::string& schema_name, ProtobufSchemaDatabase& schema_db)
+[[nodiscard]] auto generateRandomMessageFromSchemaName(const std::string& schema_name,
+                                                       ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
 template <typename T>
@@ -127,9 +130,10 @@ void setRandomValue(google::protobuf::Message* message, const google::protobuf::
   }
 }
 
-auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string;
+[[nodiscard]] auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string;
 
-auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization) -> std::string;
+[[nodiscard]] auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization)
+    -> std::string;
 
 void debugPrintSchema(const std::vector<std::byte>& schema);
 
@@ -137,12 +141,13 @@ void debugPrintMessage(const google::protobuf::Message& message);
 
 void printBinary(const uint8_t* data, size_t length);
 
-auto getTimestampString() -> std::string;
+[[nodiscard]] auto getTimestampString() -> std::string;
 
-auto convertIpcTypeInfoToWsChannelInfo(const std::string& topic, const serdes::TypeInfo& type_info)
+[[nodiscard]] auto convertIpcTypeInfoToWsChannelInfo(const std::string& topic,
+                                                     const serdes::TypeInfo& type_info)
     -> foxglove::ChannelWithoutId;
 
-auto convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info)
+[[nodiscard]] auto convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info)
     -> std::optional<serdes::TypeInfo>;
 
 }  // namespace heph::ws

@@ -1,12 +1,9 @@
 #pragma once
 
-#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <cstdint>
-#include <fstream>
 #include <map>
-#include <thread>
 
 #include <fmt/chrono.h>
 #include <fmt/core.h>
@@ -27,7 +24,7 @@ namespace heph::ws {
 using WsClient = foxglove::Client<foxglove::WebSocketNoTls>;
 
 struct ServiceCallState {
-  enum class Status { DISPATCHED, FAILED, SUCCESS };
+  enum class Status : std::uint8_t { SUCCESS = 0, DISPATCHED = 1, FAILED = 2 };
 
   uint32_t call_id;
   Status status;
@@ -39,23 +36,23 @@ struct ServiceCallState {
 
   explicit ServiceCallState(uint32_t call_id);
 
-  std::optional<std::unique_ptr<google::protobuf::Message>>
-  receiveResponse(const WsServerServiceResponse _response, WsServerAdvertisements& ws_server_ads);
+  auto receiveResponse(const WsServerServiceResponse& service_response, WsServerAdvertisements& ws_server_ads)
+      -> std::optional<std::unique_ptr<google::protobuf::Message>>;
 
   void receiveFailureResponse(const std::string& error_msg);
 
-  bool hasResponse() const;
-  bool wasSuccessful() const;
-  bool hasFailed() const;
+  [[nodiscard]] auto hasResponse() const -> bool;
+  [[nodiscard]] auto wasSuccessful() const -> bool;
+  [[nodiscard]] auto hasFailed() const -> bool;
 
-  std::optional<std::chrono::milliseconds> getDurationMs() const;
+  [[nodiscard]] auto getDurationMs() const -> std::optional<std::chrono::milliseconds>;
 };
 
 using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
 
-bool allServiceCallsFinished(const ServiceCallStateMap& state);
+[[nodiscard]] bool allServiceCallsFinished(const ServiceCallStateMap& state);
 
-std::string horizontalLine(uint32_t cell_content_width, uint32_t columns);
+[[nodiscard]] std::string horizontalLine(uint32_t cell_content_width, uint32_t columns);
 
 void printServiceCallStateMap(ServiceCallStateMap& state);
 

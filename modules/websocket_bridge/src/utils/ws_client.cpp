@@ -11,37 +11,38 @@ ServiceCallState::ServiceCallState(uint32_t call_id)
 }
 
 std::optional<std::unique_ptr<google::protobuf::Message>> ServiceCallState::receiveResponse(
-    const WsServerServiceResponse _response, WsServerAdvertisements& ws_server_ads) {
-  if (_response.callId != call_id) {
+    const WsServerServiceResponse& service_response, WsServerAdvertisements& ws_server_ads) {
+  if (service_response.callId != call_id) {
     heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", call_id, "received_call_id",
-              _response.callId);
+              service_response.callId);
     return std::nullopt;
   }
 
-  if (_response.encoding != "protobuf") {
+  if (service_response.encoding != "protobuf") {
     heph::log(heph::ERROR, "Unexpected encoding in service response", "expected", "protobuf", "received",
-              _response.encoding);
+              service_response.encoding);
     status = Status::FAILED;
     return std::nullopt;
   }
 
-  auto message = retrieveResponseMessageFromDatabase(_response.serviceId, ws_server_ads.schema_db);
+  auto message = retrieveResponseMessageFromDatabase(service_response.serviceId, ws_server_ads.schema_db);
   if (!message) {
     heph::log(heph::ERROR, "Failed to response retrieve message from database", "call_id", call_id,
-              "service_id", _response.serviceId);
+              "service_id", service_response.serviceId);
     status = Status::FAILED;
     return std::nullopt;
   }
 
-  if (!message->ParseFromArray(_response.data.data(), static_cast<int>(_response.data.size()))) {
+  if (!message->ParseFromArray(service_response.data.data(),
+                               static_cast<int>(service_response.data.size()))) {
     heph::log(heph::ERROR, "Failed to parse response data with proto schema", "call_id", call_id, "data_size",
-              _response.data.size(), "schema_name", message->GetDescriptor()->full_name());
+              service_response.data.size(), "schema_name", message->GetDescriptor()->full_name());
 
     status = Status::FAILED;
     return std::nullopt;
   }
 
-  response = _response;
+  response = service_response;
   response_time = std::chrono::steady_clock::now();
   status = Status::SUCCESS;
 
@@ -66,15 +67,15 @@ bool ServiceCallState::hasResponse() const {
   return has_response;
 }
 
-bool ServiceCallState::wasSuccessful() const {
+auto ServiceCallState::wasSuccessful() const -> bool {
   return status == Status::SUCCESS;
 }
 
-bool ServiceCallState::hasFailed() const {
+auto ServiceCallState::hasFailed() const -> bool {
   return status == Status::FAILED;
 }
 
-std::optional<std::chrono::milliseconds> ServiceCallState::getDurationMs() const {
+auto ServiceCallState::getDurationMs() const -> std::optional<std::chrono::milliseconds> {
   if (!hasResponse()) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                  dispatch_time);
@@ -82,7 +83,7 @@ std::optional<std::chrono::milliseconds> ServiceCallState::getDurationMs() const
   return std::chrono::duration_cast<std::chrono::milliseconds>(response_time - dispatch_time);
 }
 
-std::string horizontalLine(uint32_t cell_content_width, uint32_t columns) {
+auto horizontalLine(uint32_t cell_content_width, uint32_t columns) -> std::string {
   std::stringstream ss;
   ss << "+";
   for (uint32_t col = 0; col < columns; ++col) {
@@ -96,16 +97,16 @@ std::string horizontalLine(uint32_t cell_content_width, uint32_t columns) {
 }
 
 void printServiceCallStateMap(ServiceCallStateMap& state) {
-  constexpr uint32_t max_columns = 5;
-  constexpr uint32_t cell_content_width = 17;
+  constexpr uint32_t MAX_COLUMNS = 5;
+  constexpr uint32_t CELL_CONTENT_WIDTH = 17;
 
-  const uint32_t num_service_calls = static_cast<uint32_t>(state.size());
-  const uint32_t width = std::min(num_service_calls, max_columns);
+  const auto num_service_calls = static_cast<uint32_t>(state.size());
+  const uint32_t width = std::min(num_service_calls, MAX_COLUMNS);
   const uint32_t height = (num_service_calls + width - 1) / width;
 
   fmt::println("Service Call States");
 
-  auto horizontal_line = horizontalLine(cell_content_width, width);
+  auto horizontal_line = horizontalLine(CELL_CONTENT_WIDTH, width);
   fmt::print("{}", horizontal_line);
 
   auto it = state.begin();
@@ -115,7 +116,7 @@ void printServiceCallStateMap(ServiceCallStateMap& state) {
     for (uint32_t col_idx = 0; col_idx < width; ++col_idx) {
       // If we already reached the end of the map, print empty cell.
       if (it == state.end()) {
-        fmt::print("{:<{}}|", " ", cell_content_width);
+        fmt::print("{:<{}}|", " ", CELL_CONTENT_WIDTH);
         continue;
       }
 
@@ -123,13 +124,13 @@ void printServiceCallStateMap(ServiceCallStateMap& state) {
       const auto& service_call_state = it->second;
       const uint32_t call_id = service_call_state.call_id;
 
-      const std::string status_str =
-          service_call_state.hasResponse() ? (service_call_state.wasSuccessful() ? "✔" : "✖") : "∅";
+      const std::string success_or_fail_str = service_call_state.wasSuccessful() ? "✔" : "✖";
+      const std::string status_str = service_call_state.hasResponse() ? success_or_fail_str : "∅";
 
       fmt::print("{:<{}}|",
                  fmt::format(" {:03}  {:1}  {:4}ms ", call_id, status_str,
                              service_call_state.getDurationMs().value().count()),
-                 cell_content_width);
+                 CELL_CONTENT_WIDTH);
 
       ++it;
     }
@@ -138,6 +139,8 @@ void printServiceCallStateMap(ServiceCallStateMap& state) {
 }
 
 void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
+  static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
+
   fmt::println("Advertised services:");
   fmt::println("--------------------------------------------------");
   if (ws_server_ads.services.empty()) {
@@ -157,8 +160,9 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       if (service.request->schema.empty()) {
         fmt::println("Schema     : None");
       } else {
-        fmt::println("Schema     : {}...{}", service.request->schema.substr(0, 10),
-                     service.request->schema.substr(service.request->schema.size() - 10));
+        fmt::println(
+            "Schema     : {}...{}", service.request->schema.substr(0, SCHEMA_TRUNCATION_DIGITS),
+            service.request->schema.substr(service.request->schema.size() - SCHEMA_TRUNCATION_DIGITS));
       }
     } else {
       fmt::println("Request      : None");
@@ -171,8 +175,9 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
       if (service.response->schema.empty()) {
         fmt::println("Schema     : None");
       } else {
-        fmt::println("Schema     : {}...{}", service.response->schema.substr(0, 10),
-                     service.response->schema.substr(service.response->schema.size() - 10));
+        fmt::println(
+            "Schema     : {}...{}", service.response->schema.substr(0, SCHEMA_TRUNCATION_DIGITS),
+            service.response->schema.substr(service.response->schema.size() - SCHEMA_TRUNCATION_DIGITS));
       }
     } else {
       fmt::println("Response     : None");
@@ -182,6 +187,8 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
 }
 
 void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
+  static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
+
   fmt::println("Advertised topics:");
   fmt::println("--------------------------------------------------");
   if (ws_server_ads.channels.empty()) {
@@ -202,14 +209,16 @@ void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
     if (channel.schema.empty()) {
       fmt::println("Schema         : None");
     } else {
-      fmt::println("Schema         : {}...{}", channel.schema.substr(0, 10),
-                   channel.schema.substr(channel.schema.size() - 10));
+      fmt::println("Schema         : {}...{}", channel.schema.substr(0, SCHEMA_TRUNCATION_DIGITS),
+                   channel.schema.substr(channel.schema.size() - SCHEMA_TRUNCATION_DIGITS));
     }
     fmt::println("--------------------------------------------------");
   }
 }
 
 void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ads) {
+  static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
+
   fmt::println("Client Channel Advertisements:");
   fmt::println("--------------------------------------------------");
   if (client_ads.empty()) {
@@ -228,8 +237,8 @@ void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ad
       fmt::println("Schema Enc.       : None");
     }
     if (ad.schema.has_value()) {
-      fmt::println("Schema            : {}...{}", ad.schema->substr(0, 10),
-                   ad.schema->substr(ad.schema->size() - 10));
+      fmt::println("Schema            : {}...{}", ad.schema->substr(0, SCHEMA_TRUNCATION_DIGITS),
+                   ad.schema->substr(ad.schema->size() - SCHEMA_TRUNCATION_DIGITS));
     } else {
       fmt::println("Schema            : None");
     }
@@ -237,13 +246,8 @@ void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ad
   }
 }
 
-bool allServiceCallsFinished(const ServiceCallStateMap& state) {
-  for (const auto& [call_id, service_call_state] : state) {
-    if (!service_call_state.hasResponse()) {
-      return false;
-    }
-  }
-  return true;
+auto allServiceCallsFinished(const ServiceCallStateMap& state) -> bool {
+  return std::ranges::all_of(state, [](const auto& pair) { return pair.second.hasResponse(); });
 }
 
 }  // namespace heph::ws
