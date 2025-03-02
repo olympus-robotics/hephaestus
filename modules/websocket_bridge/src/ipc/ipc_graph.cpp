@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/ipc_graph.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -71,8 +72,9 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::SERVICE_SERVER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addServiceServer(info);
-          graph_updated = true;
+          if (addServiceServer(info)) {
+            graph_updated = true;
+          }
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
           removeServiceServer(info);
@@ -98,8 +100,9 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::PUBLISHER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addPublisher(info);
-          graph_updated = true;
+          if (addPublisher(info)) {
+            graph_updated = true;
+          }
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
           removePublisher(info);
@@ -129,7 +132,7 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
   }
 }
 
-std::string IpcGraph::getTopicListString() {
+auto IpcGraph::getTopicListString() -> std::string {
   absl::MutexLock lock(&mutex_);
   std::stringstream result;
   size_t max_topic_length = 0;
@@ -137,12 +140,8 @@ std::string IpcGraph::getTopicListString() {
 
   // Find the maximum lengths for alignment
   for (const auto& [topic, type] : state_.topics_to_types_map) {
-    if (topic.length() > max_topic_length) {
-      max_topic_length = topic.length();
-    }
-    if (type.length() > max_type_length) {
-      max_type_length = type.length();
-    }
+    max_topic_length = std::max(topic.length(), max_topic_length);
+    max_type_length = std::max(type.length(), max_type_length);
   }
 
   // Create the formatted string
@@ -192,16 +191,17 @@ void IpcGraph::refreshConnectionGraph() const {
   }
 }
 
-void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
+bool IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
   // A publisher means this topic is actually offered by someone and should be tracked.
   if (!addTopic(info.topic)) {
     // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
     // we will not get another liveliness event for the same publisher and currently will never re-register
     // this topic (unless the publisher is restarted or another publisher is added).
-    return;
+    return false;
   }
 
   state_.topic_to_publishers_map[info.topic].push_back(info.session_id);
+  return true;
 }
 
 void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
@@ -304,12 +304,11 @@ bool IpcGraph::hasServiceServer(const std::string& service_name) const {
   return state_.services_to_server_map.find(service_name) != state_.services_to_server_map.end();
 }
 
-bool IpcGraph::addServiceClient(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::addServiceClient(const ipc::zenoh::EndpointInfo& info) {
   // We are not tracking services based on clients, but solely on servers.
   // Therefore, we do not need to add the service here.
 
   state_.services_to_client_map[info.topic].push_back(info.session_id);
-  return true;
 }
 
 void IpcGraph::removeServiceClient(const ipc::zenoh::EndpointInfo& info) {
@@ -440,7 +439,7 @@ void IpcGraphState::printIpcGraphState() const {
   fmt::print("{}", ss.str());
 }
 
-[[nodiscard]] bool IpcGraphState::checkConsistency() const {
+[[nodiscard]] auto IpcGraphState::checkConsistency() const -> bool {
   // Check that every publisher has a corresponding topic to type entry
   for (const auto& [topic, publishers] : topic_to_publishers_map) {
     if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
@@ -464,11 +463,12 @@ void IpcGraphState::printIpcGraphState() const {
   }
 
   // Check that every service to types entry has at least one service server
-  for (const auto& [service, types] : services_to_types_map) {
-    if (services_to_server_map.find(service) == services_to_server_map.end() ||
-        services_to_server_map.at(service).empty()) {
-      return false;
-    }
+  if (!std::ranges::all_of(services_to_types_map, [this](const auto& pair) {
+        const auto& service = pair.first;
+        return services_to_server_map.find(service) != services_to_server_map.end() &&
+               !services_to_server_map.at(service).empty();
+      })) {
+    return false;
   }
 
   return true;

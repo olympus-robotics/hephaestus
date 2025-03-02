@@ -73,14 +73,14 @@ public:
 
   // Create a human readable, multi-line, console-optimized list of topics and
   // their types as they are stored in  topics_to_types_map_.
-  auto getTopicListString() -> std::string;
+  [[nodiscard]] auto getTopicListString() -> std::string;
 
-  auto getTopicsToTypeMap() const -> TopicsToTypeMap;
-  auto getServicesToTypesMap() const -> TopicsToServiceTypesMap;
-  auto getServicesToServersMap() const -> TopicToSessionIdMap;
-  auto getServicesToClientsMap() const -> TopicToSessionIdMap;
-  auto getTopicToSubscribersMap() const -> TopicToSessionIdMap;
-  auto getTopicToPublishersMap() const -> TopicToSessionIdMap;
+  [[nodiscard]] auto getTopicsToTypeMap() const -> TopicsToTypeMap;
+  [[nodiscard]] auto getServicesToTypesMap() const -> TopicsToServiceTypesMap;
+  [[nodiscard]] auto getServicesToServersMap() const -> TopicToSessionIdMap;
+  [[nodiscard]] auto getServicesToClientsMap() const -> TopicToSessionIdMap;
+  [[nodiscard]] auto getTopicToSubscribersMap() const -> TopicToSessionIdMap;
+  [[nodiscard]] auto getTopicToPublishersMap() const -> TopicToSessionIdMap;
 
   void refreshConnectionGraph() const;
 
@@ -94,9 +94,9 @@ private:
 
   // Publisher / Subscriber tracking
   //////////////////////////////////
-  void addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removePublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  bool hasPublisher(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool hasPublisher(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void addSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeSubscriber(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -106,18 +106,18 @@ private:
   // The functions below are used to track topics and their types.
   // Only publishers contribute to this tracking, subscribers are ignored.
 
-  bool addTopic(const std::string& topic_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool addTopic(const std::string& topic_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeTopic(const std::string& topic_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  bool hasTopic(const std::string& topic_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool hasTopic(const std::string& topic_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Service Server / Client tracking
   ///////////////////////////////////
 
-  bool addServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool addServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  bool hasServiceServer(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool hasServiceServer(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  bool addServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void addServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Services Tracking
@@ -125,9 +125,9 @@ private:
   // The functions below are used to track services and their types.
   // Only service servers contribute to this tracking, clients are ignored.
 
-  bool addService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool addService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  bool hasService(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool hasService(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // NOLINTEND(modernize-use-trailing-return-type)
 
