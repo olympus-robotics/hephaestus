@@ -22,10 +22,10 @@ public:
 
   // Full State [protected by all mutexes]
 public:
-  std::string toString() const;
+  auto toString() const -> std::string;
   void printBridgeState() const;
 
-  [[nodiscard]] bool checkConsistency() const;
+  [[nodiscard]] auto checkConsistency() const -> bool;
 
   // IPC Topics <-> WS Channels [protected by mutex_t2c_]
   // Keeps track of which IPC topic maps to which WS channel.
@@ -33,14 +33,14 @@ public:
   // - One IPC topic, one WS channel and vice versa
   // - Topic names and channel IDs are unique
 public:
-  std::string getIpcTopicForWsChannel(const WsServerChannelId& channel_id) const;
-  WsServerChannelId getWsChannelForIpcTopic(const std::string& topic) const;
+  auto getIpcTopicForWsChannel(const WsServerChannelId& channel_id) const -> std::string;
+  auto getWsChannelForIpcTopic(const std::string& topic) const -> WsServerChannelId;
   void addWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
   void removeWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id, const std::string& topic);
-  bool hasWsChannelMapping(const WsServerChannelId& channel_id) const;
-  bool hasIpcTopicMapping(const std::string& topic) const;
+  auto hasWsChannelMapping(const WsServerChannelId& channel_id) const -> bool;
+  auto hasIpcTopicMapping(const std::string& topic) const -> bool;
 
-  std::string topicChannelMappingToString() const;
+  auto topicChannelMappingToString() const -> std::string;
 
 private:
   using ChannelToTopicMap = std::unordered_map<WsServerChannelId, std::string>;
@@ -58,13 +58,14 @@ private:
   // - Topic names and channel IDs are unique
   // - Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
 public:
-  bool hasWsChannelWithClients(const WsServerChannelId& channel_id) const;
+  auto hasWsChannelWithClients(const WsServerChannelId& channel_id) const -> bool;
   void addWsChannelToClientMapping(const WsServerChannelId& channel_id, WsServerClientHandle client_handle,
                                    const std::string& client_name);
   void removeWsChannelToClientMapping(const WsServerChannelId& channel_id);
   void removeWsChannelToClientMapping(const WsServerChannelId& channel_id,
-                                      WsServerClientHandle client_handle);
-  std::optional<WsServerClientHandleSet> getClientsForWsChannel(const WsServerChannelId& channel_id) const;
+                                      const WsServerClientHandle& client_handle);
+  auto getClientsForWsChannel(const WsServerChannelId& channel_id) const
+      -> std::optional<WsServerClientHandleSet>;
 
 private:
   void cleanUpChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_c2c_);
@@ -79,14 +80,14 @@ private:
   // - One IPC service, one WS service and vice versa
   // - Service names and service IDs are unique
 public:
-  std::string getIpcServiceForWsService(const WsServerServiceId& service_id) const;
-  WsServerChannelId getWsServiceForIpcService(const std::string& service_name) const;
+  auto getIpcServiceForWsService(const WsServerServiceId& service_id) const -> std::string;
+  auto getWsServiceForIpcService(const std::string& service_name) const -> WsServerChannelId;
   void addWsServiceToIpcServiceMapping(const WsServerServiceId& service_id, const std::string& service_name);
   void removeWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
                                           const std::string& service_name);
-  bool hasWsServiceMapping(const WsServerChannelId& service_id) const;
-  bool hasIpcServiceMapping(const std::string& service_name) const;
-  std::string servicMappingToString() const;
+  auto hasWsServiceMapping(const WsServerChannelId& service_id) const -> bool;
+  auto hasIpcServiceMapping(const std::string& service_name) const -> bool;
+  auto servicMappingToString() const -> std::string;
 
 private:
   using ServiceNameToServiceIdMap = std::unordered_map<std::string, WsServerServiceId>;
@@ -105,13 +106,13 @@ private:
   // - Call IDs are unique (TODO(mfehr): probably not a great idea because the caller can set it!)
   // - Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
 public:
-  bool hasCallIdToClientMapping(const uint32_t& call_id) const;
-  void addCallIdToClientMapping(const uint32_t& call_id, WsServerClientHandle client_handle,
+  auto hasCallIdToClientMapping(const uint32_t& call_id) const -> bool;
+  void addCallIdToClientMapping(const uint32_t& call_id, const WsServerClientHandle& client_handle,
                                 const std::string& client_name);
   void removeCallIdToClientMapping(const uint32_t& call_id);
-  std::optional<ClientHandleWithName> getClientForCallId(const uint32_t& call_id) const;
+  auto getClientForCallId(const uint32_t& call_id) const -> std::optional<ClientHandleWithName>;
 
-  std::string callIdToClientMappingToString() const;
+  auto callIdToClientMappingToString() const -> std::string;
 
 private:
   void cleanUpCallIdToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_sc2c_);
@@ -126,16 +127,16 @@ private:
   // - one IPC topic can be served by multiple WS client-advertised channels
   // - IPC Topic names and WS client-advertised channel IDs are unique
 public:
-  bool hasClientChannelsForTopic(const std::string& topic) const;
-  std::string getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const;
-  WsServerClientChannelIdSet getClientChannelsForTopic(const std::string& topic) const;
+  auto hasClientChannelsForTopic(const std::string& topic) const -> bool;
+  auto getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const -> std::string;
+  auto getClientChannelsForTopic(const std::string& topic) const -> WsServerClientChannelIdSet;
   void addClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id,
                                       const std::string& topic);
   void removeClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id);
-  bool hasClientChannelMapping(const WsServerClientChannelId& client_channel_id) const;
-  bool hasTopicToClientChannelMapping(const std::string& topic) const;
+  auto hasClientChannelMapping(const WsServerClientChannelId& client_channel_id) const -> bool;
+  auto hasTopicToClientChannelMapping(const std::string& topic) const -> bool;
 
-  std::string clientChannelMappingToString() const;
+  auto clientChannelMappingToString() const -> std::string;
 
 private:
   using ClientChannelToTopicMap = std::unordered_map<WsServerClientChannelId, std::string>;
@@ -152,12 +153,12 @@ private:
   // - IPC Topic names and WS client-advertised channel IDs are unique
   // - WS Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
 public:
-  bool hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+  auto hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const -> bool;
   void addClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id,
-                                       WsServerClientHandle client_handle, const std::string& client_name);
+                                       const WsServerClientHandle& client_handle, const std::string& client_name);
   void removeClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id);
-  std::optional<ClientHandleWithName>
-  getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+  auto getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const
+      -> std::optional<ClientHandleWithName>;
 
 private:
   void cleanUpClientChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_cc2c_);
