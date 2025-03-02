@@ -110,9 +110,8 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   }
 }
 
-void sendTestServiceRequests(WsClient& client,
-                             const WsServerServiceAd& foxglove_service, WsServerAdvertisements& ws_server_ads,
-                             ServiceCallStateMap& state) {
+void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove_service,
+                             WsServerAdvertisements& ws_server_ads, ServiceCallStateMap& state) {
   auto foxglove_service_id = foxglove_service.id;
 
   for (int i = 1; i <= SERVICE_REQUEST_COUNT && !g_abort; ++i) {

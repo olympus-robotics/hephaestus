@@ -28,10 +28,10 @@
 
 #include "hephaestus/ipc/ipc_graph.h"
 #include "hephaestus/ipc/ipc_interface.h"
-#include "hephaestus/websocket_bridge/bridge_config.h"
-#include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/utils/protobuf_serdes.h"
 #include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/bridge_config.h"
+#include "hephaestus/websocket_bridge/bridge_state.h"
 
 namespace heph::ws {
 

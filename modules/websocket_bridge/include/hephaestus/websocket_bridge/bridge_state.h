@@ -135,7 +135,7 @@ public:
   void removeClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id);
   bool hasClientChannelMapping(const WsServerClientChannelId& client_channel_id) const;
   bool hasTopicToClientChannelMapping(const std::string& topic) const;
-  
+
   std::string clientChannelMappingToString() const;
 
 private:
@@ -159,6 +159,7 @@ public:
   void removeClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id);
   std::optional<ClientHandleWithName>
   getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const;
+
 private:
   void cleanUpClientChannelToClientMapping() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_cc2c_);
 
