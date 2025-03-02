@@ -1,8 +1,6 @@
 #include <atomic>
-#include <chrono>
 #include <csignal>
 #include <cstdint>
-#include <fstream>
 #include <thread>
 #include <unordered_map>
 
@@ -22,9 +20,16 @@
 #include <nlohmann/json.hpp>
 
 using namespace std::chrono_literals;
-using namespace heph::ws;
+using heph::ws::WsClient;
+using heph::ws::WsServerAdvertisements;
+using heph::ws::WsServerChannelId;
+using heph::ws::WsServerClientBinaryOpCode;
+using heph::ws::WsServerClientChannelAd;
+using heph::ws::WsServerClientChannelId;
+using heph::ws::WsServerSubscriptionId;
 
-static std::atomic<bool> g_abort{ false };
+namespace {
+std::atomic<bool> g_abort{ false };  // NOLINT
 
 void sigintHandler(int signal) {
   fmt::println("Received signal: {}", signal);
@@ -57,14 +62,14 @@ void handleBinaryMessage(
     const uint8_t* data, size_t length, WsClient& client,
     std::map<WsServerChannelId, WsServerChannelId>& sub_to_pub_channel_map,
     std::map<WsServerSubscriptionId, WsServerChannelId>& subscription_id_to_channel_id_map) {
-  if (data == nullptr || length < (1 + 4 + 8)) {
+  if (data == nullptr || length < (1 + 4 + 8)) {  // NOLINT
     fmt::print("Received invalid message.\n");
     g_abort = true;
     return;
   }
 
-  const uint8_t opcode = data[0];
-  const auto subscription_id = foxglove::ReadUint32LE(data + 1);
+  const uint8_t opcode = data[0];                                 // NOLINT
+  const auto subscription_id = foxglove::ReadUint32LE(data + 1);  // NOLINT
 
   if (opcode != static_cast<uint8_t>(WsServerClientBinaryOpCode::MESSAGE_DATA)) {
     fmt::print("Received unhandled binary message with op code {}\n", std::to_string(opcode));
@@ -91,22 +96,24 @@ void handleBinaryMessage(
   const auto client_channel_id = channel_it->second;
 
   // 1 byte for the opcode, 4 bytes for the subscription ID, 8 bytes for the timestamp
-  const uint8_t* message_data_start = data + 1 + 4 + 8;
+  const uint8_t* message_data_start = data + 1 + 4 + 8;  // NOLINT
   const size_t message_data_size = length - 1 - 4 - 8;
 
   client.publish(client_channel_id, message_data_start, message_data_size);
 }
 
-int main(int argc, char** argv) {
+}  // namespace
+
+auto main(int argc, char** argv) -> int {
   const heph::utils::StackTrace stack_trace;
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   if (argc < 2) {
-    fmt::println("Usage: {} <url> (e.g. ws://localhost:8765)", argv[0]);
+    fmt::println("Usage: {} <url> (e.g. ws://localhost:8765)", argv[0]);  // NOLINT
     return 1;
   }
 
-  const std::string url = argv[1];
+  const std::string url = argv[1];  // NOLINT
   WsClient client;
 
   WsServerAdvertisements ws_server_ads;
@@ -114,21 +121,26 @@ int main(int argc, char** argv) {
   std::map<WsServerChannelId, WsServerChannelId> sub_to_pub_channel_map;
   std::map<WsServerSubscriptionId, WsServerChannelId> subscription_id_to_channel_id_map;
 
+  // NOLINTNEXTLINE
   const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
 
+  // NOLINTNEXTLINE
   const auto on_close_handler = [&](websocketpp::connection_hdl) {
     fmt::println("Connection closed");
     g_abort = true;
   };
-  const auto json_message_handler = [&](const std::string& jsonMsg) {
-    handleJsonMessage(jsonMsg, ws_server_ads, sub_to_pub_channel_map);
+  const auto json_message_handler = [&](const std::string& json_msg) {
+    handleJsonMessage(json_msg, ws_server_ads, sub_to_pub_channel_map);
   };
 
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, client, sub_to_pub_channel_map, subscription_id_to_channel_id_map);
   };
 
-  std::signal(SIGINT, sigintHandler);
+  if (std::signal(SIGINT, sigintHandler) == SIG_ERR) {
+    fmt::print("Error setting up signal handler.\n");
+    return 1;
+  }
 
   client.setTextMessageHandler(json_message_handler);
   client.setBinaryMessageHandler(binary_message_handler);
@@ -146,23 +158,23 @@ int main(int argc, char** argv) {
   {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<uint32_t> dis(1, 100);
-    const uint32_t MIRROR_CHANNEL_ID_OFFSET = static_cast<uint32_t>(dis(gen) * 100);
+    std::uniform_int_distribution<uint32_t> dis(1, 100);  // NOLINT
+    const auto mirror_channel_offset = static_cast<uint32_t>(dis(gen) * 100);
 
     std::vector<WsServerClientChannelAd> client_ads;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {
       client_ads.emplace_back(WsServerClientChannelAd{
-          .channelId = channel_id + MIRROR_CHANNEL_ID_OFFSET,
+          .channelId = channel_id + mirror_channel_offset,
           .topic = "mirror/" + channel.topic,
           .encoding = channel.encoding,
           .schemaName = channel.schemaName,
           .schema = channel.schema,
           .schemaEncoding = channel.schemaEncoding,
       });
-      sub_to_pub_channel_map[channel_id] = channel_id + MIRROR_CHANNEL_ID_OFFSET;
+      sub_to_pub_channel_map[channel_id] = channel_id + mirror_channel_offset;
     }
 
-    printClientChannelAds(client_ads);
+    heph::ws::printClientChannelAds(client_ads);
 
     client.advertise(client_ads);
   }
@@ -182,13 +194,15 @@ int main(int argc, char** argv) {
 
   // MAIN LOOP
   fmt::println("Mirroring topics until Ctrl-C...");
+  constexpr auto SLEEP_DURATION_MS = 10ms;
   while (!g_abort) {
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(SLEEP_DURATION_MS);
   }
 
   fmt::println("Unsubscribing from all topics...");
   {
     std::vector<WsServerSubscriptionId> subscription_ids;
+    subscription_ids.reserve(subscription_id_to_channel_id_map.size());
     for (const auto& [subscription_id, channel_id] : subscription_id_to_channel_id_map) {
       subscription_ids.push_back(subscription_id);
     }
@@ -198,6 +212,7 @@ int main(int argc, char** argv) {
   fmt::println("Unadvertising all client-side topics...");
   {
     std::vector<WsServerClientChannelId> channel_ids;
+    channel_ids.reserve(sub_to_pub_channel_map.size());
     for (const auto& [_, pub_channel_id] : sub_to_pub_channel_map) {
       channel_ids.push_back(pub_channel_id);
     }

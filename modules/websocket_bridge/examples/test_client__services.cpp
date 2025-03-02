@@ -2,7 +2,6 @@
 #include <chrono>
 #include <csignal>
 #include <cstdint>
-#include <fstream>
 #include <map>
 #include <thread>
 
@@ -22,14 +21,24 @@
 #include <nlohmann/json.hpp>
 
 using namespace std::chrono_literals;
-using namespace heph::ws;
+using heph::ws::ServiceCallState;
+using heph::ws::ServiceCallStateMap;
+using heph::ws::WsClient;
+using heph::ws::WsServerAdvertisements;
+using heph::ws::WsServerBinaryOpCode;
+using heph::ws::WsServerServiceAd;
+using heph::ws::WsServerServiceFailure;
+using heph::ws::WsServerServiceRequest;
+using heph::ws::WsServerServiceResponse;
 
 constexpr int SERVICE_REQUEST_COUNT = 8;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
 constexpr int LAUNCHING_SLEEP_DURATION_MS = 0;
 constexpr int RESPONSE_WAIT_DURATION_S = 1;
 
-static std::atomic<bool> g_abort{ false };
+namespace {
+
+std::atomic<bool> g_abort{ false };  // NOLINT
 
 void sigintHandler(int signal) {
   fmt::println("Received signal: {}", signal);
@@ -43,11 +52,11 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertiseme
     return;
   }
 
-  const uint8_t opcode = data[0];
+  const uint8_t opcode = data[0];  // NOLINT
 
   if (opcode == static_cast<uint8_t>(WsServerBinaryOpCode::SERVICE_CALL_RESPONSE)) {
     // Skipping the first byte (opcode)
-    const uint8_t* payload = data + 1;
+    const uint8_t* payload = data + 1;  // NOLINT
     const size_t payload_size = length - 1;
 
     WsServerServiceResponse response;
@@ -70,7 +79,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertiseme
 
     // TODO(mfehr): REMOVE
     if (msg.has_value()) {
-      debugPrintMessage(**msg);
+      heph::ws::debugPrintMessage(**msg);
     }
     return;
   }
@@ -128,7 +137,7 @@ void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove
     }
 
     // TODO(mfehr): REMOVE
-    debugPrintMessage(*message);
+    heph::ws::debugPrintMessage(*message);
 
     // Prepare message for sending.
     std::vector<uint8_t> message_buffer(message->ByteSizeLong());
@@ -160,16 +169,18 @@ void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove
   }
 }
 
-int main(int argc, char** argv) {
+}  // namespace
+
+auto main(int argc, char** argv) -> int {
   const heph::utils::StackTrace stack_trace;
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   if (argc < 2) {
-    fmt::println("Usage: {} <url> (e.g. ws://localhost:8765)", argv[0]);
+    fmt::println("Usage: {} <url> (e.g. ws://localhost:8765)", argv[0]);  // NOLINT
     return 1;
   }
 
-  const std::string url = argv[1];
+  const std::string url = argv[1];  // NOLINT
   WsClient client;
 
   WsServerAdvertisements ws_server_ads;
@@ -178,16 +189,21 @@ int main(int argc, char** argv) {
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, ws_server_ads, state);
   };
+  // NOLINTNEXTLINE
   const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::print("Connected to {}\n", url); };
+  // NOLINTNEXTLINE
   const auto on_close_handler = [&](websocketpp::connection_hdl) {
     fmt::println("Connection closed");
     g_abort = true;
   };
-  const auto json_msg_handler = [&](const std::string& jsonMsg) {
-    handleJsonMessage(jsonMsg, ws_server_ads, state);
+  const auto json_msg_handler = [&](const std::string& json_msg) {
+    handleJsonMessage(json_msg, ws_server_ads, state);
   };
 
-  std::signal(SIGINT, sigintHandler);
+  if (std::signal(SIGINT, sigintHandler) == SIG_ERR) {
+    fmt::println("Error setting up signal handler.");
+    return 1;
+  }
 
   client.setBinaryMessageHandler(binary_message_handler);
   client.setTextMessageHandler(json_msg_handler);
@@ -202,9 +218,8 @@ int main(int argc, char** argv) {
 
   printAdvertisedServices(ws_server_ads);
 
-  const auto foxglove_service_pair =
-      std::find_if(ws_server_ads.services.begin(), ws_server_ads.services.end(),
-                   [](const auto& pair) { return !pair.second.name.starts_with("topic_info"); });
+  const auto foxglove_service_pair = std::ranges::find_if(
+      ws_server_ads.services, [](const auto& pair) { return !pair.second.name.starts_with("topic_info"); });
 
   if (foxglove_service_pair == ws_server_ads.services.end()) {
     fmt::println("No suitable service found.");
