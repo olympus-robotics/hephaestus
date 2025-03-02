@@ -6,24 +6,25 @@
 
 namespace heph::ws {
 
-RandomGenerators::RandomGenerators()
+RandomGenerators::RandomGenerators(int min, int max)
   : gen(std::random_device{}())
-  , int32_dist(-10, 10)
-  , int64_dist(-10, 10)
-  , uint32_dist(0, 10)
-  , uint64_dist(0, 10)
-  , float_dist(-10.0f, 10.0f)
-  , double_dist(-10.0, 10.0) {
+  , int32_dist(min, max)
+  , int64_dist(min, max)
+  , uint32_dist(static_cast<uint32_t>(std::max(0, min)), static_cast<uint32_t>(std::max(0, max)))
+  , uint64_dist(static_cast<uint64_t>(std::max(0, min)), static_cast<uint64_t>(std::max(0, max)))
+  , float_dist(static_cast<float>(min), static_cast<float>(max))
+  , double_dist(static_cast<double>(min), static_cast<double>(max)) {
 }
 
 void fillRepeatedField(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
                        RandomGenerators& generators, int depth) {
-  auto reflection = message->GetReflection();
-  int count = generators.int32_dist(generators.gen) % 10;
+  const auto* reflection = message->GetReflection();
+  static constexpr int MAX_REPEATED_FIELD_COUNT = 10;
+  const int count = generators.int32_dist(generators.gen) % MAX_REPEATED_FIELD_COUNT;
   for (int j = 0; j < count; ++j) {
     switch (field->type()) {
       case google::protobuf::FieldDescriptor::TYPE_BOOL:
-        reflection->AddBool(message, field, generators.int32_dist(generators.gen) % 2);
+        reflection->AddBool(message, field, (generators.int32_dist(generators.gen) % 2) != 0);
         break;
       case google::protobuf::FieldDescriptor::TYPE_INT32:
         reflection->AddInt32(message, field, generators.int32_dist(generators.gen));
@@ -60,8 +61,9 @@ void fillRepeatedField(google::protobuf::Message* message, const google::protobu
 
 void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGenerators& generators,
                                  int depth) {
-  if (depth > 5) {
-    return;  // Abort if recursion depth exceeds 5
+  static constexpr int MAX_RECURSION_DEPTH = 5;
+  if (depth > MAX_RECURSION_DEPTH) {
+    return;  // Abort if recursion depth exceeds MAX_RECURSION_DEPTH
   }
 
   const google::protobuf::Reflection* reflection = message->GetReflection();
@@ -110,8 +112,8 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
   }
 }
 
-bool loadSchema(const std::vector<std::byte>& schema_bytes,
-                google::protobuf::SimpleDescriptorDatabase* proto_db) {
+auto loadSchema(const std::vector<std::byte>& schema_bytes,
+                google::protobuf::SimpleDescriptorDatabase* proto_db) -> bool {
   if (schema_bytes.empty()) {
     heph::log(heph::ERROR, "Cannot loadSchema -> Schema bytes are empty");
     return false;
@@ -134,7 +136,8 @@ bool loadSchema(const std::vector<std::byte>& schema_bytes,
   return true;
 }
 
-bool saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db) {
+auto saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db)
+    -> bool {
   if (channel_definition.schemaEncoding == "protobuf") {
     schema_db.channel_id_to_schema_name[channel_definition.id] = channel_definition.schemaName;
 
@@ -150,7 +153,8 @@ bool saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufS
   return true;
 }
 
-bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db) {
+auto saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db)
+    -> bool {
   if (!service_definition.request.has_value() || !service_definition.response.has_value()) {
     heph::log(heph::ERROR, "Service definition is missing request or response schema");
     return false;
@@ -163,8 +167,8 @@ bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufS
          saveSchemaToDatabase(service_definition.response.value(), schema_db);
 }
 
-bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
-                          ProtobufSchemaDatabase& schema_db) {
+auto saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
+                          ProtobufSchemaDatabase& schema_db) -> bool {
   if (service_request_definition.schemaEncoding != "protobuf") {
     heph::log(heph::WARN, "Service request schema encoding is not protobuf. Will not add to database.");
     return false;
@@ -180,7 +184,8 @@ bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
   return saveSchemaToDatabase(schema_bytes, schema_db);
 }
 
-bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db) {
+auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db)
+    -> bool {
   if (!loadSchema(schema_bytes, schema_db.proto_db.get())) {
     heph::log(heph::ERROR, "Failed to load schema into database");
     heph::ws::debugPrintSchema(schema_bytes);
@@ -189,8 +194,9 @@ bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSc
   return true;
 }
 
-std::unique_ptr<google::protobuf::Message> retrieveResponseMessageFromDatabase(
-    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+auto retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id,
+                                         const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message> {
   auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
 
   if (!schema_names.second.empty()) {
@@ -203,8 +209,9 @@ std::unique_ptr<google::protobuf::Message> retrieveResponseMessageFromDatabase(
   return nullptr;
 }
 
-std::unique_ptr<google::protobuf::Message> retrieveRequestMessageFromDatabase(
-    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+auto retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id,
+                                        const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message> {
   auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
 
   if (!schema_names.first.empty()) {
@@ -217,8 +224,8 @@ std::unique_ptr<google::protobuf::Message> retrieveRequestMessageFromDatabase(
   return nullptr;
 }
 
-std::unique_ptr<google::protobuf::Message>
-retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db) {
+auto retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message> {
   const google::protobuf::Descriptor* descriptor = schema_db.proto_pool->FindMessageTypeByName(schema_name);
   if (!descriptor) {
     heph::log(heph::ERROR, "Message type not found in schema database", "schema_name", schema_name);
@@ -234,8 +241,9 @@ retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchema
   return std::unique_ptr<google::protobuf::Message>(prototype->New());
 }
 
-std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(
-    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db) {
+auto retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
+                                      const ProtobufSchemaDatabase& schema_db)
+    -> std::pair<std::string, std::string> {
   auto it = schema_db.service_id_to_schema_names.find(service_id);
   if (it != schema_db.service_id_to_schema_names.end()) {
     return it->second;
@@ -243,8 +251,8 @@ std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(
   return {};
 }
 
-std::string retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
-                                            const ProtobufSchemaDatabase& schema_db) {
+auto retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
+                                     const ProtobufSchemaDatabase& schema_db) -> std::string {
   auto it = schema_db.channel_id_to_schema_name.find(channel_id);
   if (it != schema_db.channel_id_to_schema_name.end()) {
     return it->second;
@@ -259,8 +267,8 @@ ProtobufSchemaDatabase::ProtobufSchemaDatabase()
   , proto_factory(std::make_unique<google::protobuf::DynamicMessageFactory>(proto_pool.get())) {
 }
 
-std::unique_ptr<google::protobuf::Message>
-generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db) {
+auto generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message> {
   // Retrieve the message from the database
   auto message = retrieveMessageFromDatabase(schema_name, schema_db);
   if (!message) {
@@ -269,29 +277,33 @@ generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchem
   }
 
   // Fill the message with random values
-  RandomGenerators generators;
+  static constexpr int RANDOM_GENERATOR_MIN = -10;
+  static constexpr int RANDOM_GENERATOR_MAX = 10;
+  RandomGenerators generators(RANDOM_GENERATOR_MIN, RANDOM_GENERATOR_MAX);
   fillMessageWithRandomValues(message.get(), generators);
 
   return message;
 }
 
-std::string convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) {
+namespace {
+auto convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) -> std::string {
   google::protobuf::FileDescriptorSet fds;
   if (!fds.ParseFromArray(schema.data(), static_cast<int>(schema.size()))) {
-    std::cerr << "Failed to parse schema bytes" << std::endl;
+    heph::log(heph::ERROR, "Failed to parse schema bytes");
     return {};
   }
-  std::cout << fds.DebugString() << std::endl;
+  fmt::println("{}", fds.DebugString());
   return fds.DebugString();
 }
+}  // namespace
 
 void debugPrintSchema(const std::vector<std::byte>& schema) {
   fmt::print("Schema: \n'''\n{}\n'''\n", convertProtoMsgBytesToDebugString(schema));
 }
 
-void debugPrintMessage(const google::protobuf::Message& msg) {
+void debugPrintMessage(const google::protobuf::Message& message) {
   std::string json_string;
-  const auto status = google::protobuf::util::MessageToJsonString(msg, &json_string);
+  const auto status = google::protobuf::util::MessageToJsonString(message, &json_string);
   if (!status.ok()) {
     fmt::print("Failed to convert message to JSON: {}\n", status.ToString());
     return;
@@ -299,12 +311,12 @@ void debugPrintMessage(const google::protobuf::Message& msg) {
   fmt::print("Message: \n'''\n{}\n'''\n", json_string);
 }
 
-std::string convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) {
+auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string {
   std::string_view data_view(reinterpret_cast<const char*>(data.data()), data.size());
   return foxglove::base64Encode(data_view);
 }
 
-std::string convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization) {
+auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization) -> std::string {
   auto schema_type = std::string{ magic_enum::enum_name(serialization) };
   absl::AsciiStrToLower(&schema_type);
   return schema_type;
@@ -340,7 +352,7 @@ void printBinary(const uint8_t* data, size_t length) {
   fmt::print("{}", ss.str());
 }
 
-std::string getTimestampString() {
+auto getTimestampString() -> std::string {
   auto now = std::chrono::system_clock::now();
   auto now_time_t = std::chrono::system_clock::to_time_t(now);
   auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
@@ -355,8 +367,8 @@ std::string getTimestampString() {
   return oss.str();
 }
 
-foxglove::ChannelWithoutId convertIpcTypeInfoToWsChannelInfo(const std::string& topic,
-                                                             const serdes::TypeInfo& type_info) {
+auto convertIpcTypeInfoToWsChannelInfo(const std::string& topic, const serdes::TypeInfo& type_info)
+    -> foxglove::ChannelWithoutId {
   foxglove::ChannelWithoutId channel_info;
   channel_info.topic = topic;
   channel_info.encoding = convertSerializationTypeToString(type_info.serialization);
@@ -366,8 +378,8 @@ foxglove::ChannelWithoutId convertIpcTypeInfoToWsChannelInfo(const std::string& 
   return channel_info;
 }
 
-std::optional<serdes::TypeInfo>
-convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info) {
+auto convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info)
+    -> std::optional<serdes::TypeInfo> {
   // Check if the channel info is valid. Since this is completely at the mercy
   // of whoever writes the client, we need to check this thoroughly.
   if (!channel_info.schemaEncoding.has_value() || !channel_info.schema.has_value()) {
@@ -400,16 +412,17 @@ convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_i
   }
 
   std::string encoding_upper = channel_info.encoding;
-  std::transform(encoding_upper.begin(), encoding_upper.end(), encoding_upper.begin(), ::toupper);
+  std::ranges::transform(encoding_upper, encoding_upper.begin(), ::toupper);
 
   auto schema_bytes_as_chars = foxglove::base64Decode(channel_info.schema.value());
+  std::vector<std::byte> schema_bytes(schema_bytes_as_chars.size());
+  std::ranges::transform(schema_bytes_as_chars, schema_bytes.begin(),
+                         [](unsigned char c) { return static_cast<std::byte>(c); });
 
   serdes::TypeInfo type_info;
   type_info.serialization = magic_enum::enum_cast<serdes::TypeInfo::Serialization>(encoding_upper).value();
   type_info.name = channel_info.schemaName;
-  type_info.schema = std::vector<std::byte>(
-      reinterpret_cast<std::byte*>(schema_bytes_as_chars.data()),
-      reinterpret_cast<std::byte*>(schema_bytes_as_chars.data() + schema_bytes_as_chars.size()));
+  type_info.schema = schema_bytes;
 
   fmt::print("'''\n{}\n'''", type_info.toJson());
 

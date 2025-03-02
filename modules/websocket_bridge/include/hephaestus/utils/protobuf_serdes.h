@@ -4,19 +4,12 @@
 
 #pragma once
 
-#include <atomic>
-#include <chrono>
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
-#include <queue>
 #include <random>
-#include <regex>
 #include <string>
-#include <thread>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include <absl/log/check.h>
@@ -52,7 +45,7 @@ struct RandomGenerators {
   std::uniform_real_distribution<float> float_dist;
   std::uniform_real_distribution<double> double_dist;
 
-  RandomGenerators();
+  RandomGenerators(int min, int max);
 };
 
 struct ProtobufSchemaDatabase {
@@ -67,28 +60,34 @@ struct ProtobufSchemaDatabase {
   ~ProtobufSchemaDatabase() = default;
 };
 
-bool saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db);
+auto saveSchemaToDatabase(const foxglove::Channel& channel_definition, ProtobufSchemaDatabase& schema_db)
+    -> bool;
 
-bool saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db);
+auto saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufSchemaDatabase& schema_db)
+    -> bool;
 
-bool saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
-                          ProtobufSchemaDatabase& schema_db);
+auto saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
+                          ProtobufSchemaDatabase& schema_db) -> bool;
 
-bool saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db);
+auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db)
+    -> bool;
 
-std::unique_ptr<google::protobuf::Message> retrieveRequestMessageFromDatabase(
-    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+auto retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id,
+                                        const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message>;
 
-std::unique_ptr<google::protobuf::Message> retrieveResponseMessageFromDatabase(
-    const foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db);
+auto retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id,
+                                         const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message>;
 
-std::unique_ptr<google::protobuf::Message>
-retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db);
+auto retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message>;
 
-std::pair<std::string, std::string> retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
-                                                                     const ProtobufSchemaDatabase& schema_db);
-std::string retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
-                                            const ProtobufSchemaDatabase& schema_db);
+auto retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
+                                      const ProtobufSchemaDatabase& schema_db)
+    -> std::pair<std::string, std::string>;
+auto retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
+                                     const ProtobufSchemaDatabase& schema_db) -> std::string;
 
 template <typename T>
 void setRandomValue(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
@@ -100,11 +99,11 @@ void fillRepeatedField(google::protobuf::Message* message, const google::protobu
 void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGenerators& generators,
                                  int depth = 0);
 
-bool loadSchema(const std::vector<std::byte>& schema_bytes,
-                google::protobuf::SimpleDescriptorDatabase* proto_db);
+auto loadSchema(const std::vector<std::byte>& schema_bytes,
+                google::protobuf::SimpleDescriptorDatabase* proto_db) -> bool;
 
-std::unique_ptr<google::protobuf::Message>
-generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db);
+auto generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db)
+    -> std::unique_ptr<google::protobuf::Message>;
 
 template <typename T>
 void setRandomValue(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
@@ -129,9 +128,9 @@ void setRandomValue(google::protobuf::Message* message, const google::protobuf::
   }
 }
 
-std::string convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data);
+auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string;
 
-std::string convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization);
+auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& serialization) -> std::string;
 
 void debugPrintSchema(const std::vector<std::byte>& schema);
 
@@ -139,12 +138,12 @@ void debugPrintMessage(const google::protobuf::Message& message);
 
 void printBinary(const uint8_t* data, size_t length);
 
-std::string getTimestampString();
+auto getTimestampString() -> std::string;
 
-foxglove::ChannelWithoutId convertIpcTypeInfoToWsChannelInfo(const std::string& topic,
-                                                             const serdes::TypeInfo& type_info);
+auto convertIpcTypeInfoToWsChannelInfo(const std::string& topic, const serdes::TypeInfo& type_info)
+    -> foxglove::ChannelWithoutId;
 
-std::optional<serdes::TypeInfo>
-convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info);
+auto convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& channel_info)
+    -> std::optional<serdes::TypeInfo>;
 
 }  // namespace heph::ws

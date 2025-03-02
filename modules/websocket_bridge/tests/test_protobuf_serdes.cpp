@@ -15,16 +15,14 @@ namespace heph::ws::tests {
 
 class ProtobufUtilsTest : public ::testing::Test {
 protected:
-  ProtobufSchemaDatabase schema_db;
-  RandomGenerators generators;
-
   void SetUp() override {
-    // Initialize schema_db and generators if needed
   }
 
   void TearDown() override {
-    // Clean up if needed
   }
+
+  // NOLINTNEXTLINE
+  ProtobufSchemaDatabase schema_db_;
 };
 
 TEST_F(ProtobufUtilsTest, LoadSchemaValid) {
@@ -36,12 +34,12 @@ TEST_F(ProtobufUtilsTest, LoadSchemaValid) {
   std::vector<std::byte> schema_bytes(descriptor_set.ByteSizeLong());
   descriptor_set.SerializeToArray(schema_bytes.data(), static_cast<int>(schema_bytes.size()));
 
-  EXPECT_TRUE(loadSchema(schema_bytes, schema_db.proto_db.get()));
+  EXPECT_TRUE(loadSchema(schema_bytes, schema_db_.proto_db.get()));
 }
 
 TEST_F(ProtobufUtilsTest, LoadSchemaInvalid) {
   std::vector<std::byte> schema_bytes = { std::byte{ 0x00 }, std::byte{ 0x01 } };
-  EXPECT_FALSE(loadSchema(schema_bytes, schema_db.proto_db.get()));
+  EXPECT_FALSE(loadSchema(schema_bytes, schema_db_.proto_db.get()));
 }
 
 TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
@@ -83,15 +81,15 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
         "IhgKCFZlY3RvclhmEgwKBGRhdGEYASADKAIiIAoIVmVjdG9yMmYSCQoBeBgBIAEoAhIJCgF5GAIgASgCYgZwcm90bzM=",
   };
 
-  EXPECT_TRUE(saveSchemaToDatabase(service_definition, schema_db));
+  EXPECT_TRUE(saveSchemaToDatabase(service_definition, schema_db_));
 
   // Retrieve schema names
-  auto schema_names = retrieveSchemaNamesFromServiceId(service_definition.id, schema_db);
+  auto schema_names = retrieveSchemaNamesFromServiceId(service_definition.id, schema_db_);
   EXPECT_EQ(schema_names.first, "heph.examples.types.proto.Pose");
   EXPECT_EQ(schema_names.second, "heph.examples.types.proto.Pose");
 
   // Retrieve an empty message for the schema we loaded.
-  auto message = retrieveMessageFromDatabase("heph.examples.types.proto.Pose", schema_db);
+  auto message = retrieveMessageFromDatabase("heph.examples.types.proto.Pose", schema_db_);
   ASSERT_NE(message, nullptr);
   EXPECT_EQ(message->GetDescriptor()->name(), "Pose");
   EXPECT_TRUE(message->IsInitialized());
@@ -119,7 +117,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   EXPECT_NE(json_output, "{}");
 
   // Now generate a random message for the schema.
-  auto random_message = generateRandomMessageFromSchemaName("heph.examples.types.proto.Pose", schema_db);
+  auto random_message = generateRandomMessageFromSchemaName("heph.examples.types.proto.Pose", schema_db_);
   ASSERT_NE(random_message, nullptr);
   EXPECT_EQ(random_message->GetDescriptor()->name(), "Pose");
 
