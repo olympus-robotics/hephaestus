@@ -34,7 +34,7 @@ struct IpcGraphState {
   TopicToSessionIdMap services_to_client_map;
 
   void printIpcGraphState() const;
-  [[nodiscard]] bool checkConsistency() const;
+  [[nodiscard]] auto checkConsistency() const -> bool;
 };
 
 using TopicRemovalCallback = std::function<void(const std::string& /*topic*/)>;
@@ -62,34 +62,38 @@ struct IpcGraphConfig {
 
 class IpcGraph {
 public:
-  explicit IpcGraph(const IpcGraphConfig& config);
+  explicit IpcGraph(IpcGraphConfig config);
 
   void start();
   void stop();
 
-  [[nodiscard]] std::optional<serdes::TypeInfo> getTopicTypeInfo(const std::string& topic) const;
-  [[nodiscard]] std::optional<serdes::ServiceTypeInfo>
-  getServiceTypeInfo(const std::string& service_name) const;
+  [[nodiscard]] auto getTopicTypeInfo(const std::string& topic) const -> std::optional<serdes::TypeInfo>;
+  [[nodiscard]] auto getServiceTypeInfo(const std::string& service_name) const
+      -> std::optional<serdes::ServiceTypeInfo>;
 
   // Create a human readable, multi-line, console-optimized list of topics and
   // their types as they are stored in  topics_to_types_map_.
-  std::string getTopicListString();
+  auto getTopicListString() -> std::string;
 
-  TopicsToTypeMap getTopicsToTypeMap() const;
-  TopicsToServiceTypesMap getServicesToTypesMap() const;
-  TopicToSessionIdMap getServicesToServersMap() const;
-  TopicToSessionIdMap getServicesToClientsMap() const;
-  TopicToSessionIdMap getTopicToSubscribersMap() const;
-  TopicToSessionIdMap getTopicToPublishersMap() const;
+  auto getTopicsToTypeMap() const -> TopicsToTypeMap;
+  auto getServicesToTypesMap() const -> TopicsToServiceTypesMap;
+  auto getServicesToServersMap() const -> TopicToSessionIdMap;
+  auto getServicesToClientsMap() const -> TopicToSessionIdMap;
+  auto getTopicToSubscribersMap() const -> TopicToSessionIdMap;
+  auto getTopicToPublishersMap() const -> TopicToSessionIdMap;
 
   void refreshConnectionGraph() const;
 
-  void callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  void callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
 
 private:
+  // Note: The ABSL EXCLUSIVE_LOCKS_REQUIRED(mutex_) annotations don't seem to play nice with trailing return
+  // types.
+  // NOLINTBEGIN(modernize-use-trailing-return-type)
+
   // Publisher / Subscriber tracking
   //////////////////////////////////
-
   void addPublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removePublisher(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   bool hasPublisher(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -124,6 +128,8 @@ private:
   bool addService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeService(const std::string& service_name) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   bool hasService(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // NOLINTEND(modernize-use-trailing-return-type)
 
 private:
   mutable absl::Mutex mutex_;

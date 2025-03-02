@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
 #include <fmt/base.h>
 #include <fmt/core.h>
@@ -17,7 +16,7 @@
 
 namespace heph::ws {
 
-IpcGraph::IpcGraph(const IpcGraphConfig& config) : config_(config) {
+IpcGraph::IpcGraph(IpcGraphConfig config) : config_(std::move(config)) {
 }
 
 void IpcGraph::start() {
@@ -29,7 +28,7 @@ void IpcGraph::start() {
 
   discovery_ = std::make_unique<ipc::zenoh::EndpointDiscovery>(
       config_.session, ipc::TopicConfig{ "**" },
-      [this](const ipc::zenoh::EndpointInfo& info) { callback__EndPointInfoUpdate(info); });
+      [this](const ipc::zenoh::EndpointInfo& info) { callback_EndPointInfoUpdate(info); });
 
   fmt::println("[IPC Graph] - ONLINE");
 }
@@ -51,18 +50,18 @@ void IpcGraph::stop() {
   fmt::println("[IPC Graph] - OFFLINE");
 }
 
-std::optional<serdes::TypeInfo> IpcGraph::getTopicTypeInfo(const std::string& topic) const {
+auto IpcGraph::getTopicTypeInfo(const std::string& topic) const -> std::optional<serdes::TypeInfo> {
   absl::MutexLock lock(&mutex_);
   return topic_db_->getTypeInfo(topic);
 }
 
-[[nodiscard]] std::optional<serdes::ServiceTypeInfo>
-IpcGraph::getServiceTypeInfo(const std::string& service_name) const {
+auto IpcGraph::getServiceTypeInfo(const std::string& service_name) const
+    -> std::optional<serdes::ServiceTypeInfo> {
   absl::MutexLock lock(&mutex_);
   return topic_db_->getServiceTypeInfo(service_name);
 }
 
-void IpcGraph::callback__EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
   absl::MutexLock lock(&mutex_);
   ipc::zenoh::printEndpointInfo(info);
 
@@ -155,32 +154,32 @@ std::string IpcGraph::getTopicListString() {
   return result.str();
 }
 
-TopicsToTypeMap IpcGraph::getTopicsToTypeMap() const {
+auto IpcGraph::getTopicsToTypeMap() const -> TopicsToTypeMap {
   absl::MutexLock lock(&mutex_);
   return state_.topics_to_types_map;
 }
 
-TopicsToServiceTypesMap IpcGraph::getServicesToTypesMap() const {
+auto IpcGraph::getServicesToTypesMap() const -> TopicsToServiceTypesMap {
   absl::MutexLock lock(&mutex_);
   return state_.services_to_types_map;
 }
 
-TopicToSessionIdMap IpcGraph::getServicesToServersMap() const {
+auto IpcGraph::getServicesToServersMap() const -> TopicToSessionIdMap {
   absl::MutexLock lock(&mutex_);
   return state_.services_to_server_map;
 }
 
-TopicToSessionIdMap IpcGraph::getServicesToClientsMap() const {
+auto IpcGraph::getServicesToClientsMap() const -> TopicToSessionIdMap {
   absl::MutexLock lock(&mutex_);
   return state_.services_to_client_map;
 }
 
-TopicToSessionIdMap IpcGraph::getTopicToSubscribersMap() const {
+auto IpcGraph::getTopicToSubscribersMap() const -> TopicToSessionIdMap {
   absl::MutexLock lock(&mutex_);
   return state_.topic_to_subscribers_map;
 }
 
-TopicToSessionIdMap IpcGraph::getTopicToPublishersMap() const {
+auto IpcGraph::getTopicToPublishersMap() const -> TopicToSessionIdMap {
   absl::MutexLock lock(&mutex_);
   return state_.topic_to_publishers_map;
 }
@@ -196,7 +195,7 @@ void IpcGraph::refreshConnectionGraph() const {
 void IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {
   // A publisher means this topic is actually offered by someone and should be tracked.
   if (!addTopic(info.topic)) {
-    // TODO(mfehr): This can happen if type retrieval fails. We might want to consider retrying later, since
+    // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
     // we will not get another liveliness event for the same publisher and currently will never re-register
     // this topic (unless the publisher is restarted or another publisher is added).
     return;
@@ -238,34 +237,34 @@ void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
   }
 }
 
-bool IpcGraph::addTopic(const std::string& topic) {
-  if (hasTopic(topic)) {
-    heph::log(heph::WARN, "[IPC Graph] - topic is already known", "topic", topic);
+bool IpcGraph::addTopic(const std::string& topic_name) {
+  if (hasTopic(topic_name)) {
+    heph::log(heph::WARN, "[IPC Graph] - topic is already known", "topic", topic_name);
     return true;
   }
 
-  auto type_info = topic_db_->getTypeInfo(topic);
+  auto type_info = topic_db_->getTypeInfo(topic_name);
   if (!type_info.has_value()) {
-    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic", "topic", topic);
+    heph::log(heph::ERROR, "[IPC Graph] - Could not retrieve type info for topic", "topic", topic_name);
     return false;
   }
 
-  state_.topics_to_types_map[topic] = type_info->name;
+  state_.topics_to_types_map[topic_name] = type_info->name;
 
   if (config_.topic_discovery_cb) {
-    config_.topic_discovery_cb(topic, type_info.value());
+    config_.topic_discovery_cb(topic_name, type_info.value());
   }
 
   return true;
 }
 
-void IpcGraph::removeTopic(const std::string& topic) {
-  state_.topics_to_types_map.erase(topic);
-  state_.topic_to_publishers_map.erase(topic);
-  state_.topic_to_subscribers_map.erase(topic);
+void IpcGraph::removeTopic(const std::string& topic_name) {
+  state_.topics_to_types_map.erase(topic_name);
+  state_.topic_to_publishers_map.erase(topic_name);
+  state_.topic_to_subscribers_map.erase(topic_name);
 
   if (config_.topic_removal_cb) {
-    config_.topic_removal_cb(topic);
+    config_.topic_removal_cb(topic_name);
   }
 }
 
@@ -276,7 +275,7 @@ bool IpcGraph::hasTopic(const std::string& topic_name) const {
 bool IpcGraph::addServiceServer(const ipc::zenoh::EndpointInfo& info) {
   // A server means this service is actually offered by someone and needs tracking.
   if (!addService(info.topic)) {
-    // TODO(mfehr): This can happen if type retrieval fails. We might want to consider retrying later, since
+    // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
     // we will not get another liveliness event for the same service and currently will never re-register this
     // service (unless the server is restarted or another server is added).
 

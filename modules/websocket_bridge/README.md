@@ -65,7 +65,7 @@ class IpcGraph {
     + start()
     + stop()
 
-    + callback__EndPointInfoUpdate()
+    + callback_EndPointInfoUpdate()
 
     + add/remove/hasPublisher()
     + add/remove/hasSubscriber()
