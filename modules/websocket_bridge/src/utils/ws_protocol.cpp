@@ -6,28 +6,28 @@
 
 namespace heph::ws {
 
-bool convertIpcRawServiceResponseToWsServiceResponse(
+auto convertIpcRawServiceResponseToWsServiceResponse(
     WsServerServiceId service_id, WsServerServiceCallId call_id,
     const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
-    WsServerServiceResponse& ws_response) {
+    WsServerServiceResponse& ws_response) -> bool {
   if (raw_response.value.empty()) {
     return false;
   }
 
   std::vector<uint8_t> response_data(raw_response.value.size());
-  std::transform(raw_response.value.begin(), raw_response.value.end(), response_data.begin(),
-                 [](std::byte b) { return static_cast<uint8_t>(b); });
+  std::ranges::transform(raw_response.value, response_data.begin(),
+                         [](std::byte b) { return static_cast<uint8_t>(b); });
 
   ws_response = {
     .serviceId = service_id,
     .callId = call_id,
-    .encoding = std::string("protobuf", 8),
+    .encoding = "protobuf",
     .data = std::move(response_data),
   };
   return true;
 }
 
-std::optional<WsServerChannelAd> convertWsJsonMsgToChannel(const nlohmann::json& channel_json) {
+auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optional<WsServerChannelAd> {
   // Example JSON:
   // {
   //   "channels": [
@@ -60,7 +60,8 @@ std::optional<WsServerChannelAd> convertWsJsonMsgToChannel(const nlohmann::json&
   }
 }
 
-std::optional<WsServerInfo> convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) {
+auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
+    -> std::optional<WsServerInfo> {
   // Example JSON:
   // {
   //   "capabilities": ["connectionGraph", "clientPublish", "services"],
@@ -94,7 +95,7 @@ std::optional<WsServerInfo> convertWsJsonMsgtoServerOptions(const nlohmann::json
   }
 }
 
-std::optional<WsServerServiceAd> convertWsJsonMsgToService(const nlohmann::json& service_json) {
+auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optional<WsServerServiceAd> {
   // Example JSON:
   // {
   //   "op": "advertiseServices",
@@ -224,8 +225,8 @@ bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg,
   }
 }
 
-bool parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
-                                 WsServerServiceFailure& service_failure) {
+auto parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
+                                 WsServerServiceFailure& service_failure) -> bool {
   // Example JSON:
   // {
   //   "op": "serviceCallFailure",
@@ -242,9 +243,8 @@ bool parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
       service_failure.call_id = server_txt_msg.at("callId").get<uint32_t>();
       service_failure.error_message = server_txt_msg.at("message").get<std::string>();
       return true;
-    } else {
-      return false;
     }
+    return false;
   } catch (const std::exception& e) {
     heph::log(heph::ERROR, fmt::format("JSON parsing error: {}", e.what()));
     return false;

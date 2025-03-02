@@ -55,20 +55,23 @@ using WsServerClientBinaryOpCode = foxglove::ClientBinaryOpcode;
 using ClientHandleWithName = std::pair<WsServerClientHandle, std::string>;
 
 struct WsServerClientComparator {
-  bool operator()(const ClientHandleWithName& lhs, const ClientHandleWithName& rhs) const {
+  auto operator()(const ClientHandleWithName& lhs, const ClientHandleWithName& rhs) const -> bool {
     return lhs.first.lock() < rhs.first.lock();
   }
 };
 using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
 
-bool convertIpcRawServiceResponseToWsServiceResponse(
+auto convertIpcRawServiceResponseToWsServiceResponse(
     WsServerServiceId service_id, WsServerServiceCallId call_id,
     const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
-    WsServerServiceResponse& ws_response);
+    WsServerServiceResponse& ws_response) -> bool;
 
-std::optional<WsServerChannelAd> convertWsJsonMsgToChannel(const nlohmann::json& channel_json);
-std::optional<WsServerInfo> convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json);
-std::optional<WsServerServiceAd> convertWsJsonMsgToService(const nlohmann::json& service_json);
+[[nodiscard]] auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json)
+    -> std::optional<WsServerChannelAd>;
+[[nodiscard]] auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
+    -> std::optional<WsServerInfo>;
+[[nodiscard]] auto convertWsJsonMsgToService(const nlohmann::json& service_json)
+    -> std::optional<WsServerServiceAd>;
 
 struct WsServerAdvertisements {
   WsServerInfo info;
@@ -78,14 +81,15 @@ struct WsServerAdvertisements {
   ProtobufSchemaDatabase schema_db;
 };
 
-bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerAdvertisements& ws_server_ads);
+auto parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerAdvertisements& ws_server_ads)
+    -> bool;
 
 struct WsServerServiceFailure {
   WsServerServiceCallId call_id;
   std::string error_message;
 };
 
-bool parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
-                                 WsServerServiceFailure& service_failure);
+auto parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
+                                 WsServerServiceFailure& service_failure) -> bool;
 
 }  // namespace heph::ws
