@@ -97,8 +97,7 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
           setRandomValue<double>(message, field, generators);
           break;
         case google::protobuf::FieldDescriptor::TYPE_STRING:
-          setRandomValue<std::string>(message, field, generators);
-          break;
+        // Fallthrough intended.
         case google::protobuf::FieldDescriptor::TYPE_BYTES:
           setRandomValue<std::string>(message, field, generators);
           break;
@@ -194,7 +193,7 @@ auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSc
   return true;
 }
 
-auto retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id,
+auto retrieveResponseMessageFromDatabase(foxglove::ServiceId service_id,
                                          const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message> {
   auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
@@ -209,7 +208,7 @@ auto retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id,
   return nullptr;
 }
 
-auto retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id,
+auto retrieveRequestMessageFromDatabase(foxglove::ServiceId service_id,
                                         const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message> {
   auto schema_names = retrieveSchemaNamesFromServiceId(service_id, schema_db);
@@ -227,13 +226,13 @@ auto retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id,
 auto retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message> {
   const google::protobuf::Descriptor* descriptor = schema_db.proto_pool->FindMessageTypeByName(schema_name);
-  if (!descriptor) {
+  if (descriptor == nullptr) {
     heph::log(heph::ERROR, "Message type not found in schema database", "schema_name", schema_name);
     return nullptr;
   }
 
   const google::protobuf::Message* prototype = schema_db.proto_factory->GetPrototype(descriptor);
-  if (!prototype) {
+  if (prototype == nullptr) {
     heph::log(heph::ERROR, "Failed to get prototype for message", "schema_name", schema_name);
     return nullptr;
   }
@@ -251,8 +250,8 @@ auto retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
   return {};
 }
 
-auto retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
-                                     const ProtobufSchemaDatabase& schema_db) -> std::string {
+auto retrieveSchemaNameFromChannelId(foxglove::ChannelId channel_id, const ProtobufSchemaDatabase& schema_db)
+    -> std::string {
   auto it = schema_db.channel_id_to_schema_name.find(channel_id);
   if (it != schema_db.channel_id_to_schema_name.end()) {
     return it->second;
@@ -267,7 +266,7 @@ ProtobufSchemaDatabase::ProtobufSchemaDatabase()
   , proto_factory(std::make_unique<google::protobuf::DynamicMessageFactory>(proto_pool.get())) {
 }
 
-auto generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db)
+auto generateRandomMessageFromSchemaName(const std::string& schema_name, ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message> {
   // Retrieve the message from the database
   auto message = retrieveMessageFromDatabase(schema_name, schema_db);
@@ -312,7 +311,7 @@ void debugPrintMessage(const google::protobuf::Message& message) {
 }
 
 auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string {
-  std::string_view data_view(reinterpret_cast<const char*>(data.data()), data.size());
+  std::string_view data_view{ std::bit_cast<const char*>(data.data()), data.size() };
   return foxglove::base64Encode(data_view);
 }
 
@@ -322,6 +321,7 @@ auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& ser
   return schema_type;
 }
 
+// NOLINTBEGIN
 void printBinary(const uint8_t* data, size_t length) {
   if (data == nullptr || length == 0) {
     fmt::print("No data to print.\n");
@@ -332,7 +332,7 @@ void printBinary(const uint8_t* data, size_t length) {
 
   std::stringstream ss;
   for (size_t i = 0; i < length; ++i) {
-    for (int bit = 7; bit >= 0; --bit) {
+    for (uint32_t bit = 7; bit >= 0; --bit) {
       ss << ((data[i] >> bit) & 1);
       if (bit == 4) {
         ss << " | ";
@@ -351,14 +351,20 @@ void printBinary(const uint8_t* data, size_t length) {
 
   fmt::print("{}", ss.str());
 }
+// NOLINTEND
 
 auto getTimestampString() -> std::string {
   auto now = std::chrono::system_clock::now();
   auto now_time_t = std::chrono::system_clock::to_time_t(now);
-  auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+  static constexpr int MILLISECONDS_IN_SECOND = 1000;
+  auto now_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % MILLISECONDS_IN_SECOND;
 
-  std::tm now_tm;
-  localtime_r(&now_time_t, &now_tm);
+  std::tm now_tm{};
+  if (localtime_r(&now_time_t, &now_tm) == nullptr) {
+    fmt::print("Failed to convert time to local time.\n");
+    return {};
+  }
 
   std::ostringstream oss;
   oss << "" << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "." << std::setfill('0') << std::setw(3)

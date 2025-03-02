@@ -72,22 +72,21 @@ auto saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_req
 auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db)
     -> bool;
 
-auto retrieveRequestMessageFromDatabase(const foxglove::ServiceId service_id,
+auto retrieveRequestMessageFromDatabase(foxglove::ServiceId service_id,
                                         const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
-auto retrieveResponseMessageFromDatabase(const foxglove::ServiceId service_id,
+auto retrieveResponseMessageFromDatabase(foxglove::ServiceId service_id,
                                          const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
 auto retrieveMessageFromDatabase(const std::string& schema_name, const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
-auto retrieveSchemaNamesFromServiceId(const foxglove::ServiceId service_id,
-                                      const ProtobufSchemaDatabase& schema_db)
+auto retrieveSchemaNamesFromServiceId(foxglove::ServiceId service_id, const ProtobufSchemaDatabase& schema_db)
     -> std::pair<std::string, std::string>;
-auto retrieveSchemaNameFromChannelId(const foxglove::ChannelId channel_id,
-                                     const ProtobufSchemaDatabase& schema_db) -> std::string;
+auto retrieveSchemaNameFromChannelId(foxglove::ChannelId channel_id, const ProtobufSchemaDatabase& schema_db)
+    -> std::string;
 
 template <typename T>
 void setRandomValue(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
@@ -102,13 +101,13 @@ void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGener
 auto loadSchema(const std::vector<std::byte>& schema_bytes,
                 google::protobuf::SimpleDescriptorDatabase* proto_db) -> bool;
 
-auto generateRandomMessageFromSchemaName(const std::string schema_name, ProtobufSchemaDatabase& schema_db)
+auto generateRandomMessageFromSchemaName(const std::string& schema_name, ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
 
 template <typename T>
 void setRandomValue(google::protobuf::Message* message, const google::protobuf::FieldDescriptor* field,
                     RandomGenerators& generators) {
-  auto reflection = message->GetReflection();
+  const auto* reflection = message->GetReflection();
   if constexpr (std::is_same_v<T, bool>) {
     reflection->SetBool(message, field, generators.int32_dist(generators.gen) % 2);
   } else if constexpr (std::is_same_v<T, int32_t>) {
