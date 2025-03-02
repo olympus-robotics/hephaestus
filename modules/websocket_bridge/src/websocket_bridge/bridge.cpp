@@ -28,8 +28,8 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
             [this](const std::string& service) { this->callback_IpcGraph_ServiceDropped(service); },
 
         .graph_update_cb =
-            [this](const ipc::zenoh::EndpointInfo& info, IpcGraphState state) {
-              this->callback_IpcGraph_Updated(info, std::move(state));
+            [this](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
+              this->callback_IpcGraph_Updated(info, state);
             },
     });
   }

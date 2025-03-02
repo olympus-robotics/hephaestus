@@ -21,16 +21,17 @@
 #include <hephaestus/types_proto/dummy_type.h>
 
 #include "hephaestus/ipc/ipc_interface.h"
-#include "hephaestus/types/proto/dummy_type.pb.h"
 
 namespace heph::ws::tests {
 
 class IpcInterfaceTest : public testing::Test {
 protected:
+  // NOLINTBEGIN
   std::shared_ptr<heph::ipc::zenoh::Session> session_;
   heph::ipc::zenoh::Config config_;
   std::unique_ptr<heph::ws::IpcInterface> ipc_interface_;
   std::unique_ptr<heph::ipc::zenoh::Service<types::DummyType, types::DummyType>> service_server_;
+  // NOLINTEND
 
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
@@ -41,12 +42,14 @@ protected:
     session_ = heph::ipc::zenoh::createSession(config_);
     ipc_interface_ = std::make_unique<heph::ws::IpcInterface>(session_, config_);
 
+    static constexpr int TIMEOUT_MS = 20;
+
     // Set up a service server
     heph::ipc::TopicConfig service_config{ "test_service" };
     service_server_ = std::make_unique<heph::ipc::zenoh::Service<types::DummyType, types::DummyType>>(
         session_, service_config, [](const types::DummyType& request) -> types::DummyType {
           // It simply sleeps for a bit and throws the same request back, whatever it is.
-          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_MS));
           return request;
         });
 
@@ -104,7 +107,9 @@ TEST_F(IpcInterfaceTest, CallService) {
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 
-  std::chrono::milliseconds timeout(1000);
+  static constexpr int TIMEOUT_MS = 1000;
+
+  std::chrono::milliseconds timeout(TIMEOUT_MS);
 
   const uint32_t call_id = 42;
 
@@ -129,7 +134,9 @@ TEST_F(IpcInterfaceTest, CallServiceAsync) {
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 
-  std::chrono::milliseconds timeout(1000);
+  static constexpr int TIMEOUT_MS = 1000;
+
+  std::chrono::milliseconds timeout(TIMEOUT_MS);
   bool callback_called = false;
   heph::log(heph::INFO, "[IPC Interface TEST] - Calling ASYNC service", "topic", topic);
 

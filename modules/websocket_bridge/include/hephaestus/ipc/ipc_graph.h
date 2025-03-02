@@ -46,7 +46,7 @@ using ServiceDiscoveryCallback = std::function<void(const std::string& /*service
                                                     const serdes::ServiceTypeInfo& /*service_type_info*/)>;
 
 using GraphUpdateCallback =
-    std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, IpcGraphState /*state*/)>;
+    std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, const IpcGraphState& /*state*/)>;
 
 struct IpcGraphConfig {
   ipc::zenoh::SessionPtr session;

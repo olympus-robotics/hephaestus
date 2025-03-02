@@ -22,6 +22,7 @@ namespace heph::ws::tests {
 
 class IpcGraphTest : public ::testing::Test {
 protected:
+  // NOLINTBEGIN
   IpcGraphConfig config;
   std::unique_ptr<IpcGraph> graph;
 
@@ -48,6 +49,7 @@ protected:
   const std::string TEST_SERVICE_SERVER_2 = "test_srv_s_2";
   const std::string TEST_SERVICE_CLIENT_1 = "test_srv_c_1";
   const std::string TEST_SERVICE_CLIENT_2 = "test_srv_c_2";
+  // NOLINTEND
 
   void startIpcGraph() {
     // Note: We deliberately are not using createLocalConfig, because we want those
@@ -61,7 +63,7 @@ protected:
     graph->start();
   }
 
-  void createTestPublisher(const std::string& topic, std::string session_name = "test_publisher") {
+  void createTestPublisher(const std::string& topic, const std::string& session_name = "test_publisher") {
     auto zenoh_config = heph::ipc::zenoh::Config();
     zenoh_config.id = session_name;
     auto session = heph::ipc::zenoh::createSession(zenoh_config);
@@ -71,7 +73,7 @@ protected:
         std::make_unique<ipc::zenoh::Publisher<types::DummyType>>(std::move(session), pub_topic));
   }
 
-  void createTestSubscriber(const std::string& topic, std::string session_name = "test_subscriber") {
+  void createTestSubscriber(const std::string& topic, const std::string& session_name = "test_subscriber") {
     auto zenoh_config = heph::ipc::zenoh::Config();
     zenoh_config.id = session_name;
     auto session = heph::ipc::zenoh::createSession(zenoh_config);
@@ -86,7 +88,8 @@ protected:
         }));
   }
 
-  void createTestServiceServer(const std::string& service, std::string session_name = "test_service_server") {
+  void createTestServiceServer(const std::string& service,
+                               const std::string& session_name = "test_service_server") {
     auto zenoh_config = heph::ipc::zenoh::Config();
     zenoh_config.id = session_name;
     auto session = heph::ipc::zenoh::createSession(zenoh_config);
@@ -101,7 +104,10 @@ protected:
             }));
   }
 
-  void createTestServiceClient(const std::string& service, std::string session_name = "test_service_client") {
+  void createTestServiceClient(const std::string& service,
+                               const std::string& session_name = "test_service_client") {
+    const constexpr int TIMEOUT_MS = 20;
+
     auto zenoh_config = heph::ipc::zenoh::Config();
     zenoh_config.id = session_name;
     auto session = heph::ipc::zenoh::createSession(zenoh_config);
@@ -109,11 +115,12 @@ protected:
     const auto service_topic_config = ipc::TopicConfig(service);
     client_map[session_name + "|" + service].emplace_back(
         std::make_unique<ipc::zenoh::ServiceClient<types::DummyType, types::DummyType>>(
-            std::move(session), service_topic_config, std::chrono::milliseconds(100)));
+            std::move(session), service_topic_config, std::chrono::milliseconds(TIMEOUT_MS)));
   }
 
-  void sleepLongEnoughToSync() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  static void sleepLongEnoughToSync() {
+    const constexpr int SLEEP_DURATION_MS = 20;
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION_MS));
   }
 
   void SetUp() override {
@@ -147,7 +154,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
     }
   };
 
-  config.graph_update_cb = [&](auto info, IpcGraphState state) {
+  config.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
     if (info.topic == TEST_TOPIC) {
       EXPECT_TRUE(state.checkConsistency());
       state.printIpcGraphState();
@@ -157,7 +164,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   startIpcGraph();
 
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   auto reset = [&]() {
     topic_discovered = false;
@@ -178,7 +185,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // ADDING FIRST PUBLISHER
   createTestPublisher(TEST_TOPIC, TEST_PUBLISHER_1);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding the first publisher triggers the discovery event.
   EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 1);
@@ -191,7 +198,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // ADDING SECOND PUBLISHER
   createTestPublisher(TEST_TOPIC, TEST_PUBLISHER_2);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding a second publisher does not trigger an event.
   EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 2);
@@ -204,7 +211,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // REMOVING SECOND PUBLISHER
   pub_map.erase(TEST_PUBLISHER_2 + "|" + TEST_TOPIC);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing a publisher that is not the last will not trigger a removal event.
   EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 1);
@@ -217,7 +224,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // REMOVING FIRST PUBLISHER
   pub_map.erase(TEST_PUBLISHER_1 + "|" + TEST_TOPIC);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing the last publisher triggers a removal event.
   EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
@@ -242,7 +249,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // ADD FIRST SUBSCRIBER
   createTestSubscriber(TEST_TOPIC, TEST_SUBSCRIBER_1);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding the first subscriber does not trigger a discovery event.
   EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
@@ -255,7 +262,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // ADDING SECOND SUBSCRIBER
   createTestSubscriber(TEST_TOPIC, TEST_SUBSCRIBER_2);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding a second subscriber does not trigger an event.
   EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
@@ -268,7 +275,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // REMOVING SECOND SUBSCRIBER
   sub_map.erase(TEST_SUBSCRIBER_2 + "|" + TEST_TOPIC);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing a subscriber that is not the last will not trigger a removal event.
   EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
@@ -281,7 +288,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
 
   // REMOVING FIRST SUBSCRIBER
   sub_map.erase(TEST_SUBSCRIBER_1 + "|" + TEST_TOPIC);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing the last subscriber does not trigger a removal event.
   EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
@@ -310,7 +317,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
     }
   };
 
-  config.graph_update_cb = [&](auto info, IpcGraphState state) {
+  config.graph_update_cb = [&](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
     if (info.topic == TEST_SERVICE) {
       EXPECT_TRUE(state.checkConsistency());
       state.printIpcGraphState();
@@ -326,7 +333,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   startIpcGraph();
 
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   ASSERT_FALSE(service_removed);
   ASSERT_FALSE(service_discovered);
@@ -341,7 +348,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // ADD FIRST SERVER
   createTestServiceServer(TEST_SERVICE, TEST_SERVICE_SERVER_1);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding the first server triggers the discovery event.
   EXPECT_EQ(graph->getServicesToServersMap()[TEST_SERVICE].size(), 1);
@@ -354,7 +361,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // ADDING SECOND SERVER
   createTestServiceServer(TEST_SERVICE, TEST_SERVICE_SERVER_2);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding a second server does not trigger an event.
   EXPECT_EQ(graph->getServicesToServersMap()[TEST_SERVICE].size(), 2);
@@ -367,7 +374,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // REMOVING SECOND SERVER
   server_map.erase(TEST_SERVICE_SERVER_2 + "|" + TEST_SERVICE);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing a server that is not the last will not trigger a removal event.
   EXPECT_EQ(graph->getServicesToServersMap()[TEST_SERVICE].size(), 1);
@@ -380,7 +387,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // REMOVING FIRST SERVER
   server_map.erase(TEST_SERVICE_SERVER_1 + "|" + TEST_SERVICE);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing the last server triggers a removal event.
   EXPECT_EQ(graph->getServicesToServersMap().count(TEST_SERVICE), 0);
@@ -397,7 +404,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // ADD FIRST CLIENT
   createTestServiceClient(TEST_SERVICE, TEST_SERVICE_CLIENT_1);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding the first client does not trigger a discovery event.
   EXPECT_EQ(graph->getServicesToServersMap().count(TEST_SERVICE), 0);
@@ -410,7 +417,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // ADDING SECOND CLIENT
   createTestServiceClient(TEST_SERVICE, TEST_SERVICE_CLIENT_2);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Adding a second client does not trigger an event.
   EXPECT_EQ(graph->getServicesToServersMap().count(TEST_SERVICE), 0);
@@ -423,7 +430,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // REMOVING SECOND CLIENT
   client_map.erase(TEST_SERVICE_CLIENT_2 + "|" + TEST_SERVICE);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing a client that is not the last will not trigger a removal event.
   EXPECT_EQ(graph->getServicesToServersMap().count(TEST_SERVICE), 0);
@@ -436,7 +443,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 
   // REMOVING FIRST CLIENT
   client_map.erase(TEST_SERVICE_CLIENT_1 + "|" + TEST_SERVICE);
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   // Removing the last client does not trigger a removal event.
   EXPECT_EQ(graph->getServicesToServersMap().count(TEST_SERVICE), 0);
@@ -461,7 +468,7 @@ TEST_F(IpcGraphTest, GetTopicTypeInfo) {
 
   createTestPublisher(TEST_TOPIC);
 
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
 
@@ -483,7 +490,7 @@ TEST_F(IpcGraphTest, GetTopicListString) {
 
   createTestPublisher(TEST_TOPIC);
 
-  sleepLongEnoughToSync();
+  IpcGraphTest::sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
 

@@ -27,7 +27,7 @@ protected:
 
 TEST_F(ProtobufUtilsTest, LoadSchemaValid) {
   google::protobuf::FileDescriptorSet descriptor_set;
-  auto file_descriptor_proto = descriptor_set.add_file();
+  auto* file_descriptor_proto = descriptor_set.add_file();
   file_descriptor_proto->set_name("test.proto");
   file_descriptor_proto->set_package("test");
 
@@ -44,7 +44,8 @@ TEST_F(ProtobufUtilsTest, LoadSchemaInvalid) {
 
 TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   WsServerServiceAd service_definition;
-  service_definition.id = 42;
+  static constexpr int SERVICE_ID = 42;
+  service_definition.id = SERVICE_ID;
   service_definition.name = "Poser";
   service_definition.type = "";
 
@@ -98,14 +99,14 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   std::string json_output;
   auto status = google::protobuf::util::MessageToJsonString(*message, &json_output);
   EXPECT_TRUE(status.ok());
-  std::cout << "Initial JSON output:  \n'''\n" << json_output << "\n'''" << std::endl;
+  fmt::println("Initial JSON output:  \n'''\n{}\n'''", json_output);
   EXPECT_EQ(json_output, "{}");
 
   // Parse some bytes into the message.
-  auto base64MessageByteString =
+  const auto* base64_message_bytes =
       "ChsJAAAAAAAA8D8RAAAAAAAAAEAZAAAAAAAACEASJAmamZmZmZm5PxGamZmZmZnJPxkzMzMzMzPTPyEAAAAAAADwPw==";
 
-  auto message_bytes = foxglove::base64Decode(base64MessageByteString);
+  auto message_bytes = foxglove::base64Decode(base64_message_bytes);
   EXPECT_TRUE(message->ParseFromArray(message_bytes.data(), static_cast<int>(message_bytes.size())));
   EXPECT_TRUE(message->IsInitialized());
 
@@ -113,7 +114,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   json_output.clear();
   status = google::protobuf::util::MessageToJsonString(*message, &json_output);
   EXPECT_TRUE(status.ok());
-  std::cout << "JSON output after parsing bytes:  \n'''\n" << json_output << "\n'''" << std::endl;
+  fmt::println("JSON output after parsing bytes:  \n'''\n{}\n'''", json_output);
   EXPECT_NE(json_output, "{}");
 
   // Now generate a random message for the schema.
@@ -125,7 +126,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   json_output.clear();
   status = google::protobuf::util::MessageToJsonString(*random_message, &json_output);
   EXPECT_TRUE(status.ok());
-  std::cout << "JSON output of randomizing the message: \n'''\n" << json_output << "\n'''" << std::endl;
+  fmt::println("JSON output of randomizing the message: \n'''\n{}\n'''", json_output);
   EXPECT_NE(json_output, "{}");
 }
 
