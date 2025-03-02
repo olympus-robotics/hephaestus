@@ -19,8 +19,6 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 
-#include "hephaestus/websocket_bridge/bridge_config.h"
-
 namespace heph::ws {
 
 using TopicSubscriberWithTypeCallback = std::function<void(
@@ -31,7 +29,7 @@ using AsyncServiceResponseCallback = std::function<void(const RawServiceResponse
 
 class IpcInterface {
 public:
-  IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, const ipc::zenoh::Config& config);
+  IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, ipc::zenoh::Config config);
 
   ~IpcInterface();
 
@@ -40,33 +38,39 @@ public:
 
   // Subsribers
   /////////////
-  bool hasSubscriber(const std::string& topic) const;
+  [[nodiscard]] auto hasSubscriber(const std::string& topic) const -> bool;
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
-                     TopicSubscriberWithTypeCallback callback);
+                     const TopicSubscriberWithTypeCallback& subscriber_cb);
   void removeSubscriber(const std::string& topic);
 
   // Publishers
   /////////////
-  bool hasPublisher(const std::string& topic) const;
+  [[nodiscard]] auto hasPublisher(const std::string& topic) const -> bool;
   void addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info);
   void removePublisher(const std::string& topic);
-  bool publishMessage(const std::string& topic, std::span<const std::byte> data);
+  [[nodiscard]] auto publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool;
 
   // Services
   ///////////
-  auto callService(uint32_t call_id, const ipc::TopicConfig& topic_config, std::span<const std::byte> buffer,
-                   std::chrono::milliseconds timeout) -> RawServiceResponses;
-  std::future<void> callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
-                                     std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
-                                     AsyncServiceResponseCallback callback);
+  [[nodiscard]] auto callService(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                                 std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
+      -> RawServiceResponses;
+  auto callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                        std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
+                        AsyncServiceResponseCallback callback) -> std::future<void>;
 
 private:
-  bool hasSubscriberImpl(const std::string& topic) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_sub_);
+  // NOLINTNEXTLINE(modernize-use-trailing-return-type)
+  [[nodiscard]] bool hasSubscriberImpl(const std::string& topic) const
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_sub_);
 
-  void callback_PublisherMatchingStatus(const std::string& topic, const ipc::zenoh::MatchingStatus& status);
+  // NOLINTBEGIN(readability-identifier-naming)
+  static void callback_PublisherMatchingStatus(const std::string& topic,
+                                               const ipc::zenoh::MatchingStatus& status);
 
   void callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
                                 const RawServiceResponses& responses);
+  // NOLINTEND(readability-identifier-naming)
 
   std::shared_ptr<ipc::zenoh::Session> session_;
 

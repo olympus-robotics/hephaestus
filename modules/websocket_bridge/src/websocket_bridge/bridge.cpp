@@ -42,8 +42,8 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
   // Initialize WS Server
   {
     // Log handler
-    const auto ws_server_log_handler = [this](WsServerLogLevel level, char const* msg) {
-      this->callback_Ws_Log(level, msg);
+    const auto ws_server_log_handler = [](WsServerLogLevel level, char const* msg) {
+      WsBridge::callback_Ws_Log(level, msg);
     };
 
     // Create server
