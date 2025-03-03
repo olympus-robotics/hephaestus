@@ -257,12 +257,11 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # websocketpp
 set(WEBSOCKETPP_VERSION 0.8.2)
-set(WEBSOCKETPP_TAG v${WEBSOCKETPP_VERSION})
 add_cmake_dependency(
   NAME websocketpp
   VERSION ${WEBSOCKETPP_VERSION}
   GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
-  GIT_TAG ${WEBSOCKETPP_TAG}
+  GIT_TAG ${WEBSOCKETPP_VERSION}
   CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
 )
 
