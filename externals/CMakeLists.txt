@@ -259,17 +259,6 @@ add_cmake_dependency(
   CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja
 )
 
-# --------------------------------------------------------------------------------------------------
-# asio
-set(ASIO_VERSION 1.28.0)  # Use the latest stable version
-add_cmake_dependency(
-  NAME asio
-  VERSION ${ASIO_VERSION}
-  GIT_REPOSITORY "https://github.com/chriskohlhoff/asio.git"
-  GIT_TAG asio-${ASIO_VERSION}
-  CMAKE_ARGS -DASIO_STANDALONE=ON -DASIO_NO_DEPRECATED=ON
-)
-
 
 # --------------------------------------------------------------------------------------------------
 # websocketpp
