@@ -46,6 +46,11 @@ if(ws_protocol IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${WS_PROTOCOL_DEPENDS})
 endif()
 
+if(websocketpp IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(WEBSOCKETPP_DEPENDS asio)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${WEBSOCKETPP_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -254,6 +259,7 @@ add_cmake_dependency(
   CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja
 )
 
+
 # --------------------------------------------------------------------------------------------------
 # websocketpp
 set(WEBSOCKETPP_VERSION 0.8.2)
@@ -262,7 +268,7 @@ add_cmake_dependency(
   VERSION ${WEBSOCKETPP_VERSION}
   GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
   GIT_TAG ${WEBSOCKETPP_VERSION}
-  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
+  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DASIO_STANDALONE=ON -DENABLE_CPP11=ON
 )
 
 # --------------------------------------------------------------------------------------------------
