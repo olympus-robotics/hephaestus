@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <span>
 #include <string>
@@ -23,6 +24,7 @@
 #include <fmt/format.h>
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/server_interface.hpp>
+#include <hephaestus/ipc/topic.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
 #include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/session.h>
@@ -638,8 +640,7 @@ void WsBridge::callback_Ws_ClientUnadvertise(WsServerClientChannelId client_chan
   if (!client_handle_with_name.has_value()) {
     heph::log(heph::ERROR,
               "[WS Bridge] - Client tried to unadvertise topic but the channel is not owned by this client!",
-              "client_name", client_name, "channel_id", client_channel_id, "topic", topic,
-              "owner_client_name", client_handle_with_name.value().second);
+              "client_name", client_name, "channel_id", client_channel_id, "topic", topic);
     return;
   }
 
@@ -711,7 +712,7 @@ void WsBridge::callback_Ws_ClientMessage(const WsServerClientMessage& message,
 
   // Forward only the payload (skip the bytes we extracted above)
   const auto payload_bytes = std::span<const uint8_t>(message.data).subspan(NUM_MESSAGE_HEADER_BYTES);
-  std::span<const std::byte> message_data = std::as_bytes(payload_bytes);
+  const std::span<const std::byte> message_data = std::as_bytes(payload_bytes);
 
   if (!ipc_interface_->publishMessage(topic, message_data)) {
     heph::log(heph::ERROR, "[WS Bridge] - Failed to publish client message!", "client_name", client_name,
@@ -751,7 +752,7 @@ void WsBridge::callback_Ws_ServiceRequest(const WsServerServiceRequest& request,
   fmt::println("[WS Bridge] - Client '{}' sent service request '{}' [{}/{}] ...", client_name, service_name,
                service_id, call_id);
 
-  ipc::TopicConfig topic_config(service_name);
+  const ipc::TopicConfig topic_config(service_name);
 
   auto buffer = std::as_bytes(std::span(request.data.data(), request.data.size()));
 

@@ -105,6 +105,10 @@ void handleBinaryMessage(
 
 }  // namespace
 
+// NOLINTBEGIN(clang-analyzer-optin.cplusplus.VirtualCall)
+// Note: This NOLINT is needed because it is triggered by an issue in the virtual
+// destructor of foxglove::Client, i.e. inside the dependency, not our code
+
 auto main(int argc, char** argv) -> int try {
   const heph::utils::StackTrace stack_trace;
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
@@ -228,3 +232,5 @@ auto main(int argc, char** argv) -> int try {
   fmt::print("Exception: {}\n", e.what());
   return 1;
 }
+
+// NOLINTEND(clang-analyzer-optin.cplusplus.VirtualCall)

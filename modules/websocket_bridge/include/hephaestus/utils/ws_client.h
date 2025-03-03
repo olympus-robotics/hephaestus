@@ -5,9 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -18,28 +16,7 @@
 
 namespace heph::ws {
 
-// We have to derive from the Client class to ensure that the virtual function close() is not called during
-// destruction. This is something clang-tidy didn't like in the dependency code.
-template <typename T>
-class WsClient : public foxglove::Client<T> {
-public:
-  WsClient() = default;
-  WsClient(const WsClient&) = delete;
-  auto operator=(const WsClient&) -> WsClient& = delete;
-  WsClient(WsClient&&) noexcept = default;
-  auto operator=(WsClient&&) noexcept -> WsClient& = default;
-
-  ~WsClient() override {
-    this->_endpoint.stop_perpetual();
-    this->_thread->join();
-  }
-
-  void close() override {
-    foxglove::Client<T>::close();
-  }
-};
-
-using WsClientNoTls = WsClient<foxglove::WebSocketNoTls>;
+using WsClientNoTls = foxglove::Client<foxglove::WebSocketNoTls>;
 
 struct ServiceCallState {
   enum class Status : std::uint8_t { SUCCESS = 0, DISPATCHED = 1, FAILED = 2 };
