@@ -334,17 +334,17 @@ auto convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) -> 
 }  // namespace
 
 void debugPrintSchema(const std::vector<std::byte>& schema) {
-  fmt::print("Schema: \n'''\n{}\n'''\n", convertProtoMsgBytesToDebugString(schema));
+  fmt::println("Schema: \n'''\n{}\n'''", convertProtoMsgBytesToDebugString(schema));
 }
 
 void debugPrintMessage(const google::protobuf::Message& message) {
   std::string json_string;
   const auto status = google::protobuf::util::MessageToJsonString(message, &json_string);
   if (!status.ok()) {
-    fmt::print("Failed to convert message to JSON: {}\n", status.ToString());
+    fmt::println("Failed to convert message to JSON: {}", status.ToString());
     return;
   }
-  fmt::print("Message: \n'''\n{}\n'''\n", json_string);
+  fmt::println("Message: \n'''\n{}\n'''", json_string);
 }
 
 auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string {
@@ -361,7 +361,7 @@ auto convertSerializationTypeToString(const serdes::TypeInfo::Serialization& ser
 // NOLINTBEGIN
 void printBinary(const uint8_t* data, size_t length) {
   if (data == nullptr || length == 0) {
-    fmt::print("No data to print.\n");
+    fmt::println("No data to print.");
     return;
   }
 
@@ -386,7 +386,7 @@ void printBinary(const uint8_t* data, size_t length) {
     ss << "\n";
   }
 
-  fmt::print("{}", ss.str());
+  fmt::println("{}", ss.str());
 }
 // NOLINTEND
 
@@ -399,7 +399,7 @@ auto getTimestampString() -> std::string {
 
   std::tm now_tm{};
   if (localtime_r(&now_time_t, &now_tm) == nullptr) {
-    fmt::print("Failed to convert time to local time.\n");
+    fmt::println("Failed to convert time to local time.");
     return {};
   }
 
@@ -472,10 +472,6 @@ auto convertWsChannelInfoToIpcTypeInfo(const foxglove::ClientAdvertisement& chan
 
   type_info.name = channel_info.schemaName;
   type_info.schema = schema_bytes;
-
-  fmt::print("'''\n{}\n'''", type_info.toJson());
-
-  debugPrintSchema(type_info.schema);
 
   return type_info;
 }

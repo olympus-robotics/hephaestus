@@ -27,13 +27,13 @@ protected:
 };
 
 TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
-  WsServerServiceAd service_definition;
+  WsServiceAd service_definition;
   static constexpr int SERVICE_ID = 42;
   service_definition.id = SERVICE_ID;
   service_definition.name = "Poser";
   service_definition.type = "";
 
-  service_definition.request = WsServerServiceRequestDefinition{
+  service_definition.request = WsServiceRequestDefinition{
     .encoding = "protobuf",
     .schemaName = "heph.examples.types.proto.Pose",
     .schemaEncoding = "protobuf",
@@ -49,7 +49,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
         "cxgCIAEoDRIMCgRkYXRhGAMgAygBIjQKCE1hdHJpeFhmEgwKBHJvd3MYASABKA0SDAoEY29scxgCIAEoDRIMCgRkYXRhGAMgAygC"
         "IhgKCFZlY3RvclhmEgwKBGRhdGEYASADKAIiIAoIVmVjdG9yMmYSCQoBeBgBIAEoAhIJCgF5GAIgASgCYgZwcm90bzM=",
   };
-  service_definition.response = WsServerServiceResponseDefinition{
+  service_definition.response = WsServiceResponseDefinition{
     .encoding = "protobuf",
     .schemaName = "heph.examples.types.proto.Pose",
     .schemaEncoding = "protobuf",

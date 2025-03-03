@@ -26,74 +26,72 @@
 
 namespace heph::ws {
 
-using WsServerClientHandle = websocketpp::connection_hdl;
-using WsServerInterface = foxglove::ServerInterface<WsServerClientHandle>;
-using WsServerInterfacePtr = std::unique_ptr<WsServerInterface>;
-using WsServerHandlers = foxglove::ServerHandlers<WsServerClientHandle>;
-using WsServerFactory = foxglove::ServerFactory;
-using WsServerInfo = foxglove::ServerOptions;
-using WsServerLogLevel = foxglove::WebSocketLogLevel;
+using WsClientHandle = websocketpp::connection_hdl;
+using WsInterface = foxglove::ServerInterface<WsClientHandle>;
+using WsInterfacePtr = std::unique_ptr<WsInterface>;
+using WsHandlers = foxglove::ServerHandlers<WsClientHandle>;
+using WsFactory = foxglove::ServerFactory;
+using WsInfo = foxglove::ServerOptions;
+using WsLogLevel = foxglove::WebSocketLogLevel;
 
-using WsServerChannelId = foxglove::ChannelId;
-using WsServerChannelInfo = foxglove::ChannelWithoutId;
-using WsServerChannelAd = foxglove::Channel;
+using WsChannelId = foxglove::ChannelId;
+using WsChannelInfo = foxglove::ChannelWithoutId;
+using WsChannelAd = foxglove::Channel;
 
-using WsServerClientChannelId = foxglove::ClientChannelId;
-using WsServerClientChannelIdSet = std::unordered_set<WsServerClientChannelId>;
-using WsServerClientChannelAd = foxglove::ClientAdvertisement;
-using WsServerSubscriptionId = foxglove::SubscriptionId;
-using WsServerClientMessage = foxglove::ClientMessage;
+using WsClientChannelId = foxglove::ClientChannelId;
+using WsClientChannelIdSet = std::unordered_set<WsClientChannelId>;
+using WsClientChannelAd = foxglove::ClientAdvertisement;
+using WsSubscriptionId = foxglove::SubscriptionId;
+using WsClientMessage = foxglove::ClientMessage;
 
-using WsServerServiceId = foxglove::ServiceId;
-using WsServerServiceCallId = uint32_t;
-using WsServerServiceInfo = foxglove::ServiceWithoutId;
-using WsServerServiceAd = foxglove::Service;
-using WsServerServiceRequestDefinition = foxglove::ServiceRequestDefinition;
-using WsServerServiceResponseDefinition = foxglove::ServiceResponseDefinition;
-using WsServerServiceRequest = foxglove::ServiceRequest;
-using WsServerServiceResponse = foxglove::ServiceResponse;
+using WsServiceId = foxglove::ServiceId;
+using WsServiceCallId = uint32_t;
+using WsServiceInfo = foxglove::ServiceWithoutId;
+using WsServiceAd = foxglove::Service;
+using WsServiceRequestDefinition = foxglove::ServiceRequestDefinition;
+using WsServiceResponseDefinition = foxglove::ServiceResponseDefinition;
+using WsServiceRequest = foxglove::ServiceRequest;
+using WsServiceResponse = foxglove::ServiceResponse;
 
-using WsServerBinaryOpCode = foxglove::BinaryOpcode;
-using WsServerClientBinaryOpCode = foxglove::ClientBinaryOpcode;
+using WsBinaryOpCode = foxglove::BinaryOpcode;
+using WsClientBinaryOpCode = foxglove::ClientBinaryOpcode;
 
-using ClientHandleWithName = std::pair<WsServerClientHandle, std::string>;
+using ClientHandleWithName = std::pair<WsClientHandle, std::string>;
 
-struct WsServerClientComparator {
+struct WsClientComparator {
   auto operator()(const ClientHandleWithName& lhs, const ClientHandleWithName& rhs) const -> bool {
     return lhs.first.lock() < rhs.first.lock();
   }
 };
-using WsServerClientHandleSet = std::set<ClientHandleWithName, WsServerClientComparator>;
+using WsClientHandleSet = std::set<ClientHandleWithName, WsClientComparator>;
 
 auto convertIpcRawServiceResponseToWsServiceResponse(
-    WsServerServiceId service_id, WsServerServiceCallId call_id,
-    const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
-    WsServerServiceResponse& ws_response) -> bool;
+    WsServiceId service_id, WsServiceCallId call_id,
+    const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response, WsServiceResponse& ws_response)
+    -> bool;
 
 [[nodiscard]] auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json)
-    -> std::optional<WsServerChannelAd>;
+    -> std::optional<WsChannelAd>;
 [[nodiscard]] auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
-    -> std::optional<WsServerInfo>;
+    -> std::optional<WsInfo>;
 [[nodiscard]] auto convertWsJsonMsgToService(const nlohmann::json& service_json)
-    -> std::optional<WsServerServiceAd>;
+    -> std::optional<WsServiceAd>;
 
-struct WsServerAdvertisements {
-  WsServerInfo info;
-  std::unordered_map<WsServerChannelId, WsServerChannelAd> channels;
-  std::unordered_map<WsServerServiceId, WsServerServiceAd> services;
+struct WsAdvertisements {
+  WsInfo info;
+  std::unordered_map<WsChannelId, WsChannelAd> channels;
+  std::unordered_map<WsServiceId, WsServiceAd> services;
 
   ProtobufSchemaDatabase schema_db;
 };
 
-auto parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerAdvertisements& ws_server_ads)
-    -> bool;
+auto parseWsAdvertisements(const nlohmann::json& server_txt_msg, WsAdvertisements& ws_server_ads) -> bool;
 
-struct WsServerServiceFailure {
-  WsServerServiceCallId call_id;
+struct WsServiceFailure {
+  WsServiceCallId call_id;
   std::string error_message;
 };
 
-auto parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
-                                 WsServerServiceFailure& service_failure) -> bool;
+auto parseWsServiceFailure(const nlohmann::json& server_txt_msg, WsServiceFailure& service_failure) -> bool;
 
 }  // namespace heph::ws

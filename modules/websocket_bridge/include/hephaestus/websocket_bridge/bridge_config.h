@@ -28,7 +28,7 @@ struct WsBridgeConfig {
   ///////////////
   // WS Server //
   ///////////////
-  WsServerInfo ws_server_config = {
+  WsInfo ws_server_config = {
     // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     .capabilities = {
       foxglove::CAPABILITY_CLIENT_PUBLISH,
@@ -53,7 +53,7 @@ struct WsBridgeConfig {
     .clientTopicWhitelistPatterns = parseRegexStrings({ ".*" }),
   };
   // NOTE: Unfortunately 'address' and 'port' are not part of
-  // WsServerInfo and need to be passed to the server when calling
+  // WsInfo and need to be passed to the server when calling
   // "start".
   static constexpr uint16_t DEFAULT_WS_SERVER_PORT = 8765;
   uint16_t ws_server_port = DEFAULT_WS_SERVER_PORT;
@@ -67,6 +67,8 @@ struct WsBridgeConfig {
   static constexpr int DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS = 5000;
   int ipc_service_call_timeout_ms = DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS;
   bool ipc_service_service_request_async = true;
+
+  bool ipc_advertise_topics_based_on_subscribers = true;
 
   std::vector<std::string> ipc_topic_whitelist = { ".*" };
   std::vector<std::string> ipc_topic_blacklist;

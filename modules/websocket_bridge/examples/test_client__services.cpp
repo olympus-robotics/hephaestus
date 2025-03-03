@@ -25,13 +25,13 @@
 using namespace std::chrono_literals;
 using heph::ws::ServiceCallState;
 using heph::ws::ServiceCallStateMap;
+using heph::ws::WsAdvertisements;
+using heph::ws::WsBinaryOpCode;
 using heph::ws::WsClientNoTls;
-using heph::ws::WsServerAdvertisements;
-using heph::ws::WsServerBinaryOpCode;
-using heph::ws::WsServerServiceAd;
-using heph::ws::WsServerServiceFailure;
-using heph::ws::WsServerServiceRequest;
-using heph::ws::WsServerServiceResponse;
+using heph::ws::WsServiceAd;
+using heph::ws::WsServiceFailure;
+using heph::ws::WsServiceRequest;
+using heph::ws::WsServiceResponse;
 
 constexpr int SERVICE_REQUEST_COUNT = 8;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
@@ -47,21 +47,21 @@ void sigintHandler(int signal) {
   g_abort = true;
 }
 
-void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertisements& ws_server_ads,
+void handleBinaryMessage(const uint8_t* data, size_t length, WsAdvertisements& ws_server_ads,
                          ServiceCallStateMap& state) {
   if (data == nullptr || length == 0) {
-    fmt::print("Received invalid message.\n");
+    fmt::println("Received invalid message.");
     return;
   }
 
   const uint8_t opcode = data[0];  // NOLINT
 
-  if (opcode == static_cast<uint8_t>(WsServerBinaryOpCode::SERVICE_CALL_RESPONSE)) {
+  if (opcode == static_cast<uint8_t>(WsBinaryOpCode::SERVICE_CALL_RESPONSE)) {
     // Skipping the first byte (opcode)
     const uint8_t* payload = data + 1;  // NOLINT
     const size_t payload_size = length - 1;
 
-    WsServerServiceResponse response;
+    WsServiceResponse response;
     try {
       response.read(payload, payload_size);
     } catch (const std::exception& e) {
@@ -78,16 +78,11 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertiseme
 
     // Receive, parse and convert response to Protobuf message.
     auto msg = state_it->second.receiveResponse(response, ws_server_ads);
-
-    // TODO: REMOVE
-    if (msg.has_value()) {
-      heph::ws::debugPrintMessage(**msg);
-    }
     return;
   }
 }
 
-void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_server_ads,
+void handleJsonMessage(const std::string& json_msg, WsAdvertisements& ws_server_ads,
                        ServiceCallStateMap& state) {
   // Parse the JSON message
   nlohmann::json msg;
@@ -100,14 +95,14 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   }
 
   // Handle Advertisements
-  if (parseWsServerAdvertisements(msg, ws_server_ads)) {
+  if (parseWsAdvertisements(msg, ws_server_ads)) {
     // Everything is alright.
     return;
   }
 
   // Handle Service Failures
-  WsServerServiceFailure service_failure;
-  if (parseWsServerServiceFailure(msg, service_failure)) {
+  WsServiceFailure service_failure;
+  if (parseWsServiceFailure(msg, service_failure)) {
     heph::log(heph::ERROR, "Service call failed with error.", "call_id", service_failure.call_id,
               "error_message", service_failure.error_message);
 
@@ -121,12 +116,12 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   }
 }
 
-void sendTestServiceRequests(WsClientNoTls& client, const WsServerServiceAd& foxglove_service,
-                             WsServerAdvertisements& ws_server_ads, ServiceCallStateMap& state) {
+void sendTestServiceRequests(WsClientNoTls& client, const WsServiceAd& foxglove_service,
+                             WsAdvertisements& ws_server_ads, ServiceCallStateMap& state) {
   auto foxglove_service_id = foxglove_service.id;
 
   for (int i = 1; i <= SERVICE_REQUEST_COUNT && !g_abort; ++i) {
-    WsServerServiceRequest request;
+    WsServiceRequest request;
     request.callId = static_cast<uint32_t>(i);
     request.serviceId = foxglove_service_id;
 
@@ -143,9 +138,6 @@ void sendTestServiceRequests(WsClientNoTls& client, const WsServerServiceAd& fox
       g_abort = true;
       break;
     }
-
-    // TODO: REMOVE
-    heph::ws::debugPrintMessage(*message);
 
     // Prepare message for sending.
     std::vector<uint8_t> message_buffer(message->ByteSizeLong());
@@ -195,14 +187,14 @@ auto main(int argc, char** argv) -> int try {
   const std::string url = argv[1];  // NOLINT
   WsClientNoTls client;
 
-  WsServerAdvertisements ws_server_ads;
+  WsAdvertisements ws_server_ads;
   ServiceCallStateMap state;
 
   const auto binary_message_handler = [&](const uint8_t* data, size_t length) {
     handleBinaryMessage(data, length, ws_server_ads, state);
   };
   // NOLINTNEXTLINE
-  const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::print("Connected to {}\n", url); };
+  const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
   // NOLINTNEXTLINE
   const auto on_close_handler = [&](websocketpp::connection_hdl) {
     fmt::println("Connection closed");

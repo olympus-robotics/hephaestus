@@ -41,6 +41,8 @@ ipc_service_call_timeout_ms: 10000
 # Async service calls are currently not supported.
 ipc_service_service_request_async: true
 
+ipc_advertise_topics_based_on_subscribers: true
+
 ipc_topic_whitelist:
   - .*
 ipc_topic_blacklist: []

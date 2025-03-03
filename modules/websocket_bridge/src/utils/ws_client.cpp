@@ -31,8 +31,8 @@ ServiceCallState::ServiceCallState(uint32_t call_id)
   : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
 }
 
-auto ServiceCallState::receiveResponse(const WsServerServiceResponse& service_response,
-                                       WsServerAdvertisements& ws_server_ads)
+auto ServiceCallState::receiveResponse(const WsServiceResponse& service_response,
+                                       WsAdvertisements& ws_server_ads)
     -> std::optional<std::unique_ptr<google::protobuf::Message>> {
   if (service_response.callId != call_id) {
     heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", call_id, "received_call_id",
@@ -161,7 +161,7 @@ void printServiceCallStateMap(ServiceCallStateMap& state) {
   }
 }
 
-void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
+void printAdvertisedServices(const WsAdvertisements& ws_server_ads) {
   static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
 
   fmt::println("Advertised services:");
@@ -209,7 +209,7 @@ void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads) {
   }
 }
 
-void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
+void printAdvertisedTopics(const WsAdvertisements& ws_server_ads) {
   static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
 
   fmt::println("Advertised topics:");
@@ -239,7 +239,7 @@ void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads) {
   }
 }
 
-void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ads) {
+void printClientChannelAds(const std::vector<WsClientChannelAd>& client_ads) {
   static constexpr size_t SCHEMA_TRUNCATION_DIGITS = 10;
 
   fmt::println("Client Channel Advertisements:");

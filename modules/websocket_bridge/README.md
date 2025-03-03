@@ -38,7 +38,7 @@ class WsBridge {
     + start()
     + stop()
 
-    + callback__WsServer__*()
+    + callback__Ws__*()
     + callback_IpcGraph_*()
     + callback_Ipc_*()
 }

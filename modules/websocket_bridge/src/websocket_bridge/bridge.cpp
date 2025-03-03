@@ -47,6 +47,7 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
   {
     ipc_graph_ = std::make_unique<IpcGraph>(IpcGraphConfig{
         .session = session,
+        .track_topics_based_on_subscribers = config.ipc_advertise_topics_based_on_subscribers,
         .topic_discovery_cb =
             [this](const std::string& topic, const heph::serdes::TypeInfo& type_info) {
               this->callback_IpcGraph_TopicFound(topic, type_info);
@@ -75,17 +76,17 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
   // Initialize WS Server
   {
     // Log handler
-    const auto ws_server_log_handler = [](WsServerLogLevel level, char const* msg) {
+    const auto ws_server_log_handler = [](WsLogLevel level, char const* msg) {
       WsBridge::callback_Ws_Log(level, msg);
     };
 
     // Create server
-    ws_server_ = WsServerFactory::createServer<WsServerClientHandle>("WS Server", ws_server_log_handler,
-                                                                     config.ws_server_config);
+    ws_server_ =
+        WsFactory::createServer<WsClientHandle>("WS Server", ws_server_log_handler, config.ws_server_config);
     CHECK(ws_server_);
 
     // Prepare server callbacks
-    WsServerHandlers ws_server_hdlrs;
+    WsHandlers ws_server_hdlrs;
     // Implements foxglove::CAPABILITY_PUBLISH (this capability does not exist in the foxglove library, but it
     // would represent the basic ability to advertise and publish topics from the server side )
     ws_server_hdlrs.subscribeHandler = [this](auto&&... args) {
@@ -102,7 +103,7 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
 
     // Implements foxglove::CAPABILITY_CLIENT_PUBLISH
     ws_server_hdlrs.clientAdvertiseHandler = [this](auto&&... args) {
-      this->callback_WsServer_ClientAdvertise(std::forward<decltype(args)>(args)...);
+      this->callback_Ws_ClientAdvertise(std::forward<decltype(args)>(args)...);
     };
     ws_server_hdlrs.clientUnadvertiseHandler = [this](auto&&... args) {
       this->callback_Ws_ClientUnadvertise(std::forward<decltype(args)>(args)...);
@@ -116,11 +117,11 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
       this->callback_Ws_ServiceRequest(std::forward<decltype(args)>(args)...);
     };
 
-    // TODO(mfehr): Add implementation for the following capabilities:
+    // TODO: Add implementation for the following capabilities:
     // - foxglove::CAPABILITY_ASSETS
     // - foxglove::CAPABILITY_PARAMETERS
     // - foxglove::CAPABILITY_TIME
-    // Reference implementation of both capabilities can be found in the ROS2
+    // Reference implementation of those capabilities can be found in the ROS2
     // bridge (ros2_foxglove_bridge.cpp)
 
     ws_server_->setHandlers(std::move(ws_server_hdlrs));
@@ -147,9 +148,6 @@ void WsBridge::start() {
     fmt::println("[WS Server] - Starting ...");
     ws_server_->start(config_.ws_server_address, config_.ws_server_port);
 
-    // This is a sanity check I found in the ros-foxglove bridge, so I assume under certain conditions
-    // (probably a port collision), this can actually happen.
-    // TODO(mfehr): Test this and verify.
     const uint16_t ws_server_actual_listening_port = ws_server_->getPort();
     CHECK_EQ(ws_server_actual_listening_port, config_.ws_server_port);
     fmt::println("[WS Server] - ONLINE");
@@ -198,9 +196,9 @@ void WsBridge::callback_IpcGraph_TopicFound(const std::string& topic,
     return;
   }
 
-  const WsServerChannelInfo new_ws_server_channel = convertIpcTypeInfoToWsChannelInfo(topic, type_info);
+  const WsChannelInfo new_ws_server_channel = convertIpcTypeInfoToWsChannelInfo(topic, type_info);
 
-  const std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
+  const std::vector<WsChannelInfo> new_ws_server_channels{ new_ws_server_channel };
   auto new_channel_ids = ws_server_->addChannels(new_ws_server_channels);
 
   CHECK_EQ(new_channel_ids.size(), 1);
@@ -246,19 +244,19 @@ void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
   fmt::println("[WS Bridge] - Service '{}' [{}/{}] will be added  ...", service_name, type_info.request.name,
                type_info.reply.name);
 
-  const WsServerServiceInfo new_ws_server_service = {
+  const WsServiceInfo new_ws_server_service = {
     .name = service_name,
     // This interface was built with the ROS2 convention in mind, that the request and reply types are two
     // pieces of a common type, hence the type name is the same with a _Request or _Reply suffix. This is not
     // the case for hephaestus. So we just chose the request type name.
     .type = type_info.request.name,
 
-    .request = std::make_optional<WsServerServiceRequestDefinition>(
+    .request = std::make_optional<WsServiceRequestDefinition>(
         convertSerializationTypeToString(type_info.request.serialization), type_info.request.name,
         convertSerializationTypeToString(type_info.request.serialization),
         convertProtoBytesToFoxgloveBase64String(type_info.request.schema)),
 
-    .response = std::make_optional<WsServerServiceResponseDefinition>(
+    .response = std::make_optional<WsServiceResponseDefinition>(
         convertSerializationTypeToString(type_info.reply.serialization), type_info.reply.name,
         convertSerializationTypeToString(type_info.reply.serialization),
         convertProtoBytesToFoxgloveBase64String(type_info.reply.schema)),
@@ -268,7 +266,7 @@ void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
     .responseSchema = std::nullopt,
   };
 
-  const std::vector<WsServerServiceInfo> new_ws_server_services{ new_ws_server_service };
+  const std::vector<WsServiceInfo> new_ws_server_services{ new_ws_server_service };
   auto new_service_ids = ws_server_->addServices(new_ws_server_services);
 
   CHECK_EQ(new_service_ids.size(), 1);
@@ -301,17 +299,10 @@ void WsBridge::callback_IpcGraph_ServiceDropped(const std::string& service_name)
 
 void WsBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
                                          IpcGraphState ipc_graph_state) {
-  // TODO(mfehr): Not pretty but it works... Consider refactoring.
-  std::string update_origin = "refresh";
-  if (!info.topic.empty()) {
-    const std::string endpoint_type = std::string(magic_enum::enum_name(info.type));
-    update_origin = info.type == ipc::zenoh::EndpointType::PUBLISHER ||
-                            info.type == ipc::zenoh::EndpointType::SUBSCRIBER ?
-                        "topic '" + info.topic + "' [" + endpoint_type + "]" :
-                        "service '" + info.topic + "' [" + endpoint_type + "]";
-  }
-
-  fmt::println("[WS Bridge] - Updating connection graph due to {}...", update_origin);
+  // NOTE: currently we do not need the endpoint info that triggered the graph update. However, it is very
+  // useful to debug, and there are also some features that might require knowing who triggered it. Let's keep
+  // it.
+  (void)info;
 
   ipc_graph_state.printIpcGraphState();
   CHECK(ipc_graph_state.checkConsistency());
@@ -361,8 +352,6 @@ void WsBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
   }
 
   ws_server_->updateConnectionGraph(topic_to_pub_node_map, topic_to_sub_node_map, service_to_node_map);
-
-  fmt::println("[WS Bridge] - Connection graph updated successfully.");
 }
 
 /////////////////////////////
@@ -377,7 +366,7 @@ void WsBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetad
   CHECK(ws_server_);
 
   const std::string topic = metadata.topic;
-  const WsServerChannelId channel_id = state_.getWsChannelForIpcTopic(topic);
+  const WsChannelId channel_id = state_.getWsChannelForIpcTopic(topic);
 
   auto clients = state_.getClientsForWsChannel(channel_id);
   if (!clients.has_value()) {
@@ -399,7 +388,7 @@ void WsBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetad
 }
 
 void WsBridge::callback_Ipc_ServiceResponsesReceived(
-    WsServerServiceId service_id, WsServerServiceCallId call_id, const RawServiceResponses& responses,
+    WsServiceId service_id, WsServiceCallId call_id, const RawServiceResponses& responses,
     std::optional<ClientHandleWithName> client_handle_w_name_opt) {
   CHECK(ws_server_);
 
@@ -459,7 +448,7 @@ void WsBridge::callback_Ipc_ServiceResponsesReceived(
     return;
   }
 
-  WsServerServiceResponse ws_server_response;
+  WsServiceResponse ws_server_response;
   if (!convertIpcRawServiceResponseToWsServiceResponse(service_id, call_id, response, ws_server_response)) {
     auto msg = fmt::format("[WS Bridge] - Failed to convert IPC service response "
                            "to WS service response for service '{}' [{}]",
@@ -479,28 +468,27 @@ void WsBridge::callback_Ipc_ServiceResponsesReceived(
 // Websocket Server Callbacks //
 ////////////////////////////////
 
-void WsBridge::callback_Ws_Log(WsServerLogLevel level, char const* msg) {
+void WsBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
   switch (level) {
-    case WsServerLogLevel::Debug:
-      heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
+    case WsLogLevel::Debug:
+      heph::log(heph::DEBUG, fmt::format("\n[WS Server] - {}", msg));
       break;
-    case WsServerLogLevel::Info:
-      heph::log(heph::INFO, fmt::format("[WS Server] - {}", msg));
+    case WsLogLevel::Info:
+      heph::log(heph::INFO, fmt::format("\n[WS Server] - {}", msg));
       break;
-    case WsServerLogLevel::Warn:
-      heph::log(heph::WARN, fmt::format("[WS Server] - {}", msg));
+    case WsLogLevel::Warn:
+      heph::log(heph::WARN, fmt::format("\n[WS Server] - {}", msg));
       break;
-    case WsServerLogLevel::Error:
-      heph::log(heph::ERROR, fmt::format("[WS Server] - {}", msg));
+    case WsLogLevel::Error:
+      heph::log(heph::ERROR, fmt::format("\n[WS Server] - {}", msg));
       break;
-    case WsServerLogLevel::Critical:
-      heph::log(heph::FATAL, fmt::format("[WS Server] - {}", msg));
+    case WsLogLevel::Critical:
+      heph::log(heph::FATAL, fmt::format("\n[WS Server] - {}", msg));
       break;
   }
 }
 
-void WsBridge::callback_Ws_Subscribe(WsServerChannelId channel_id,
-                                     const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
   CHECK(ipc_graph_);
   CHECK(ipc_interface_);
   CHECK(ws_server_);
@@ -539,8 +527,7 @@ void WsBridge::callback_Ws_Subscribe(WsServerChannelId channel_id,
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_Unsubscribe(WsServerChannelId channel_id,
-                                       const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
   CHECK(ipc_interface_);
   CHECK(ws_server_);
 
@@ -572,8 +559,8 @@ void WsBridge::callback_Ws_Unsubscribe(WsServerChannelId channel_id,
   state_.printBridgeState();
 }
 
-void WsBridge::callback_WsServer_ClientAdvertise(const WsServerClientChannelAd& advertisement,
-                                                 const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
+                                           const WsClientHandle& client_handle) {
   CHECK(ipc_graph_);
   CHECK(ipc_interface_);
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
@@ -621,8 +608,8 @@ void WsBridge::callback_WsServer_ClientAdvertise(const WsServerClientChannelAd& 
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_ClientUnadvertise(WsServerClientChannelId client_channel_id,
-                                             const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
+                                             const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   auto topic = state_.getTopicForClientChannel(client_channel_id);
 
@@ -665,8 +652,8 @@ void WsBridge::callback_Ws_ClientUnadvertise(WsServerClientChannelId client_chan
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_ClientMessage(const WsServerClientMessage& message,
-                                         const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
+                                         const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   const auto& topic = message.advertisement.topic;
   const auto& channel_id = message.advertisement.channelId;
@@ -696,10 +683,9 @@ void WsBridge::callback_Ws_ClientMessage(const WsServerClientMessage& message,
   const auto opcode = static_cast<uint8_t>(message.data[0]);
 
   auto channel_id_bytes = std::span<const uint8_t>(message.data).subspan(1, 4);
-  const auto parsed_channel_id =
-      static_cast<WsServerChannelId>(foxglove::ReadUint32LE(channel_id_bytes.data()));
+  const auto parsed_channel_id = static_cast<WsChannelId>(foxglove::ReadUint32LE(channel_id_bytes.data()));
 
-  if (opcode != static_cast<uint8_t>(WsServerClientBinaryOpCode::MESSAGE_DATA)) {
+  if (opcode != static_cast<uint8_t>(WsClientBinaryOpCode::MESSAGE_DATA)) {
     heph::log(heph::ERROR, "[WS Bridge] - Client sent message with unexpected opcode!", "client_name",
               client_name, "topic", topic, "channel_id", channel_id, "opcode", static_cast<int>(opcode));
     return;
@@ -720,8 +706,8 @@ void WsBridge::callback_Ws_ClientMessage(const WsServerClientMessage& message,
   }
 }
 
-void WsBridge::callback_Ws_ServiceRequest(const WsServerServiceRequest& request,
-                                          const WsServerClientHandle& client_handle) {
+void WsBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request,
+                                          const WsClientHandle& client_handle) {
   CHECK(ipc_interface_);
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
@@ -746,8 +732,8 @@ void WsBridge::callback_Ws_ServiceRequest(const WsServerServiceRequest& request,
   }
 
   auto service_name = state_.getIpcServiceForWsService(request.serviceId);
-  const WsServerServiceId service_id = request.serviceId;
-  const WsServerServiceCallId call_id = request.callId;
+  const WsServiceId service_id = request.serviceId;
+  const WsServiceCallId call_id = request.callId;
 
   fmt::println("[WS Bridge] - Client '{}' sent service request '{}' [{}/{}] ...", client_name, service_name,
                service_id, call_id);
@@ -789,13 +775,8 @@ void WsBridge::callback_Ws_ServiceRequest(const WsServerServiceRequest& request,
 
 void WsBridge::callback_Ws_SubscribeConnectionGraph(bool subscribe) {
   CHECK(ipc_graph_);
-
   if (subscribe) {
-    fmt::println("[WS Bridge] - A client is subscribing to the connection graph ...");
     ipc_graph_->refreshConnectionGraph();
-    fmt::println("[WS Bridge] - A client has subscribed to the connection graph successfully.");
-  } else {
-    fmt::println("[WS Bridge] - A client has unsubscribed from the connection graph.");
   }
 }
 

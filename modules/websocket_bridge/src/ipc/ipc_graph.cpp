@@ -82,12 +82,12 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::SERVICE_SERVER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          if (addServiceServer(info)) {
+          if (addServiceServerEndpoint(info)) {
             graph_updated = true;
           }
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removeServiceServer(info);
+          removeServiceServerEndpoint(info);
           graph_updated = true;
           break;
       }
@@ -95,11 +95,11 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::SERVICE_CLIENT:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addServiceClient(info);
+          addServiceClientEndPoint(info);
           graph_updated = true;
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removeServiceClient(info);
+          removeServiceClientEndPoint(info);
           graph_updated = true;
           break;
       }
@@ -110,12 +110,12 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::PUBLISHER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          if (addPublisher(info)) {
+          if (addPublisherEndpoint(info)) {
             graph_updated = true;
           }
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removePublisher(info);
+          removePublisherEndpoint(info);
           graph_updated = true;
           break;
       }
@@ -123,11 +123,12 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
     case ipc::zenoh::EndpointType::SUBSCRIBER:
       switch (info.status) {
         case ipc::zenoh::EndpointInfo::Status::ALIVE:
-          addSubscriber(info);
-          graph_updated = true;
+          if (addSubscriberEndpoint(info)) {
+            graph_updated = true;
+          }
           break;
         case ipc::zenoh::EndpointInfo::Status::DROPPED:
-          removeSubscriber(info);
+          removeSubscriberEndpoint(info);
           graph_updated = true;
           break;
       }
@@ -135,32 +136,10 @@ void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info)
   }
 
   if (graph_updated) {
-    fmt::print("[IPC Graph] - Graph updated!\n");
     if (config_.graph_update_cb) {
       config_.graph_update_cb(info, state_);
     }
   }
-}
-
-auto IpcGraph::getTopicListString() -> std::string {
-  const absl::MutexLock lock(&mutex_);
-  std::stringstream result;
-  size_t max_topic_length = 0;
-  size_t max_type_length = 0;
-
-  // Find the maximum lengths for alignment
-  for (const auto& [topic, type] : state_.topics_to_types_map) {
-    max_topic_length = std::max(topic.length(), max_topic_length);
-    max_type_length = std::max(type.length(), max_type_length);
-  }
-
-  // Create the formatted string
-  for (const auto& [topic, type] : state_.topics_to_types_map) {
-    result << " - " << std::left << std::setw(static_cast<int>(max_topic_length)) << topic
-           << "\tType: " << std::left << std::setw(static_cast<int>(max_type_length)) << type << "\n";
-  }
-
-  return result.str();
 }
 
 auto IpcGraph::getTopicsToTypeMap() const -> TopicsToTypeMap {
@@ -201,8 +180,7 @@ void IpcGraph::refreshConnectionGraph() const {
   }
 }
 
-bool IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
-  // A publisher means this topic is actually offered by someone and should be tracked.
+bool IpcGraph::addPublisherEndpoint(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
   if (!addTopic(info.topic)) {
     // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
     // we will not get another liveliness event for the same publisher and currently will never re-register
@@ -214,37 +192,69 @@ bool IpcGraph::addPublisher(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
   return true;
 }
 
-void IpcGraph::removePublisher(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removePublisherEndpoint(const ipc::zenoh::EndpointInfo& info) {
   auto& publishers = state_.topic_to_publishers_map[info.topic];
   std::erase(publishers, info.session_id);
 
-  // If the last publisher is removed, remove the topic altogether.
-  if (publishers.empty()) {
-    state_.topic_to_publishers_map.erase(info.topic);
+  // If there are publishers left for this topic, no cleanup is needed.
+  if (!publishers.empty()) {
+    return;
+  }
+
+  // If the last publisher is removed, remove the map entry.
+  state_.topic_to_publishers_map.erase(info.topic);
+
+  if (config_.track_topics_based_on_subscribers) {
+    // Cleanup the topic if no publishers or subscribers are left.
+    if (!topicHasAnyEndpoints(info.topic)) {
+      removeTopic(info.topic);
+    }
+  } else {
+    // If we are not tracking topics based on subscribers, we can remove the topic immediately.
     removeTopic(info.topic);
   }
 }
 
-bool IpcGraph::hasPublisher(const std::string& topic) const {  // NOLINT
-  // Any publisher means the topic is offered.
-  return state_.topic_to_publishers_map.find(topic) != state_.topic_to_publishers_map.end();
-}
-
-void IpcGraph::addSubscriber(const ipc::zenoh::EndpointInfo& info) {
-  // We are not tracking topics based on subscribers, but solely on publishers.
-  // Therefore, we do not need to add the topic here.
+bool IpcGraph::addSubscriberEndpoint(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
+  if (config_.track_topics_based_on_subscribers) {
+    if (!addTopic(info.topic)) {
+      // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
+      // we will not get another liveliness event for the same publisher and currently will never re-register
+      // this topic (unless the publisher is restarted or another publisher is added).
+      return false;
+    }
+  }
 
   state_.topic_to_subscribers_map[info.topic].push_back(info.session_id);
+  return true;
 }
 
-void IpcGraph::removeSubscriber(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removeSubscriberEndpoint(const ipc::zenoh::EndpointInfo& info) {
   auto& subscribers = state_.topic_to_subscribers_map[info.topic];
   std::erase(subscribers, info.session_id);
 
-  // If the last subscriber is removed, clean up, but DO NOT remove the topic.
-  if (subscribers.empty()) {
-    state_.topic_to_subscribers_map.erase(info.topic);
+  // If there are subscribers left for this topic, no cleanup is needed.
+  if (!subscribers.empty()) {
+    return;
   }
+
+  // If the last subsriber is removed, remove the map entry.
+  state_.topic_to_subscribers_map.erase(info.topic);
+
+  if (config_.track_topics_based_on_subscribers) {
+    // Cleanup the topic if no publishers or subscribers are left.
+    if (!topicHasAnyEndpoints(info.topic)) {
+      removeTopic(info.topic);
+    }
+  }
+}
+
+bool IpcGraph::topicHasAnyEndpoints(const std::string& topic) const {  // NOLINT
+  auto pub_it = state_.topic_to_publishers_map.find(topic);
+  auto sub_it = state_.topic_to_subscribers_map.find(topic);
+
+  return (pub_it != state_.topic_to_publishers_map.end() && !pub_it->second.empty()) ||
+         (sub_it != state_.topic_to_subscribers_map.end() && !sub_it->second.empty());
 }
 
 bool IpcGraph::addTopic(const std::string& topic_name) {  // NOLINT
@@ -282,7 +292,7 @@ bool IpcGraph::hasTopic(const std::string& topic_name) const {  // NOLINT
   return state_.topics_to_types_map.find(topic_name) != state_.topics_to_types_map.end();
 }
 
-bool IpcGraph::addServiceServer(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
+bool IpcGraph::addServiceServerEndpoint(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
   // A server means this service is actually offered by someone and needs tracking.
   if (!addService(info.topic)) {
     // TODO: This can happen if type retrieval fails. We might want to consider retrying later, since
@@ -297,7 +307,7 @@ bool IpcGraph::addServiceServer(const ipc::zenoh::EndpointInfo& info) {  // NOLI
   return true;
 }
 
-void IpcGraph::removeServiceServer(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removeServiceServerEndpoint(const ipc::zenoh::EndpointInfo& info) {
   auto& servers = state_.services_to_server_map[info.topic];
   std::erase(servers, info.session_id);
 
@@ -308,20 +318,20 @@ void IpcGraph::removeServiceServer(const ipc::zenoh::EndpointInfo& info) {
   }
 }
 
-bool IpcGraph::hasServiceServer(const std::string& service_name) const {  // NOLINT
+bool IpcGraph::hasServiceServerEndPoint(const std::string& service_name) const {  // NOLINT
   // Any server means the service is offered.
   // Note: multiple identical service servers should not exists, but we do not enforce this here.
   return state_.services_to_server_map.find(service_name) != state_.services_to_server_map.end();
 }
 
-void IpcGraph::addServiceClient(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::addServiceClientEndPoint(const ipc::zenoh::EndpointInfo& info) {
   // We are not tracking services based on clients, but solely on servers.
   // Therefore, we do not need to add the service here.
 
   state_.services_to_client_map[info.topic].push_back(info.session_id);
 }
 
-void IpcGraph::removeServiceClient(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::removeServiceClientEndPoint(const ipc::zenoh::EndpointInfo& info) {
   auto& clients = state_.services_to_client_map[info.topic];
   std::erase(clients, info.session_id);
 
@@ -446,7 +456,7 @@ void IpcGraphState::printIpcGraphState() const {
 
   ss << "\n";
 
-  fmt::print("{}", ss.str());
+  fmt::println("{}", ss.str());
 }
 
 [[nodiscard]] auto IpcGraphState::checkConsistency() const -> bool {
@@ -457,10 +467,12 @@ void IpcGraphState::printIpcGraphState() const {
     }
   }
 
-  // Check that every topic to type entry has at least one publisher
+  // Check that every topic to type entry has at least one publisher or subscriber
   for (const auto& [topic, type] : topics_to_types_map) {
-    if (topic_to_publishers_map.find(topic) == topic_to_publishers_map.end() ||
-        topic_to_publishers_map.at(topic).empty()) {
+    if ((topic_to_publishers_map.find(topic) == topic_to_publishers_map.end() ||
+         topic_to_publishers_map.at(topic).empty()) &&
+        (topic_to_subscribers_map.find(topic) == topic_to_subscribers_map.end() ||
+         topic_to_subscribers_map.at(topic).empty())) {
       return false;
     }
   }

@@ -41,21 +41,19 @@ private:
   // Websocket Server Interface //
   ////////////////////////////////
 
-  WsServerInterfacePtr ws_server_;
+  WsInterfacePtr ws_server_;
 
   // Callbacks triggered by WS Server
   // NOLINTBEGIN(readability-identifier-naming)
-  static void callback_Ws_Log(WsServerLogLevel level, char const* msg);
-  void callback_Ws_Subscribe(WsServerChannelId channel_id, const WsServerClientHandle& client_handle);
-  void callback_Ws_Unsubscribe(WsServerChannelId channel_id, const WsServerClientHandle& client_handle);
-  void callback_WsServer_ClientAdvertise(const WsServerClientChannelAd& advertisement,
-                                         const WsServerClientHandle& client_handle);
-  void callback_Ws_ClientUnadvertise(WsServerClientChannelId client_channel_id,
-                                     const WsServerClientHandle& client_handle);
-  void callback_Ws_ClientMessage(const WsServerClientMessage& message,
-                                 const WsServerClientHandle& client_handle);
-  void callback_Ws_ServiceRequest(const WsServerServiceRequest& request,
-                                  const WsServerClientHandle& client_handle);
+  static void callback_Ws_Log(WsLogLevel level, char const* msg);
+  void callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandle& client_handle);
+  void callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle);
+  void callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
+                                   const WsClientHandle& client_handle);
+  void callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
+                                     const WsClientHandle& client_handle);
+  void callback_Ws_ClientMessage(const WsClientMessage& message, const WsClientHandle& client_handle);
+  void callback_Ws_ServiceRequest(const WsServiceRequest& request, const WsClientHandle& client_handle);
 
   void callback_Ws_SubscribeConnectionGraph(bool subscribe);
   // NOLINTEND(readability-identifier-naming)
@@ -86,7 +84,7 @@ private:
                                     std::span<const std::byte> data, const heph::serdes::TypeInfo& type_info);
 
   void callback_Ipc_ServiceResponsesReceived(
-      WsServerServiceId service_id, WsServerServiceCallId call_id, const RawServiceResponses& responses,
+      WsServiceId service_id, WsServiceCallId call_id, const RawServiceResponses& responses,
       std::optional<ClientHandleWithName> client_handle_w_name_opt = std::nullopt);
   // NOLINTEND(readability-identifier-naming)
 };

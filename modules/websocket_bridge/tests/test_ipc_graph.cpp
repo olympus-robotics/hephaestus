@@ -137,7 +137,7 @@ protected:
   }
 };
 
-TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
+TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithoutSubTopicTracking) {
   bool topic_discovered = false;
   bool topic_removed = false;
   bool graph_updated = false;
@@ -161,6 +161,9 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
       graph_updated = true;
     }
   };
+
+  // THIS IS NOT THE DEFAULT BEHAVIOR
+  config.track_topics_based_on_subscribers = false;
 
   startIpcGraph();
 
@@ -296,6 +299,172 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemoval) {
   EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 0);
   EXPECT_FALSE(topic_discovered);
   EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+}
+
+TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithSubTopicTracking) {
+  bool topic_discovered = false;
+  bool topic_removed = false;
+  bool graph_updated = false;
+
+  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+    if (topic == TEST_TOPIC) {
+      topic_discovered = true;
+    }
+  };
+
+  config.topic_removal_cb = [&](const std::string& topic) {
+    if (topic == TEST_TOPIC) {
+      topic_removed = true;
+    }
+  };
+
+  config.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
+    if (info.topic == TEST_TOPIC) {
+      EXPECT_TRUE(state.checkConsistency());
+      state.printIpcGraphState();
+      graph_updated = true;
+    }
+  };
+
+  // THIS IS NOT THE DEFAULT BEHAVIOR
+  config.track_topics_based_on_subscribers = true;
+
+  startIpcGraph();
+
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  auto reset = [&]() {
+    topic_discovered = false;
+    topic_removed = false;
+    graph_updated = false;
+  };
+
+  ASSERT_FALSE(topic_removed);
+  ASSERT_FALSE(topic_discovered);
+  ASSERT_FALSE(graph_updated);
+  ASSERT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  ASSERT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  ASSERT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 0);
+
+  ////////////////
+  // PUBLISHERS //
+  ////////////////
+
+  // ADDING FIRST PUBLISHER
+  createTestPublisher(TEST_TOPIC, TEST_PUBLISHER_1);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Adding the first publisher triggers the discovery event.
+  EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 1);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_TRUE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // ADDING SECOND PUBLISHER
+  createTestPublisher(TEST_TOPIC, TEST_PUBLISHER_2);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Adding a second publisher does not trigger an event.
+  EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 2);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // REMOVING SECOND PUBLISHER
+  pub_map.erase(TEST_PUBLISHER_2 + "|" + TEST_TOPIC);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Removing a publisher that is not the last will not trigger a removal event.
+  EXPECT_EQ(graph->getTopicToPublishersMap()[TEST_TOPIC].size(), 1);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // REMOVING FIRST PUBLISHER
+  pub_map.erase(TEST_PUBLISHER_1 + "|" + TEST_TOPIC);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Removing the last publisher triggers a removal event.
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 0);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_TRUE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+
+  reset();
+
+  ASSERT_FALSE(topic_removed);
+  ASSERT_FALSE(topic_discovered);
+  ASSERT_FALSE(graph_updated);
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 0);
+
+  /////////////////
+  // SUBSCRIBERS //
+  /////////////////
+
+  // ADD FIRST SUBSCRIBER
+  createTestSubscriber(TEST_TOPIC, TEST_SUBSCRIBER_1);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // This will now trigger a discovery event!
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap()[TEST_TOPIC].size(), 1);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_TRUE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // ADDING SECOND SUBSCRIBER
+  createTestSubscriber(TEST_TOPIC, TEST_SUBSCRIBER_2);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Adding a second subscriber does not trigger an event.
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap()[TEST_TOPIC].size(), 2);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // REMOVING SECOND SUBSCRIBER
+  sub_map.erase(TEST_SUBSCRIBER_2 + "|" + TEST_TOPIC);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Removing a subscriber that is not the last will not trigger a removal event.
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap()[TEST_TOPIC].size(), 1);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 1);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_FALSE(topic_removed);
+  EXPECT_TRUE(graph_updated);
+  reset();
+
+  // REMOVING FIRST SUBSCRIBER
+  sub_map.erase(TEST_SUBSCRIBER_1 + "|" + TEST_TOPIC);
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  // Removing the last subscriber does not trigger a removal event.
+  EXPECT_EQ(graph->getTopicToPublishersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicToSubscribersMap().count(TEST_TOPIC), 0);
+  EXPECT_EQ(graph->getTopicsToTypeMap().count(TEST_TOPIC), 0);
+  EXPECT_FALSE(topic_discovered);
+  EXPECT_TRUE(topic_removed);
   EXPECT_TRUE(graph_updated);
   reset();
 }
@@ -493,9 +662,6 @@ TEST_F(IpcGraphTest, GetTopicListString) {
   IpcGraphTest::sleepLongEnoughToSync();
 
   EXPECT_TRUE(topic_discovered);
-
-  auto topic_list = graph->getTopicListString();
-  EXPECT_FALSE(topic_list.empty());
 }
 
 }  // namespace heph::ws::tests

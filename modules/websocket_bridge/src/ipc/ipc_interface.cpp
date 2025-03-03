@@ -176,7 +176,6 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
       RawServiceResponses responses;
 
       try {
-        // TODO(mfehr): This does currently not work / or rather it works, but not asynchronously.
         fmt::println("[IPC Interface] - Sending service request for service '{}' [ASYNC]", topic_config.name);
 
         responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);

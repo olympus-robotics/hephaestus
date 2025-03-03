@@ -24,9 +24,9 @@
 namespace heph::ws {
 
 auto convertIpcRawServiceResponseToWsServiceResponse(
-    WsServerServiceId service_id, WsServerServiceCallId call_id,
-    const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response,
-    WsServerServiceResponse& ws_response) -> bool {
+    WsServiceId service_id, WsServiceCallId call_id,
+    const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response, WsServiceResponse& ws_response)
+    -> bool {
   if (raw_response.value.empty()) {
     return false;
   }
@@ -44,9 +44,9 @@ auto convertIpcRawServiceResponseToWsServiceResponse(
   return true;
 }
 
-auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optional<WsServerChannelAd> {
+auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optional<WsChannelAd> {
   try {
-    WsServerChannelAd channel;
+    WsChannelAd channel;
     channel.id = channel_json.at("id").get<uint32_t>();
     channel.topic = channel_json.at("topic").get<std::string>();
     channel.encoding = channel_json.at("encoding").get<std::string>();
@@ -63,10 +63,9 @@ auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optio
   }
 }
 
-auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
-    -> std::optional<WsServerInfo> {
+auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json) -> std::optional<WsInfo> {
   try {
-    WsServerInfo server_options;
+    WsInfo server_options;
     if (server_options_json.contains("capabilities")) {
       const auto& capabilities_json = server_options_json.at("capabilities");
       if (!capabilities_json.is_array()) {
@@ -89,15 +88,15 @@ auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
   }
 }
 
-auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optional<WsServerServiceAd> {
+auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optional<WsServiceAd> {
   try {
-    WsServerServiceAd service;
+    WsServiceAd service;
     service.id = service_json.at("id").get<uint32_t>();
     service.name = service_json.at("name").get<std::string>();
     service.type = service_json.at("type").get<std::string>();
     if (service_json.contains("request")) {
       const auto& request_json = service_json.at("request");
-      WsServerServiceRequestDefinition request_def;
+      WsServiceRequestDefinition request_def;
       request_def.encoding = request_json.at("encoding").get<std::string>();
       request_def.schemaName = request_json.at("schemaName").get<std::string>();
       request_def.schemaEncoding = request_json.at("schemaEncoding").get<std::string>();
@@ -106,7 +105,7 @@ auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optio
     }
     if (service_json.contains("response")) {
       const auto& response_json = service_json.at("response");
-      WsServerServiceResponseDefinition response_def;
+      WsServiceResponseDefinition response_def;
       response_def.encoding = response_json.at("encoding").get<std::string>();
       response_def.schemaName = response_json.at("schemaName").get<std::string>();
       response_def.schemaEncoding = response_json.at("schemaEncoding").get<std::string>();
@@ -119,8 +118,7 @@ auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optio
   }
 }
 
-auto parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerAdvertisements& ws_server_ads)
-    -> bool {
+auto parseWsAdvertisements(const nlohmann::json& server_txt_msg, WsAdvertisements& ws_server_ads) -> bool {
   try {
     if (!server_txt_msg.contains("op")) {
       return false;
@@ -179,8 +177,7 @@ auto parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerA
   }
 }
 
-auto parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
-                                 WsServerServiceFailure& service_failure) -> bool {
+auto parseWsServiceFailure(const nlohmann::json& server_txt_msg, WsServiceFailure& service_failure) -> bool {
   try {
     if (!server_txt_msg.contains("op") ||
         server_txt_msg.at("op").get<std::string>() != "serviceCallFailure") {

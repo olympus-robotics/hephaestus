@@ -33,7 +33,7 @@ struct Reflector<std::regex> {
 
   static ReflType from(const std::regex& v) {  // NOLINT
     (void)v;
-    // TODO(mfehr): there is currently no nice way to serialize an std::regex because std::regex is lacking
+    // NOTE: there is currently no nice way to serialize an std::regex because std::regex is lacking
     // the API to retreive the original string.
     return ".*";
   }

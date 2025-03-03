@@ -21,13 +21,13 @@
 #include <hephaestus/utils/ws_protocol.h>
 #include <nlohmann/json_fwd.hpp>
 
+using heph::ws::WsAdvertisements;
+using heph::ws::WsChannelId;
+using heph::ws::WsClientBinaryOpCode;
+using heph::ws::WsClientChannelAd;
+using heph::ws::WsClientChannelId;
 using heph::ws::WsClientNoTls;
-using heph::ws::WsServerAdvertisements;
-using heph::ws::WsServerChannelId;
-using heph::ws::WsServerClientBinaryOpCode;
-using heph::ws::WsServerClientChannelAd;
-using heph::ws::WsServerClientChannelId;
-using heph::ws::WsServerSubscriptionId;
+using heph::ws::WsSubscriptionId;
 
 namespace {
 std::atomic<bool> g_abort{ false };  // NOLINT
@@ -37,8 +37,8 @@ void sigintHandler(int signal) {
   g_abort = true;
 }
 
-void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_server_ads,
-                       std::map<WsServerChannelId, WsServerChannelId>& sub_to_pub_channel_map) {
+void handleJsonMessage(const std::string& json_msg, WsAdvertisements& ws_server_ads,
+                       std::map<WsChannelId, WsChannelId>& sub_to_pub_channel_map) {
   (void)sub_to_pub_channel_map;
 
   nlohmann::json msg;
@@ -51,7 +51,7 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   }
 
   // Handle Advertisements
-  if (parseWsServerAdvertisements(msg, ws_server_ads)) {
+  if (parseWsAdvertisements(msg, ws_server_ads)) {
     printAdvertisedTopics(ws_server_ads);
     return;
   }
@@ -59,12 +59,11 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   fmt::println("Received unhandled JSON message: \n'''\n{}\n'''", json_msg);
 }
 
-void handleBinaryMessage(
-    const uint8_t* data, size_t length, WsClientNoTls& client,
-    std::map<WsServerChannelId, WsServerChannelId>& sub_to_pub_channel_map,
-    std::map<WsServerSubscriptionId, WsServerChannelId>& subscription_id_to_channel_id_map) {
+void handleBinaryMessage(const uint8_t* data, size_t length, WsClientNoTls& client,
+                         std::map<WsChannelId, WsChannelId>& sub_to_pub_channel_map,
+                         std::map<WsSubscriptionId, WsChannelId>& subscription_id_to_channel_id_map) {
   if (data == nullptr || length < (1 + 4 + 8)) {  // NOLINT
-    fmt::print("Received invalid message.\n");
+    fmt::println("Received invalid message.");
     g_abort = true;
     return;
   }
@@ -72,8 +71,8 @@ void handleBinaryMessage(
   const uint8_t opcode = data[0];                                 // NOLINT
   const auto subscription_id = foxglove::ReadUint32LE(data + 1);  // NOLINT
 
-  if (opcode != static_cast<uint8_t>(WsServerClientBinaryOpCode::MESSAGE_DATA)) {
-    fmt::print("Received unhandled binary message with op code {}\n", std::to_string(opcode));
+  if (opcode != static_cast<uint8_t>(WsClientBinaryOpCode::MESSAGE_DATA)) {
+    fmt::println("Received unhandled binary message with op code {}", std::to_string(opcode));
     g_abort = true;
     return;
   }
@@ -81,7 +80,7 @@ void handleBinaryMessage(
   // Find the server-side channel ID for this subscription ID.
   auto sub_id_it = subscription_id_to_channel_id_map.find(subscription_id);
   if (sub_id_it == subscription_id_to_channel_id_map.end()) {
-    fmt::print("No matching channel ID found for subscription ID {}\n", subscription_id);
+    fmt::println("No matching channel ID found for subscription ID {}", subscription_id);
     g_abort = true;
     return;
   }
@@ -90,7 +89,7 @@ void handleBinaryMessage(
   // Get the advertised client-side channel ID for this server-side channel ID.
   auto channel_it = sub_to_pub_channel_map.find(server_channel_id);
   if (channel_it == sub_to_pub_channel_map.end()) {
-    fmt::print("No matching client channel ID found for server channel ID {}\n", server_channel_id);
+    fmt::println("No matching client channel ID found for server channel ID {}", server_channel_id);
     g_abort = true;
     return;
   }
@@ -121,10 +120,10 @@ auto main(int argc, char** argv) -> int try {
   const std::string url = argv[1];  // NOLINT
   WsClientNoTls client;
 
-  WsServerAdvertisements ws_server_ads;
+  WsAdvertisements ws_server_ads;
 
-  std::map<WsServerChannelId, WsServerChannelId> sub_to_pub_channel_map;
-  std::map<WsServerSubscriptionId, WsServerChannelId> subscription_id_to_channel_id_map;
+  std::map<WsChannelId, WsChannelId> sub_to_pub_channel_map;
+  std::map<WsSubscriptionId, WsChannelId> subscription_id_to_channel_id_map;
 
   // NOLINTNEXTLINE
   const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
@@ -143,7 +142,7 @@ auto main(int argc, char** argv) -> int try {
   };
 
   if (std::signal(SIGINT, sigintHandler) == SIG_ERR) {
-    fmt::print("Error setting up signal handler.\n");
+    fmt::println("Error setting up signal handler.");
     return 1;
   }
 
@@ -166,9 +165,9 @@ auto main(int argc, char** argv) -> int try {
     std::uniform_int_distribution<uint32_t> dis(1, 100);  // NOLINT
     const auto mirror_channel_offset = static_cast<uint32_t>(dis(gen) * 100);
 
-    std::vector<WsServerClientChannelAd> client_ads;
+    std::vector<WsClientChannelAd> client_ads;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {
-      client_ads.emplace_back(WsServerClientChannelAd{
+      client_ads.emplace_back(WsClientChannelAd{
           .channelId = channel_id + mirror_channel_offset,
           .topic = "mirror/" + channel.topic,
           .encoding = channel.encoding,
@@ -186,8 +185,8 @@ auto main(int argc, char** argv) -> int try {
 
   fmt::println("Subscribe to all advertised server-channels, so we can start mirroring...");
   {
-    std::vector<std::pair<WsServerSubscriptionId, WsServerChannelId>> subscriptions;
-    WsServerSubscriptionId subscriber_id = 1;
+    std::vector<std::pair<WsSubscriptionId, WsChannelId>> subscriptions;
+    WsSubscriptionId subscriber_id = 1;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {
       subscriptions.emplace_back(subscriber_id, channel_id);
       subscription_id_to_channel_id_map[subscriber_id] = channel_id;
@@ -206,7 +205,7 @@ auto main(int argc, char** argv) -> int try {
 
   fmt::println("Unsubscribing from all topics...");
   {
-    std::vector<WsServerSubscriptionId> subscription_ids;
+    std::vector<WsSubscriptionId> subscription_ids;
     subscription_ids.reserve(subscription_id_to_channel_id_map.size());
     for (const auto& [subscription_id, channel_id] : subscription_id_to_channel_id_map) {
       subscription_ids.push_back(subscription_id);
@@ -216,7 +215,7 @@ auto main(int argc, char** argv) -> int try {
 
   fmt::println("Unadvertising all client-side topics...");
   {
-    std::vector<WsServerClientChannelId> channel_ids;
+    std::vector<WsClientChannelId> channel_ids;
     channel_ids.reserve(sub_to_pub_channel_map.size());
     for (const auto& [_, pub_channel_id] : sub_to_pub_channel_map) {
       channel_ids.push_back(pub_channel_id);
@@ -229,7 +228,7 @@ auto main(int argc, char** argv) -> int try {
   fmt::println("Done.");
   return 0;
 } catch (const std::exception& e) {
-  fmt::print("Exception: {}\n", e.what());
+  fmt::println("Exception: {}", e.what());
   return 1;
 }
 

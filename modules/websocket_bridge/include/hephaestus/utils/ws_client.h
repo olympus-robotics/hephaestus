@@ -26,12 +26,12 @@ struct ServiceCallState {
   std::chrono::steady_clock::time_point dispatch_time;
   std::chrono::steady_clock::time_point response_time;
 
-  std::optional<WsServerServiceResponse> response;
+  std::optional<WsServiceResponse> response;
   std::string error_message;
 
   explicit ServiceCallState(uint32_t call_id);
 
-  auto receiveResponse(const WsServerServiceResponse& service_response, WsServerAdvertisements& ws_server_ads)
+  auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads)
       -> std::optional<std::unique_ptr<google::protobuf::Message>>;
 
   void receiveFailureResponse(const std::string& error_msg);
@@ -51,10 +51,10 @@ using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
 
 void printServiceCallStateMap(ServiceCallStateMap& state);
 
-void printAdvertisedServices(const WsServerAdvertisements& ws_server_ads);
+void printAdvertisedServices(const WsAdvertisements& ws_server_ads);
 
-void printAdvertisedTopics(const WsServerAdvertisements& ws_server_ads);
+void printAdvertisedTopics(const WsAdvertisements& ws_server_ads);
 
-void printClientChannelAds(const std::vector<WsServerClientChannelAd>& client_ads);
+void printClientChannelAds(const std::vector<WsClientChannelAd>& client_ads);
 
 }  // namespace heph::ws
