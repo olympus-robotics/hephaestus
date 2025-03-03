@@ -268,7 +268,7 @@ add_cmake_dependency(
   VERSION ${WEBSOCKETPP_VERSION}
   GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
   GIT_TAG ${WEBSOCKETPP_VERSION}
-  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DASIO_STANDALONE=ON -DENABLE_CPP11=ON
+  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
 )
 
 # --------------------------------------------------------------------------------------------------
