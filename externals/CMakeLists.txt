@@ -46,6 +46,11 @@ if(ws_protocol IN_LIST EXTERNAL_PROJECTS_LIST)
   list(APPEND EXTERNAL_PROJECTS_LIST ${WS_PROTOCOL_DEPENDS})
 endif()
 
+if(websocketpp IN_LIST EXTERNAL_PROJECTS_LIST)
+  set(WEBSOCKETPP_DEPENDS asio)
+  list(APPEND EXTERNAL_PROJECTS_LIST ${WEBSOCKETPP_DEPENDS})
+endif()
+
 # --------------------------------------------------------------------------------------------------
 # zenoh
 
@@ -255,6 +260,18 @@ add_cmake_dependency(
 )
 
 # --------------------------------------------------------------------------------------------------
+# asio
+set(ASIO_VERSION 1.28.0)  # Use the latest stable version
+add_cmake_dependency(
+  NAME asio
+  VERSION ${ASIO_VERSION}
+  GIT_REPOSITORY "https://github.com/chriskohlhoff/asio.git"
+  GIT_TAG asio-${ASIO_VERSION}
+  CMAKE_ARGS -DASIO_STANDALONE=ON -DASIO_NO_DEPRECATED=ON
+)
+
+
+# --------------------------------------------------------------------------------------------------
 # websocketpp
 set(WEBSOCKETPP_VERSION 0.8.2)
 add_cmake_dependency(
@@ -262,7 +279,7 @@ add_cmake_dependency(
   VERSION ${WEBSOCKETPP_VERSION}
   GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
   GIT_TAG ${WEBSOCKETPP_VERSION}
-  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
+  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DASIO_STANDALONE=ON -DENABLE_CPP11=ON
 )
 
 # --------------------------------------------------------------------------------------------------
