@@ -30,7 +30,6 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 #include <hephaestus/telemetry/log.h>
-#include <magic_enum.hpp>
 
 #include "hephaestus/ipc/ipc_graph.h"
 #include "hephaestus/ipc/ipc_interface.h"
