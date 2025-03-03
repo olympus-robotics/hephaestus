@@ -67,12 +67,13 @@ class IpcGraph {
 
     + callback_EndPointInfoUpdate()
 
-    + add/remove/hasPublisher()
-    + add/remove/hasSubscriber()
+    + add/removePublisherEndpoint()
+    + add/removeSubscriberEndpoint()
+    + topicHasAnyEndpoint()
     + add/remove/hasTopic()
 
-    + add/remove/hasServiceServer()
-    + add/remove/hasServiceClient()
+    + add/remove/hasServiceServerEndpoint()
+    + add/remove/hasServiceClientEndpoint()
     + add/remove/hasService()
 }
 
@@ -119,7 +120,7 @@ WsBridge --> Foxglove WebSocket Server
 
 ## Test Clients
 
-### Test Client - Services
+### Test Client - Services - C++
 
 This client tests the websocket bridge by checking the advertised services and then calling the first one many times while tracking the response times.
 
@@ -127,9 +128,20 @@ This client tests the websocket bridge by checking the advertised services and t
 bazel run //modules/websocket_bridge:test_client__services ws://localhost:8765
 ```
 
-### Test Client - Topics
+### Test Client - Topics - C++
 This client tests the websocket bridge by subscribing to all topics and then advertising mirror topics and pinging back the received messages to the bridge.
 
 ```bash
 bazel run //modules/websocket_bridge:test_client__topics ws://localhost:8765
 ```
+
+### Foxglove Studio
+
+1. Open [Foxglove Studio](https://foxglove.dev/download)
+2. Add a WebSocket connection
+3. Connect to ws://localhost:8765
+
+Note: Service Calls and client-side topic publishing are not supported in Foxglove Studio with protobuf yet.
+
+
+
