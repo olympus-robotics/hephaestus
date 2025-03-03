@@ -4,12 +4,13 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <unordered_map>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/telemetry/log.h>
 
 #include "hephaestus/utils/ws_protocol.h"
@@ -59,8 +60,8 @@ private:
   // - Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
 public:
   auto hasWsChannelWithClients(const WsServerChannelId& channel_id) const -> bool;
-  void addWsChannelToClientMapping(const WsServerChannelId& channel_id, WsServerClientHandle client_handle,
-                                   const std::string& client_name);
+  void addWsChannelToClientMapping(const WsServerChannelId& channel_id,
+                                   const WsServerClientHandle& client_handle, const std::string& client_name);
   void removeWsChannelToClientMapping(const WsServerChannelId& channel_id);
   void removeWsChannelToClientMapping(const WsServerChannelId& channel_id,
                                       const WsServerClientHandle& client_handle);
@@ -155,7 +156,8 @@ private:
 public:
   auto hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const -> bool;
   void addClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id,
-                                       const WsServerClientHandle& client_handle, const std::string& client_name);
+                                       const WsServerClientHandle& client_handle,
+                                       const std::string& client_name);
   void removeClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id);
   auto getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const
       -> std::optional<ClientHandleWithName>;

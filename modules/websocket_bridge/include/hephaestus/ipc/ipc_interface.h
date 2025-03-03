@@ -4,15 +4,20 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <future>
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <absl/log/check.h>
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <hephaestus/ipc/topic.h>
 #include <hephaestus/ipc/zenoh/raw_publisher.h>
 #include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/service.h>
@@ -37,21 +42,18 @@ public:
   void stop();
 
   // Subsribers
-  /////////////
   [[nodiscard]] auto hasSubscriber(const std::string& topic) const -> bool;
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
                      const TopicSubscriberWithTypeCallback& subscriber_cb);
   void removeSubscriber(const std::string& topic);
 
   // Publishers
-  /////////////
   [[nodiscard]] auto hasPublisher(const std::string& topic) const -> bool;
   void addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info);
   void removePublisher(const std::string& topic);
   [[nodiscard]] auto publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool;
 
   // Services
-  ///////////
   [[nodiscard]] auto callService(uint32_t call_id, const ipc::TopicConfig& topic_config,
                                  std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
       -> RawServiceResponses;

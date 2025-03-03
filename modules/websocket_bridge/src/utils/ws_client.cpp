@@ -4,14 +4,36 @@
 
 #include "hephaestus/utils/ws_client.h"
 
+#include <algorithm>
+#include <chrono>
+#include <csignal>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <fmt/base.h>
+#include <fmt/format.h>
+#include <foxglove/websocket/common.hpp>
+#include <google/protobuf/message.h>
+#include <hephaestus/utils/protobuf_serdes.h>
+#include <hephaestus/utils/ws_protocol.h>
+
 namespace heph::ws {
 
 ServiceCallState::ServiceCallState(uint32_t call_id)
   : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
 }
 
-std::optional<std::unique_ptr<google::protobuf::Message>> ServiceCallState::receiveResponse(
-    const WsServerServiceResponse& service_response, WsServerAdvertisements& ws_server_ads) {
+auto ServiceCallState::receiveResponse(const WsServerServiceResponse& service_response,
+                                       WsServerAdvertisements& ws_server_ads)
+    -> std::optional<std::unique_ptr<google::protobuf::Message>> {
   if (service_response.callId != call_id) {
     heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", call_id, "received_call_id",
               service_response.callId);
@@ -55,7 +77,7 @@ void ServiceCallState::receiveFailureResponse(const std::string& error_msg) {
   status = Status::FAILED;
 }
 
-bool ServiceCallState::hasResponse() const {
+auto ServiceCallState::hasResponse() const -> bool {
   const bool has_response = (status == Status::SUCCESS || status == Status::FAILED);
 
   if (has_response && (!response.has_value() && error_message.empty())) {
@@ -127,9 +149,10 @@ void printServiceCallStateMap(ServiceCallStateMap& state) {
       const std::string success_or_fail_str = service_call_state.wasSuccessful() ? "✔" : "✖";
       const std::string status_str = service_call_state.hasResponse() ? success_or_fail_str : "∅";
 
+      auto duration = service_call_state.getDurationMs();
       fmt::print("{:<{}}|",
                  fmt::format(" {:03}  {:1}  {:4}ms ", call_id, status_str,
-                             service_call_state.getDurationMs().value().count()),
+                             duration.has_value() ? duration.value().count() : 0),
                  CELL_CONTENT_WIDTH);
 
       ++it;

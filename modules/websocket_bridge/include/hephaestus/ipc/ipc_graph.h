@@ -4,17 +4,20 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-// #define ZENOHCXX_ZENOHC
-
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <hephaestus/ipc/topic_database.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
+#include <hephaestus/ipc/zenoh/session.h>
+#include <hephaestus/serdes/type_info.h>
 
 namespace heph::ws {
 
@@ -113,9 +116,11 @@ private:
   // Service Server / Client tracking
   ///////////////////////////////////
 
-  [[nodiscard]] bool addServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool addServiceServer(const ipc::zenoh::EndpointInfo& info)
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeServiceServer(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  [[nodiscard]] bool hasServiceServer(const std::string& service_name) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] bool hasServiceServer(const std::string& service_name) const
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void addServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void removeServiceClient(const ipc::zenoh::EndpointInfo& info) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);

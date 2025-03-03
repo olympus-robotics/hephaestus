@@ -4,10 +4,23 @@
 
 #include "hephaestus/websocket_bridge/bridge_state.h"
 
+#include <cstdint>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
+#include <absl/synchronization/mutex.h>
+#include <fmt/base.h>
+#include <hephaestus/telemetry/log.h>
+
+#include "hephaestus/utils/ws_protocol.h"
+
 namespace heph::ws {
 
 auto WsBridgeState::getIpcTopicForWsChannel(const WsServerChannelId& channel_id) const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_t2c_);
+  const absl::ReaderMutexLock lock(&mutex_t2c_);
   auto it = channel_to_topic_.find(channel_id);
   if (it == channel_to_topic_.end()) {
     heph::log(heph::ERROR, "[WS Bridge] - Could not convert channel id to topic. Something went wrong!",
@@ -18,7 +31,7 @@ auto WsBridgeState::getIpcTopicForWsChannel(const WsServerChannelId& channel_id)
 }
 
 auto WsBridgeState::getWsChannelForIpcTopic(const std::string& topic) const -> WsServerChannelId {
-  absl::ReaderMutexLock lock(&mutex_t2c_);
+  const absl::ReaderMutexLock lock(&mutex_t2c_);
   auto it = topic_to_channel_.find(topic);
   if (it == topic_to_channel_.end()) {
     heph::log(heph::ERROR, "[WS Bridge] - Could not find channel id for topic. Something went wrong!",
@@ -30,30 +43,30 @@ auto WsBridgeState::getWsChannelForIpcTopic(const std::string& topic) const -> W
 
 void WsBridgeState::addWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id,
                                                   const std::string& topic) {
-  absl::WriterMutexLock lock(&mutex_t2c_);
+  const absl::WriterMutexLock lock(&mutex_t2c_);
   channel_to_topic_[channel_id] = topic;
   topic_to_channel_[topic] = channel_id;
 }
 
 void WsBridgeState::removeWsChannelToIpcTopicMapping(const WsServerChannelId& channel_id,
                                                      const std::string& topic) {
-  absl::WriterMutexLock lock(&mutex_t2c_);
+  const absl::WriterMutexLock lock(&mutex_t2c_);
   channel_to_topic_.erase(channel_id);
   topic_to_channel_.erase(topic);
 }
 
 auto WsBridgeState::hasWsChannelMapping(const WsServerChannelId& channel_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_t2c_);
+  const absl::ReaderMutexLock lock(&mutex_t2c_);
   return channel_to_topic_.find(channel_id) != channel_to_topic_.end();
 }
 
 auto WsBridgeState::hasIpcTopicMapping(const std::string& topic) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_t2c_);
+  const absl::ReaderMutexLock lock(&mutex_t2c_);
   return topic_to_channel_.find(topic) != topic_to_channel_.end();
 }
 
 auto WsBridgeState::hasWsChannelWithClients(const WsServerChannelId& channel_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_c2c_);
+  const absl::ReaderMutexLock lock(&mutex_c2c_);
   auto it = channel_to_client_map_.find(channel_id);
   const bool channel_is_in_map = it != channel_to_client_map_.end();
   const bool channel_has_clients = channel_is_in_map && !it->second.empty();
@@ -65,9 +78,9 @@ auto WsBridgeState::hasWsChannelWithClients(const WsServerChannelId& channel_id)
 }
 
 void WsBridgeState::addWsChannelToClientMapping(const WsServerChannelId& channel_id,
-                                                WsServerClientHandle client_handle,
+                                                const WsServerClientHandle& client_handle,
                                                 const std::string& client_name) {
-  absl::WriterMutexLock lock(&mutex_c2c_);
+  const absl::WriterMutexLock lock(&mutex_c2c_);
   channel_to_client_map_[channel_id].emplace(client_handle, client_name);
 
   if (client_handle.expired()) {
@@ -78,13 +91,13 @@ void WsBridgeState::addWsChannelToClientMapping(const WsServerChannelId& channel
 }
 
 void WsBridgeState::removeWsChannelToClientMapping(const WsServerChannelId& channel_id) {
-  absl::WriterMutexLock lock(&mutex_c2c_);
+  const absl::WriterMutexLock lock(&mutex_c2c_);
   channel_to_client_map_.erase(channel_id);
 }
 
 void WsBridgeState::removeWsChannelToClientMapping(const WsServerChannelId& channel_id,
                                                    const WsServerClientHandle& client_handle) {
-  absl::WriterMutexLock lock(&mutex_c2c_);
+  const absl::WriterMutexLock lock(&mutex_c2c_);
   auto it = channel_to_client_map_.find(channel_id);
   if (it != channel_to_client_map_.end()) {
     auto& clients = it->second;
@@ -101,9 +114,9 @@ void WsBridgeState::removeWsChannelToClientMapping(const WsServerChannelId& chan
   cleanUpChannelToClientMapping();
 }
 
-auto
-WsBridgeState::getClientsForWsChannel(const WsServerChannelId& channel_id) const -> std::optional<WsServerClientHandleSet> {
-  absl::ReaderMutexLock lock(&mutex_c2c_);
+auto WsBridgeState::getClientsForWsChannel(const WsServerChannelId& channel_id) const
+    -> std::optional<WsServerClientHandleSet> {
+  const absl::ReaderMutexLock lock(&mutex_c2c_);
   auto it = channel_to_client_map_.find(channel_id);
   if (it == channel_to_client_map_.end()) {
     return std::nullopt;
@@ -148,7 +161,7 @@ void WsBridgeState::printBridgeState() const {
 auto WsBridgeState::checkConsistency() const -> bool {
   bool consistent = true;
   {
-    absl::ReaderMutexLock lock(&mutex_t2c_);
+    const absl::ReaderMutexLock lock(&mutex_t2c_);
     // Check channel -> topic consistency
     for (const auto& [channel, topic] : channel_to_topic_) {
       auto it = topic_to_channel_.find(topic);
@@ -172,7 +185,7 @@ auto WsBridgeState::checkConsistency() const -> bool {
   }
 
   {
-    absl::ReaderMutexLock lock(&mutex_c2c_);
+    const absl::ReaderMutexLock lock(&mutex_c2c_);
     // Check for channels with empty client sets
     for (const auto& [channel, clients] : channel_to_client_map_) {
       if (clients.empty()) {
@@ -183,7 +196,7 @@ auto WsBridgeState::checkConsistency() const -> bool {
   }
 
   {
-    absl::ReaderMutexLock lock(&mutex_s2s_);
+    const absl::ReaderMutexLock lock(&mutex_s2s_);
     // Check service id -> service name consistency
     for (const auto& [service_id, service_name] : service_id_to_service_name_map_) {
       auto it = service_name_to_service_id_map_.find(service_name);
@@ -210,7 +223,7 @@ auto WsBridgeState::checkConsistency() const -> bool {
 
   {
     // Check client_channel -> ipc_topic consistency
-    absl::ReaderMutexLock lock(&mutex_cc2t_);
+    const absl::ReaderMutexLock lock(&mutex_cc2t_);
     for (const auto& [client_channel_id, topic] : client_channel_to_topic_) {
       auto it = topic_to_client_channels_.find(topic);
       if (it == topic_to_client_channels_.end() || it->second.find(client_channel_id) == it->second.end()) {
@@ -240,7 +253,7 @@ auto WsBridgeState::checkConsistency() const -> bool {
 }
 
 auto WsBridgeState::getIpcServiceForWsService(const WsServerServiceId& service_id) const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_s2s_);
+  const absl::ReaderMutexLock lock(&mutex_s2s_);
   auto it = service_id_to_service_name_map_.find(service_id);
   if (it == service_id_to_service_name_map_.end()) {
     heph::log(heph::ERROR,
@@ -252,7 +265,7 @@ auto WsBridgeState::getIpcServiceForWsService(const WsServerServiceId& service_i
 }
 
 auto WsBridgeState::getWsServiceForIpcService(const std::string& service_name) const -> WsServerChannelId {
-  absl::ReaderMutexLock lock(&mutex_s2s_);
+  const absl::ReaderMutexLock lock(&mutex_s2s_);
   auto it = service_name_to_service_id_map_.find(service_name);
   if (it == service_name_to_service_id_map_.end()) {
     heph::log(heph::ERROR, "[WS Bridge] - Could not find service id for service name. Something went wrong!",
@@ -264,36 +277,37 @@ auto WsBridgeState::getWsServiceForIpcService(const std::string& service_name) c
 
 void WsBridgeState::addWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
                                                     const std::string& service_name) {
-  absl::WriterMutexLock lock(&mutex_s2s_);
+  const absl::WriterMutexLock lock(&mutex_s2s_);
   service_id_to_service_name_map_[service_id] = service_name;
   service_name_to_service_id_map_[service_name] = service_id;
 }
 
 void WsBridgeState::removeWsServiceToIpcServiceMapping(const WsServerServiceId& service_id,
                                                        const std::string& service_name) {
-  absl::WriterMutexLock lock(&mutex_s2s_);
+  const absl::WriterMutexLock lock(&mutex_s2s_);
   service_id_to_service_name_map_.erase(service_id);
   service_name_to_service_id_map_.erase(service_name);
 }
 
 auto WsBridgeState::hasWsServiceMapping(const WsServerChannelId& service_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_s2s_);
+  const absl::ReaderMutexLock lock(&mutex_s2s_);
   return service_id_to_service_name_map_.find(service_id) != service_id_to_service_name_map_.end();
 }
 
 auto WsBridgeState::hasIpcServiceMapping(const std::string& service_name) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_s2s_);
+  const absl::ReaderMutexLock lock(&mutex_s2s_);
   return service_name_to_service_id_map_.find(service_name) != service_name_to_service_id_map_.end();
 }
 
 auto WsBridgeState::hasCallIdToClientMapping(const uint32_t& call_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_sc2c_);
+  const absl::ReaderMutexLock lock(&mutex_sc2c_);
   return call_id_to_client_map_.find(call_id) != call_id_to_client_map_.end();
 }
 
-void WsBridgeState::addCallIdToClientMapping(const uint32_t& call_id, const WsServerClientHandle& client_handle,
+void WsBridgeState::addCallIdToClientMapping(const uint32_t& call_id,
+                                             const WsServerClientHandle& client_handle,
                                              const std::string& client_name) {
-  absl::WriterMutexLock lock(&mutex_sc2c_);
+  const absl::WriterMutexLock lock(&mutex_sc2c_);
   call_id_to_client_map_[call_id] = { client_handle, client_name };
 
   if (client_handle.expired()) {
@@ -304,12 +318,12 @@ void WsBridgeState::addCallIdToClientMapping(const uint32_t& call_id, const WsSe
 }
 
 void WsBridgeState::removeCallIdToClientMapping(const uint32_t& call_id) {
-  absl::WriterMutexLock lock(&mutex_sc2c_);
+  const absl::WriterMutexLock lock(&mutex_sc2c_);
   call_id_to_client_map_.erase(call_id);
 }
 
 auto WsBridgeState::getClientForCallId(const uint32_t& call_id) const -> std::optional<ClientHandleWithName> {
-  absl::ReaderMutexLock lock(&mutex_sc2c_);
+  const absl::ReaderMutexLock lock(&mutex_sc2c_);
   auto it = call_id_to_client_map_.find(call_id);
   if (it == call_id_to_client_map_.end()) {
     return std::nullopt;
@@ -335,12 +349,13 @@ void WsBridgeState::cleanUpCallIdToClientMapping() {
 }
 
 auto WsBridgeState::hasClientChannelsForTopic(const std::string& topic) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
   return topic_to_client_channels_.find(topic) != topic_to_client_channels_.end();
 }
 
-auto WsBridgeState::getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
+auto WsBridgeState::getTopicForClientChannel(const WsServerClientChannelId& client_channel_id) const
+    -> std::string {
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
   auto it = client_channel_to_topic_.find(client_channel_id);
   if (it == client_channel_to_topic_.end()) {
     heph::log(heph::ERROR,
@@ -352,7 +367,7 @@ auto WsBridgeState::getTopicForClientChannel(const WsServerClientChannelId& clie
 }
 
 auto WsBridgeState::getClientChannelsForTopic(const std::string& topic) const -> WsServerClientChannelIdSet {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
   auto it = topic_to_client_channels_.find(topic);
   if (it == topic_to_client_channels_.end()) {
     heph::log(heph::ERROR,
@@ -365,7 +380,7 @@ auto WsBridgeState::getClientChannelsForTopic(const std::string& topic) const ->
 
 void WsBridgeState::addClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id,
                                                    const std::string& topic) {
-  absl::WriterMutexLock lock(&mutex_cc2t_);
+  const absl::WriterMutexLock lock(&mutex_cc2t_);
 
   auto it = client_channel_to_topic_.find(client_channel_id);
   if (it != client_channel_to_topic_.end()) {
@@ -387,7 +402,7 @@ void WsBridgeState::addClientChannelToTopicMapping(const WsServerClientChannelId
 }
 
 void WsBridgeState::removeClientChannelToTopicMapping(const WsServerClientChannelId& client_channel_id) {
-  absl::WriterMutexLock lock(&mutex_cc2t_);
+  const absl::WriterMutexLock lock(&mutex_cc2t_);
   auto it = client_channel_to_topic_.find(client_channel_id);
   if (it != client_channel_to_topic_.end()) {
     const std::string topic = it->second;
@@ -407,18 +422,19 @@ void WsBridgeState::removeClientChannelToTopicMapping(const WsServerClientChanne
 }
 
 auto WsBridgeState::hasClientChannelMapping(const WsServerClientChannelId& client_channel_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
   return client_channel_to_topic_.find(client_channel_id) != client_channel_to_topic_.end();
 }
 
 auto WsBridgeState::hasTopicToClientChannelMapping(const std::string& topic) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
   auto it = topic_to_client_channels_.find(topic);
   return it != topic_to_client_channels_.end() && !it->second.empty();
 }
 
-auto WsBridgeState::hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const -> bool {
-  absl::ReaderMutexLock lock(&mutex_cc2c_);
+auto WsBridgeState::hasClientForClientChannel(const WsServerClientChannelId& client_channel_id) const
+    -> bool {
+  const absl::ReaderMutexLock lock(&mutex_cc2c_);
   auto it = client_channel_to_client_map_.find(client_channel_id);
   const bool channel_is_in_map = it != client_channel_to_client_map_.end();
 
@@ -434,22 +450,22 @@ auto WsBridgeState::hasClientForClientChannel(const WsServerClientChannelId& cli
 void WsBridgeState::addClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id,
                                                     const WsServerClientHandle& client_handle,
                                                     const std::string& client_name) {
-  absl::WriterMutexLock lock(&mutex_cc2c_);
+  const absl::WriterMutexLock lock(&mutex_cc2c_);
   client_channel_to_client_map_[client_channel_id] = { client_handle, client_name };
 
   cleanUpClientChannelToClientMapping();
 }
 
 void WsBridgeState::removeClientChannelToClientMapping(const WsServerClientChannelId& client_channel_id) {
-  absl::WriterMutexLock lock(&mutex_cc2c_);
+  const absl::WriterMutexLock lock(&mutex_cc2c_);
   client_channel_to_client_map_.erase(client_channel_id);
 
   cleanUpClientChannelToClientMapping();
 }
 
-auto
-WsBridgeState::getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const -> std::optional<ClientHandleWithName> {
-  absl::ReaderMutexLock lock(&mutex_cc2c_);
+auto WsBridgeState::getClientForClientChannel(const WsServerClientChannelId& client_channel_id) const
+    -> std::optional<ClientHandleWithName> {
+  const absl::ReaderMutexLock lock(&mutex_cc2c_);
   auto it = client_channel_to_client_map_.find(client_channel_id);
   if (it == client_channel_to_client_map_.end()) {
     return std::nullopt;
@@ -508,8 +524,8 @@ auto WsBridgeState::toString() const -> std::string {
 }
 
 auto WsBridgeState::topicChannelMappingToString() const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_t2c_);
-  absl::ReaderMutexLock second_lock(&mutex_c2c_);
+  const absl::ReaderMutexLock lock(&mutex_t2c_);
+  const absl::ReaderMutexLock second_lock(&mutex_c2c_);
 
   std::ostringstream oss;
   oss << "  ADVERTISED TOPICS\n";
@@ -535,7 +551,7 @@ auto WsBridgeState::topicChannelMappingToString() const -> std::string {
 }
 
 auto WsBridgeState::servicMappingToString() const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_s2s_);
+  const absl::ReaderMutexLock lock(&mutex_s2s_);
   std::ostringstream oss;
   oss << "  ADVERTISED SERVICES\n";
 
@@ -551,7 +567,7 @@ auto WsBridgeState::servicMappingToString() const -> std::string {
 }
 
 auto WsBridgeState::callIdToClientMappingToString() const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_sc2c_);
+  const absl::ReaderMutexLock lock(&mutex_sc2c_);
   std::ostringstream oss;
   oss << "  ACTIVE SERVICE CALLS\n";
 
@@ -568,8 +584,8 @@ auto WsBridgeState::callIdToClientMappingToString() const -> std::string {
 }
 
 auto WsBridgeState::clientChannelMappingToString() const -> std::string {
-  absl::ReaderMutexLock lock(&mutex_cc2t_);
-  absl::ReaderMutexLock second_lock(&mutex_cc2c_);
+  const absl::ReaderMutexLock lock(&mutex_cc2t_);
+  const absl::ReaderMutexLock second_lock(&mutex_cc2c_);
 
   std::ostringstream oss;
   oss << "  CLIENT ADVERTISED TOPICS\n";

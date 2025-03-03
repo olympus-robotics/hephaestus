@@ -1,26 +1,27 @@
 #include <atomic>
+#include <chrono>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
+#include <exception>
+#include <map>
+#include <memory>
+#include <random>
+#include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include <fmt/chrono.h>
-#include <fmt/core.h>
-#include <foxglove/websocket/base64.hpp>
-#include <foxglove/websocket/common.hpp>
+#include <fmt/base.h>
 #include <foxglove/websocket/serialization.hpp>
-#include <foxglove/websocket/websocket_client.hpp>
-#include <google/protobuf/util/json_util.h>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/utils/protobuf_serdes.h>
-#include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
 #include <hephaestus/utils/ws_client.h>
 #include <hephaestus/utils/ws_protocol.h>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
-using namespace std::chrono_literals;
-using heph::ws::WsClient;
+using heph::ws::WsClientNoTls;
 using heph::ws::WsServerAdvertisements;
 using heph::ws::WsServerChannelId;
 using heph::ws::WsServerClientBinaryOpCode;
@@ -59,7 +60,7 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
 }
 
 void handleBinaryMessage(
-    const uint8_t* data, size_t length, WsClient& client,
+    const uint8_t* data, size_t length, WsClientNoTls& client,
     std::map<WsServerChannelId, WsServerChannelId>& sub_to_pub_channel_map,
     std::map<WsServerSubscriptionId, WsServerChannelId>& subscription_id_to_channel_id_map) {
   if (data == nullptr || length < (1 + 4 + 8)) {  // NOLINT
@@ -104,7 +105,7 @@ void handleBinaryMessage(
 
 }  // namespace
 
-auto main(int argc, char** argv) -> int {
+auto main(int argc, char** argv) -> int try {
   const heph::utils::StackTrace stack_trace;
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
@@ -114,7 +115,7 @@ auto main(int argc, char** argv) -> int {
   }
 
   const std::string url = argv[1];  // NOLINT
-  WsClient client;
+  WsClientNoTls client;
 
   WsServerAdvertisements ws_server_ads;
 
@@ -149,9 +150,9 @@ auto main(int argc, char** argv) -> int {
   client.connect(url, on_open_handler, on_close_handler);
 
   fmt::println("Waiting for topics to be advertised...");
-  std::this_thread::sleep_for(1s);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   while (ws_server_ads.channels.empty() && !g_abort) {
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
   fmt::println("Advertise a client-side topic for each server-side topic, just with the prefix: 'mirror/'");
@@ -194,7 +195,7 @@ auto main(int argc, char** argv) -> int {
 
   // MAIN LOOP
   fmt::println("Mirroring topics until Ctrl-C...");
-  constexpr auto SLEEP_DURATION_MS = 10ms;
+  constexpr auto SLEEP_DURATION_MS = std::chrono::milliseconds(10);
   while (!g_abort) {
     std::this_thread::sleep_for(SLEEP_DURATION_MS);
   }
@@ -223,4 +224,7 @@ auto main(int argc, char** argv) -> int {
   client.close();
   fmt::println("Done.");
   return 0;
+} catch (const std::exception& e) {
+  fmt::print("Exception: {}\n", e.what());
+  return 1;
 }

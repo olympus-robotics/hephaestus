@@ -4,24 +4,42 @@
 #include <csignal>
 #include <cstdint>
 #include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <shared_mutex>
+#include <string>
+#include <vector>
 
-#include <fmt/chrono.h>
-#include <fmt/core.h>
-#include <foxglove/websocket/base64.hpp>
-#include <foxglove/websocket/common.hpp>
-#include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
-#include <google/protobuf/util/json_util.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/utils/protobuf_serdes.h>
-#include <hephaestus/utils/signal_handler.h>
-#include <hephaestus/utils/stack_trace.h>
+#include <foxglove/websocket/websocket_notls.hpp>
+#include <google/protobuf/message.h>
 #include <hephaestus/utils/ws_protocol.h>
-#include <nlohmann/json.hpp>
 
 namespace heph::ws {
 
-using WsClient = foxglove::Client<foxglove::WebSocketNoTls>;
+// We have to derive from the Client class to ensure that the virtual function close() is not called during
+// destruction. This is something clang-tidy didn't like in the dependency code.
+template <typename T>
+class WsClient : public foxglove::Client<T> {
+public:
+  WsClient() = default;
+  WsClient(const WsClient&) = delete;
+  auto operator=(const WsClient&) -> WsClient& = delete;
+  WsClient(WsClient&&) noexcept = default;
+  auto operator=(WsClient&&) noexcept -> WsClient& = default;
+
+  ~WsClient() override {
+    this->_endpoint.stop_perpetual();
+    this->_thread->join();
+  }
+
+  void close() override {
+    foxglove::Client<T>::close();
+  }
+};
+
+using WsClientNoTls = WsClient<foxglove::WebSocketNoTls>;
 
 struct ServiceCallState {
   enum class Status : std::uint8_t { SUCCESS = 0, DISPATCHED = 1, FAILED = 2 };
@@ -50,9 +68,9 @@ struct ServiceCallState {
 
 using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
 
-[[nodiscard]] bool allServiceCallsFinished(const ServiceCallStateMap& state);
+[[nodiscard]] auto allServiceCallsFinished(const ServiceCallStateMap& state) -> bool;
 
-[[nodiscard]] std::string horizontalLine(uint32_t cell_content_width, uint32_t columns);
+[[nodiscard]] auto horizontalLine(uint32_t cell_content_width, uint32_t columns) -> std::string;
 
 void printServiceCallStateMap(ServiceCallStateMap& state);
 

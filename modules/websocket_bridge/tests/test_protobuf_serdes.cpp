@@ -2,6 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
@@ -24,23 +25,6 @@ protected:
   // NOLINTNEXTLINE
   ProtobufSchemaDatabase schema_db_;
 };
-
-TEST_F(ProtobufUtilsTest, LoadSchemaValid) {
-  google::protobuf::FileDescriptorSet descriptor_set;
-  auto* file_descriptor_proto = descriptor_set.add_file();
-  file_descriptor_proto->set_name("test.proto");
-  file_descriptor_proto->set_package("test");
-
-  std::vector<std::byte> schema_bytes(descriptor_set.ByteSizeLong());
-  descriptor_set.SerializeToArray(schema_bytes.data(), static_cast<int>(schema_bytes.size()));
-
-  EXPECT_TRUE(loadSchema(schema_bytes, schema_db_.proto_db.get()));
-}
-
-TEST_F(ProtobufUtilsTest, LoadSchemaInvalid) {
-  std::vector<std::byte> schema_bytes = { std::byte{ 0x00 }, std::byte{ 0x01 } };
-  EXPECT_FALSE(loadSchema(schema_bytes, schema_db_.proto_db.get()));
-}
 
 TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   WsServerServiceAd service_definition;

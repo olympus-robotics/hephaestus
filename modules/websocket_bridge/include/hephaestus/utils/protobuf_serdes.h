@@ -7,32 +7,24 @@
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <random>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
-#include <absl/log/check.h>
 #include <absl/log/log.h>
-#include <absl/strings/ascii.h>
-#include <fmt/base.h>
 #include <fmt/core.h>
-#include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/common.hpp>
-#include <foxglove/websocket/serialization.hpp>
-#include <foxglove/websocket/websocket_client.hpp>
-#include <foxglove/websocket/websocket_notls.hpp>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/message.h>
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/util/json_util.h>
 #include <hephaestus/serdes/type_info.h>
 #include <hephaestus/telemetry/log.h>
-#include <magic_enum.hpp>
-#include <nlohmann/json.hpp>
 
 namespace heph::ws {
 
@@ -69,9 +61,6 @@ auto saveSchemaToDatabase(const foxglove::Service& service_definition, ProtobufS
 auto saveSchemaToDatabase(const foxglove::ServiceResponseDefinition& service_request_definition,
                           ProtobufSchemaDatabase& schema_db) -> bool;
 
-auto saveSchemaToDatabase(const std::vector<std::byte>& schema_bytes, ProtobufSchemaDatabase& schema_db)
-    -> bool;
-
 [[nodiscard]] auto retrieveRequestMessageFromDatabase(foxglove::ServiceId service_id,
                                                       const ProtobufSchemaDatabase& schema_db)
     -> std::unique_ptr<google::protobuf::Message>;
@@ -99,9 +88,6 @@ void fillRepeatedField(google::protobuf::Message* message, const google::protobu
 
 void fillMessageWithRandomValues(google::protobuf::Message* message, RandomGenerators& generators,
                                  int depth = 0);
-
-auto loadSchema(const std::vector<std::byte>& schema_bytes,
-                google::protobuf::SimpleDescriptorDatabase* proto_db) -> bool;
 
 [[nodiscard]] auto generateRandomMessageFromSchemaName(const std::string& schema_name,
                                                        ProtobufSchemaDatabase& schema_db)

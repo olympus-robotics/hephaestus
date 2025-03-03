@@ -4,7 +4,38 @@
 
 #include "hephaestus/websocket_bridge/bridge.h"
 
+#include <bit>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <absl/log/check.h>
+#include <fmt/base.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <foxglove/websocket/serialization.hpp>
+#include <foxglove/websocket/server_interface.hpp>
+#include <hephaestus/ipc/zenoh/liveliness.h>
+#include <hephaestus/ipc/zenoh/raw_subscriber.h>
+#include <hephaestus/ipc/zenoh/session.h>
+#include <hephaestus/serdes/type_info.h>
+#include <hephaestus/telemetry/log.h>
+#include <magic_enum.hpp>
+
+#include "hephaestus/ipc/ipc_graph.h"
+#include "hephaestus/ipc/ipc_interface.h"
 #include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/bridge_config.h"
+#include "hephaestus/websocket_bridge/bridge_state.h"
 
 namespace heph::ws {
 
@@ -165,9 +196,9 @@ void WsBridge::callback_IpcGraph_TopicFound(const std::string& topic,
     return;
   }
 
-  WsServerChannelInfo new_ws_server_channel = convertIpcTypeInfoToWsChannelInfo(topic, type_info);
+  const WsServerChannelInfo new_ws_server_channel = convertIpcTypeInfoToWsChannelInfo(topic, type_info);
 
-  std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
+  const std::vector<WsServerChannelInfo> new_ws_server_channels{ new_ws_server_channel };
   auto new_channel_ids = ws_server_->addChannels(new_ws_server_channels);
 
   CHECK_EQ(new_channel_ids.size(), 1);
@@ -213,7 +244,7 @@ void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
   fmt::println("[WS Bridge] - Service '{}' [{}/{}] will be added  ...", service_name, type_info.request.name,
                type_info.reply.name);
 
-  WsServerServiceInfo new_ws_server_service = {
+  const WsServerServiceInfo new_ws_server_service = {
     .name = service_name,
     // This interface was built with the ROS2 convention in mind, that the request and reply types are two
     // pieces of a common type, hence the type name is the same with a _Request or _Reply suffix. This is not
@@ -235,7 +266,7 @@ void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
     .responseSchema = std::nullopt,
   };
 
-  std::vector<WsServerServiceInfo> new_ws_server_services{ new_ws_server_service };
+  const std::vector<WsServerServiceInfo> new_ws_server_services{ new_ws_server_service };
   auto new_service_ids = ws_server_->addServices(new_ws_server_services);
 
   CHECK_EQ(new_service_ids.size(), 1);

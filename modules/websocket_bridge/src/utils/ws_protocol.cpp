@@ -4,6 +4,23 @@
 
 #include "hephaestus/utils/ws_protocol.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <fmt/format.h>
+#include <hephaestus/ipc/zenoh/service.h>
+#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
+
+#include "hephaestus/utils/protobuf_serdes.h"
+
 namespace heph::ws {
 
 auto convertIpcRawServiceResponseToWsServiceResponse(
@@ -28,20 +45,6 @@ auto convertIpcRawServiceResponseToWsServiceResponse(
 }
 
 auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optional<WsServerChannelAd> {
-  // Example JSON:
-  // {
-  //   "channels": [
-  //     {
-  //       "encoding": "protobuf",
-  //       "id": 1,
-  //       "schema": "Cv4CCipoZXBoYWVzdH...90bzM=",
-  //       "schemaEncoding": "protobuf",
-  //       "schemaName": "heph.examples.types.proto.Pose",
-  //       "topic": "pub/test1"
-  //     }
-  //   ],
-  //   "op": "advertise"
-  // }
   try {
     WsServerChannelAd channel;
     channel.id = channel_json.at("id").get<uint32_t>();
@@ -62,15 +65,6 @@ auto convertWsJsonMsgToChannel(const nlohmann::json& channel_json) -> std::optio
 
 auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
     -> std::optional<WsServerInfo> {
-  // Example JSON:
-  // {
-  //   "capabilities": ["connectionGraph", "clientPublish", "services"],
-  //   "metadata": {},
-  //   "name": "WS Server",
-  //   "op": "serverInfo",
-  //   "sessionId": "websocket_bridge",
-  //   "supportedEncodings": ["protobuf"]
-  // }
   try {
     WsServerInfo server_options;
     if (server_options_json.contains("capabilities")) {
@@ -96,46 +90,6 @@ auto convertWsJsonMsgtoServerOptions(const nlohmann::json& server_options_json)
 }
 
 auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optional<WsServerServiceAd> {
-  // Example JSON:
-  // {
-  //   "op": "advertiseServices",
-  //   "services": [
-  //     {
-  //       "id": 2,
-  //       "name": "srv/test1",
-  //       "request": {
-  //         "encoding": "protobuf",
-  //         "schema": "Cv4CCipoZXBoYWV...gZwcm90bzM=",
-  //         "schemaEncoding": "protobuf",
-  //         "schemaName": "heph.examples.types.proto.Pose"
-  //       },
-  //       "response": {
-  //         "encoding": "protobuf",
-  //         "schema": "Cv4CCipoZXBoYWV...gZwcm90bzM=",
-  //         "schemaEncoding": "protobuf",
-  //         "schemaName": "heph.examples.types.proto.Pose"
-  //       },
-  //       "type": "heph.examples.types.proto.Pose"
-  //     },
-  //     {
-  //       "id": 1,
-  //       "name": "topic_info/pub/test1",
-  //       "request": {
-  //         "encoding": "text",
-  //         "schema": "",
-  //         "schemaEncoding": "text",
-  //         "schemaName": "string"
-  //       },
-  //       "response": {
-  //         "encoding": "text",
-  //         "schema": "",
-  //         "schemaEncoding": "text",
-  //         "schemaName": "string"
-  //       },
-  //       "type": "string"
-  //     }
-  //   ]
-  // }
   try {
     WsServerServiceAd service;
     service.id = service_json.at("id").get<uint32_t>();
@@ -165,14 +119,14 @@ auto convertWsJsonMsgToService(const nlohmann::json& service_json) -> std::optio
   }
 }
 
-bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg,
-                                 WsServerAdvertisements& ws_server_ads) {
+auto parseWsServerAdvertisements(const nlohmann::json& server_txt_msg, WsServerAdvertisements& ws_server_ads)
+    -> bool {
   try {
     if (!server_txt_msg.contains("op")) {
       return false;
     }
 
-    std::string op_code = server_txt_msg.at("op").get<std::string>();
+    const std::string op_code = server_txt_msg.at("op").get<std::string>();
 
     if (op_code == "serverInfo") {
       auto server_info = convertWsJsonMsgtoServerOptions(server_txt_msg);
@@ -227,12 +181,6 @@ bool parseWsServerAdvertisements(const nlohmann::json& server_txt_msg,
 
 auto parseWsServerServiceFailure(const nlohmann::json& server_txt_msg,
                                  WsServerServiceFailure& service_failure) -> bool {
-  // Example JSON:
-  // {
-  //   "op": "serviceCallFailure",
-  //   "callId": 123,
-  //   "message": "Service call failed due to timeout"
-  // }
   try {
     if (!server_txt_msg.contains("op") ||
         server_txt_msg.at("op").get<std::string>() != "serviceCallFailure") {

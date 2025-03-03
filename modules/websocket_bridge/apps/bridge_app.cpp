@@ -7,8 +7,8 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 
-#include <fmt/format.h>
 #include <hephaestus/cli/program_options.h>
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/telemetry/log.h>

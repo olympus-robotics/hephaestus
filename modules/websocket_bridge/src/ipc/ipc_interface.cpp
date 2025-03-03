@@ -4,18 +4,28 @@
 
 #include "hephaestus/ipc/ipc_interface.h"
 
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
+#include <exception>
+#include <functional>
+#include <future>
+#include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <absl/log/check.h>
-#include <hephaestus/ipc/zenoh/dynamic_subscriber.h>
-#include <hephaestus/ipc/zenoh/liveliness.h>
+#include <absl/synchronization/mutex.h>
+#include <fmt/base.h>
 #include <hephaestus/ipc/zenoh/raw_publisher.h>
 #include <hephaestus/ipc/zenoh/raw_subscriber.h>
-#include <hephaestus/ipc/zenoh/scout.h>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/serdes/dynamic_deserializer.h>
-#include <hephaestus/utils/stack_trace.h>
+#include <hephaestus/serdes/type_info.h>
 
 namespace heph::ws {
 
@@ -32,17 +42,17 @@ void IpcInterface::start() {
   fmt::println("[IPC Interface] - Starting...");
 
   {
-    absl::MutexLock lock(&mutex_sub_);
+    const absl::MutexLock lock(&mutex_sub_);
     subscribers_.clear();
   }
 
   {
-    absl::MutexLock lock(&mutex_pub_);
+    const absl::MutexLock lock(&mutex_pub_);
     publishers_.clear();
   }
 
   {
-    absl::MutexLock lock(&mutex_srv_);
+    const absl::MutexLock lock(&mutex_srv_);
     async_service_callbacks_.clear();
   }
 
@@ -53,17 +63,17 @@ void IpcInterface::stop() {
   fmt::println("[IPC Interface] - Stopping...");
 
   {
-    absl::MutexLock lock(&mutex_sub_);
+    const absl::MutexLock lock(&mutex_sub_);
     subscribers_.clear();
   }
 
   {
-    absl::MutexLock lock(&mutex_pub_);
+    const absl::MutexLock lock(&mutex_pub_);
     publishers_.clear();
   }
 
   {
-    absl::MutexLock lock(&mutex_srv_);
+    const absl::MutexLock lock(&mutex_srv_);
     async_service_callbacks_.clear();
   }
 
@@ -76,13 +86,13 @@ bool IpcInterface::hasSubscriberImpl(const std::string& topic) const {
 }
 
 auto IpcInterface::hasSubscriber(const std::string& topic) const -> bool {
-  absl::MutexLock lock(&mutex_sub_);
+  const absl::MutexLock lock(&mutex_sub_);
   return hasSubscriberImpl(topic);
 }
 
 void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
                                  const TopicSubscriberWithTypeCallback& subscriber_cb) {
-  absl::MutexLock lock(&mutex_sub_);
+  const absl::MutexLock lock(&mutex_sub_);
 
   if (hasSubscriberImpl(topic)) {
     heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
@@ -100,6 +110,7 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
 
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ topic },
+      // NOLINTNEXTLINE(bugprone-exception-escape)
       [subscriber_cb, topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
                                        std::span<const std::byte> data) {
         subscriber_cb(metadata, data, topic_type_info);
@@ -108,7 +119,7 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
 }
 
 void IpcInterface::removeSubscriber(const std::string& topic) {
-  absl::MutexLock lock(&mutex_sub_);
+  const absl::MutexLock lock(&mutex_sub_);
 
   if (!hasSubscriberImpl(topic)) {
     heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic does not exist!", "topic", topic);
@@ -134,7 +145,7 @@ void IpcInterface::callback_ServiceResponse(uint32_t call_id, const std::string&
   AsyncServiceResponseCallback callback;
 
   {
-    absl::MutexLock lock(&mutex_srv_);
+    const absl::MutexLock lock(&mutex_srv_);
     auto it = async_service_callbacks_.find(call_id);
     if (it != async_service_callbacks_.end()) {
       fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' and call id [{}] to "
@@ -158,6 +169,7 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
                                     std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
                                     AsyncServiceResponseCallback callback) -> std::future<void> {
   try {
+    // NOLINTNEXTLINE(bugprone-exception-escape)
     auto future = std::async(std::launch::async, [this, call_id, topic_config, buffer, timeout]() {
       CHECK(session_);
 
@@ -181,7 +193,7 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
     });
 
     {
-      absl::MutexLock lock(&mutex_srv_);
+      const absl::MutexLock lock(&mutex_srv_);
       async_service_callbacks_[call_id] = std::move(callback);
     }
 
@@ -196,12 +208,12 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
 }
 
 auto IpcInterface::hasPublisher(const std::string& topic) const -> bool {
-  absl::MutexLock lock(&mutex_pub_);
+  const absl::MutexLock lock(&mutex_pub_);
   return publishers_.find(topic) != publishers_.end();
 }
 
 void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
-  absl::MutexLock lock(&mutex_pub_);
+  const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) != publishers_.end()) {
     heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic already exists!", "topic", topic);
@@ -213,6 +225,7 @@ void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo
 
   publishers_[topic] = std::make_unique<ipc::zenoh::RawPublisher>(
       session_, ipc::TopicConfig{ topic }, topic_type_info,
+      // NOLINTNEXTLINE(bugprone-exception-escape)
       [topic](const ipc::zenoh::MatchingStatus& status) {
         IpcInterface::callback_PublisherMatchingStatus(topic, status);
       },
@@ -220,7 +233,7 @@ void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo
 }
 
 void IpcInterface::removePublisher(const std::string& topic) {
-  absl::MutexLock lock(&mutex_pub_);
+  const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) == publishers_.end()) {
     heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
@@ -230,7 +243,7 @@ void IpcInterface::removePublisher(const std::string& topic) {
 }
 
 auto IpcInterface::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
-  absl::MutexLock lock(&mutex_pub_);
+  const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) == publishers_.end()) {
     heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);

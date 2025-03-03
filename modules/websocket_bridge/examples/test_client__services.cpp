@@ -1,29 +1,31 @@
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <map>
+#include <memory>
+#include <optional>
+#include <string>
 #include <thread>
+#include <vector>
 
-#include <fmt/chrono.h>
-#include <fmt/core.h>
-#include <foxglove/websocket/base64.hpp>
+#include <fmt/base.h>
 #include <foxglove/websocket/common.hpp>
-#include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
-#include <google/protobuf/util/json_util.h>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/protobuf_serdes.h>
-#include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
 #include <hephaestus/utils/ws_client.h>
 #include <hephaestus/utils/ws_protocol.h>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 using namespace std::chrono_literals;
 using heph::ws::ServiceCallState;
 using heph::ws::ServiceCallStateMap;
-using heph::ws::WsClient;
+using heph::ws::WsClientNoTls;
 using heph::ws::WsServerAdvertisements;
 using heph::ws::WsServerBinaryOpCode;
 using heph::ws::WsServerServiceAd;
@@ -77,7 +79,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsServerAdvertiseme
     // Receive, parse and convert response to Protobuf message.
     auto msg = state_it->second.receiveResponse(response, ws_server_ads);
 
-    // TODO(mfehr): REMOVE
+    // TODO: REMOVE
     if (msg.has_value()) {
       heph::ws::debugPrintMessage(**msg);
     }
@@ -119,7 +121,7 @@ void handleJsonMessage(const std::string& json_msg, WsServerAdvertisements& ws_s
   }
 }
 
-void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove_service,
+void sendTestServiceRequests(WsClientNoTls& client, const WsServerServiceAd& foxglove_service,
                              WsServerAdvertisements& ws_server_ads, ServiceCallStateMap& state) {
   auto foxglove_service_id = foxglove_service.id;
 
@@ -128,15 +130,21 @@ void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove
     request.callId = static_cast<uint32_t>(i);
     request.serviceId = foxglove_service_id;
 
-    auto message =
-        generateRandomMessageFromSchemaName(foxglove_service.request->schemaName, ws_server_ads.schema_db);
-    if (!message) {
+    if (!foxglove_service.request.has_value()) {
+      fmt::println("Service '{}' has no request definition", foxglove_service.name);
+      g_abort = true;
+      break;
+    }
+
+    auto message = generateRandomMessageFromSchemaName(foxglove_service.request.value().schemaName,
+                                                       ws_server_ads.schema_db);
+    if (message == nullptr) {
       fmt::println("Failed to generate random protobuf message for service '{}'", foxglove_service.name);
       g_abort = true;
       break;
     }
 
-    // TODO(mfehr): REMOVE
+    // TODO: REMOVE
     heph::ws::debugPrintMessage(*message);
 
     // Prepare message for sending.
@@ -161,7 +169,7 @@ void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove
 
     fmt::println("Service request with call ID {} dispatched", request.callId);
 
-    // Optionally sleep before launching the next request. This can be useful to explore/investiagate the
+    // Optionally sleep before launching the next request. This can be useful to explore/investigate the
     // performance of the services and how the queue up in the bridge.
     if (LAUNCHING_SLEEP_DURATION_MS > 0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(LAUNCHING_SLEEP_DURATION_MS));
@@ -171,7 +179,7 @@ void sendTestServiceRequests(WsClient& client, const WsServerServiceAd& foxglove
 
 }  // namespace
 
-auto main(int argc, char** argv) -> int {
+auto main(int argc, char** argv) -> int try {
   const heph::utils::StackTrace stack_trace;
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
@@ -181,7 +189,7 @@ auto main(int argc, char** argv) -> int {
   }
 
   const std::string url = argv[1];  // NOLINT
-  WsClient client;
+  WsClientNoTls client;
 
   WsServerAdvertisements ws_server_ads;
   ServiceCallStateMap state;
@@ -248,4 +256,7 @@ auto main(int argc, char** argv) -> int {
   client.close();
   fmt::println("Done.");
   return 0;
+} catch (const std::exception& e) {
+  fmt::println("Exception caught in main: {}", e.what());
+  return 1;
 }

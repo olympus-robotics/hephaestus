@@ -4,18 +4,22 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/server_interface.hpp>
-#include <foxglove/websocket/websocket_client.hpp>
-#include <foxglove/websocket/websocket_notls.hpp>
-#include <foxglove/websocket/websocket_server.hpp>
 #include <hephaestus/ipc/zenoh/service.h>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
 #include "hephaestus/utils/protobuf_serdes.h"

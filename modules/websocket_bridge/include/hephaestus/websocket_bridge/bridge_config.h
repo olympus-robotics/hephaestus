@@ -4,16 +4,18 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstdint>
 #include <regex>
 #include <string>
 #include <vector>
 
-#include <absl/log/check.h>
+#include <absl/log/log.h>
 #include <fmt/core.h>
+#include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/telemetry/log.h>
-#include <magic_enum.hpp>
 
 #include "hephaestus/utils/ws_protocol.h"
 
@@ -78,7 +80,8 @@ struct WsBridgeConfig {
 [[nodiscard]] auto shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) -> bool;
 
 [[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) -> bool;
-[[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::string>& regex_string_list) -> bool;
+[[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::string>& regex_string_list)
+    -> bool;
 
 [[nodiscard]] auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConfig;
 
