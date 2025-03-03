@@ -54,7 +54,7 @@ struct IpcGraphConfig {
   ipc::zenoh::SessionPtr session;
 
   bool track_topics_based_on_subscribers = true;
-  
+
   TopicDiscoveryCallback topic_discovery_cb;
   TopicRemovalCallback topic_removal_cb;
 
