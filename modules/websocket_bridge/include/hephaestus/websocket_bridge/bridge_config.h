@@ -77,8 +77,10 @@ struct WebsocketBridgeConfig {
   std::vector<std::string> ipc_service_blacklist;
 };
 
-[[nodiscard]] auto shouldBridgeIpcTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool;
-[[nodiscard]] auto shouldBridgeIpcService(const std::string& service, const WebsocketBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeIpcTopic(const std::string& topic, const WebsocketBridgeConfig& config)
+    -> bool;
+[[nodiscard]] auto shouldBridgeIpcService(const std::string& service, const WebsocketBridgeConfig& config)
+    -> bool;
 [[nodiscard]] auto shouldBridgeWsTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool;
 
 [[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) -> bool;

@@ -40,7 +40,8 @@
 
 namespace heph::ws {
 
-WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const WebsocketBridgeConfig& config)
+WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& session,
+                                 const WebsocketBridgeConfig& config)
   : config_(config), ws_server_(nullptr), ipc_graph_(nullptr) {
   // Initialize IPC Graph
   {
@@ -183,7 +184,7 @@ void WebsocketBridge::stop() {
 /////////////////////////
 
 void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
-                                            const heph::serdes::TypeInfo& type_info) {
+                                                   const heph::serdes::TypeInfo& type_info) {
   CHECK(ipc_graph_);
   heph::log(heph::INFO, "\n[WS Bridge] - New topic will be added  ...", "topic", topic, "type_name",
             type_info.name);
@@ -242,7 +243,7 @@ void WebsocketBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
 }
 
 void WebsocketBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
-                                              const heph::serdes::ServiceTypeInfo& type_info) {
+                                                     const heph::serdes::ServiceTypeInfo& type_info) {
   heph::log(heph::INFO, "\n[WS Bridge] - Service will be added  ...", "service_name", service_name,
             "request_type_name", type_info.request.name, "reply_type_name", type_info.reply.name);
 
@@ -302,7 +303,7 @@ void WebsocketBridge::callback_IpcGraph_ServiceDropped(const std::string& servic
 }
 
 void WebsocketBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
-                                         IpcGraphState ipc_graph_state) {
+                                                IpcGraphState ipc_graph_state) {
   // NOTE: currently we do not need the endpoint info that triggered the graph update. However, it is very
   // useful to debug, and there are also some features that might require knowing who triggered it. Let's keep
   // it.
@@ -363,8 +364,8 @@ void WebsocketBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& 
 /////////////////////////////
 
 void WebsocketBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
-                                            std::span<const std::byte> message_data,
-                                            const heph::serdes::TypeInfo& type_info) {
+                                                   std::span<const std::byte> message_data,
+                                                   const heph::serdes::TypeInfo& type_info) {
   (void)type_info;
 
   CHECK(ws_server_);
@@ -565,7 +566,7 @@ void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsCl
 }
 
 void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
-                                           const WsClientHandle& client_handle) {
+                                                  const WsClientHandle& client_handle) {
   CHECK(ipc_graph_);
   CHECK(ipc_entity_manager_);
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
@@ -615,7 +616,7 @@ void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& adver
 }
 
 void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
-                                             const WsClientHandle& client_handle) {
+                                                    const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   auto topic = state_.getTopicForClientChannel(client_channel_id);
 
@@ -659,7 +660,7 @@ void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_cha
 }
 
 void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
-                                         const WsClientHandle& client_handle) {
+                                                const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   const auto& topic = message.advertisement.topic;
   const auto& channel_id = message.advertisement.channelId;
@@ -713,7 +714,7 @@ void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
 }
 
 void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request,
-                                          const WsClientHandle& client_handle) {
+                                                 const WsClientHandle& client_handle) {
   CHECK(ipc_entity_manager_);
 
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);

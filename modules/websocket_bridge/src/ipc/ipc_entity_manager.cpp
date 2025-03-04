@@ -127,7 +127,7 @@ void IpcEntityManager::removeSubscriber(const std::string& topic) {
 }
 
 void IpcEntityManager::publisherMatchingStatusCallback(const std::string& topic,
-                                                        const ipc::zenoh::MatchingStatus& status) {
+                                                       const ipc::zenoh::MatchingStatus& status) {
   heph::log(heph::INFO, "\n[IPC Interface]: The topic has changed matching status!", "topic", topic,
             "matching", status.matching);
 }
@@ -140,7 +140,7 @@ auto IpcEntityManager::callService(uint32_t call_id, const ipc::TopicConfig& top
 }
 
 void IpcEntityManager::serviceResponseCallback(uint32_t call_id, const std::string& service_name,
-                                                const RawServiceResponses& responses) {
+                                               const RawServiceResponses& responses) {
   AsyncServiceResponseCallback callback;
 
   {

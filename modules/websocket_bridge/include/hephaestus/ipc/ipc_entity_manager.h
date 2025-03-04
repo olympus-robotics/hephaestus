@@ -85,7 +85,7 @@ private:
       publishers_ ABSL_GUARDED_BY(mutex_pub_);
 
   static void publisherMatchingStatusCallback(const std::string& topic,
-                                               const ipc::zenoh::MatchingStatus& status);
+                                              const ipc::zenoh::MatchingStatus& status);
 
   // Services
   ///////////
@@ -94,7 +94,7 @@ private:
       async_service_callbacks_ ABSL_GUARDED_BY(mutex_srv_);
 
   void serviceResponseCallback(uint32_t call_id, const std::string& service_name,
-                                const RawServiceResponses& responses);
+                               const RawServiceResponses& responses);
 };
 
 }  // namespace heph::ws
