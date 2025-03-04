@@ -2,7 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 #include <algorithm>
 #include <bit>
@@ -328,7 +328,6 @@ auto convertProtoMsgBytesToDebugString(const std::vector<std::byte>& schema) -> 
     heph::log(heph::ERROR, "Failed to parse schema bytes");
     return {};
   }
-  fmt::println("{}", fds.DebugString());
   return fds.DebugString();
 }
 }  // namespace

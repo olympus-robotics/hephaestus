@@ -22,7 +22,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
-#include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {
 

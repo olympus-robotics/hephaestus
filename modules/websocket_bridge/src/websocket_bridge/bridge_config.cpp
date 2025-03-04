@@ -20,7 +20,7 @@
 #include <rfl/yaml/read.hpp>
 #include <rfl/yaml/write.hpp>
 
-#include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace rfl {
 template <>

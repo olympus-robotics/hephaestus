@@ -2,7 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/ipc_interface.h"
+#include "hephaestus/ipc/ipc_entity_manager.h"
 
 #include <chrono>
 #include <cstddef>
@@ -20,7 +20,6 @@
 
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/base.h>
 #include <hephaestus/ipc/zenoh/raw_publisher.h>
 #include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/service.h>
@@ -29,17 +28,17 @@
 
 namespace heph::ws {
 
-IpcInterface::IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, ipc::zenoh::Config config)
+IpcEntityManager::IpcEntityManager(std::shared_ptr<ipc::zenoh::Session> session, ipc::zenoh::Config config)
   : session_(std::move(session)), config_(std::move(config)) {
   CHECK(session_);
 }
 
-IpcInterface::~IpcInterface() {
+IpcEntityManager::~IpcEntityManager() {
   stop();
 }
 
-void IpcInterface::start() {
-  fmt::println("[IPC Interface] - Starting...");
+void IpcEntityManager::start() {
+  heph::log(heph::INFO, "\n[IPC Interface] - Starting...");
 
   {
     const absl::MutexLock lock(&mutex_sub_);
@@ -56,11 +55,11 @@ void IpcInterface::start() {
     async_service_callbacks_.clear();
   }
 
-  fmt::println("[IPC Interface] - ONLINE");
+  heph::log(heph::INFO, "\n[IPC Interface] - ONLINE");
 }
 
-void IpcInterface::stop() {
-  fmt::println("[IPC Interface] - Stopping...");
+void IpcEntityManager::stop() {
+  heph::log(heph::INFO, "\n[IPC Interface] - Stopping...");
 
   {
     const absl::MutexLock lock(&mutex_sub_);
@@ -77,25 +76,25 @@ void IpcInterface::stop() {
     async_service_callbacks_.clear();
   }
 
-  fmt::println("[IPC Interface] - OFFLINE");
+  heph::log(heph::INFO, "\n[IPC Interface] - OFFLINE");
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-bool IpcInterface::hasSubscriberImpl(const std::string& topic) const {
+bool IpcEntityManager::hasSubscriberImpl(const std::string& topic) const {
   return subscribers_.find(topic) != subscribers_.end();
 }
 
-auto IpcInterface::hasSubscriber(const std::string& topic) const -> bool {
+auto IpcEntityManager::hasSubscriber(const std::string& topic) const -> bool {
   const absl::MutexLock lock(&mutex_sub_);
   return hasSubscriberImpl(topic);
 }
 
-void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
-                                 const TopicSubscriberWithTypeCallback& subscriber_cb) {
+void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,
+                                     const TopicSubscriberWithTypeCallback& subscriber_cb) {
   const absl::MutexLock lock(&mutex_sub_);
 
   if (hasSubscriberImpl(topic)) {
-    heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
+    heph::log(heph::FATAL, "\n[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
   }
 
   auto subscriber_config =
@@ -118,39 +117,38 @@ void IpcInterface::addSubscriber(const std::string& topic, const serdes::TypeInf
       topic_type_info, subscriber_config);
 }
 
-void IpcInterface::removeSubscriber(const std::string& topic) {
+void IpcEntityManager::removeSubscriber(const std::string& topic) {
   const absl::MutexLock lock(&mutex_sub_);
 
   if (!hasSubscriberImpl(topic)) {
-    heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic does not exist!", "topic", topic);
+    heph::log(heph::FATAL, "\n[IPC Interface] - Subscriber for topic does not exist!", "topic", topic);
   }
   subscribers_.erase(topic);
 }
 
-void IpcInterface::callback_PublisherMatchingStatus(const std::string& topic,
-                                                    const ipc::zenoh::MatchingStatus& status) {
-  heph::log(heph::INFO, "[IPC Interface]: The topic has changed matching status!", "topic", topic, "matching",
-            status.matching);
+void IpcEntityManager::publisherMatchingStatusCallback(const std::string& topic,
+                                                        const ipc::zenoh::MatchingStatus& status) {
+  heph::log(heph::INFO, "\n[IPC Interface]: The topic has changed matching status!", "topic", topic,
+            "matching", status.matching);
 }
 
-auto IpcInterface::callService(uint32_t call_id, const ipc::TopicConfig& topic_config,
-                               std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
+auto IpcEntityManager::callService(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                                   std::span<const std::byte> buffer, std::chrono::milliseconds timeout)
     -> RawServiceResponses {
   (void)call_id;
   return ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
 }
 
-void IpcInterface::callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
-                                            const RawServiceResponses& responses) {
+void IpcEntityManager::serviceResponseCallback(uint32_t call_id, const std::string& service_name,
+                                                const RawServiceResponses& responses) {
   AsyncServiceResponseCallback callback;
 
   {
     const absl::MutexLock lock(&mutex_srv_);
     auto it = async_service_callbacks_.find(call_id);
     if (it != async_service_callbacks_.end()) {
-      fmt::println("[IPC Interface] - Forwarding service response (#{}) for service '{}' and call id [{}] to "
-                   "bridge [ASYNC]",
-                   responses.size(), service_name, call_id);
+      heph::log(heph::INFO, "\n[IPC Interface] - Forwarding service response to bridge [ASYNC]",
+                "response_count", responses.size(), "service_name", service_name, "call_id", call_id);
 
       callback = it->second;
       async_service_callbacks_.erase(it);
@@ -160,14 +158,14 @@ void IpcInterface::callback_ServiceResponse(uint32_t call_id, const std::string&
   if (callback) {
     callback(responses);
   } else {
-    heph::log(heph::ERROR, "[IPC Interface] - No callback found for service response", "service_name",
+    heph::log(heph::ERROR, "\n[IPC Interface] - No callback found for service response", "service_name",
               service_name);
   }
 }
 
-auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
-                                    std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
-                                    AsyncServiceResponseCallback callback) -> std::future<void> {
+auto IpcEntityManager::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& topic_config,
+                                        std::span<const std::byte> buffer, std::chrono::milliseconds timeout,
+                                        AsyncServiceResponseCallback callback) -> std::future<void> {
   try {
     // NOLINTNEXTLINE(bugprone-exception-escape)
     auto future = std::async(std::launch::async, [this, call_id, topic_config, buffer, timeout]() {
@@ -176,19 +174,20 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
       RawServiceResponses responses;
 
       try {
-        fmt::println("[IPC Interface] - Sending service request for service '{}' [ASYNC]", topic_config.name);
+        heph::log(heph::INFO, "\n[IPC Interface] - Sending service request for service [ASYNC]",
+                  "service_name", topic_config.name);
 
         responses = ipc::zenoh::callServiceRaw(*session_, topic_config, buffer, timeout);
       } catch (const std::exception& e) {
-        heph::log(heph::ERROR, "[IPC Interface] - Exception during async service call", "topic",
+        heph::log(heph::ERROR, "\n[IPC Interface] - Exception during async service call", "topic",
                   topic_config.name, "error", e.what());
         throw;
       }
 
-      fmt::println("[IPC Interface] - Received service response (#{}) for service '{}' [ASYNC]",
-                   responses.size(), topic_config.name);
+      heph::log(heph::INFO, "\n[IPC Interface] - Received service response [ASYNC]", "response_count",
+                responses.size(), "service_name", topic_config.name);
 
-      callback_ServiceResponse(call_id, topic_config.name, responses);
+      serviceResponseCallback(call_id, topic_config.name, responses);
     });
 
     {
@@ -198,7 +197,7 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
 
     return future;
   } catch (const std::exception& e) {
-    heph::log(heph::ERROR, "[IPC Interface] - Failed to dispatch async service call", "topic",
+    heph::log(heph::ERROR, "\n[IPC Interface] - Failed to dispatch async service call", "topic",
               topic_config.name, "error", e.what());
     std::promise<void> promise;
     promise.set_exception(std::make_exception_ptr(e));
@@ -206,16 +205,16 @@ auto IpcInterface::callServiceAsync(uint32_t call_id, const ipc::TopicConfig& to
   }
 }
 
-auto IpcInterface::hasPublisher(const std::string& topic) const -> bool {
+auto IpcEntityManager::hasPublisher(const std::string& topic) const -> bool {
   const absl::MutexLock lock(&mutex_pub_);
   return publishers_.find(topic) != publishers_.end();
 }
 
-void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
+void IpcEntityManager::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
   const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) != publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic already exists!", "topic", topic);
+    heph::log(heph::FATAL, "\n[IPC Interface] - Publisher for topic already exists!", "topic", topic);
   }
 
   auto publisher_config = ipc::zenoh::PublisherConfig{ .cache_size = std::nullopt,
@@ -226,26 +225,26 @@ void IpcInterface::addPublisher(const std::string& topic, const serdes::TypeInfo
       session_, ipc::TopicConfig{ topic }, topic_type_info,
       // NOLINTNEXTLINE(bugprone-exception-escape)
       [topic](const ipc::zenoh::MatchingStatus& status) {
-        IpcInterface::callback_PublisherMatchingStatus(topic, status);
+        IpcEntityManager::publisherMatchingStatusCallback(topic, status);
       },
       publisher_config);
 }
 
-void IpcInterface::removePublisher(const std::string& topic) {
+void IpcEntityManager::removePublisher(const std::string& topic) {
   const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) == publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
+    heph::log(heph::FATAL, "\n[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
   }
 
   publishers_.erase(topic);
 }
 
-auto IpcInterface::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
+auto IpcEntityManager::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
   const absl::MutexLock lock(&mutex_pub_);
 
   if (publishers_.find(topic) == publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
+    heph::log(heph::FATAL, "\n[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
   }
 
   return publishers_[topic]->publish(data);

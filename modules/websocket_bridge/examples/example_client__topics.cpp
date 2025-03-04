@@ -17,8 +17,8 @@
 #include <foxglove/websocket/serialization.hpp>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/utils/ws_client.h>
-#include <hephaestus/utils/ws_protocol.h>
+#include <hephaestus/websocket_bridge/utils/ws_client.h>
+#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
 #include <nlohmann/json_fwd.hpp>
 
 using heph::ws::WsAdvertisements;

@@ -9,8 +9,8 @@
 #include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/utils/protobuf_serdes.h"
-#include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws::tests {
 
@@ -83,7 +83,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   std::string json_output;
   auto status = google::protobuf::util::MessageToJsonString(*message, &json_output);
   EXPECT_TRUE(status.ok());
-  fmt::println("Initial JSON output:  \n'''\n{}\n'''", json_output);
+  heph::log(heph::INFO, fmt::format("Initial JSON output:  \n'''\n{}\n'''", json_output));
   EXPECT_EQ(json_output, "{}");
 
   // Parse some bytes into the message.
@@ -98,7 +98,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   json_output.clear();
   status = google::protobuf::util::MessageToJsonString(*message, &json_output);
   EXPECT_TRUE(status.ok());
-  fmt::println("JSON output after parsing bytes:  \n'''\n{}\n'''", json_output);
+  heph::log(heph::INFO, fmt::format("JSON output after parsing bytes:  \n'''\n{}\n'''", json_output));
   EXPECT_NE(json_output, "{}");
 
   // Now generate a random message for the schema.
@@ -110,7 +110,7 @@ TEST_F(ProtobufUtilsTest, SaveAndRetrieveSchemaFromDatabase) {
   json_output.clear();
   status = google::protobuf::util::MessageToJsonString(*random_message, &json_output);
   EXPECT_TRUE(status.ok());
-  fmt::println("JSON output of randomizing the message: \n'''\n{}\n'''", json_output);
+  heph::log(heph::INFO, fmt::format("JSON output of randomizing the message: \n'''\n{}\n'''", json_output));
   EXPECT_NE(json_output, "{}");
 }
 

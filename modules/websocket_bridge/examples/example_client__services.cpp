@@ -16,10 +16,10 @@
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/utils/protobuf_serdes.h>
 #include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/utils/ws_client.h>
-#include <hephaestus/utils/ws_protocol.h>
+#include <hephaestus/websocket_bridge/utils/protobuf_serdes.h>
+#include <hephaestus/websocket_bridge/utils/ws_client.h>
+#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
 #include <nlohmann/json_fwd.hpp>
 
 using namespace std::chrono_literals;
@@ -77,7 +77,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsAdvertisements& w
     }
 
     // Receive, parse and convert response to Protobuf message.
-    auto msg = state_it->second.receiveResponse(response, ws_server_ads);
+    auto msg = receiveResponse(response, ws_server_ads, state_it->second);
     return;
   }
 }
@@ -112,7 +112,7 @@ void handleJsonMessage(const std::string& json_msg, WsAdvertisements& ws_server_
       return;
     }
 
-    state_it->second.receiveFailureResponse(service_failure.error_message);
+    receiveFailureResponse(service_failure.error_message, state_it->second);
   }
 }
 

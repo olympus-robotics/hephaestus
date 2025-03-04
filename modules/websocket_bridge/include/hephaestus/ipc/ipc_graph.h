@@ -84,8 +84,7 @@ public:
 
   void refreshConnectionGraph() const;
 
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  void callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info);
+  void endPointInfoUpdateCallback(const ipc::zenoh::EndpointInfo& info);
 
 private:
   // Note: The ABSL EXCLUSIVE_LOCKS_REQUIRED(mutex_) annotations don't seem to play nice with trailing return

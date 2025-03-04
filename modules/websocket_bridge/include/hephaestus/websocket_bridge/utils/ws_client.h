@@ -12,7 +12,7 @@
 #include <foxglove/websocket/websocket_client.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <google/protobuf/message.h>
-#include <hephaestus/utils/ws_protocol.h>
+#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
 
 namespace heph::ws {
 
@@ -31,17 +31,17 @@ struct ServiceCallState {
 
   explicit ServiceCallState(uint32_t call_id);
 
-  auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads)
-      -> std::optional<std::unique_ptr<google::protobuf::Message>>;
-
-  void receiveFailureResponse(const std::string& error_msg);
-
   [[nodiscard]] auto hasResponse() const -> bool;
   [[nodiscard]] auto wasSuccessful() const -> bool;
   [[nodiscard]] auto hasFailed() const -> bool;
 
   [[nodiscard]] auto getDurationMs() const -> std::optional<std::chrono::milliseconds>;
 };
+
+auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads,
+                     ServiceCallState& state) -> std::optional<std::unique_ptr<google::protobuf::Message>>;
+
+void receiveFailureResponse(const std::string& error_msg, ServiceCallState& state);
 
 using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
 

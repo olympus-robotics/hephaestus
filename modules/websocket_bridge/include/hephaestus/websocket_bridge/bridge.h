@@ -15,11 +15,11 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 
+#include "hephaestus/ipc/ipc_entity_manager.h"
 #include "hephaestus/ipc/ipc_graph.h"
-#include "hephaestus/ipc/ipc_interface.h"
-#include "hephaestus/utils/ws_protocol.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
 
@@ -76,7 +76,7 @@ private:
   void callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info, IpcGraphState ipc_graph_state);
   // NOLINTEND(readability-identifier-naming)
 
-  std::unique_ptr<IpcInterface> ipc_interface_;
+  std::unique_ptr<IpcEntityManager> ipc_entity_manager_;
 
   // Callbacks triggered by the IPC interface
   // NOLINTBEGIN(readability-identifier-naming)

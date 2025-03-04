@@ -32,11 +32,11 @@ using TopicSubscriberWithTypeCallback = std::function<void(
 using RawServiceResponses = std::vector<ipc::zenoh::ServiceResponse<std::vector<std::byte>>>;
 using AsyncServiceResponseCallback = std::function<void(const RawServiceResponses&)>;
 
-class IpcInterface {
+class IpcEntityManager {
 public:
-  IpcInterface(std::shared_ptr<ipc::zenoh::Session> session, ipc::zenoh::Config config);
+  IpcEntityManager(std::shared_ptr<ipc::zenoh::Session> session, ipc::zenoh::Config config);
 
-  ~IpcInterface();
+  ~IpcEntityManager();
 
   void start();
   void stop();
@@ -84,8 +84,7 @@ private:
   std::unordered_map<std::string, std::unique_ptr<ipc::zenoh::RawPublisher>>
       publishers_ ABSL_GUARDED_BY(mutex_pub_);
 
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  static void callback_PublisherMatchingStatus(const std::string& topic,
+  static void publisherMatchingStatusCallback(const std::string& topic,
                                                const ipc::zenoh::MatchingStatus& status);
 
   // Services
@@ -94,8 +93,7 @@ private:
   std::unordered_map<uint32_t, AsyncServiceResponseCallback>
       async_service_callbacks_ ABSL_GUARDED_BY(mutex_srv_);
 
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  void callback_ServiceResponse(uint32_t call_id, const std::string& service_name,
+  void serviceResponseCallback(uint32_t call_id, const std::string& service_name,
                                 const RawServiceResponses& responses);
 };
 

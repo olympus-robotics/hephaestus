@@ -9,14 +9,14 @@ package(default_visibility = ["//visibility:public"])
 heph_cc_library(
     name = "websocket_bridge",
     srcs = glob([
-        "src/utils/*.cpp",
         "src/ipc/*.cpp",
         "src/websocket_bridge/*.cpp",
+        "src/websocket_bridge/utils/*.cpp",
     ]),
     hdrs = glob([
-        "include/hephaestus/websocket_bridge/*.h",
         "include/hephaestus/ipc/*.h",
-        "include/hephaestus/utils/*.h",
+        "include/hephaestus/websocket_bridge/*.h",
+        "include/hephaestus/websocket_bridge/utils/*.h",
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -54,8 +54,8 @@ heph_cc_binary(
 )
 
 heph_cc_binary(
-    name = "test_client__services",
-    srcs = ["examples/test_client__services.cpp"],
+    name = "example_client__services",
+    srcs = ["examples/example_client__services.cpp"],
     deps = [
         ":websocket_bridge",
         "@bazel_tools//tools/cpp/runfiles",
@@ -63,8 +63,8 @@ heph_cc_binary(
 )
 
 heph_cc_binary(
-    name = "test_client__topics",
-    srcs = ["examples/test_client__topics.cpp"],
+    name = "example_client__topics",
+    srcs = ["examples/example_client__topics.cpp"],
     deps = [
         ":websocket_bridge",
         "@bazel_tools//tools/cpp/runfiles",
@@ -80,45 +80,45 @@ IPC_TEST_DEPS = [
 ]
 
 heph_cc_test(
-    name = "test_bridge_config",
+    name = "bridge_config_tests",
     srcs = [
-        "tests/test_bridge_config.cpp",
+        "tests/bridge_config_tests.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
 
 heph_cc_test(
-    name = "test_ipc_graph",
+    name = "ipc_graph_tests",
     srcs = [
-        "tests/test_ipc_graph.cpp",
+        "tests/ipc_graph_tests.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
 
 heph_cc_test(
-    name = "test_bridge_state",
+    name = "bridge_state_tests",
     srcs = [
-        "tests/test_bridge_state.cpp",
+        "tests/bridge_state_tests.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
 
 heph_cc_test(
-    name = "test_ipc_interface",
+    name = "ipc_entity_manager_tests",
     srcs = [
-        "tests/test_ipc_interface.cpp",
+        "tests/ipc_entity_manager_tests.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
 
 heph_cc_test(
-    name = "test_protobuf_serdes",
+    name = "protobuf_serdes_tests",
     srcs = [
-        "tests/test_protobuf_serdes.cpp",
+        "tests/protobuf_serdes_tests.cpp",
     ],
     tags = ["exclusive"],
     deps = IPC_TEST_DEPS,

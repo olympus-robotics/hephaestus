@@ -3,9 +3,10 @@
 ## Overview
 
 This module offers a websocket interface to hephaestus, enabling foxglove studio or a similar websocket-capable client to connect to hephaestus communication and:
-  - Publish and subscribe to hephaestus topics
-  - Trigger hephaestus service calls
-  - Monitor the hephaestus node graph (Foxglove has a built in node graph visualizer)
+
+- Publish and subscribe to hephaestus topics
+- Trigger hephaestus service calls
+- Monitor the hephaestus node graph (Foxglove has a built in node graph visualizer)
 
 ## Build
 
@@ -31,7 +32,7 @@ class WsBridge {
     - WsBridgeConfig
     - WsBridgeState
     - IpcGraph
-    - IpcInterface
+    - IpcEntityManager
 
     - Foxglove WebSocket Server
     
@@ -65,7 +66,7 @@ class IpcGraph {
     + start()
     + stop()
 
-    + callback_EndPointInfoUpdate()
+    + endPointInfoUpdateCallback()
 
     + add/removePublisherEndpoint()
     + add/removeSubscriberEndpoint()
@@ -77,7 +78,7 @@ class IpcGraph {
     + add/remove/hasService()
 }
 
-class IpcInterface {
+class IpcEntityManager {
     - Subscribers
     - Publishers
     - ServiceClients
@@ -114,25 +115,26 @@ class Foxglove WebSocket Server {
 WsBridge --> WsBridgeConfig
 WsBridge --> WsBridgeState
 WsBridge --> IpcGraph
-WsBridge --> IpcInterface
+WsBridge --> IpcEntityManager
 WsBridge --> Foxglove WebSocket Server
 ```
 
-## Test Clients
+## Example Clients
 
-### Test Client - Services - C++
+### Example Client - Services - C++
 
 This client tests the websocket bridge by checking the advertised services and then calling the first one many times while tracking the response times.
 
 ```bash
-bazel run //modules/websocket_bridge:test_client__services ws://localhost:8765
+bazel run //modules/websocket_bridge:example_client__services ws://localhost:8765
 ```
 
-### Test Client - Topics - C++
+### Example Client - Topics - C++
+
 This client tests the websocket bridge by subscribing to all topics and then advertising mirror topics and pinging back the received messages to the bridge.
 
 ```bash
-bazel run //modules/websocket_bridge:test_client__topics ws://localhost:8765
+bazel run //modules/websocket_bridge:example_client__topics ws://localhost:8765
 ```
 
 ### Foxglove Studio
@@ -142,6 +144,3 @@ bazel run //modules/websocket_bridge:test_client__topics ws://localhost:8765
 3. Connect to ws://localhost:8765
 
 Note: Service Calls and client-side topic publishing are not supported in Foxglove Studio with protobuf yet.
-
-
-

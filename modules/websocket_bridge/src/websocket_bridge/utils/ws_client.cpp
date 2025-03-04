@@ -2,7 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/ws_client.h"
+#include "hephaestus/websocket_bridge/utils/ws_client.h"
 
 #include <algorithm>
 #include <chrono>
@@ -22,8 +22,8 @@
 #include <fmt/format.h>
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/message.h>
-#include <hephaestus/utils/protobuf_serdes.h>
-#include <hephaestus/utils/ws_protocol.h>
+#include <hephaestus/websocket_bridge/utils/protobuf_serdes.h>
+#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
 
 namespace heph::ws {
 
@@ -31,11 +31,10 @@ ServiceCallState::ServiceCallState(uint32_t call_id)
   : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
 }
 
-auto ServiceCallState::receiveResponse(const WsServiceResponse& service_response,
-                                       WsAdvertisements& ws_server_ads)
-    -> std::optional<std::unique_ptr<google::protobuf::Message>> {
-  if (service_response.callId != call_id) {
-    heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", call_id, "received_call_id",
+auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads,
+                     ServiceCallState& state) -> std::optional<std::unique_ptr<google::protobuf::Message>> {
+  if (service_response.callId != state.call_id) {
+    heph::log(heph::ERROR, "Mismatched call ID", "expected_call_id", state.call_id, "received_call_id",
               service_response.callId);
     return std::nullopt;
   }
@@ -43,38 +42,39 @@ auto ServiceCallState::receiveResponse(const WsServiceResponse& service_response
   if (service_response.encoding != "protobuf") {
     heph::log(heph::ERROR, "Unexpected encoding in service response", "expected", "protobuf", "received",
               service_response.encoding);
-    status = Status::FAILED;
+    state.status = ServiceCallState::Status::FAILED;
     return std::nullopt;
   }
 
   auto message = retrieveResponseMessageFromDatabase(service_response.serviceId, ws_server_ads.schema_db);
   if (!message) {
-    heph::log(heph::ERROR, "Failed to response retrieve message from database", "call_id", call_id,
+    heph::log(heph::ERROR, "Failed to response retrieve message from database", "call_id", state.call_id,
               "service_id", service_response.serviceId);
-    status = Status::FAILED;
+    state.status = ServiceCallState::Status::FAILED;
     return std::nullopt;
   }
 
   if (!message->ParseFromArray(service_response.data.data(),
                                static_cast<int>(service_response.data.size()))) {
-    heph::log(heph::ERROR, "Failed to parse response data with proto schema", "call_id", call_id, "data_size",
-              service_response.data.size(), "schema_name", message->GetDescriptor()->full_name());
+    heph::log(heph::ERROR, "Failed to parse response data with proto schema", "call_id", state.call_id,
+              "data_size", service_response.data.size(), "schema_name",
+              message->GetDescriptor()->full_name());
 
-    status = Status::FAILED;
+    state.status = ServiceCallState::Status::FAILED;
     return std::nullopt;
   }
 
-  response = service_response;
-  response_time = std::chrono::steady_clock::now();
-  status = Status::SUCCESS;
+  state.response = service_response;
+  state.response_time = std::chrono::steady_clock::now();
+  state.status = ServiceCallState::Status::SUCCESS;
 
   return message;
 }
 
-void ServiceCallState::receiveFailureResponse(const std::string& error_msg) {
-  response_time = std::chrono::steady_clock::now();
-  error_message = error_msg;
-  status = Status::FAILED;
+void receiveFailureResponse(const std::string& error_msg, ServiceCallState& state) {
+  state.response_time = std::chrono::steady_clock::now();
+  state.error_message = error_msg;
+  state.status = ServiceCallState::Status::FAILED;
 }
 
 auto ServiceCallState::hasResponse() const -> bool {

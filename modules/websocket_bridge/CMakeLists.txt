@@ -20,11 +20,11 @@ find_package(ZLIB REQUIRED)
 # library target
 file(GLOB_RECURSE SOURCES 
         src/websocket_bridge/*.cpp
+        src/websocket_bridge/utils/*.cpp
         src/ipc/*.cpp
-        src/utils/*.cpp
         include/hephaestus/websocket_bridge/*.h
+        include/hephaestus/websocket_bridge/utils/*.h
         include/hephaestus/ipc/*.h
-        include/hephaestus/utils/*.h
 )
 
 define_module_library(

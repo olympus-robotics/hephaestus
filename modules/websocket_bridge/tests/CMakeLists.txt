@@ -3,8 +3,8 @@
 #=================================================================================================
 
 define_module_test(
-        NAME test_bridge_config
-        SOURCES test_bridge_config.cpp
+        NAME bridge_config_tests
+        SOURCES bridge_config_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS 
@@ -14,8 +14,8 @@ define_module_test(
 )
 
 define_module_test(
-        NAME test_bridge_state
-        SOURCES test_bridge_state.cpp
+        NAME bridge_state_tests
+        SOURCES bridge_state_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS 
@@ -25,8 +25,8 @@ define_module_test(
 )
 
 define_module_test(
-        NAME test_ipc_graph
-        SOURCES test_ipc_graph.cpp
+        NAME ipc_graph_tests
+        SOURCES ipc_graph_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS 
@@ -36,8 +36,8 @@ define_module_test(
 )
 
 define_module_test(
-        NAME test_ipc_interface
-        SOURCES test_ipc_interface.cpp
+        NAME ipc_entity_manager_tests
+        SOURCES ipc_entity_manager_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS 
@@ -47,8 +47,8 @@ define_module_test(
 )
 
 define_module_test(
-        NAME test_protobuf_serdes
-        SOURCES test_protobuf_serdes.cpp
+        NAME protobuf_serdes_tests
+        SOURCES protobuf_serdes_tests.cpp
         PUBLIC_INCLUDE_PATHS
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         PUBLIC_LINK_LIBS 

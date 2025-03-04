@@ -31,19 +31,19 @@ IpcGraph::IpcGraph(IpcGraphConfig config) : config_(std::move(config)) {
 void IpcGraph::start() {
   const absl::MutexLock lock(&mutex_);
 
-  fmt::println("[IPC Graph] - Starting...");
+  heph::log(heph::INFO, "\n[IPC Graph] - Starting...");
 
   topic_db_ = ipc::createZenohTopicDatabase(config_.session);
 
   discovery_ = std::make_unique<ipc::zenoh::EndpointDiscovery>(
       config_.session, ipc::TopicConfig{ "**" },
-      [this](const ipc::zenoh::EndpointInfo& info) { callback_EndPointInfoUpdate(info); });
+      [this](const ipc::zenoh::EndpointInfo& info) { endPointInfoUpdateCallback(info); });
 
-  fmt::println("[IPC Graph] - ONLINE");
+  heph::log(heph::INFO, "\n[IPC Graph] - ONLINE");
 }
 
 void IpcGraph::stop() {
-  fmt::println("[IPC Graph] - Stopping...");
+  heph::log(heph::INFO, "\n[IPC Graph] - Stopping...");
   {
     const absl::MutexLock lock(&mutex_);
 
@@ -56,7 +56,7 @@ void IpcGraph::stop() {
 
   discovery_.reset();
 
-  fmt::println("[IPC Graph] - OFFLINE");
+  heph::log(heph::INFO, "\n[IPC Graph] - OFFLINE");
 }
 
 auto IpcGraph::getTopicTypeInfo(const std::string& topic) const -> std::optional<serdes::TypeInfo> {
@@ -70,7 +70,7 @@ auto IpcGraph::getServiceTypeInfo(const std::string& service_name) const
   return topic_db_->getServiceTypeInfo(service_name);
 }
 
-void IpcGraph::callback_EndPointInfoUpdate(const ipc::zenoh::EndpointInfo& info) {
+void IpcGraph::endPointInfoUpdateCallback(const ipc::zenoh::EndpointInfo& info) {
   const absl::MutexLock lock(&mutex_);
   ipc::zenoh::printEndpointInfo(info);
 
@@ -454,7 +454,7 @@ void IpcGraphState::printIpcGraphState() const {
 
   ss << "\n";
 
-  fmt::println("{}", ss.str());
+  fmt::println("\n{}", ss.str());
 }
 
 [[nodiscard]] auto IpcGraphState::checkConsistency() const -> bool {

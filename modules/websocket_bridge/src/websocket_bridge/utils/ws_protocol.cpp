@@ -2,7 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,7 +19,7 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
-#include "hephaestus/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {
 

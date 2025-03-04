@@ -9,4 +9,3 @@ build --generate_json_trace_profile --profile command.profile.gz
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
 build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
-build:clang-tidy --local_cpu_resources=HOST_CPUS*0.5

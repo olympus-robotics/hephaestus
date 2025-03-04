@@ -17,7 +17,7 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/telemetry/log.h>
 
-#include "hephaestus/utils/ws_protocol.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
 
