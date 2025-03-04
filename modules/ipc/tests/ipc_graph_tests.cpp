@@ -6,8 +6,8 @@
 #include <string>
 
 #include <gtest/gtest.h>
-#include <hephaestus/ipc/ipc_graph.h>
 #include <hephaestus/ipc/topic.h>
+#include <hephaestus/ipc/zenoh/ipc_graph.h>
 #include <hephaestus/ipc/zenoh/publisher.h>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <hephaestus/ipc/zenoh/service_client.h>
@@ -18,7 +18,11 @@
 #include <hephaestus/types/dummy_type.h>
 #include <hephaestus/types_proto/dummy_type.h>  // NOLINT(misc-include-cleaner)
 
-namespace heph::ws::tests {
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::testing;
+
+namespace heph::ipc::zenoh::tests {
+namespace {
 
 class IpcGraphTest : public ::testing::Test {
 protected:
@@ -664,4 +668,5 @@ TEST_F(IpcGraphTest, GetTopicListString) {
   EXPECT_TRUE(topic_discovered);
 }
 
-}  // namespace heph::ws::tests
+}  // namespace
+}  // namespace heph::ipc::zenoh::tests

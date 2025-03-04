@@ -89,15 +89,6 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "ipc_graph_tests",
-    srcs = [
-        "tests/ipc_graph_tests.cpp",
-    ],
-    tags = ["exclusive"],
-    deps = IPC_TEST_DEPS,
-)
-
-heph_cc_test(
     name = "bridge_state_tests",
     srcs = [
         "tests/bridge_state_tests.cpp",

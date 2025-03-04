@@ -149,3 +149,11 @@ heph_cc_test(
     ],
     deps = IPC_TEST_DEPS,
 )
+
+heph_cc_test(
+    name = "ipc_graph_tests",
+    srcs = [
+        "tests/ipc_graph_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)

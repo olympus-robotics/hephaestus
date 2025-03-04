@@ -2,7 +2,7 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/ipc/ipc_graph.h"
+#include "hephaestus/ipc/zenoh/ipc_graph.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -23,7 +23,7 @@
 #include <hephaestus/serdes/type_info.h>
 #include <hephaestus/telemetry/log.h>
 
-namespace heph::ws {
+namespace heph::ipc::zenoh {
 
 IpcGraph::IpcGraph(IpcGraphConfig config) : config_(std::move(config)) {
 }
@@ -494,4 +494,4 @@ void IpcGraphState::printIpcGraphState() const {
   return true;
 }
 
-}  // namespace heph::ws
+}  // namespace heph::ipc::zenoh

@@ -24,6 +24,7 @@ set(SOURCES
     src/topic_filter.cpp
     src/zenoh/conversions.cpp
     src/zenoh/dynamic_subscriber.cpp
+    src/zenoh/ipc_graph.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
     src/zenoh/program_options.cpp
@@ -44,6 +45,7 @@ set(SOURCES
     include/hephaestus/ipc/topic_filter.h
     include/hephaestus/ipc/zenoh/conversions.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h
+    include/hephaestus/ipc/zenoh/ipc_graph.h
     include/hephaestus/ipc/zenoh/program_options.h
     include/hephaestus/ipc/zenoh/publisher.h
     include/hephaestus/ipc/zenoh/raw_publisher.h

@@ -19,7 +19,7 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 
-namespace heph::ws {
+namespace heph::ipc::zenoh {
 
 using TopicsToTypeMap = std::unordered_map<std::string, std::string>;
 using TopicsToServiceTypesMap = std::unordered_map<std::string, std::pair<std::string, std::string>>;
@@ -154,4 +154,4 @@ private:
   TopicDiscoveryCallback topic_discovery_cb_;
 };
 
-}  // namespace heph::ws
+}  // namespace heph::ipc::zenoh

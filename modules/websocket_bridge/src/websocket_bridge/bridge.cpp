@@ -25,6 +25,7 @@
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/ipc/topic.h>
+#include <hephaestus/ipc/zenoh/ipc_graph.h>
 #include <hephaestus/ipc/zenoh/liveliness.h>
 #include <hephaestus/ipc/zenoh/raw_subscriber.h>
 #include <hephaestus/ipc/zenoh/session.h>
@@ -32,7 +33,6 @@
 #include <hephaestus/telemetry/log.h>
 
 #include "hephaestus/ipc/ipc_entity_manager.h"
-#include "hephaestus/ipc/ipc_graph.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"

@@ -25,17 +25,6 @@ define_module_test(
 )
 
 define_module_test(
-        NAME ipc_graph_tests
-        SOURCES ipc_graph_tests.cpp
-        PUBLIC_INCLUDE_PATHS
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-        PUBLIC_LINK_LIBS 
-                hephaestus::websocket_bridge
-                hephaestus::types
-                hephaestus::types_proto
-)
-
-define_module_test(
         NAME ipc_entity_manager_tests
         SOURCES ipc_entity_manager_tests.cpp
         PUBLIC_INCLUDE_PATHS
