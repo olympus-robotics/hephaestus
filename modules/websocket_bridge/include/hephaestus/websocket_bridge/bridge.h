@@ -23,19 +23,19 @@
 
 namespace heph::ws {
 
-class WsBridge {
+class WebsocketBridge {
 public:
-  WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const WsBridgeConfig& config);
+  WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const WebsocketBridgeConfig& config);
 
-  ~WsBridge() = default;
+  ~WebsocketBridge() = default;
 
   void start();
   void stop();
 
 private:
-  WsBridgeConfig config_;
+  WebsocketBridgeConfig config_;
 
-  WsBridgeState state_;
+  WebsocketBridgeState state_;
 
   ////////////////////////////////
   // Websocket Server Interface //

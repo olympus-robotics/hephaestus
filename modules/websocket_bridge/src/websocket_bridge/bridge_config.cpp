@@ -58,7 +58,7 @@ auto parseRegexStrings(const std::vector<std::string>& regex_string_vector) -> s
   return regex_vector;
 }
 
-auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConfig {
+auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WebsocketBridgeConfig {
   const std::ifstream file(yaml_file_path);
   if (!file.is_open()) {
     throw std::runtime_error("Could not open YAML file for reading: " + yaml_file_path);
@@ -68,7 +68,7 @@ auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConf
   buffer << file.rdbuf();
   const std::string yaml_content = buffer.str();
 
-  const auto maybe_config = rfl::yaml::read<WsBridgeConfig>(yaml_content);
+  const auto maybe_config = rfl::yaml::read<WebsocketBridgeConfig>(yaml_content);
   if (!maybe_config) {
     throw std::runtime_error("Failed to parse YAML from: " + yaml_file_path);
   }
@@ -76,7 +76,7 @@ auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConf
   return maybe_config.value();
 }
 
-void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path) {
+void saveBridgeConfigToYaml(const WebsocketBridgeConfig& config, const std::string& path) {
   auto yaml_str = convertBridgeConfigToString(config);
   {
     std::ofstream out(path);
@@ -100,19 +100,19 @@ auto isMatch(const std::string& topic, const std::vector<std::string>& regex_str
   return isMatch(topic, regex_list);
 }
 
-auto shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config) -> bool {
+auto shouldBridgeIpcTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool {
   return isMatch(topic, config.ipc_topic_whitelist) && !isMatch(topic, config.ipc_topic_blacklist);
 }
 
-auto shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config) -> bool {
+auto shouldBridgeIpcService(const std::string& service, const WebsocketBridgeConfig& config) -> bool {
   return isMatch(service, config.ipc_service_whitelist) && !isMatch(service, config.ipc_service_blacklist);
 }
 
-auto shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) -> bool {
+auto shouldBridgeWsTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool {
   return isMatch(topic, config.ws_server_config.clientTopicWhitelistPatterns);
 }
 
-auto convertBridgeConfigToString(const WsBridgeConfig& config) -> std::string {
+auto convertBridgeConfigToString(const WebsocketBridgeConfig& config) -> std::string {
   return rfl::yaml::write(config);
 }
 

@@ -24,7 +24,7 @@ namespace heph::ws {
 [[nodiscard]] auto parseRegexStrings(const std::vector<std::string>& regex_string_vector)
     -> std::vector<std::regex>;
 
-struct WsBridgeConfig {
+struct WebsocketBridgeConfig {
   ///////////////
   // WS Server //
   ///////////////
@@ -77,18 +77,18 @@ struct WsBridgeConfig {
   std::vector<std::string> ipc_service_blacklist;
 };
 
-[[nodiscard]] auto shouldBridgeIpcTopic(const std::string& topic, const WsBridgeConfig& config) -> bool;
-[[nodiscard]] auto shouldBridgeIpcService(const std::string& service, const WsBridgeConfig& config) -> bool;
-[[nodiscard]] auto shouldBridgeWsTopic(const std::string& topic, const WsBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeIpcTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeIpcService(const std::string& service, const WebsocketBridgeConfig& config) -> bool;
+[[nodiscard]] auto shouldBridgeWsTopic(const std::string& topic, const WebsocketBridgeConfig& config) -> bool;
 
 [[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::regex>& regex_list) -> bool;
 [[nodiscard]] auto isMatch(const std::string& topic, const std::vector<std::string>& regex_string_list)
     -> bool;
 
-[[nodiscard]] auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WsBridgeConfig;
+[[nodiscard]] auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WebsocketBridgeConfig;
 
-void saveBridgeConfigToYaml(const WsBridgeConfig& config, const std::string& path);
+void saveBridgeConfigToYaml(const WebsocketBridgeConfig& config, const std::string& path);
 
-auto convertBridgeConfigToString(const WsBridgeConfig& config) -> std::string;
+auto convertBridgeConfigToString(const WebsocketBridgeConfig& config) -> std::string;
 
 }  // namespace heph::ws

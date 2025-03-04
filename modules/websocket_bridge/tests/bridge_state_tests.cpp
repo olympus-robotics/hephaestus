@@ -13,7 +13,7 @@
 
 namespace heph::ws::tests {
 
-class WsBridgeStateTest : public ::testing::Test {
+class WebsocketBridgeStateTest : public ::testing::Test {
 protected:
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
@@ -32,7 +32,7 @@ protected:
 
   // NOLINTBEGIN
   // Note: The following variables are perfectly ok to be accessible from within the test.
-  WsBridgeState state;
+  WebsocketBridgeState state;
   WsChannelId channel_id1 = 1;
   WsChannelId channel_id2 = 2;
   std::string topic1 = "topic1";
@@ -48,44 +48,44 @@ protected:
   // NOLINTEND
 };
 
-TEST_F(WsBridgeStateTest, AddAndGetIpcTopicForWsChannel) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetIpcTopicForWsChannel) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   EXPECT_EQ(state.getIpcTopicForWsChannel(channel_id1), topic1);
 }
 
-TEST_F(WsBridgeStateTest, GetIpcTopicForWsChannelNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetIpcTopicForWsChannelNotFound) {
   EXPECT_EQ(state.getIpcTopicForWsChannel(channel_id1), "");
 }
 
-TEST_F(WsBridgeStateTest, AddAndGetWsChannelForIpcTopic) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetWsChannelForIpcTopic) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   EXPECT_EQ(state.getWsChannelForIpcTopic(topic1), channel_id1);
 }
 
-TEST_F(WsBridgeStateTest, GetWsChannelForIpcTopicNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetWsChannelForIpcTopicNotFound) {
   EXPECT_EQ(state.getWsChannelForIpcTopic(topic1), WsChannelId{});
 }
 
-TEST_F(WsBridgeStateTest, RemoveWsChannelToIpcTopicMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveWsChannelToIpcTopicMapping) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   state.removeWsChannelToIpcTopicMapping(channel_id1, topic1);
   EXPECT_EQ(state.getIpcTopicForWsChannel(channel_id1), "");
   EXPECT_EQ(state.getWsChannelForIpcTopic(topic1), WsChannelId{});
 }
 
-TEST_F(WsBridgeStateTest, HasWsChannelMapping) {
+TEST_F(WebsocketBridgeStateTest, HasWsChannelMapping) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   EXPECT_TRUE(state.hasWsChannelMapping(channel_id1));
   EXPECT_FALSE(state.hasWsChannelMapping(channel_id2));
 }
 
-TEST_F(WsBridgeStateTest, HasIpcTopicMapping) {
+TEST_F(WebsocketBridgeStateTest, HasIpcTopicMapping) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   EXPECT_TRUE(state.hasIpcTopicMapping(topic1));
   EXPECT_FALSE(state.hasIpcTopicMapping(topic2));
 }
 
-TEST_F(WsBridgeStateTest, TopicChannelMappingToString) {
+TEST_F(WebsocketBridgeStateTest, TopicChannelMappingToString) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_NE(state.topicChannelMappingToString().find("[1]"), std::string::npos);
@@ -93,7 +93,7 @@ TEST_F(WsBridgeStateTest, TopicChannelMappingToString) {
   EXPECT_NE(state.topicChannelMappingToString().find("topic1"), std::string::npos);
 }
 
-TEST_F(WsBridgeStateTest, AddAndGetClientsForWsChannel) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetClientsForWsChannel) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   auto clients = state.getClientsForWsChannel(channel_id1);
   ASSERT_TRUE(clients.has_value());
@@ -101,19 +101,19 @@ TEST_F(WsBridgeStateTest, AddAndGetClientsForWsChannel) {
   EXPECT_EQ(clients->begin()->second, client_name1);
 }
 
-TEST_F(WsBridgeStateTest, GetClientsForWsChannelNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetClientsForWsChannelNotFound) {
   auto clients = state.getClientsForWsChannel(channel_id1);
   EXPECT_FALSE(clients.has_value());
 }
 
-TEST_F(WsBridgeStateTest, RemoveWsChannelToClientMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveWsChannelToClientMapping) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   state.removeWsChannelToClientMapping(channel_id1);
   auto clients = state.getClientsForWsChannel(channel_id1);
   EXPECT_FALSE(clients.has_value());
 }
 
-TEST_F(WsBridgeStateTest, RemoveSpecificClientFromWsChannel) {
+TEST_F(WebsocketBridgeStateTest, RemoveSpecificClientFromWsChannel) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   state.addWsChannelToClientMapping(channel_id1, client_handle2, client_name2);
   state.removeWsChannelToClientMapping(channel_id1, client_handle1);
@@ -123,20 +123,20 @@ TEST_F(WsBridgeStateTest, RemoveSpecificClientFromWsChannel) {
   EXPECT_EQ(clients->begin()->second, client_name2);
 }
 
-TEST_F(WsBridgeStateTest, HasWsChannelWithClients) {
+TEST_F(WebsocketBridgeStateTest, HasWsChannelWithClients) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_TRUE(state.hasWsChannelWithClients(channel_id1));
   EXPECT_FALSE(state.hasWsChannelWithClients(channel_id2));
 }
 
-TEST_F(WsBridgeStateTest, ToString) {
+TEST_F(WebsocketBridgeStateTest, ToString) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_NE(state.toString().find("[1]"), std::string::npos);
   EXPECT_NE(state.toString().find("client1"), std::string::npos);
 }
 
-TEST_F(WsBridgeStateTest, AddAndRetrieveServiceMapping) {
+TEST_F(WebsocketBridgeStateTest, AddAndRetrieveServiceMapping) {
   const WsServiceId service_id = 101;
   const std::string service_name = "test_service";
   state.addWsServiceToIpcServiceMapping(service_id, service_name);
@@ -145,7 +145,7 @@ TEST_F(WsBridgeStateTest, AddAndRetrieveServiceMapping) {
   EXPECT_EQ(state.getWsServiceForIpcService(service_name), service_id);
 }
 
-TEST_F(WsBridgeStateTest, RemoveServiceMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveServiceMapping) {
   const WsServiceId service_id = 202;
   const std::string service_name = "removable_service";
   state.addWsServiceToIpcServiceMapping(service_id, service_name);
@@ -155,7 +155,7 @@ TEST_F(WsBridgeStateTest, RemoveServiceMapping) {
   EXPECT_FALSE(state.hasIpcServiceMapping(service_name));
 }
 
-TEST_F(WsBridgeStateTest, ServiceMappingToString) {
+TEST_F(WebsocketBridgeStateTest, ServiceMappingToString) {
   const WsServiceId service_id = 303;
   const std::string service_name = "string_service";
   state.addWsServiceToIpcServiceMapping(service_id, service_name);
@@ -164,16 +164,16 @@ TEST_F(WsBridgeStateTest, ServiceMappingToString) {
   EXPECT_NE(mapping_str.find(service_name), std::string::npos);
 }
 
-// Additional tests for WsBridgeState
+// Additional tests for WebsocketBridgeState
 
 // Client channel to topic mappings
-TEST_F(WsBridgeStateTest, AddAndGetTopicForClientChannel) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetTopicForClientChannel) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToTopicMapping(client_channel_id, topic1);
   EXPECT_EQ(state.getTopicForClientChannel(client_channel_id), topic1);
 }
 
-TEST_F(WsBridgeStateTest, GetClientChannelsForTopic) {
+TEST_F(WebsocketBridgeStateTest, GetClientChannelsForTopic) {
   const WsClientChannelId client_channel_id1 = 10001;
   const WsClientChannelId client_channel_id2 = 10002;
   state.addClientChannelToTopicMapping(client_channel_id1, topic1);
@@ -185,17 +185,17 @@ TEST_F(WsBridgeStateTest, GetClientChannelsForTopic) {
   EXPECT_TRUE(client_channels.find(client_channel_id2) != client_channels.end());
 }
 
-TEST_F(WsBridgeStateTest, GetTopicForClientChannelNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetTopicForClientChannelNotFound) {
   const WsClientChannelId client_channel_id = 10001;
   EXPECT_EQ(state.getTopicForClientChannel(client_channel_id), "");
 }
 
-TEST_F(WsBridgeStateTest, GetClientChannelsForTopicNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetClientChannelsForTopicNotFound) {
   auto client_channels = state.getClientChannelsForTopic(topic1);
   EXPECT_TRUE(client_channels.empty());
 }
 
-TEST_F(WsBridgeStateTest, RemoveClientChannelToTopicMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveClientChannelToTopicMapping) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToTopicMapping(client_channel_id, topic1);
   EXPECT_TRUE(state.hasClientChannelMapping(client_channel_id));
@@ -205,19 +205,19 @@ TEST_F(WsBridgeStateTest, RemoveClientChannelToTopicMapping) {
   EXPECT_FALSE(state.hasTopicToClientChannelMapping(topic1));
 }
 
-TEST_F(WsBridgeStateTest, HasClientChannelMapping) {
+TEST_F(WebsocketBridgeStateTest, HasClientChannelMapping) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToTopicMapping(client_channel_id, topic1);
   EXPECT_TRUE(state.hasClientChannelMapping(client_channel_id));
   EXPECT_FALSE(state.hasClientChannelMapping(10002));
 }
 
-TEST_F(WsBridgeStateTest, HasWsChannelWithClientsNoClientsInMap) {
+TEST_F(WebsocketBridgeStateTest, HasWsChannelWithClientsNoClientsInMap) {
   state.addWsChannelToIpcTopicMapping(channel_id2, topic2);
   EXPECT_FALSE(state.hasWsChannelWithClients(channel_id2));
 }
 
-TEST_F(WsBridgeStateTest, HasWsChannelWithClientsExpiredHandle) {
+TEST_F(WebsocketBridgeStateTest, HasWsChannelWithClientsExpiredHandle) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   client_handle1_shared_ptr.reset();
   // NOTE: The handle is expired, but without a call to the
@@ -226,21 +226,21 @@ TEST_F(WsBridgeStateTest, HasWsChannelWithClientsExpiredHandle) {
 }
 
 // Test for checkConsistency()
-TEST_F(WsBridgeStateTest, CheckConsistencyValidState) {
+TEST_F(WebsocketBridgeStateTest, CheckConsistencyValidState) {
   state.addWsChannelToIpcTopicMapping(channel_id1, topic1);
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   EXPECT_TRUE(state.checkConsistency());
 }
 
 // Tests for WS Service Call ID <-> WS Clients
-TEST_F(WsBridgeStateTest, HasCallIdToClientMapping) {
+TEST_F(WebsocketBridgeStateTest, HasCallIdToClientMapping) {
   const uint32_t call_id = 5000;
   EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
   state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
   EXPECT_TRUE(state.hasCallIdToClientMapping(call_id));
 }
 
-TEST_F(WsBridgeStateTest, AddAndGetClientForCallId) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetClientForCallId) {
   const uint32_t call_id = 5001;
   state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
 
@@ -249,13 +249,13 @@ TEST_F(WsBridgeStateTest, AddAndGetClientForCallId) {
   EXPECT_EQ(client->second, client_name1);
 }
 
-TEST_F(WsBridgeStateTest, GetClientForCallIdNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetClientForCallIdNotFound) {
   const uint32_t call_id = 5002;
   auto client = state.getClientForCallId(call_id);
   EXPECT_FALSE(client.has_value());
 }
 
-TEST_F(WsBridgeStateTest, RemoveCallIdToClientMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveCallIdToClientMapping) {
   const uint32_t call_id = 5003;
   state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
   EXPECT_TRUE(state.hasCallIdToClientMapping(call_id));
@@ -264,7 +264,7 @@ TEST_F(WsBridgeStateTest, RemoveCallIdToClientMapping) {
   EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
 }
 
-TEST_F(WsBridgeStateTest, CallIdToClientMappingToString) {
+TEST_F(WebsocketBridgeStateTest, CallIdToClientMappingToString) {
   const uint32_t call_id = 5004;
   state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
 
@@ -273,7 +273,7 @@ TEST_F(WsBridgeStateTest, CallIdToClientMappingToString) {
   EXPECT_NE(mapping_str.find(client_name1), std::string::npos);
 }
 
-TEST_F(WsBridgeStateTest, CleanUpCallIdToClientMappingExpiredHandle) {
+TEST_F(WebsocketBridgeStateTest, CleanUpCallIdToClientMappingExpiredHandle) {
   const uint32_t call_id = 5005;
   const uint32_t call_id_2 = 5006;
   state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
@@ -290,7 +290,7 @@ TEST_F(WsBridgeStateTest, CleanUpCallIdToClientMappingExpiredHandle) {
 }
 
 // Test for clientChannelMappingToString
-TEST_F(WsBridgeStateTest, ClientChannelMappingToString) {
+TEST_F(WebsocketBridgeStateTest, ClientChannelMappingToString) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToTopicMapping(client_channel_id, topic1);
   state.addClientChannelToClientMapping(client_channel_id, client_handle1, client_name1);
@@ -302,7 +302,7 @@ TEST_F(WsBridgeStateTest, ClientChannelMappingToString) {
 }
 
 // Tests for WS Client Channels <-> WS Clients
-TEST_F(WsBridgeStateTest, HasClientForClientChannel) {
+TEST_F(WebsocketBridgeStateTest, HasClientForClientChannel) {
   const WsClientChannelId client_channel_id = 10001;
   EXPECT_FALSE(state.hasClientForClientChannel(client_channel_id));
 
@@ -310,7 +310,7 @@ TEST_F(WsBridgeStateTest, HasClientForClientChannel) {
   EXPECT_TRUE(state.hasClientForClientChannel(client_channel_id));
 }
 
-TEST_F(WsBridgeStateTest, AddAndGetClientForClientChannel) {
+TEST_F(WebsocketBridgeStateTest, AddAndGetClientForClientChannel) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToClientMapping(client_channel_id, client_handle1, client_name1);
 
@@ -319,13 +319,13 @@ TEST_F(WsBridgeStateTest, AddAndGetClientForClientChannel) {
   EXPECT_EQ(client->second, client_name1);
 }
 
-TEST_F(WsBridgeStateTest, GetClientForClientChannelNotFound) {
+TEST_F(WebsocketBridgeStateTest, GetClientForClientChannelNotFound) {
   const WsClientChannelId client_channel_id = 10001;
   auto client = state.getClientForClientChannel(client_channel_id);
   EXPECT_FALSE(client.has_value());
 }
 
-TEST_F(WsBridgeStateTest, RemoveClientChannelToClientMapping) {
+TEST_F(WebsocketBridgeStateTest, RemoveClientChannelToClientMapping) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToClientMapping(client_channel_id, client_handle1, client_name1);
   EXPECT_TRUE(state.hasClientForClientChannel(client_channel_id));
@@ -334,7 +334,7 @@ TEST_F(WsBridgeStateTest, RemoveClientChannelToClientMapping) {
   EXPECT_FALSE(state.hasClientForClientChannel(client_channel_id));
 }
 
-TEST_F(WsBridgeStateTest, CleanUpClientChannelToClientMappingExpiredHandle) {
+TEST_F(WebsocketBridgeStateTest, CleanUpClientChannelToClientMappingExpiredHandle) {
   const WsClientChannelId client_channel_id = 10001;
   const WsClientChannelId client_channel_id_2 = 10002;
 
@@ -352,7 +352,7 @@ TEST_F(WsBridgeStateTest, CleanUpClientChannelToClientMappingExpiredHandle) {
 }
 
 // Test for HasClientForClientChannel with expired handle
-TEST_F(WsBridgeStateTest, HasClientForClientChannelExpiredHandle) {
+TEST_F(WebsocketBridgeStateTest, HasClientForClientChannelExpiredHandle) {
   const WsClientChannelId client_channel_id = 10001;
   state.addClientChannelToClientMapping(client_channel_id, client_handle1, client_name1);
   EXPECT_TRUE(state.hasClientForClientChannel(client_channel_id));
@@ -365,7 +365,7 @@ TEST_F(WsBridgeStateTest, HasClientForClientChannelExpiredHandle) {
 }
 
 // Test for HasTopicToClientChannelMapping
-TEST_F(WsBridgeStateTest, HasTopicToClientChannelMapping) {
+TEST_F(WebsocketBridgeStateTest, HasTopicToClientChannelMapping) {
   EXPECT_FALSE(state.hasTopicToClientChannelMapping(topic1));
 
   const WsClientChannelId client_channel_id = 10001;

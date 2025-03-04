@@ -17,9 +17,9 @@
 
 namespace heph::ws {
 
-class WsBridgeState {
+class WebsocketBridgeState {
 public:
-  WsBridgeState() = default;
+  WebsocketBridgeState() = default;
 
   // Full State [protected by all mutexes]
 public:

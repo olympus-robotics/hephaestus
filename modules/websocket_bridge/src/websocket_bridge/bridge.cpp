@@ -40,7 +40,7 @@
 
 namespace heph::ws {
 
-WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const WsBridgeConfig& config)
+WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const WebsocketBridgeConfig& config)
   : config_(config), ws_server_(nullptr), ipc_graph_(nullptr) {
   // Initialize IPC Graph
   {
@@ -76,7 +76,7 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
   {
     // Log handler
     const auto ws_server_log_handler = [](WsLogLevel level, char const* msg) {
-      WsBridge::callback_Ws_Log(level, msg);
+      WebsocketBridge::callback_Ws_Log(level, msg);
     };
 
     // Create server
@@ -128,10 +128,10 @@ WsBridge::WsBridge(const std::shared_ptr<ipc::zenoh::Session>& session, const Ws
 }
 
 /////////////////////////
-// WsBridge Life-cycle //
+// WebsocketBridge Life-cycle //
 /////////////////////////
 
-void WsBridge::start() {
+void WebsocketBridge::start() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
@@ -159,7 +159,7 @@ void WsBridge::start() {
   heph::log(heph::INFO, "\n[WS Bridge] - ONLINE");
 }
 
-void WsBridge::stop() {
+void WebsocketBridge::stop() {
   CHECK(ws_server_);
   CHECK(ipc_graph_);
 
@@ -182,7 +182,7 @@ void WsBridge::stop() {
 // IPC Graph Callbacks //
 /////////////////////////
 
-void WsBridge::callback_IpcGraph_TopicFound(const std::string& topic,
+void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
                                             const heph::serdes::TypeInfo& type_info) {
   CHECK(ipc_graph_);
   heph::log(heph::INFO, "\n[WS Bridge] - New topic will be added  ...", "topic", topic, "type_name",
@@ -210,7 +210,7 @@ void WsBridge::callback_IpcGraph_TopicFound(const std::string& topic,
             type_info.name, "channel_id", new_channel_id);
 }
 
-void WsBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
+void WebsocketBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
   heph::log(heph::INFO, "\n[WS Bridge] - Topic will be dropped  ...", "topic", topic);
   if (!state_.hasIpcTopicMapping(topic)) {
     state_.printBridgeState();
@@ -241,7 +241,7 @@ void WsBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
   heph::log(heph::INFO, "\n[WS Bridge] - Topic dropped successfully.", "topic", topic);
 }
 
-void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
+void WebsocketBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
                                               const heph::serdes::ServiceTypeInfo& type_info) {
   heph::log(heph::INFO, "\n[WS Bridge] - Service will be added  ...", "service_name", service_name,
             "request_type_name", type_info.request.name, "reply_type_name", type_info.reply.name);
@@ -280,7 +280,7 @@ void WsBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
             "new_service_id", new_service_id);
 }
 
-void WsBridge::callback_IpcGraph_ServiceDropped(const std::string& service_name) {
+void WebsocketBridge::callback_IpcGraph_ServiceDropped(const std::string& service_name) {
   heph::log(heph::INFO, "\n[WS Bridge] - Service will be dropped  ...", "service_name", service_name);
 
   if (!state_.hasIpcServiceMapping(service_name)) {
@@ -301,7 +301,7 @@ void WsBridge::callback_IpcGraph_ServiceDropped(const std::string& service_name)
   heph::log(heph::INFO, "\n[WS Bridge] - Service dropped successfully.", "service_name", service_name);
 }
 
-void WsBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
+void WebsocketBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
                                          IpcGraphState ipc_graph_state) {
   // NOTE: currently we do not need the endpoint info that triggered the graph update. However, it is very
   // useful to debug, and there are also some features that might require knowing who triggered it. Let's keep
@@ -362,7 +362,7 @@ void WsBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info,
 // IPC Interface Callbacks //
 /////////////////////////////
 
-void WsBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
+void WebsocketBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
                                             std::span<const std::byte> message_data,
                                             const heph::serdes::TypeInfo& type_info) {
   (void)type_info;
@@ -391,7 +391,7 @@ void WsBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetad
   }
 }
 
-void WsBridge::callback_Ipc_ServiceResponsesReceived(
+void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
     WsServiceId service_id, WsServiceCallId call_id, const RawServiceResponses& responses,
     std::optional<ClientHandleWithName> client_handle_w_name_opt) {
   CHECK(ws_server_);
@@ -473,7 +473,7 @@ void WsBridge::callback_Ipc_ServiceResponsesReceived(
 // Websocket Server Callbacks //
 ////////////////////////////////
 
-void WsBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
+void WebsocketBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
   switch (level) {
     case WsLogLevel::Debug:
       heph::log(heph::DEBUG, fmt::format("\n[WS Server] - {}", msg));
@@ -493,7 +493,7 @@ void WsBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
   }
 }
 
-void WsBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
+void WebsocketBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
   CHECK(ipc_graph_);
   CHECK(ipc_entity_manager_);
   CHECK(ws_server_);
@@ -533,7 +533,7 @@ void WsBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandl
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
+void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
   CHECK(ipc_entity_manager_);
   CHECK(ws_server_);
 
@@ -564,7 +564,7 @@ void WsBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHan
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
+void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
                                            const WsClientHandle& client_handle) {
   CHECK(ipc_graph_);
   CHECK(ipc_entity_manager_);
@@ -614,7 +614,7 @@ void WsBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisemen
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
+void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
                                              const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   auto topic = state_.getTopicForClientChannel(client_channel_id);
@@ -658,7 +658,7 @@ void WsBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id
   state_.printBridgeState();
 }
 
-void WsBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
+void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
                                          const WsClientHandle& client_handle) {
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
   const auto& topic = message.advertisement.topic;
@@ -712,7 +712,7 @@ void WsBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
   }
 }
 
-void WsBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request,
+void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request,
                                           const WsClientHandle& client_handle) {
   CHECK(ipc_entity_manager_);
 
@@ -779,7 +779,7 @@ void WsBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request,
   }
 }
 
-void WsBridge::callback_Ws_SubscribeConnectionGraph(bool subscribe) {
+void WebsocketBridge::callback_Ws_SubscribeConnectionGraph(bool subscribe) {
   CHECK(ipc_graph_);
   if (subscribe) {
     ipc_graph_->refreshConnectionGraph();

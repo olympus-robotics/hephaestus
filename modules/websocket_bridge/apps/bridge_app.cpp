@@ -24,11 +24,11 @@ auto main(int argc, const char* argv[]) -> int {
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
-    auto desc = heph::cli::ProgramDescription("Hephaestus <===> WebSocket (Foxglove) WsBridge");
+    auto desc = heph::cli::ProgramDescription("Hephaestus <===> WebSocket (Foxglove) WebsocketBridge");
     desc.defineOption<std::filesystem::path>("config", 'c', "Path to the configuration YAML file");
 
     const auto args = std::move(desc).parse(argc, argv);
-    heph::ws::WsBridgeConfig config;
+    heph::ws::WebsocketBridgeConfig config;
 
     if (args.hasOption("config")) {
       auto config_file_path = args.getOption<std::filesystem::path>("config");
@@ -43,7 +43,7 @@ auto main(int argc, const char* argv[]) -> int {
     }
 
     auto session = heph::ipc::zenoh::createSession(config.zenoh_config);
-    auto bridge = std::make_unique<heph::ws::WsBridge>(session, config);
+    auto bridge = std::make_unique<heph::ws::WebsocketBridge>(session, config);
 
     bridge->start();
 

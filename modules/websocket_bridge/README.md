@@ -28,9 +28,9 @@ bazel run //modules/websocket_bridge::app -- -c <path to config file>
 
 ```mermaid
 classDiagram
-class WsBridge {
-    - WsBridgeConfig
-    - WsBridgeState
+class WebsocketBridge {
+    - WebsocketBridgeConfig
+    - WebsocketBridgeState
     - IpcGraph
     - IpcEntityManager
 
@@ -44,13 +44,13 @@ class WsBridge {
     + callback_Ipc_*()
 }
 
-class WsBridgeConfig {
+class WebsocketBridgeConfig {
     - WS Server Config
     - IPC Config
     - Topic/Service Whitelists/Blacklists
 }
 
-class WsBridgeState {
+class WebsocketBridgeState {
    - Map: IPC Topics <-> WS Channels
    - Map: WS Channels <-> WS Clients
    - Map: IPC Services <-> WS Services
@@ -112,11 +112,11 @@ class Foxglove WebSocket Server {
     + updateConnectionGraph()    
 }
 
-WsBridge --> WsBridgeConfig
-WsBridge --> WsBridgeState
-WsBridge --> IpcGraph
-WsBridge --> IpcEntityManager
-WsBridge --> Foxglove WebSocket Server
+WebsocketBridge --> WebsocketBridgeConfig
+WebsocketBridge --> WebsocketBridgeState
+WebsocketBridge --> IpcGraph
+WebsocketBridge --> IpcEntityManager
+WebsocketBridge --> Foxglove WebSocket Server
 ```
 
 ## Example Clients

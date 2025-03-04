@@ -45,7 +45,7 @@ TEST_F(BridgeConfigTest, StringMatch) {
 }
 
 TEST_F(BridgeConfigTest, WhitelistAndBlacklistA) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   config.ipc_topic_blacklist = { "^exclude$" };
   EXPECT_TRUE(shouldBridgeIpcTopic("include", config));
@@ -53,14 +53,14 @@ TEST_F(BridgeConfigTest, WhitelistAndBlacklistA) {
 }
 
 TEST_F(BridgeConfigTest, WhitelistOnlyA) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcTopic("include", config));
   EXPECT_TRUE(shouldBridgeIpcTopic("exclude", config));
 }
 
 TEST_F(BridgeConfigTest, WhitelistAndBlacklistB) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   config.ipc_service_blacklist = { "^exclude$" };
   EXPECT_TRUE(shouldBridgeIpcService("include", config));
@@ -68,28 +68,28 @@ TEST_F(BridgeConfigTest, WhitelistAndBlacklistB) {
 }
 
 TEST_F(BridgeConfigTest, WhitelistOnlyB) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcService("include", config));
   EXPECT_TRUE(shouldBridgeIpcService("exclude", config));
 }
 
 TEST_F(BridgeConfigTest, MatchWhitelist) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   config.ws_server_config.clientTopicWhitelistPatterns = parseRegexStrings({ ".*incl.*" });
   EXPECT_TRUE(shouldBridgeWsTopic("include", config));
   EXPECT_FALSE(shouldBridgeWsTopic("exclude", config));
 }
 
 TEST_F(BridgeConfigTest, SaveDefaultAndLoad) {
-  WsBridgeConfig original_config;
+  WebsocketBridgeConfig original_config;
   try {
     saveBridgeConfigToYaml(original_config, "/tmp/default.yaml");
   } catch (const std::exception& e) {
     FAIL() << "Failed to save default config: " << e.what();
   }
 
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   try {
     config = loadBridgeConfigFromYaml("/tmp/default.yaml");
   } catch (const std::exception& e) {
@@ -144,7 +144,7 @@ TEST_F(BridgeConfigTest, LoadInvalidYaml) {
 }
 
 TEST_F(BridgeConfigTest, SaveInvalidPath) {
-  WsBridgeConfig config;
+  WebsocketBridgeConfig config;
   EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"), std::runtime_error);
 }
 
