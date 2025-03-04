@@ -169,15 +169,17 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithoutSubTopicTracking) {
   // THIS IS NOT THE DEFAULT BEHAVIOR
   config.track_topics_based_on_subscribers = false;
 
-  startIpcGraph();
-
-  IpcGraphTest::sleepLongEnoughToSync();
-
   auto reset = [&]() {
     topic_discovered = false;
     topic_removed = false;
     graph_updated = false;
   };
+  
+  startIpcGraph();
+
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  reset();
 
   ASSERT_FALSE(topic_removed);
   ASSERT_FALSE(topic_discovered);
@@ -335,15 +337,17 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithSubTopicTracking) {
   // THIS IS NOT THE DEFAULT BEHAVIOR
   config.track_topics_based_on_subscribers = true;
 
-  startIpcGraph();
-
-  IpcGraphTest::sleepLongEnoughToSync();
-
   auto reset = [&]() {
     topic_discovered = false;
     topic_removed = false;
     graph_updated = false;
   };
+
+  startIpcGraph();
+
+  IpcGraphTest::sleepLongEnoughToSync();
+
+  reset();
 
   ASSERT_FALSE(topic_removed);
   ASSERT_FALSE(topic_discovered);
@@ -507,6 +511,8 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
   startIpcGraph();
 
   IpcGraphTest::sleepLongEnoughToSync();
+
+  reset();
 
   ASSERT_FALSE(service_removed);
   ASSERT_FALSE(service_discovered);
