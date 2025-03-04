@@ -279,7 +279,7 @@ add_cmake_dependency(
   NAME ws_protocol
   VERSION ${WS_PROTOCOL_VERSION}
   DEPENDS ${WS_PROTOCOL_DEPENDS}
-  URL https://github.com/mfehr/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
+  URL https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
   GIT_TAG ${WS_PROTOCOL_TAG}
   SOURCE_SUBDIR cpp/foxglove-websocket
   CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -G Ninja
