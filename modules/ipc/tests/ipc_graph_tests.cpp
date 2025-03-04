@@ -174,7 +174,7 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithoutSubTopicTracking) {
     topic_removed = false;
     graph_updated = false;
   };
-  
+
   startIpcGraph();
 
   IpcGraphTest::sleepLongEnoughToSync();
