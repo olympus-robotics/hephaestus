@@ -50,30 +50,33 @@ struct BinaryCheckParams {
 }
 }  // namespace
 
-auto createCallbackWithStateMachine(Callbacks&& callbacks) -> StateMachineCallbackT {
+auto createStateMachineCallback(Callbacks&& callbacks) -> StateMachineCallbackT {
   return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> State {
     switch (state) {
       case State::NOT_INITIALIZED:
-        state = executeOperation(OperationParams{ .operation = callbacks.init_cb(),
+        state = executeOperation(OperationParams{ .operation = callbacks.init_cb,
                                                   .success_state = State::READY_TO_SPIN,
                                                   .failure_state = State::FAILED });
         break;
       case State::READY_TO_SPIN:
-        state = executeOperation(OperationParams{ .operation = callbacks.spin_once_cb(),
+        state = executeOperation(OperationParams{ .operation = callbacks.spin_once_cb,
                                                   .success_state = State::SPIN_SUCCESSFUL,
                                                   .failure_state = State::FAILED });
         break;
       case State::FAILED:
-        state = executeBinaryCheck(BinaryCheckParams{ .operation = callbacks.shall_restart_cb(),
+        state = executeBinaryCheck(BinaryCheckParams{ .check = callbacks.shall_restart_cb,
                                                       .true_state = State::NOT_INITIALIZED,
                                                       .false_state = State::EXIT,
                                                       .repeat_state = State::FAILED });
         break;
       case State::SPIN_SUCCESSFUL:
-        state = executeBinaryCheck(BinaryCheckParams{ .operation = callbacks.shall_stop_spinning_cb(),
+        state = executeBinaryCheck(BinaryCheckParams{ .check = callbacks.shall_stop_spinning_cb,
                                                       .true_state = State::EXIT,
                                                       .false_state = State::READY_TO_SPIN,
                                                       .repeat_state = State::SPIN_SUCCESSFUL });
+        break;
+      default:
+        state = State::EXIT;
         break;
     }
 

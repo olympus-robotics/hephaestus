@@ -9,9 +9,9 @@
 
 namespace heph::concurrency::spinner_state_machine {
 
-enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
-enum class CallbackResult : uint8_t { SUCCESS, FAILURE };
-enum class ExecutionDirective : uint8_t { TRUE, FALSE, REPEAT };
+enum class State : std::uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
+enum class CallbackResult : std::uint8_t { SUCCESS, FAILURE };
+enum class ExecutionDirective : std::uint8_t { TRUE, FALSE, REPEAT };
 
 using StateMachineCallbackT = std::function<State()>;
 using OperationCallbackT = std::function<CallbackResult()>;
