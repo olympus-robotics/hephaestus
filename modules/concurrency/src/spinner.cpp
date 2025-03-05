@@ -49,7 +49,7 @@ auto Spinner::createCallbackWithStateMachine(
     const auto state = state_machine_callback();
 
     // If the state machine reaches the exit state, the spinner should stop, else continue spinning.
-    if (state == State::EXIT) {
+    if (state == spinner_state_machine::State::EXIT) {
       return SpinResult::STOP;
     }
 

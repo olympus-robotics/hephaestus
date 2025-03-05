@@ -12,6 +12,8 @@
 #include <limits>
 #include <mutex>
 
+#include "hephaestus/concurrency/spinner_state_machine.h"
+
 namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.

@@ -4,8 +4,6 @@
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
 
-#include <utility>
-
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::spinner_state_machine {
@@ -18,7 +16,9 @@ struct OperationParams {
 };
 
 [[nodiscard]] auto executeOperation(const OperationParams& params) -> State {
-  switch (params.operation()) {
+  const auto result = params.operation();
+
+  switch (result) {
     case CallbackResult::SUCCESS:
       return params.success_state;
     case CallbackResult::FAILURE:
@@ -26,18 +26,18 @@ struct OperationParams {
   }
 
   heph::throwException<heph::InvalidParameterException>("Invalid callback result");
-  std::unreachable();
 }
 
 struct BinaryCheckParams {
-  BinaryCheckCallbackT operation;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+  BinaryCheckCallbackT& check;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
   State true_state;
   State false_state;
   State repeat_state;
 };
 
 [[nodiscard]] auto executeBinaryCheck(const BinaryCheckParams& params) -> State {
-  switch (params.operation()) {
+  const auto result = params.check();
+  switch (result) {
     case ExecutionDirective::TRUE:
       return params.true_state;
     case ExecutionDirective::FALSE:
@@ -47,35 +47,33 @@ struct BinaryCheckParams {
   }
 
   heph::throwException<heph::InvalidParameterException>("Invalid callback result");
-  std::unreachable();
 }
-
 }  // namespace
 
 auto createCallbackWithStateMachine(Callbacks&& callbacks) -> StateMachineCallbackT {
   return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> State {
     switch (state) {
       case State::NOT_INITIALIZED:
-        state = executeOperation({ .operation = callbacks.init_cb(),
-                                   .success_state = State::READY_TO_SPIN,
-                                   .failure_state = State::FAILED });
+        state = executeOperation(OperationParams{ .operation = callbacks.init_cb(),
+                                                  .success_state = State::READY_TO_SPIN,
+                                                  .failure_state = State::FAILED });
         break;
       case State::READY_TO_SPIN:
-        state = executeOperation({ .operation = callbacks.spin_once_cb(),
-                                   .success_state = State::SPIN_SUCCESSFUL,
-                                   .failure_state = State::FAILED });
+        state = executeOperation(OperationParams{ .operation = callbacks.spin_once_cb(),
+                                                  .success_state = State::SPIN_SUCCESSFUL,
+                                                  .failure_state = State::FAILED });
         break;
       case State::FAILED:
-        state = executeBinaryCheck({ .operation = callbacks.shall_restart_cb(),
-                                     .true_state = State::NOT_INITIALIZED,
-                                     .false_state = State::EXIT,
-                                     .repeat_state = State::FAILED });
+        state = executeBinaryCheck(BinaryCheckParams{ .operation = callbacks.shall_restart_cb(),
+                                                      .true_state = State::NOT_INITIALIZED,
+                                                      .false_state = State::EXIT,
+                                                      .repeat_state = State::FAILED });
         break;
       case State::SPIN_SUCCESSFUL:
-        state = executeBinaryCheck({ .operation = callbacks.shall_stop_spinning_cb(),
-                                     .true_state = State::EXIT,
-                                     .false_state = State::READY_TO_SPIN,
-                                     .repeat_state = State::SPIN_SUCCESSFUL });
+        state = executeBinaryCheck(BinaryCheckParams{ .operation = callbacks.shall_stop_spinning_cb(),
+                                                      .true_state = State::EXIT,
+                                                      .false_state = State::READY_TO_SPIN,
+                                                      .repeat_state = State::SPIN_SUCCESSFUL });
         break;
     }
 
