@@ -6,8 +6,6 @@
 
 #include <utility>
 
-#include "hephaestus/utils/exception.h"
-
 namespace heph::concurrency::spinner_state_machine {
 
 namespace {
@@ -26,8 +24,6 @@ struct OperationParams {
     case CallbackResult::FAILURE:
       return params.failure_state;
   }
-
-  heph::throwException<heph::InvalidParameterException>("Invalid callback result");
 }
 
 struct BinaryCheckParams {
@@ -47,8 +43,6 @@ struct BinaryCheckParams {
     case ExecutionDirective::REPEAT:
       return params.repeat_state;
   }
-
-  heph::throwException<heph::InvalidParameterException>("Invalid callback result");
 }
 }  // namespace
 

@@ -93,6 +93,7 @@ void Spinner::spin() {
                                         start_timestamp, std::chrono::system_clock::now(), spin_period_));
       }
     } catch (std::exception& e) {
+      heph::log(heph::ERROR, "Spinner caught an exception, terminating", "error", e.what());
       terminate();
       throw;
     }
