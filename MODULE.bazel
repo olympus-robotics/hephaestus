@@ -84,10 +84,11 @@ git_override(
 )
 
 bazel_dep(name = "zstd", version = "1.5.6")
+bazel_dep(name = "liburing", version = "2.5")
 
 # TODO: eventually add
 # bazel_dep(name = "lz4", version = "1.9.4")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "zenohc_builder")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "zenohc_builder", "stdexec")

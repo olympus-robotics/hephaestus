@@ -3,6 +3,7 @@
 # =================================================================================================
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 def foreign_cc_repositories():
     ZENOH_VERSION = "1.2.1"
@@ -49,4 +50,11 @@ def foreign_cc_repositories():
         urls = ["https://github.com/getml/reflect-cpp/archive/v{version}.zip".format(version = REFLECT_CPP_VERSION)],
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION,
         sha256 = "16494784cf7af86a9903213eb4f654579258d44502b6fc8b1b50467c66b5a4a3",
+    )
+    
+    git_repository(
+        name = "stdexec",
+        commit = "46f8c6368dc419260e19f585de35ca3c1bb47ee0",
+        remote = "git@github.com:NVIDIA/stdexec.git",
+        build_file = "//bazel/foreign_cc:stdexec.BUILD",
     )
