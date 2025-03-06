@@ -4,6 +4,8 @@
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
 
+#include <utility>
+
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::spinner_state_machine {

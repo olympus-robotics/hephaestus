@@ -13,11 +13,9 @@
 #include <future>
 #include <limits>
 #include <mutex>
-#include <type_traits>
 #include <utility>
 
-#include <magic_enum.hpp>
-
+#include "hephaestus/concurrency/spinner_state_machine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
