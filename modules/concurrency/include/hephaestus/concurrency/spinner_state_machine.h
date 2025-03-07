@@ -10,29 +10,19 @@
 namespace heph::concurrency::spinner_state_machine {
 
 enum class State : std::uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
-enum class CallbackResult : std::uint8_t { SUCCESS, FAILURE };
-enum class ExecutionDirective : std::uint8_t { TRUE, FALSE, REPEAT };
+enum class Result : std::uint8_t { SUCCESS, FAILURE, REPEAT };
 
+using OperationCallbackT = std::function<Result()>;
+using CheckCallbackT = std::function<bool()>;
 using StateMachineCallbackT = std::function<State()>;
-using OperationCallbackT = std::function<CallbackResult()>;
-using BinaryCheckCallbackT = std::function<ExecutionDirective()>;
 
 struct Callbacks {
-  OperationCallbackT init_cb = []() -> CallbackResult {
-    return CallbackResult::SUCCESS;
-  };  //!< Handles initialization.
+  OperationCallbackT init_cb = []() -> Result { return Result::SUCCESS; };  //!< Handles initialization.
 
-  OperationCallbackT spin_once_cb = []() -> CallbackResult {
-    return CallbackResult::SUCCESS;
-  };  //!< Handles execution.
+  OperationCallbackT spin_once_cb = []() -> Result { return Result::SUCCESS; };  //!< Handles execution.
 
-  BinaryCheckCallbackT shall_stop_spinning_cb = []() -> ExecutionDirective {
-    return ExecutionDirective::FALSE;
-  };  //!< This callback is called after successful execution. It decides if spinning shall continue or
-      //!< conclude. Default: spin indefinitely.
-
-  BinaryCheckCallbackT shall_restart_cb = []() -> ExecutionDirective {
-    return ExecutionDirective::FALSE;
+  CheckCallbackT shall_restart_cb = []() -> bool {
+    return false;
   };  //!< This callback is called after failure. It decides if operation shall restart, or the spinner
       //!< shall conclude. Default: do not restart.
 };
