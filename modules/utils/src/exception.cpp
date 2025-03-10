@@ -12,7 +12,7 @@
 
 namespace heph {
 
-Exception::Exception(const std::string& message, std::source_location location)
+Panic::Panic(const std::string& message, std::source_location location)
   : std::runtime_error("[" + std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
                        std::to_string(location.line()) + "] " + message) {
 }
