@@ -115,7 +115,10 @@ concept UnorderedMapType = requires(T t) {
 };
 
 template <typename T>
-concept ChronoDurationType = std::chrono::__is_duration<T>::value;  // NOLINT(misc-include-cleaner)
+concept ChronoDurationType = requires {
+  typename T::rep;
+  typename T::period;
+} && std::is_same_v<T, std::chrono::duration<typename T::rep, typename T::period>>;
 
 template <typename T>
 concept ChronoSystemClockType = std::is_same_v<T, std::chrono::system_clock>;
