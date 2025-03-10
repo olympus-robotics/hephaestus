@@ -6,8 +6,6 @@
 
 #include <utility>
 
-#include <sys/stat.h>
-
 namespace heph::concurrency::spinner_state_machine {
 
 namespace {
