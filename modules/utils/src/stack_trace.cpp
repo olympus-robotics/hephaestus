@@ -9,8 +9,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include <cxxabi.h>
 #include <execinfo.h>
@@ -21,10 +23,11 @@ class StackTrace::Impl {
 public:
   Impl();
 
+  static void print(std::ostream& os);
+
 private:
   static constexpr size_t MAX_FRAMES = 64;
   static constexpr size_t MAX_FUNC_NAME_LEN = 1024;
-  static void print();
   [[noreturn]] static void abort(int signum, siginfo_t* si, void* unused);
 };
 
@@ -42,11 +45,11 @@ StackTrace::Impl::Impl() {
   sigaction(SIGPIPE, &sa, nullptr);
 }
 
-void StackTrace::Impl::print() {
+void StackTrace::Impl::print(std::ostream& os) {
   /// reference: https://oroboro.com/stack-trace-on-crash/
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cert-err33-c)
-  fprintf(stderr, "stack trace:\n");
+  os << "stack trace:\n";
   void* addrlist[MAX_FRAMES];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
   // retrieve current stack addresses
@@ -54,7 +57,7 @@ void StackTrace::Impl::print() {
   auto addrlen = backtrace(addrlist, MAX_FRAMES);
   if (addrlen == 0) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cert-err33-c)
-    fprintf(stderr, "  \n");
+    os << "  \n";
   }
 
   // resolve addresses into strings containing "filename(function+address)",
@@ -105,17 +108,18 @@ void StackTrace::Impl::print() {
         fname = ret;
       }
 
+      // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
       if (begin_offset != nullptr) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-        fprintf(stderr, "  %-30s ( %-40s  + %-6s) %s\n", symbol_list[i], fname, begin_offset, end_offset);
+        os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
+           << "  + " << std::setw(6) << begin_offset << ") " << end_offset << "\n";
       } else {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-        fprintf(stderr, "  %-30s ( %-40s    %-6s) %s\n", symbol_list[i], fname, "", end_offset);
+        os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
+           << "    " << std::setw(6) << "" << ") " << end_offset << "\n";
       }
     } else {
       // couldn't parse the line? print the whole line.
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-      fprintf(stderr, "  %-40s\n", symbol_list[i]);
+      os << "  " << std::setw(40) << symbol_list[i] << "\n";
+      // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
   }
 
@@ -128,7 +132,7 @@ void StackTrace::Impl::abort(int signum, siginfo_t* signal_info, void* unused) {
   (void)unused;
 
   std::cerr << "Caught signal " << strsignal(signum) << "\n";
-  StackTrace::Impl::print();
+  StackTrace::Impl::print(std::cerr);
   exit(signum);
 }
 
@@ -138,6 +142,12 @@ StackTrace::StackTrace() : impl_{ std::make_unique<Impl>() } {
 }
 
 StackTrace::~StackTrace() = default;
+
+auto StackTrace::print() -> std::string {
+  std::stringstream os;
+  Impl::print(os);
+  return os.str();
+}
 
 // NOLINTEND(misc-include-cleaner)
 }  // namespace heph::utils
