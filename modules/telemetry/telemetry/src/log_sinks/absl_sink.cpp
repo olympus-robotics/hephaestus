@@ -11,6 +11,7 @@
 #include <fmt/format.h>
 
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/utils/stack_trace.h"
 
 namespace heph::telemetry {
 
@@ -55,9 +56,11 @@ void AbslLogSink::send(const LogEntry& entry) {
       break;
     case LogLevel::ERROR:
       ABSL_LOG(ERROR).NoPrefix() << formatter_(entry);
+      ABSL_LOG(ERROR).NoPrefix() << utils::StackTrace::print();
       break;
     case LogLevel::FATAL:
       ABSL_LOG(FATAL).NoPrefix() << formatter_(entry);
+      ABSL_LOG(FATAL).NoPrefix() << utils::StackTrace::print();
       break;
     default:
       ABSL_LOG(FATAL).NoPrefix() << "LogLevel not implemented.";
