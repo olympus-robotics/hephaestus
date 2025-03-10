@@ -52,6 +52,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "spinner_state_machine_tests",
+    srcs = ["tests/spinner_state_machine_tests.cpp"],
+    deps = CONCURRENCY_TEST_DEPS,
+)
+
+heph_cc_test(
     name = "spinner_tests",
     srcs = ["tests/spinner_tests.cpp"],
     deps = CONCURRENCY_TEST_DEPS,
