@@ -108,19 +108,18 @@ void StackTrace::Impl::print(std::ostream& os) {
         fname = ret;
       }
 
+      // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
       if (begin_offset != nullptr) {
-        // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-do-not-use-pointer-arithmetic)
         os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
            << "  + " << std::setw(6) << begin_offset << ") " << end_offset << "\n";
       } else {
-        // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-do-not-use-pointer-arithmetic)
         os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
            << "    " << std::setw(6) << "" << ") " << end_offset << "\n";
       }
     } else {
       // couldn't parse the line? print the whole line.
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-do-not-use-pointer-arithmetic)
       os << "  " << std::setw(40) << symbol_list[i] << "\n";
+      // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
   }
 
