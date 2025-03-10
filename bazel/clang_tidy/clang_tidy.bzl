@@ -45,7 +45,7 @@ def _run_tidy(
 
     args.add("--export-fixes", outfile.path)
 
-    args.add("--enable-check-profile")
+    # args.add("--enable-check-profile") # NOTE: enable this to get profile information on each check timings.
 
     # add source to check
     args.add(infile.path)
