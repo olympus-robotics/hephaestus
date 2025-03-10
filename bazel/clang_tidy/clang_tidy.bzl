@@ -1,3 +1,11 @@
+# =================================================================================================
+# Copyright (C) 2020 Benedek Thaler Copyright (C) 2023-2024 HEPHAESTUS Contributors
+# =================================================================================================
+
+# This file is adapted from https://github.com/erenon/bazel_clang_tidy
+# File: clang_tidy/clang_tidy.bzl
+# Commit 393c5faf015202ee7db5853c324c857f13ef40f7
+
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
