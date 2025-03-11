@@ -37,8 +37,8 @@ void removeInvalidChar(std::string& str) {
 [[nodiscard]] auto createSessionId(std::string_view id) -> std::string {
   static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
 
-  throwExceptionIf<InvalidParameterException>(
-      !isValidId(id), fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
+  panicIf(!isValidId(id),
+          fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
 
   std::string session_id{ id };
 
@@ -55,7 +55,7 @@ void removeInvalidChar(std::string& str) {
 
 [[nodiscard]] auto createSessionIdFromBinaryName() -> std::string {
   auto binary_name = utils::getBinaryPath();
-  throwExceptionIf<InvalidParameterException>(!binary_name.has_value(), "cannot get binary name");
+  panicIf(!binary_name.has_value(), "cannot get binary name");
   std::string filename = binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access);
   removeInvalidChar(filename);
   filename = fmt::format("{}_{}", getpid(), filename);
@@ -64,10 +64,9 @@ void removeInvalidChar(std::string& str) {
 
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> ::zenoh::Config {
-  throwExceptionIf<InvalidParameterException>(config.qos && config.real_time,
-                                              "cannot specify both QoS and Real-Time options");
-  throwExceptionIf<InvalidParameterException>(config.protocol != Protocol::ANY && !config.router.empty(),
-                                              "cannot specify both protocol and the router endpoint");
+  panicIf(config.qos && config.real_time, "cannot specify both QoS and Real-Time options");
+  panicIf(config.protocol != Protocol::ANY && !config.router.empty(),
+          "cannot specify both protocol and the router endpoint");
 
   auto zconfig = [&] {
     if (config.zenoh_config_path.has_value()) {
