@@ -70,7 +70,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   } else if (protocol == "tcp") {
     config.protocol = Protocol::TCP;
   } else {
-    heph::panic(fmt::format("invalid value {} for option 'protocol'", protocol));
+    panic(fmt::format("invalid value {} for option 'protocol'", protocol));
   }
 
   config.router = args.getOption<std::string>("router");
