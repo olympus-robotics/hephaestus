@@ -300,7 +300,7 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
   ::zenoh::ZResult result{};
 
   if (!internal::checkQueryTypeInfo<RequestT, ReplyT>(query)) {
-    heph::log(heph::ERROR, "failed to process query", "error", "type mismatch for request and reply",
+    heph::log(heph::WARN, "failed to process query", "error", "type mismatch for request and reply",
               "service", query.get_keyexpr().as_string_view());
     failure_callback_();
     query.reply_err(::zenoh::ext::serialize("Type mismatch for request and reply"),
@@ -319,7 +319,7 @@ void Service<RequestT, ReplyT>::onQuery(const ::zenoh::Query& query) {
     query.reply(this->topic_config_.name, toZenohBytes(buffer), std::move(options), &result);
   }
 
-  heph::logIf(heph::ERROR, result != Z_OK, "failed to reply to query", "service", topic_config_.name, "error",
+  heph::logIf(heph::WARN, result != Z_OK, "failed to reply to query", "service", topic_config_.name, "error",
               result);
 
   post_reply_callback_();
@@ -352,7 +352,7 @@ auto callService(Session& session, const TopicConfig& topic_config, const Reques
   auto replies = session.zenoh_session.get(keyexpr, "", ::zenoh::channels::FifoChannel(FIFO_QUEUE_SIZE),
                                            std::move(options), &result);
   if (result != Z_OK) {
-    heph::log(heph::ERROR, "failed to call service, server error", "topic", topic_config.name);
+    heph::log(heph::WARN, "failed to call service, server error", "topic", topic_config.name);
     return {};
   }
 

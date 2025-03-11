@@ -105,14 +105,14 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
   // Expected keyexpr: <topic/name/whatever>|<session_id>|<actor_type>
   const std::vector<std::string> items = absl::StrSplit(keyexpr, '|');
   if (items.size() != 3) {
-    heph::log(heph::ERROR, "invalid liveliness keyexpr, too few items", "keyexpr", keyexpr, "items_count",
+    heph::log(heph::WARN, "invalid liveliness keyexpr, too few items", "keyexpr", keyexpr, "items_count",
               items.size());
     return std::nullopt;
   }
 
   auto type = livelinessTokenKeyexprSuffixTActionType(items[TYPE_IDX]);
   if (!type) {
-    heph::log(heph::ERROR, "invalid liveliness keyexpr, failed to parse type", "keyexpr", keyexpr, "type",
+    heph::log(heph::WARN, "invalid liveliness keyexpr, failed to parse type", "keyexpr", keyexpr, "type",
               items[TYPE_IDX]);
     return std::nullopt;
   }
@@ -134,7 +134,7 @@ auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
-      heph::log(heph::ERROR, "invalid reply for liveliness", "topic", topic);
+      heph::log(heph::WARN, "invalid reply for liveliness", "topic", topic);
       continue;
     }
 

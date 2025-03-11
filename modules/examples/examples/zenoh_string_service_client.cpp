@@ -50,7 +50,7 @@ auto main(int argc, const char* argv[]) -> int {
       });
       heph::log(heph::DEBUG, "received", "reply", reply_str);
     } else {
-      heph::log(heph::ERROR, "error happened or no messages received", "timeout", K_TIMEOUT);
+      heph::log(heph::WARN, "error happened or no messages received", "timeout", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;

@@ -73,14 +73,14 @@ void DynamicSubscriber::onPublisher(const EndpointInfo& info) {
 
 void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   if (subscribers_.contains(info.topic)) {
-    heph::log(heph::ERROR, "trying to add subscriber for topic but one already exists", "topic", info.topic);
+    heph::log(heph::WARN, "trying to add subscriber for topic but one already exists", "topic", info.topic);
     return;
   }
 
   auto type_info = topic_db_->getTypeInfo(info.topic);
   if (!type_info) {
     // TODO(@fbrizzi): consider if we still want to allow for empty type info.
-    heph::log(heph::ERROR, "failed to get type info for topic, skipping", "topic", info.topic);
+    heph::log(heph::WARN, "failed to get type info for topic, skipping", "topic", info.topic);
     return;
   }
 
@@ -100,7 +100,7 @@ void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
 
 void DynamicSubscriber::onPublisherDropped(const EndpointInfo& info) {
   if (!subscribers_.contains(info.topic)) {
-    heph::log(heph::ERROR, "trying to drop subscriber, but one doesn't exist", "topic", info.topic);
+    heph::log(heph::WARN, "trying to drop subscriber, but one doesn't exist", "topic", info.topic);
     return;
   }
 

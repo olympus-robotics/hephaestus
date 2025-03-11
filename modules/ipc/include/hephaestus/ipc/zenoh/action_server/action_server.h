@@ -157,7 +157,7 @@ ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
 template <typename RequestT, typename StatusT, typename ReplyT>
 auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const Request<RequestT>& request) -> RequestResponse {
   if (is_running_.exchange(true)) {
-    heph::log(heph::ERROR, "action server is already serving one request", "topic", topic_config_.name);
+    heph::log(heph::WARN, "action server is already serving one request", "topic", topic_config_.name);
 
     return { .status = RequestStatus::REJECTED_ALREADY_RUNNING };
   }
@@ -238,7 +238,7 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
-    heph::log(heph::ERROR, "failed to send final response to client", "topic", topic_config_.name);
+    heph::log(heph::WARN, "failed to send final response to client", "topic", topic_config_.name);
   }
 
   is_running_ = false;

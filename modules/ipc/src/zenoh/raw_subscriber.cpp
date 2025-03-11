@@ -44,7 +44,7 @@ namespace {
         ::zenoh::ext::deserialize<std::unordered_map<std::string, std::string>>(attachment->get());
 
     auto res = absl::SimpleAtoi(attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY], &sequence_id);
-    heph::logIf(heph::ERROR, !res, "failed to read message counter from attachment", "service", topic);
+    heph::logIf(heph::WARN, !res, "failed to read message counter from attachment", "service", topic);
 
     sender_id = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY];
     type_info = attachment_data[PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO];

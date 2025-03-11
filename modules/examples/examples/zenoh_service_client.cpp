@@ -56,7 +56,7 @@ auto main(int argc, const char* argv[]) -> int {
           replies, [&reply_str](const auto& reply) { reply_str += fmt::format("-\t {}\n", reply.value); });
       fmt::println("Received: \n{}\n", reply_str);
     } else {
-      heph::log(heph::ERROR, "error happened or no messages received", "timeout", K_TIMEOUT);
+      heph::log(heph::WARN, "error happened or no messages received", "timeout", K_TIMEOUT);
     }
 
     return EXIT_SUCCESS;

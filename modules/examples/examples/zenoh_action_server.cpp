@@ -34,7 +34,7 @@ namespace {
     -> heph::ipc::zenoh::action_server::TriggerStatus {
   heph::log(heph::DEBUG, "request received", "request", sample);
   if (sample.iterations_count == 0) {
-    heph::log(heph::ERROR, "invalid request, iterations must be greater than 0");
+    heph::log(heph::WARN, "invalid request, iterations must be greater than 0");
     return heph::ipc::zenoh::action_server::TriggerStatus::REJECTED;
   }
 
@@ -58,7 +58,7 @@ execute(const heph::examples::types::SampleRequest& request,
     accumulated += 1;
     const auto result = status_update_publisher.publish(
         heph::examples::types::SampleReply{ .value = accumulated, .counter = counter });
-    heph::logIf(heph::ERROR, !result, "failed to publish status update");
+    heph::logIf(heph::WARN, !result, "failed to publish status update");
 
     fmt::println("- Update {}: {} ", counter, accumulated);
     std::this_thread::sleep_for(WAIT_FOR);

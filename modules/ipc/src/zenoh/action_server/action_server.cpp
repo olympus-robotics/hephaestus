@@ -19,7 +19,7 @@ auto requestActionServerToStopExecution(Session& session, const TopicConfig& top
   const auto stop_topic = internal::getStopServiceTopic(topic_config);
   auto results = callService<std::string, std::string>(session, TopicConfig{ stop_topic }, "", TIMEOUT);
   if (results.size() != 1) {
-    heph::log(heph::ERROR, "failed to stop the action server", "topic", topic_config.name);
+    heph::log(heph::WARN, "failed to stop the action server", "topic", topic_config.name);
     return false;
   }
 
