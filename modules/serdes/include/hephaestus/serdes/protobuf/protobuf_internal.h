@@ -40,8 +40,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto res = buffer.deserialize(proto);
-  throwExceptionIf<InvalidDataException>(
-      !res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
+  panicIf(!res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
 
   fromProto(proto, data);
 }

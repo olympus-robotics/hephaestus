@@ -11,7 +11,7 @@
 TEST(LogTest, NoSinksRegisteredPrintsWarning) {
   testing::internal::CaptureStderr();
   // Restore original stderr
-  heph::log(heph::ERROR, "test");
+  heph::log(heph::INFO, "test");
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   std::this_thread::sleep_for(std::chrono::seconds(1));
   std::string output = testing::internal::GetCapturedStderr();

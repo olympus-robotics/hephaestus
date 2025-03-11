@@ -62,26 +62,24 @@ TEST(ProgramOptions, Option) {
 TEST(ProgramOptions, Errors) {
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
-    EXPECT_THROW_OR_DEATH(std::move(desc).parse({ "--option" }), InvalidParameterException,
-                          "Undefined option");
+    EXPECT_THROW_OR_DEATH(std::move(desc).parse({ "--option" }), Panic, "Undefined option");
   }
 
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
     desc.defineOption<std::string>("option", "desc").defineOption<int>("other", "desc");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({}), InvalidConfigurationException,
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({}), Panic,
                           "Required option 'option' not specified");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option" }), InvalidParameterException,
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option" }), Panic,
                           "is supposed to be a value");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "value" }), InvalidParameterException,
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "value" }), Panic,
                           "Arg value is not a valid option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }),
-                          InvalidParameterException, "not another option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }),
-                          InvalidParameterException, "not a valid option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }),
-                          InvalidConfigurationException, "not specified");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), InvalidParameterException,
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }), Panic,
+                          "not another option");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }), Panic,
+                          "not a valid option");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }), Panic, "not specified");
+    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), Panic,
                           "not another option");
   }
 

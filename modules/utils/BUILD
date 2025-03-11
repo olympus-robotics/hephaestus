@@ -76,6 +76,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "stack_trace_tests",
+    srcs = ["tests/stack_trace_tests.cpp"],
+    deps = [":utils"],
+)
+
+heph_cc_test(
     name = "stop_watch_tests",
     srcs = ["tests/stop_watch_tests.cpp"],
     deps = [":utils"],

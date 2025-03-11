@@ -46,9 +46,7 @@ constexpr auto MAX_ITERATION_COUNT = 10;
 }
 
 [[nodiscard]] auto createThrowingCallback() -> Spinner::StoppableCallback {
-  auto cb = []() {
-    throw heph::InvalidOperationException{ "This is a test exception.", std::source_location::current() };
-  };
+  auto cb = []() { panic("This is a test exception.", std::source_location::current()); };
   return Spinner::createNeverStoppingCallback(std::move(cb));
 }
 }  // namespace
@@ -90,13 +88,13 @@ TEST(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
 
-  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::InvalidOperationException, "");
+  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::Panic, "");
   spinner.start();
 
-  EXPECT_THROW_OR_DEATH(spinner.start(), heph::InvalidOperationException, "");
+  EXPECT_THROW_OR_DEATH(spinner.start(), heph::Panic, "");
   spinner.stop().get();
 
-  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::InvalidOperationException, "");
+  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::Panic, "");
 }
 
 TEST(SpinnerTest, SpinTest) {
@@ -173,7 +171,7 @@ TEST(SpinnerTest, ExceptionHandling) {
 
   spinner.start();
   spinner.wait();
-  EXPECT_THROW(spinner.stop().get(), heph::InvalidOperationException);
+  EXPECT_THROW(spinner.stop().get(), heph::Panic);
   EXPECT_TRUE(callback_called);
 }
 

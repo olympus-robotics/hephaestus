@@ -44,17 +44,15 @@ ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(bri
 
 void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k) const {
   const auto it = std::ranges::find_if(options_, [&key](const auto& opt) { return key == opt.key; });
-  throwExceptionIf<InvalidOperationException>(it != options_.end(),
-                                              fmt::format("Attempted redefinition of option '{}'", key));
+  panicIf(it != options_.end(), fmt::format("Attempted redefinition of option '{}'", key));
 
   if (k == '\0') {
     return;
   }
 
   const auto short_it = std::ranges::find_if(options_, [k](const auto& opt) { return k == opt.short_key; });
-  throwExceptionIf<InvalidOperationException>(
-      short_it != options_.end(),
-      fmt::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
+  panicIf(short_it != options_.end(),
+          fmt::format("Attempted redefinition of short key '{}' for option '{}'", k, key));
 }
 
 auto ProgramDescription::defineFlag(const std::string& key, char short_key, const std::string& description)
@@ -94,12 +92,11 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
     }
 
     ++arg_it;
-    throwExceptionIf<InvalidParameterException>(
-        arg_it == args.end(), fmt::format("After option --{} there is supposed to be a value", option.key));
+    panicIf(arg_it == args.end(),
+            fmt::format("After option --{} there is supposed to be a value", option.key));
     const auto is_option = arg_it->starts_with('-') && arg_it->size() > 1 && std::isdigit((*arg_it)[1]) == 0;
-    throwExceptionIf<InvalidParameterException>(
-        is_option, fmt::format("Option --{} is supposed to be followed by a value, not another option {}",
-                               option.key, *arg_it));
+    panicIf(is_option, fmt::format("Option --{} is supposed to be followed by a value, not another option {}",
+                                   option.key, *arg_it));
 
     option.value = *arg_it;
     option.is_specified = true;
@@ -107,9 +104,8 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
 
   // check all required arguments are specified
   for (const auto& entry : options_) {
-    throwExceptionIf<InvalidConfigurationException>(
-        entry.is_required and not entry.is_specified,
-        fmt::format("Required option '{}' not specified", entry.key));
+    panicIf(entry.is_required and not entry.is_specified,
+            fmt::format("Required option '{}' not specified", entry.key));
   }
 
   return ProgramOptions(std::move(options_));
@@ -120,22 +116,19 @@ auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOpti
     const auto key = arg.substr(2);
     const auto it = std::ranges::find_if(options_, [&key](const auto& opt) { return key == opt.key; });
 
-    throwExceptionIf<InvalidParameterException>(it == options_.end(),
-                                                fmt::format("Undefined option '{}'", key));
+    panicIf(it == options_.end(), fmt::format("Undefined option '{}'", key));
     return *it;
   }
 
   if (arg.starts_with("-")) {
-    throwExceptionIf<InvalidParameterException>(arg.size() != 2,
-                                                fmt::format("Undefined option '{}'", arg.substr(1)));
+    panicIf(arg.size() != 2, fmt::format("Undefined option '{}'", arg.substr(1)));
     const auto short_key = arg[1];
     const auto it =
         std::ranges::find_if(options_, [short_key](const auto& opt) { return short_key == opt.short_key; });
     return *it;
   }
 
-  throwException<InvalidParameterException>(
-      fmt::format("Arg {} is not a valid option, it must start with either '--' or '-'", arg));
+  panic(fmt::format("Arg {} is not a valid option, it must start with either '--' or '-'", arg));
 
   // NOTE: this will never happen as we will throw an exception before getting here, but compiler
   // wants this.

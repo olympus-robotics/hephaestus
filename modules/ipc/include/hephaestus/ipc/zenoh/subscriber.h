@@ -52,9 +52,8 @@ private:
     if (metadata.type_info != serialized_type) {
       heph::log(heph::ERROR, "subscriber type mismatch; terminating", "topic", metadata.topic,
                 "subscriber_type", serialized_type, "topic_type", metadata.type_info);
-      throwException<FailedZenohOperation>(
-          fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
-                      metadata.type_info, serialized_type));
+      panic(fmt::format("Topic '{}' is of type '{}', but subscriber expect type '{}'", metadata.topic,
+                        metadata.type_info, serialized_type));
     }
   }
 
