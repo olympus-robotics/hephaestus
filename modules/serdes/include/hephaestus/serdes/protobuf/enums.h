@@ -59,7 +59,7 @@ template <EnumType ProtoT, EnumType T>
   const auto proto_enum_name = fmt::format("{}_{}", getProtoPrefix<ProtoT>(), magic_enum::enum_name(e));
   const auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
 
-  heph::panicIf(!proto_enum.has_value(),
+  panicIf(!proto_enum.has_value(),
                 fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
                             proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
 
