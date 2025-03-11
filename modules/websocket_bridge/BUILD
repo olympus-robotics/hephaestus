@@ -33,7 +33,6 @@ heph_cc_library(
         "@boringssl//:ssl",
         "@fmt",
         "@reflect-cpp",
-        "@websocketpp",
         "@ws_protocol",
         "@zenohc_builder//:zenoh-c",
         "@zenohc_builder//:zenoh-cpp",

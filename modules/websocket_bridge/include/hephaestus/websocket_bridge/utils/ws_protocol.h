@@ -20,13 +20,12 @@
 #include <foxglove/websocket/server_interface.hpp>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <nlohmann/json_fwd.hpp>
-#include <websocketpp/common/connection_hdl.hpp>
 
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {
 
-using WsClientHandle = websocketpp::connection_hdl;
+using WsClientHandle = foxglove::ConnHandle;
 using WsInterface = foxglove::ServerInterface<WsClientHandle>;
 using WsInterfacePtr = std::unique_ptr<WsInterface>;
 using WsHandlers = foxglove::ServerHandlers<WsClientHandle>;

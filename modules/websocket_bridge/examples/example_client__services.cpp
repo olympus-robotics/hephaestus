@@ -32,6 +32,7 @@ using heph::ws::WsServiceAd;
 using heph::ws::WsServiceFailure;
 using heph::ws::WsServiceRequest;
 using heph::ws::WsServiceResponse;
+using heph::ws::WsClientHandle;
 
 constexpr int SERVICE_REQUEST_COUNT = 8;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
@@ -194,9 +195,9 @@ auto main(int argc, char** argv) -> int try {
     handleBinaryMessage(data, length, ws_server_ads, state);
   };
   // NOLINTNEXTLINE
-  const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
+  const auto on_open_handler = [&](WsClientHandle) { fmt::println("Connected to {}", url); };
   // NOLINTNEXTLINE
-  const auto on_close_handler = [&](websocketpp::connection_hdl) {
+  const auto on_close_handler = [&](WsClientHandle) {
     fmt::println("Connection closed");
     g_abort = true;
   };

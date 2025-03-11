@@ -14,7 +14,6 @@
 #include <vector>
 
 #include <fmt/base.h>
-#include <foxglove/websocket/serialization.hpp>
 #include <hephaestus/telemetry/log_sinks/absl_sink.h>
 #include <hephaestus/utils/stack_trace.h>
 #include <hephaestus/websocket_bridge/utils/ws_client.h>
@@ -28,6 +27,7 @@ using heph::ws::WsClientChannelAd;
 using heph::ws::WsClientChannelId;
 using heph::ws::WsClientNoTls;
 using heph::ws::WsSubscriptionId;
+using heph::ws::WsClientHandle;
 
 namespace {
 std::atomic<bool> g_abort{ false };  // NOLINT
@@ -126,10 +126,10 @@ auto main(int argc, char** argv) -> int try {
   std::map<WsSubscriptionId, WsChannelId> subscription_id_to_channel_id_map;
 
   // NOLINTNEXTLINE
-  const auto on_open_handler = [&](websocketpp::connection_hdl) { fmt::println("Connected to {}", url); };
+  const auto on_open_handler = [&](WsClientHandle) { fmt::println("Connected to {}", url); };
 
   // NOLINTNEXTLINE
-  const auto on_close_handler = [&](websocketpp::connection_hdl) {
+  const auto on_close_handler = [&](WsClientHandle) {
     fmt::println("Connection closed");
     g_abort = true;
   };
