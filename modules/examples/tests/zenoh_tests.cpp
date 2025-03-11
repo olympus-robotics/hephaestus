@@ -26,7 +26,7 @@ TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
   auto session = ipc::zenoh::createSession(std::move(config));
   const auto topic = ipc::TopicConfig("test_topic");
 
-  [[maybe_unused]] const auto send_message = randomFramedPose(mt);
+  const auto send_message = randomFramedPose(mt);
   auto received_message = Pose{};
 
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
