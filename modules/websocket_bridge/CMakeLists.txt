@@ -5,7 +5,7 @@
 declare_module(
         NAME websocket_bridge
         DEPENDS_ON_MODULES ipc cli concurrency containers utils serdes telemetry
-        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt yaml-cpp zenohc zenohcxx ws_protocol reflectcpp)
+        DEPENDS_ON_EXTERNAL_PROJECTS  absl fmt nlohmann_json zenohc zenohcxx foxglove_websocket OpenSSL reflectcpp ZLIB)
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
@@ -42,10 +42,13 @@ define_module_library(
                 hephaestus::serdes
                 hephaestus::telemetry
                 hephaestus::utils
+                nlohmann_json::nlohmann_json
                 OpenSSL::Crypto
                 OpenSSL::SSL
                 reflectcpp::reflectcpp
                 yaml-cpp
+                zenohc::lib
+                zenohcxx::zenohc
                 ZLIB::ZLIB
         PRIVATE_LINK_LIBS ""
         SOURCES ${SOURCES} README.md

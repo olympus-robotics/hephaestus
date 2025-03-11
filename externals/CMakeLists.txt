@@ -181,7 +181,7 @@ add_cmake_dependency(
   DEPENDS ${REFLECT_CPP_DEPENDS}
   GIT_REPOSITORY https://github.com/olympus-robotics/reflect-cpp.git
   GIT_TAG ${REFLECT_CPP_TAG}
-  CMAKE_ARGS -DREFLECTCPP_YAML=ON -DREFLECTCPP_JSON=ON -DCMAKE_BUILD_TYPE=Debug
+  CMAKE_ARGS -DREFLECTCPP_YAML=ON -DREFLECTCPP_JSON=ON -DCMAKE_BUILD_TYPE=Release
 )
 
 # --------------------------------------------------------------------------------------------------
@@ -276,7 +276,7 @@ add_cmake_dependency(
 set(WS_PROTOCOL_VERSION 1.4.0)
 set(WS_PROTOCOL_TAG releases/cpp/v${WS_PROTOCOL_VERSION}-dev)
 add_cmake_dependency(
-  NAME ws_protocol
+  NAME foxglove_websocket
   VERSION ${WS_PROTOCOL_VERSION}
   DEPENDS ${WS_PROTOCOL_DEPENDS}
   URL https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
