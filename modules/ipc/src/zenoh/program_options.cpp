@@ -59,7 +59,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   } else if (mode == "client") {
     config.mode = Mode::CLIENT;
   } else {
-    heph::panic(fmt::format("invalid mode value: {}", mode));
+    panic(fmt::format("invalid mode value: {}", mode));
   }
 
   auto protocol = args.getOption<std::string>("protocol");
