@@ -27,8 +27,8 @@
 
 namespace heph::ws {
 
-ServiceCallState::ServiceCallState(uint32_t call_id)
-  : call_id(call_id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
+ServiceCallState::ServiceCallState(uint32_t id)
+  : call_id(id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
 }
 
 auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads,

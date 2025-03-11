@@ -29,7 +29,7 @@ struct ServiceCallState {
   std::optional<WsServiceResponse> response;
   std::string error_message;
 
-  explicit ServiceCallState(uint32_t call_id);
+  explicit ServiceCallState(uint32_t id);
 
   [[nodiscard]] auto hasResponse() const -> bool;
   [[nodiscard]] auto wasSuccessful() const -> bool;

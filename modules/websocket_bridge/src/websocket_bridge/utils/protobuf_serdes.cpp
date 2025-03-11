@@ -368,7 +368,7 @@ void printBinary(const uint8_t* data, size_t length) {
 
   std::stringstream ss;
   for (size_t i = 0; i < length; ++i) {
-    for (uint32_t bit = 7; bit >= 0; --bit) {
+    for (int32_t bit = 7; bit >= 0; --bit) {
       ss << ((data[i] >> bit) & 1);
       if (bit == 4) {
         ss << " | ";
