@@ -27,7 +27,6 @@ public:
 
 private:
   static constexpr size_t MAX_FRAMES = 64;
-  static constexpr size_t MAX_FUNC_NAME_LEN = 1024;
   [[noreturn]] static void abort(int signum, siginfo_t* si, void* unused);
 };
 
@@ -66,8 +65,6 @@ void StackTrace::Impl::print(std::ostream& os) {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   char** symbol_list = backtrace_symbols(addrlist, addrlen);
 
-  char funcname[MAX_FUNC_NAME_LEN];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-
   // iterate over the returned symbol lines. skip the first, it is the
   // address of this function.
   for (auto i = 3; i < addrlen; i++) {
@@ -99,13 +96,15 @@ void StackTrace::Impl::print(std::ostream& os) {
       // offset in [begin_offset, end_offset). now apply
       // __cxa_demangle():
 
-      int status = 0;
-      size_t fun_name_len = MAX_FUNC_NAME_LEN;
+      int status = 0;           // This will be set by __cxa_demangle
+      size_t fun_name_len = 0;  // This will be set by __cxa_demangle
+      // Nullptr as output buffer will allocate the memory needed for the demangled name on the heap. We need
+      // to free manually afterwards.
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-      char* ret = abi::__cxa_demangle(begin_name, funcname, &fun_name_len, &status);
-      char* fname = begin_name;
+      char* ret = abi::__cxa_demangle(begin_name, nullptr, &fun_name_len, &status);
+      std::string_view fname = begin_name;
       if (status == 0) {
-        fname = ret;
+        fname = std::string_view{ ret, fun_name_len };
       }
 
       // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -116,6 +115,8 @@ void StackTrace::Impl::print(std::ostream& os) {
         os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
            << "    " << std::setw(6) << "" << ") " << end_offset << "\n";
       }
+      // NOLINTNEXTLINE(hicpp-no-malloc,cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
+      free(ret);
     } else {
       // couldn't parse the line? print the whole line.
       os << "  " << std::setw(40) << symbol_list[i] << "\n";
