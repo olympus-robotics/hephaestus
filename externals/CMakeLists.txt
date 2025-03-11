@@ -42,13 +42,8 @@ if(reflectcpp IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 if(foxglove_websocket IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(WS_PROTOCOL_DEPENDS nlohmann_json websocketpp)
+  set(WS_PROTOCOL_DEPENDS nlohmann_json)
   list(APPEND EXTERNAL_PROJECTS_LIST ${WS_PROTOCOL_DEPENDS})
-endif()
-
-if(websocketpp IN_LIST EXTERNAL_PROJECTS_LIST)
-  set(WEBSOCKETPP_DEPENDS asio)
-  list(APPEND EXTERNAL_PROJECTS_LIST ${WEBSOCKETPP_DEPENDS})
 endif()
 
 # --------------------------------------------------------------------------------------------------
@@ -257,18 +252,6 @@ add_cmake_dependency(
   GIT_REPOSITORY "https://boringssl.googlesource.com/boringssl"
   GIT_TAG ${BORINGSSL_TAG}
   CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja
-)
-
-
-# --------------------------------------------------------------------------------------------------
-# websocketpp
-set(WEBSOCKETPP_VERSION 0.8.2)
-add_cmake_dependency(
-  NAME websocketpp
-  VERSION ${WEBSOCKETPP_VERSION}
-  GIT_REPOSITORY "https://github.com/zaphoyd/websocketpp.git"
-  GIT_TAG ${WEBSOCKETPP_VERSION}
-  CMAKE_ARGS -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DENABLE_CPP11=ON
 )
 
 # --------------------------------------------------------------------------------------------------
