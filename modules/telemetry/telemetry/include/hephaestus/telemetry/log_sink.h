@@ -8,6 +8,7 @@
 #include <concepts>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -116,6 +117,10 @@ struct LogEntry {
   std::thread::id thread_id;
   ClockT::time_point time;
   std::string hostname;
+
+  // Stack trace is optional, since it is only available in error and fatal log (because its expensive)
+  // TODO(@graeter): Replace with c++23 std::stack_trace when available
+  std::optional<std::string> stack_trace;
 
   FieldsT fields;
 };
