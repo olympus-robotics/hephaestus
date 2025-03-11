@@ -70,7 +70,7 @@ constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
     case BoundsType::OPEN:
       return value > bounds.lower && value < bounds.upper;
     default:
-      throwException<InvalidParameterException>("Incorrect Type");
+      panic("Incorrect Type");
   }
 
   __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
@@ -98,7 +98,7 @@ auto Bounds<T>::format() const -> std::string {
       bounds_type_str = "()";
       break;
     default:
-      throwException<InvalidParameterException>("Incorrect BoundsType");
+      panic("Incorrect BoundsType");
   }
 
   return fmt::format("{}{} - {}{}", bounds_type_str[0], lower, upper, bounds_type_str[1]);

@@ -45,7 +45,7 @@ TEST(BitField, WithUnderlyingValue) {
   EXPECT_FALSE(flag.has(TestEnum::B));
   EXPECT_TRUE(flag.has(TestEnum::C));
 
-  EXPECT_THROW_OR_DEATH(BitFlag<TestEnum>{ 1u << 4u }, InvalidParameterException, "contains invalid bits");
+  EXPECT_THROW_OR_DEATH(BitFlag<TestEnum>{ 1u << 4u }, Panic, "contains invalid bits");
 }
 
 TEST(BitFlag, Reset) {

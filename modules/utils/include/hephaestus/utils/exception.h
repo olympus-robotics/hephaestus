@@ -37,7 +37,7 @@ inline void panic(const std::string& message,
 #ifndef DISABLE_EXCEPTIONS
   throw Panic{ message, location };
 #else
-  auto e = T{ message, location };
+  auto e = Panic{ message, location };
   CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
                               location.line());
 #endif
@@ -55,7 +55,7 @@ inline void panicIf(bool condition, const std::string& message,
     throw Panic{ message, location };
   }
 #else
-  auto e = T{ message, location };
+  auto e = Panic{ message, location };
   CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
                                    location.line());
 #endif
@@ -68,13 +68,13 @@ inline void panicIf(bool condition, const std::string& message,
 /// @param expected_matcher The matcher to be used in case of program death.
 /// @note If `DISABLE_EXCEPTIONS` is defined, this macro uses `EXPECT_DEATH` to check for program death.
 ///       Otherwise, it uses `EXPECT_THROW` to check for the expected exception.
-#ifdef DISABLE_EXCEPTIONS
+#ifndef DISABLE_EXCEPTIONS
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
-  EXPECT_DEATH(statement, expected_matcher)
+  EXPECT_THROW(statement, expected_exception)
 #else
 #define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
-  EXPECT_THROW(statement, expected_exception)
+  EXPECT_DEATH(statement, expected_matcher)
 // NOLINTEND(cppcoreguidelines-macro-usage)
 #endif
 }  // namespace heph
