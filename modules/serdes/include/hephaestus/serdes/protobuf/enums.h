@@ -60,8 +60,8 @@ template <EnumType ProtoT, EnumType T>
   const auto proto_enum = magic_enum::enum_cast<ProtoT>(proto_enum_name);
 
   panicIf(!proto_enum.has_value(),
-                fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
-                            proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
+          fmt::format("The proto enum does not contain the requested key {}. Proto enum keys are\n{}",
+                      proto_enum_name, utils::format::toString(magic_enum::enum_names<ProtoT>())));
 
   return proto_enum.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
