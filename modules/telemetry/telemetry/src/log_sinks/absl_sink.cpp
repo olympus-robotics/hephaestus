@@ -56,9 +56,6 @@ void AbslLogSink::send(const LogEntry& entry) {
       break;
     case LogLevel::ERROR:
       ABSL_LOG(ERROR).NoPrefix() << formatter_(entry);
-      if (entry.stack_trace.has_value()) {
-        ABSL_LOG(ERROR).NoPrefix() << entry.stack_trace.value();
-      }
       break;
     case LogLevel::FATAL:
       ABSL_LOG(FATAL).NoPrefix() << formatter_(entry);
