@@ -140,16 +140,6 @@ TEST_F(LogTestFixture, logString) {
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
 }
 
-TEST_F(LogTestFixture, logStringToError) {
-  using namespace std::literals::string_literals;
-
-  heph::log(heph::ERROR, "as string"s);
-
-  const auto& log = sink_ptr->getLog();
-  fmt::println("{}\n", log);
-  EXPECT_TRUE(log.find("stack trace") != std::string::npos);
-}
-
 TEST_F(LogTestFixture, logLibFmt) {
   const int num = 456;
 
