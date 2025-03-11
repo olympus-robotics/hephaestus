@@ -163,7 +163,7 @@ auto main(int argc, char** argv) -> int try {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<uint32_t> dis(1, 100);  // NOLINT
-    const auto mirror_channel_offset = static_cast<uint32_t>(dis(gen) * 100);
+    const auto mirror_channel_offset = dis(gen) * 100u;
 
     std::vector<WsClientChannelAd> client_ads;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {

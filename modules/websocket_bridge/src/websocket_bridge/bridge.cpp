@@ -69,9 +69,7 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
   }
 
   // Initialize IPC Interface
-  {
-    ipc_entity_manager_ = std::make_unique<IpcEntityManager>(session, config_.zenoh_config);
-  }
+  { ipc_entity_manager_ = std::make_unique<IpcEntityManager>(session, config_.zenoh_config); }
 
   // Initialize WS Server
   {
@@ -690,7 +688,7 @@ void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
   const auto opcode = static_cast<uint8_t>(message.data[0]);
 
   auto channel_id_bytes = std::span<const uint8_t>(message.data).subspan(1, 4);
-  const auto parsed_channel_id = static_cast<WsChannelId>(foxglove::ReadUint32LE(channel_id_bytes.data()));
+  const auto parsed_channel_id = foxglove::ReadUint32LE(channel_id_bytes.data());
 
   if (opcode != static_cast<uint8_t>(WsClientBinaryOpCode::MESSAGE_DATA)) {
     heph::log(heph::ERROR, "\n[WS Bridge] - Client sent message with unexpected opcode!", "client_name",
