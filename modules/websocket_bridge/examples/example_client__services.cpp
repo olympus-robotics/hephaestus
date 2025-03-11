@@ -27,12 +27,12 @@ using heph::ws::ServiceCallState;
 using heph::ws::ServiceCallStateMap;
 using heph::ws::WsAdvertisements;
 using heph::ws::WsBinaryOpCode;
+using heph::ws::WsClientHandle;
 using heph::ws::WsClientNoTls;
 using heph::ws::WsServiceAd;
 using heph::ws::WsServiceFailure;
 using heph::ws::WsServiceRequest;
 using heph::ws::WsServiceResponse;
-using heph::ws::WsClientHandle;
 
 constexpr int SERVICE_REQUEST_COUNT = 8;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;

@@ -25,9 +25,9 @@ using heph::ws::WsChannelId;
 using heph::ws::WsClientBinaryOpCode;
 using heph::ws::WsClientChannelAd;
 using heph::ws::WsClientChannelId;
+using heph::ws::WsClientHandle;
 using heph::ws::WsClientNoTls;
 using heph::ws::WsSubscriptionId;
-using heph::ws::WsClientHandle;
 
 namespace {
 std::atomic<bool> g_abort{ false };  // NOLINT
@@ -163,7 +163,7 @@ auto main(int argc, char** argv) -> int try {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<uint32_t> dis(1, 100);  // NOLINT
-    const auto mirror_channel_offset = dis(gen) * 100u;
+    const uint32_t mirror_channel_offset = dis(gen) * 100;
 
     std::vector<WsClientChannelAd> client_ads;
     for (const auto& [channel_id, channel] : ws_server_ads.channels) {

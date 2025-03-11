@@ -368,20 +368,23 @@ void printBinary(const uint8_t* data, size_t length) {
 
   std::stringstream ss;
   for (size_t i = 0; i < length; ++i) {
-    for (int32_t bit = 7; bit >= 0; --bit) {
-      ss << ((data[i] >> bit) & 1);
+    for (int bit = 7; bit >= 0; --bit) {
+      // Cast to unsigned to avoid sign extensions
+      ss << ((static_cast<unsigned int>(data[i]) >> bit) & 1U);
       if (bit == 4) {
         ss << " | ";
       }
     }
-    if ((i + 1) % 4 == 0) {
-      uint32_t uint32_value = foxglove::ReadUint32LE(data + i - 3);
+    // Use size_t for modulus to avoid mixed signed/unsigned
+    if ((i + 1) % static_cast<size_t>(4) == 0) {
+      // Also avoid mixed indexing
+      uint32_t uint32_value = foxglove::ReadUint32LE(data + (i - 3));
       ss << " ==> " << uint32_value << "\n";
-    } else if (i < length - 1) {
+    } else if ((i + 1) < length) {
       ss << " || ";
     }
   }
-  if (length % 4 != 0) {
+  if ((length % static_cast<size_t>(4)) != 0U) {
     ss << "\n";
   }
 

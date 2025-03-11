@@ -18,6 +18,7 @@
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/server_interface.hpp>
+#include <foxglove/websocket/websocket_server.hpp>
 #include <hephaestus/ipc/zenoh/service.h>
 #include <nlohmann/json_fwd.hpp>
 
