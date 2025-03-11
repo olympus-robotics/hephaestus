@@ -96,7 +96,7 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) noexcept {
 
 void Logger::log(LogEntry&& log_entry) noexcept {
   auto& telemetry = instance();
-  if (log_entry.level == LogLevel::FATAL || log_entry.level == LogLevel::ERROR) {
+  if (log_entry.level == LogLevel::FATAL) {
     log_entry.stack_trace = heph::utils::StackTrace::print();
   }
   try {
