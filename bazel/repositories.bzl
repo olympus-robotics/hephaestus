@@ -42,11 +42,11 @@ def foreign_cc_repositories():
         sha256 = "374f5cff1cabc5ce8ff0d4b227475e2221c038b668a797fd9ef117bee43ead07",
     )
 
-    REFLECT_CPP_VERSION = "76ad9f8f36a4b5836dfb906071994e61f64c573c"
+    REFLECT_CPP_VERSION = "c118963de004b32f12b04636bbc525066f792673"
     http_archive(
         name = "reflect-cpp",
         build_file = "//bazel/foreign_cc:reflect_cpp.BUILD",
         urls = ["https://github.com/getml/reflect-cpp/archive/{version}.zip".format(version = REFLECT_CPP_VERSION)],
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION,
-        sha256 = "3d3fc0dcbade10fc96eefa44d0ef66ea7bb959c3c8837fd28b2d473b2fab258b",
+        sha256 = "3e34090fe5202c46b6247afbed7d0b10bd569db2c31463842846b3e419c57ecc",
     )
