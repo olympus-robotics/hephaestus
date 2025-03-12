@@ -70,7 +70,7 @@ Spinner::~Spinner() {
 }
 
 void Spinner::start() {
-  throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
+  panicIf(async_spinner_handle_.valid(), "Spinner is already started.");
 
   stop_requested_.store(false);
   spinner_completed_.clear();
@@ -109,8 +109,7 @@ void Spinner::terminate() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(!async_spinner_handle_.valid(),
-                                              "Spinner not yet started, cannot stop.");
+  panicIf(!async_spinner_handle_.valid(), "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
 

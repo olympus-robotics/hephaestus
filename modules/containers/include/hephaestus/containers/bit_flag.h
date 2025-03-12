@@ -85,14 +85,13 @@ public:
 
   /// Constructs a BitFlag with the given underlying value.
   ///
-  /// An 'InvalidParameterException' is thrown if there are bits set in 'underlying_value' which do not
+  /// An 'Panic' is thrown if there are bits set in 'underlying_value' which do not
   /// correspond to a valid enum value.
   constexpr explicit BitFlag(T underlying_value) : value_(underlying_value) {
     static_assert(internal::checkEnumValuesArePowerOf2<EnumT>(),
                   "Enum is not valid for BitFlag, its values must be power of 2.");
-
-    throwExceptionIf<InvalidParameterException>(
-        // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
+    panicIf(
         (underlying_value & ~internal::allEnumValuesMask<EnumT>()) != 0,
         "Enum underlying value contains invalid bits (bits which don't correspond to a valid enum value).");
   }

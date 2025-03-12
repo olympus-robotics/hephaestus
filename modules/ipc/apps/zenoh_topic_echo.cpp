@@ -92,7 +92,7 @@ public:
 private:
   void subscribeCallback(const MessageMetadata& metadata, std::span<const std::byte> data,
                          const std::optional<serdes::TypeInfo>& type_info) {
-    throwExceptionIf<InvalidParameterException>(!type_info, "Topic echo requires the type info to run");
+    panicIf(!type_info, "Topic echo requires the type info to run");
     auto msg_json =
         dynamic_deserializer_.toJson(type_info->name, data);  // NOLINT(bugprone-unchecked-optional-access)
     truncateLongItems(msg_json, noarr_, max_array_length_);

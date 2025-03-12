@@ -18,6 +18,7 @@
 
 #include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/utils/stack_trace.h"
 
 namespace heph::telemetry {
 namespace {
@@ -95,6 +96,9 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) noexcept {
 
 void Logger::log(LogEntry&& log_entry) noexcept {
   auto& telemetry = instance();
+  if (log_entry.level == LogLevel::FATAL) {
+    log_entry.stack_trace = heph::utils::StackTrace::print();
+  }
   try {
     telemetry.entries_.forcePush(std::move(log_entry));
   } catch (const std::bad_alloc& ex) {
