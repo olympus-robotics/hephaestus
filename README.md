@@ -155,7 +155,7 @@ include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 Create the `modules` folder and add your modules. You can use the hephaestus script by calling:
 ```bash
 cd modules
-python3 ../build/_deps/hephaestus-src/cmake/create_module.py my_module
+python3 ../cmake/create_module.py my_module
 ```
 
 Create the `external` folder and add a `CMakeLists.txt` file as:

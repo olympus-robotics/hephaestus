@@ -62,6 +62,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-gcc",
       "installDir": "/install-gcc",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/toolchain_gcc.cmake",
       "cacheVariables": {
         "BUILD_MODULES": "all;examples",
         "ENABLE_LINTER": "OFF",

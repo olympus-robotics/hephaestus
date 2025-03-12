@@ -50,3 +50,13 @@ def foreign_cc_repositories():
         strip_prefix = "reflect-cpp-" + REFLECT_CPP_VERSION,
         sha256 = "3e34090fe5202c46b6247afbed7d0b10bd569db2c31463842846b3e419c57ecc",
     )
+
+    WS_PROTOCOL_VERSION = "1.4.0-dev"
+    WS_PROTOCOL_TAG = "releases/cpp/v" + WS_PROTOCOL_VERSION
+    http_archive(
+        name = "ws_protocol",
+        build_file = ":foreign_cc/ws_protocol.BUILD",
+        urls = ["https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
+        strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
+        sha256 = "86bd5743098825822b26b0459f4115b86694fdc86398ba7e84e296b6af4bdc23",
+    )

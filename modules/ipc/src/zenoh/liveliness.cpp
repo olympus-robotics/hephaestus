@@ -44,7 +44,7 @@ struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view ACTION_SERVER = "hephaestus_action_server";
 };
 
-[[nodiscard]] auto toActorInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
+[[nodiscard]] auto toEndpointnfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
       return EndpointInfo::Status::ALIVE;
@@ -122,7 +122,7 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
   return EndpointInfo{ .session_id = items[SESSION_IDX],
                        .topic = std::move(topic),
                        .type = *type,
-                       .status = toActorInfoStatus(kind) };
+                       .status = toEndpointnfoStatus(kind) };
 }
 
 auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
@@ -148,14 +148,9 @@ auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::
   return endpoints;
 }
 
-void printActorInfo(const EndpointInfo& info) {
-  auto text = fmt::format("[{}] Session: '{}'. Topic: '{}'", magic_enum::enum_name(info.type),
-                          info.session_id, info.topic);
-  if (info.status == EndpointInfo::Status::DROPPED) {
-    text = fmt::format("{} - DROPPED", text);
-  }
-
-  fmt::println("{}", text);
+void printEndpointInfo(const EndpointInfo& info) {
+  fmt::println("[{}]\t{:<15}\t{}\t'{}'", info.status == EndpointInfo::Status::ALIVE ? "NEW" : "LOST",
+               magic_enum::enum_name(info.type), info.session_id, info.topic);
 }
 
 EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
