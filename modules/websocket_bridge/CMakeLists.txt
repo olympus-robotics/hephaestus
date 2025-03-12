@@ -21,10 +21,10 @@ find_package(ZLIB REQUIRED)
 file(GLOB_RECURSE SOURCES 
         src/websocket_bridge/*.cpp
         src/websocket_bridge/utils/*.cpp
-        src/ipc/*.cpp
+        src/websocket_bridge/ipc/*.cpp
         include/hephaestus/websocket_bridge/*.h
         include/hephaestus/websocket_bridge/utils/*.h
-        include/hephaestus/ipc/*.h
+        include/hephaestus/websocket_bridge/ipc/*.h
 )
 
 define_module_library(

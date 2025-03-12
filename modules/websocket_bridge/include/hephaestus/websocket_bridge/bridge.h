@@ -16,9 +16,9 @@
 #include <hephaestus/ipc/zenoh/session.h>
 #include <hephaestus/serdes/type_info.h>
 
-#include "hephaestus/ipc/ipc_entity_manager.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
+#include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
@@ -37,11 +37,10 @@ private:
 
   WebsocketBridgeState state_;
 
+private:
   ////////////////////////////////
   // Websocket Server Interface //
   ////////////////////////////////
-
-  WsInterfacePtr ws_server_;
 
   // Callbacks triggered by WS Server
   // NOLINTBEGIN(readability-identifier-naming)
@@ -64,12 +63,11 @@ private:
 
   using IpcGraph = ipc::zenoh::IpcGraph;
   using IpcGraphState = ipc::zenoh::IpcGraphState;
+  using IpcGraphCallbacks = ipc::zenoh::IpcGraphCallbacks;
   using IpcGraphConfig = ipc::zenoh::IpcGraphConfig;
   using TopicsToTypeMap = ipc::zenoh::TopicsToTypeMap;
   using TopicsToServiceTypesMap = ipc::zenoh::TopicsToServiceTypesMap;
   using TopicToSessionIdMap = ipc::zenoh::TopicToSessionIdMap;
-
-  std::unique_ptr<IpcGraph> ipc_graph_;
 
   // Callbacks triggered by the IPC Graph
   // NOLINTBEGIN(readability-identifier-naming)
@@ -83,8 +81,6 @@ private:
   void callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& info, IpcGraphState ipc_graph_state);
   // NOLINTEND(readability-identifier-naming)
 
-  std::unique_ptr<IpcEntityManager> ipc_entity_manager_;
-
   // Callbacks triggered by the IPC interface
   // NOLINTBEGIN(readability-identifier-naming)
   void callback_Ipc_MessageReceived(const heph::ipc::zenoh::MessageMetadata& metadata,
@@ -94,6 +90,13 @@ private:
       WsServiceId service_id, WsServiceCallId call_id, const RawServiceResponses& responses,
       std::optional<ClientHandleWithName> client_handle_w_name_opt = std::nullopt);
   // NOLINTEND(readability-identifier-naming)
+
+private:
+  WsInterfacePtr ws_server_;
+
+  std::unique_ptr<IpcGraph> ipc_graph_;
+
+  std::unique_ptr<IpcEntityManager> ipc_entity_manager_;
 };
 
 }  // namespace heph::ws

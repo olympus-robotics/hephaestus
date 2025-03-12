@@ -28,6 +28,7 @@ class IpcGraphTest : public ::testing::Test {
 protected:
   // NOLINTBEGIN
   IpcGraphConfig config;
+  IpcGraphCallbacks callbacks;
   std::unique_ptr<IpcGraph> graph;
 
   using PublisherPtr = std::unique_ptr<ipc::zenoh::Publisher<types::DummyType>>;
@@ -63,7 +64,7 @@ protected:
     // multicast scouting enabled to simulate a real world scenario where endpoints are very likely in
     // different sessions.
     config.session = heph::ipc::zenoh::createSession(heph::ipc::zenoh::Config());
-    graph = std::make_unique<IpcGraph>(config);
+    graph = std::make_unique<IpcGraph>(config, std::move(callbacks));
     graph->start();
   }
 
@@ -146,19 +147,19 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithoutSubTopicTracking) {
   bool topic_removed = false;
   bool graph_updated = false;
 
-  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+  callbacks.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
     if (topic == TEST_TOPIC) {
       topic_discovered = true;
     }
   };
 
-  config.topic_removal_cb = [&](const std::string& topic) {
+  callbacks.topic_removal_cb = [&](const std::string& topic) {
     if (topic == TEST_TOPIC) {
       topic_removed = true;
     }
   };
 
-  config.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
+  callbacks.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
     if (info.topic == TEST_TOPIC) {
       EXPECT_TRUE(state.checkConsistency());
       state.printIpcGraphState();
@@ -314,19 +315,19 @@ TEST_F(IpcGraphTest, TopicDiscoveryAndRemovalWithSubTopicTracking) {
   bool topic_removed = false;
   bool graph_updated = false;
 
-  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+  callbacks.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
     if (topic == TEST_TOPIC) {
       topic_discovered = true;
     }
   };
 
-  config.topic_removal_cb = [&](const std::string& topic) {
+  callbacks.topic_removal_cb = [&](const std::string& topic) {
     if (topic == TEST_TOPIC) {
       topic_removed = true;
     }
   };
 
-  config.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
+  callbacks.graph_update_cb = [&](const auto& info, const IpcGraphState& state) {
     if (info.topic == TEST_TOPIC) {
       EXPECT_TRUE(state.checkConsistency());
       state.printIpcGraphState();
@@ -482,19 +483,19 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
   bool service_removed = false;
   bool graph_updated = false;
 
-  config.service_discovery_cb = [&](const std::string& service, const heph::serdes::ServiceTypeInfo&) {
+  callbacks.service_discovery_cb = [&](const std::string& service, const heph::serdes::ServiceTypeInfo&) {
     if (service == TEST_SERVICE) {
       service_discovered = true;
     }
   };
 
-  config.service_removal_cb = [&](const std::string& service) {
+  callbacks.service_removal_cb = [&](const std::string& service) {
     if (service == TEST_SERVICE) {
       service_removed = true;
     }
   };
 
-  config.graph_update_cb = [&](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
+  callbacks.graph_update_cb = [&](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
     if (info.topic == TEST_SERVICE) {
       EXPECT_TRUE(state.checkConsistency());
       state.printIpcGraphState();
@@ -637,7 +638,7 @@ TEST_F(IpcGraphTest, ServiceDiscoveryAndRemoval) {
 TEST_F(IpcGraphTest, GetTopicTypeInfo) {
   bool topic_discovered = false;
 
-  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+  callbacks.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
     if (topic == TEST_TOPIC) {
       topic_discovered = true;
     }
@@ -659,7 +660,7 @@ TEST_F(IpcGraphTest, GetTopicTypeInfo) {
 TEST_F(IpcGraphTest, GetTopicListString) {
   bool topic_discovered = false;
 
-  config.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
+  callbacks.topic_discovery_cb = [&](const std::string& topic, const heph::serdes::TypeInfo&) {
     if (topic == TEST_TOPIC) {
       topic_discovered = true;
     }
@@ -676,3 +677,4 @@ TEST_F(IpcGraphTest, GetTopicListString) {
 
 }  // namespace
 }  // namespace heph::ipc::zenoh::tests
+\

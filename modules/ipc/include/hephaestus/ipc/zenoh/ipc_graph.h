@@ -40,20 +40,15 @@ struct IpcGraphState {
   [[nodiscard]] auto checkConsistency() const -> bool;
 };
 
-using TopicRemovalCallback = std::function<void(const std::string& /*topic*/)>;
-using TopicDiscoveryCallback =
-    std::function<void(const std::string& /*topic*/, const serdes::TypeInfo& /*type_info*/)>;
-using ServiceRemovalCallback = std::function<void(const std::string& /*service_name*/)>;
-using ServiceDiscoveryCallback = std::function<void(const std::string& /*service_name*/,
-                                                    const serdes::ServiceTypeInfo& /*service_type_info*/)>;
-
-using GraphUpdateCallback =
-    std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, const IpcGraphState& /*state*/)>;
-
-struct IpcGraphConfig {
-  ipc::zenoh::SessionPtr session;
-
-  bool track_topics_based_on_subscribers = true;
+struct IpcGraphCallbacks {
+  using TopicRemovalCallback = std::function<void(const std::string& /*topic*/)>;
+  using TopicDiscoveryCallback =
+      std::function<void(const std::string& /*topic*/, const serdes::TypeInfo& /*type_info*/)>;
+  using ServiceRemovalCallback = std::function<void(const std::string& /*service_name*/)>;
+  using ServiceDiscoveryCallback = std::function<void(const std::string& /*service_name*/,
+                                                      const serdes::ServiceTypeInfo& /*service_type_info*/)>;
+  using GraphUpdateCallback =
+      std::function<void(const ipc::zenoh::EndpointInfo& /*info*/, const IpcGraphState& /*state*/)>;
 
   TopicDiscoveryCallback topic_discovery_cb;
   TopicRemovalCallback topic_removal_cb;
@@ -64,9 +59,15 @@ struct IpcGraphConfig {
   GraphUpdateCallback graph_update_cb;
 };
 
+struct IpcGraphConfig {
+  ipc::zenoh::SessionPtr session;
+
+  bool track_topics_based_on_subscribers = true;
+};
+
 class IpcGraph {
 public:
-  explicit IpcGraph(IpcGraphConfig config);
+  IpcGraph(IpcGraphConfig config, IpcGraphCallbacks&& callbacks);
 
   void start();
   void stop();
@@ -143,15 +144,13 @@ private:
   mutable absl::Mutex mutex_;
 
   IpcGraphConfig config_;
+  IpcGraphCallbacks callbacks_;
 
   std::unique_ptr<ipc::zenoh::EndpointDiscovery> discovery_;
 
   IpcGraphState state_ ABSL_GUARDED_BY(mutex_);
 
   std::unique_ptr<ipc::ITopicDatabase> topic_db_ ABSL_GUARDED_BY(mutex_);
-
-  TopicRemovalCallback topic_removal_cb_;
-  TopicDiscoveryCallback topic_discovery_cb_;
 };
 
 }  // namespace heph::ipc::zenoh

@@ -9,14 +9,14 @@ package(default_visibility = ["//visibility:public"])
 heph_cc_library(
     name = "websocket_bridge",
     srcs = glob([
-        "src/ipc/*.cpp",
         "src/websocket_bridge/*.cpp",
         "src/websocket_bridge/utils/*.cpp",
+        "src/websocket_bridge/ipc/*.cpp",
     ]),
     hdrs = glob([
-        "include/hephaestus/ipc/*.h",
         "include/hephaestus/websocket_bridge/*.h",
         "include/hephaestus/websocket_bridge/utils/*.h",
+        "include/hephaestus/websocket_bridge/ipc/*.h",
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],

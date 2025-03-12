@@ -20,7 +20,7 @@
 #include <hephaestus/types/dummy_type.h>
 #include <hephaestus/types_proto/dummy_type.h>
 
-#include "hephaestus/ipc/ipc_entity_manager.h"
+#include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 
 namespace heph::ws::tests {
 

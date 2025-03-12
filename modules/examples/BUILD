@@ -152,6 +152,17 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "zenoh_ipc_graph",
+    srcs = [
+        "examples/zenoh_ipc_graph.cpp",
+        "examples/zenoh_program_options.h",
+    ],
+    deps = [
+        ":examples",
+    ],
+)
+
 #########
 # Tests #
 #########

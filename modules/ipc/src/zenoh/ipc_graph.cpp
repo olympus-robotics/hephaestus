@@ -25,13 +25,22 @@
 
 namespace heph::ipc::zenoh {
 
-IpcGraph::IpcGraph(IpcGraphConfig config) : config_(std::move(config)) {
+IpcGraph::IpcGraph(IpcGraphConfig config, IpcGraphCallbacks&& callbacks)
+  : config_(std::move(config)), callbacks_(std::move(callbacks)) {
+  heph::log(heph::INFO, "[IPC Graph] - Initializing...");
+
+  if (config_.session == nullptr) {
+    heph::log(heph::ERROR, "[IPC Graph] - Session is null");
+    return;
+  }
+
+  heph::log(heph::INFO, "[IPC Graph] - Initialized");
 }
 
 void IpcGraph::start() {
   const absl::MutexLock lock(&mutex_);
 
-  heph::log(heph::INFO, "\n[IPC Graph] - Starting...");
+  heph::log(heph::INFO, "[IPC Graph] - Starting...");
 
   topic_db_ = ipc::createZenohTopicDatabase(config_.session);
 
@@ -39,24 +48,24 @@ void IpcGraph::start() {
       config_.session, ipc::TopicConfig{ "**" },
       [this](const ipc::zenoh::EndpointInfo& info) { endPointInfoUpdateCallback(info); });
 
-  heph::log(heph::INFO, "\n[IPC Graph] - ONLINE");
+  heph::log(heph::INFO, "[IPC Graph] - ONLINE");
 }
 
 void IpcGraph::stop() {
-  heph::log(heph::INFO, "\n[IPC Graph] - Stopping...");
+  heph::log(heph::INFO, "[IPC Graph] - Stopping...");
   {
     const absl::MutexLock lock(&mutex_);
 
     topic_db_.reset();
 
-    config_.topic_discovery_cb = nullptr;
-    config_.topic_removal_cb = nullptr;
-    config_.graph_update_cb = nullptr;
+    callbacks_.topic_discovery_cb = nullptr;
+    callbacks_.topic_removal_cb = nullptr;
+    callbacks_.graph_update_cb = nullptr;
   }
 
   discovery_.reset();
 
-  heph::log(heph::INFO, "\n[IPC Graph] - OFFLINE");
+  heph::log(heph::INFO, "[IPC Graph] - OFFLINE");
 }
 
 auto IpcGraph::getTopicTypeInfo(const std::string& topic) const -> std::optional<serdes::TypeInfo> {
@@ -134,8 +143,8 @@ void IpcGraph::endPointInfoUpdateCallback(const ipc::zenoh::EndpointInfo& info) 
   }
 
   if (graph_updated) {
-    if (config_.graph_update_cb) {
-      config_.graph_update_cb(info, state_);
+    if (callbacks_.graph_update_cb) {
+      callbacks_.graph_update_cb(info, state_);
     }
   }
 }
@@ -172,9 +181,9 @@ auto IpcGraph::getTopicToPublishersMap() const -> TopicToSessionIdMap {
 
 void IpcGraph::refreshConnectionGraph() const {
   const absl::MutexLock lock(&mutex_);
-  if (config_.graph_update_cb) {
+  if (callbacks_.graph_update_cb) {
     const ipc::zenoh::EndpointInfo info{};
-    config_.graph_update_cb(info, state_);
+    callbacks_.graph_update_cb(info, state_);
   }
 }
 
@@ -257,7 +266,6 @@ bool IpcGraph::topicHasAnyEndpoints(const std::string& topic) const {  // NOLINT
 
 bool IpcGraph::addTopic(const std::string& topic_name) {  // NOLINT
   if (hasTopic(topic_name)) {
-    heph::log(heph::WARN, "[IPC Graph] - topic is already known", "topic", topic_name);
     return true;
   }
 
@@ -269,8 +277,8 @@ bool IpcGraph::addTopic(const std::string& topic_name) {  // NOLINT
 
   state_.topics_to_types_map[topic_name] = type_info->name;
 
-  if (config_.topic_discovery_cb) {
-    config_.topic_discovery_cb(topic_name, type_info.value());
+  if (callbacks_.topic_discovery_cb) {
+    callbacks_.topic_discovery_cb(topic_name, type_info.value());
   }
 
   return true;
@@ -281,8 +289,8 @@ void IpcGraph::removeTopic(const std::string& topic_name) {
   state_.topic_to_publishers_map.erase(topic_name);
   state_.topic_to_subscribers_map.erase(topic_name);
 
-  if (config_.topic_removal_cb) {
-    config_.topic_removal_cb(topic_name);
+  if (callbacks_.topic_removal_cb) {
+    callbacks_.topic_removal_cb(topic_name);
   }
 }
 
@@ -341,7 +349,6 @@ void IpcGraph::removeServiceClientEndPoint(const ipc::zenoh::EndpointInfo& info)
 
 bool IpcGraph::addService(const std::string& service_name) {  // NOLINT
   if (hasService(service_name)) {
-    heph::log(heph::WARN, "[IPC Graph] - service is already known", "service", service_name);
     return true;
   }
 
@@ -356,8 +363,8 @@ bool IpcGraph::addService(const std::string& service_name) {  // NOLINT
 
   state_.services_to_types_map[service_name] = std::make_pair(request_type_name, reply_type_name);
 
-  if (config_.service_discovery_cb) {
-    config_.service_discovery_cb(service_name, service_type_info.value());
+  if (callbacks_.service_discovery_cb) {
+    callbacks_.service_discovery_cb(service_name, service_type_info.value());
   }
 
   return true;
@@ -368,8 +375,8 @@ void IpcGraph::removeService(const std::string& service_name) {
   state_.services_to_server_map.erase(service_name);
   state_.services_to_client_map.erase(service_name);
 
-  if (config_.service_removal_cb) {
-    config_.service_removal_cb(service_name);
+  if (callbacks_.service_removal_cb) {
+    callbacks_.service_removal_cb(service_name);
   }
 }
 
@@ -380,75 +387,94 @@ bool IpcGraph::hasService(const std::string& service_name) const {  // NOLINT
 void IpcGraphState::printIpcGraphState() const {
   std::stringstream ss;
 
-  ss << "[IPC Graph] - State:\n";
+  ss << "[IPC Graph]\n";
+
+  ss << "\n  == EDGES ==\n\n";
+
+  const auto max_name_length = [](const auto& map) -> std::size_t {
+    if (map.empty())
+      return 0;
+    return std::max_element(map.begin(), map.end(),
+                            [](const auto& a, const auto& b) { return a.first.size() < b.first.size(); })
+        ->first.size();
+  };
+
+  const std::size_t longest_name =
+      std::max(max_name_length(topics_to_types_map), max_name_length(services_to_types_map));
 
   if (!topics_to_types_map.empty()) {
-    ss << "\n  TOPICS:\n";
     for (const auto& [topic, type] : topics_to_types_map) {
-      ss << "    '" << topic << "' [" << type << "]\n";
+      ss << "    TOPIC:   '" << topic << "'" << std::string(longest_name - topic.size(), ' ') << " [" << type
+         << "]\n";
     }
   }
 
+  ss << "\n";
+
+  if (!services_to_types_map.empty()) {
+    for (const auto& [srv, srv_types] : services_to_types_map) {
+      ss << "    SERVICE: '" << srv << "'" << std::string(longest_name - srv.size(), ' ') << " ["
+         << srv_types.first << "/" << srv_types.second << "]\n";
+    }
+  }
+
+  ss << "\n  == ENDPOINTS ==\n\n";
+
   if (!topic_to_publishers_map.empty()) {
-    ss << "\n  PUBLISHERS:\n";
     for (const auto& [topic, publishers] : topic_to_publishers_map) {
-      ss << "    '" << topic << "' <- [";
+      ss << "    [";
       for (auto it = publishers.begin(); it != publishers.end(); ++it) {
         ss << *it;
         if (std::next(it) != publishers.end()) {
           ss << ", ";
         }
       }
-      ss << "]\n";
+      ss << "] --PUBLISH--> '" << topic << "'\n";
     }
   }
 
+  ss << "\n";
+
   if (!topic_to_subscribers_map.empty()) {
-    ss << "\n  SUBSCRIBERS:\n";
     for (const auto& [topic, subscribers] : topic_to_subscribers_map) {
-      ss << "    '" << topic << "' -> [";
+      ss << "    [";
       for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {
         ss << *it;
         if (std::next(it) != subscribers.end()) {
           ss << ", ";
         }
       }
-      ss << "]\n";
+      ss << "] --SUBSCRIBE--> '" << topic << "'\n";
     }
   }
 
-  if (!services_to_types_map.empty()) {
-    ss << "\n  SERVICES:\n";
-    for (const auto& [srv, srv_types] : services_to_types_map) {
-      ss << "    '" << srv << "' [" << srv_types.first << "/" << srv_types.second << "]\n";
-    }
-  }
+  ss << "\n";
 
   if (!services_to_server_map.empty()) {
-    ss << "\n  SERVERS:\n";
     for (const auto& [srv, nodes] : services_to_server_map) {
-      ss << "    '" << srv << "' [";
+      ss << "    [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
         ss << *it;
         if (std::next(it) != nodes.end()) {
           ss << ", ";
         }
       }
-      ss << "]\n";
+      ss << "] --SERVE--> '" << srv << "'\n";
     }
   }
 
+  ss << "\n";
+
   if (!services_to_client_map.empty()) {
-    ss << "\n  CLIENTS:\n";
     for (const auto& [srv, nodes] : services_to_client_map) {
-      ss << "    '" << srv << "' [";
+      ss << "    [";
       for (auto it = nodes.begin(); it != nodes.end(); ++it) {
         ss << *it;
         if (std::next(it) != nodes.end()) {
           ss << ", ";
         }
       }
-      ss << "]\n";
+      ss << "] --CALL--> '" << srv << "'\n";
     }
   }
 

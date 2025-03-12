@@ -21,7 +21,7 @@ bazel build //modules/websocket_bridge:app
 To run the WebSocket bridge, execute the following command:
 
 ```bash
-bazel run //modules/websocket_bridge::app -- -c <path to config file>
+bazel run //modules/websocket_bridge:app -- -c <path to config file>
 ```
 
 ## Bridge Structure

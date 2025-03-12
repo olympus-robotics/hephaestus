@@ -59,6 +59,13 @@ define_module_example(
 )
 
 define_module_example(
+  NAME zenoh_ipc_graph
+  SOURCES zenoh_ipc_graph.cpp  zenoh_program_options.h
+  PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+  PUBLIC_LINK_LIBS hephaestus::ipc
+)
+
+define_module_example(
   NAME mcap_writer
   SOURCES mcap_writer.cpp
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
