@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/containers",
         "//modules/random",
         "//modules/serdes",
+        "//modules/utils",
         "@abseil-cpp//absl/log:absl_log",
         "@fmt",
         "@magic_enum",

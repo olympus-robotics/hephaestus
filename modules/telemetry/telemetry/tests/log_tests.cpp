@@ -1,6 +1,7 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 
+#include <fmt/base.h>
 #if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
 #include <format>
 #endif
@@ -29,7 +30,7 @@ namespace ht = heph::telemetry;
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {
-    std::ignore = logs_.tryEmplace(fmt::format("{}", s));
+    std::ignore = logs_.tryEmplace(fmt::format("|{} -- {}|", s, s.stack_trace.value_or("")));
   }
 
   [[nodiscard]] auto getLog() -> std::string {
@@ -114,7 +115,7 @@ TEST_F(LogTestFixture, Escapes) {
 TEST_F(LogTestFixture, sink) {
   const int num = 123;
 
-  heph::log(heph::ERROR, "test another great message", "num", num);
+  heph::log(heph::INFO, "test another great message", "num", num);
   const auto log = sink_ptr->getLog();
   {
     std::stringstream ss;
@@ -126,7 +127,7 @@ TEST_F(LogTestFixture, sink) {
 TEST_F(LogTestFixture, log) {
   using namespace std::literals::string_literals;
 
-  heph::log(heph::ERROR, "test another great message");
+  heph::log(heph::INFO, "test another great message");
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
 }
@@ -134,7 +135,7 @@ TEST_F(LogTestFixture, log) {
 TEST_F(LogTestFixture, logString) {
   using namespace std::literals::string_literals;
 
-  heph::log(heph::ERROR, "as string"s);
+  heph::log(heph::INFO, "as string"s);
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
 }
@@ -142,7 +143,7 @@ TEST_F(LogTestFixture, logString) {
 TEST_F(LogTestFixture, logLibFmt) {
   const int num = 456;
 
-  heph::log(heph::ERROR, fmt::format("this {} is formatted", num));
+  heph::log(heph::INFO, fmt::format("this {} is formatted", num));
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
@@ -151,7 +152,7 @@ TEST_F(LogTestFixture, logLibFmt) {
 #if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
 TEST_F(LogTestFixture, logStdFmt) {
   const int num = 456;
-  heph::log(heph::ERROR, std::format("this {} is formatted", num));
+  heph::log(heph::INFO, std::format("this {} is formatted", num));
 
   EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
@@ -162,7 +163,7 @@ TEST_F(LogTestFixture, logWithFields) {
 
   const int num = 123;
 
-  heph::log(heph::ERROR, "test another great message", "num", num, "test", "lala");
+  heph::log(heph::INFO, "test another great message", "num", num, "test", "lala");
 
   const auto log = sink_ptr->getLog();
   {
@@ -183,7 +184,7 @@ TEST_F(LogTestFixture, logIfWithFields) {
   const int num = 123;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
-  heph::logIf(heph::ERROR, num == 123, "test another great message", "num", num, "test", "lala");
+  heph::logIf(heph::INFO, num == 123, "test another great message", "num", num, "test", "lala");
 
   const auto log = sink_ptr->getLog();
   {
@@ -198,7 +199,7 @@ TEST_F(LogTestFixture, logIfWithFields) {
   }
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
-  heph::logIf(heph::ERROR, num == 124, "test another great message", "num", num, "test", "lala");
+  heph::logIf(heph::INFO, num == 124, "test another great message", "num", num, "test", "lala");
   EXPECT_TRUE(sink_ptr->empty());
 }
 
