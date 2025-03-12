@@ -32,9 +32,9 @@
 #include <hephaestus/serdes/type_info.h>
 #include <hephaestus/telemetry/log.h>
 
-#include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
+#include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
