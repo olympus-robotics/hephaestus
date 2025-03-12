@@ -21,8 +21,6 @@
 #include <hephaestus/utils/signal_handler.h>
 #include <hephaestus/utils/stack_trace.h>
 
-#include "zenoh_program_options.h"
-
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
