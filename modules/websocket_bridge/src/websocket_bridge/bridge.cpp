@@ -69,7 +69,9 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
   }
 
   // Initialize IPC Interface
-  { ipc_entity_manager_ = std::make_unique<IpcEntityManager>(session, config_.zenoh_config); }
+  {
+    ipc_entity_manager_ = std::make_unique<IpcEntityManager>(session, config_.zenoh_config);
+  }
 
   // Initialize WS Server
   {

@@ -58,5 +58,5 @@ def foreign_cc_repositories():
         build_file = ":foreign_cc/ws_protocol.BUILD",
         urls = ["https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
         strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
-        sha256 = "068e771a39dfdb957d27bff281e822f979543b5b7c55e1b639b4d85551f1f13b",
+        sha256 = "86bd5743098825822b26b0459f4115b86694fdc86398ba7e84e296b6af4bdc23",
     )
