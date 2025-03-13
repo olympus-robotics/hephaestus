@@ -12,6 +12,8 @@
 #include <limits>
 #include <mutex>
 
+#include "hephaestus/concurrency/spinner_state_machine.h"
+
 namespace heph::concurrency {
 
 /// A spinner is a class that spins in a loop calling a user-defined function.
@@ -27,25 +29,9 @@ public:
   /// @brief Wrap the user provided callback in a callback that never stops.
   [[nodiscard]] static auto createNeverStoppingCallback(Callback&& callback) -> StoppableCallback;
 
-  struct StateMachineCallbacks {
-    using TransitionCallback = std::function<void()>;
-    using PolicyCallback = std::function<bool()>;
-
-    TransitionCallback init_cb = []() {};       //!< Handles initialization.
-    TransitionCallback spin_once_cb = []() {};  //!< Handles execution.
-
-    PolicyCallback shall_stop_spinning_cb = []() {
-      return false;
-    };  //!< This callback is called after successful execution. It decides if spinning shall continue or
-        //!< conclude. Default: spin indefinitely.
-    PolicyCallback shall_restart_cb = []() {
-      return false;
-    };  //!< This callback is called after failure. It decides if operation shall restart, or the spinner
-        //!< shall conclude. Default: do not restart.
-  };
-
   /// @brief Create a callback for the spinner which internally handles the state machine.
-  [[nodiscard]] static auto createCallbackWithStateMachine(StateMachineCallbacks&& callbacks)
+  [[nodiscard]] static auto
+  createCallbackWithStateMachine(spinner_state_machine::StateMachineCallbackT&& state_machine_callback)
       -> StoppableCallback;
 
   /// @brief Create a spinner with a stoppable callback. A stoppable callback is a function that returns

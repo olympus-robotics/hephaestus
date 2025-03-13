@@ -23,7 +23,7 @@ Hephaestus provides robust abstractions for fundamental robotics infrastructure:
 - **Memory Management**
   - Automated memory handling
   - Memory pools for efficient allocation
-  
+
 - **Concurrency**
   - Thread pools
   - Parallelism primitives
@@ -81,6 +81,13 @@ Bazel is the official tool to build Hephaestus.
 * Run binaries:
   * `bazel run //modules/ipc:zenoh_topic_list`, or
   * `./bazel-bin/modules/ipc/zenoh_topic_list`
+
+#### Clang-tidy Profiling
+It is possible to run clang-tidy with profiling enabled to see how long each check takes. To do that:
+* in `clang_tidy.bzl` uncomment line `# args.add("--enable-check-profile")`
+* in `run_clang_tidy.sh` comment current `trap` command and uncomment `# trap 'head -n 15 "$logfile" 1>&2' EXIT`
+
+This will print stats for each files sorted by time.
 
 ### Folders
 For more details see https://bazel.build/remote/output-directories
@@ -148,7 +155,7 @@ include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 Create the `modules` folder and add your modules. You can use the hephaestus script by calling:
 ```bash
 cd modules
-python3 ../build/_deps/hephaestus-src/cmake/create_module.py my_module
+python3 ../cmake/create_module.py my_module
 ```
 
 Create the `external` folder and add a `CMakeLists.txt` file as:

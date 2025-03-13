@@ -1,0 +1,51 @@
+ws_server_config:
+  capabilities:
+    - connectionGraph
+    - clientPublish
+    - services
+    # - time
+    # - parameters
+    # - parametersSubscribe
+    # - assets
+  supportedEncodings:
+    - protobuf
+  metadata: {}
+  sendBufferLimitBytes: 10000000
+  useTls: false
+  certfile: ""
+  keyfile: ""
+  sessionId: websocket_bridge
+  numWorkerThreads: 10
+  useCompression: true
+  clientTopicWhitelistPatterns:
+    - .*
+ws_server_port: 8765
+# Note on websocket bridge address:
+# - 0.0.0.0 -> bridge visible on all interfaces, e.g. for local LAN access
+# - localhost or 127.0.0.1 -> bridge only accessible from within this machine
+ws_server_address: 0.0.0.0
+zenoh_config:
+  use_binary_name_as_session_id: false
+  id: "ws_bridge"
+  # zenoh_config_path: ""
+  enable_shared_memory: false
+  mode: PEER
+  router: "127.0.01:7447"
+  qos: false
+  real_time: false
+  protocol: ANY
+  multicast_scouting_enabled: true
+  multicast_scouting_interface: auto
+
+ipc_service_call_timeout_ms: 10000
+# Async service calls are currently not supported.
+ipc_service_service_request_async: true
+
+ipc_advertise_topics_based_on_subscribers: true
+
+ipc_topic_whitelist:
+  - .*
+ipc_topic_blacklist: []
+ipc_service_whitelist:
+  - .*
+ipc_service_blacklist: []

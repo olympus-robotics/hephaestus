@@ -159,27 +159,23 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
   const auto& keyexpr = query.get_keyexpr().as_string_view();
 
   const auto encoding = query.get_encoding();
-  throwExceptionIf<InvalidParameterException>(
-      !encoding.has_value(), fmt::format("Serivce {}: encoding is missing in query.", keyexpr));
+  panicIf(!encoding.has_value(), fmt::format("Serivce {}: encoding is missing in query.", keyexpr));
 
   auto payload = query.get_payload();
-  throwExceptionIf<InvalidParameterException>(
-      !payload.has_value(), fmt::format("Serivce {}: payload is missing in query.", keyexpr));
+  panicIf(!payload.has_value(), fmt::format("Serivce {}: payload is missing in query.", keyexpr));
 
   if constexpr (std::is_same_v<RequestT, std::string>) {
-    throwExceptionIf<InvalidParameterException>(
-        encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
-            ::zenoh::Encoding::Predefined::zenoh_string(),
-        fmt::format("Encoding for std::string should be '{}'",
-                    ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
+    panicIf(encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
+                ::zenoh::Encoding::Predefined::zenoh_string(),
+            fmt::format("Encoding for std::string should be '{}'",
+                        ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
 
     return payload->get().as_string();  // NOLINT(bugprone-unchecked-optional-access)
   } else {
-    throwExceptionIf<InvalidParameterException>(
-        encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
-            ::zenoh::Encoding::Predefined::zenoh_bytes(),
-        fmt::format("Encoding for std::string should be '{}'",
-                    ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
+    panicIf(encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
+                ::zenoh::Encoding::Predefined::zenoh_bytes(),
+            fmt::format("Encoding for std::string should be '{}'",
+                        ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
 
     auto buffer = toByteVector(payload->get());  // NOLINT(bugprone-unchecked-optional-access)
 
@@ -194,17 +190,15 @@ auto onReply(const ::zenoh::Sample& sample) -> ServiceResponse<ReplyT> {
   const auto server_topic = static_cast<std::string>(sample.get_keyexpr().as_string_view());
 
   if constexpr (std::is_same_v<ReplyT, std::string>) {
-    throwExceptionIf<InvalidParameterException>(
-        sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_string(),
-        fmt::format("Encoding for Service {} should be '{}'", server_topic,
-                    ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
+    panicIf(sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_string(),
+            fmt::format("Encoding for Service {} should be '{}'", server_topic,
+                        ::zenoh::Encoding::Predefined::zenoh_string().as_string()));
     auto payload = sample.get_payload().as_string();
     return ServiceResponse<ReplyT>{ .topic = server_topic, .value = std::move(payload) };
   } else {
-    throwExceptionIf<InvalidParameterException>(
-        sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_bytes(),
-        fmt::format("Encoding for Service {} should be '{}'", server_topic,
-                    ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
+    panicIf(sample.get_encoding() != ::zenoh::Encoding::Predefined::zenoh_bytes(),
+            fmt::format("Encoding for Service {} should be '{}'", server_topic,
+                        ::zenoh::Encoding::Predefined::zenoh_bytes().as_string()));
     auto buffer = toByteVector(sample.get_payload());
     ReplyT reply{};
     serdes::deserialize(buffer, reply);
@@ -284,9 +278,8 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   queryable_ = std::make_unique<::zenoh::Queryable<void>>(session_->zenoh_session.declare_queryable(
       keyexpr, std::move(on_query_cb), []() {}, ::zenoh::Session::QueryableOptions::create_default(),
       &result));
-  throwExceptionIf<FailedZenohOperation>(
-      result != Z_OK,
-      fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
+  panicIf(result != Z_OK,
+          fmt::format("[Service '{}'] failed to create zenoh queryable, err {}", topic_config_.name, result));
 
   if (config.create_liveliness_token) {
     liveliness_token_ =
@@ -294,9 +287,8 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::SERVICE_SERVER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-    throwExceptionIf<FailedZenohOperation>(
-        result != Z_OK, fmt::format("[Publisher {}] failed to create livelines token, result {}",
-                                    topic_config_.name, result));
+    panicIf(result != Z_OK, fmt::format("[Publisher {}] failed to create livelines token, result {}",
+                                        topic_config_.name, result));
   }
 }
 

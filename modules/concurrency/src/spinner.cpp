@@ -13,11 +13,9 @@
 #include <future>
 #include <limits>
 #include <mutex>
-#include <type_traits>
 #include <utility>
 
-#include <magic_enum.hpp>
-
+#include "hephaestus/concurrency/spinner_state_machine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
@@ -34,48 +32,6 @@ namespace {
 
   return std::chrono::microseconds{ period_microseconds };
 }
-
-enum class State : uint8_t { NOT_INITIALIZED, FAILED, READY_TO_SPIN, SPIN_SUCCESSFUL, EXIT };
-
-template <typename CallbackT>
-struct BinaryTransitionParams {
-  State input_state;
-  CallbackT& operation;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
-  State success_state;
-  State failure_state;
-};
-
-template <typename T>
-struct IsPolicyCallback : std::false_type {};
-
-template <>
-struct IsPolicyCallback<Spinner::StateMachineCallbacks::PolicyCallback> : std::true_type {};
-
-template <typename CallbackT>
-[[nodiscard]] auto attemptBinaryTransition(State current_state,
-                                           const BinaryTransitionParams<CallbackT>& params) -> State {
-  if (current_state != params.input_state) {
-    return current_state;
-  }
-
-  try {
-    if constexpr (IsPolicyCallback<CallbackT>::value) {
-      // policy callbacks have a return value which is returned to the caller
-      return params.operation() ? params.success_state : params.failure_state;
-    }
-
-    params.operation();
-  } catch (const std::exception& exception_message) {
-    heph::log(heph::ERROR, "spinner state transition failed", "current_state",
-              magic_enum::enum_name(params.input_state), "expected_transition_state",
-              magic_enum::enum_name(params.success_state), "actual_transition_state",
-              magic_enum::enum_name(params.failure_state), "exception", exception_message.what());
-
-    return params.failure_state;
-  }
-
-  return params.success_state;
-}
 }  // namespace
 
 auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallback {
@@ -85,31 +41,13 @@ auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallb
   };
 }
 
-auto Spinner::createCallbackWithStateMachine(StateMachineCallbacks&& callbacks) -> StoppableCallback {
-  return [callbacks = std::move(callbacks), state = State::NOT_INITIALIZED]() mutable -> SpinResult {
-    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::NOT_INITIALIZED,
-                                                                   .operation = callbacks.init_cb,
-                                                                   .success_state = State::READY_TO_SPIN,
-                                                                   .failure_state = State::FAILED });
-
-    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::READY_TO_SPIN,
-                                                                   .operation = callbacks.spin_once_cb,
-                                                                   .success_state = State::SPIN_SUCCESSFUL,
-                                                                   .failure_state = State::FAILED });
-
-    state = attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::FAILED,
-                                                                   .operation = callbacks.shall_restart_cb,
-                                                                   .success_state = State::NOT_INITIALIZED,
-                                                                   .failure_state = State::EXIT });
-
-    state =
-        attemptBinaryTransition(state, BinaryTransitionParams{ .input_state = State::SPIN_SUCCESSFUL,
-                                                               .operation = callbacks.shall_stop_spinning_cb,
-                                                               .success_state = State::EXIT,
-                                                               .failure_state = State::READY_TO_SPIN });
+auto Spinner::createCallbackWithStateMachine(
+    spinner_state_machine::StateMachineCallbackT&& state_machine_callback) -> StoppableCallback {
+  return [state_machine_callback = std::move(state_machine_callback)]() mutable -> SpinResult {
+    const auto state = state_machine_callback();
 
     // If the state machine reaches the exit state, the spinner should stop, else continue spinning.
-    if (state == State::EXIT) {
+    if (state == spinner_state_machine::State::EXIT) {
       return SpinResult::STOP;
     }
 
@@ -132,7 +70,7 @@ Spinner::~Spinner() {
 }
 
 void Spinner::start() {
-  throwExceptionIf<InvalidOperationException>(async_spinner_handle_.valid(), "Spinner is already started.");
+  panicIf(async_spinner_handle_.valid(), "Spinner is already started.");
 
   stop_requested_.store(false);
   spinner_completed_.clear();
@@ -155,6 +93,7 @@ void Spinner::spin() {
                                         start_timestamp, std::chrono::system_clock::now(), spin_period_));
       }
     } catch (std::exception& e) {
+      heph::log(heph::ERROR, "Spinner caught an exception, terminating", "error", e.what());
       terminate();
       throw;
     }
@@ -170,8 +109,7 @@ void Spinner::terminate() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(!async_spinner_handle_.valid(),
-                                              "Spinner not yet started, cannot stop.");
+  panicIf(!async_spinner_handle_.valid(), "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
 

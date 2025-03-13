@@ -7,7 +7,7 @@ module(
 )
 
 bazel_dep(name = "rules_foreign_cc", version = "0.12.0")
-bazel_dep(name = "rules_cc", version = "0.0.15")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "aspect_rules_lint", version = "1.0.3")
 bazel_dep(name = "buildifier_prebuilt", version = "7.3.1")
@@ -67,7 +67,7 @@ git_override(
 # Third-party dependencies #
 ############################
 
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
+bazel_dep(name = "googletest", version = "1.15.2")
 bazel_dep(name = "abseil-cpp", version = "20240116.2")
 bazel_dep(name = "magic_enum", version = "0.9.5")
 bazel_dep(name = "fmt", version = "11.0.2")
@@ -83,6 +83,8 @@ git_override(
     remote = "https://github.com/ericniebler/range-v3",
 )
 
+bazel_dep(name = "boringssl", version = "0.20250114.0")
+bazel_dep(name = "websocketpp", version = "0.8.2.bcr.3")
 bazel_dep(name = "zstd", version = "1.5.6")
 
 # TODO: eventually add
@@ -90,4 +92,4 @@ bazel_dep(name = "zstd", version = "1.5.6")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "zenohc_builder")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "ws_protocol", "zenohc_builder")

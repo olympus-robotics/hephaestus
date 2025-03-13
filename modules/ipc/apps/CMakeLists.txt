@@ -25,3 +25,9 @@ define_module_executable(
   SOURCES zenoh_topic_echo.cpp PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
   PUBLIC_LINK_LIBS ""
 )
+
+define_module_example(
+  NAME zenoh_ipc_graph
+  SOURCES zenoh_ipc_graph.cpp PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+  PUBLIC_LINK_LIBS ""
+)

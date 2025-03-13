@@ -67,6 +67,16 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "zenoh_ipc_graph",
+    srcs = [
+        "apps/zenoh_ipc_graph.cpp",
+    ],
+    deps = [
+        ":ipc",
+    ],
+)
+
 #########
 # Tests #
 #########
@@ -146,6 +156,14 @@ heph_cc_test(
     name = "topic_database_tests",
     srcs = [
         "tests/topic_database_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "ipc_graph_tests",
+    srcs = [
+        "tests/ipc_graph_tests.cpp",
     ],
     deps = IPC_TEST_DEPS,
 )

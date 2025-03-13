@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 namespace heph::utils {
 
@@ -19,6 +20,8 @@ class StackTrace {
 public:
   StackTrace();
   ~StackTrace();
+
+  static auto print() -> std::string;
 
 private:
   class Impl;

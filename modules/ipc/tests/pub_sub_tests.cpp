@@ -87,7 +87,7 @@ TEST(PublisherSubscriber, MismatchType) {
         std::ignore = publisher.publish(types::DummyType::random(mt));
         stop_flag.wait(false);
       },
-      FailedZenohOperation, "");
+      Panic, "");
 }
 
 TEST(PublisherSubscriber, PublisherTypeInfo) {
