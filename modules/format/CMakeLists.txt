@@ -10,17 +10,17 @@ declare_module(
 
 find_package(fmt REQUIRED)
 find_package(reflectcpp REQUIRED)
+find_package(magic_enum REQUIRED)
 
 # library sources
-set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generic_formatter.h)
+set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generic_formatter.h
+            include/hephaestus/format/enum.h
+)
 
 # library target
 define_module_library(
   NAME format
-  PUBLIC_LINK_LIBS
-    fmt::fmt
-    hephaestus::utils
-    reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp magic_enum::magic_enum
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

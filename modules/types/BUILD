@@ -40,5 +40,7 @@ heph_cc_test(
 heph_cc_test(
     name = "tests",
     srcs = ["tests/tests.cpp"],
-    deps = TYPES_TEST_DEPS,
+    deps = TYPES_TEST_DEPS + [
+        "//modules/format",
+    ],
 )

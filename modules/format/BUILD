@@ -19,6 +19,7 @@ heph_cc_library(
     deps = [
         "//modules/utils",
         "@fmt",
+        "@magic_enum",
         "@reflect-cpp",
     ],
 )
