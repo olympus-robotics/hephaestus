@@ -16,6 +16,7 @@
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
+#include "hephaestus/format/enum.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/format/format.h"
 

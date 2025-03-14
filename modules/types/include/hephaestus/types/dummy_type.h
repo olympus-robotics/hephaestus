@@ -6,13 +6,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <random>
 #include <string>
 #include <vector>
-
-#include <fmt/base.h>
-#include <fmt/ostream.h>
 
 namespace heph::types {
 
@@ -40,8 +36,6 @@ struct DummyPrimitivesType {
   double dummy_double{};
 };
 
-auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream&;
-
 enum class ExternalDummyEnum : int8_t { A, B, C, D, E, F, G };
 
 /// @brief Collection of non-primitive types for testing purposes.
@@ -63,14 +57,4 @@ struct DummyType {
   std::vector<int32_t> dummy_vector;
 };
 
-auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream&;
-
 }  // namespace heph::types
-
-namespace fmt {
-template <>
-struct formatter<heph::types::DummyPrimitivesType> : ostream_formatter {};
-
-template <>
-struct formatter<heph::types::DummyType> : ostream_formatter {};
-}  // namespace fmt
