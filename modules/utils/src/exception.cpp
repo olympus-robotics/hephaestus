@@ -15,7 +15,7 @@ namespace heph {
 
 Panic::Panic(const std::string& message, std::source_location location)
   : std::runtime_error("[" + std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
-                       std::to_string(location.line()) + "] " + message + "/n" + utils::StackTrace::print()) {
+                       std::to_string(location.line()) + "] " + message + "\n" + utils::StackTrace::print()) {
 }
 
 }  // namespace heph
