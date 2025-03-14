@@ -175,6 +175,6 @@ concept Waitable = requires(T value) {
 };
 
 template <typename T>
-concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
+concept StoppableAndWaitable = requires { Stoppable<T> && Waitable<T>; };
 
 }  // namespace heph

@@ -17,14 +17,19 @@ bazel_dep(name = "buildifier_prebuilt", version = "7.3.1")
 ##############
 
 # LLVM
-bazel_dep(name = "toolchains_llvm", version = "1.2.0")
+bazel_dep(name = "toolchains_llvm", version = "1.3.0")
+git_override(
+    module_name = "toolchains_llvm",
+    commit = "14eb90172b3c5f35bdb2699d006fe0f70e76aa24",
+    remote = "https://github.com/bazel-contrib/toolchains_llvm.git",
+)
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 
 LLVM_VERSIONS = {
-    "": "19.1.0",
-    "linux-aarch64": "19.1.0",
-    "linux-x86_64": "19.1.0",
+    "": "20.1.0",
+    "linux-aarch64": "20.1.0",
+    "linux-x86_64": "20.1.0",
 }
 
 llvm.toolchain(
@@ -70,7 +75,7 @@ git_override(
 bazel_dep(name = "googletest", version = "1.15.2")
 bazel_dep(name = "abseil-cpp", version = "20240116.2")
 bazel_dep(name = "magic_enum", version = "0.9.5")
-bazel_dep(name = "fmt", version = "11.0.2")
+bazel_dep(name = "fmt", version = "11.1.4")
 bazel_dep(name = "protobuf", version = "29.0")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0")
