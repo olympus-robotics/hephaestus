@@ -21,7 +21,7 @@ docker-exec:
 	fi
 
 # log into the container
-.PHONY: docker-attach docker-vim
+.PHONY: docker-attach docker-nvim
 docker-attach:
 	make docker-exec
 
