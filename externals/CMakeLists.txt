@@ -170,7 +170,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # reflect-cpp
 set(REFLECT_CPP_VERSION 0.17.0)
-set(REFLECT_CPP_TAG ${REFLECT_CPP_VERSION}-cmake-3.22.1)
+set(REFLECT_CPP_TAG ${REFLECT_CPP_VERSION}-cmake-3.22.1-1)
 add_cmake_dependency(
   NAME reflectcpp
   DEPENDS ${REFLECT_CPP_DEPENDS}
