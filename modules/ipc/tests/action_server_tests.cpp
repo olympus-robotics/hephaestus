@@ -236,5 +236,56 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
   reply_future.get();
 }
 
+TEST(ActionServer, AsyncRejectedCall) {
+  auto mt = random::createRNG();
+  // Match the exact function signature: (const RequestT&, Publisher<StatusT>&, std::atomic_bool&)
+  auto test_data = createDummyActionServer(
+      mt, [](const types::DummyType&) { return TriggerStatus::REJECTED; },
+      [](const types::DummyType&, heph::ipc::zenoh::Publisher<types::DummyPrimitivesType>&,
+         std::atomic_bool&) { return types::DummyType{}; });
+
+  std::promise<Response<types::DummyType>> promise;
+  auto future_response = promise.get_future();
+
+  auto future_call = callActionServerAsync<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+      test_data.session, test_data.topic_config, types::DummyType::random(mt), [](const auto&) {},
+      SERVICE_CALL_TIMEOUT, [&](auto resp) { promise.set_value(resp); });
+
+  future_call.get();
+  auto resp = future_response.get();
+  EXPECT_EQ(resp.status, RequestStatus::REJECTED_USER);
+}
+
+TEST(ActionServer, AsyncSuccessfulCall) {
+  auto mt = random::createRNG();
+  auto sample_status = types::DummyPrimitivesType::random(mt);
+
+  auto test_data = createDummyActionServer(
+      mt, [](const types::DummyType&) -> TriggerStatus { return TriggerStatus::SUCCESSFUL; },
+      [&](const types::DummyType& request,
+          heph::ipc::zenoh::Publisher<heph::types::DummyPrimitivesType>& publisher,
+          std::atomic_bool&) -> types::DummyType {
+        EXPECT_TRUE(publisher.publish(sample_status));
+        return request;
+      });
+
+  std::promise<Response<types::DummyType>> promise;
+  auto future_response = promise.get_future();
+
+  std::atomic_flag status_received = ATOMIC_FLAG_INIT;
+  auto future_call = callActionServerAsync<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+      test_data.session, test_data.topic_config, types::DummyType::random(mt),
+      [&](auto st) {
+        EXPECT_EQ(st, sample_status);
+        status_received.test_and_set();
+      },
+      SERVICE_CALL_TIMEOUT, [&](auto resp) { promise.set_value(resp); });
+
+  future_call.get();
+  auto resp = future_response.get();
+  EXPECT_EQ(resp.status, RequestStatus::SUCCESSFUL);
+  EXPECT_TRUE(status_received.test());
+}
+
 }  // namespace
 }  // namespace heph::ipc::zenoh::action_server::tests
