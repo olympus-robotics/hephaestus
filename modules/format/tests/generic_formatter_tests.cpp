@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 #include <rfl.hpp>  // NOLINT(misc-include-cleaner)
 
+#include "hephaestus/format/enum.h"
 #include "hephaestus/format/generic_formatter.h"
 #include "hephaestus/types/bounds.h"
 // This is part of the test, since if operator<< is defined this will not compile due to conflicts
@@ -115,6 +116,25 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
   // Dummy test if the custom formatters can be compiled
   fmt::println("test: {}", x);
   std::cout << "cout: " << x << "\n" << std::flush;
+}
+
+TEST(GenericFormatterTests, TestFormatStructEnums) {
+  enum class TestEnum : std::uint8_t { A, B, C };
+
+  const std::string formatted = fmt::format("test enum {}", TestEnum::A);
+  EXPECT_NE(formatted.find("A"), std::string::npos);
+
+  struct S {
+    std::string a = "test_value";
+    TestEnum b = TestEnum::B;
+  };
+
+  S x{};
+
+  const std::string formatted2 = fmt::format("{}", x);
+
+  EXPECT_NE(formatted2.find("B"), std::string::npos);
+  EXPECT_NE(formatted2.find("test_value"), std::string::npos);
 }
 
 TEST(GenericFormatterTests, TestFormatStructArray) {
