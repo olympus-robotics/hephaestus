@@ -108,6 +108,9 @@ private:
 template <typename StatusT>
 using StatusUpdateCallback = std::function<void(const StatusT&)>;
 
+template <typename ReplyT>
+using ResponseCallback = std::function<void(const Response<ReplyT>&)>;
+
 /// Call the action server with the given request.
 /// - The status_update_cb will be called with the status updates from the server.
 ///   - The updates are decided by the user implementation of the action server.
@@ -117,6 +120,16 @@ template <typename RequestT, typename StatusT, typename ReplyT>
                                     const RequestT& request, StatusUpdateCallback<StatusT>&& status_update_cb,
                                     std::chrono::milliseconds request_timeout)
     -> std::future<Response<ReplyT>>;
+
+/// Call the action server with the given request.
+/// - The status_update_cb will be called with the status updates from the server.
+///   - The updates are decided by the user implementation of the action server.
+/// - The reply_cb will be called with the final response from the server.
+template <typename RequestT, typename StatusT, typename ReplyT>
+auto callActionServerAsync(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
+                           StatusUpdateCallback<StatusT>&& status_update_cb,
+                           std::chrono::milliseconds request_timeout, ResponseCallback<ReplyT>&& response_cb)
+    -> std::future<void>;
 
 /// Request the action server to stop.
 [[nodiscard]] auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config)
@@ -276,6 +289,21 @@ auto callActionServer(SessionPtr session, const TopicConfig& topic_config, const
   return std::async(std::launch::async, [client_helper = std::move(client_helper)]() mutable {
     auto response = client_helper->getResponse().get();
     return response;
+  });
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+auto callActionServerAsync(SessionPtr session, const TopicConfig& topic_config, const RequestT& request,
+                           StatusUpdateCallback<StatusT>&& status_update_cb,
+                           std::chrono::milliseconds request_timeout, ResponseCallback<ReplyT>&& response_cb)
+    -> std::future<void> {
+  return std::async(std::launch::async, [session, topic_config, request,
+                                         status_update_cb = std::move(status_update_cb), request_timeout,
+                                         response_cb = std::move(response_cb)]() mutable {
+    auto future = callActionServer<RequestT, StatusT, ReplyT>(session, topic_config, request,
+                                                              std::move(status_update_cb), request_timeout);
+    future.wait();
+    response_cb(future.get());
   });
 }
 
