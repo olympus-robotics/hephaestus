@@ -63,6 +63,9 @@ Checks: "-*,
 HeaderFilterRegex: '\/modules\/'
 ExcludeHeaderFilterRegex: ".pb.h$"
 
+ExtraArgs:
+  - -Wno-unused-command-line-argument
+
 CheckOptions:
   - {
       key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor,
