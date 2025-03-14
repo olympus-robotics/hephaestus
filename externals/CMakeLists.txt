@@ -169,8 +169,8 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # reflect-cpp
-set(REFLECT_CPP_VERSION 0.16.0)
-set(REFLECT_CPP_TAG v${REFLECT_CPP_VERSION}-cmake-3.22.1)
+set(REFLECT_CPP_VERSION 0.17.0)
+set(REFLECT_CPP_TAG ${REFLECT_CPP_VERSION}-cmake-3.22.1)
 add_cmake_dependency(
   NAME reflectcpp
   DEPENDS ${REFLECT_CPP_DEPENDS}
@@ -261,10 +261,9 @@ set(WS_PROTOCOL_TAG releases/cpp/v${WS_PROTOCOL_VERSION}-dev)
 add_cmake_dependency(
   NAME foxglove_websocket
   VERSION ${WS_PROTOCOL_VERSION}
-  DEPENDS ${WS_PROTOCOL_DEPENDS}
-  URL https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
+  DEPENDS ${WS_PROTOCOL_DEPENDS} URL
+          https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
   GIT_TAG ${WS_PROTOCOL_TAG}
   SOURCE_SUBDIR cpp/foxglove-websocket
   CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -G Ninja
 )
-
