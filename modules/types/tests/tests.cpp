@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
