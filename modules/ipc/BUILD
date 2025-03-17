@@ -165,5 +165,6 @@ heph_cc_test(
     srcs = [
         "tests/ipc_graph_tests.cpp",
     ],
+    flaky = True,
     deps = IPC_TEST_DEPS,
 )

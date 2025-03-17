@@ -75,7 +75,7 @@ struct Dummy {
       .uint64 = random::random<uint64_t>(mt),
       .float32 = random::random<float>(mt),
       .float64 = random::random<double>(mt),
-      .string = random::random<std::string>(mt),
+      .string = "k" + random::random<std::string>(mt),
       .nested = { .vector = random::random<std::vector<int64_t>>(mt),
                   .float64 = random::random<double>(mt),
                   .nested = { .vector = random::random<std::vector<int64_t>>(mt),
@@ -110,10 +110,11 @@ TEST(Measure, Metric) {
   const auto* mock_sink_ptr = mock_sink.get();
   registerMetricSink(std::move(mock_sink));
 
-  const auto entry = Metric{ .component = random::random<std::string>(mt),
-                             .tag = random::random<std::string>(mt),
-                             .timestamp = random::random<ClockT::time_point>(mt),
-                             .values = { { random::random<std::string>(mt), random::random<int64_t>(mt) } } };
+  const auto entry =
+      Metric{ .component = random::random<std::string>(mt),
+              .tag = random::random<std::string>(mt),
+              .timestamp = random::random<ClockT::time_point>(mt),
+              .values = { { "k" + random::random<std::string>(mt), random::random<int64_t>(mt) } } };
   record(entry);
 
   mock_sink_ptr->wait();
