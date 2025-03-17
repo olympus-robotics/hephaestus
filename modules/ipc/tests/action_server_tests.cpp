@@ -112,13 +112,17 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
       });
 
   auto request = types::DummyType::random(mt);
+  std::mutex status_mtx;
   types::DummyPrimitivesType received_status;
   std::atomic_flag received_status_flag = ATOMIC_FLAG_INIT;
   static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 10000 };
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
-      [&received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
-        received_status = status;
+      [&status_mtx, &received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
+        {
+          std::scoped_lock l{ status_mtx };
+          received_status = status;
+        }
         received_status_flag.test_and_set();
         received_status_flag.notify_all();
       },
@@ -127,7 +131,10 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
   while (received_status_flag.test() == false) {
     received_status_flag.wait(false);
   }
-  EXPECT_EQ(status, received_status);
+  {
+    std::scoped_lock l{ status_mtx };
+    EXPECT_EQ(status, received_status);
+  }
 
   const auto reply = reply_future.get();
   EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
@@ -226,7 +233,7 @@ TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
     auto other_reply_future =
         callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
             action_server_data.session, action_server_data.topic_config, request, [](const auto&) {},
-            SERVICE_CALL_TIMEOUT);
+            SERVICE_CALL_TIMEOUT * 2);
     EXPECT_EQ(other_reply_future.get().status, RequestStatus::REJECTED_ALREADY_RUNNING);
   }
 

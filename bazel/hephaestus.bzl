@@ -133,6 +133,7 @@ def heph_cc_test(
             # Leak detection currently doesn't work due to zenoh
             "ASAN_OPTIONS": "detect_leaks=0",
             "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
+            "RUST_BACKTRACE": "full",
         },
         tags = tags + ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
         size = size,

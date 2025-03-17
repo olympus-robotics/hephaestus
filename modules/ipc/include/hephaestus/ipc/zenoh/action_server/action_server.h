@@ -197,12 +197,8 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
   PublisherConfig config;
   config.create_liveliness_token = false;
   config.create_type_info_service = false;
-  auto status_update_publisher = Publisher<StatusT>{
-    session_,
-    internal::getStatusPublisherTopic(topic_config_, request.uid),
-    nullptr,
-    config,
-  };
+  auto status_update_publisher = std::make_unique<Publisher<StatusT>>(
+      session_, internal::getStatusPublisherTopic(topic_config_, request.uid), nullptr, config);
 
   std::atomic_bool stop_requested{ false };  // NOLINT(misc-const-correctness) False positive
   auto stop_service = Service<std::string, std::string>(
@@ -217,10 +213,12 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
           .create_type_info_service = false,
       });
 
-  const auto reply = [this, &request, &status_update_publisher, &stop_requested]() noexcept {
+  const auto reply = [this, session = session_, request,
+                      status_update_publisher = std::move(status_update_publisher),
+                      &stop_requested]() noexcept {
     try {
       return Response<ReplyT>{
-        .value = execute_cb_(request.request, status_update_publisher, stop_requested),
+        .value = execute_cb_(request.request, *status_update_publisher, stop_requested),
         .status = stop_requested ? RequestStatus::STOPPED : RequestStatus::SUCCESSFUL,
       };
     } catch (const std::exception& ex) {

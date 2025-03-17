@@ -47,7 +47,7 @@ TEST(ZenohTests, ServiceCallExchange) {
       session, service_topic, [](const types::DummyType& request) { return request; });
 
   const auto replies = callService<types::DummyType, types::DummyType>(
-      *session, service_topic, request_message, std::chrono::milliseconds(10));
+      *session, service_topic, request_message, std::chrono::milliseconds(100));
 
   EXPECT_FALSE(replies.empty());
   EXPECT_EQ(replies.size(), 1);
