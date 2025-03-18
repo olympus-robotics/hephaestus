@@ -59,3 +59,12 @@ heph_cc_test(
         ":format",
     ],
 )
+
+heph_cc_test(
+    name = "types_formatter_tests",
+    srcs = ["tests/types_formatter_tests.cpp"],
+    deps = [
+        ":format",
+        "//modules/types",
+    ],
+)
