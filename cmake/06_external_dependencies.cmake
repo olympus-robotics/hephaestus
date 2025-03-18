@@ -29,7 +29,7 @@ macro(build_external_dependencies)
   # Because execute_process() cannot handle ';' character in a list when passed as argument, escape it
   string(REPLACE ";" "\\;" formatted_external_projects_list "${_external_projects_list}")
 
-  # Configuration of all external dependencies are in external/CMakeLists.txt NOTE: external/CMakeLists.txt is processed
+  # Configuration of all external dependencies are in externals/CMakeLists.txt NOTE: externals/CMakeLists.txt is processed
   # as if it was a separate project. This means: - Variables set there are not shared by the rest of this project -
   # CMake parameters must be explicitly passed as if cmake was called on it from the command line
   message(STATUS "========= External dependencies (from folder: ${TARGET_ARG_FOLDER}): Configuring =========")
@@ -60,7 +60,7 @@ macro(build_external_dependencies)
 
   # If anything went wrong with external project build, stop and exit
   if(NOT ${_result} EQUAL 0)
-    message(FATAL_ERROR "Error processing ${PROJECT_SOURCE_DIR}/external/CMakeLists.txt")
+    message(FATAL_ERROR "Error processing ${PROJECT_SOURCE_DIR}/externals/CMakeLists.txt")
   endif()
 
   list(PREPEND CMAKE_PREFIX_PATH ${EP_DEPLOY_DIR}/)
