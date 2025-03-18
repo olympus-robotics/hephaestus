@@ -1,3 +1,5 @@
+
+
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
@@ -8,31 +10,39 @@
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <hephaestus/types/bounds.h>
+#include <hephaestus/types/dummy_type.h>
 
-#include "hephaestus/random/random_number_generator.h"
-#include "hephaestus/types/bounds.h"
-#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::types::tests {
 
+template <class T>
+class TypeFormatTests : public ::testing::Test {};
+
 using IntegerBoundsT = Bounds<int32_t>;
 using FloatingPointBoundsT = Bounds<float>;
-
-/* --- Test all custom structs which support creation via a random member function --- */
-template <class T>
-class TypeTests : public ::testing::Test {};
 using TypeImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType>;
 
-TYPED_TEST_SUITE(TypeTests, TypeImplementations);
+TYPED_TEST_SUITE(TypeFormatTests, TypeImplementations);
 
-TYPED_TEST(TypeTests, RandomUnequalTest) {
-  auto [mt, mt_copy] = heph::random::createPairOfIdenticalRNGs();
+TYPED_TEST(TypeFormatTests, OstreamTest) {
+  const TypeParam type;
+  std::stringstream ss;
+  EXPECT_TRUE(ss.str().empty());
+  ss << type;
+  EXPECT_FALSE(ss.str().empty());
+}
 
-  EXPECT_EQ(TypeParam::random(mt), TypeParam::random(mt_copy));  // Ensure determinism
-  EXPECT_NE(TypeParam::random(mt), TypeParam::random(mt));       // Ensure randomness
+TYPED_TEST(TypeFormatTests, FmtFormatTest) {
+  TypeParam type;
+  std::string fmt_stream;
+  EXPECT_TRUE(fmt_stream.empty());
+  fmt_stream = fmt::format("{}", type);
+  EXPECT_FALSE(fmt_stream.empty());
 }
 
 }  // namespace heph::types::tests
