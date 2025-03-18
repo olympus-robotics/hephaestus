@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include <absl/synchronization/mutex.h>
 #include <foxglove/websocket/websocket_client.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <google/protobuf/message.h>
@@ -43,7 +44,15 @@ auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements
 
 void receiveFailureResponse(const std::string& error_msg, ServiceCallState& state);
 
-using ServiceCallStateMap = std::map<uint32_t, ServiceCallState>;
+class ServiceCallStateMap : public std::map<uint32_t, ServiceCallState> {
+private:
+  mutable absl::Mutex mutex_;
+
+public:
+  [[nodiscard]] auto scopedLock() const -> absl::MutexLock {
+    return absl::MutexLock(&mutex_);
+  }
+};
 
 [[nodiscard]] auto allServiceCallsFinished(const ServiceCallStateMap& state) -> bool;
 
