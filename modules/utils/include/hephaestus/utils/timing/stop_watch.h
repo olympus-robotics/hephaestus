@@ -45,7 +45,7 @@ public:
 
   /// \return Elapsed time since the last start() cast to the desired duration.
   template <typename TargetDurationT = StopWatch::DurationT>
-  [[nodiscard]] auto elapsed() -> TargetDurationT;
+  [[nodiscard]] auto elapsed() const -> TargetDurationT;
 
   /// Stop and reset accumulated information.
   void reset();
@@ -62,7 +62,7 @@ public:
 private:
   [[nodiscard]] auto lapseImpl() -> DurationT;
   [[nodiscard]] auto stopImpl() -> DurationT;
-  [[nodiscard]] auto elapsedImpl() -> DurationT;
+  [[nodiscard]] auto elapsedImpl() const -> DurationT;
 
 private:
   NowFunctionPtr now_fn_;
@@ -88,7 +88,7 @@ auto StopWatch::lapse() -> TargetDurationT {
 }
 
 template <typename TargetDurationT>
-auto StopWatch::elapsed() -> TargetDurationT {
+auto StopWatch::elapsed() const -> TargetDurationT {
   return std::chrono::duration_cast<TargetDurationT>(elapsedImpl());
 }
 
