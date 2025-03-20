@@ -78,7 +78,7 @@ auto StopWatch::stopImpl() -> ClockT::duration {
   return lap_time;
 }
 
-auto StopWatch::elapsedImpl() -> ClockT::duration {
+auto StopWatch::elapsedImpl() const -> ClockT::duration {
   if (!lap_start_timestamp_.has_value()) {
     return {};
   }
