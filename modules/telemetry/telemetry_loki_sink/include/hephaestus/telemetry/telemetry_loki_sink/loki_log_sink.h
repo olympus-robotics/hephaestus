@@ -48,7 +48,6 @@ private:
   std::map<std::string, std::string> stream_labels_;
 
   absl::Mutex mutex_;
-  // std::vector<LogEntry> log_entries_ ABSL_GUARDED_BY(mutex_);
   std::unordered_map<LogLevel, std::vector<LogEntry>> log_entries_ ABSL_GUARDED_BY(mutex_);
 
   concurrency::Spinner spinner_;
