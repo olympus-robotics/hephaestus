@@ -7,6 +7,7 @@
 
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h"
+#include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
 // To start a Grafana + Loki stack follow this instructions
@@ -31,6 +32,14 @@ auto main(int /*unused*/, const char* /*unused*/[]) -> int {
     heph::log(heph::TRACE, "debug loki trace log sink with fields", "num", num);
 
     heph::log(heph::ERROR, "debug loki error log sink with fields", "num", num);
+
+    std::size_t counter = 0;
+    while (!heph::utils::TerminationBlocker::stopRequested()) {
+      static constexpr auto PERIOD = std::chrono::milliseconds{ 200 };
+      heph::log(heph::INFO, "loki log sink with fields", "counter", counter);
+      heph::log(heph::ERROR, "debug loki error log sink with fields", "counter", counter++);
+      std::this_thread::sleep_for(PERIOD);
+    }
 
   } catch (std::exception& e) {
     return 1;
