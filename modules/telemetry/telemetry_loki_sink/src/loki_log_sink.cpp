@@ -68,20 +68,26 @@ struct PushRequest {
   return value;
 }
 
-[[nodiscard]] auto toStream(const LogEntry& entry, const std::map<std::string, std::string>& stream_labels)
-    -> Stream {
+[[nodiscard]] auto toStream(LogLevel level, const std::vector<LogEntry>& entries,
+                            const std::map<std::string, std::string>& stream_labels) -> Stream {
   Stream stream;
   stream.stream = stream_labels;
-  stream.stream["level"] = magic_enum::enum_name(entry.level);
+  stream.stream["level"] = magic_enum::enum_name(level);
 
-  stream.values.push_back(createValue(entry));
+  stream.values.reserve(entries.size());
+  for (const auto& entry : entries) {
+    stream.values.push_back(createValue(entry));
+  }
+
   return stream;
 }
 
-[[nodiscard]] auto createPushRequest(const LogEntry& entry,
+[[nodiscard]] auto createPushRequest(const std::unordered_map<LogLevel, std::vector<LogEntry>>& entries,
                                      const std::map<std::string, std::string>& stream_labels) -> PushRequest {
   PushRequest request;
-  request.streams.push_back(toStream(entry, stream_labels));
+  for (const auto& [level, logs] : entries) {
+    request.streams.push_back(toStream(level, logs, stream_labels));
+  }
 
   return request;
 }
@@ -96,9 +102,46 @@ struct PushRequest {
 }  // namespace
 
 LokiLogSink::LokiLogSink(const LokiLogSinkConfig& config)
-  : min_log_level_(config.log_level), stream_labels_(createStaticStreamLabels(config)) {
+  : min_log_level_(config.log_level)
+  , stream_labels_(createStaticStreamLabels(config))
+  , spinner_(
+        [this]() {
+          spinOnce();
+          return concurrency::Spinner::SpinResult::CONTINUE;
+        },
+        config.flush_rate_hz) {
   cpr_session_.SetUrl(fmt::format(LOKI_URL_FORMAT, config.loki_host, config.loki_port));
   cpr_session_.SetHeader(cpr::Header{ { "Content-Type", "application/json" } });
+  spinner_.start();
+}
+
+LokiLogSink::~LokiLogSink() {
+  spinner_.stop().get();
+}
+
+void LokiLogSink::spinOnce() {
+  std::unordered_map<LogLevel, std::vector<LogEntry>> entries;
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    if (log_entries_.empty()) {
+      return;
+    }
+
+    entries = std::move(log_entries_);
+    log_entries_ = {};
+  }
+
+  const auto request = createPushRequest(entries, stream_labels_);
+  // NOTE: we use JSON serialization to send data to Loki, but Loki also supports Protobuf with snappy if
+  // performance become a problem.
+  auto json_str = rfl::json::write(request);
+
+  cpr_session_.SetBody(cpr::Body{ std::move(json_str) });
+  const auto response = cpr_session_.Post();
+  if (response.status_code > cpr::status::HTTP_MULTIPLE_CHOICE) {
+    fmt::println(stderr, "failed to send log to Loki, status code: {}, content\n{}", response.status_code,
+                 json_str);
+  }
 }
 
 void LokiLogSink::send(const LogEntry& entry) {
@@ -106,15 +149,8 @@ void LokiLogSink::send(const LogEntry& entry) {
     return;
   }
 
-  // TODO(@fbrizzi): extend to support batching
-  const auto request = createPushRequest(entry, stream_labels_);
-  auto json_str = rfl::json::write(request);
-
-  cpr_session_.SetBody(cpr::Body{ std::move(json_str) });
-  const auto response = cpr_session_.Post();
-  if (response.status_code > cpr::status::HTTP_MULTIPLE_CHOICE) {
-    fmt::println(stderr, "failed to send log to Loki, status code: {}", response.status_code);
-  }
+  const absl::MutexLock lock{ &mutex_ };
+  log_entries_[entry.level].push_back(entry);
 }
 
 }  // namespace heph::telemetry
