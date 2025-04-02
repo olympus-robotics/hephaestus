@@ -119,6 +119,8 @@ auto horizontalLine(uint32_t cell_content_width, uint32_t columns) -> std::strin
 }
 
 void printServiceCallStateMap(ServiceCallStateMap& state) {
+  auto lock = state.scopedLock();
+
   constexpr uint32_t MAX_COLUMNS = 5;
   constexpr uint32_t CELL_CONTENT_WIDTH = 17;
 
@@ -270,6 +272,7 @@ void printClientChannelAds(const std::vector<WsClientChannelAd>& client_ads) {
 }
 
 auto allServiceCallsFinished(const ServiceCallStateMap& state) -> bool {
+  auto lock = state.scopedLock();
   return std::ranges::all_of(state, [](const auto& pair) { return pair.second.hasResponse(); });
 }
 
