@@ -131,12 +131,13 @@ void Spinner::setTerminationCallback(Callback&& termination_callback) {
 namespace internal {
 auto computeNextSpinTimestamp(const std::chrono::system_clock::time_point& start_timestamp,
                               const std::chrono::system_clock::time_point& now,
-                              const std::chrono::microseconds& spin_period)
+                              std::chrono::duration<double> spin_period)
     -> std::chrono::system_clock::time_point {
-  const auto elapsed_time_since_start_micro_sec = static_cast<double>(
-      std::chrono::duration_cast<std::chrono::microseconds>(now - start_timestamp).count());
-  const auto spin_count = static_cast<std::size_t>(
-      std::ceil(elapsed_time_since_start_micro_sec / static_cast<double>(spin_period.count())));
+  const auto duration_since_start =
+      std::chrono::duration_cast<std::chrono::duration<double>>(now - start_timestamp);
+  const auto spin_count =
+      static_cast<std::size_t>(std::ceil(duration_since_start.count() / spin_period.count()));
+
   return start_timestamp + (spin_count * spin_period);
 }
 }  // namespace internal
