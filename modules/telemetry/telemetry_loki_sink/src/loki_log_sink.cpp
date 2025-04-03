@@ -109,7 +109,7 @@ LokiLogSink::LokiLogSink(const LokiLogSinkConfig& config)
           spinOnce();
           return concurrency::Spinner::SpinResult::CONTINUE;
         },
-        config.flush_rate_hz) {
+        config.flush_period) {
   cpr_session_.SetUrl(fmt::format(LOKI_URL_FORMAT, config.loki_host, config.loki_port));
   cpr_session_.SetHeader(cpr::Header{ { "Content-Type", "application/json" } });
   spinner_.start();

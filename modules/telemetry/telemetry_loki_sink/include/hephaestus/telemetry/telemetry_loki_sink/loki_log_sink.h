@@ -20,12 +20,12 @@ namespace heph::telemetry {
 struct LokiLogSinkConfig {
   static constexpr auto DEFAULT_LOKI_PORT = 3100;
   static constexpr auto DEFAULT_LOKI_HOST = "localhost";
-  static constexpr auto DEFAULT_FLUSH_RATE_HZ = 5;
+  static constexpr std::chrono::duration<double> DEFAULT_FLUSH_PERIOD{ 0.2 };
   uint32_t loki_port = DEFAULT_LOKI_PORT;
   std::string loki_host = DEFAULT_LOKI_HOST;
   LogLevel log_level = LogLevel::TRACE;
   std::string domain;  /// Used to group logs from different binaries.
-  double flush_rate_hz = DEFAULT_FLUSH_RATE_HZ;
+  std::chrono::duration<double> flush_period = DEFAULT_FLUSH_PERIOD;
 };
 
 /// @brief A simple sink that passes the logs to ABSL.

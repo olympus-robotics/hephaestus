@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <chrono>
 #include <cstdlib>
 #include <exception>
 #include <future>
@@ -11,12 +12,12 @@
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/utils/signal_handler.h"
 
-static constexpr auto RATE_HZ = 10;
+static constexpr auto SPIN_PERIOD = std::chrono::duration<double>(0.1);
 
 class Worker {
 public:
   Worker()
-    : spinner_(heph::concurrency::Spinner::createNeverStoppingCallback([this] { doWork(); }), RATE_HZ) {
+    : spinner_(heph::concurrency::Spinner::createNeverStoppingCallback([this] { doWork(); }), SPIN_PERIOD) {
   }
 
   void start() {
