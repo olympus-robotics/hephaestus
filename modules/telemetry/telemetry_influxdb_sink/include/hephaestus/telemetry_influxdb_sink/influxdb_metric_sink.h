@@ -22,9 +22,11 @@ struct InfluxDBSinkConfig {
   std::string database;
   std::optional<std::size_t> batch_size{ std::nullopt };  //! If specified the sink will batch this many
                                                           //! points before sending them.
-  std::optional<double> flush_rate_hz{ std::nullopt };  //! If specified the sink will flush the batch at this
-                                                        //! rate. NOTE: setting this will invalidate the
-                                                        //! batch_size.
+  std::optional<std::chrono::duration<double>> flush_period{
+    std::nullopt
+  };  //! If specified the sink will flush the batch at this
+      //! period. NOTE: setting this will invalidate the
+      //! batch_size.
 };
 
 class InfluxDBSink final : public telemetry::IMetricSink {

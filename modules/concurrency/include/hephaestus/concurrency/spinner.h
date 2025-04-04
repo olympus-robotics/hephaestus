@@ -11,6 +11,7 @@
 #include <future>
 #include <limits>
 #include <mutex>
+#include <optional>
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
 
@@ -37,8 +38,11 @@ public:
   /// @brief Create a spinner with a stoppable callback. A stoppable callback is a function that returns
   /// SpinResult::STOP to indicate that the spinner should stop. Other types of callbacks are supported via
   /// mappings to StoppableCallback. Example: a callback that stops after 10 iterations.
+  /// @param stoppable_callback The callback to be called in the spinner loop.
+  /// @param spin_period The duration between spins. If not provided, the spinner will spin as fast as
+  /// possible.
   explicit Spinner(StoppableCallback&& stoppable_callback,
-                   double rate_hz = std::numeric_limits<double>::infinity());
+                   std::optional<std::chrono::duration<double>> spin_period = std::nullopt);
 
   ~Spinner();
   Spinner(const Spinner&) = delete;
@@ -66,7 +70,7 @@ private:
   std::future<void> async_spinner_handle_;
   std::atomic_flag spinner_completed_ = ATOMIC_FLAG_INIT;
 
-  std::chrono::microseconds spin_period_;
+  std::optional<std::chrono::duration<double>> spin_period_;
   std::mutex mutex_;
   std::condition_variable condition_;
 };
@@ -74,7 +78,7 @@ private:
 namespace internal {
 [[nodiscard]] auto computeNextSpinTimestamp(const std::chrono::system_clock::time_point& start_timestamp,
                                             const std::chrono::system_clock::time_point& now,
-                                            const std::chrono::microseconds& spin_period)
+                                            std::chrono::duration<double> spin_period)
     -> std::chrono::system_clock::time_point;
 }
 }  // namespace heph::concurrency

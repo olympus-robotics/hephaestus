@@ -41,10 +41,12 @@ auto main(int argc, const char* argv[]) -> int {
   heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
+    static constexpr auto PERIOD = std::chrono::duration<double>(1.0);
+
     auto influxdb_sink = heph::telemetry_sink::InfluxDBSink::create({ .url = "localhost:8099",
                                                                       .token = "my-super-secret-auth-token",
                                                                       .database = "hephaestus",
-                                                                      .flush_rate_hz = 1.0 });
+                                                                      .flush_period = PERIOD });
     heph::telemetry::registerMetricSink(std::move(influxdb_sink));
 
     int64_t counter = 0;
@@ -58,7 +60,7 @@ auto main(int argc, const char* argv[]) -> int {
                                       .message = heph::random::random<std::string>(mt, 4),
                                   });
         }),
-        1);
+        PERIOD);
 
     spinner.start();
     heph::utils::TerminationBlocker::waitForInterrupt();
