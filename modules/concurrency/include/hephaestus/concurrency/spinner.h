@@ -65,7 +65,8 @@ private:
   void terminate();
 
 private:
-  std::optional<std::string> component_name_ = std::nullopt; //!< a unique name for this spinner for telemetry logging
+  std::optional<std::string> component_name_ =
+      std::nullopt;  //!< a unique name for this spinner for telemetry logging
 
   StoppableCallback stoppable_callback_;
   Callback termination_callback_ = []() {};
