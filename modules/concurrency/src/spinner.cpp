@@ -14,7 +14,9 @@
 #include <limits>
 #include <mutex>
 #include <utility>
-
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/concurrency/spinner_state_machine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
@@ -43,8 +45,9 @@ auto Spinner::createCallbackWithStateMachine(
 }
 
 Spinner::Spinner(StoppableCallback&& stoppable_callback,
-                 std::optional<std::chrono::duration<double>> spin_period /*= std::nullopt*/)
-  : stoppable_callback_(std::move(stoppable_callback)), stop_requested_(false), spin_period_(spin_period) {
+                 std::optional<std::chrono::duration<double>> spin_period /*= std::nullopt*/,
+                 std::optional<std::string> component_name /*= std::nullopt*/)
+  :component_name_(std::move(component_name)),  stoppable_callback_(std::move(stoppable_callback)), stop_requested_(false), spin_period_(spin_period) {
 }
 
 Spinner::~Spinner() {
@@ -65,18 +68,35 @@ void Spinner::start() {
 void Spinner::spin() {
   // TODO(@brizzi): set thread name
 
-  auto start_timestamp = std::chrono::system_clock::now();
+  const auto timestamp_start = std::chrono::system_clock::now();
+  
   while (!stop_requested_.load()) {
     try {
+      const auto timestamp_start_current_spin = std::chrono::steady_clock::now();
+     
       if (stoppable_callback_() == SpinResult::STOP) {
         break;
       }
+      const auto callback_duration = timestamp_start_current_spin - std::chrono::steady_clock::now();
 
       if (spin_period_.has_value()) {  // Throttle spinner to a fixed period if spin_period_ is provided
         std::unique_lock<std::mutex> lock(mutex_);
-        condition_.wait_until(lock, internal::computeNextSpinTimestamp(start_timestamp,
+        condition_.wait_until(lock, internal::computeNextSpinTimestamp(timestamp_start,
                                                                        std::chrono::system_clock::now(),
                                                                        spin_period_.value()));
+      }    
+      
+      if(component_name_.has_value()){ 
+        spin_duration = std::chrono::steady_clock::now() - timestamp_start_current_spin;
+          heph::telemetry::record(heph::telemetry::Metric{
+        .component = component_name_.value(),
+        .tag = "spinner_timestamp",
+        .timestamp = std::chrono::system_clock::now(),
+        .values = { { "callback_duration_microsec",
+          std::chrono::duration_cast<std::chrono::microseconds>(callback_duration).count() } , 
+          { "spin_duration_microsec",
+            std::chrono::duration_cast<std::chrono::microseconds>(spin_duration).count() } }
+        });
       }
     } catch (std::exception& e) {
       heph::log(heph::ERROR, "Spinner caught an exception, terminating", "error", e.what());
