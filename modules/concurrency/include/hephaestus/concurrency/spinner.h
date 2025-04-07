@@ -41,8 +41,10 @@ public:
   /// @param stoppable_callback The callback to be called in the spinner loop.
   /// @param spin_period The duration between spins. If not provided, the spinner will spin as fast as
   /// possible.
+  /// @param component_name A unique name for this spinner for telemetry logging.
   explicit Spinner(StoppableCallback&& stoppable_callback,
-                   std::optional<std::chrono::duration<double>> spin_period = std::nullopt);
+                   std::optional<std::chrono::duration<double>> spin_period = std::nullopt,
+                   std::optional<std::string> component_name = std::nullopt);
 
   ~Spinner();
   Spinner(const Spinner&) = delete;
@@ -63,6 +65,9 @@ private:
   void terminate();
 
 private:
+  std::optional<std::string> component_name_ =
+      std::nullopt;  //!< a unique name for this spinner for telemetry logging
+
   StoppableCallback stoppable_callback_;
   Callback termination_callback_ = []() {};
 
