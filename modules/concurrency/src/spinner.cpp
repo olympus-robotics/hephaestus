@@ -86,7 +86,7 @@ void Spinner::spin() {
       if (component_name_.has_value()) {
         telemetry::record(telemetry::Metric{
             .component = component_name_.value(),
-            .tag = "timestamp_start_spin",
+            .tag = "spinner_timings",
             .timestamp = std::chrono::system_clock::now(),
             .values = {
                 { "timestamp_start_spin_microsec", std::chrono::duration_cast<std::chrono::microseconds>(
