@@ -17,6 +17,7 @@ heph_cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+        "//modules/concurrency",
         "//modules/telemetry/telemetry",
         "@cpr",
         "@fmt",

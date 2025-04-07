@@ -20,19 +20,6 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
-namespace {
-[[nodiscard]] auto rateToPeriod(double rate_hz) -> std::chrono::microseconds {
-  // Explicit check to prevent floating point errors
-  if (rate_hz == std::numeric_limits<double>::infinity()) {
-    return std::chrono::microseconds{ 0 };
-  }
-
-  const double period_seconds = 1 / rate_hz;
-  const auto period_microseconds = static_cast<uint64_t>(period_seconds * 1e6);
-
-  return std::chrono::microseconds{ period_microseconds };
-}
-}  // namespace
 
 auto Spinner::createNeverStoppingCallback(Callback&& callback) -> StoppableCallback {
   return [callback = std::move(callback)]() -> SpinResult {
@@ -56,10 +43,8 @@ auto Spinner::createCallbackWithStateMachine(
 }
 
 Spinner::Spinner(StoppableCallback&& stoppable_callback,
-                 double rate_hz /*= std::numeric_limits<double>::infinity()*/)
-  : stoppable_callback_(std::move(stoppable_callback))
-  , stop_requested_(false)
-  , spin_period_(rateToPeriod(rate_hz)) {
+                 std::optional<std::chrono::duration<double>> spin_period /*= std::nullopt*/)
+  : stoppable_callback_(std::move(stoppable_callback)), stop_requested_(false), spin_period_(spin_period) {
 }
 
 Spinner::~Spinner() {
@@ -87,10 +72,11 @@ void Spinner::spin() {
         break;
       }
 
-      if (spin_period_.count() > 0) {  // Throttle spinner to a fixed rate if a valid rate_hz is provided.
+      if (spin_period_.has_value()) {  // Throttle spinner to a fixed period if spin_period_ is provided
         std::unique_lock<std::mutex> lock(mutex_);
-        condition_.wait_until(lock, internal::computeNextSpinTimestamp(
-                                        start_timestamp, std::chrono::system_clock::now(), spin_period_));
+        condition_.wait_until(lock, internal::computeNextSpinTimestamp(start_timestamp,
+                                                                       std::chrono::system_clock::now(),
+                                                                       spin_period_.value()));
       }
     } catch (std::exception& e) {
       heph::log(heph::ERROR, "Spinner caught an exception, terminating", "error", e.what());
@@ -131,13 +117,15 @@ void Spinner::setTerminationCallback(Callback&& termination_callback) {
 namespace internal {
 auto computeNextSpinTimestamp(const std::chrono::system_clock::time_point& start_timestamp,
                               const std::chrono::system_clock::time_point& now,
-                              const std::chrono::microseconds& spin_period)
+                              std::chrono::duration<double> spin_period)
     -> std::chrono::system_clock::time_point {
-  const auto elapsed_time_since_start_micro_sec = static_cast<double>(
-      std::chrono::duration_cast<std::chrono::microseconds>(now - start_timestamp).count());
-  const auto spin_count = static_cast<std::size_t>(
-      std::ceil(elapsed_time_since_start_micro_sec / static_cast<double>(spin_period.count())));
-  return start_timestamp + (spin_count * spin_period);
+  const auto duration_since_start =
+      std::chrono::duration_cast<std::chrono::duration<double>>(now - start_timestamp);
+  const auto spin_count =
+      static_cast<std::size_t>(std::ceil(duration_since_start.count() / spin_period.count()));
+
+  return start_timestamp +
+         std::chrono::duration_cast<std::chrono::system_clock::duration>(spin_count * spin_period);
 }
 }  // namespace internal
 }  // namespace heph::concurrency

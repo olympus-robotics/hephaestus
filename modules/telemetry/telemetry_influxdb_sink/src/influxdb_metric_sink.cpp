@@ -74,7 +74,7 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
   heph::log(heph::DEBUG, "connecting to InfluxDB", "url", url);
   influxdb_ = influxdb::InfluxDBFactory::Get(url);
 
-  if (config_.flush_rate_hz.has_value()) {
+  if (config_.flush_period.has_value()) {
     // NOTE: we define a very large number for the batch size as we want to flush at a fixed rate.
     static constexpr std::size_t DEFAULT_BATCH_SIZE = 1e6;
     influxdb_->batchOf(DEFAULT_BATCH_SIZE);
@@ -89,7 +89,7 @@ InfluxDBSink::InfluxDBSink(InfluxDBSinkConfig config) : config_(std::move(config
 
           return concurrency::Spinner::SpinResult::CONTINUE;
         },
-        config_.flush_rate_hz.value());
+        config_.flush_period.value());
     spinner_->start();
   } else if (config_.batch_size.has_value()) {
     influxdb_->batchOf(config_.batch_size.value());

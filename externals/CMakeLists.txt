@@ -165,6 +165,7 @@ add_cmake_dependency(
   VERSION ${YAML_CPP_VERSION}
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
   GIT_TAG ${YAML_CPP_VERSION}
+  CMAKE_ARGS -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )
 
 # --------------------------------------------------------------------------------------------------
