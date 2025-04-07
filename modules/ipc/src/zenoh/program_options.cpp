@@ -17,7 +17,7 @@
 
 namespace heph::ipc::zenoh {
 namespace {
-constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_FILE";
+constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
 }
 
 void appendProgramOption(cli::ProgramDescription& program_description,
