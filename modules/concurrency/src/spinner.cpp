@@ -46,11 +46,11 @@ public:
       return;
     }
 
-    telemetry::record(
-        telemetry::Metric{ .component = component_name_.value(),
-                           .tag = "spinner_timings",
-                           .timestamp = current_timestamp_,
-                           .values = { { "callback_duration_microsec", current_callback_duration_.count() } } });
+    telemetry::record(telemetry::Metric{
+        .component = component_name_.value(),
+        .tag = "spinner_timings",
+        .timestamp = current_timestamp_,
+        .values = { { "callback_duration_microsec", current_callback_duration_.count() } } });
 
     // On the first spin, there is no previous spin_duration nor previous timestamp.
     if (previous_timestamp_ != std::chrono::system_clock::time_point{}) {
@@ -64,7 +64,7 @@ public:
   }
 
 private:
-std::optional<std::string>  component_name_;
+  std::optional<std::string> component_name_;
 
   std::chrono::system_clock::time_point current_timestamp_{};
   std::chrono::system_clock::time_point previous_timestamp_{};
