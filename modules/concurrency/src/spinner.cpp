@@ -19,6 +19,7 @@
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
+#include "hephaestus/utils/timing/stop_watch.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
@@ -72,29 +73,37 @@ void Spinner::spin() {
   // TODO(@brizzi): set thread name
 
   const auto timestamp_start = std::chrono::system_clock::now();
-  std::chrono::system_clock::time_point timestamp_start_spin;
+  auto current_timestamp = std::chrono::system_clock::now();
+  auto previous_timestamp = std::chrono::system_clock::time_point{};
+  utils::timing::StopWatch stop_watch;
 
   while (!stop_requested_.load()) {
     try {
-      timestamp_start_spin = std::chrono::system_clock::now();
+      current_timestamp = std::chrono::system_clock::now();
+      const auto previous_spin_duration = stop_watch.stop<std::chrono::microseconds>();
+      stop_watch.start();
 
       if (stoppable_callback_() == SpinResult::STOP) {
         break;
       }
-      const auto callback_duration = std::chrono::system_clock::now() - timestamp_start_spin;
+      const auto callback_duration = stop_watch.elapsed<std::chrono::microseconds>();
 
       if (component_name_.has_value()) {
-        telemetry::record(telemetry::Metric{
-            .component = component_name_.value(),
-            .tag = "spinner_timings",
-            .timestamp = std::chrono::system_clock::now(),
-            .values = {
-                { "timestamp_start_spin_microsec", std::chrono::duration_cast<std::chrono::microseconds>(
-                                                       timestamp_start_spin.time_since_epoch())
-                                                       .count() },
-                { "callback_duration_microsec",
-                  std::chrono::duration_cast<std::chrono::microseconds>(callback_duration).count() } } });
+        if (previous_timestamp != std::chrono::system_clock::time_point{}) {
+          telemetry::record(
+              telemetry::Metric{ .component = component_name_.value(),
+                                 .tag = "spinner_timings",
+                                 .timestamp = previous_timestamp,
+                                 .values = { { "spin_duration_microsec", previous_spin_duration.count() } } });
+        }
+
+        telemetry::record(
+            telemetry::Metric{ .component = component_name_.value(),
+                               .tag = "spinner_timings",
+                               .timestamp = current_timestamp,
+                               .values = { { "callback_duration_microsec", callback_duration.count() } } });
       }
+      previous_timestamp = current_timestamp;
 
       if (spin_period_.has_value()) {  // Throttle spinner to a fixed period if spin_period_ is provided
         std::unique_lock<std::mutex> lock(mutex_);
