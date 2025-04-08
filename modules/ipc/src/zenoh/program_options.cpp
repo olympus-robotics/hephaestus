@@ -16,6 +16,9 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
+namespace {
+constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
+}
 
 void appendProgramOption(cli::ProgramDescription& program_description,
                          const std::string& default_topic /*= DEFAULT_TOPIC*/) {
@@ -51,6 +54,9 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   auto zenoh_config_path = args.getOption<std::string>("zenoh_config");
   if (!zenoh_config_path.empty()) {
     config.zenoh_config_path.emplace(std::move(zenoh_config_path));
+  } else if (const auto* zenoh_config_file = std::getenv(ZENOH_CONFIG_FILE_ENV_VAR);
+             zenoh_config_file != nullptr) {
+    config.zenoh_config_path.emplace(zenoh_config_file);
   }
 
   auto mode = args.getOption<std::string>("mode");
