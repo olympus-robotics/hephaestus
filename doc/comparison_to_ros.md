@@ -1,12 +1,14 @@
 # Comparison to ROS
 
-* We want to move out of ROS approach to define microservices, where every component is a node and we create a massive data flow graph that gets hard to handle.
-* The benefit of that approach is that it is easy to extend and to compose from existing components, however from our experience robotic systems that are past prototype stage do not have that requirement so the cost of it outweighs the benefit.
-* We have a clear idea of what we want: determinism, easy inspectability and efficiency. This can be done with ROS but it is hard to do.
-* We want a standard message format that is not custom but widely used and highly compatible.
+ROS is an excellent framework designed to maximize prototyping speed, flexibility, and code reuse, making it ideal for research labs and early-stage startups. However, building scalable, robust products often demands a different set of priorities: static configuration, determinism, high inspectability, optimized performance, and tailored resource usage.
 
-*Example*:
+Hephaestus is designed with these production requirements in mind. Compared to a typical ROS setup, Hephaestus offers:
 
-For the Visual SLAM module instead of having one feature extraction, a feature cleaning, a prior estimation, a bundle adjustment and a mapping module, all would be defined in one module that has images as input and map and pose as output.
-However hephaestus supports easy use of thread pools and asynchronous containers to still easily parallelize workload.
-Looking most of the SLAM code that is published, the ROS interface is usually just one node anyways. Hence hephaestus can be seen as facilitating multithreading by emposing clear architecture paradigms.
+* **Static and Deterministic by Design:** Configuration is handled statically, eliminating runtime parameter changes and ensuring predictable system behavior crucial for reliable deployment.
+* **Performance Optimization:**
+    * Allows the use of custom data types and serialization methods, enabling fine-tuning for specific performance needs and reducing overhead.
+    * The `conduit` module facilitates grouping related components into fewer, larger processes. This minimizes Inter-Process Communication (IPC) overhead and potential errors while maintaining modularity and encapsulation.
+* **Built-in Inspectability:** Provides an integrated profiling and metrics system for automatic runtime performance analysis, simplifying debugging and optimization.
+* **Strong Platform/Algorithm Decoupling:** Enforces a clear separation, allowing platform details (like communication or scheduling) to evolve independently from core algorithms. 
+* **Modern C++ and Code Quality:** Leverages modern C++ standards and integrates with static analysis (clang-tidy) and formatting (clang-format) tools to enforce high code quality and maintainability.
+
