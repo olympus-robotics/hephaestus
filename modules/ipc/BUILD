@@ -105,6 +105,14 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "pollable_action_server_tests",
+    srcs = [
+        "tests/pollable_action_server_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
     name = "pub_sub_tests",
     srcs = [
         "tests/pub_sub_tests.cpp",
