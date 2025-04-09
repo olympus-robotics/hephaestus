@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/cli",
         "//modules/concurrency",
         "//modules/containers",
+        "//modules/format",
         "//modules/ipc/proto:types_gen_proto",
         "//modules/serdes",
         "//modules/telemetry/telemetry",
@@ -100,6 +101,14 @@ heph_cc_test(
     name = "dynamic_subscriber_tests",
     srcs = [
         "tests/dynamic_subscriber_tests.cpp",
+    ],
+    deps = IPC_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "pollable_action_server_tests",
+    srcs = [
+        "tests/pollable_action_server_tests.cpp",
     ],
     deps = IPC_TEST_DEPS,
 )

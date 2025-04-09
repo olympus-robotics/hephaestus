@@ -87,6 +87,8 @@ public:
   auto operator=(const ActionServer&) -> ActionServer& = delete;
   auto operator=(ActionServer&&) -> ActionServer& = delete;
 
+  auto getTopicConfig() const -> const TopicConfig&;
+
 private:
   [[nodiscard]] auto onRequest(const Request<RequestT>& request) -> RequestResponse;
   void execute(const Request<RequestT>& request);
@@ -152,6 +154,11 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
   auto stopped = request_consumer_.stop();
   stopped.get();
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+auto ActionServer<RequestT, StatusT, ReplyT>::getTopicConfig() const -> const TopicConfig& {
+  return topic_config_;
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
