@@ -86,7 +86,7 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
                                                                       TopicConfig topic_config)
   : action_server_(
         std::move(session), std::move(topic_config),
-        [this](const auto& command) {
+        [this](const auto&) {
           std::unique_lock lock(mutex_);
           if (state_ != State::IDLE) {
             heph::log(heph::ERROR,
