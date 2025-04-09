@@ -75,6 +75,7 @@ define_module_library(
     hephaestus::cli
     hephaestus::concurrency
     hephaestus::containers
+    hephaestus::format
     hephaestus::serdes
     hephaestus::telemetry
     hephaestus::utils
