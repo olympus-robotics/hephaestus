@@ -5,7 +5,6 @@
 #pragma once
 
 #include <condition_variable>
-#include <iostream>
 #include <mutex>
 #include <optional>
 
@@ -57,8 +56,19 @@ public:
   /// action as fast as possible and then calls 'complete'.
   auto shouldAbort() -> bool;
 
+  /// Stops the underlying action server.
+  ///
+  /// If an action is currently in progress, then it will wait for this action to complete.
+  ///
+  /// Usually, this function will be called from a thread different from the one which implements the action
+  /// server, because it's a blocking call, while it's important that an unfinished action keeps making
+  /// progress while this call is blocking.
+  void stop();
+
 private:
-  ActionServer<RequestT, StatusT, ReplyT> action_server_;
+  SessionPtr session_;
+  TopicConfig topic_config_;
+  std::unique_ptr<ActionServer<RequestT, StatusT, ReplyT>> action_server_;
 
   std::mutex mutex_;
   std::condition_variable condition_variable_;
@@ -84,8 +94,10 @@ private:
 template <typename RequestT, typename StatusT, typename ReplyT>
 PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr session,
                                                                       TopicConfig topic_config)
-  : action_server_(
-        std::move(session), std::move(topic_config),
+  : session_(std::move(session))
+  , topic_config_(std::move(topic_config))
+  , action_server_(std::make_unique<ActionServer<RequestT, StatusT, ReplyT>>(
+        session_, topic_config_,
         [this](const auto&) {
           std::unique_lock lock(mutex_);
           if (state_ != State::IDLE) {
@@ -100,8 +112,8 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
                std::atomic_bool& stop_requested) -> ReplyT {
           std::unique_lock lock(mutex_);
 
-          heph::log(heph::INFO, "started action server request", "topic",
-                    action_server_.getTopicConfig().name, "request", request);
+          heph::log(heph::INFO, "started action server request", "topic", topic_config_.name, "request",
+                    request);
 
           state_ = State::REQUEST_PENDING;
           request_ = request;
@@ -121,11 +133,11 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
 
           state_ = State::IDLE;
 
-          heph::log(heph::INFO, "action server request completed", "topic",
-                    action_server_.getTopicConfig().name, "request", request, "reply", *reply_);
+          heph::log(heph::INFO, "action server request completed", "topic", topic_config_.name, "request",
+                    request, "reply", *reply_);
 
           return *std::move(reply_);
-        }) {
+        })) {
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
@@ -171,6 +183,18 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 auto PollableActionServer<RequestT, StatusT, ReplyT>::shouldAbort() -> bool {
   std::unique_lock lock(mutex_);
   return state_ == State::IN_PROGRESS_SHOULD_ABORT;
+}
+
+template <typename RequestT, typename StatusT, typename ReplyT>
+void PollableActionServer<RequestT, StatusT, ReplyT>::stop() {
+  std::unique_ptr<ActionServer<RequestT, StatusT, ReplyT>> action_server;
+  {
+    std::unique_lock lock(mutex_);
+    action_server = std::move(action_server_);
+  }
+
+  // Delete the action server when the lock is not taken.
+  action_server.reset();
 }
 
 }  // namespace heph::ipc::zenoh::action_server

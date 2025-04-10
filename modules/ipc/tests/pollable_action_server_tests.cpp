@@ -155,4 +155,34 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   }
 }
 
+TEST(PollableActionServerTest, StopActionServer) {
+  auto mt = random::createRNG();
+
+  const auto session = createSession(createLocalConfig());
+  const ipc::TopicConfig topic_config("test/polling_action_server");
+
+  PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
+
+  auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+      session, topic_config, types::DummyType::random(mt), [](const auto&) {}, 10ms);
+
+  while (!action_server.pollRequest().has_value()) {
+    std::this_thread::yield();
+  }
+
+  std::atomic_bool action_completed{ false };
+
+  std::thread thread([&]() {
+    action_server.stop();
+    EXPECT_TRUE(action_completed.load());
+  });
+
+  std::this_thread::sleep_for(1ms);
+  action_completed.store(true);
+  action_server.complete(types::DummyType::random(mt));
+  reply_future.wait();
+
+  thread.join();
+}
+
 }  // namespace heph::ipc::zenoh::action_server
