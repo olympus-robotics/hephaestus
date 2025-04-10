@@ -19,8 +19,6 @@ using namespace std::chrono_literals;  // NOLINT(google-build-using-namespace)
 
 namespace heph::ipc::zenoh::action_server {
 
-static constexpr int TOPIC_LENGTH = 30;
-
 TEST(PollableActionServerTest, CompleteAction) {
   auto mt = random::createRNG();
 
