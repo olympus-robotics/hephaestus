@@ -60,9 +60,9 @@ public:
   ///
   /// If an action is currently in progress, then it will wait for this action to complete.
   ///
-  /// Usually, this function will be called from a thread different from the one which implements the action
-  /// server, because it's a blocking call, while it's important that an unfinished action keeps making
-  /// progress while this call is blocking.
+  /// This function should generally be called from a thread different from the one which executes the action
+  /// server's actions, because it will block if an action is currently in progress, so the thread which
+  /// executes the action must keep making progress in the meanwhile.
   void stop();
 
 private:
