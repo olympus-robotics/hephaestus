@@ -25,8 +25,7 @@ TEST(PollableActionServerTest, CompleteAction) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config(fmt::format(
-      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
+  const ipc::TopicConfig topic_config("test/polling_action_server/complete_action_test");
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -65,8 +64,7 @@ TEST(PollableActionServerTest, StopExecution) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config(fmt::format(
-      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
+  const ipc::TopicConfig topic_config("test/polling_action_server/stop_execution_action_test");
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -111,8 +109,7 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config(fmt::format(
-      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
+  const ipc::TopicConfig topic_config("test/polling_action_server/complete_action_with_status_updates_test");
 
   PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
 
@@ -164,8 +161,7 @@ TEST(PollableActionServerTest, StopActionServer) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config(fmt::format(
-      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
+  const ipc::TopicConfig topic_config("test/polling_action_server/stop_action_server_test");
 
   PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
 
