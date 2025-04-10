@@ -30,6 +30,10 @@ auto TopicFilter::create(const TopicFilterParams& params) -> TopicFilter {
     filter = std::move(filter).prefix(params.prefix);
   }
 
+  if (!params.exclude_prefix.empty()) {
+    filter = std::move(filter).excludePrefix(params.exclude_prefix);
+  }
+
   return filter;
 }
 
@@ -51,6 +55,12 @@ auto TopicFilter::prefix(std::string prefix) && -> TopicFilter {
 
     return topic.starts_with(prefix);
   });
+  return std::move(*this);
+}
+
+auto TopicFilter::excludePrefix(std::string prefix) && -> TopicFilter {
+  match_cb_.emplace_back(
+      [prefix = std::move(prefix)](const auto& topic) { return !topic.starts_with(prefix); });
   return std::move(*this);
 }
 

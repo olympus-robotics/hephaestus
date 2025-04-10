@@ -109,6 +109,7 @@ TEST(Bag, PlayAndRecord) {
                                             .topics_filter_params = {
                                                 .include_topics_only = {},
                                                 .prefix = "bag_test/",
+                                                .exclude_prefix = "",
                                                 .exclude_topics = {},
                                             } });
     {

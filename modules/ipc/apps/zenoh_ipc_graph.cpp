@@ -33,7 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
     desc.defineFlag("live", 'l', "If set, the app will continue running until interrupted");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, _, __] = heph::ipc::zenoh::parseProgramOptions(args);
     const auto duration_sec = args.getOption<int>("duration");
     const bool live_mode = args.getOption<bool>("live");
 
