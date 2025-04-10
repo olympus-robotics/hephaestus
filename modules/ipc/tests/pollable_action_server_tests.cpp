@@ -19,11 +19,14 @@ using namespace std::chrono_literals;  // NOLINT(google-build-using-namespace)
 
 namespace heph::ipc::zenoh::action_server {
 
+static constexpr int TOPIC_LENGTH = 30;
+
 TEST(PollableActionServerTest, CompleteAction) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(fmt::format(
+      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -62,7 +65,8 @@ TEST(PollableActionServerTest, StopExecution) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(fmt::format(
+      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -91,7 +95,7 @@ TEST(PollableActionServerTest, StopExecution) {
 
     EXPECT_TRUE(requestActionServerToStopExecution(*session, topic_config));
 
-    while (action_server.shouldAbort()) {
+    while (!action_server.shouldAbort()) {
       std::this_thread::yield();
     }
 
@@ -107,7 +111,8 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(fmt::format(
+      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
 
@@ -159,7 +164,8 @@ TEST(PollableActionServerTest, StopActionServer) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(fmt::format(
+      "test/polling_action_server/{}", random::random<std::string>(mt, TOPIC_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
 
