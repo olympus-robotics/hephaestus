@@ -37,6 +37,7 @@ TEST(PollableActionServerTest, CompleteAction) {
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
         session, topic_config, expected_request, [](const auto&) {}, 10ms);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       const auto request_opt = action_server.pollRequest();
@@ -76,6 +77,7 @@ TEST(PollableActionServerTest, StopExecution) {
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
         session, topic_config, expected_request, [](const auto&) {}, 10ms);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       const auto request_opt = action_server.pollRequest();
@@ -127,6 +129,7 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
           last_received_status.store(status);
         },
         10ms);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       const auto request_opt = action_server.pollRequest();
@@ -165,6 +168,7 @@ TEST(PollableActionServerTest, StopActionServer) {
 
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       session, topic_config, types::DummyType::random(mt), [](const auto&) {}, 10ms);
+  heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
   while (!action_server.pollRequest().has_value()) {
     std::this_thread::yield();
