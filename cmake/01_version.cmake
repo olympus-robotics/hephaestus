@@ -43,7 +43,8 @@ endif()
 
 # Extract major, minor and patch versions. NOTE: works only for repo tag in format vX.Y.Z
 if(NOT ${REPO_TAG} MATCHES "^v([0-9]+)\\.([0-9]+)\\.([0-9]+)(-.+)?$")
-  message(FATAL_ERROR "Expected version tag in format v1.2.3 or v1.2.3-*, got ${REPO_TAG}")
+  message(WARNING "Repo version check failed, invalid semver version ${REPO_TAG}. Will use \"v0.0.0\"")
+  set(REPO_TAG "v0.0.0")
 endif()
 string(REGEX MATCHALL "[0-9]+" VERSION_ELEMENTS "${REPO_TAG}")
 list(GET VERSION_ELEMENTS 0 VERSION_MAJOR)
