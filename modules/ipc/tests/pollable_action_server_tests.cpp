@@ -19,11 +19,16 @@ using namespace std::chrono_literals;  // NOLINT(google-build-using-namespace)
 
 namespace heph::ipc::zenoh::action_server {
 
+static constexpr auto REQUEST_TIMEOUT = 1s;
+static constexpr auto TOPIC_ID_LENGTH = 30;
+
 TEST(PollableActionServerTest, CompleteAction) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(
+      fmt::format("test/polling_action_server_{}/complete_action_test",
+                  random::random<std::string>(mt, TOPIC_ID_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -36,9 +41,14 @@ TEST(PollableActionServerTest, CompleteAction) {
     EXPECT_FALSE(action_server.pollRequest().has_value());
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-        session, topic_config, expected_request, [](const auto&) {}, 10ms);
+        session, topic_config, expected_request, [](const auto&) {}, REQUEST_TIMEOUT);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
+      if (reply_future.wait_for(0s) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      }
+
       const auto request_opt = action_server.pollRequest();
       if (request_opt.has_value()) {
         EXPECT_EQ(*request_opt, expected_request);
@@ -48,7 +58,9 @@ TEST(PollableActionServerTest, CompleteAction) {
       std::this_thread::yield();
     }
 
-    EXPECT_EQ(reply_future.wait_for(0s), std::future_status::timeout);
+    if (reply_future.wait_for(0s) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    }
 
     action_server.complete(expected_reply);
 
@@ -62,7 +74,9 @@ TEST(PollableActionServerTest, StopExecution) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(
+      fmt::format("test/polling_action_server_{}/stop_execution_action_test",
+                  random::random<std::string>(mt, TOPIC_ID_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType> action_server(
       session, topic_config);
@@ -75,9 +89,14 @@ TEST(PollableActionServerTest, StopExecution) {
     EXPECT_FALSE(action_server.pollRequest().has_value());
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
-        session, topic_config, expected_request, [](const auto&) {}, 10ms);
+        session, topic_config, expected_request, [](const auto&) {}, REQUEST_TIMEOUT);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
+      if (reply_future.wait_for(0s) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      }
+
       const auto request_opt = action_server.pollRequest();
       if (request_opt.has_value()) {
         EXPECT_EQ(*request_opt, expected_request);
@@ -87,11 +106,13 @@ TEST(PollableActionServerTest, StopExecution) {
       std::this_thread::yield();
     }
 
-    EXPECT_EQ(reply_future.wait_for(0s), std::future_status::timeout);
+    if (reply_future.wait_for(0s) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    }
 
     EXPECT_TRUE(requestActionServerToStopExecution(*session, topic_config));
 
-    while (action_server.shouldAbort()) {
+    while (!action_server.shouldAbort()) {
       std::this_thread::yield();
     }
 
@@ -107,7 +128,9 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   auto mt = random::createRNG();
 
   const auto session = createSession(createLocalConfig());
-  const ipc::TopicConfig topic_config("test/polling_action_server");
+  const ipc::TopicConfig topic_config(
+      fmt::format("test/polling_action_server_{}/complete_action_with_status_updates_test",
+                  random::random<std::string>(mt, TOPIC_ID_LENGTH, false, true)));
 
   PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
 
@@ -126,9 +149,14 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
           EXPECT_EQ(status, expected_status.load());
           last_received_status.store(status);
         },
-        10ms);
+        REQUEST_TIMEOUT);
+    heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
+      if (reply_future.wait_for(0s) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      }
+
       const auto request_opt = action_server.pollRequest();
       if (request_opt.has_value()) {
         EXPECT_EQ(*request_opt, expected_request);
@@ -153,6 +181,43 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
     EXPECT_EQ(reply.status, RequestStatus::SUCCESSFUL);
     EXPECT_EQ(reply.value, expected_reply);
   }
+}
+
+TEST(PollableActionServerTest, StopActionServer) {
+  auto mt = random::createRNG();
+
+  const auto session = createSession(createLocalConfig());
+  const ipc::TopicConfig topic_config(
+      fmt::format("test/polling_action_server_{}/stop_action_server_test",
+                  random::random<std::string>(mt, TOPIC_ID_LENGTH, false, true)));
+
+  PollableActionServer<types::DummyType, int, types::DummyType> action_server(session, topic_config);
+
+  auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
+      session, topic_config, types::DummyType::random(mt), [](const auto&) {}, REQUEST_TIMEOUT);
+  heph::panicIf(!reply_future.valid(), "callActionServer failed.");
+
+  while (!action_server.pollRequest().has_value()) {
+    if (reply_future.wait_for(0s) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    }
+
+    std::this_thread::yield();
+  }
+
+  std::atomic_bool action_completed{ false };
+
+  std::thread thread([&]() {
+    action_server.stop();
+    EXPECT_TRUE(action_completed.load());
+  });
+
+  std::this_thread::sleep_for(1ms);
+  action_completed.store(true);
+  action_server.complete(types::DummyType::random(mt));
+  reply_future.get();
+
+  thread.join();
 }
 
 }  // namespace heph::ipc::zenoh::action_server

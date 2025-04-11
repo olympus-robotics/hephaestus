@@ -240,13 +240,13 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
 
   auto response_topic = internal::getResponseServiceTopic(topic_config_, request.uid);
 
+  is_running_ = false;
+
   const auto client_response = callService<Response<ReplyT>, RequestResponse>(
       *session_, response_topic, reply, REPLY_SERVICE_DEFAULT_TIMEOUT);
   if (client_response.size() != 1 || client_response.front().value.status != RequestStatus::SUCCESSFUL) {
     heph::log(heph::ERROR, "failed to send final response to client", "topic", topic_config_.name);
   }
-
-  is_running_ = false;
 }
 
 // ----------------------------------------------------------------------------------------------------------
