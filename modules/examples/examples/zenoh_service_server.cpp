@@ -33,7 +33,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = heph::cli::ProgramDescription("Binary service example");
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, topic_config, _] = heph::ipc::zenoh::parseProgramOptions(args);
     auto session = heph::ipc::zenoh::createSession(session_config);
 
     auto callback = [](const heph::examples::types::Pose& sample) {

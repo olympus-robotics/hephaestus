@@ -12,6 +12,7 @@
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 
@@ -21,8 +22,9 @@ constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
 }
 
 void appendProgramOption(cli::ProgramDescription& program_description,
-                         const std::string& default_topic /*= DEFAULT_TOPIC*/) {
+                         const std::string& default_topic /*= ""*/) {
   program_description.defineOption<std::string>("topic", "Key expression", default_topic)
+      .defineOption<std::string>("topic_prefix", "Key expression", "")
       .defineFlag("use_binary_name_as_session_id", "Use the binary name as the session id")
       .defineOption<std::string>("session_id", "the session id", "")
       .defineOption<std::string>("zenoh_config",
@@ -41,8 +43,17 @@ void appendProgramOption(cli::ProgramDescription& program_description,
       .defineFlag("realtime", "Enable real-time communication");
 }
 
-auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
-  TopicConfig topic_config{ args.getOption<std::string>("topic") };
+auto parseProgramOptions(const heph::cli::ProgramOptions& args)
+    -> std::tuple<Config, TopicConfig, TopicFilterParams> {
+  const auto topic = args.getOption<std::string>("topic");
+  auto topic_config = TopicConfig{ topic.empty() ? "**" : topic };
+
+  TopicFilterParams topic_filter_params;
+  if (!topic.empty()) {
+    topic_filter_params.include_topics_only.push_back(topic);
+  } else if (auto topic_prefix = args.getOption<std::string>("topic_prefix"); !topic_prefix.empty()) {
+    topic_filter_params.prefix = std::move(topic_prefix);
+  }
 
   Config config;
   if (args.getOption<bool>("use_binary_name_as_session_id")) {
@@ -86,7 +97,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   config.qos = args.getOption<bool>("qos");
   config.real_time = args.getOption<bool>("realtime");
 
-  return { std::move(config), std::move(topic_config) };
+  return { std::move(config), std::move(topic_config), std::move(topic_filter_params) };
 }
 
 }  // namespace heph::ipc::zenoh

@@ -32,7 +32,7 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
   discover_publishers_ = std::make_unique<EndpointDiscovery>(
-      session_, TopicConfig{ "**" }, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
+      session_, topic_filter_, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -57,10 +57,6 @@ void DynamicSubscriber::onEndpointDiscovered(const EndpointInfo& info) {
 }
 
 void DynamicSubscriber::onPublisher(const EndpointInfo& info) {
-  if (!topic_filter_.isAcceptable(info.topic)) {
-    return;
-  }
-
   switch (info.status) {
     case ipc::zenoh::EndpointInfo::Status::ALIVE:
       onPublisherAdded(info);

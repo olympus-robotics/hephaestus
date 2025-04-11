@@ -125,22 +125,23 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
                        .status = toEndpointnfoStatus(kind) };
 }
 
-auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
+auto getListOfEndpoints(const Session& session, const TopicFilter& topic_filter)
+    -> std::vector<EndpointInfo> {
   static constexpr auto FIFO_BOUND = 100;
-  const ::zenoh::KeyExpr keyexpr(topic);
+  const ::zenoh::KeyExpr keyexpr("**");
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
   std::vector<EndpointInfo> endpoints;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
-      heph::log(heph::ERROR, "invalid reply for liveliness", "topic", topic);
+      heph::log(heph::ERROR, "invalid reply for liveliness");
       continue;
     }
 
     const auto& sample = reply.get_ok();
     auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
-    if (actor_info) {
+    if (actor_info && topic_filter.isAcceptable(actor_info->topic)) {
       endpoints.push_back(std::move(*actor_info));
     }
   }
@@ -153,10 +154,9 @@ void printEndpointInfo(const EndpointInfo& info) {
                magic_enum::enum_name(info.type), info.session_id, info.topic);
 }
 
-EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
-                                     Callback&& callback)
+EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicFilter topic_filter, Callback&& callback)
   : session_(std::move(session))
-  , topic_config_(std::move(topic_config))
+  , topic_filter_(std::move(topic_filter))
   , callback_(std::move(callback))
   , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<EndpointInfo>>(
         [this](const EndpointInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
@@ -164,7 +164,7 @@ EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_confi
   // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
   // This means that we won't get the list of publisher that are already running.
   // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfEndpoints(*session_, topic_config_.name);
+  auto publishers_info = getListOfEndpoints(*session_, topic_filter_);
   for (const auto& info : publishers_info) {
     infos_consumer_->queue().forcePush(info);
   }
@@ -185,17 +185,16 @@ EndpointDiscovery::~EndpointDiscovery() {
   try {
     std::move(*liveliness_subscriber_).undeclare();
   } catch (std::exception& e) {
-    heph::log(heph::ERROR, "failed to undeclare liveliness subscriber", "topic", topic_config_.name,
-              "exception", e.what());
+    heph::log(heph::ERROR, "failed to undeclare liveliness subscriber", "exception", e.what());
   }
 }
 
 void EndpointDiscovery::createLivelinessSubscriber() {
-  const ::zenoh::KeyExpr keyexpr(topic_config_.name);
+  const ::zenoh::KeyExpr keyexpr("**");
 
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
     auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
-    if (info.has_value()) {
+    if (info.has_value() && topic_filter_.isAcceptable(info->topic)) {
       infos_consumer_->queue().forcePush(std::move(*info));
     }
   };
