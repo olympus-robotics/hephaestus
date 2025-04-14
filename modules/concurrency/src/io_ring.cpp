@@ -19,31 +19,47 @@ struct DispatchOperation {
     return r;
   }
 
-  void prepare(::io_uring_sqe* sqe) const {
-    ::io_uring_prep_msg_ring(sqe, destination->ring_.ring_fd, 0, operation.data, 0);
+  void prepare(::io_uring_sqe* sqe) {
+    IoRingOperationPointer self{ this };
+    ::io_uring_prep_msg_ring(sqe, destination->ring_.ring_fd, 0, self.data, 0);
   }
 
   void handleCompletion(io_uring_cqe* cqe) {
+    if (destination->isCurrentRing()) {
+      // Resubmit operation to the ring.
+      // Some operations don't need an extra prepare and simply act as a trigger
+      // so we can omit the submit phase entirely
+      if (operation.hasPrepare()) {
+        destination->submit(operation);
+      } else {
+        operation.handleCompletion(nullptr);
+      }
+      submit_done.store(true, std::memory_order_release);
+      submit_done.notify_all();
+      return;
+    }
     heph::panicIf(cqe->res < 0, fmt::format("dispatch failed: {}",
                                             std::error_code(-cqe->res, std::system_category()).message()));
 
-    done.store(true, std::memory_order_release);
-  }
-
-  void requestStop() {
+    dispatch_done.store(true, std::memory_order_release);
   }
 
   void run() {
     destination->in_flight_.fetch_add(1, std::memory_order_release);
     ring().submit(*this);
-    while (!done.load(std::memory_order_acquire)) {
+    while (!dispatch_done.load(std::memory_order_acquire)) {
       ring().runOnce();
+    }
+
+    while (!submit_done.load(std::memory_order_acquire)) {
+      submit_done.wait(false, std::memory_order_acquire);
     }
   }
 
   IoRing* destination{ nullptr };
   IoRingOperationPointer operation;
-  std::atomic<bool> done{ false };
+  std::atomic<bool> dispatch_done{ false };
+  std::atomic<bool> submit_done{ false };
 };
 
 IoRing::IoRing(IoRingConfig const& config) {
@@ -59,20 +75,10 @@ IoRing::IoRing(IoRingConfig const& config) {
 }
 
 struct StopOperation {
-  void prepare(::io_uring_sqe* /*sqe*/) const {
-    heph::panic("StopOperation::prepare should not be called");
-  }
-
-  void handleCompletion(io_uring_cqe* cqe) {
-    heph::panicIf(cqe->res < 0, fmt::format("stop failed: {}",
-                                            std::error_code(-cqe->res, std::system_category()).message()));
-
+  void handleCompletion() {
     self->requestStop();
     done.store(true, std::memory_order_release);
     done.notify_all();
-  }
-
-  void requestStop() {
   }
 
   void wait() {
@@ -86,9 +92,12 @@ struct StopOperation {
 };
 
 void IoRing::requestStop() {
-  if (current_ring != this && running_.load(std::memory_order_acquire)) {
-    StopOperation stop_operation{ this, false };
-    DispatchOperation dispatch{ this, IoRingOperationPointer{ &stop_operation }, false };
+  if (!isCurrentRing() && isRunning()) {
+    StopOperation stop_operation{ .self = this, .done = false };
+    DispatchOperation dispatch{ .destination = this,
+                                .operation = IoRingOperationPointer{ &stop_operation },
+                                .dispatch_done = false,
+                                .submit_done = false };
     dispatch.run();
     stop_operation.wait();
     return;
@@ -109,26 +118,40 @@ void IoRing::runOnce() {
     IoRingOperationPointer operation{ io_uring_cqe_get_data64(cqe) };
     operation.handleCompletion(cqe);
     io_uring_cqe_seen(&ring_, cqe);
-    in_flight_.fetch_sub(1, std::memory_order_release);
+    if ((cqe->flags & IORING_CQE_F_MORE) == 0) {
+      in_flight_.fetch_sub(1, std::memory_order_release);
+    }
   }
 }
 
-void IoRing::run(std::function<void()> on_started) {
+void IoRing::run(std::function<void()> on_started, std::function<void()> on_progress) {
   heph::panicIf(current_ring != nullptr, "Cannot run ring, another ring is already active for this thread");
   current_ring = this;
   running_.store(true, std::memory_order_release);
   on_started();
+  on_progress();
   while (!stop_source_.stop_requested() || in_flight_.load(std::memory_order_acquire) > 0) {
     runOnce();
+    on_progress();
   }
   current_ring = nullptr;
+}
+
+auto IoRing::isCurrentRing() -> bool {
+  return current_ring == this;
+}
+
+auto IoRing::isRunning() -> bool {
+  return running_.load(std::memory_order_acquire);
 }
 
 void IoRing::submit(IoRingOperationPointer operation) {
   // We need to dispatch to our ring if we are calling this function from outside
   // the event loop
-  if (current_ring != this && running_.load(std::memory_order_acquire)) {
-    DispatchOperation dispatch{ this, operation, false };
+  if (!isCurrentRing() && isRunning()) {
+    DispatchOperation dispatch{
+      .destination = this, .operation = operation, .dispatch_done = false, .submit_done = false
+    };
     dispatch.run();
     return;
   }

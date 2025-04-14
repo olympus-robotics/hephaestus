@@ -24,10 +24,13 @@ struct IoRingOperationPointer {
     std::memcpy(&ptr, static_cast<const void*>(&operation), sizeof(void*));
 
     data = (idx | ptr);
-    // ptr = static_cast<(index) | operation;
   }
 
   explicit IoRingOperationPointer(std::size_t data) : data(data) {
+  }
+
+  [[nodiscard]] auto hasPrepare() const -> bool {
+    return IoRingOperationRegistry::instance().hasPrepare(index());
   }
 
   void prepare(::io_uring_sqe* sqe) const {

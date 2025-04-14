@@ -46,15 +46,28 @@ struct IoRingOperationRegistry {
     idx = size;
     heph::panicIf(size == CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
     ++size;
+
     operation_identifier_table.at(idx) = IDENTIFIER;
-    prepare_function_table.at(idx) = [](void* operation, ::io_uring_sqe* sqe) {
-      static_cast<IoRingOperationT*>(operation)->prepare(sqe);
-    };
-    handle_completion_function_table.at(idx) = [](void* operation, ::io_uring_cqe* cqe) {
-      static_cast<IoRingOperationT*>(operation)->handleCompletion(cqe);
-    };
+    if constexpr (requires() { std::declval<IoRingOperationT>().prepare(std::declval<::io_uring_sqe*>()); }) {
+      prepare_function_table.at(idx) = [](void* operation, ::io_uring_sqe* sqe) {
+        static_cast<IoRingOperationT*>(operation)->prepare(sqe);
+      };
+      handle_completion_function_table.at(idx) = [](void* operation, ::io_uring_cqe* cqe) {
+        static_cast<IoRingOperationT*>(operation)->handleCompletion(cqe);
+      };
+    } else {
+      prepare_function_table.at(idx) = nullptr;
+      handle_completion_function_table.at(idx) = [](void* operation, ::io_uring_cqe* /*cqe*/) {
+        static_cast<IoRingOperationT*>(operation)->handleCompletion();
+      };
+    }
 
     return idx;
+  }
+
+  auto hasPrepare(std::uint8_t idx) {
+    heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
+    return prepare_function_table.at(idx) != nullptr;
   }
 
   void prepare(std::uint8_t idx, void* operation, ::io_uring_sqe* sqe) {
