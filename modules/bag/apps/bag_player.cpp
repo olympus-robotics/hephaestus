@@ -39,7 +39,7 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
     auto input_file = args.getOption<std::filesystem::path>("input_bag");
     auto wait_for_readers_to_connect = args.getOption<bool>("wait_for_readers_to_connect");
-    auto [config, _] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [config, _, __] = heph::ipc::zenoh::parseProgramOptions(args);
 
     heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 

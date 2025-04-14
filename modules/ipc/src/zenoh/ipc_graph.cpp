@@ -45,7 +45,7 @@ void IpcGraph::start() {
   topic_db_ = ipc::createZenohTopicDatabase(config_.session);
 
   discovery_ = std::make_unique<ipc::zenoh::EndpointDiscovery>(
-      config_.session, ipc::TopicConfig{ "**" },
+      config_.session, TopicFilter::create(),
       [this](const ipc::zenoh::EndpointInfo& info) { endPointInfoUpdateCallback(info); });
 
   heph::log(heph::INFO, "[IPC Graph] - ONLINE");

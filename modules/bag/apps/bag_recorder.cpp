@@ -29,15 +29,13 @@ auto main(int argc, const char* argv[]) -> int {
     heph::ipc::zenoh::appendProgramOption(desc);
     desc.defineOption<std::string>("output_bag", 'o', "output file where to write the bag");
     const auto args = std::move(desc).parse(argc, argv);
-    auto [config, topic] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [config, _, topic_filter] = heph::ipc::zenoh::parseProgramOptions(args);
     auto output_file = args.getOption<std::string>("output_bag");
 
     heph::bag::ZenohRecorderParams params{
       .session = heph::ipc::zenoh::createSession(config),
       .bag_writer = heph::bag::createMcapWriter({ .output_file = std::move(output_file) }),
-      .topics_filter_params = heph::ipc::TopicFilterParams{ .include_topics_only = {},
-                                                            .prefix = topic.name,
-                                                            .exclude_topics = {} }
+      .topics_filter_params = topic_filter,
     };
 
     auto zeno_recorder = heph::bag::ZenohRecorder::create(std::move(params));
@@ -46,7 +44,6 @@ auto main(int argc, const char* argv[]) -> int {
     heph::utils::TerminationBlocker::waitForInterrupt();
 
     zeno_recorder.stop().get();
-
   } catch (std::exception& e) {
     fmt::println("Failed with exception: {}", e.what());
     std::exit(1);

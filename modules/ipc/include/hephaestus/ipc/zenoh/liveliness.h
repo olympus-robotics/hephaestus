@@ -19,6 +19,7 @@
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/session.h"
 
 namespace heph::ipc::zenoh {
@@ -47,7 +48,7 @@ struct EndpointInfo {
 [[nodiscard]] auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind)
     -> std::optional<EndpointInfo>;
 
-[[nodiscard]] auto getListOfEndpoints(const Session& session, std::string_view topic = "**")
+[[nodiscard]] auto getListOfEndpoints(const Session& session, const TopicFilter& topic_filter)
     -> std::vector<EndpointInfo>;
 
 void printEndpointInfo(const EndpointInfo& info);
@@ -57,7 +58,7 @@ void printEndpointInfo(const EndpointInfo& info);
 class EndpointDiscovery {
 public:
   using Callback = std::function<void(const EndpointInfo& info)>;
-  explicit EndpointDiscovery(SessionPtr session, TopicConfig topic_config, Callback&& callback);
+  explicit EndpointDiscovery(SessionPtr session, TopicFilter topic_filter, Callback&& callback);
   ~EndpointDiscovery();
 
   EndpointDiscovery(const EndpointDiscovery&) = delete;
@@ -70,7 +71,7 @@ private:
 
 private:
   SessionPtr session_;
-  TopicConfig topic_config_;
+  TopicFilter topic_filter_;
   Callback callback_;
 
   std::unique_ptr<::zenoh::Subscriber<void>> liveliness_subscriber_;

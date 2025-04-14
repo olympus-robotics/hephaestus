@@ -17,6 +17,7 @@ struct TopicFilterParams {
                                                  //!< going to be recorded. This rule has precedence
                                                  //!< over all the other
   std::string prefix;                            //!< Record all the topic sharing the prefix
+  std::string exclude_prefix;                    //!< Exclude all topics that share the prefix
   std::vector<std::string> exclude_topics;       //!< List of topics to exclude
 };
 
@@ -30,6 +31,7 @@ public:
   [[nodiscard]] auto onlyIncluding(const std::vector<std::string>& topic_names) && -> TopicFilter;
 
   [[nodiscard]] auto prefix(std::string prefix) && -> TopicFilter;
+  [[nodiscard]] auto excludePrefix(std::string prefix) && -> TopicFilter;
 
   [[nodiscard]] auto anyExcluding(const std::vector<std::string>& topic_names) && -> TopicFilter;
 
