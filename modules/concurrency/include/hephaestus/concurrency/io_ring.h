@@ -27,7 +27,10 @@ public:
   template <typename IoRingOperationT>
   void submit(IoRingOperationT& operation);
   void runOnce();
-  void run(std::function<void()> on_start = [] {});
+  void run(std::function<void()> on_start = [] {}, std::function<void()> on_progress = [] {});
+
+  auto isRunning() -> bool;
+  auto isCurrentRing() -> bool;
 
 private:
   ::io_uring ring_{};
