@@ -91,7 +91,7 @@ namespace std {
 ///        ```
 ///        // needs to be in the public std namespace to work
 ///        namespace std {
-///          auto operator<<(ostream& os, const mjbots::moteus::CanFdFrame&) -> ostream& = delete;
+///          auto operator<<(ostream& os, const UncontrollableType&) -> ostream& = delete;
 ///        }  // namespace std
 ///        ```
 template <typename T>
