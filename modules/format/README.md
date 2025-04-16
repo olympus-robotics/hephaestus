@@ -33,3 +33,13 @@ int main() {
   std::cout << x << "\n" ;
 }
 ```
+
+Sometimes you might need to deactivate the general_formatter for certain types that are unformattable and outside of your control.
+In this case you can delete the operator explicitely like 
+```cpp
+// needs to be in the public std namespace to work
+namespace std {
+  auto operator<<(ostream& os, const UncontrollableType&) -> ostream& = delete;
+}  // namespace std
+```
+Same works for the fmt formatter

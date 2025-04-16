@@ -87,6 +87,13 @@ struct formatter<T, Char> : formatter<std::string_view, Char> {
 
 namespace std {
 /// \brief Generic operator<< for all types that are not handled by the standard.
+///        If you want or need to deactivate this for certain types, you can delete the operator explicitely
+///        ```
+///        // needs to be in the public std namespace to work
+///        namespace std {
+///          auto operator<<(ostream& os, const mjbots::moteus::CanFdFrame&) -> ostream& = delete;
+///        }  // namespace std
+///        ```
 template <typename T>
   requires(heph::format::IsReflectable<T> && !heph::StringLike<T>)
 auto operator<<(ostream& os, const T& data) -> ostream& {
