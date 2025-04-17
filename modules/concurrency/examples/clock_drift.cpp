@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <concepts>
 #include <csignal>
 
 #include <exec/async_scope.hpp>
@@ -20,11 +21,11 @@
 namespace {
 std::atomic<bool> stop{ false };
 
+// Signal handler to stop execution...
 void setStop(int /*unused*/) {
   stop.store(true, std::memory_order_release);
 }
 }  // namespace
-// Signal handler to stop execution...
 
 struct ClockJitter {
   std::chrono::milliseconds::rep period;
@@ -86,7 +87,7 @@ auto main(int argc, const char* argv[]) -> int {
           auto jitter_system_clock =
               std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
 
-          if (period == 500ms) {
+          if (period == PERIOD.back()) {
             heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
           }
           heph::telemetry::record("clock_jitter", fmt::format("period={}", period),
@@ -108,5 +109,5 @@ auto main(int argc, const char* argv[]) -> int {
   }
 
   context.run();
-  fmt::println(stderr, "booyah");
+  fmt::println(stderr, "");
 }
