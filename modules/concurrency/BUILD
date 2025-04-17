@@ -43,8 +43,18 @@ heph_cc_binary(
     srcs = ["examples/clock_drift.cpp"],
     deps = [
         ":concurrency",
-        "//modules/telemetry/telemetry_influxdb_sink:telemetry_influxdb_sink",
         "//modules/cli",
+        "//modules/telemetry/telemetry_influxdb_sink",
+    ],
+)
+
+heph_cc_binary(
+    name = "spinner_clock_drift",
+    srcs = ["examples/spinner_clock_drift.cpp"],
+    deps = [
+        ":concurrency",
+        "//modules/cli",
+        "//modules/telemetry/telemetry_influxdb_sink",
     ],
 )
 
