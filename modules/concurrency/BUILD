@@ -38,6 +38,14 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "clock_drift",
+    srcs = ["examples/clock_drift.cpp"],
+    deps = [
+        ":concurrency",
+    ],
+)
+
 #########
 # Tests #
 #########

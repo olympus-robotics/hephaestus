@@ -91,6 +91,10 @@ struct StopOperation {
   std::atomic<bool> done{ false };
 };
 
+auto IoRing::stopRequested() -> bool {
+  return stop_source_.stop_requested();
+}
+
 void IoRing::requestStop() {
   if (!isCurrentRing() && isRunning()) {
     StopOperation stop_operation{ .self = this, .done = false };
@@ -108,8 +112,13 @@ auto IoRing::getStopToken() -> stdexec::inplace_stop_token {
   return stop_source_.get_token();
 }
 
-void IoRing::runOnce() {
-  int res = ::io_uring_submit_and_wait(&ring_, 1);
+void IoRing::runOnce(bool block) {
+  int res{ 0 };
+  if (block) {
+    res = ::io_uring_submit_and_wait(&ring_, 1);
+  } else {
+    res = ::io_uring_submit_and_get_events(&ring_);
+  }
   heph::panicIf(res < 0 && !(res == -EAGAIN || res == -EINTR),
                 fmt::format("::io_uring_submit_and_wait failed: {}",
                             std::error_code(-res, std::system_category()).message()));
@@ -124,15 +133,15 @@ void IoRing::runOnce() {
   }
 }
 
-void IoRing::run(std::function<void()> on_started, std::function<void()> on_progress) {
+void IoRing::run(const std::function<void()>& on_started, const std::function<bool()>& on_progress) {
   heph::panicIf(current_ring != nullptr, "Cannot run ring, another ring is already active for this thread");
   current_ring = this;
   running_.store(true, std::memory_order_release);
   on_started();
-  on_progress();
-  while (!stop_source_.stop_requested() || in_flight_.load(std::memory_order_acquire) > 0) {
-    runOnce();
-    on_progress();
+  bool more_work = on_progress();
+  while (more_work || !stop_source_.stop_requested() || in_flight_.load(std::memory_order_acquire) > 0) {
+    runOnce(!more_work);
+    more_work = on_progress();
   }
   current_ring = nullptr;
 }

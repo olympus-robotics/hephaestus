@@ -21,13 +21,16 @@ class IoRing {
 public:
   explicit IoRing(IoRingConfig const& config);
 
+  auto stopRequested() -> bool;
   void requestStop();
   auto getStopToken() -> stdexec::inplace_stop_token;
 
   template <typename IoRingOperationT>
   void submit(IoRingOperationT& operation);
-  void runOnce();
-  void run(std::function<void()> on_start = [] {}, std::function<void()> on_progress = [] {});
+  void runOnce(bool block = true);
+  void run(
+      const std::function<void()>& on_start = [] {},
+      const std::function<bool()>& on_progress = [] { return true; });
 
   auto isRunning() -> bool;
   auto isCurrentRing() -> bool;
