@@ -121,18 +121,15 @@ Timer::Timer(IoRing& ring, TimerOptions options)
   TimerClock::timer = this;
 }
 
-auto Timer::tick() -> bool {
-  TaskBase* task = next();
-  if (task != nullptr) {
+void Timer::tick() {
+  for (TaskBase* task = next(); task != nullptr; task = next()) {
     task->start();
   }
   last_tick_ = TimerClock::now();
   if (!tasks_.empty()) {
     auto const& top = tasks_.top();
     update(top.start_time);
-    return true;
   }
-  return false;
 }
 
 auto Timer::tickSimulated(bool advance) -> bool {

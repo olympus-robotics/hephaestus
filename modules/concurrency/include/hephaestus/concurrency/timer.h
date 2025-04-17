@@ -55,7 +55,7 @@ struct Timer {
 
   void requestStop();
 
-  auto tick() -> bool;
+  void tick();
 
   void startAt(TaskBase* task, TimerClock::time_point start_after);
 
