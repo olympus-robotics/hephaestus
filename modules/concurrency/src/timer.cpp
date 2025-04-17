@@ -7,15 +7,31 @@
 #include <cerrno>
 #include <chrono>
 #include <cmath>
+#include <iostream>
+#include <limits>
 
 #include <fmt/chrono.h>
 #include <fmt/format.h>
+#include <hephaestus/utils/exception.h>
 
 #include "hephaestus/concurrency/context.h"
 
 namespace heph::concurrency {
+Timer* TimerClock::timer{ nullptr };
+auto TimerClock::now() -> time_point {
+  switch (timer->clock_mode_) {
+    case ClockMode::WALLCLOCK: {
+      auto now = TimerClock::base_clock::now();
+      return time_point{ now - TimerClock::base_clock::time_point{} };
+    }
+    case ClockMode::SIMULATED:
+      return timer->now();
+  }
+}
+
 void Timer::Operation::prepare(::io_uring_sqe* sqe) {
-  io_uring_prep_timeout(sqe, &timer->next_timeout_, 0, IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS);
+  io_uring_prep_timeout(sqe, &timer->next_timeout_, std::numeric_limits<unsigned>::max(),
+                        IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS);
 }
 
 void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) {
@@ -49,7 +65,7 @@ void Timer::requestStop() {
   }
 }
 
-void Timer::update(std::chrono::steady_clock::time_point start_time) {
+void Timer::update(TimerClock::time_point start_time) {
   auto since_epoch = start_time.time_since_epoch();
 
   auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
@@ -77,7 +93,7 @@ void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) {
 
 void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) {
   if (cqe->res < 0) {
-    if (cqe->res == -ENOENT) {
+    if (cqe->res == -ENOENT || cqe->res == -EALREADY) {
       timer->tick();
       return;
     }
@@ -86,43 +102,74 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) {
   }
   if (timer->next_timeout_.tv_sec != next_timeout.tv_sec ||
       timer->next_timeout_.tv_nsec != next_timeout.tv_nsec) {
-    auto next = std::chrono::seconds(timer->next_timeout_.tv_sec) +
-                std::chrono::nanoseconds(timer->next_timeout_.tv_nsec);
-    timer->update(std::chrono::steady_clock::time_point{} + next);
+    auto next = std::chrono::duration_cast<TimerClock::duration>(
+        std::chrono::seconds(timer->next_timeout_.tv_sec) +
+        std::chrono::nanoseconds(timer->next_timeout_.tv_nsec));
+    timer->update(TimerClock::time_point{} + next);
     return;
   }
   timer->update_timer_operation_.reset();
 }
 
-Timer::Timer(IoRing& ring) : ring_(&ring) {
+Timer::Timer(IoRing& ring, TimerOptions options)
+  : ring_(&ring)
+  , start_(TimerClock::base_clock::now() -
+           TimerClock::base_clock::time_point{})  //(std::chrono::system_clock::now() -
+                                                  // std::chrono::system_clock::time_point{})
+  , last_tick_(start_)
+  , clock_mode_(options.clock_mode) {
+  TimerClock::timer = this;
 }
 
-void Timer::tick() {
-  for (TaskBase* task = next(); task != nullptr; task = next()) {
+auto Timer::tick() -> bool {
+  TaskBase* task = next();
+  if (task != nullptr) {
     task->start();
   }
-
+  last_tick_ = TimerClock::now();
   if (!tasks_.empty()) {
     auto const& top = tasks_.top();
     update(top.start_time);
+    return true;
   }
+  return false;
 }
 
-void Timer::startAfter(TaskBase* task, std::chrono::steady_clock::duration start_after) {
-  auto start_time = std::chrono::steady_clock::now() + start_after;
+auto Timer::tickSimulated(bool advance) -> bool {
+  if (tasks_.empty()) {
+    return false;
+  }
 
+  if (advance) {
+    auto const& top = tasks_.top();
+    last_tick_ = top.start_time;
+    top.task->start();
+    tasks_.pop();
+    return !tasks_.empty();
+  }
+
+  TaskBase* task = next();
+  if (task != nullptr) {
+    task->start();
+  }
+  return !tasks_.empty();
+}
+
+void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
   tasks_.emplace(task, start_time);
 
   auto const& top = tasks_.top();
-  if (top.task != task) {
+
+  if (top.task != task || clock_mode_ == ClockMode::SIMULATED) {
     return;
   }
+
   update(start_time);
 }
 
 auto Timer::next() -> TaskBase* {
   if (!tasks_.empty()) {
-    auto now = std::chrono::steady_clock::now();
+    auto now = TimerClock::now();
     auto const& top = tasks_.top();
     if (top.start_time <= now) {
       auto* task = top.task;

@@ -83,23 +83,24 @@ TEST(ContextTests, scheduleConcurrent) {
   static constexpr std::size_t NUM_TASKS = 10000;
   auto submit_thread_id = std::this_thread::get_id();
   for (std::size_t i = 0; i != NUM_TASKS; ++i) {
-    scope.spawn(stdexec::schedule(context_ptr->scheduler()) | stdexec::then([&] {
-                  ++completions;
-                  EXPECT_NE(std::this_thread::get_id(), submit_thread_id);
-                }));
+    stdexec::sync_wait(stdexec::schedule(context_ptr->scheduler()) | stdexec::then([&] {
+                         ++completions;
+                         EXPECT_NE(std::this_thread::get_id(), submit_thread_id);
+                       }));
   }
 
   context_ptr->requestStop();
   runner.join();
   EXPECT_EQ(completions, NUM_TASKS);
 }
-TEST(ContextTests, SchedulerAfter) {
+TEST(ContextTests, scheduleAfter) {
   Context context{ {} };
   exec::async_scope scope;
   std::vector<int> call_sequence;
   std::vector<int> call_sequence_ref{ 2, 1 };
   std::size_t called{ 0 };
-  auto delay_time = std::chrono::milliseconds(1);
+  auto delay_time = std::chrono::milliseconds(10);
+  auto begin = std::chrono::steady_clock::now();
   {
     auto sender = context.scheduler().scheduleAfter(delay_time * 2) |
                   stdexec::then([&context, &called, &call_sequence] {
@@ -116,19 +117,77 @@ TEST(ContextTests, SchedulerAfter) {
                   });
     scope.spawn(sender);
   }
-  auto begin = std::chrono::steady_clock::now();
   context.run();
   auto end = std::chrono::steady_clock::now();
   EXPECT_EQ(called, 2);
   EXPECT_EQ(call_sequence, call_sequence_ref);
-  EXPECT_GE(end - begin, delay_time);
+  EXPECT_GE(end - begin, delay_time * 2);
+  EXPECT_GE(context.elapsed(), delay_time * 2);
 }
 
-TEST(ContextTests, SchedulerAfterStopWaiting) {
+TEST(ContextTests, scheduleAfterStopWaiting) {
   Context context{ {} };
   exec::async_scope scope;
   std::size_t called{ 0 };
-  auto delay_time = std::chrono::milliseconds(1);
+  auto delay_time = std::chrono::milliseconds(50);
+  auto begin = std::chrono::steady_clock::now();
+  {
+    auto sender = context.scheduler().scheduleAfter(delay_time * 2) | stdexec::then([&called] { ++called; });
+    scope.spawn(sender);
+  }
+  {
+    auto sender = context.scheduler().scheduleAfter(delay_time) | stdexec::then([&called, &context] {
+                    ++called;
+                    context.requestStop();
+                  });
+    scope.spawn(sender);
+  }
+  context.run();
+  auto end = std::chrono::steady_clock::now();
+  auto duration = end - begin;
+  if (duration < delay_time * 2) {
+    EXPECT_EQ(called, 1);
+  }
+  EXPECT_GE(duration, delay_time);
+}
+
+TEST(ContextTests, scheduleAfterSimulated) {
+  Context context{ { .io_ring_config = {}, .timer_options{ ClockMode::SIMULATED } } };
+  exec::async_scope scope;
+  std::vector<int> call_sequence;
+  std::vector<int> call_sequence_ref{ 2, 1 };
+  std::size_t called{ 0 };
+  auto delay_time = std::chrono::minutes(1);
+  auto begin = std::chrono::system_clock::now();
+  {
+    auto sender = context.scheduler().scheduleAfter(delay_time * 2) |
+                  stdexec::then([&context, &called, &call_sequence] {
+                    ++called;
+                    context.requestStop();
+                    call_sequence.push_back(1);
+                  });
+    scope.spawn(sender);
+  }
+  {
+    auto sender = context.scheduler().scheduleAfter(delay_time) | stdexec::then([&called, &call_sequence] {
+                    ++called;
+                    call_sequence.push_back(2);
+                  });
+    scope.spawn(sender);
+  }
+  context.run();
+  auto end = std::chrono::system_clock::now();
+  EXPECT_EQ(called, 2);
+  EXPECT_EQ(call_sequence, call_sequence_ref);
+  EXPECT_LE(end - begin, delay_time);
+  EXPECT_GE(context.elapsed(), delay_time * 2);
+}
+
+TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
+  Context context{ { .io_ring_config = {}, .timer_options{ ClockMode::SIMULATED } } };
+  exec::async_scope scope;
+  std::size_t called{ 0 };
+  auto delay_time = std::chrono::minutes(1);
   {
     auto sender = context.scheduler().scheduleAfter(delay_time * 2) | stdexec::then([&called] { ++called; });
     scope.spawn(sender);
@@ -144,7 +203,9 @@ TEST(ContextTests, SchedulerAfterStopWaiting) {
   context.run();
   auto end = std::chrono::steady_clock::now();
   EXPECT_EQ(called, 1);
-  EXPECT_GE(end - begin, delay_time);
+  EXPECT_LE(end - begin, delay_time);
+  EXPECT_GE(context.elapsed(), delay_time);
+  EXPECT_LT(context.elapsed(), delay_time * 2);
 }
 
 }  // namespace heph::concurrency::tests

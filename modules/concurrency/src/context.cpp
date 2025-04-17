@@ -4,18 +4,25 @@
 
 #include "hephaestus/concurrency/context.h"
 
+#include <chrono>
+
+#include <fmt/chrono.h>
+#include <fmt/ostream.h>
+
 namespace heph::concurrency {
-
-namespace context_internal {
-[[nodiscard]] inline auto Env::query(stdexec::get_stop_token_t /*ignore*/) const noexcept
-    -> stdexec::inplace_stop_token {
-  return self->getStopToken();
-}
-
-}  // namespace context_internal
-
-void TaskDispatchOperation::handleCompletion() const {
-  self->start();
+void Context::run(const std::function<void()>& on_start) {
+  std::function<bool()> on_progress;
+  if (timer_.clockMode() == ClockMode::WALLCLOCK) {
+    on_progress = [this] {
+      bool more_work = timer_.tick();
+      return runTasks() || more_work;
+    };
+  } else {
+    on_progress = [this] { return runTasksSimulated(); };
+  }
+  start_time_ = TimerClock::base_clock::now();
+  last_progress_time_ = TimerClock::base_clock::now();
+  ring_.run(on_start, on_progress);
 }
 
 void Context::enqueue(TaskBase* task) {
@@ -26,16 +33,40 @@ void Context::enqueue(TaskBase* task) {
   ring_.submit(task->dispatch_operation);
 }
 
-void Context::enqueueAfter(TaskBase* task, std::chrono::steady_clock::duration start_after) {
-  timer_.startAfter(task, start_after);
+void Context::enqueueAt(TaskBase* task, TimerClock::time_point start_time) {
+  if (!ring_.isRunning() || ring_.isCurrentRing()) {
+    timer_.startAt(task, start_time);
+    return;
+  }
+  ring_.submit(task->dispatch_operation);
 }
 
-void Context::runTasks() {
-  std::deque<TaskBase*> tasks;
-  std::swap(tasks, tasks_);
-  while (!tasks.empty()) {
-    TaskBase* task = tasks.front();
-    tasks.pop_front();
+auto Context::runTasks() -> bool {
+  if (tasks_.empty()) {
+    return false;
+  }
+
+  TaskBase* task = tasks_.front();
+  tasks_.pop_front();
+  runTask(task);
+
+  return !tasks_.empty();
+}
+
+auto Context::runTasksSimulated() -> bool {
+  auto now = TimerClock::base_clock::now();
+  timer_.advanceSimulation(now - last_progress_time_);
+  last_progress_time_ = now;
+
+  bool progress = timer_.tickSimulated(tasks_.empty());
+
+  return runTasks() || progress;
+}
+
+void Context::runTask(TaskBase* task) {
+  if (ring_.stopRequested()) {
+    task->setStopped();
+  } else {
     task->setValue();
   }
 }
