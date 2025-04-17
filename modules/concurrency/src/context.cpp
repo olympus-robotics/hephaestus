@@ -13,10 +13,7 @@ namespace heph::concurrency {
 void Context::run(const std::function<void()>& on_start) {
   std::function<bool()> on_progress;
   if (timer_.clockMode() == ClockMode::WALLCLOCK) {
-    on_progress = [this] {
-      bool more_work = timer_.tick();
-      return runTasks() || more_work;
-    };
+    on_progress = [this] { return runTasks(); };
   } else {
     on_progress = [this] { return runTasksSimulated(); };
   }
