@@ -73,7 +73,8 @@ auto main(int argc, const char* argv[]) -> int {
   for (auto period : PERIOD) {
     scope.spawn(exec::repeat_effect_until(
         context.scheduler().scheduleAfter(period) |
-        stdexec::then([period, &last_steady = last_steady[id], &last_system = last_system[id], &context] {
+        stdexec::then([period, tag = fmt::format("period={}", period), &last_steady = last_steady[id],
+                       &last_system = last_system[id], &context] {
           auto now_steady = std::chrono::steady_clock::now();
           auto now_system = std::chrono::system_clock::now();
 
@@ -90,7 +91,7 @@ auto main(int argc, const char* argv[]) -> int {
           if (period == PERIOD.back()) {
             heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
           }
-          heph::telemetry::record("clock_jitter", fmt::format("period={}", period),
+          heph::telemetry::record("clock_jitter", tag,
                                   ClockJitter{
                                       .period = period.count(),
                                       .scheduler = jitter_scheduling.count(),

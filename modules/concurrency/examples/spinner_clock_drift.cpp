@@ -18,15 +18,6 @@
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 
-namespace {
-std::atomic<bool> stop{ false };
-
-void setStop(int /*unused*/) {
-  stop.store(true, std::memory_order_release);
-}
-}  // namespace
-// Signal handler to stop execution...
-
 struct ClockJitter {
   std::chrono::milliseconds::rep period;
   std::chrono::microseconds::rep scheduler;
@@ -56,11 +47,6 @@ auto main(int argc, const char* argv[]) -> int {
         .flush_period = TELEMETRY_PERIOD });
   heph::telemetry::registerMetricSink(std::move(influxdb_sink));
 
-  struct sigaction set_stop{};
-  set_stop.sa_handler = setStop;
-  sigaction(SIGINT, &set_stop, nullptr);
-  sigaction(SIGTERM, &set_stop, nullptr);
-
   exec::async_scope scope;
 
   std::vector<std::chrono::steady_clock::time_point> last_steady(PERIOD.size(),
@@ -72,7 +58,8 @@ auto main(int argc, const char* argv[]) -> int {
   for (auto period : PERIOD) {
     spinner.emplace_back(std::make_unique<heph::concurrency::Spinner>(
         heph::concurrency::Spinner::createNeverStoppingCallback(
-            [period, &last_steady = last_steady[id], &last_system = last_system[id]] {
+            [period, tag = fmt::format("period={}", period), &last_steady = last_steady[id],
+             &last_system = last_system[id]] {
               auto now_steady = std::chrono::steady_clock::now();
               auto now_system = std::chrono::system_clock::now();
 
@@ -89,7 +76,7 @@ auto main(int argc, const char* argv[]) -> int {
               if (period == PERIOD.back()) {
                 heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
               }
-              heph::telemetry::record("spinner_clock_jitter", fmt::format("period={}", period),
+              heph::telemetry::record("spinner_clock_jitter", tag,
                                       ClockJitter{
                                           .period = period.count(),
                                           .scheduler = jitter_scheduling.count(),
