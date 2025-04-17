@@ -2,6 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def foreign_cc_repositories():
@@ -59,4 +60,11 @@ def foreign_cc_repositories():
         urls = ["https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/{tag}.zip".format(tag = WS_PROTOCOL_TAG)],
         strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
         sha256 = "1c7d7b874f2e20d841cd04391d9d0be507ccb75b22f84b65a0fc61a30ac30651",
+    )
+
+    git_repository(
+        name = "stdexec",
+        commit = "dc8f1688bad95eff99699c775251ee47e82bd4f1",
+        remote = "git@github.com:NVIDIA/stdexec.git",
+        build_file = "//bazel/foreign_cc:stdexec.BUILD",
     )
