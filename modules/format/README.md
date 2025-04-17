@@ -35,7 +35,7 @@ int main() {
 ```
 
 Sometimes you might need to deactivate the general_formatter for certain types that are unformattable and outside of your control.
-In this case you can delete the operator explicitely like 
+In this case you can delete the operator explicitly like 
 ```cpp
 // needs to be in the public std namespace to work
 namespace std {
