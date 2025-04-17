@@ -86,7 +86,7 @@ auto main(int argc, const char* argv[]) -> int {
               auto jitter_system_clock =
                   std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
 
-              if (period == 500ms) {
+              if (period == PERIOD.back()) {
                 heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
               }
               heph::telemetry::record("spinner_clock_jitter", fmt::format("period={}", period),
@@ -109,5 +109,5 @@ auto main(int argc, const char* argv[]) -> int {
     spin->stop().get();
   }
 
-  fmt::println(stderr, "booyah");
+  fmt::println(stderr, "");
 }
