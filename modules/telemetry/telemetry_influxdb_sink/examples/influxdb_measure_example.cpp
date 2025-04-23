@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>

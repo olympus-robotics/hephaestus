@@ -17,11 +17,12 @@
 #include <absl/synchronization/mutex.h>
 #include <fmt/base.h>
 #include <fmt/core.h>
-#include <hephaestus/ipc/topic.h>
-#include <hephaestus/ipc/topic_database.h>
-#include <hephaestus/ipc/zenoh/liveliness.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
+
+#include "hephaestus/ipc/topic_database.h"
+#include "hephaestus/ipc/topic_filter.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh {
 
@@ -295,7 +296,7 @@ void IpcGraph::removeTopic(const std::string& topic_name) {
 }
 
 bool IpcGraph::hasTopic(const std::string& topic_name) const {  // NOLINT
-  return state_.topics_to_types_map.find(topic_name) != state_.topics_to_types_map.end();
+  return state_.topics_to_types_map.contains(topic_name);
 }
 
 bool IpcGraph::addServiceServerEndpoint(const ipc::zenoh::EndpointInfo& info) {  // NOLINT
@@ -327,7 +328,7 @@ void IpcGraph::removeServiceServerEndpoint(const ipc::zenoh::EndpointInfo& info)
 bool IpcGraph::hasServiceServerEndPoint(const std::string& service_name) const {  // NOLINT
   // Any server means the service is offered.
   // Note: multiple identical service servers should not exists, but we do not enforce this here.
-  return state_.services_to_server_map.find(service_name) != state_.services_to_server_map.end();
+  return state_.services_to_server_map.contains(service_name);
 }
 
 void IpcGraph::addServiceClientEndPoint(const ipc::zenoh::EndpointInfo& info) {
@@ -381,7 +382,7 @@ void IpcGraph::removeService(const std::string& service_name) {
 }
 
 bool IpcGraph::hasService(const std::string& service_name) const {  // NOLINT
-  return state_.services_to_types_map.find(service_name) != state_.services_to_types_map.end();
+  return state_.services_to_types_map.contains(service_name);
 }
 
 void IpcGraphState::printIpcGraphState() const {
@@ -392,8 +393,9 @@ void IpcGraphState::printIpcGraphState() const {
   ss << "\n  == EDGES ==\n\n";
 
   const auto max_name_length = [](const auto& map) -> std::size_t {
-    if (map.empty())
+    if (map.empty()) {
       return 0;
+    }
     return std::max_element(map.begin(), map.end(),
                             [](const auto& a, const auto& b) { return a.first.size() < b.first.size(); })
         ->first.size();
@@ -486,24 +488,22 @@ void IpcGraphState::printIpcGraphState() const {
 [[nodiscard]] auto IpcGraphState::checkConsistency() const -> bool {
   // Check that every publisher has a corresponding topic to type entry
   for (const auto& [topic, publishers] : topic_to_publishers_map) {
-    if (topics_to_types_map.find(topic) == topics_to_types_map.end()) {
+    if (!topics_to_types_map.contains(topic)) {
       return false;
     }
   }
 
   // Check that every topic to type entry has at least one publisher or subscriber
   for (const auto& [topic, type] : topics_to_types_map) {
-    if ((topic_to_publishers_map.find(topic) == topic_to_publishers_map.end() ||
-         topic_to_publishers_map.at(topic).empty()) &&
-        (topic_to_subscribers_map.find(topic) == topic_to_subscribers_map.end() ||
-         topic_to_subscribers_map.at(topic).empty())) {
+    if ((!topic_to_publishers_map.contains(topic) || topic_to_publishers_map.at(topic).empty()) &&
+        (!topic_to_subscribers_map.contains(topic) || topic_to_subscribers_map.at(topic).empty())) {
       return false;
     }
   }
 
   // Check that every service server has a corresponding service to types entry
   for (const auto& [service, servers] : services_to_server_map) {
-    if (services_to_types_map.find(service) == services_to_types_map.end()) {
+    if (!services_to_types_map.contains(service)) {
       return false;
     }
   }
@@ -511,8 +511,7 @@ void IpcGraphState::printIpcGraphState() const {
   // Check that every service to types entry has at least one service server
   if (!std::ranges::all_of(services_to_types_map, [this](const auto& pair) {
         const auto& service = pair.first;
-        return services_to_server_map.find(service) != services_to_server_map.end() &&
-               !services_to_server_map.at(service).empty();
+        return services_to_server_map.contains(service) && !services_to_server_map.at(service).empty();
       })) {
     return false;
   }

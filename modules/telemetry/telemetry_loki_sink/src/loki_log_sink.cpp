@@ -7,10 +7,12 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include <absl/synchronization/mutex.h>
 #include <cpr/cprtypes.h>
 #include <cpr/session.h>
 #include <cpr/status_codes.h>

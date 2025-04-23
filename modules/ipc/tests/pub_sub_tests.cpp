@@ -10,10 +10,13 @@
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/exception.h"
@@ -63,7 +66,7 @@ TEST(PublisherSubscriber, MessageExchange) {
 
 TEST(PublisherSubscriber, MismatchType) {
   auto mt = random::createRNG();
-  Config config{};
+  const Config config{};
   auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
@@ -96,7 +99,7 @@ TEST(PublisherSubscriber, PublisherTypeInfo) {
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
-  Publisher<types::DummyType> publisher(session, topic);
+  const Publisher<types::DummyType> publisher(session, topic);
 
   auto type_info_json = callService<std::string, std::string>(
       *session, TopicConfig{ getEndpointTypeInfoServiceTopic(topic.name) }, "", std::chrono::seconds{ 1 });
@@ -113,7 +116,7 @@ TEST(PublisherSubscriber, SubscriberTypeInfo) {
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
-  Subscriber<types::DummyType> subscriber(session, topic, [](const auto&, const auto&) {});
+  const Subscriber<types::DummyType> subscriber(session, topic, [](const auto&, const auto&) {});
 
   auto type_info_json = callService<std::string, std::string>(
       *session, TopicConfig{ getEndpointTypeInfoServiceTopic(topic.name) }, "", std::chrono::seconds{ 1 });

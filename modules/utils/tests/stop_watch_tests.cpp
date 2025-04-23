@@ -2,6 +2,10 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <chrono>
+#include <tuple>
+#include <type_traits>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/timing/mock_clock.h"
@@ -12,8 +16,7 @@ using namespace ::testing;
 
 namespace heph::utils::timing::tests {
 TEST(StopWatch, AccumulateTime) {
-  using namespace std::chrono_literals;
-  constexpr auto PERIOD = 100ms;
+  constexpr auto PERIOD = std::chrono::milliseconds{ 100 };
 
   StopWatch swatch{ MockClock::now };
   swatch.start();
@@ -25,8 +28,7 @@ TEST(StopWatch, AccumulateTime) {
 }
 
 TEST(StopWatch, Stoppable) {
-  using namespace std::chrono_literals;
-  static constexpr auto PERIOD = 10ms;
+  static constexpr auto PERIOD = std::chrono::milliseconds{ 100 };
 
   StopWatch swatch{ MockClock::now };
   swatch.start();
@@ -45,8 +47,7 @@ TEST(StopWatch, Stoppable) {
 }
 
 TEST(StopWatch, ResumeCounting) {
-  using namespace std::chrono_literals;
-  constexpr auto PERIOD = 10ms;
+  constexpr auto PERIOD = std::chrono::milliseconds{ 10 };
 
   StopWatch swatch{ MockClock::now };
 
@@ -71,8 +72,7 @@ TEST(StopWatch, ResumeCounting) {
 }
 
 TEST(StopWatch, Reset) {
-  using namespace std::chrono_literals;
-  constexpr auto PERIOD = 10ms;
+  constexpr auto PERIOD = std::chrono::milliseconds{ 10 };
 
   StopWatch swatch{ MockClock::now };
   swatch.start();
@@ -87,8 +87,7 @@ TEST(StopWatch, Reset) {
 }
 
 TEST(StopWatch, Lapse) {
-  using namespace std::chrono_literals;
-  constexpr auto PERIOD = 10ms;
+  constexpr auto PERIOD = std::chrono::milliseconds{ 10 };
 
   StopWatch swatch{ MockClock::now };
   swatch.start();
@@ -109,11 +108,11 @@ TEST(StopWatch, DurationCast) {
   using DurationT = std::chrono::duration<double>;
   StopWatch swatch{ MockClock::now };
   swatch.start();
-  auto elapsed = swatch.lapse<DurationT>();
-  static_assert(std::is_same_v<decltype(elapsed), DurationT>);
+  const auto elapsed = swatch.lapse<DurationT>();  // NOLINT(clang-analyzer-deadcode.DeadStores)
+  static_assert(std::is_same_v<std::remove_const_t<decltype(elapsed)>, DurationT>);
 
-  auto total_elapsed = swatch.stop<DurationT>();
-  static_assert(std::is_same_v<decltype(total_elapsed), DurationT>);
+  const auto total_elapsed = swatch.stop<DurationT>();  // NOLINT(clang-analyzer-deadcode.DeadStores)
+  static_assert(std::is_same_v<std::remove_const_t<decltype(total_elapsed)>, DurationT>);
 }
 
 }  // namespace heph::utils::timing::tests

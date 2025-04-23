@@ -2,21 +2,29 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <chrono>
+#include <memory>
 #include <optional>
 #include <string>
+#include <thread>
+#include <utility>
 
 #include <gtest/gtest.h>
-#include <hephaestus/ipc/topic.h>
-#include <hephaestus/ipc/zenoh/ipc_graph.h>
-#include <hephaestus/ipc/zenoh/publisher.h>
-#include <hephaestus/ipc/zenoh/service.h>
-#include <hephaestus/ipc/zenoh/service_client.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/ipc/zenoh/subscriber.h>
-#include <hephaestus/telemetry/log.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/types/dummy_type.h>
-#include <hephaestus/types_proto/dummy_type.h>  // NOLINT(misc-include-cleaner)
+
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/ipc_graph.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/service_client.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -654,6 +662,7 @@ TEST_F(IpcGraphTest, GetTopicTypeInfo) {
 
   auto type_info = graph->getTopicTypeInfo(TEST_TOPIC);
   EXPECT_TRUE(type_info.has_value());
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(type_info->name, "heph.types.proto.DummyType");
 }
 

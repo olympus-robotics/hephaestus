@@ -12,7 +12,6 @@
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/bag/zenoh_recorder.h"
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"

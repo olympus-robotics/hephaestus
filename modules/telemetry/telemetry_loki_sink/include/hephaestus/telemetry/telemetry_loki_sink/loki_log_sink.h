@@ -5,8 +5,11 @@
 #pragma once
 
 #include <cstdint>
+#include <chrono>
+#include <unordered_map>
 #include <map>
 #include <string>
+#include <vector>
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>

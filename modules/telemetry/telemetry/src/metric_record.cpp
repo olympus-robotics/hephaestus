@@ -19,11 +19,11 @@
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <fmt/format.h>
-#include <hephaestus/telemetry/log_sink.h>
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::telemetry {

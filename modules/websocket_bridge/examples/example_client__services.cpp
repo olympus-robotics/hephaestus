@@ -15,12 +15,13 @@
 #include <fmt/base.h>
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/websocket_client.hpp>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/utils/stack_trace.h>
-#include <hephaestus/websocket_bridge/utils/protobuf_serdes.h>
-#include <hephaestus/websocket_bridge/utils/ws_client.h>
-#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
 #include <nlohmann/json_fwd.hpp>
+
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/utils/stack_trace.h"
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/ws_client.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 using namespace std::chrono_literals;
 using heph::ws::ServiceCallState;

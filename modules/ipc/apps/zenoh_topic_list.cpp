@@ -7,14 +7,13 @@
 #include <cstdlib>
 #include <exception>
 #include <memory>
-#include <string_view>
 #include <tuple>
 #include <utility>
 
 #include <fmt/base.h>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"

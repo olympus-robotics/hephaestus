@@ -2,24 +2,34 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
+#include <future>
+#include <string>
 #include <thread>
-#include <utility>
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/action_server/pollable_action_server.h"
+#include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/utils/exception.h"
 
-using namespace ::testing;             // NOLINT(google-build-using-namespace)
-using namespace std::chrono_literals;  // NOLINT(google-build-using-namespace)
+using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::ipc::zenoh::action_server {
 
-static constexpr auto REQUEST_TIMEOUT = 1s;
+static constexpr auto REQUEST_TIMEOUT = std::chrono::seconds{ 1 };
+static constexpr auto ZERO_DURATION = std::chrono::milliseconds{ 0 };
 static constexpr auto TOPIC_ID_LENGTH = 30;
 
 TEST(PollableActionServerTest, CompleteAction) {
@@ -45,8 +55,8 @@ TEST(PollableActionServerTest, CompleteAction) {
     heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
-      if (reply_future.wait_for(0s) != std::future_status::timeout) {
-        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early";
       }
 
       const auto request_opt = action_server.pollRequest();
@@ -58,8 +68,8 @@ TEST(PollableActionServerTest, CompleteAction) {
       std::this_thread::yield();
     }
 
-    if (reply_future.wait_for(0s) != std::future_status::timeout) {
-      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early with result";
     }
 
     action_server.complete(expected_reply);
@@ -93,8 +103,8 @@ TEST(PollableActionServerTest, StopExecution) {
     heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
-      if (reply_future.wait_for(0s) != std::future_status::timeout) {
-        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early";
       }
 
       const auto request_opt = action_server.pollRequest();
@@ -106,8 +116,8 @@ TEST(PollableActionServerTest, StopExecution) {
       std::this_thread::yield();
     }
 
-    if (reply_future.wait_for(0s) != std::future_status::timeout) {
-      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early";
     }
 
     EXPECT_TRUE(requestActionServerToStopExecution(*session, topic_config));
@@ -153,8 +163,8 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
     heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
-      if (reply_future.wait_for(0s) != std::future_status::timeout) {
-        FAIL() << "reply_future completed too early with result: " << reply_future.get();
+      if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
+        FAIL() << "reply_future completed too early";
       }
 
       const auto request_opt = action_server.pollRequest();
@@ -166,7 +176,8 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
       std::this_thread::yield();
     }
 
-    for (int j = 0; j < 10; j++) {
+    static constexpr auto ITERATION_COUNT = 10;
+    for (int j = 0; j < ITERATION_COUNT; ++j) {
       expected_status.store(j);
       action_server.setStatus(j);
 
@@ -198,8 +209,8 @@ TEST(PollableActionServerTest, StopActionServer) {
   heph::panicIf(!reply_future.valid(), "callActionServer failed.");
 
   while (!action_server.pollRequest().has_value()) {
-    if (reply_future.wait_for(0s) != std::future_status::timeout) {
-      FAIL() << "reply_future completed too early with result: " << reply_future.get();
+    if (reply_future.wait_for(std::chrono::milliseconds{ 0 }) != std::future_status::timeout) {
+      FAIL() << "reply_future completed too early";
     }
 
     std::this_thread::yield();
@@ -212,7 +223,7 @@ TEST(PollableActionServerTest, StopActionServer) {
     EXPECT_TRUE(action_completed.load());
   });
 
-  std::this_thread::sleep_for(1ms);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
   action_completed.store(true);
   action_server.complete(types::DummyType::random(mt));
   reply_future.get();

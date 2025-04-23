@@ -4,12 +4,19 @@
 
 #pragma once
 
+#include <atomic>
+#include <chrono>
 #include <condition_variable>
+#include <cstdint>
+#include <memory>
 #include <mutex>
 #include <optional>
+#include <utility>
 
-#include "hephaestus/format/generic_formatter.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh::action_server {
@@ -73,7 +80,7 @@ private:
   std::mutex mutex_;
   std::condition_variable condition_variable_;
 
-  enum class State {
+  enum class State : uint8_t {
     IDLE,
     REQUEST_PENDING,
     IN_PROGRESS,
@@ -112,8 +119,7 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
                std::atomic_bool& stop_requested) -> ReplyT {
           std::unique_lock lock(mutex_);
 
-          heph::log(heph::INFO, "started action server request", "topic", topic_config_.name, "request",
-                    request);
+          heph::log(heph::INFO, "started action server request", "topic", topic_config_.name);
 
           state_ = State::REQUEST_PENDING;
           request_ = request;
@@ -133,8 +139,7 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
 
           state_ = State::IDLE;
 
-          heph::log(heph::INFO, "action server request completed", "topic", topic_config_.name, "request",
-                    request, "reply", *reply_);
+          heph::log(heph::INFO, "action server request completed", "topic", topic_config_.name);
 
           return *std::move(reply_);
         })) {

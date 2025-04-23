@@ -3,9 +3,9 @@
 //=================================================================================================
 
 #include <gtest/gtest.h>
-#include <hephaestus/telemetry/log.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
 
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws {

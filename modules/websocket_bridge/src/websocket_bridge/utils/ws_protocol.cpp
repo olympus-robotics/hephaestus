@@ -15,10 +15,10 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include <hephaestus/ipc/zenoh/service.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {

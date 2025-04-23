@@ -1,13 +1,9 @@
 #include <memory>
 #include <string>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/ipc/zenoh/conversions.h"
-#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"

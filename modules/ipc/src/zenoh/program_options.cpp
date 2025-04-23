@@ -5,8 +5,10 @@
 #include "hephaestus/ipc/zenoh/program_options.h"
 
 #include <cstddef>
+#include <cstdlib>
 #include <string>
 #include <utility>
+#include <tuple>
 
 #include <fmt/format.h>
 

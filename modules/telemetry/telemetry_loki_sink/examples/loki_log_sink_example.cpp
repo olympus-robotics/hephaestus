@@ -1,9 +1,11 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
+#include <cstddef>
 #include <exception>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h"

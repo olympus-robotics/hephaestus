@@ -13,8 +13,8 @@
 
 #include <absl/synchronization/mutex.h>
 #include <fmt/base.h>
-#include <hephaestus/telemetry/log.h>
 
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
@@ -57,12 +57,12 @@ void WebsocketBridgeState::removeWsChannelToIpcTopicMapping(const WsChannelId& c
 
 auto WebsocketBridgeState::hasWsChannelMapping(const WsChannelId& channel_id) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_t2c_);
-  return channel_to_topic_.find(channel_id) != channel_to_topic_.end();
+  return channel_to_topic_.contains(channel_id);
 }
 
 auto WebsocketBridgeState::hasIpcTopicMapping(const std::string& topic) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_t2c_);
-  return topic_to_channel_.find(topic) != topic_to_channel_.end();
+  return topic_to_channel_.contains(topic);
 }
 
 auto WebsocketBridgeState::hasWsChannelWithClients(const WsChannelId& channel_id) const -> bool {
@@ -226,7 +226,7 @@ auto WebsocketBridgeState::checkConsistency() const -> bool {
     const absl::ReaderMutexLock lock(&mutex_cc2t_);
     for (const auto& [client_channel_id, topic] : client_channel_to_topic_) {
       auto it = topic_to_client_channels_.find(topic);
-      if (it == topic_to_client_channels_.end() || it->second.find(client_channel_id) == it->second.end()) {
+      if (it == topic_to_client_channels_.end() || !it->second.contains(client_channel_id)) {
         heph::log(heph::ERROR,
                   "[WS Bridge] Inconsistent state between client_channel_to_topic_ and "
                   "topic_to_client_channels_.",
@@ -291,17 +291,17 @@ void WebsocketBridgeState::removeWsServiceToIpcServiceMapping(const WsServiceId&
 
 auto WebsocketBridgeState::hasWsServiceMapping(const WsChannelId& service_id) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_s2s_);
-  return service_id_to_service_name_map_.find(service_id) != service_id_to_service_name_map_.end();
+  return service_id_to_service_name_map_.contains(service_id);
 }
 
 auto WebsocketBridgeState::hasIpcServiceMapping(const std::string& service_name) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_s2s_);
-  return service_name_to_service_id_map_.find(service_name) != service_name_to_service_id_map_.end();
+  return service_name_to_service_id_map_.contains(service_name);
 }
 
 auto WebsocketBridgeState::hasCallIdToClientMapping(const uint32_t& call_id) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_sc2c_);
-  return call_id_to_client_map_.find(call_id) != call_id_to_client_map_.end();
+  return call_id_to_client_map_.contains(call_id);
 }
 
 void WebsocketBridgeState::addCallIdToClientMapping(const uint32_t& call_id,
@@ -351,7 +351,7 @@ void WebsocketBridgeState::cleanUpCallIdToClientMapping() {
 
 auto WebsocketBridgeState::hasClientChannelsForTopic(const std::string& topic) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_cc2t_);
-  return topic_to_client_channels_.find(topic) != topic_to_client_channels_.end();
+  return topic_to_client_channels_.contains(topic);
 }
 
 auto WebsocketBridgeState::getTopicForClientChannel(const WsClientChannelId& client_channel_id) const
@@ -424,7 +424,7 @@ void WebsocketBridgeState::removeClientChannelToTopicMapping(const WsClientChann
 
 auto WebsocketBridgeState::hasClientChannelMapping(const WsClientChannelId& client_channel_id) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_cc2t_);
-  return client_channel_to_topic_.find(client_channel_id) != client_channel_to_topic_.end();
+  return client_channel_to_topic_.contains(client_channel_id);
 }
 
 auto WebsocketBridgeState::hasTopicToClientChannelMapping(const std::string& topic) const -> bool {

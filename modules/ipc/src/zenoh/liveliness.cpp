@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <optional>
@@ -28,7 +29,7 @@
 #include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
