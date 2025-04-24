@@ -7,18 +7,19 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <exception>
 #include <functional>
 #include <future>
-#include <limits>
 #include <mutex>
+#include <optional>
+#include <string>
 #include <utility>
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
+#include "hephaestus/telemetry/metric_sink.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/timing/stop_watch.h"
 
@@ -26,7 +27,8 @@ namespace heph::concurrency {
 namespace {
 class SpinnerTelemetry {
 public:
-  SpinnerTelemetry(std::optional<std::string> component_name) : component_name_(std::move(component_name)) {
+  explicit SpinnerTelemetry(std::optional<std::string> component_name)
+    : component_name_(std::move(component_name)) {
   }
 
   /// Start and time previous spin
@@ -66,8 +68,8 @@ public:
 private:
   std::optional<std::string> component_name_;
 
-  std::chrono::system_clock::time_point current_timestamp_{};
-  std::chrono::system_clock::time_point previous_timestamp_{};
+  std::chrono::system_clock::time_point current_timestamp_;
+  std::chrono::system_clock::time_point previous_timestamp_;
   utils::timing::StopWatch stop_watch_;
 
   std::chrono::microseconds previous_spin_duration_{ 0 };

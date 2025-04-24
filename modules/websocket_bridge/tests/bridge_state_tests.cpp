@@ -2,14 +2,17 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 
 #include <gtest/gtest.h>
-#include <hephaestus/telemetry/log.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
 
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws::tests {
 
@@ -97,8 +100,8 @@ TEST_F(WebsocketBridgeStateTest, AddAndGetClientsForWsChannel) {
   state.addWsChannelToClientMapping(channel_id1, client_handle1, client_name1);
   auto clients = state.getClientsForWsChannel(channel_id1);
   ASSERT_TRUE(clients.has_value());
-  EXPECT_EQ(clients->size(), 1);
-  EXPECT_EQ(clients->begin()->second, client_name1);
+  EXPECT_EQ(clients->size(), 1);                      // NOLINT(bugprone-unchecked-optional-access)
+  EXPECT_EQ(clients->begin()->second, client_name1);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST_F(WebsocketBridgeStateTest, GetClientsForWsChannelNotFound) {
@@ -119,8 +122,8 @@ TEST_F(WebsocketBridgeStateTest, RemoveSpecificClientFromWsChannel) {
   state.removeWsChannelToClientMapping(channel_id1, client_handle1);
   auto clients = state.getClientsForWsChannel(channel_id1);
   ASSERT_TRUE(clients.has_value());
-  EXPECT_EQ(clients->size(), 1);
-  EXPECT_EQ(clients->begin()->second, client_name2);
+  EXPECT_EQ(clients->size(), 1);                      // NOLINT(bugprone-unchecked-optional-access)
+  EXPECT_EQ(clients->begin()->second, client_name2);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST_F(WebsocketBridgeStateTest, HasWsChannelWithClients) {
@@ -181,8 +184,8 @@ TEST_F(WebsocketBridgeStateTest, GetClientChannelsForTopic) {
 
   auto client_channels = state.getClientChannelsForTopic(topic1);
   EXPECT_EQ(client_channels.size(), 2);
-  EXPECT_TRUE(client_channels.find(client_channel_id1) != client_channels.end());
-  EXPECT_TRUE(client_channels.find(client_channel_id2) != client_channels.end());
+  EXPECT_TRUE(client_channels.contains(client_channel_id1));
+  EXPECT_TRUE(client_channels.contains(client_channel_id2));
 }
 
 TEST_F(WebsocketBridgeStateTest, GetTopicForClientChannelNotFound) {
@@ -234,59 +237,60 @@ TEST_F(WebsocketBridgeStateTest, CheckConsistencyValidState) {
 
 // Tests for WS Service Call ID <-> WS Clients
 TEST_F(WebsocketBridgeStateTest, HasCallIdToClientMapping) {
-  const uint32_t call_id = 5000;
-  EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
-  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
-  EXPECT_TRUE(state.hasCallIdToClientMapping(call_id));
+  static constexpr uint32_t CALL_ID = 5000;
+  EXPECT_FALSE(state.hasCallIdToClientMapping(CALL_ID));
+  state.addCallIdToClientMapping(CALL_ID, client_handle1, client_name1);
+  EXPECT_TRUE(state.hasCallIdToClientMapping(CALL_ID));
 }
 
 TEST_F(WebsocketBridgeStateTest, AddAndGetClientForCallId) {
-  const uint32_t call_id = 5001;
-  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
+  static constexpr uint32_t CALL_ID = 5001;
+  state.addCallIdToClientMapping(CALL_ID, client_handle1, client_name1);
 
-  auto client = state.getClientForCallId(call_id);
+  auto client = state.getClientForCallId(CALL_ID);
   ASSERT_TRUE(client.has_value());
-  EXPECT_EQ(client->second, client_name1);
+  EXPECT_EQ(client->second, client_name1);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST_F(WebsocketBridgeStateTest, GetClientForCallIdNotFound) {
-  const uint32_t call_id = 5002;
-  auto client = state.getClientForCallId(call_id);
+  static constexpr uint32_t CALL_ID = 5002;
+  auto client = state.getClientForCallId(CALL_ID);
   EXPECT_FALSE(client.has_value());
 }
 
 TEST_F(WebsocketBridgeStateTest, RemoveCallIdToClientMapping) {
-  const uint32_t call_id = 5003;
-  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
-  EXPECT_TRUE(state.hasCallIdToClientMapping(call_id));
+  static constexpr uint32_t CALL_ID = 5003;
+  state.addCallIdToClientMapping(CALL_ID, client_handle1, client_name1);
+  EXPECT_TRUE(state.hasCallIdToClientMapping(CALL_ID));
 
-  state.removeCallIdToClientMapping(call_id);
-  EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
+  state.removeCallIdToClientMapping(CALL_ID);
+  EXPECT_FALSE(state.hasCallIdToClientMapping(CALL_ID));
 }
 
 TEST_F(WebsocketBridgeStateTest, CallIdToClientMappingToString) {
-  const uint32_t call_id = 5004;
-  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
+  static constexpr uint32_t CALL_ID = 5004;
+  state.addCallIdToClientMapping(CALL_ID, client_handle1, client_name1);
 
   auto mapping_str = state.callIdToClientMappingToString();
-  EXPECT_NE(mapping_str.find(std::to_string(call_id)), std::string::npos);
+  EXPECT_NE(mapping_str.find(std::to_string(CALL_ID)), std::string::npos);
   EXPECT_NE(mapping_str.find(client_name1), std::string::npos);
 }
 
 TEST_F(WebsocketBridgeStateTest, CleanUpCallIdToClientMappingExpiredHandle) {
-  const uint32_t call_id = 5005;
-  const uint32_t call_id_2 = 5006;
-  state.addCallIdToClientMapping(call_id, client_handle1, client_name1);
-  EXPECT_TRUE(state.hasCallIdToClientMapping(call_id));
+  static constexpr uint32_t CALL_ID = 5005;
+  static constexpr uint32_t CALL_ID_2 = 5006;
+  state.addCallIdToClientMapping(CALL_ID, client_handle1, client_name1);
+  EXPECT_TRUE(state.hasCallIdToClientMapping(CALL_ID));
 
   // Expire the client handle
   client_handle1_shared_ptr.reset();
 
   // Add another mapping to trigger cleanup
-  state.addCallIdToClientMapping(call_id_2, client_handle2, client_name2);
+  state.addCallIdToClientMapping(CALL_ID_2, client_handle2, client_name2);
 
   // Verify the expired handle was cleaned up
-  EXPECT_FALSE(state.hasCallIdToClientMapping(call_id));
+  EXPECT_FALSE(state.hasCallIdToClientMapping(CALL_ID));
+  EXPECT_TRUE(state.hasCallIdToClientMapping(CALL_ID_2));
 }
 
 // Test for clientChannelMappingToString
@@ -316,7 +320,7 @@ TEST_F(WebsocketBridgeStateTest, AddAndGetClientForClientChannel) {
 
   auto client = state.getClientForClientChannel(client_channel_id);
   ASSERT_TRUE(client.has_value());
-  EXPECT_EQ(client->second, client_name1);
+  EXPECT_EQ(client->second, client_name1);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST_F(WebsocketBridgeStateTest, GetClientForClientChannelNotFound) {

@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <optional>
@@ -28,7 +29,7 @@
 #include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
@@ -91,6 +92,13 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
 
   return std::nullopt;
 }
+
+[[nodiscard]] auto endpointAlreadyDiscovered(const std::vector<EndpointInfo>& endpoints,
+                                             const EndpointInfo& info) -> bool {
+  return std::ranges::find_if(endpoints, [&info](const EndpointInfo& endpoint) {
+           return endpoint == info;
+         }) != endpoints.end();
+}
 }  // namespace
 
 auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
@@ -141,7 +149,8 @@ auto getListOfEndpoints(const Session& session, const TopicFilter& topic_filter)
 
     const auto& sample = reply.get_ok();
     auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
-    if (actor_info && topic_filter.isAcceptable(actor_info->topic)) {
+    if (actor_info && topic_filter.isAcceptable(actor_info->topic) &&
+        !endpointAlreadyDiscovered(endpoints, *actor_info)) {
       endpoints.push_back(std::move(*actor_info));
     }
   }

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <source_location>
 #include <thread>
 #include <utility>
 

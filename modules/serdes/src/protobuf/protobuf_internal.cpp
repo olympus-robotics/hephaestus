@@ -25,7 +25,7 @@ auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descrip
     next->CopyTo(fd_set.add_file());
     for (int i = 0; i < next->dependency_count(); ++i) {
       const auto& dep = next->dependency(i);
-      if (seen_dependencies.find(dep->name()) == seen_dependencies.end()) {
+      if (!seen_dependencies.contains(dep->name())) {
         seen_dependencies.insert(dep->name());
         to_add.push(dep);
       }

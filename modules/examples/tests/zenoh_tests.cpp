@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <atomic>
 #include <exception>
 #include <memory>
@@ -16,14 +20,15 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::examples::types::tests {
 namespace {
 
 TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
   auto mt = random::createRNG();
-  ipc::zenoh::Config config{};
-  auto session = ipc::zenoh::createSession(std::move(config));
+  const ipc::zenoh::Config config{};
+  auto session = ipc::zenoh::createSession(config);
   const auto topic = ipc::TopicConfig("test_topic");
 
   const auto send_message = randomFramedPose(mt);

@@ -135,7 +135,7 @@ def heph_cc_test(
             "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
             "RUST_BACKTRACE": "full",
         },
-        tags = tags + ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
+        tags = tags,
         size = size,
         **kwargs
     )

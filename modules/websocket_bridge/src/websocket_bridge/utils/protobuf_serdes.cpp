@@ -35,9 +35,10 @@
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/message.h>
 #include <google/protobuf/util/json_util.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
 #include <magic_enum.hpp>
+
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ws {
 
@@ -347,6 +348,7 @@ void debugPrintMessage(const google::protobuf::Message& message) {
 }
 
 auto convertProtoBytesToFoxgloveBase64String(const std::vector<std::byte>& data) -> std::string {
+  // NOLINTNEXTLINE(bugprone-bitwise-pointer-cast)
   const std::string_view data_view{ std::bit_cast<const char*>(data.data()), data.size() };
   return foxglove::base64Encode(data_view);
 }

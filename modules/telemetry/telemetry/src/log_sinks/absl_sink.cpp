@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/stack_trace.h"
 
 namespace heph::telemetry {
 

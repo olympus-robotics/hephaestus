@@ -3,23 +3,28 @@
 //=================================================================================================
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <span>
+#include <string>
 #include <thread>
 #include <vector>
 
 #include <fmt/core.h>
 #include <gtest/gtest.h>
-#include <hephaestus/ipc/zenoh/service.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/random/random_number_generator.h>
-#include <hephaestus/random/random_object_creator.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/types/dummy_type.h>
-#include <hephaestus/types_proto/dummy_type.h>
 
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 
 namespace heph::ws::tests {
@@ -45,7 +50,7 @@ protected:
     static constexpr int TIMEOUT_MS = 20;
 
     // Set up a service server
-    heph::ipc::TopicConfig service_config{ "test_service" };
+    const heph::ipc::TopicConfig service_config{ "test_service" };
     service_server_ = std::make_unique<heph::ipc::zenoh::Service<types::DummyType, types::DummyType>>(
         session_, service_config, [](const types::DummyType& request) -> types::DummyType {
           // It simply sleeps for a bit and throws the same request back, whatever it is.
@@ -63,8 +68,8 @@ protected:
 };
 
 TEST_F(IpcEntityManagerTest, AddSubscriber) {
-  std::string topic = "test_topic";
-  heph::serdes::TypeInfo type_info;
+  const std::string topic = "test_topic";
+  const heph::serdes::TypeInfo type_info;
   bool callback_called = false;
 
   ipc_entity_manager_->addSubscriber(topic, type_info,
@@ -75,8 +80,8 @@ TEST_F(IpcEntityManagerTest, AddSubscriber) {
 }
 
 TEST_F(IpcEntityManagerTest, RemoveSubscriber) {
-  std::string topic = "test_topic";
-  serdes::TypeInfo type_info;
+  const std::string topic = "test_topic";
+  const serdes::TypeInfo type_info;
 
   ipc_entity_manager_->addSubscriber(topic, type_info,
                                      [](const heph::ipc::zenoh::MessageMetadata&, std::span<const std::byte>,
@@ -87,8 +92,8 @@ TEST_F(IpcEntityManagerTest, RemoveSubscriber) {
 }
 
 TEST_F(IpcEntityManagerTest, HasSubscriber) {
-  std::string topic = "test_topic";
-  serdes::TypeInfo type_info;
+  const std::string topic = "test_topic";
+  const serdes::TypeInfo type_info;
 
   EXPECT_FALSE(ipc_entity_manager_->hasSubscriber(topic));
 
@@ -100,20 +105,17 @@ TEST_F(IpcEntityManagerTest, HasSubscriber) {
 }
 
 TEST_F(IpcEntityManagerTest, CallService) {
-  std::string topic = "test_service";
-  ipc::TopicConfig topic_config{ topic };
+  const std::string topic = "test_service";
+  const ipc::TopicConfig topic_config{ topic };
 
   auto mt = random::createRNG();
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 
-  static constexpr int TIMEOUT_MS = 1000;
-
-  std::chrono::milliseconds timeout(TIMEOUT_MS);
-
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   const uint32_t call_id = 42;
 
-  auto responses = ipc_entity_manager_->callService(call_id, topic_config, request_buffer, timeout);
+  auto responses = ipc_entity_manager_->callService(call_id, topic_config, request_buffer, TIMEOUT);
 
   EXPECT_FALSE(responses.empty());
   ASSERT_EQ(responses.size(), 1);
@@ -128,21 +130,19 @@ TEST_F(IpcEntityManagerTest, CallService) {
 
 TEST_F(IpcEntityManagerTest, CallServiceAsync) {
   std::string topic = "test_service";
-  ipc::TopicConfig topic_config{ topic };
+  const ipc::TopicConfig topic_config{ topic };
 
   auto mt = random::createRNG();
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 
-  static constexpr int TIMEOUT_MS = 1000;
-
-  std::chrono::milliseconds timeout(TIMEOUT_MS);
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 1000 };
   bool callback_called = false;
   heph::log(heph::INFO, "[IPC Interface TEST] - Calling ASYNC service", "topic", topic);
 
   const uint32_t call_id = 42;
   auto future = ipc_entity_manager_->callServiceAsync(
-      call_id, topic_config, request_buffer, timeout, [&](const RawServiceResponses& responses) {
+      call_id, topic_config, request_buffer, TIMEOUT, [&](const RawServiceResponses& responses) {
         callback_called = true;
         EXPECT_FALSE(responses.empty());
         ASSERT_EQ(responses.size(), 1);

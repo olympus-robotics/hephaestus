@@ -34,7 +34,7 @@ using namespace ::testing;
 
 class MyEnvironment : public Environment {
 public:
-  ~MyEnvironment() = default;
+  ~MyEnvironment() override = default;
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
   }
@@ -55,7 +55,7 @@ constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
 [[nodiscard]] auto createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<types::DummyType>,
                                              std::vector<types::DummyPrimitivesType>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
-  auto mcap_writer = createMcapWriter({ scoped_path });
+  auto mcap_writer = createMcapWriter({ .output_file = scoped_path });
 
   auto robot_type_info = serdes::getSerializedTypeInfo<types::DummyType>();
   mcap_writer->registerSchema(robot_type_info);
@@ -103,7 +103,7 @@ TEST(Bag, PlayAndRecord) {
   {
     auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
 
-    auto bag_writer = createMcapWriter({ output_bag });
+    auto bag_writer = createMcapWriter({ .output_file = output_bag });
     auto recorder = ZenohRecorder::create({ .session = session,
                                             .bag_writer = std::move(bag_writer),
                                             .topics_filter_params = {

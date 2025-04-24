@@ -11,8 +11,8 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <hephaestus/telemetry/log.h>
 
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
@@ -104,11 +104,11 @@ private:
   // - Call IDs are unique (TODO: probably not a great idea because we are at the  mercy of the caller!)
   // - Client can one-sided hang up asynchronously and invalidate their handle, hence lookups can fail.
 public:
-  auto hasCallIdToClientMapping(const uint32_t& call_id) const -> bool;
-  void addCallIdToClientMapping(const uint32_t& call_id, const WsClientHandle& client_handle,
+  auto hasCallIdToClientMapping(uint32_t call_id) const -> bool;
+  void addCallIdToClientMapping(uint32_t call_id, const WsClientHandle& client_handle,
                                 const std::string& client_name);
-  void removeCallIdToClientMapping(const uint32_t& call_id);
-  auto getClientForCallId(const uint32_t& call_id) const -> std::optional<ClientHandleWithName>;
+  void removeCallIdToClientMapping(uint32_t call_id);
+  auto getClientForCallId(uint32_t call_id) const -> std::optional<ClientHandleWithName>;
 
   auto callIdToClientMappingToString() const -> std::string;
 

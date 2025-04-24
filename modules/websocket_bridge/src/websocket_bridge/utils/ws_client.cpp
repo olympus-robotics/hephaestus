@@ -22,13 +22,14 @@
 #include <fmt/format.h>
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/message.h>
-#include <hephaestus/websocket_bridge/utils/protobuf_serdes.h>
-#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
+
+#include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
 
-ServiceCallState::ServiceCallState(uint32_t call_id_in)
-  : call_id(call_id_in), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
+ServiceCallState::ServiceCallState(uint32_t id)
+  : call_id(id), status(Status::DISPATCHED), dispatch_time(std::chrono::steady_clock::now()) {
 }
 
 auto receiveResponse(const WsServiceResponse& service_response, WsAdvertisements& ws_server_ads,

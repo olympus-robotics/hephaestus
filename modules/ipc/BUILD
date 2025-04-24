@@ -20,7 +20,6 @@ heph_cc_library(
         "//modules/cli",
         "//modules/concurrency",
         "//modules/containers",
-        "//modules/format",
         "//modules/ipc/proto:types_gen_proto",
         "//modules/serdes",
         "//modules/telemetry/telemetry",

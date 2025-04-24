@@ -83,7 +83,6 @@ heph_cc_test(
     srcs = [
         "tests/bridge_config_tests.cpp",
     ],
-    tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
 
@@ -110,6 +109,5 @@ heph_cc_test(
     srcs = [
         "tests/protobuf_serdes_tests.cpp",
     ],
-    tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )

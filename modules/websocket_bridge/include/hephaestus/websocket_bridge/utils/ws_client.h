@@ -12,7 +12,8 @@
 #include <foxglove/websocket/websocket_client.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <google/protobuf/message.h>
-#include <hephaestus/websocket_bridge/utils/ws_protocol.h>
+
+#include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
 

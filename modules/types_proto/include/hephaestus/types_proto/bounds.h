@@ -8,7 +8,7 @@
 #include "hephaestus/serdes/protobuf/enums.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/proto/bounds.pb.h"
-#include "hephaestus/types_proto/numeric_value.h"  // used to serialize bounds
+#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes::protobuf {

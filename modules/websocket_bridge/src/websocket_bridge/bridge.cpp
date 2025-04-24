@@ -24,14 +24,14 @@
 #include <fmt/format.h>
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/server_interface.hpp>
-#include <hephaestus/ipc/topic.h>
-#include <hephaestus/ipc/zenoh/ipc_graph.h>
-#include <hephaestus/ipc/zenoh/liveliness.h>
-#include <hephaestus/ipc/zenoh/raw_subscriber.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
 
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/ipc_graph.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
@@ -392,6 +392,7 @@ void WebsocketBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::Messa
                                   std::chrono::system_clock::now().time_since_epoch())
                                   .count());
     ws_server_->sendMessage(client_handle.first, channel_id, timestamp_now_ns,
+                            // NOLINTNEXTLINE(bugprone-bitwise-pointer-cast)
                             std::bit_cast<const uint8_t*>(message_data.data()), message_data.size());
   }
 }

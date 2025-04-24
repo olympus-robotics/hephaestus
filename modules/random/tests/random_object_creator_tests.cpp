@@ -2,11 +2,13 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <array>
 #include <chrono>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <random>
 #include <string>
 #include <vector>

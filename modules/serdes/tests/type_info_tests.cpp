@@ -3,17 +3,18 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <optional>
+#include <random>
 #include <string>
 #include <vector>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <hephaestus/utils/stack_trace.h>
-#include <nlohmann/detail/macro_scope.hpp>
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/stack_trace.h"
 #include "test_proto_conversion.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -40,7 +41,7 @@ TEST(TypeInfo, Generate) {
 }
 
 TEST(TypeInfo, ToFromJson) {
-  utils::StackTrace trace;
+  const utils::StackTrace trace;
   auto mt = random::createRNG();
 
   const auto type_info = randomTypeInfo(mt);
@@ -52,7 +53,7 @@ TEST(TypeInfo, ToFromJson) {
 }
 
 TEST(ServiceTypeInfo, ToFromJson) {
-  utils::StackTrace trace;
+  const utils::StackTrace trace;
   auto mt = random::createRNG();
 
   const auto service_type_info = ServiceTypeInfo{
