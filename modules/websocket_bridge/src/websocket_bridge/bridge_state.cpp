@@ -299,13 +299,12 @@ auto WebsocketBridgeState::hasIpcServiceMapping(const std::string& service_name)
   return service_name_to_service_id_map_.contains(service_name);
 }
 
-auto WebsocketBridgeState::hasCallIdToClientMapping(const uint32_t& call_id) const -> bool {
+auto WebsocketBridgeState::hasCallIdToClientMapping(uint32_t call_id) const -> bool {
   const absl::ReaderMutexLock lock(&mutex_sc2c_);
   return call_id_to_client_map_.contains(call_id);
 }
 
-void WebsocketBridgeState::addCallIdToClientMapping(const uint32_t& call_id,
-                                                    const WsClientHandle& client_handle,
+void WebsocketBridgeState::addCallIdToClientMapping(uint32_t call_id, const WsClientHandle& client_handle,
                                                     const std::string& client_name) {
   const absl::WriterMutexLock lock(&mutex_sc2c_);
   call_id_to_client_map_[call_id] = { client_handle, client_name };
@@ -317,13 +316,12 @@ void WebsocketBridgeState::addCallIdToClientMapping(const uint32_t& call_id,
   cleanUpCallIdToClientMapping();
 }
 
-void WebsocketBridgeState::removeCallIdToClientMapping(const uint32_t& call_id) {
+void WebsocketBridgeState::removeCallIdToClientMapping(uint32_t call_id) {
   const absl::WriterMutexLock lock(&mutex_sc2c_);
   call_id_to_client_map_.erase(call_id);
 }
 
-auto WebsocketBridgeState::getClientForCallId(const uint32_t& call_id) const
-    -> std::optional<ClientHandleWithName> {
+auto WebsocketBridgeState::getClientForCallId(uint32_t call_id) const -> std::optional<ClientHandleWithName> {
   const absl::ReaderMutexLock lock(&mutex_sc2c_);
   auto it = call_id_to_client_map_.find(call_id);
   if (it == call_id_to_client_map_.end()) {

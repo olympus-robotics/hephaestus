@@ -2,6 +2,14 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <exception>
+#include <fstream>
+#include <memory>
+#include <regex>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/telemetry/log.h"
@@ -21,25 +29,25 @@ protected:
 };
 
 TEST_F(BridgeConfigTest, ValidRegex) {
-  std::vector<std::string> regex_strings = { ".*", "^test$", "a+b*" };
-  auto regexes = parseRegexStrings(regex_strings);
+  const std::vector<std::string> regex_strings = { ".*", "^test$", "a+b*" };
+  const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size());
 }
 
 TEST_F(BridgeConfigTest, InvalidRegex) {
-  std::vector<std::string> regex_strings = { ".*", "(", "a+b*" };
-  auto regexes = parseRegexStrings(regex_strings);
+  const std::vector<std::string> regex_strings = { ".*", "(", "a+b*" };
+  const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size() - 1);  // One invalid regex
 }
 
 TEST_F(BridgeConfigTest, RegexMatch) {
-  std::vector<std::regex> regex_list = { std::regex("^test$") };
+  const std::vector<std::regex> regex_list = { std::regex("^test$") };
   EXPECT_TRUE(isMatch("test", regex_list));
   EXPECT_FALSE(isMatch("not_test", regex_list));
 }
 
 TEST_F(BridgeConfigTest, StringMatch) {
-  std::vector<std::string> regex_strings = { "^test$" };
+  const std::vector<std::string> regex_strings = { "^test$" };
   EXPECT_TRUE(isMatch("test", regex_strings));
   EXPECT_FALSE(isMatch("not_test", regex_strings));
 }
@@ -133,7 +141,7 @@ TEST_F(BridgeConfigTest, SaveDefaultAndLoad) {
 }
 
 TEST_F(BridgeConfigTest, LoadInvalidYaml) {
-  std::string yaml_content = R"(
+  const std::string yaml_content = R"(
   invalid_yaml_content
   )";
   std::ofstream yaml_file("/tmp/invalid_test_config.yaml");
@@ -144,12 +152,12 @@ TEST_F(BridgeConfigTest, LoadInvalidYaml) {
 }
 
 TEST_F(BridgeConfigTest, SaveInvalidPath) {
-  WebsocketBridgeConfig config;
+  const WebsocketBridgeConfig config;
   EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"), std::runtime_error);
 }
 
 TEST_F(BridgeConfigTest, LoadInvalidPath) {
-  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
+  EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
 }
 
 }  // namespace heph::ws

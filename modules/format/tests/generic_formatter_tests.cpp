@@ -2,16 +2,20 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <array>
 #include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <sstream>
+#include <string>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <rfl.hpp>  // NOLINT(misc-include-cleaner)
+#include <rfl/Timestamp.hpp>
 
-#include "hephaestus/format/enum.h"
 #include "hephaestus/format/generic_formatter.h"
 #include "hephaestus/types/bounds.h"
 // This is part of the test, since if operator<< is defined this will not compile due to conflicts
@@ -39,10 +43,10 @@ TEST(GenericFormatterTests, TestFormatKnownObject) {
 }
 
 TEST(GenericFormatterTests, TestFormatKnownObjectWithRflTimestamp) {
-  static constexpr std::array<char, 18> timestamp_format{ "%Y-%m-%d %H:%M:%S" };
+  static constexpr std::array<char, 18> TIMESTAMP_FORMAT{ "%Y-%m-%d %H:%M:%S" };
   struct TestStruct {
     std::string a = "test_value";
-    rfl::Timestamp<timestamp_format> b;
+    rfl::Timestamp<TIMESTAMP_FORMAT> b;
   };
   TestStruct x{};
   const auto timestamp = std::chrono::system_clock::now();
@@ -70,11 +74,10 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoTimePoint) {
 }
 
 TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoDuration) {
-  using namespace std::literals::chrono_literals;
   struct TestStruct {
     std::string a = "test_value";
-    std::chrono::duration<double> b = 42min;
-    std::chrono::milliseconds c = 42ms;
+    std::chrono::duration<double> b = std::chrono::minutes{ 42 };
+    std::chrono::milliseconds c = std::chrono::milliseconds{ 42 };
   };
   const TestStruct x{};
   const std::string formatted = toString(x);
@@ -96,8 +99,8 @@ TEST(GenericFormatterTests, TestFormatBounds) {
   fmt::println("bounds inclusive: {} vs\n {}", bounds, formatted);
   fmt::println("bounds left open: {} vs\n {}", bounds2, toString(bounds2));
 
-  EXPECT_NE(formatted.find("1"), std::string::npos);
-  EXPECT_NE(formatted.find("2"), std::string::npos);
+  EXPECT_NE(formatted.find('1'), std::string::npos);
+  EXPECT_NE(formatted.find('2'), std::string::npos);
 }
 
 TEST(GenericFormatterTests, TestFormatStructWithBounds) {
@@ -108,10 +111,10 @@ TEST(GenericFormatterTests, TestFormatStructWithBounds) {
   const TestStruct x{};
   const std::string formatted = toString(x);
 
-  EXPECT_NE(formatted.find("1"), std::string::npos);
-  EXPECT_NE(formatted.find("2"), std::string::npos);
-  EXPECT_NE(formatted.find("3"), std::string::npos);
-  EXPECT_NE(formatted.find("4"), std::string::npos);
+  EXPECT_NE(formatted.find('1'), std::string::npos);
+  EXPECT_NE(formatted.find('2'), std::string::npos);
+  EXPECT_NE(formatted.find('3'), std::string::npos);
+  EXPECT_NE(formatted.find('4'), std::string::npos);
 
   // Dummy test if the custom formatters can be compiled
   fmt::println("test: {}", x);
@@ -122,7 +125,7 @@ TEST(GenericFormatterTests, TestFormatStructEnums) {
   enum class TestEnum : std::uint8_t { A, B, C };
 
   const std::string formatted = fmt::format("test enum {}", TestEnum::A);
-  EXPECT_NE(formatted.find("A"), std::string::npos);
+  EXPECT_NE(formatted.find('A'), std::string::npos);
 
   struct S {
     std::string a = "test_value";
@@ -133,7 +136,7 @@ TEST(GenericFormatterTests, TestFormatStructEnums) {
 
   const std::string formatted2 = fmt::format("{}", x);
 
-  EXPECT_NE(formatted2.find("B"), std::string::npos);
+  EXPECT_NE(formatted2.find('B'), std::string::npos);
   EXPECT_NE(formatted2.find("test_value"), std::string::npos);
 }
 
@@ -142,15 +145,15 @@ TEST(GenericFormatterTests, TestFormatStructArray) {
     // Reflect-cpp will only work on aggregate types (so no private members, no custom constructor)
   public:
     // TestStruct() = default;
-    std::array<int, 2> a_{ 1, 2 };
+    std::array<int, 2> a{ 1, 2 };
     // private:
-    [[maybe_unused]] int b_ = 3;
+    [[maybe_unused]] int b = 3;
   };
   const TestStruct x{};
   const std::string formatted = toString(x);
 
-  EXPECT_NE(formatted.find("1"), std::string::npos);
-  EXPECT_NE(formatted.find("2"), std::string::npos);
+  EXPECT_NE(formatted.find('1'), std::string::npos);
+  EXPECT_NE(formatted.find('2'), std::string::npos);
 
   // Dummy test if the custom formatters can be compiled
   fmt::println("test: {}", x);
