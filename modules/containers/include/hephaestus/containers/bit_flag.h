@@ -46,7 +46,7 @@ constexpr auto allEnumValuesMask() -> std::underlying_type_t<EnumT> {
 
 template <typename EnumT>
 concept UnsignedEnum =
-    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
+    requires { std::is_enum_v<EnumT> && std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
 
 /// This class allows to use enum classes as bit flags.
 /// Enum classes need to satisfy three properties:
