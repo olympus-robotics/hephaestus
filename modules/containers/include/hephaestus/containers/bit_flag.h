@@ -5,10 +5,11 @@
 #pragma once
 
 #include <algorithm>
+#include <concepts>
+#include <cstddef>
 #include <random>
 #include <type_traits>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <magic_enum_utility.hpp>
 
