@@ -12,8 +12,9 @@
 #include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
-#include <fmt/std.h>  // NOLINT(misc-include-cleaner)
-#include <rfl.hpp>    // NOLINT(misc-include-cleaner)
+#include <fmt/ranges.h>  // NOLINT(misc-include-cleaner)
+#include <fmt/std.h>     // NOLINT(misc-include-cleaner)
+#include <rfl.hpp>       // NOLINT(misc-include-cleaner)
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
