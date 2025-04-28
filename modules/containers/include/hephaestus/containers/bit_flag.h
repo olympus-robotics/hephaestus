@@ -46,7 +46,7 @@ constexpr auto allEnumValuesMask() -> std::underlying_type_t<EnumT> {
 
 template <typename EnumT>
 concept UnsignedEnum =
-    requires { std::is_enum_v<EnumT> && std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
+    requires { std::is_enum_v<EnumT>&& std::is_unsigned_v<typename std::underlying_type_t<EnumT>>; };
 
 /// This class allows to use enum classes as bit flags.
 /// Enum classes need to satisfy three properties:
@@ -170,11 +170,11 @@ template <containers::UnsignedEnum EnumT>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> containers::BitFlag<EnumT> {
   containers::BitFlag<EnumT> bit_flag{};
 
-  auto enum_value_count = magic_enum::enum_values<EnumT>().size();
-  auto values = random<std::size_t>(mt, { 0, enum_value_count - 1 });
-  for (std::size_t i = 0; i < values; ++i) {
-    const auto enum_v = random<EnumT>(mt);
-    bit_flag.set(enum_v);
+  std::bernoulli_distribution dist;
+  for (const auto enum_value : magic_enum::enum_values<EnumT>()) {
+    if (dist(mt)) {
+      bit_flag.set(enum_value);
+    }
   }
 
   return bit_flag;
