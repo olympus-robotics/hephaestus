@@ -76,6 +76,16 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
     createTypeInfoService();
   }
 
+  if (dedicated_callback_thread_) {
+    callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
+        [this](const Message& message) {
+          const auto& [metadata, buffer] = message;
+          callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
+        },
+        DEFAULT_CACHE_RESERVES);
+    callback_messages_consumer_->start();
+  }
+
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
   if (config.cache_size.has_value() && *config.cache_size > 0) {
     sub_options.history =
@@ -98,16 +108,6 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::SUBSCRIBER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  }
-
-  if (dedicated_callback_thread_) {
-    callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
-        [this](const Message& message) {
-          const auto& [metadata, buffer] = message;
-          callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
-        },
-        DEFAULT_CACHE_RESERVES);
-    callback_messages_consumer_->start();
   }
 }
 
