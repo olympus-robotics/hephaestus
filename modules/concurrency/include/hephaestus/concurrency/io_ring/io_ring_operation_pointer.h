@@ -11,8 +11,8 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/io_ring_operation_handle.h"
-#include "hephaestus/concurrency/io_ring_operation_registration.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_handle.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 
 namespace heph::concurrency {
 

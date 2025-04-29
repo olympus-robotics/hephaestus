@@ -12,7 +12,7 @@
 
 #include <exec/async_scope.hpp>
 #include <gtest/gtest.h>
-#include <hephaestus/concurrency/timer.h>
+#include <hephaestus/concurrency/io_ring/timer.h>
 #include <hephaestus/utils/exception.h>
 #include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>

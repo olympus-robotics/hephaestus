@@ -9,8 +9,8 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/io_ring_operation_pointer.h"
-#include "hephaestus/concurrency/io_ring_operation_registration.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::tests {

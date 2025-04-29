@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/concurrency/timer.h"
+#include "hephaestus/concurrency/io_ring/timer.h"
 
 #include <cerrno>
 #include <chrono>
@@ -14,7 +14,7 @@
 #include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/context_scheduler.h"
-#include "hephaestus/concurrency/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {

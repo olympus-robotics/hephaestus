@@ -1,5 +1,5 @@
 
-#include "hephaestus/concurrency/io_ring.h"
+#include "hephaestus/concurrency/io_ring/io_ring.h"
 
 #include <atomic>
 #include <cerrno>
@@ -11,7 +11,7 @@
 #include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>
 
-#include "hephaestus/concurrency/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {

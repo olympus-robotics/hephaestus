@@ -14,7 +14,7 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
-#include "hephaestus/concurrency/timer.h"
+#include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
 struct Context;

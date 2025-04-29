@@ -14,8 +14,8 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/io_ring.h"
-#include "hephaestus/concurrency/stoppable_io_ring_operation.h"
+#include "hephaestus/concurrency/io_ring/io_ring.h"
+#include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
 namespace heph::concurrency {
 struct TaskBase;

@@ -11,8 +11,8 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context_scheduler.h"
-#include "hephaestus/concurrency/io_ring.h"
-#include "hephaestus/concurrency/timer.h"
+#include "hephaestus/concurrency/io_ring/io_ring.h"
+#include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
 struct Context;

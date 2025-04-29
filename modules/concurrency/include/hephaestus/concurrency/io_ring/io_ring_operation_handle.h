@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "hephaestus/concurrency/io_ring_operation_registration.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 
 namespace heph::concurrency {
 

@@ -8,7 +8,7 @@
 #include <functional>
 
 #include "hephaestus/concurrency/context_scheduler.h"
-#include "hephaestus/concurrency/timer.h"
+#include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
 void Context::run(const std::function<void()>& on_start) {
