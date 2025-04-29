@@ -48,7 +48,6 @@ struct IoRingOperationRegistry {
     }
     std::uint8_t idx{ size };
 
-    idx = size;
     heph::panicIf(size == CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
     ++size;
 

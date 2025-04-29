@@ -35,7 +35,7 @@ public:
   void runOnce(bool block = true);
   void run(
       const std::function<void()>& on_start = [] {},
-      const std::function<bool()>& on_progress = [] { return true; });
+      const std::function<bool()>& on_progress = [] { return false; });
 
   auto isRunning() -> bool;
   auto isCurrentRing() -> bool;
