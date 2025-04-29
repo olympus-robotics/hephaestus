@@ -49,9 +49,8 @@ struct StoppableIoRingOperation {
     StoppableIoRingOperation* self;
   };
 
-  explicit StoppableIoRingOperation(IoRingOperationT operation, IoRing& ring,
-                                    stdexec::inplace_stop_token token)
-    : operation(std::move(operation)), ring(&ring), stop_callback(token, StopCallback{ this }) {
+  explicit StoppableIoRingOperation(IoRingOperationT op, IoRing& ring, stdexec::inplace_stop_token token)
+    : operation(std::move(op)), ring(&ring), stop_callback(token, StopCallback{ this }) {
     if (token.stop_requested()) {
       operation.handleStopped();
     }

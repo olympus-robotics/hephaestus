@@ -5,12 +5,13 @@
 #include <cstddef>
 #include <cstring>
 
-#include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <hephaestus/utils/exception.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/io_ring_operation_handle.h"
 #include "hephaestus/concurrency/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring_operation_registration.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::tests {
 
@@ -102,9 +103,9 @@ TEST(IoRingTest, IoRingOperationRegistry) {
 
 TEST(IoRingTest, IoRingOperationPointer) {
   TestOperation1 test_operation1;
-  IoRingOperationPointer test_operation_ptr1(&test_operation1);
+  const IoRingOperationPointer test_operation_ptr1(&test_operation1);
   TestOperation1 test_operation2;
-  IoRingOperationPointer test_operation_ptr2(&test_operation2);
+  const IoRingOperationPointer test_operation_ptr2(&test_operation2);
 
   EXPECT_FALSE(test_operation1.prepare_called);
   EXPECT_FALSE(test_operation1.handle_completion_called);

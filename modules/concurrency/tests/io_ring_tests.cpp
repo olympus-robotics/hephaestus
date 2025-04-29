@@ -6,12 +6,15 @@
 #include <condition_variable>
 #include <cstddef>
 #include <cstring>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <vector>
 
-#include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/io_ring.h"
 #include "hephaestus/concurrency/stoppable_io_ring_operation.h"
@@ -19,13 +22,13 @@
 namespace heph::concurrency::tests {
 
 TEST(IoRingTest, DefaultConstruction) {
-  EXPECT_NO_THROW(IoRing ring{ {} });
+  EXPECT_NO_THROW(const IoRing ring{ {} });
 }
 
 struct StopOperation {
   IoRing* ring{ nullptr };
 
-  void prepare(::io_uring_sqe* sqe) {
+  static void prepare(::io_uring_sqe* sqe) {
     ::io_uring_prep_nop(sqe);
   }
 
@@ -36,7 +39,7 @@ struct StopOperation {
 };
 
 TEST(IoRingTest, startStop) {
-  IoRingConfig config;
+  const IoRingConfig config;
   IoRing ring{ config };
 
   StopOperation stopper;
@@ -58,7 +61,7 @@ struct DummyOperation {
 
   DummyOperation() = default;
 
-  void prepare(::io_uring_sqe* sqe) {
+  static void prepare(::io_uring_sqe* sqe) {
     ::io_uring_prep_nop(sqe);
   }
 
@@ -69,7 +72,7 @@ struct DummyOperation {
 };
 
 TEST(IoRingTest, submit) {
-  IoRingConfig config;
+  const IoRingConfig config;
   IoRing ring{ config };
 
   std::size_t completions = 0;
@@ -104,7 +107,7 @@ TEST(IoRingTest, submitConcurrent) {
     IoRing ring{ config };
     ring.run([&] {
       {
-        std::scoped_lock l{ mtx };
+        const std::scoped_lock l{ mtx };
         ring_ptr = &ring;
       }
       cv.notify_all();
@@ -130,7 +133,7 @@ struct TestOperation1T {
   void prepare(io_uring_sqe* sqe) {
     ::io_uring_prep_timeout(sqe, &ts, 0, 0);
   }
-  void handleCompletion(io_uring_cqe* /*cqe*/) {
+  static void handleCompletion(io_uring_cqe* /*cqe*/) {
     EXPECT_TRUE(false) << "completion handler should not get called";
   }
   void handleStopped() {
@@ -138,12 +141,12 @@ struct TestOperation1T {
   }
   bool stop_called{ false };
   static constexpr int HUGE_TIMEOUT_S = 60;
-  __kernel_timespec ts{ .tv_sec = HUGE_TIMEOUT_S, .tv_nsec = 0 };
+  __kernel_timespec ts{ .tv_sec = HUGE_TIMEOUT_S, .tv_nsec = 0 };  // NOLINT(misc-include-cleaner)
 };
 using TestOperation1 = StoppableIoRingOperation<TestOperation1T>;
 
 struct StopTestOperation {
-  void prepare(io_uring_sqe* sqe) {
+  static void prepare(io_uring_sqe* sqe) {
     ::io_uring_prep_nop(sqe);
   }
   void handleCompletion(io_uring_cqe* /*cqe*/) const {
@@ -202,7 +205,7 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
 
     ring->run([&] {
       {
-        std::scoped_lock l{ mtx };
+        const std::scoped_lock l{ mtx };
         ring_ptr = &ring.value();
       }
       cv.notify_all();

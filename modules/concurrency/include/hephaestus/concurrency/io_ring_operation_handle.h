@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "hephaestus/concurrency/io_ring_operation_registration.h"
 
 namespace heph::concurrency {

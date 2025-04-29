@@ -5,10 +5,14 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
+#include <deque>
+#include <functional>
 #include <optional>
 #include <queue>
 
-#include <fmt/chrono.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/io_ring.h"
 #include "hephaestus/concurrency/stoppable_io_ring_operation.h"
@@ -57,7 +61,7 @@ struct Timer {
 
   void tick();
 
-  void startAt(TaskBase* task, TimerClock::time_point start_after);
+  void startAt(TaskBase* task, TimerClock::time_point start_time);
 
   auto now() -> TimerClock::time_point {
     return last_tick_;
@@ -78,19 +82,19 @@ struct Timer {
 
 private:
   struct Operation {
-    void prepare(::io_uring_sqe* sqe);
-    void handleCompletion(::io_uring_cqe* cqe);
+    void prepare(::io_uring_sqe* sqe) const;
+    void handleCompletion(::io_uring_cqe* cqe) const;
     void handleStopped();
 
-    Timer* timer;
+    Timer* timer{ nullptr };
   };
 
   struct UpdateOperation {
-    void prepare(::io_uring_sqe* sqe);
-    void handleCompletion(::io_uring_cqe* cqe);
+    void prepare(::io_uring_sqe* sqe) const;
+    void handleCompletion(::io_uring_cqe* cqe) const;
     void handleStopped();
     Timer* timer{ nullptr };
-    __kernel_timespec next_timeout{};
+    __kernel_timespec next_timeout{};  // NOLINT(misc-include-cleaner)
   };
 
   void update(TimerClock::time_point start_time);

@@ -6,14 +6,15 @@
 
 #include <utility>
 
-#include <stdexec/__detail/__basic_sender.hpp>
+#include <stdexec/__detail/__sender_introspection.hpp>
+#include <stdexec/execution.hpp>
 
 namespace heph::concurrency {
 
 struct Ignore {
   Ignore() noexcept = default;
   template <typename... T>
-  Ignore(T&&... /*ignore*/) noexcept {
+  Ignore(T&&... /*ignore*/) noexcept {  // NOLINT (google-explicit-constructor,hicpp-explicit-conversions)
   }
 };
 

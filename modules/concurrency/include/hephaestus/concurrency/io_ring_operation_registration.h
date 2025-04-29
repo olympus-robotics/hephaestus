@@ -4,10 +4,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <cstdint>
+#include <iterator>
+#include <limits>
+#include <utility>
 
 #include <fmt/format.h>
-#include <liburing.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 
 #include "hephaestus/utils/exception.h"
 
@@ -31,17 +37,16 @@ struct IoRingOperationRegistry {
   std::array<handle_completion_function_t, CAPACITY> handle_completion_function_table{ nullptr };
 
   template <typename IoRingOperationT>
-  auto registerOperation() noexcept -> std::uint8_t {
+  auto registerOperation() -> std::uint8_t {
     static constexpr void const* IDENTIFIER = &IO_RING_OPERATION_IDENTIFIER<IoRingOperationT>;
     // Check if already registered
-    std::uint8_t idx{ 0 };
-    for (; idx != size; ++idx) {
-      void const* registered_identifier = operation_identifier_table.at(idx);
-      // NOLINTNEXTLINE
-      if (registered_identifier == IDENTIFIER) {
-        return idx;
-      }
+    auto it = std::ranges::find_if(operation_identifier_table, [](void const* registered_identifier) {
+      return registered_identifier == IDENTIFIER;
+    });
+    if (it != operation_identifier_table.end()) {
+      return std::distance(operation_identifier_table.begin(), it);
     }
+    std::uint8_t idx{ size };
 
     idx = size;
     heph::panicIf(size == CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));

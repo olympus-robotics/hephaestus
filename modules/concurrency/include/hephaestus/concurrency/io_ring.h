@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include <atomic>
+#include <cstddef>
+#include <functional>
+
 #include <liburing.h>
+#include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring_operation_pointer.h"

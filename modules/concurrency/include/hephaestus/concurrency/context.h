@@ -7,7 +7,6 @@
 #include <chrono>
 #include <deque>
 #include <functional>
-#include <utility>
 
 #include <absl/synchronization/mutex.h>
 #include <stdexec/execution.hpp>

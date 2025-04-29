@@ -5,7 +5,12 @@
 #pragma once
 
 #include <chrono>
+#include <exception>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
+#include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
@@ -39,7 +44,7 @@ struct ContextScheduler {
 struct ContextEnv {
   Context* self;
 
-  [[nodiscard]] constexpr auto query(stdexec::__is_scheduler_affine_t /*ignore*/) noexcept {
+  [[nodiscard]] static constexpr auto query(stdexec::__is_scheduler_affine_t /*ignore*/) noexcept {
     return true;
   }
 

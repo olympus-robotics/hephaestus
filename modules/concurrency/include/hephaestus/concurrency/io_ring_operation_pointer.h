@@ -4,6 +4,13 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
+
 #include "hephaestus/concurrency/io_ring_operation_handle.h"
 #include "hephaestus/concurrency/io_ring_operation_registration.h"
 

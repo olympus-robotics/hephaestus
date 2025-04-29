@@ -5,9 +5,10 @@
 #include "hephaestus/concurrency/context.h"
 
 #include <chrono>
+#include <functional>
 
-#include <fmt/chrono.h>
-#include <fmt/ostream.h>
+#include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/concurrency/timer.h"
 
 namespace heph::concurrency {
 void Context::run(const std::function<void()>& on_start) {
@@ -55,7 +56,7 @@ auto Context::runTasksSimulated() -> bool {
   timer_.advanceSimulation(now - last_progress_time_);
   last_progress_time_ = now;
 
-  bool progress = timer_.tickSimulated(tasks_.empty());
+  const bool progress = timer_.tickSimulated(tasks_.empty());
 
   return runTasks() || progress;
 }

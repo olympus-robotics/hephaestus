@@ -3,11 +3,15 @@
 
 #include <atomic>
 #include <cerrno>
+#include <functional>
 #include <system_error>
 
 #include <fmt/format.h>
-#include <hephaestus/concurrency/io_ring_operation_pointer.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
+#include <stdexec/stop_token.hpp>
 
+#include "hephaestus/concurrency/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
@@ -20,7 +24,7 @@ struct DispatchOperation {
   }
 
   void prepare(::io_uring_sqe* sqe) {
-    IoRingOperationPointer self{ this };
+    const IoRingOperationPointer self{ this };
     ::io_uring_prep_msg_ring(sqe, destination->ring_.ring_fd, 0, self.data, 0);
   }
 
@@ -124,7 +128,7 @@ void IoRing::runOnce(bool block) {
                             std::error_code(-res, std::system_category()).message()));
 
   for (auto* cqe = nextCompletion(); cqe != nullptr; cqe = nextCompletion()) {
-    IoRingOperationPointer operation{ io_uring_cqe_get_data64(cqe) };
+    const IoRingOperationPointer operation{ io_uring_cqe_get_data64(cqe) };
     operation.handleCompletion(cqe);
     io_uring_cqe_seen(&ring_, cqe);
     if ((cqe->flags & IORING_CQE_F_MORE) == 0) {
@@ -177,7 +181,7 @@ auto IoRing::getSqe() -> ::io_uring_sqe* {
       in_flight_.fetch_add(1, std::memory_order_release);
       return sqe;
     }
-    int res = ::io_uring_submit(&ring_);
+    const int res = ::io_uring_submit(&ring_);
     if (res < 0 && !(-res == EAGAIN || -res == EINTR)) {
       heph::panicIf(res < 0, fmt::format("::io_uring_submit failed: {}",
                                          std::error_code(-res, std::system_category()).message()));

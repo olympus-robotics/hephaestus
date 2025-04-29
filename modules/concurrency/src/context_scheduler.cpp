@@ -4,6 +4,9 @@
 
 #include "hephaestus/concurrency/context_scheduler.h"
 
+#include <stdexec/__detail/__env.hpp>
+#include <stdexec/stop_token.hpp>
+
 #include "hephaestus/concurrency/context.h"
 
 namespace heph::concurrency {

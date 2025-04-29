@@ -6,15 +6,16 @@
 
 #include <cerrno>
 #include <chrono>
-#include <cmath>
-#include <iostream>
 #include <limits>
+#include <system_error>
 
-#include <fmt/chrono.h>
 #include <fmt/format.h>
-#include <hephaestus/utils/exception.h>
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/concurrency/io_ring_operation_pointer.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
 Timer* TimerClock::timer{ nullptr };
@@ -29,12 +30,12 @@ auto TimerClock::now() -> time_point {
   }
 }
 
-void Timer::Operation::prepare(::io_uring_sqe* sqe) {
+void Timer::Operation::prepare(::io_uring_sqe* sqe) const {
   io_uring_prep_timeout(sqe, &timer->next_timeout_, std::numeric_limits<unsigned>::max(),
                         IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS);
 }
 
-void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) {
+void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
   if (cqe->res < 0 && cqe->res != -ETIME) {
     heph::panic(
         fmt::format("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message()));
@@ -86,12 +87,13 @@ void Timer::update(TimerClock::time_point start_time) {
   ring_->submit(update_timer_operation_.value());
 }
 
-void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) {
-  IoRingOperationPointer ptr{ &timer->timer_operation_.value() };
+void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) const {
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const IoRingOperationPointer ptr{ &timer->timer_operation_.value() };
   ::io_uring_prep_timeout_update(sqe, &timer->next_timeout_, ptr.data, IORING_TIMEOUT_ABS);
 }
 
-void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) {
+void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
   if (cqe->res < 0) {
     if (cqe->res == -ENOENT || cqe->res == -EALREADY) {
       timer->tick();
