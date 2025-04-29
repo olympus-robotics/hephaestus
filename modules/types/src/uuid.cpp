@@ -11,6 +11,10 @@
 
 namespace heph::types {
 
+auto Uuid::random(std::mt19937_64& mt) -> Uuid {
+  return { .high = random::random<uint64_t>(mt), .low = random::random<uint64_t>(mt) };
+}
+
 auto Uuid::format() const -> std::string {
   return fmt::format("{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
                      static_cast<uint32_t>(high >> 32),                // First 8 hex chars

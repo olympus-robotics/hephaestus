@@ -9,6 +9,7 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types/uuid.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -21,7 +22,7 @@ using FloatingPointBoundsT = Bounds<float>;
 /* --- Test all custom structs which support creation via a random member function --- */
 template <class T>
 class TypeTests : public ::testing::Test {};
-using TypeImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType>;
+using TypeImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType, Uuid>;
 
 TYPED_TEST_SUITE(TypeTests, TypeImplementations);
 
