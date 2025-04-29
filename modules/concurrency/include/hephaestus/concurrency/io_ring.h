@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 
 #include <liburing.h>
@@ -17,9 +18,9 @@
 namespace heph::concurrency {
 
 struct IoRingConfig {
-  static constexpr unsigned DEFAULT_NENTRIES = 1024;
-  unsigned nentries{ DEFAULT_NENTRIES };
-  unsigned flags{ IORING_SETUP_DEFER_TASKRUN | IORING_SETUP_SINGLE_ISSUER };
+  static constexpr std::uint32_t DEFAULT_ENTRY_COUNT = 1024;
+  std::uint32_t nentries{ DEFAULT_ENTRY_COUNT };
+  std::uint32_t flags{ IORING_SETUP_DEFER_TASKRUN | IORING_SETUP_SINGLE_ISSUER };
 };
 
 class IoRing {

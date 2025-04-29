@@ -3,9 +3,7 @@
 //=================================================================================================
 
 #include <array>
-#include <atomic>
 #include <chrono>
-#include <csignal>
 #include <cstddef>
 #include <exception>
 #include <memory>
@@ -16,24 +14,16 @@
 #include <exec/repeat_effect_until.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <hephaestus/telemetry/log_sink.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
-
-namespace {
-std::atomic<bool> stop{ false };  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-
-// Signal handler to stop execution...
-void setStop(int /*unused*/) {
-  stop.store(true, std::memory_order_release);
-}
-}  // namespace
+#include "hephaestus/utils/signal_handler.h"
 
 struct ClockJitter {
   std::chrono::milliseconds::rep period;
@@ -72,11 +62,6 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::concurrency::Context context{ {} };
 
-    struct sigaction set_stop{};             // NOLINT(misc-include-cleaner)
-    set_stop.sa_handler = setStop;           // NOLINT(misc-include-cleaner)
-    sigaction(SIGINT, &set_stop, nullptr);   // NOLINT(misc-include-cleaner)
-    sigaction(SIGTERM, &set_stop, nullptr);  // NOLINT(misc-include-cleaner)
-
     exec::async_scope scope;
 
     std::vector<std::chrono::steady_clock::time_point> last_steady(PERIOD.size(),
@@ -114,7 +99,7 @@ auto main(int argc, const char* argv[]) -> int {
             last_steady = now_steady;
             last_system = now_system;
 
-            const bool should_stop = stop.load(std::memory_order_acquire);
+            const bool should_stop = heph::utils::TerminationBlocker::stopRequested();
             if (should_stop) {
               context.requestStop();
             }

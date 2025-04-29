@@ -4,7 +4,6 @@
 
 #include <array>
 #include <chrono>
-#include <csignal>
 #include <cstddef>
 #include <exception>
 #include <memory>
@@ -13,11 +12,11 @@
 
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <hephaestus/telemetry/log_sink.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"

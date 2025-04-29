@@ -46,9 +46,9 @@ struct IoRingOperationRegistry {
     if (it != operation_identifier_table.end()) {
       return std::distance(operation_identifier_table.begin(), it);
     }
-    std::uint8_t idx{ size };
+    const std::uint8_t idx{ size };
 
-    heph::panicIf(size == CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
+    heph::panicIf(size >= CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
     ++size;
 
     operation_identifier_table.at(idx) = IDENTIFIER;

@@ -8,7 +8,6 @@
 #include <deque>
 #include <functional>
 
-#include <absl/synchronization/mutex.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context_scheduler.h"
@@ -49,22 +48,25 @@ struct Context {
     return timer_.elapsed();
   }
 
-  void enqueue(TaskBase* task);
-  void enqueueAt(TaskBase* task, TimerClock::time_point start_time);
-
 private:
-  IoRing ring_;
-  absl::Mutex tasks_mutex_;
-  std::deque<TaskBase*> tasks_;
-  Timer timer_;
-  TimerClock::base_clock::time_point start_time_;
-  TimerClock::base_clock::time_point last_progress_time_;
+  template <typename Receiver, typename Context>
+  friend struct Task;
+  void enqueue(TaskBase* task);
+  template <typename Receiver, typename Context>
+  friend struct TimedTask;
+  void enqueueAt(TaskBase* task, TimerClock::time_point start_time);
 
   auto runTimedTasks() -> bool;
   auto runTasks() -> bool;
   auto runTasksSimulated() -> bool;
 
   void runTask(TaskBase* task);
+
+  IoRing ring_;
+  std::deque<TaskBase*> tasks_;
+  Timer timer_;
+  TimerClock::base_clock::time_point start_time_;
+  TimerClock::base_clock::time_point last_progress_time_;
 };
 
 }  // namespace heph::concurrency
