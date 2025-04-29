@@ -166,12 +166,12 @@ concept IsBitFlag = requires {
 }  // namespace heph::containers
 
 namespace heph::random {
-template <containers::UnsignedEnum EnumT>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> containers::BitFlag<EnumT> {
-  containers::BitFlag<EnumT> bit_flag{};
+template <containers::IsBitFlag T>
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  T bit_flag{};
 
   std::bernoulli_distribution dist;
-  for (const auto enum_value : magic_enum::enum_values<EnumT>()) {
+  for (const auto enum_value : magic_enum::enum_values<typename T::EnumT>()) {
     if (dist(mt)) {
       bit_flag.set(enum_value);
     }
