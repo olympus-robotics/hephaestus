@@ -7,6 +7,7 @@ set(SOURCES
     hephaestus/types/proto/bounds.proto
     hephaestus/types/proto/dummy_type.proto
     hephaestus/types/proto/numeric_value.proto
+    hephaestus/types/proto/uuid_v4.proto
 )
 
 # To create proto messages in another repository that import `hephaestus` proto messages, see readme.

@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package heph.types.proto;
 
-message Uuid {
+message UuidV4 {
   uint64 high = 1;
   uint64 low = 2;
 }

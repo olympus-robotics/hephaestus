@@ -6,9 +6,6 @@
 
 #include "hephaestus/types/bounds.h"
 
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::testing;
-
 namespace heph::types::tests {
 
 TEST(BoundsTest, InclusiveBounds) {

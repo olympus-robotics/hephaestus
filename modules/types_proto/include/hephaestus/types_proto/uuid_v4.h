@@ -5,18 +5,19 @@
 #pragma once
 
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "hephaestus/types/proto/uuid.pb.h"
+#include "hephaestus/types/proto/uuid_v4.pb.h"
+#include "hephaestus/types/uuid_v4.h"
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<Uuid> {
-  using Type = types::proto::Uuid;
+struct ProtoAssociation<types::UuidV4> {
+  using Type = types::proto::UuidV4;
 };
 }  // namespace heph::serdes::protobuf
 
 namespace heph::types {
 
-void toProto(proto::Uuid& proto_uuid, Uuid uuid);
-void fromProto(const proto::Uuid& proto_uuid, Uuid& uuid);
+void toProto(proto::UuidV4& proto_uuid, UuidV4 uuid);
+void fromProto(const proto::UuidV4& proto_uuid, UuidV4& uuid);
 
 }  // namespace heph::types
