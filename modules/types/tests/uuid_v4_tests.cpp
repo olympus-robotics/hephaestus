@@ -47,12 +47,15 @@ TEST(UuidV4Test, CreateMax) {
 TEST(UuidV4Test, Format) {
   const auto uuid = UuidV4::create();
 
-  // Check the format
+  // Check the format, we expect xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx
   const auto formatted = uuid.format();
   EXPECT_EQ(formatted.size(), 36);
   EXPECT_EQ(formatted[8], '-');
   EXPECT_EQ(formatted[13], '-');
+  EXPECT_EQ(formatted[14], '4');
   EXPECT_EQ(formatted[18], '-');
+  EXPECT_TRUE(formatted[19] == '8' || formatted[19] == '9' || formatted[19] == 'a' ||
+              formatted[19] == 'b');  // RFC 9562 variant bits are 10xx
   EXPECT_EQ(formatted[23], '-');
 }
 
