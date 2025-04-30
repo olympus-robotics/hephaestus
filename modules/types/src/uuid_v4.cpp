@@ -5,6 +5,7 @@
 #include "hephaestus/types/uuid_v4.h"
 
 #include <cstdint>
+#include <limits>
 #include <random>
 #include <string>
 
@@ -17,15 +18,15 @@ namespace heph::types {
 namespace {
 inline void setUuidVersion4(UuidV4& uuid) {
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
-  uuid.high &= 0xFFFFFFFFFFFF0FFF;  // Clear the version bits
-  uuid.high |= 0x0000000000004000;  // Set the version to 4 (random)
+  uuid.high &= 0xFFFFFFFFFFFF0FFFULL;  // Clear the version bits
+  uuid.high |= 0x0000000000004000ULL;  // Set the version to 4 (random)
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 }
 
 inline void setUuidVariantRFC9562(UuidV4& uuid) {
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
-  uuid.low &= 0x3FFFFFFFFFFFFFFF;  // Clear the variant bits
-  uuid.low |= 0x8000000000000000;  // Set the variant to RFC 9562 (10xx)
+  uuid.low &= 0x3FFFFFFFFFFFFFFFULL;  // Clear the variant bits
+  uuid.low |= 0x8000000000000000ULL;  // Set the variant to RFC 9562 (10xx)
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 }
 }  // namespace
@@ -52,7 +53,7 @@ auto UuidV4::createNil() -> UuidV4 {
 }
 
 auto UuidV4::createMax() -> UuidV4 {
-  return { .high = std::limits<uint64_t>::max(), .low = std::limits<uint64_t>::max() };
+  return { .high = std::numeric_limits<uint64_t>::max(), .low = std::numeric_limits<uint64_t>::max() };
 }
 
 auto UuidV4::format() const -> std::string {
@@ -60,7 +61,7 @@ auto UuidV4::format() const -> std::string {
   return fmt::format("{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
                      static_cast<uint32_t>(high >> 32ULL),                 // First 8 hex chars
                      static_cast<uint16_t>(high >> 16ULL),                 // Next 4 hex chars
-                     static_cast<uint16_t>(high & 0xFFFFULL),                 // Next 4 hex chars
+                     static_cast<uint16_t>(high & 0xFFFFULL),              // Next 4 hex chars
                      static_cast<uint16_t>(low >> 48ULL),                  // Next 4 hex chars
                      static_cast<uint64_t>(low & 0x0000FFFFFFFFFFFFULL));  // Last 12 hex chars
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)

@@ -17,7 +17,7 @@ struct ProtoAssociation<types::UuidV4> {
 
 namespace heph::types {
 
-void toProto(proto::UuidV4& proto_uuid, UuidV4 uuid);
+void toProto(proto::UuidV4& proto_uuid, const UuidV4& uuid);
 void fromProto(const proto::UuidV4& proto_uuid, UuidV4& uuid);
 
 }  // namespace heph::types

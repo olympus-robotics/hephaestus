@@ -2,6 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstdint>
+#include <limits>
+
 #include <gtest/gtest.h>
 
 #include "hephaestus/types/uuid_v4.h"
@@ -37,8 +40,8 @@ TEST(UuidV4Test, CreateMax) {
   const auto uuid = UuidV4::createMax();
 
   // Expect all bits to be one
-  EXPECT_EQ(uuid.high, std::limits<uint64_t>::max());
-  EXPECT_EQ(uuid.low, std::limits<uint64_t>::max());
+  EXPECT_EQ(uuid.high, std::numeric_limits<uint64_t>::max());
+  EXPECT_EQ(uuid.low, std::numeric_limits<uint64_t>::max());
 }
 
 TEST(UuidV4Test, Format) {
