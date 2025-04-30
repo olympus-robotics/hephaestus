@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <random>
+#include <string>
 
 namespace heph::types {
 
@@ -13,6 +14,8 @@ namespace heph::types {
 /// randomly generated. We follow RFC 9562, which defines the UUIDv4 format. For details, see
 /// https://www.rfc-editor.org/rfc/rfc9562.html.
 struct UuidV4 {
+  /// @brief Default comparison operator. We avoid using the spaceship operator (<=>) as random UUIDs (version
+  /// 4) are not ordered.
   [[nodiscard]] auto operator==(const UuidV4&) const -> bool = default;
 
   /// @brief Generates a random valid UUIDv4 using the provided random number generator.
@@ -35,8 +38,8 @@ struct UuidV4 {
 
   [[nodiscard]] auto format() const -> std::string;
 
-  uint64_t high;  //!< High 64 bits of the 128 bit UUID
-  uint64_t low;   //!< Low 64 bits of the 128 bit UUID
+  uint64_t high{ 0ULL };  //!< High 64 bits of the 128 bit UUID
+  uint64_t low{ 0ULL };   //!< Low 64 bits of the 128 bit UUID
 };
 
 }  // namespace heph::types

@@ -8,6 +8,10 @@
 
 namespace heph::types::tests {
 
+TEST(UuidV4Test, DefaultConstructor) {
+  EXPECT_EQ(UuidV4(), UuidV4::createNil());
+}
+
 TEST(UuidV4Test, Create) {
   const auto uuid = UuidV4::create();
 
@@ -15,26 +19,26 @@ TEST(UuidV4Test, Create) {
   EXPECT_NE(uuid, UuidV4::create());
 
   // Expect version 4
-  EXPECT_EQ((uuid.high & 0x000000000000F000) >> 12, 4);
+  EXPECT_EQ((uuid.high & 0x000000000000F000ULL) >> 12ULL, 4ULL);
 
   // Expect variant RFC 9562
-  EXPECT_EQ((uuid.low & 0xC000000000000000) >> 62, 2);  // 10xx
+  EXPECT_EQ((uuid.low & 0xC000000000000000ULL) >> 62ULL, 2ULL);  // 10xx
 }
 
 TEST(UuidV4Test, CreateNil) {
   const auto uuid = UuidV4::createNil();
 
   // Expect all bits to be zero
-  EXPECT_EQ(uuid.high, 0);
-  EXPECT_EQ(uuid.low, 0);
+  EXPECT_EQ(uuid.high, 0ULL);
+  EXPECT_EQ(uuid.low, 0ULL);
 }
 
 TEST(UuidV4Test, CreateMax) {
   const auto uuid = UuidV4::createMax();
 
   // Expect all bits to be one
-  EXPECT_EQ(uuid.high, UINT64_MAX);
-  EXPECT_EQ(uuid.low, UINT64_MAX);
+  EXPECT_EQ(uuid.high, std::limits<uint64_t>::max());
+  EXPECT_EQ(uuid.low, std::limits<uint64_t>::max());
 }
 
 TEST(UuidV4Test, Format) {
