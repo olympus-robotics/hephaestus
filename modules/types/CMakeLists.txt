@@ -13,8 +13,13 @@ find_package(magic_enum REQUIRED)
 find_package(range-v3 REQUIRED)
 
 # library sources
-set(SOURCES src/bounds.cpp src/dummy_type.cpp README.md include/hephaestus/types/bounds.h
+set(SOURCES src/bounds.cpp 
+            src/dummy_type.cpp 
+            src/uuid_v4.cpp 
+            README.md 
+            include/hephaestus/types/bounds.h
             include/hephaestus/types/dummy_type.h
+            include/hephaestus/types/uuid_v4.h
 )
 
 # library target

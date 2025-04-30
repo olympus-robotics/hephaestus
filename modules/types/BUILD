@@ -44,3 +44,9 @@ heph_cc_test(
         "//modules/format",
     ],
 )
+
+heph_cc_test(
+    name = "uuid_v4_tests",
+    srcs = ["tests/uuid_v4_tests.cpp"],
+    deps = TYPES_TEST_DEPS,
+)

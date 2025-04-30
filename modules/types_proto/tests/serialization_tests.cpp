@@ -11,10 +11,12 @@
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types/uuid_v4.h"
 #include "hephaestus/types_proto/bool.h"           // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/bounds.h"         // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/uuid_v4.h"        // NOLINT(misc-include-cleaner)
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
@@ -27,7 +29,7 @@ using FloatingPointBoundsT = Bounds<float>;
 template <class T>
 class SerializationTests : public ::testing::Test {};
 using SerializationImplementations =
-    ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType, bool,  //
+    ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType, UuidV4, bool,  //
                      int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t, float,
                      double  // NumericValue types
                      >;
