@@ -15,14 +15,15 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
-struct Context;
+class Context;
 
 struct ContextConfig {
   io_ring::IoRingConfig io_ring_config;
   io_ring::TimerOptions timer_options;
 };
 
-struct Context {
+class Context {
+public:
   using Scheduler = ContextScheduler;
 
   explicit Context(ContextConfig const& config)
@@ -62,6 +63,7 @@ private:
 
   void runTask(TaskBase* task);
 
+private:
   io_ring::IoRing ring_;
   std::deque<TaskBase*> tasks_;
   io_ring::Timer timer_;

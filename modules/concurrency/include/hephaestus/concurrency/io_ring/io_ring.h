@@ -42,20 +42,20 @@ public:
   auto isCurrentRing() -> bool;
 
 private:
+  inline void submit(IoRingOperationPointer operation);
+  auto getSqe() -> ::io_uring_sqe*;
+  auto nextCompletion() -> io_uring_cqe*;
+
+  friend struct DispatchOperation;
+  friend struct StopOperation;
+
+private:
   ::io_uring ring_{};
   std::atomic<bool> running_{ false };
   stdexec::inplace_stop_source stop_source_;
 
   std::atomic<std::size_t> in_flight_{ 0 };
-
-  inline void submit(IoRingOperationPointer operation);
-  auto getSqe() -> ::io_uring_sqe*;
-  auto nextCompletion() -> io_uring_cqe*;
-
   static thread_local IoRing* current_ring;
-
-  friend struct DispatchOperation;
-  friend struct StopOperation;
 };
 
 template <typename IoRingOperationT>

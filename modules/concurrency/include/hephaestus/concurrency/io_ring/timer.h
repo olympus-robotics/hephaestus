@@ -28,7 +28,7 @@ struct TimerOptions {
   ClockMode clock_mode{ ClockMode::WALLCLOCK };
 };
 
-struct Timer;
+class Timer;
 
 struct TimerClock {
   using base_clock = std::chrono::steady_clock;
@@ -56,7 +56,8 @@ struct TimerEntry {
   }
 };
 
-struct Timer {
+class Timer {
+public:
   explicit Timer(IoRing& ring, TimerOptions options);
 
   void requestStop();
@@ -102,13 +103,15 @@ private:
   void update(TimerClock::time_point start_time);
   auto next() -> TaskBase*;
 
+  friend struct TimerClock;
+
+private:
   IoRing* ring_;
   __kernel_timespec next_timeout_{};
   std::optional<StoppableIoRingOperation<Operation>> timer_operation_;
   std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_;
   std::priority_queue<TimerEntry, std::deque<TimerEntry>, std::greater<>> tasks_;
 
-  friend struct TimerClock;
   TimerClock::time_point start_;
   TimerClock::time_point last_tick_;
   ClockMode clock_mode_;
