@@ -6,6 +6,8 @@ build --repository_cache=~/.cache/bazel/repos/
 build --features=external_include_paths
 build --generate_json_trace_profile --profile command.profile.gz
 
+test --flaky_test_attempts=10
+
 # https://libcxx.llvm.org/Hardening.html
 build:opt --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
 build:fastbuild --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
