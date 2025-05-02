@@ -48,7 +48,7 @@ private:
 
   std::atomic<std::size_t> in_flight_{ 0 };
 
-  void submit(IoRingOperationPointer operation);
+  inline void submit(IoRingOperationPointer operation);
   auto getSqe() -> ::io_uring_sqe*;
   auto nextCompletion() -> io_uring_cqe*;
 

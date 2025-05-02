@@ -11,17 +11,14 @@
 #include <limits>
 #include <utility>
 
-#include <fmt/format.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
-
-#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
 struct IoRingOperationIdentifierT {};
 
 template <typename IoRingOperationT>
-static inline constexpr IoRingOperationIdentifierT IO_RING_OPERATION_IDENTIFIER{};
+inline constexpr IoRingOperationIdentifierT IO_RING_OPERATION_IDENTIFIER{};
 
 struct IoRingOperationRegistry {
   using identifier_function_t = bool (*)(void*);
@@ -46,48 +43,40 @@ struct IoRingOperationRegistry {
     if (it != operation_identifier_table.end()) {
       return std::distance(operation_identifier_table.begin(), it);
     }
-    const std::uint8_t idx{ size };
 
-    heph::panicIf(size >= CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
-    ++size;
-
-    operation_identifier_table.at(idx) = IDENTIFIER;
+    prepare_function_t prepare{ nullptr };
+    handle_completion_function_t handle_completion{ nullptr };
     if constexpr (requires() { std::declval<IoRingOperationT>().prepare(std::declval<::io_uring_sqe*>()); }) {
-      prepare_function_table.at(idx) = [](void* operation, ::io_uring_sqe* sqe) {
+      prepare = [](void* operation, ::io_uring_sqe* sqe) {
         static_cast<IoRingOperationT*>(operation)->prepare(sqe);
       };
-      handle_completion_function_table.at(idx) = [](void* operation, ::io_uring_cqe* cqe) {
+      handle_completion = [](void* operation, ::io_uring_cqe* cqe) {
         static_cast<IoRingOperationT*>(operation)->handleCompletion(cqe);
       };
     } else {
-      prepare_function_table.at(idx) = nullptr;
-      handle_completion_function_table.at(idx) = [](void* operation, ::io_uring_cqe* /*cqe*/) {
+      handle_completion = [](void* operation, ::io_uring_cqe* /*cqe*/) {
         static_cast<IoRingOperationT*>(operation)->handleCompletion();
       };
     }
+    const std::uint8_t idx{ size };
+    registerOperation(idx, IDENTIFIER, prepare, handle_completion);
+
+    ++size;
 
     return idx;
   }
 
-  auto hasPrepare(std::uint8_t idx) {
-    heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
-    return prepare_function_table.at(idx) != nullptr;
-  }
+  auto hasPrepare(std::uint8_t idx) -> bool;
 
-  void prepare(std::uint8_t idx, void* operation, ::io_uring_sqe* sqe) {
-    heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
-    prepare_function_table.at(idx)(operation, sqe);
-  }
+  void prepare(std::uint8_t idx, void* operation, ::io_uring_sqe* sqe);
 
-  void handleCompletion(std::uint8_t idx, void* operation, ::io_uring_cqe* cqe) {
-    heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
-    handle_completion_function_table.at(idx)(operation, cqe);
-  }
+  void handleCompletion(std::uint8_t idx, void* operation, ::io_uring_cqe* cqe);
 
-  static auto instance() -> IoRingOperationRegistry& {
-    static IoRingOperationRegistry self;
-    return self;
-  }
+  static auto instance() -> IoRingOperationRegistry&;
+
+private:
+  void registerOperation(std::uint8_t idx, void const* identifier, prepare_function_t prepare,
+                         handle_completion_function_t handle_completion);
 };
 
 }  // namespace heph::concurrency

@@ -12,12 +12,9 @@ namespace heph::concurrency {
 
 template <typename IoRingOperationT>
 struct IoRingOperationRegistrar {
-  IoRingOperationRegistrar() noexcept
-    : index(IoRingOperationRegistry::instance().registerOperation<IoRingOperationT>()) {
-  }
+  IoRingOperationRegistrar() noexcept = default;
   void instantiate() {
   }
-  std::uint8_t index{ IoRingOperationRegistry::CAPACITY };
 
   static IoRingOperationRegistrar instance;
 };
@@ -37,7 +34,8 @@ struct IoRingOperationHandle : IoRingOperationBase {
   }
 
   [[nodiscard]] auto index() const -> std::uint8_t {
-    return IoRingOperationRegistrar<IoRingOperationT>::instance.index;
+    static auto index = IoRingOperationRegistry::instance().registerOperation<IoRingOperationT>();
+    return index;
   }
 };
 
