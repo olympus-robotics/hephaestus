@@ -19,7 +19,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
-namespace heph::concurrency::tests {
+namespace heph::concurrency::io_ring::tests {
 
 TEST(IoRingTest, DefaultConstruction) {
   EXPECT_NO_THROW(const IoRing ring{ {} });
@@ -224,4 +224,4 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
   }
 }
 
-}  // namespace heph::concurrency::tests
+}  // namespace heph::concurrency::io_ring::tests

@@ -13,13 +13,13 @@
 namespace heph::concurrency {
 void Context::run(const std::function<void()>& on_start) {
   std::function<bool()> on_progress;
-  if (timer_.clockMode() == ClockMode::WALLCLOCK) {
+  if (timer_.clockMode() == io_ring::ClockMode::WALLCLOCK) {
     on_progress = [this] { return runTasks(); };
   } else {
     on_progress = [this] { return runTasksSimulated(); };
   }
-  start_time_ = TimerClock::base_clock::now();
-  last_progress_time_ = TimerClock::base_clock::now();
+  start_time_ = io_ring::TimerClock::base_clock::now();
+  last_progress_time_ = io_ring::TimerClock::base_clock::now();
   ring_.run(on_start, on_progress);
 }
 
@@ -31,7 +31,7 @@ void Context::enqueue(TaskBase* task) {
   ring_.submit(task->dispatch_operation);
 }
 
-void Context::enqueueAt(TaskBase* task, TimerClock::time_point start_time) {
+void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time) {
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
     timer_.startAt(task, start_time);
     return;
@@ -52,7 +52,7 @@ auto Context::runTasks() -> bool {
 }
 
 auto Context::runTasksSimulated() -> bool {
-  auto now = TimerClock::base_clock::now();
+  auto now = io_ring::TimerClock::base_clock::now();
   timer_.advanceSimulation(now - last_progress_time_);
   last_progress_time_ = now;
 

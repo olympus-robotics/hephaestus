@@ -17,7 +17,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 Timer* TimerClock::timer{ nullptr };
 auto TimerClock::now() -> time_point {
   switch (timer->clock_mode_) {
@@ -178,4 +178,4 @@ auto Timer::next() -> TaskBase* {
   }
   return nullptr;
 }
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

@@ -14,7 +14,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 thread_local IoRing* IoRing::current_ring = nullptr;
 
 struct DispatchOperation {
@@ -198,4 +198,4 @@ auto IoRing::nextCompletion() -> io_uring_cqe* {
   }
   return nullptr;
 }
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

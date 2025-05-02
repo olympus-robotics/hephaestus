@@ -18,8 +18,8 @@ namespace heph::concurrency {
 struct Context;
 
 struct ContextConfig {
-  IoRingConfig io_ring_config;
-  TimerOptions timer_options;
+  io_ring::IoRingConfig io_ring_config;
+  io_ring::TimerOptions timer_options;
 };
 
 struct Context {
@@ -54,7 +54,7 @@ private:
   void enqueue(TaskBase* task);
   template <typename Receiver, typename Context>
   friend struct TimedTask;
-  void enqueueAt(TaskBase* task, TimerClock::time_point start_time);
+  void enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time);
 
   auto runTimedTasks() -> bool;
   auto runTasks() -> bool;
@@ -62,11 +62,11 @@ private:
 
   void runTask(TaskBase* task);
 
-  IoRing ring_;
+  io_ring::IoRing ring_;
   std::deque<TaskBase*> tasks_;
-  Timer timer_;
-  TimerClock::base_clock::time_point start_time_;
-  TimerClock::base_clock::time_point last_progress_time_;
+  io_ring::Timer timer_;
+  io_ring::TimerClock::base_clock::time_point start_time_;
+  io_ring::TimerClock::base_clock::time_point last_progress_time_;
 };
 
 }  // namespace heph::concurrency

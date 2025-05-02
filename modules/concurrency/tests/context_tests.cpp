@@ -156,7 +156,7 @@ TEST(ContextTests, scheduleAfterStopWaiting) {
 }
 
 TEST(ContextTests, scheduleAfterSimulated) {
-  Context context{ { .io_ring_config = {}, .timer_options{ ClockMode::SIMULATED } } };
+  Context context{ { .io_ring_config = {}, .timer_options{ io_ring::ClockMode::SIMULATED } } };
   exec::async_scope scope;
   std::vector<int> call_sequence;
   const std::vector<int> call_sequence_ref{ 2, 1 };
@@ -188,7 +188,7 @@ TEST(ContextTests, scheduleAfterSimulated) {
 }
 
 TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
-  Context context{ { .io_ring_config = {}, .timer_options{ ClockMode::SIMULATED } } };
+  Context context{ { .io_ring_config = {}, .timer_options{ io_ring::ClockMode::SIMULATED } } };
   exec::async_scope scope;
   std::size_t called{ 0 };
   auto delay_time = std::chrono::minutes(1);

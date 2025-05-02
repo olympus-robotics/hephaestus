@@ -19,6 +19,8 @@
 
 namespace heph::concurrency {
 struct TaskBase;
+}
+namespace heph::concurrency::io_ring {
 
 enum class ClockMode : std::uint8_t { WALLCLOCK, SIMULATED };
 
@@ -111,4 +113,4 @@ private:
   TimerClock::time_point last_tick_;
   ClockMode clock_mode_;
 };
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

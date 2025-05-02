@@ -16,7 +16,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 
 template <typename IoRingOperationT>
 struct StoppableIoRingOperation {
@@ -85,4 +85,4 @@ struct StoppableIoRingOperation {
   int in_flight{ 1 };
   std::optional<StopOperation> stop_operation;
 };
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

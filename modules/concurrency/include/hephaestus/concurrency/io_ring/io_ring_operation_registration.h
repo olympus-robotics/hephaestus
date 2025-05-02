@@ -14,7 +14,7 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 struct IoRingOperationIdentifierT {};
 
 template <typename IoRingOperationT>
@@ -79,4 +79,4 @@ private:
                          handle_completion_function_t handle_completion);
 };
 
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

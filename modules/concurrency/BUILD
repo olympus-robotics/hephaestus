@@ -69,13 +69,13 @@ CONCURRENCY_TEST_DEPS = [
 
 heph_cc_test(
     name = "io_ring_operation_tests",
-    srcs = ["tests/io_ring_operation_tests.cpp"],
+    srcs = ["tests/io_ring/io_ring_operation_tests.cpp"],
     deps = CONCURRENCY_TEST_DEPS,
 )
 
 heph_cc_test(
     name = "io_ring_tests",
-    srcs = ["tests/io_ring_tests.cpp"],
+    srcs = ["tests/io_ring/io_ring_tests.cpp"],
     deps = CONCURRENCY_TEST_DEPS,
 )
 

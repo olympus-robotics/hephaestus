@@ -14,7 +14,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_handle.h"
 #include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 
 struct IoRingOperationPointer {
   static constexpr std::size_t IDX_MASK = 0x0000000000000007;
@@ -63,4 +63,4 @@ struct IoRingOperationPointer {
 };
 static_assert(sizeof(IoRingOperationPointer) == sizeof(void*));
 
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

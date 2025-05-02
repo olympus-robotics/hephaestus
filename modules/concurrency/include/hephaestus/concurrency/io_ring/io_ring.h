@@ -15,7 +15,7 @@
 
 #include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 
 struct IoRingConfig {
   static constexpr std::uint32_t DEFAULT_ENTRY_COUNT = 1024;
@@ -63,4 +63,4 @@ void IoRing::submit(IoRingOperationT& operation) {
   submit(IoRingOperationPointer{ &operation });
 }
 
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

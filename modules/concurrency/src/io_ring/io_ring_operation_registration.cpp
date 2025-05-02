@@ -13,7 +13,7 @@
 
 #include "hephaestus/utils/exception.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 auto IoRingOperationRegistry::instance() -> IoRingOperationRegistry& {
   static IoRingOperationRegistry self;
   return self;
@@ -38,4 +38,4 @@ void IoRingOperationRegistry::registerOperation(std::uint8_t idx, void const* id
   prepare_function_table.at(idx) = prepare;
   handle_completion_function_table.at(idx) = handle_completion;
 }
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring

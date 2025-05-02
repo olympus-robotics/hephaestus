@@ -13,7 +13,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 #include "hephaestus/utils/exception.h"
 
-namespace heph::concurrency::tests {
+namespace heph::concurrency::io_ring::tests {
 
 struct alignas(alignof(void*)) TestOperation1 {
   bool prepare_called{ false };
@@ -149,4 +149,4 @@ TEST(IoRingTest, IoRingOperationPointer) {
                    IoRingOperationRegistry::instance().size + 2, nullptr, nullptr),
                heph::Panic);
 }
-}  // namespace heph::concurrency::tests
+}  // namespace heph::concurrency::io_ring::tests

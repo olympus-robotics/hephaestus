@@ -99,13 +99,13 @@ struct Task : TaskBase {
 template <typename Receiver, typename Context>
 struct TimedTask : TaskBase {
   Context* context{ nullptr };
-  TimerClock::time_point start_time;
+  io_ring::TimerClock::time_point start_time;
   Receiver receiver;
   bool timeout_started{ false };
 
   template <typename Rep, typename Period>
   TimedTask(Context* context, std::chrono::duration<Rep, Period> start_after, Receiver&& receiver)
-    : context(context), start_time(TimerClock::now() + start_after), receiver(std::move(receiver)) {
+    : context(context), start_time(io_ring::TimerClock::now() + start_after), receiver(std::move(receiver)) {
   }
 
   void start() noexcept final {

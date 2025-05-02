@@ -8,7 +8,7 @@
 
 #include "hephaestus/concurrency/io_ring/io_ring_operation_registration.h"
 
-namespace heph::concurrency {
+namespace heph::concurrency::io_ring {
 
 template <typename IoRingOperationT>
 struct IoRingOperationRegistrar {
@@ -39,4 +39,4 @@ struct IoRingOperationHandle : IoRingOperationBase {
   }
 };
 
-}  // namespace heph::concurrency
+}  // namespace heph::concurrency::io_ring
