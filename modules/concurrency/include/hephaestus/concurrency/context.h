@@ -15,7 +15,6 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
-class Context;
 
 struct ContextConfig {
   io_ring::IoRingConfig io_ring_config;
