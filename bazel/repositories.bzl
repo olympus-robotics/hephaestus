@@ -60,3 +60,12 @@ def foreign_cc_repositories():
         strip_prefix = "ws-protocol-releases-cpp-v" + WS_PROTOCOL_VERSION,
         sha256 = "1c7d7b874f2e20d841cd04391d9d0be507ccb75b22f84b65a0fc61a30ac30651",
     )
+
+    STDEXEC_VERSION = "b0b18b82e9a9166af7a51bceeb2d7229f7bef33d"
+    http_archive(
+        name = "stdexec",
+        urls = ["https://github.com/NVIDIA/stdexec/archive/{version}.zip".format(version = STDEXEC_VERSION)],
+        strip_prefix = "stdexec-" + STDEXEC_VERSION,
+        sha256 = "80ba2aa6ecf6bc422ae5679a77fc5a17f645b29a78d81f47bdddaeaf5287bd70",
+        build_file = "//bazel/foreign_cc:stdexec.BUILD",
+    )

@@ -1,5 +1,5 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 HEPHAESTUS Contributors
+# Copyright (C) 2023-2025 HEPHAESTUS Contributors
 # =================================================================================================
 
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
@@ -20,7 +20,9 @@ heph_cc_library(
         "//modules/containers",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "@liburing",
         "@magic_enum",
+        "@stdexec",
     ],
 )
 
@@ -36,6 +38,26 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "clock_drift",
+    srcs = ["examples/clock_drift.cpp"],
+    deps = [
+        ":concurrency",
+        "//modules/cli",
+        "//modules/telemetry/telemetry_influxdb_sink",
+    ],
+)
+
+heph_cc_binary(
+    name = "spinner_clock_drift",
+    srcs = ["examples/spinner_clock_drift.cpp"],
+    deps = [
+        ":concurrency",
+        "//modules/cli",
+        "//modules/telemetry/telemetry_influxdb_sink",
+    ],
+)
+
 #########
 # Tests #
 #########
@@ -44,6 +66,24 @@ CONCURRENCY_TEST_DEPS = [
     ":concurrency",
     "//modules/random",
 ]
+
+heph_cc_test(
+    name = "io_ring_operation_tests",
+    srcs = ["tests/io_ring/io_ring_operation_tests.cpp"],
+    deps = CONCURRENCY_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "io_ring_tests",
+    srcs = ["tests/io_ring/io_ring_tests.cpp"],
+    deps = CONCURRENCY_TEST_DEPS,
+)
+
+heph_cc_test(
+    name = "context_tests",
+    srcs = ["tests/context_tests.cpp"],
+    deps = CONCURRENCY_TEST_DEPS,
+)
 
 heph_cc_test(
     name = "queue_consumer_tests",
