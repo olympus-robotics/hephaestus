@@ -38,13 +38,13 @@ public:
     };
 
     auto trigger = operationTrigger(engine);
-    using trigger_type = decltype(trigger);
-    using trigger_values_variant = stdexec::value_types_of_t<trigger_type>;
-    static_assert(std::variant_size_v<trigger_values_variant> == 1);
-    using trigger_values = std::variant_alternative_t<0, trigger_values_variant>;
-    using result_type = decltype(std::apply(invoke_operation, std::declval<trigger_values>()));
+    using TriggerT = decltype(trigger);
+    using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
+    static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
+    using TriggerValuesT = std::variant_alternative_t<0, TriggerValuesVariantT>;
+    using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
     return std::move(trigger) | [&invoke_operation] {
-      if constexpr (stdexec::sender<result_type>) {
+      if constexpr (stdexec::sender<ResultT>) {
         return stdexec::let_value(invoke_operation);
       } else {
         return stdexec::then(invoke_operation);

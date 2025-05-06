@@ -33,14 +33,6 @@ struct ClockJitter {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
 class Spinner : public heph::conduit::Node<Spinner> {
-  std::chrono::milliseconds spin_period_;
-
-  std::chrono::steady_clock::time_point last_steady_;
-  std::chrono::system_clock::time_point last_system_;
-  std::string tag_ = fmt::format("period={}", spin_period_);
-
-  bool output_{ false };
-
 public:
   explicit Spinner(std::chrono::milliseconds period)
     : Node()
@@ -83,6 +75,15 @@ public:
     last_steady_ = now_steady;
     last_system_ = now_system;
   }
+
+private:
+  std::chrono::milliseconds spin_period_;
+
+  std::chrono::steady_clock::time_point last_steady_;
+  std::chrono::system_clock::time_point last_system_;
+  std::string tag_ = fmt::format("period={}", spin_period_);
+
+  bool output_{ false };
 };
 
 auto main(int argc, const char* argv[]) -> int {
