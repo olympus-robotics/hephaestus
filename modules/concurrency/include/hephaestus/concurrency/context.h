@@ -40,6 +40,10 @@ public:
     ring_.requestStop();
   }
 
+  auto stopRequested() -> bool {
+    return ring_.stopRequested();
+  }
+
   auto getStopToken() -> stdexec::inplace_stop_token {
     return ring_.getStopToken();
   }
