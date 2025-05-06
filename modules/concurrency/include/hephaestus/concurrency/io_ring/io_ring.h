@@ -42,7 +42,7 @@ public:
   auto isCurrentRing() -> bool;
 
 private:
-  inline void submit(IoRingOperationPointer operation);
+  void submit(IoRingOperationPointer operation);
   auto getSqe() -> ::io_uring_sqe*;
   auto nextCompletion() -> io_uring_cqe*;
 

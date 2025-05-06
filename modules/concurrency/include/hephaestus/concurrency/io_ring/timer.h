@@ -75,6 +75,7 @@ public:
   }
 
   auto tickSimulated(bool advance) -> bool;
+
   void advanceSimulation(TimerClock::duration duration) {
     last_tick_ += duration;
   }
@@ -101,7 +102,7 @@ private:
   };
 
   void update(TimerClock::time_point start_time);
-  auto next() -> TaskBase*;
+  auto next(bool advance = false) -> TaskBase*;
 
   friend struct TimerClock;
 

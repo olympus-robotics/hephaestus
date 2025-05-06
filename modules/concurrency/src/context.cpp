@@ -56,9 +56,14 @@ auto Context::runTasksSimulated() -> bool {
   timer_.advanceSimulation(now - last_progress_time_);
   last_progress_time_ = now;
 
-  const bool progress = timer_.tickSimulated(tasks_.empty());
+  timer_.tickSimulated(tasks_.empty());
 
-  return runTasks() || progress;
+  runTasks();
+
+  if (tasks_.empty() && stopRequested()) {
+    return false;
+  }
+  return true;
 }
 
 void Context::runTask(TaskBase* task) {
