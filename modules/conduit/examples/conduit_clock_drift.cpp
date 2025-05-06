@@ -7,8 +7,8 @@
 #include <cstddef>
 #include <exception>
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/base.h>
@@ -25,38 +25,44 @@
 #include "hephaestus/utils/signal_handler.h"
 
 struct ClockJitter {
-  std::chrono::milliseconds::rep period;
-  std::chrono::microseconds::rep scheduler;
-  std::chrono::microseconds::rep system_clock;
+  std::chrono::milliseconds::rep period_ms;
+  std::chrono::microseconds::rep scheduler_us;
+  std::chrono::microseconds::rep system_clock_us;
 };
 // NOLINTNEXTLINE(misc-include-cleaner)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler, system_clock);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
-struct Spinner : heph::conduit::Node<Spinner> {
-  std::chrono::milliseconds spin_period;
+class Spinner : public heph::conduit::Node<Spinner> {
+  std::chrono::milliseconds spin_period_;
 
-  std::chrono::steady_clock::time_point last_steady;
-  std::chrono::system_clock::time_point last_system;
-  std::string tag = fmt::format("period={}", spin_period);
-  bool output{ false };
+  std::chrono::steady_clock::time_point last_steady_;
+  std::chrono::system_clock::time_point last_system_;
+  std::string tag_ = fmt::format("period={}", spin_period_);
 
+  bool output_{ false };
+
+public:
   explicit Spinner(std::chrono::milliseconds period)
     : Node()
-    , spin_period(period)
-    , last_steady(std::chrono::steady_clock::now())
-    , last_system(std::chrono::system_clock::now()) {
+    , spin_period_(period)
+    , last_steady_(std::chrono::steady_clock::now())
+    , last_system_(std::chrono::system_clock::now()) {
   }
 
   [[nodiscard]] auto period() const {
-    return spin_period;
+    return spin_period_;
   }
 
-  void operator()(heph::conduit::NodeEngine& engine) {
+  void toggleOutput() {
+    output_ = !output_;
+  }
+
+  void operator()() {
     auto now_steady = std::chrono::steady_clock::now();
     auto now_system = std::chrono::system_clock::now();
 
-    auto duration_steady = now_steady - last_steady;
-    auto duration_system = now_system - last_system;
+    auto duration_steady = now_steady - last_steady_;
+    auto duration_system = now_system - last_system_;
 
     // a positive duration drift indicates that the clock under consideration took longer than
     // expected, and vice versa
@@ -65,22 +71,17 @@ struct Spinner : heph::conduit::Node<Spinner> {
     auto jitter_system_clock =
         std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
 
-    if (output) {
+    if (output_) {
       heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
     }
-    heph::telemetry::record("conduit_clock_jitter", tag,
+    heph::telemetry::record("conduit_clock_jitter", tag_,
                             ClockJitter{
-                                .period = period().count(),
-                                .scheduler = jitter_scheduling.count(),
-                                .system_clock = jitter_system_clock.count(),
+                                .period_ms = period().count(),
+                                .scheduler_us = jitter_scheduling.count(),
+                                .system_clock_us = jitter_system_clock.count(),
                             });
-    last_steady = now_steady;
-    last_system = now_system;
-
-    const bool should_stop = heph::utils::TerminationBlocker::stopRequested();
-    if (should_stop) {
-      engine.requestStop();
-    }
+    last_steady_ = now_steady;
+    last_system_ = now_system;
   }
 };
 
@@ -113,15 +114,16 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::conduit::NodeEngine engine{ {} };
 
-    std::vector<Spinner> spinner;
-    spinner.reserve(PERIOD.size());
+    std::vector<Spinner> spinners;
+    spinners.reserve(PERIOD.size());
 
     for (auto period : PERIOD) {
-      spinner.emplace_back(period);
-      engine.addNode(spinner.back());
+      spinners.emplace_back(period);
+      engine.addNode(spinners.back());
     }
-    spinner.back().output = true;
+    spinners.back().toggleOutput();
 
+    heph::utils::TerminationBlocker::registerInterruptCallback([&engine] { engine.requestStop(); });
     engine.run();
     fmt::println(stderr, "");
   } catch (const std::exception& ex) {

@@ -17,10 +17,10 @@
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::conduit {
-template <typename Operation>
+template <typename OperationT>
 class Node {
 public:
-  static constexpr bool HAS_PERIOD = requires(Operation& op) { op.period(); };
+  static constexpr bool HAS_PERIOD = requires(OperationT& op) { op.period(); };
 
   auto name() const {
     return operation().name();
@@ -29,7 +29,7 @@ public:
   auto execute(NodeEngine& engine) {
     auto invoke_operation = [this, &engine]<typename... Ts>(Ts&&... ts) {
       ExecutionStopWatch stop_watch{ this };
-      if constexpr (std::is_invocable_v<Operation&, NodeEngine&, Ts...>) {
+      if constexpr (std::is_invocable_v<OperationT&, NodeEngine&, Ts...>) {
         return operation()(engine, std::forward<Ts>(ts)...);
       } else {
         (void)engine;
@@ -52,8 +52,8 @@ public:
     }();  // | outputs_.propagate(engine);
   }
 
-  auto operation() -> Operation& {
-    return static_cast<Operation&>(*this);
+  auto operation() -> OperationT& {
+    return static_cast<OperationT&>(*this);
   }
 
 private:
@@ -75,9 +75,9 @@ private:
       }
     };
     return stdexec::just() | stdexec::let_value(schedule_trigger) | stdexec::let_value([this, &engine] {
-             if constexpr (requires(Operation& op) { op.trigger(); }) {
+             if constexpr (requires(OperationT& op) { op.trigger(); }) {
                return operation().trigger();
-             } else if constexpr (requires(Operation& op) { op.trigger(engine); }) {
+             } else if constexpr (requires(OperationT& op) { op.trigger(engine); }) {
                return operation().trigger(engine);
              } else {
                static_assert(HAS_PERIOD,
