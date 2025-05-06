@@ -8,6 +8,7 @@
 #include <exception>
 #include <memory>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include <fmt/base.h>
