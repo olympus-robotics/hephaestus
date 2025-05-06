@@ -86,9 +86,9 @@ auto main(int argc, const char* argv[]) -> int {
                 }
                 heph::telemetry::record("spinner_clock_jitter", tag,
                                         ClockJitter{
-                                            .period = period.count(),
-                                            .scheduler = jitter_scheduling.count(),
-                                            .system_clock = jitter_system_clock.count(),
+                                            .period_ms = period.count(),
+                                            .scheduler_us = jitter_scheduling.count(),
+                                            .system_clock_us = jitter_system_clock.count(),
                                         });
                 last_steady = now_steady;
                 last_system = now_system;
