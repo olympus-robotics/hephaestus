@@ -18,11 +18,14 @@ bazel_dep(name = "buildifier_prebuilt", version = "7.3.1")
 
 # LLVM
 bazel_dep(name = "toolchains_llvm", version = "1.3.0")
+
 LLVM_COMMIT = "14eb90172b3c5f35bdb2699d006fe0f70e76aa24"
+
 archive_override(
     module_name = "toolchains_llvm",
-    url = "https://github.com/bazel-contrib/toolchains_llvm/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
+    sha256 = "d85f78a501d6050fa0f1fb74e1c5f971549cd6d0b9c9147857935c0346c070d0",
     strip_prefix = "toolchains_llvm-{commit}".format(commit = LLVM_COMMIT),
+    url = "https://github.com/bazel-contrib/toolchains_llvm/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
 )
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
@@ -61,11 +64,14 @@ use_repo(buf, "rules_buf_toolchains")
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+
 COMPILE_COMMANDS_COMMIT = "4f28899228fb3ad0126897876f147ca15026151e"
+
 archive_override(
     module_name = "hedron_compile_commands",
-    url = "https://github.com/hedronvision/bazel-compile-commands-extractor/archive/{commit}.tar.gz".format(commit = COMPILE_COMMANDS_COMMIT),
+    sha256 = "658122cfb1f25be76ea212b00f5eb047d8e2adc8bcf923b918461f2b1e37cdf2",
     strip_prefix = "bazel-compile-commands-extractor-{commit}".format(commit = COMPILE_COMMANDS_COMMIT),
+    url = "https://github.com/hedronvision/bazel-compile-commands-extractor/archive/{commit}.tar.gz".format(commit = COMPILE_COMMANDS_COMMIT),
 )
 
 ############################
@@ -82,12 +88,14 @@ bazel_dep(name = "eigen", version = "3.4.0")
 bazel_dep(name = "curl", version = "8.8.0.bcr.1")
 bazel_dep(name = "yaml-cpp", version = "0.8.0")
 bazel_dep(name = "range-v3", version = "0.12.0")
+
 RANGE_COMMIT = "7e6f34b1e820fb8321346888ef0558a0ec842b8e"
+
 archive_override(
     module_name = "range-v3",
-    url = "https://github.com/ericniebler/range-v3/archive/{commit}.tar.gz".format(commit = RANGE_COMMIT),
-    strip_prefix = "range-v3-{commit}".format(commit = RANGE_COMMIT),
     sha256 = "8395518e171e5873e51db9ef153a17b5bd46e69a99b64fd6c44b45b53f98d7cf",
+    strip_prefix = "range-v3-{commit}".format(commit = RANGE_COMMIT),
+    url = "https://github.com/ericniebler/range-v3/archive/{commit}.tar.gz".format(commit = RANGE_COMMIT),
 )
 
 bazel_dep(name = "boringssl", version = "0.20250114.0")
