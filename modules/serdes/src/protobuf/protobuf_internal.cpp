@@ -5,7 +5,7 @@
 #include "hephaestus/serdes/protobuf/protobuf_internal.h"
 
 #include <queue>
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include <google/protobuf/descriptor.h>
