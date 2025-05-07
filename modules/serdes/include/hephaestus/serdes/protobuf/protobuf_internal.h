@@ -60,7 +60,7 @@ template <class ProtoT>
                  [](char c) { return static_cast<std::byte>(c); });
 
   auto original_type_tmp = std::move(original_type);  // NOTE: this is need otherwise clang-tidy will complain
-  return { .name = proto_descriptor->full_name(),
+  return { .name = std::string{ proto_descriptor->full_name() },
            .schema = schema,
            .serialization = TypeInfo::Serialization::PROTOBUF,
            .original_type = std::move(original_type_tmp) };
