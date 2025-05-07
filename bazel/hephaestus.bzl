@@ -26,6 +26,8 @@ def heph_basic_copts():
         "-Wdouble-promotion",  # warn if float is implicit promoted to double
         "-Wformat=2",  # warn on security issues around functions that format output (ie printf)
         "-Wimplicit-fallthrough",  # warn on statements that fallthrough without an explicit annotation
+        "-Wno-nullability-extension",
+        "-Wno-private-header",
         "-Iexternal/abseil-cpp~",  # This is needed to avoid the error: file not found with <angled> include; use "quotes" instead
     ] + select({
         "@hephaestus//bazel:opt_compilation": ["-O3"],
