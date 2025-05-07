@@ -289,7 +289,7 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy.executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  EXPECT_GE(sink_ptr->num_messages, dummy.executed-1);
+  EXPECT_GE(sink_ptr->num_messages, dummy.executed - 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 

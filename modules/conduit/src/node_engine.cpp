@@ -4,9 +4,9 @@
 
 #include "hephaestus/conduit/node_engine.h"
 
-#include <stdexec/execution.hpp>
-
 #include <exception>
+
+#include <stdexec/execution.hpp>
 
 namespace heph::conduit {
 
