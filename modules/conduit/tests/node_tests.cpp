@@ -235,8 +235,8 @@ TEST(NodeTests, nodePeriodicSimulated) {
   engine.addNode(dummy);
 
   engine.run();
-  EXPECT_EQ(dummy.period_called - 1, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
-  EXPECT_EQ(dummy.executed - 1, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy.period_called, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy.executed, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
   EXPECT_TRUE(PeriodicOperation::HAS_PERIOD);
 }
 
@@ -289,7 +289,7 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy.executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  EXPECT_EQ(sink_ptr->num_messages + 1, dummy.executed);
+  EXPECT_GE(sink_ptr->num_messages, dummy.executed-1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 

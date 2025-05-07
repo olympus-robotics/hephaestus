@@ -4,6 +4,8 @@
 
 #include "hephaestus/conduit/node_engine.h"
 
+#include <stdexec/execution.hpp>
+
 #include <exception>
 
 namespace heph::conduit {
@@ -16,6 +18,7 @@ void NodeEngine::run() {
   if (exception_) {
     std::rethrow_exception(exception_);
   }
+  stdexec::sync_wait(scope_.on_empty());
 }
 void NodeEngine::requestStop() {
   context_.requestStop();
