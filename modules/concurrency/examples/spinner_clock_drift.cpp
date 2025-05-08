@@ -23,12 +23,12 @@
 #include "hephaestus/utils/signal_handler.h"
 
 struct ClockJitter {
-  std::chrono::milliseconds::rep period;
-  std::chrono::microseconds::rep scheduler;
-  std::chrono::microseconds::rep system_clock;
+  std::chrono::milliseconds::rep period_ms;
+  std::chrono::microseconds::rep scheduler_us;
+  std::chrono::microseconds::rep system_clock_us;
 };
 // NOLINTNEXTLINE(misc-include-cleaner)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler, system_clock);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
 auto main(int argc, const char* argv[]) -> int {
   try {
@@ -86,9 +86,9 @@ auto main(int argc, const char* argv[]) -> int {
                 }
                 heph::telemetry::record("spinner_clock_jitter", tag,
                                         ClockJitter{
-                                            .period = period.count(),
-                                            .scheduler = jitter_scheduling.count(),
-                                            .system_clock = jitter_system_clock.count(),
+                                            .period_ms = period.count(),
+                                            .scheduler_us = jitter_scheduling.count(),
+                                            .system_clock_us = jitter_system_clock.count(),
                                         });
                 last_steady = now_steady;
                 last_system = now_system;

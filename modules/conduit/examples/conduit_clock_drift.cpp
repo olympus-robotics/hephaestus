@@ -7,17 +7,16 @@
 #include <cstddef>
 #include <exception>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
-#include <exec/async_scope.hpp>
-#include <exec/repeat_effect_until.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <stdexec/execution.hpp>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/concurrency/context.h"
+#include "hephaestus/conduit/node.h"
+#include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -32,6 +31,60 @@ struct ClockJitter {
 };
 // NOLINTNEXTLINE(misc-include-cleaner)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
+
+class Spinner : public heph::conduit::Node<Spinner> {
+public:
+  explicit Spinner(std::chrono::milliseconds period)
+    : Node()
+    , spin_period_(period)
+    , last_steady_(std::chrono::steady_clock::now())
+    , last_system_(std::chrono::system_clock::now()) {
+  }
+
+  [[nodiscard]] auto period() const {
+    return spin_period_;
+  }
+
+  void toggleOutput() {
+    output_ = !output_;
+  }
+
+  void operator()() {
+    auto now_steady = std::chrono::steady_clock::now();
+    auto now_system = std::chrono::system_clock::now();
+
+    auto duration_steady = now_steady - last_steady_;
+    auto duration_system = now_system - last_system_;
+
+    // a positive duration drift indicates that the clock under consideration took longer than
+    // expected, and vice versa
+    auto jitter_scheduling =
+        std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period());
+    auto jitter_system_clock =
+        std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
+
+    if (output_) {
+      heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
+    }
+    heph::telemetry::record("conduit_clock_jitter", tag_,
+                            ClockJitter{
+                                .period_ms = period().count(),
+                                .scheduler_us = jitter_scheduling.count(),
+                                .system_clock_us = jitter_system_clock.count(),
+                            });
+    last_steady_ = now_steady;
+    last_system_ = now_system;
+  }
+
+private:
+  std::chrono::milliseconds spin_period_;
+
+  std::chrono::steady_clock::time_point last_steady_;
+  std::chrono::system_clock::time_point last_system_;
+  std::string tag_ = fmt::format("period={}", spin_period_);
+
+  bool output_{ false };
+};
 
 auto main(int argc, const char* argv[]) -> int {
   try {
@@ -60,55 +113,19 @@ auto main(int argc, const char* argv[]) -> int {
           .flush_period = TELEMETRY_PERIOD });
     heph::telemetry::registerMetricSink(std::move(influxdb_sink));
 
-    heph::concurrency::Context context{ {} };
+    heph::conduit::NodeEngine engine{ {} };
 
-    exec::async_scope scope;
+    std::vector<Spinner> spinners;
+    spinners.reserve(PERIOD.size());
 
-    std::vector<std::chrono::steady_clock::time_point> last_steady(PERIOD.size(),
-                                                                   std::chrono::steady_clock::now());
-    std::vector<std::chrono::system_clock::time_point> last_system(PERIOD.size(),
-                                                                   std::chrono::system_clock::now());
-    std::size_t id{ 0 };
     for (auto period : PERIOD) {
-      scope.spawn(exec::repeat_effect_until(
-          context.scheduler().scheduleAfter(period) |
-          stdexec::then([period, tag = fmt::format("period={}", period), &last_steady = last_steady[id],
-                         &last_system = last_system[id], &context] {
-            auto now_steady = std::chrono::steady_clock::now();
-            auto now_system = std::chrono::system_clock::now();
-
-            auto duration_steady = now_steady - last_steady;
-            auto duration_system = now_system - last_system;
-
-            // a positive duration drift indicates that the clock under consideration took longer than
-            // expected, and vice versa
-            auto jitter_scheduling =
-                std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period);
-            auto jitter_system_clock =
-                std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
-
-            if (period == PERIOD.back()) {
-              heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
-            }
-            heph::telemetry::record("clock_jitter", tag,
-                                    ClockJitter{
-                                        .period_ms = period.count(),
-                                        .scheduler_us = jitter_scheduling.count(),
-                                        .system_clock_us = jitter_system_clock.count(),
-                                    });
-            last_steady = now_steady;
-            last_system = now_system;
-
-            const bool should_stop = heph::utils::TerminationBlocker::stopRequested();
-            if (should_stop) {
-              context.requestStop();
-            }
-            return should_stop;
-          })));
-      ++id;
+      spinners.emplace_back(period);
+      engine.addNode(spinners.back());
     }
+    spinners.back().toggleOutput();
 
-    context.run();
+    heph::utils::TerminationBlocker::registerInterruptCallback([&engine] { engine.requestStop(); });
+    engine.run();
     fmt::println(stderr, "");
   } catch (const std::exception& ex) {
     fmt::println("{}", ex.what());

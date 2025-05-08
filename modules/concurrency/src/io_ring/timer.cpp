@@ -141,7 +141,9 @@ auto Timer::tickSimulated(bool advance) -> bool {
 
   if (advance) {
     auto const& top = tasks_.top();
-    last_tick_ = top.start_time;
+    if (top.start_time > last_tick_) {
+      advanceSimulation(top.start_time - last_tick_);
+    }
     top.task->start();
     tasks_.pop();
     return !tasks_.empty();
@@ -166,12 +168,15 @@ void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
   update(start_time);
 }
 
-auto Timer::next() -> TaskBase* {
+auto Timer::next(bool advance) -> TaskBase* {
   if (!tasks_.empty()) {
     auto now = TimerClock::now();
     auto const& top = tasks_.top();
     if (top.start_time <= now) {
       auto* task = top.task;
+      if (advance) {
+        last_tick_ += (top.start_time - last_tick_);
+      }
       tasks_.pop();
       return task;
     }
