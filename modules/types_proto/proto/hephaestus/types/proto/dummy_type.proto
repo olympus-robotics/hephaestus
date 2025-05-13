@@ -43,7 +43,7 @@ message DummyType {
   InternalDummyEnum internal_dummy_enum = 2;
   DummyTypeExternalDummyEnum external_dummy_enum = 3;
 
-  string dummy_string = 3;
-  repeated int32 dummy_vector = 4;
-  repeated DummyPrimitivesType dummy_vector_encapsulated = 5;
+  string dummy_string = 4;
+  repeated int32 dummy_vector = 5;
+  repeated DummyPrimitivesType dummy_vector_encapsulated = 6;
 }

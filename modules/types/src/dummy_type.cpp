@@ -34,15 +34,4 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
            .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt) };
 }
 
-auto operator<<(std::ostream& os, const DummyType& dummy_type) -> std::ostream& {
-  return os << "DummyType{\n"
-            << "  dummy_primitives_type={" << dummy_type.dummy_primitives_type << "}\n"
-            << "  dummy_enum=" << magic_enum::enum_name(dummy_type.dummy_enum) << "\n"
-            << "  dummy_string=" << dummy_type.dummy_string << "\n"
-            << "  dummy_vector=" << utils::format::toString(dummy_type.dummy_vector) << "\n"
-            << "  dummy_vector_encapsulated=" << utils::format::toString(dummy_type.dummy_vector_encapsulated)
-            << "\n"
-            << "}";
-}
-
 }  // namespace heph::types

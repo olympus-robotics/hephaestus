@@ -49,17 +49,30 @@ TYPED_TEST(SerializationTests, TestSerialization) {
   auto mt = random::createRNG();
   const auto value = random::random<TypeParam>(mt);
 
-  TypeParam value_des{};
-  if constexpr (!std::is_same_v<TypeParam, bool> && !std::is_same_v<TypeParam, int8_t> &&
-                !std::is_same_v<TypeParam, uint8_t>) {  // sample space of bool and small integers is too
-                                                        // small
-    EXPECT_NE(value, value_des);
+  {
+    TypeParam value_des{};
+    if constexpr (!std::is_same_v<TypeParam, bool> && !std::is_same_v<TypeParam, int8_t> &&
+                  !std::is_same_v<TypeParam, uint8_t>) {  // sample space of bool and small integers is too
+                                                          // small
+      EXPECT_NE(value, value_des);
+    }
   }
 
   auto buff = serdes::serialize(value);
-  serdes::deserialize(buff, value_des);
 
-  EXPECT_EQ(value, value_des);
+  {
+    // Deserialize into a empty object
+    TypeParam value_des{};
+    heph::serdes::deserialize(buff, value_des);
+    EXPECT_EQ(value, value_des);
+  }
+
+  {
+    // Deserialize into a non-empty object
+    TypeParam value_des = random::random<TypeParam>(mt);
+    heph::serdes::deserialize(buff, value_des);
+    EXPECT_EQ(value, value_des);
+  }
 }
 
 }  // namespace heph::types::tests
