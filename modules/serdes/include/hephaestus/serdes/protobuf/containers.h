@@ -7,7 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <type_traits>
-#include <ranges>
+#include <ranges> // NOLINT(misc-include-cleaner)
 #include <vector>
 
 #include <fmt/format.h>
