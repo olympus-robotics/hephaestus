@@ -46,7 +46,7 @@ auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_fie
     -> void {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
-  std::transform(proto_repeated_field.begin(), proto_repeated_field.end(), std::back_inserter(vec),
+  std::transform(proto_repeated_field.cbegin(), proto_repeated_field.cend(), std::back_inserter(vec),
                  [](const auto& proto_value) { return static_cast<T>(proto_value); });
 }
 
