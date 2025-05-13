@@ -5,35 +5,14 @@
 #include "hephaestus/types_proto/dummy_type.h"
 
 #include <cstddef>
-#include <vector>
 
+#include "hephaestus/serdes/protobuf/containers.h"
 #include "hephaestus/serdes/protobuf/enums.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/proto/dummy_type.pb.h"
 
 namespace heph::types {
-namespace {
-//=================================================================================================
-// Vector
-//=================================================================================================
-template <typename T, typename ProtoT>
-void toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec) {
-  proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
-  proto_repeated_field.Reserve(static_cast<int>(vec.size()));
-  for (const auto& value : vec) {
-    proto_repeated_field.Add(value);
-  }
-}
 
-template <typename T, typename ProtoT>
-void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec) {
-  vec.clear();  // Ensure that the vector is empty before adding elements.
-  vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
-  for (const auto& proto_value : proto_repeated_field) {
-    vec.push_back(proto_value);
-  }
-}
-}  // namespace
 //=================================================================================================
 // DummyPrimitivesType
 //=================================================================================================
@@ -91,7 +70,9 @@ void toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) {
 
   proto_dummy_type.set_dummy_string(dummy_type.dummy_string);
 
-  toProto(*proto_dummy_type.mutable_dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::toProto(*proto_dummy_type.mutable_dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::toProto(*proto_dummy_type.mutable_dummy_vector_encapsulated(),
+                            dummy_type.dummy_vector_encapsulated);
 }
 
 void fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) {
@@ -102,7 +83,9 @@ void fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) 
 
   dummy_type.dummy_string = proto_dummy_type.dummy_string();
 
-  fromProto(proto_dummy_type.dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::fromProto(proto_dummy_type.dummy_vector(), dummy_type.dummy_vector);
+  serdes::protobuf::fromProto(proto_dummy_type.dummy_vector_encapsulated(),
+                              dummy_type.dummy_vector_encapsulated);
 }
 
 }  // namespace heph::types

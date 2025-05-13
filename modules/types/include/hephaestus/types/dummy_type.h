@@ -55,6 +55,7 @@ struct DummyType {
 
   std::string dummy_string;
   std::vector<int32_t> dummy_vector;
+  std::vector<DummyPrimitivesType> dummy_vector_encapsulated;
 };
 
 }  // namespace heph::types

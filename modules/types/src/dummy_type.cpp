@@ -30,7 +30,8 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
            .internal_dummy_enum = random::random<decltype(internal_dummy_enum)>(mt),
            .external_dummy_enum = random::random<decltype(external_dummy_enum)>(mt),
            .dummy_string = random::random<decltype(dummy_string)>(mt),
-           .dummy_vector = random::random<decltype(dummy_vector)>(mt) };
+           .dummy_vector = random::random<decltype(dummy_vector)>(mt),
+           .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt) };
 }
 
 }  // namespace heph::types
