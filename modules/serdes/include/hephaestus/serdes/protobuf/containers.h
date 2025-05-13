@@ -27,7 +27,7 @@ auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, cons
     -> void {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
   proto_repeated_field.Reserve(static_cast<int>(vec.size()));
-  proto_repeated_field.Add(vec.begin(), vec.end());
+  proto_repeated_field.Add(vec.cbegin(), vec.cend());
 }
 
 template <typename T, typename ProtoT>
