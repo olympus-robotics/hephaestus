@@ -69,8 +69,7 @@ void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_
 //=================================================================================================
 // Array (std::array <-> google::protobuf::RepeatedField)
 //=================================================================================================
-template <typename T, typename ProtoT, std::size_t N>
-  requires std::is_arithmetic_v<T>
+template <Arithmetic T, typename ProtoT, std::size_t N>
 void toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::array<T, N>& arr) {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
   proto_repeated_field.Reserve(static_cast<int>(arr.size()));
@@ -87,8 +86,7 @@ void toProto(google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_ptr_fiel
   }
 }
 
-template <typename T, typename ProtoT, std::size_t N>
-  requires std::is_arithmetic_v<T>
+template <Arithmetic T, typename ProtoT, std::size_t N>
 void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::array<T, N>& arr) {
   panicIf(proto_repeated_field.size() != N,
           fmt::format("Mismatch between size of repeated proto field {} and size of array {}.",
