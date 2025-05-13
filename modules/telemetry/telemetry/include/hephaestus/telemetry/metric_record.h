@@ -3,7 +3,12 @@
 //=================================================================================================
 
 #pragma once
+
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/metric_sink.h"
@@ -34,13 +39,12 @@ void record(const Metric& metric);
 /// @param data The data to record, needs to be json serializable.
 /// @param timestamp The timestamp of the metric, if not provided, the current time is used.
 template <typename DataT>
-void record(const std::string& component, const std::string& tag, std::size_t id, const DataT& data,
+void record(const std::string& component, const std::string& tag, const DataT& data,
             ClockT::time_point timestamp = ClockT::now()) {
   const auto json = serdes::serializeToJSON(data);
   const Metric metric{
     .component = component,
     .tag = tag,
-    .id = id,
     .timestamp = timestamp,
     .values = internal::jsonToValuesMap(json),
   };

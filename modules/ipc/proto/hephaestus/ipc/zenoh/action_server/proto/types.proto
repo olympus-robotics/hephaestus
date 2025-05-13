@@ -1,22 +1,27 @@
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
 package heph.ipc.zenoh.action_server.proto;
 
+import "google/protobuf/any.proto";
+
+message Request {
+  google.protobuf.Any request = 1;
+  string uid = 2;
+}
+
 enum RequestStatus {
-    SUCCESSFUL = 0;
-    REJECTED_USER = 1;
-    REJECTED_ALREADY_RUNNING = 2;
-    INVALID = 3;
-    STOPPED = 4;
+  REQUEST_STATUS_SUCCESSFUL = 0;
+  REQUEST_STATUS_REJECTED_USER = 1;
+  REQUEST_STATUS_REJECTED_ALREADY_RUNNING = 2;
+  REQUEST_STATUS_INVALID = 3;
+  REQUEST_STATUS_STOPPED = 4;
 }
 
 message RequestResponse {
-    RequestStatus status = 1;
-};
+  RequestStatus status = 1;
+}
 
 message Response {
-    RequestStatus status = 1;
-    google.protobuf.Any value = 2;
+  RequestStatus status = 1;
+  google.protobuf.Any value = 2;
 }

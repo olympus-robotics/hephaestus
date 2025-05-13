@@ -6,14 +6,12 @@
 
 #include <atomic>
 #include <csignal>
+#include <functional>
 #include <future>
 
 #include "hephaestus/utils/concepts.h"
 
 namespace heph::utils {
-
-template <typename T>
-concept StoppableAndWaitable = requires { Stoppable<T>&& Waitable<T>; };
 
 /// \brief Use this class to block until a signal is received.
 /// > NOTE: can be extended to call a generic callback when a signal is received.
@@ -49,7 +47,7 @@ private:
   TerminationBlocker() = default;
   [[nodiscard]] static auto instance() -> TerminationBlocker&;
 
-  static auto signalHandler(int /*unused*/) -> void;
+  static void signalHandler(int /*unused*/);
 
 private:
   std::atomic_flag stop_flag_ = ATOMIC_FLAG_INIT;

@@ -4,16 +4,17 @@
 
 #include "hephaestus/ipc/zenoh/conversions.h"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <zenoh/api/bytes.hxx>
 #include <zenoh/api/id.hxx>
 #include <zenoh/api/timestamp.hxx>
@@ -32,6 +33,13 @@ namespace {
 
   return seconds + nanoseconds;
 }
+
+[[nodiscard]] auto fromAsciiHex(std::span<const uint8_t> input) -> std::string {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto str = std::string{ reinterpret_cast<const char*>(input.data()), input.size() };
+  str.erase(std::ranges::find(str, '\0'), str.end());
+  return str;
+}
 }  // namespace
 
 auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte> {
@@ -48,9 +56,22 @@ auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes {
   return ::zenoh::Bytes{ data_view };
 }
 
+/// Only alphanumeric or underscore characters are allowed.
+auto isValidIdChar(char c) -> bool {
+  return std::isalnum(c) != 0 || c == '_';
+}
+
+auto isValidId(std::string_view session_id) -> bool {
+  return std::ranges::all_of(session_id, [](char c) { return isValidIdChar(c); });
+}
+
 auto toString(const ::zenoh::Id& id) -> std::string {
-  return std::accumulate(std::begin(id.bytes()), std::end(id.bytes()), std::string(),
-                         [](const std::string& s, uint8_t v) { return fmt::format("{:02x}", v) + s; });
+  auto id_str = fromAsciiHex(std::span<const uint8_t>{ id.bytes().data(), id.bytes().size() });
+  if (!id_str.empty() && isValidId(id_str)) {
+    return id_str;
+  }
+
+  return id.to_string();
 }
 
 auto toString(const std::vector<std::string>& vec) -> std::string {

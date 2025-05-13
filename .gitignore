@@ -3,6 +3,7 @@ modules/utils/src/version_impl.h
 .cache/
 .vscode/
 build/
+build-gcc/
 
 # Prerequisites
 *.d
@@ -36,3 +37,9 @@ build/
 *.exe
 *.out
 *.app
+
+# Bazel
+bazel-*
+MODULE.bazel.lock
+command.profile.gz
+compile_commands.json

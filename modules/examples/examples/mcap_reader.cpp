@@ -2,12 +2,11 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 #include <mcap/reader.hpp>
 
 auto main(int argc, const char* argv[]) -> int {

@@ -4,12 +4,14 @@
 
 declare_module(
   NAME bag
-  DEPENDS_ON_MODULES containers ipc random
-  DEPENDS_ON_EXTERNAL_PROJECTS absl mcap
+  DEPENDS_ON_MODULES containers ipc telemetry
+  DEPENDS_ON_MODULES_FOR_TESTING random types_proto
+  DEPENDS_ON_EXTERNAL_PROJECTS absl mcap zstd
 )
 
 find_package(absl REQUIRED)
 find_package(mcap REQUIRED)
+find_package(zstd REQUIRED)
 
 # library sources
 set(SOURCES
@@ -25,7 +27,13 @@ set(SOURCES
 # library target
 define_module_library(
   NAME bag
-  PUBLIC_LINK_LIBS absl::base absl::log hephaestus::containers hephaestus::ipc mcap
+  PUBLIC_LINK_LIBS
+    absl::base  
+    hephaestus::containers
+    hephaestus::ipc
+    hephaestus::telemetry
+    mcap
+    zstd::libzstd
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -35,5 +43,4 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
-add_subdirectory(examples)
 add_subdirectory(apps)

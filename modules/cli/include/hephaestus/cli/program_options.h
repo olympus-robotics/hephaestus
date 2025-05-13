@@ -6,10 +6,13 @@
 #pragma once
 
 #include <algorithm>
+#include <ios>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include <absl/strings/ascii.h>
 #include <fmt/format.h>
 
 #include "hephaestus/utils/concepts.h"
@@ -190,14 +193,12 @@ template <StringStreamable T>
 inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   const auto it = std::find_if(options_.begin(), options_.end(),
                                [&option](const auto& opt) { return option == opt.key; });
-  throwExceptionIf<InvalidParameterException>(it == options_.end(),
-                                              fmt::format("Undefined option '{}'", option));
+  panicIf(it == options_.end(), fmt::format("Undefined option '{}'", option));
 
   const auto my_type = utils::getTypeName<T>();
-  throwExceptionIf<TypeMismatchException>(
-      it->value_type != my_type,
-      fmt::format("Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
-                  it->value_type));
+  panicIf(it->value_type != my_type,
+          fmt::format("Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
+                      it->value_type));
 
   if constexpr (std::is_same_v<T, std::string>) {
     // note: since std::istringstream extracts only up to whitespace, this special case is
@@ -205,11 +206,14 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
     return it->value;
   }
 
+  if (absl::AsciiStrToLower(it->value) == "nan") {
+    return std::numeric_limits<T>::quiet_NaN();
+  }
+
   T value;
   std::istringstream stream(it->value);
-  throwExceptionIf<TypeMismatchException>(
-      not(stream >> std::boolalpha >> value),
-      fmt::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option));
+  panicIf(not(stream >> std::boolalpha >> value),
+          fmt::format("Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option));
 
   return value;
 }

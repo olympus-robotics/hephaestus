@@ -21,11 +21,11 @@ struct ProtoAssociation<types::DummyType> {
 }  // namespace heph::serdes::protobuf
 
 namespace heph::types {
-auto toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
-             const DummyPrimitivesType& dummy_primitives_type) -> void;
-auto fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
-               DummyPrimitivesType& dummy_primitives_type) -> void;
+void toProto(proto::DummyPrimitivesType& proto_dummy_primitives_type,
+             const DummyPrimitivesType& dummy_primitives_type);
+void fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
+               DummyPrimitivesType& dummy_primitives_type);
 
-auto toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type) -> void;
-auto fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type) -> void;
+void toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type);
+void fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type);
 }  // namespace heph::types

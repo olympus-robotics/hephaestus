@@ -10,8 +10,8 @@
 #include <memory>
 #include <utility>
 
-#include <absl/log/log.h>
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <mcap/errors.hpp>
 #include <mcap/reader.hpp>
 
@@ -19,12 +19,16 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
+
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("Playback a bag to zenoh topics");
@@ -35,13 +39,12 @@ auto main(int argc, const char* argv[]) -> int {
     const auto args = std::move(desc).parse(argc, argv);
     auto input_file = args.getOption<std::filesystem::path>("input_bag");
     auto wait_for_readers_to_connect = args.getOption<bool>("wait_for_readers_to_connect");
-    auto [config, _] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [config, _, __] = heph::ipc::zenoh::parseProgramOptions(args);
 
-    LOG(INFO) << fmt::format("Reading bag file: {}", input_file.string());
+    heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 
-    heph::throwExceptionIf<heph::InvalidDataException>(
-        !std::filesystem::exists(input_file),
-        fmt::format("input bag file {} doesn't exist", input_file.string()));
+    heph::panicIf(!std::filesystem::exists(input_file),
+                  fmt::format("input bag file {} doesn't exist", input_file.string()));
     auto bag_reader = std::make_unique<mcap::McapReader>();
     const auto status = bag_reader->open(input_file.string());
     if (status.code != mcap::StatusCode::Success) {
@@ -49,7 +52,7 @@ auto main(int argc, const char* argv[]) -> int {
       std::exit(1);
     }
 
-    heph::bag::ZenohPlayerParams params{ .session = heph::ipc::zenoh::createSession(std::move(config)),
+    heph::bag::ZenohPlayerParams params{ .session = heph::ipc::zenoh::createSession(config),
                                          .bag_reader = std::move(bag_reader),
                                          .wait_for_readers_to_connect = wait_for_readers_to_connect };
     auto zenoh_player = heph::bag::ZenohPlayer::create(std::move(params));

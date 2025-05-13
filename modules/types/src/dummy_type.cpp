@@ -5,13 +5,9 @@
 #include "hephaestus/types/dummy_type.h"
 
 #include <cstdint>
-#include <iostream>
 #include <random>
 
-#include <magic_enum.hpp>
-
 #include "hephaestus/random/random_object_creator.h"
-#include "hephaestus/utils/format/format.h"
 
 namespace heph::types {
 
@@ -29,26 +25,10 @@ auto DummyPrimitivesType::random(std::mt19937_64& mt) -> DummyPrimitivesType {
            .dummy_double = random::random<double>(mt) };
 }
 
-auto operator<<(std::ostream& os, const DummyPrimitivesType& dummy_primitives_type) -> std::ostream& {
-  return os << "DummyPrimitivesType{"
-            << "\n"
-            << "  dummy_bool=" << dummy_primitives_type.dummy_bool << "\n"
-            << "  dummy_int8_t=" << static_cast<int>(dummy_primitives_type.dummy_int8_t) << "\n"
-            << "  dummy_int16_t=" << dummy_primitives_type.dummy_int16_t << "\n"
-            << "  dummy_int32_t=" << dummy_primitives_type.dummy_int32_t << "\n"
-            << "  dummy_int64_t=" << dummy_primitives_type.dummy_int64_t << "\n"
-            << "  dummy_uint8_t=" << static_cast<int>(dummy_primitives_type.dummy_uint8_t) << "\n"
-            << "  dummy_uint16_t=" << dummy_primitives_type.dummy_uint16_t << "\n"
-            << "  dummy_uint32_t=" << dummy_primitives_type.dummy_uint32_t << "\n"
-            << "  dummy_uint64_t=" << dummy_primitives_type.dummy_uint64_t << "\n"
-            << "  dummy_float=" << dummy_primitives_type.dummy_float << "\n"
-            << "  dummy_double=" << dummy_primitives_type.dummy_double << "\n"
-            << "}";
-}
-
 auto DummyType::random(std::mt19937_64& mt) -> DummyType {
   return { .dummy_primitives_type = random::random<decltype(dummy_primitives_type)>(mt),
-           .dummy_enum = random::random<decltype(dummy_enum)>(mt),
+           .internal_dummy_enum = random::random<decltype(internal_dummy_enum)>(mt),
+           .external_dummy_enum = random::random<decltype(external_dummy_enum)>(mt),
            .dummy_string = random::random<decltype(dummy_string)>(mt),
            .dummy_vector = random::random<decltype(dummy_vector)>(mt),
            .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt) };

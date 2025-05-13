@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <cstdlib>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <cxxabi.h>
@@ -13,7 +16,7 @@ namespace heph::utils {
 
 /// Return user-readable name for specified type
 template <typename T>
-inline auto getTypeName() -> std::string {
+auto getTypeName() -> std::string {
   // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
   const auto* const mangled_name = typeid(T).name();
   int status{ 0 };
@@ -24,5 +27,7 @@ inline auto getTypeName() -> std::string {
 }
 
 [[nodiscard]] auto getHostName() -> std::string;
+
+[[nodiscard]] auto getBinaryPath() -> std::optional<std::filesystem::path>;
 
 }  // namespace heph::utils

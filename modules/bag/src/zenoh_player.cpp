@@ -16,9 +16,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include <absl/log/log.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 
@@ -26,6 +25,7 @@
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::bag {
@@ -71,12 +71,11 @@ ZenohPlayer::Impl::Impl(ZenohPlayerParams params)
 
 auto ZenohPlayer::Impl::start() -> std::future<void> {
   const auto status = bag_reader_->readSummary(mcap::ReadSummaryMethod::AllowFallbackScan);
-  throwExceptionIf<InvalidDataException>(!status.ok(),
-                                         fmt::format("Failed to read bag summary: {}", status.message));
+  panicIf(!status.ok(), fmt::format("Failed to read bag summary: {}", status.message));
 
   const auto channels = bag_reader_->channels();
   channel_count_ = channels.size();
-  LOG(INFO) << fmt::format("found {} channels in the bag", channels.size());
+  heph::log(heph::DEBUG, "found channels in the bag", "num_channels", channels.size());
   for (const auto& [id, channel] : channels) {
     createPublisher(*channel);
   }
@@ -89,7 +88,7 @@ auto ZenohPlayer::Impl::start() -> std::future<void> {
 }
 
 auto ZenohPlayer::Impl::stop() -> std::future<void> {
-  throwExceptionIf<InvalidOperationException>(terminate_, "player is already stopped, cannot stop again");
+  panicIf(terminate_, "player is already stopped, cannot stop again");
   terminate_ = true;
   play_cv_.notify_all();
 
@@ -101,9 +100,8 @@ void ZenohPlayer::Impl::wait() const {
 }
 
 void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
-  throwExceptionIf<InvalidDataException>(
-      publishers_.contains(channel.topic),
-      fmt::format("failed to create publisher for topic: {}; topic already exist", channel.topic));
+  panicIf(publishers_.contains(channel.topic),
+          fmt::format("failed to create publisher for topic: {}; topic already exist", channel.topic));
 
   const auto& schema = bag_reader_->schema(channel.schemaId);
   auto type_info = serdes::TypeInfo{
@@ -115,7 +113,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
   };
 
   publishers_[channel.topic] = std::make_unique<ipc::zenoh::RawPublisher>(
-      session_, ipc::TopicConfig{ .name = channel.topic }, std::move(type_info),
+      session_, ipc::TopicConfig{ channel.topic }, std::move(type_info),
       [this, &channel](ipc::zenoh::MatchingStatus status) {
         if (!status.matching) {
           return;
@@ -128,7 +126,7 @@ void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
         }
       });
 
-  LOG(INFO) << fmt::format("Created publisher for topic: {}", channel.topic);
+  heph::log(heph::INFO, "created publisher for topic", "name", channel.topic);
 }
 
 void ZenohPlayer::Impl::run() {
@@ -142,7 +140,8 @@ void ZenohPlayer::Impl::run() {
   std::size_t msgs_played_count = 0;
   std::size_t deadline_missed_count = 0;
 
-  LOG_IF(WARNING, wait_for_readers_to_connect_) << "Waiting for subscribers to connect is NOT supported yet!";
+  heph::logIf(heph::WARN, wait_for_readers_to_connect_,
+              "waiting for subscribers to connect is NOT supported yet!");
   if (wait_for_readers_to_connect_) {
     all_publisher_connected_.wait(false);
   }
@@ -163,8 +162,8 @@ void ZenohPlayer::Impl::run() {
 
     if (const auto now = std::chrono::system_clock::now(); now > write_timestamp && msgs_played_count > 0) {
       ++deadline_missed_count;
-      LOG(WARNING) << fmt::format("deadline misseed on message {} for topic {}, delay {}",
-                                  message.message.sequence, topic, now - write_timestamp);
+      heph::log(heph::WARN, "deadline missed", "sequence_counter", message.message.sequence, "topic", topic,
+                "delay", now - write_timestamp);
     } else {
       std::unique_lock<std::mutex> guard(play_mutex_);
       if (play_cv_.wait_until(guard, write_timestamp, [this] { return terminate_.load(); })) {
@@ -173,14 +172,14 @@ void ZenohPlayer::Impl::run() {
     }
 
     auto success = publisher->publish({ message.message.data, message.message.dataSize });
-    LOG_IF(WARNING, !success) << fmt::format("Failed to publish message {} for topic {}",
-                                             message.message.sequence, topic);
+    heph::logIf(heph::WARN, !success, "failed to publish message", "message", message.message.sequence,
+                "topic", topic);
 
     ++msgs_played_count;
   }
 
-  LOG(INFO) << fmt::format("Played {} messages, missed {} deadlines", msgs_played_count,
-                           deadline_missed_count);
+  heph::log(heph::DEBUG, "playing finished", "played_message_count", msgs_played_count,
+            "num_missed_deadlines", deadline_missed_count);
 }
 
 // ----------------------------------------------------------------------------------------------------------

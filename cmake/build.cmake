@@ -23,7 +23,7 @@ enumerate_modules(ROOT_PATH ${PROJECT_SOURCE_DIR}/modules)
 
 # -------------------------------------------------------------------------------------------------
 # Build external dependencies before configuring project
-build_external_dependencies(FOLDER ${PROJECT_SOURCE_DIR}/external)
+build_external_dependencies(FOLDER ${PROJECT_SOURCE_DIR}/externals)
 
 # -------------------------------------------------------------------------------------------------
 # ~~~

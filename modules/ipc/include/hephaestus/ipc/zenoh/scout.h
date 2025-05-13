@@ -3,6 +3,8 @@
 //=================================================================================================
 
 #pragma once
+
+#include <string>
 #include <vector>
 
 #include "hephaestus/ipc/zenoh/session.h"

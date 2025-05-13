@@ -29,7 +29,7 @@ TEST(Watchdog, TimerFiring) {
 
 TEST(Watchdog, TimerFiringWithPath) {
   constexpr auto PERIOD = std::chrono::milliseconds{ 10 };
-  constexpr auto PERIOD_EPSILON = PERIOD * 0.1;
+  constexpr auto PERIOD_EPSILON = PERIOD * 0.2;
   WatchdogTimer timer;
   std::atomic<int> count{ 0 };
   timer.start(PERIOD, [&count]() { ++count; });

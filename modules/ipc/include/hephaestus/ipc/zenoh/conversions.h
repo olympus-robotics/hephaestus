@@ -5,12 +5,16 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
-#include <zenoh.hxx>
 #include <zenoh/api/bytes.hxx>
+#include <zenoh/api/enums.hxx>
 #include <zenoh/api/id.hxx>
+#include <zenoh/api/timestamp.hxx>
 
 #include "hephaestus/ipc/zenoh/session.h"
 
@@ -20,11 +24,14 @@ static constexpr auto TEXT_PLAIN_ENCODING = "text/plain";
 /// We use single char key to reduce the overhead of the attachment.
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_COUNTER_KEY = "0";
 static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_SESSION_ID_KEY = "1";
+static constexpr auto PUBLISHER_ATTACHMENT_MESSAGE_TYPE_INFO = "2";
 
 [[nodiscard]] auto toByteVector(const ::zenoh::Bytes& bytes) -> std::vector<std::byte>;
 
 [[nodiscard]] auto toZenohBytes(std::span<const std::byte> buffer) -> ::zenoh::Bytes;
 
+[[nodiscard]] auto isValidIdChar(char c) -> bool;
+[[nodiscard]] auto isValidId(std::string_view session_id) -> bool;
 [[nodiscard]] auto toString(const ::zenoh::Id& id) -> std::string;
 
 [[nodiscard]] auto toString(const std::vector<std::string>& vec) -> std::string;

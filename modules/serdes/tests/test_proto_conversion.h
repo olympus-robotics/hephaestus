@@ -1,7 +1,14 @@
+//=================================================================================================
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "test.pb.h"
+#include "test_user_type.pb.h"
 
 namespace heph::serdes {
 namespace tests {

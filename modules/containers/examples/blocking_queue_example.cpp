@@ -6,10 +6,11 @@
 #include <string>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/containers/blocking_queue.h"
 
+namespace {
 class String {
 public:
   String() {
@@ -74,6 +75,7 @@ void pushVsEmplace() {
     }
   }
 }
+}  // namespace
 
 auto main() -> int {
   try {

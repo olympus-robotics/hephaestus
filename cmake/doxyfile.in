@@ -993,7 +993,7 @@ RECURSIVE              = YES
 EXCLUDE                = @PROJECT_SOURCE_DIR@/build \
                          @PROJECT_SOURCE_DIR@/third_party \
                          @PROJECT_SOURCE_DIR@/gbs \
-                         @PROJECT_SOURCE_DIR@/external
+                         @PROJECT_SOURCE_DIR@/externals
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

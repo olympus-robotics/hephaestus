@@ -4,7 +4,8 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES cli concurrency containers utils serdes types
+  DEPENDS_ON_MODULES cli concurrency containers utils serdes telemetry
+  DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
 
@@ -23,6 +24,7 @@ set(SOURCES
     src/topic_filter.cpp
     src/zenoh/conversions.cpp
     src/zenoh/dynamic_subscriber.cpp
+    src/zenoh/ipc_graph.cpp
     src/zenoh/liveliness.cpp
     src/zenoh/publisher.cpp
     src/zenoh/program_options.cpp
@@ -35,14 +37,16 @@ set(SOURCES
     src/zenoh/topic_database.cpp
     src/zenoh/action_server/action_server.cpp
     src/zenoh/action_server/client_helper.cpp
+    src/zenoh/action_server/pollable_action_server.cpp
     src/zenoh/action_server/types.cpp
-    src/zenoh/action_server/types_protobuf.cpp
+    src/zenoh/action_server/types_proto.cpp
     README.md
     include/hephaestus/ipc/topic.h
     include/hephaestus/ipc/topic_database.h
     include/hephaestus/ipc/topic_filter.h
     include/hephaestus/ipc/zenoh/conversions.h
     include/hephaestus/ipc/zenoh/dynamic_subscriber.h
+    include/hephaestus/ipc/zenoh/ipc_graph.h
     include/hephaestus/ipc/zenoh/program_options.h
     include/hephaestus/ipc/zenoh/publisher.h
     include/hephaestus/ipc/zenoh/raw_publisher.h
@@ -52,8 +56,9 @@ set(SOURCES
     include/hephaestus/ipc/zenoh/subscriber.h
     include/hephaestus/ipc/zenoh/action_server/action_server.h
     include/hephaestus/ipc/zenoh/action_server/client_helper.h
+    include/hephaestus/ipc/zenoh/action_server/pollable_action_server.h
     include/hephaestus/ipc/zenoh/action_server/types.h
-    include/hephaestus/ipc/zenoh/action_server/types_protobuf.h
+    include/hephaestus/ipc/zenoh/action_server/types_proto.h
 )
 
 # library target
@@ -61,18 +66,19 @@ define_module_library(
   NAME ipc
   PUBLIC_LINK_LIBS
     absl::base
+    absl::log
     absl::raw_hash_set
     absl::status
     absl::statusor
-    absl::log
+    fmt::fmt
+    hephaestus::action_server_types_proto
+    hephaestus::cli
     hephaestus::concurrency
     hephaestus::containers
-    hephaestus::cli
-    hephaestus::utils
+    hephaestus::format
     hephaestus::serdes
-    hephaestus::types
-    hephaestus::action_server_types_proto
-    fmt::fmt
+    hephaestus::telemetry
+    hephaestus::utils
     nlohmann_json::nlohmann_json
     range-v3::range-v3
     zenohc::lib
@@ -83,6 +89,7 @@ define_module_library(
   PRIVATE_INCLUDE_PATHS ""
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
+target_compile_definitions(hephaestus_ipc PUBLIC ZENOH_WITH_UNSTABLE_API Z_FEATURE_UNSTABLE_API ZENOHCXX_ZENOHC)
 
 # Subprojects
 add_subdirectory(tests)

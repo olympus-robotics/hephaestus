@@ -6,6 +6,9 @@
 
 #include <cctype>
 #include <cstdio>
+#include <iomanip>
+#include <ios>
+#include <sstream>
 #include <string>
 #include <string_view>
 
@@ -36,4 +39,14 @@ auto toScreamingSnakeCase(std::string_view camel_case) -> std::string {
   return absl::AsciiStrToUpper(snake_case);
 }
 
+auto toAsciiHex(const std::string& input) -> std::string {
+  std::stringstream ss;
+  ss << std::hex << std::setfill('0');
+
+  for (const char c : input) {
+    ss << std::setw(2) << static_cast<int>(c);
+  }
+
+  return ss.str();
+}
 }  // namespace heph::utils::string

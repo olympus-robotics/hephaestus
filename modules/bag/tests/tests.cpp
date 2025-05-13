@@ -22,77 +22,102 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/filesystem/scoped_path.h"
-#include "test_proto_conversion.h"
+#include "hephaestus/utils/utils.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
+class MyEnvironment : public Environment {
+public:
+  ~MyEnvironment() override = default;
+  void SetUp() override {
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
+  }
+};
+// NOLINTNEXTLINE
+const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
+
 namespace heph::bag::tests {
 namespace {
-constexpr std::size_t ROBOT_MSG_COUNT = 10;
-constexpr auto ROBOT_MSG_PERIOD = std::chrono::milliseconds{ 1 };
-constexpr std::size_t FLEET_MSG_COUNT = 5;
-constexpr auto FLEET_MSG_PERIOD = std::chrono::milliseconds{ 2 };
+constexpr std::size_t DUMMY_TYPE_MSG_COUNT = 10;
+constexpr auto DUMMY_TYPE_MSG_PERIOD = std::chrono::milliseconds{ 1 };
+constexpr std::size_t DUMMY_PRIMITIVE_TYPE_MSG_COUNT = 5;
+constexpr auto DUMMY_PRIMITIVE_TYPE_MSG_PERIOD = std::chrono::milliseconds{ 2 };
 constexpr auto SENDER_ID = "bag_tester";
-constexpr auto ROBOT_TOPIC = "bag_test/robot";
-constexpr auto FLEET_TOPIC = "bag_test/fleet";
+constexpr auto DUMMY_TYPE_TOPIC = "bag_test/dummy_type";
+constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
 
-[[nodiscard]] auto createBag()
-    -> std::tuple<utils::filesystem::ScopedPath, std::vector<Robot>, std::vector<Fleet>> {
+[[nodiscard]] auto createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<types::DummyType>,
+                                             std::vector<types::DummyPrimitivesType>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
-  auto mcap_writer = createMcapWriter({ scoped_path });
+  auto mcap_writer = createMcapWriter({ .output_file = scoped_path });
 
-  auto robot_type_info = serdes::getSerializedTypeInfo<Robot>();
+  auto robot_type_info = serdes::getSerializedTypeInfo<types::DummyType>();
   mcap_writer->registerSchema(robot_type_info);
-  mcap_writer->registerChannel(ROBOT_TOPIC, robot_type_info);
+  mcap_writer->registerChannel(DUMMY_TYPE_TOPIC, robot_type_info);
 
-  auto fleet_type_info = serdes::getSerializedTypeInfo<Fleet>();
-  mcap_writer->registerSchema(fleet_type_info);
-  mcap_writer->registerChannel(FLEET_TOPIC, fleet_type_info);
+  auto dummy_primitive_type_type_info = serdes::getSerializedTypeInfo<types::DummyPrimitivesType>();
+  mcap_writer->registerSchema(dummy_primitive_type_type_info);
+  mcap_writer->registerChannel(DUMMY_PRIMITIVE_TYPE_TOPIC, dummy_primitive_type_type_info);
 
   auto mt = random::createRNG();
 
   const auto start_time = std::chrono::nanoseconds{ 0 };
-  std::vector<Robot> robots(ROBOT_MSG_COUNT);
-  for (std::size_t i = 0; i < ROBOT_MSG_COUNT; ++i) {
-    robots[i] = Robot::random(mt);
-    mcap_writer->writeRecord({ .sender_id = SENDER_ID,
-                               .topic = ROBOT_TOPIC,
-                               .timestamp = start_time + i * ROBOT_MSG_PERIOD,
-                               .sequence_id = i },
-                             serdes::serialize(robots[i]));
+  std::vector<types::DummyType> dummy_types(DUMMY_TYPE_MSG_COUNT);
+  for (std::size_t i = 0; i < DUMMY_TYPE_MSG_COUNT; ++i) {
+    dummy_types[i] = types::DummyType::random(mt);
+    mcap_writer->writeRecord(
+        {
+            .sender_id = SENDER_ID,
+            .topic = DUMMY_TYPE_TOPIC,
+            .type_info = utils::getTypeName<types::DummyType>(),
+            .timestamp = start_time + i * DUMMY_TYPE_MSG_PERIOD,
+            .sequence_id = i,
+        },
+        serdes::serialize(dummy_types[i]));
   }
 
-  std::vector<Fleet> fleet(FLEET_MSG_COUNT);
-  for (std::size_t i = 0; i < FLEET_MSG_COUNT; ++i) {
-    fleet[i] = Fleet::random(mt);
+  std::vector<types::DummyPrimitivesType> dummy_primitive_type(DUMMY_PRIMITIVE_TYPE_MSG_COUNT);
+  for (std::size_t i = 0; i < DUMMY_PRIMITIVE_TYPE_MSG_COUNT; ++i) {
+    dummy_primitive_type[i] = types::DummyPrimitivesType::random(mt);
     mcap_writer->writeRecord({ .sender_id = SENDER_ID,
-                               .topic = FLEET_TOPIC,
-                               .timestamp = start_time + i * FLEET_MSG_PERIOD,
+                               .topic = DUMMY_PRIMITIVE_TYPE_TOPIC,
+                               .type_info = utils::getTypeName<types::DummyType>(),
+                               .timestamp = start_time + i * DUMMY_PRIMITIVE_TYPE_MSG_PERIOD,
                                .sequence_id = i },
-                             serdes::serialize(fleet[i]));
+                             serdes::serialize(dummy_primitive_type[i]));
   }
 
-  return { std::move(scoped_path), std::move(robots), std::move(fleet) };
+  return { std::move(scoped_path), std::move(dummy_types), std::move(dummy_primitive_type) };
 }
 
 // TODO: figure out how to isolate the network to make sure that only the two topics here are visible.
 TEST(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
-  auto [bag_path, robots, companies] = createBag();
+  auto [bag_path, dummy_types, companies] = createBag();
   {
-    auto bag_writer = createMcapWriter({ output_bag });
-    auto recorder = ZenohRecorder::create({ .session = ipc::zenoh::createSession({}),
+    auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
+
+    auto bag_writer = createMcapWriter({ .output_file = output_bag });
+    auto recorder = ZenohRecorder::create({ .session = session,
                                             .bag_writer = std::move(bag_writer),
-                                            .topics_filter_params = { .prefix = "bag_test/" } });
+                                            .topics_filter_params = {
+                                                .include_topics_only = {},
+                                                .prefix = "bag_test/",
+                                                .exclude_prefix = "",
+                                                .exclude_topics = {},
+                                            } });
     {
       auto reader = std::make_unique<mcap::McapReader>();
       const auto status = reader->open(bag_path);
       EXPECT_TRUE(status.ok());
-      auto player = ZenohPlayer::create({ .session = ipc::zenoh::createSession({}),
-                                          .bag_reader = std::move(reader),
-                                          .wait_for_readers_to_connect = true });
+      auto player = ZenohPlayer::create(
+          { .session = session, .bag_reader = std::move(reader), .wait_for_readers_to_connect = true });
       recorder.start().get();
       player.start().get();
       player.wait();
@@ -113,10 +138,11 @@ TEST(Bag, PlayAndRecord) {
   auto statistics = reader->statistics();
   ASSERT_TRUE(statistics.has_value());
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->messageCount, ROBOT_MSG_COUNT + FLEET_MSG_COUNT);
+  EXPECT_EQ(statistics->messageCount, DUMMY_TYPE_MSG_COUNT + DUMMY_PRIMITIVE_TYPE_MSG_COUNT);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(statistics->channelCount, 2);
   const auto channels = reader->channels();
+
   EXPECT_THAT(channels, SizeIs(2));
 
   std::unordered_map<std::string, mcap::ChannelId> reverse_channels;  // NOLINT(misc-const-correctness)
@@ -125,23 +151,24 @@ TEST(Bag, PlayAndRecord) {
   }
 
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[ROBOT_TOPIC]], ROBOT_MSG_COUNT);
+  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[DUMMY_TYPE_TOPIC]], DUMMY_TYPE_MSG_COUNT);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[FLEET_TOPIC]], FLEET_MSG_COUNT);
+  EXPECT_EQ(statistics->channelMessageCounts[reverse_channels[DUMMY_PRIMITIVE_TYPE_TOPIC]],
+            DUMMY_PRIMITIVE_TYPE_MSG_COUNT);
 
   auto read_options = mcap::ReadMessageOptions{};
   read_options.readOrder = mcap::ReadMessageOptions::ReadOrder::LogTimeOrder;
   auto messages = reader->readMessages([](const auto&) {}, read_options);
 
   for (const auto& message : messages) {
-    if (message.channel->topic == ROBOT_TOPIC) {
-      Robot robot;  // NOLINT(misc-const-correctness)
-      serdes::deserialize({ message.message.data, message.message.dataSize }, robot);
-      EXPECT_EQ(robot, robots[message.message.sequence]);
-    } else if (message.channel->topic == FLEET_TOPIC) {
-      Fleet fleet;  // NOLINT(misc-const-correctness)
-      serdes::deserialize({ message.message.data, message.message.dataSize }, fleet);
-      EXPECT_EQ(fleet, companies[message.message.sequence]);
+    if (message.channel->topic == DUMMY_TYPE_TOPIC) {
+      types::DummyType dummy_type;  // NOLINT(misc-const-correctness)
+      serdes::deserialize({ message.message.data, message.message.dataSize }, dummy_type);
+      EXPECT_EQ(dummy_type, dummy_types[message.message.sequence]);
+    } else if (message.channel->topic == DUMMY_PRIMITIVE_TYPE_TOPIC) {
+      types::DummyPrimitivesType dummy_primitive_type;  // NOLINT(misc-const-correctness)
+      serdes::deserialize({ message.message.data, message.message.dataSize }, dummy_primitive_type);
+      EXPECT_EQ(dummy_primitive_type, companies[message.message.sequence]);
     } else {
       FAIL() << "unexpected channel id: " << message.channel->topic;
     }

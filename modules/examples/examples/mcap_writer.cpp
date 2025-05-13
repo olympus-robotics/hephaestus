@@ -4,19 +4,18 @@
 
 #include <chrono>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
-#include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/bag/writer.h"
 #include "hephaestus/examples/types/pose.h"
-#include "hephaestus/examples/types_protobuf/pose.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/examples/types_proto/pose.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/utils/utils.h"
 
 auto main(int argc, const char* argv[]) -> int {
   try {
@@ -25,9 +24,9 @@ auto main(int argc, const char* argv[]) -> int {
                    argv[0]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       std::exit(1);
     }
-    std::filesystem::path output{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const std::filesystem::path output{ argv[1] };  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    auto bag_writer = heph::bag::createMcapWriter({ std::move(output) });
+    auto bag_writer = heph::bag::createMcapWriter({ .output_file = output });
 
     auto type_info = heph::serdes::getSerializedTypeInfo<heph::examples::types::Pose>();
     bag_writer->registerSchema(type_info);
@@ -43,7 +42,11 @@ auto main(int argc, const char* argv[]) -> int {
       pose.position = Eigen::Vector3d{ static_cast<double>(i), 2, 3 };  // NOLINT
       const auto data = heph::serdes::serialize(pose);
       const heph::ipc::zenoh::MessageMetadata metadata{
-        .sender_id = "myself", .topic = "pose", .timestamp = frame_time, .sequence_id = i
+        .sender_id = "myself",
+        .topic = "pose",
+        .type_info = heph::utils::getTypeName<heph::examples::types::Pose>(),
+        .timestamp = frame_time,
+        .sequence_id = i
       };
 
       bag_writer->writeRecord(metadata, data);

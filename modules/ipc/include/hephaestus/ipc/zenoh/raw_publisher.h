@@ -4,11 +4,20 @@
 
 #pragma once
 
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <span>
+#include <string>
+#include <unordered_map>
 
-#include <zenoh.h>
-#include <zenoh.hxx>
+#include <zenoh/api/ext/advanced_publisher.hxx>
+#include <zenoh/api/liveliness.hxx>
+#include <zenoh/api/matching.hxx>
+#include <zenoh/api/session.hxx>
 
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
@@ -18,6 +27,15 @@ namespace heph::ipc::zenoh {
 
 struct MatchingStatus {
   bool matching{};  //! If true publisher is connect to at least one subscriber.
+};
+
+struct PublisherConfig {
+  std::optional<std::size_t> cache_size{ std::nullopt };
+  ::zenoh::Session::PublisherOptions zenoh_publisher_options{
+    ::zenoh::Session::PublisherOptions::create_default()
+  };
+  bool create_liveliness_token{ true };
+  bool create_type_info_service{ true };
 };
 
 /// - Create a Zenoh publisher on the topic specified in `config`.
@@ -32,8 +50,8 @@ public:
   using MatchCallback = std::function<void(MatchingStatus)>;
   ///
   RawPublisher(SessionPtr session, TopicConfig topic_config, serdes::TypeInfo type_info,
-               MatchCallback&& match_cb = nullptr);
-  ~RawPublisher();
+               MatchCallback&& match_cb = nullptr, const PublisherConfig& config = {});
+  ~RawPublisher() = default;
   RawPublisher(const RawPublisher&) = delete;
   RawPublisher(RawPublisher&&) = delete;
   auto operator=(const RawPublisher&) -> RawPublisher& = delete;
@@ -41,38 +59,30 @@ public:
 
   [[nodiscard]] auto publish(std::span<const std::byte> data) -> bool;
 
-  [[nodiscard]] auto id() const -> std::string {
+  [[nodiscard]] auto sessionId() const -> std::string {
     return toString(session_->zenoh_session.get_zid());
   }
 
 private:
-  void enableCache();
-  [[nodiscard]] auto createPublisherOptions() -> ::zenoh::Publisher::PutOptions;
-  void enableMatchingListener();
+  [[nodiscard]] auto createPublisherOptions() -> ::zenoh::ext::AdvancedPublisher::PutOptions;
   void createTypeInfoService();
+  void initializeAttachment();
 
 private:
   SessionPtr session_;
+
   TopicConfig topic_config_;
-  std::unique_ptr<::zenoh::Publisher> publisher_;
+  std::unique_ptr<::zenoh::ext::AdvancedPublisher> publisher_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   serdes::TypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_service_;
 
-  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
-
-  bool enable_cache_ = false;
-  ze_owned_publication_cache_t cache_publisher_{};
-
   std::size_t pub_msg_count_ = 0;
   std::unordered_map<std::string, std::string> attachment_;
 
-  MatchCallback match_cb_{ nullptr };
-  zc_owned_matching_listener_t subscriers_listener_{};
+  MatchCallback match_cb_;
+  std::unique_ptr<::zenoh::MatchingListener<void>> matching_listener_;
 };
-
-[[nodiscard]] static inline auto getTypeInfoServiceTopic(const std::string& topic) -> std::string {
-  return fmt::format("type_info/{}", topic);
-}
 
 }  // namespace heph::ipc::zenoh

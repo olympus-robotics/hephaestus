@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 
-#include "hephaestus/@module@/@module@.h"
+#include "@include@/@module@/@module@.h"
 
 //=================================================================================================
 auto main(int argc, const char* argv[]) -> int {

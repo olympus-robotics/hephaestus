@@ -4,27 +4,38 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <limits>
+#include <optional>
 #include <random>
-#include <type_traits>
-#include <vector>
+#include <string>
 
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
+#include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::random {
 
+template <NumericType T>
+struct Limits {
+  T min;
+  T max;
+};
+
+template <NumericType T>
+constexpr Limits<T> NO_LIMITS{ .min = std::numeric_limits<T>::min(), .max = std::numeric_limits<T>::max() };
+
 //=================================================================================================
 // Random boolean creation
 //=================================================================================================
-template <typename T>
-concept IsBoolean = std::is_same_v<T, bool>;
-
-template <IsBoolean T>
+template <BooleanType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   std::bernoulli_distribution dist;
   return dist(mt);
@@ -33,12 +44,9 @@ template <IsBoolean T>
 //=================================================================================================
 // Random integer value creation
 //=================================================================================================
-template <typename T>
-concept IsNonBooleanIntegral = std::integral<T> && !std::same_as<T, bool>;
-
-template <IsNonBooleanIntegral T>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  std::uniform_int_distribution<T> dist;
+template <NonBooleanIntegralType T>
+[[nodiscard]] auto random(std::mt19937_64& mt, Limits<T> limits = NO_LIMITS<T>) -> T {
+  std::uniform_int_distribution<T> dist(limits.min, limits.max);
   return dist(mt);
 }
 
@@ -46,19 +54,27 @@ template <IsNonBooleanIntegral T>
 // Random floating point value creation
 //=================================================================================================
 template <std::floating_point T>
-[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
-  std::uniform_real_distribution<T> dist;
+[[nodiscard]] auto random(std::mt19937_64& mt, Limits<T> limits = NO_LIMITS<T>) -> T {
+  std::uniform_real_distribution<T> dist(limits.min, limits.max);
   return dist(mt);
+}
+
+//=================================================================================================
+// Random floating point value creation
+//=================================================================================================
+template <typename T>
+  requires(std::is_same_v<T, std::byte>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::uniform_int_distribution<std::uint8_t> dist;
+  return static_cast<std::byte>(dist(mt));
 }
 
 //=================================================================================================
 // Random enum creation
 //=================================================================================================
-template <typename T>
-concept IsEnum = std::is_enum_v<T>;
-
-template <IsEnum T>
+template <EnumType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  // We deduce the actual enum_values, which might not be monotonic, and then randomly select one.
   static const auto enum_values = magic_enum::enum_values<T>();
   std::uniform_int_distribution<size_t> dist(0, enum_values.size() - 1);
   return enum_values[dist(mt)];  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -67,17 +83,8 @@ template <IsEnum T>
 //=================================================================================================
 // Random timestamp creation
 //=================================================================================================
-template <typename T>
-concept IsTimestamp = requires {
-  typename T::clock;
-  typename T::duration;
-  requires std::is_same_v<typename T::clock, std::chrono::system_clock> ||
-               std::is_same_v<typename T::clock, std::chrono::steady_clock>;
-  requires std::is_same_v<T, typename std::chrono::time_point<typename T::clock, typename T::duration>>;
-};
-
 namespace internal {
-template <IsTimestamp T, size_t Year>
+template <ChronoTimestampType T, size_t Year>
 [[nodiscard]] constexpr auto createFinalTimestampOfTheYear() -> T {
   // The final date of the year is YYYY-12-31.
   constexpr auto YEAR = std::chrono::year{ Year };
@@ -95,7 +102,7 @@ template <IsTimestamp T, size_t Year>
 }  // namespace internal
 
 /// Create a random timestamp between year 1970 and the year 2100.
-template <IsTimestamp T>
+template <ChronoTimestampType T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   static constexpr auto MIN_DURATION = 0;  // Start of UNIX epoch time == year 1970.
   static constexpr auto MAX_YEAR = 2100;
@@ -113,11 +120,11 @@ template <IsTimestamp T>
 // Random struct/class creation
 //=================================================================================================
 template <class T>
-concept HasrandomMethod = requires(std::mt19937_64& mt) {
+concept HasRandomMethod = requires(std::mt19937_64& mt) {
   { T::random(mt) } -> std::convertible_to<T>;
 };
 
-template <HasrandomMethod T>
+template <HasRandomMethod T>
 [[nodiscard]] auto random(std::mt19937_64& mt) -> T {
   return T::random(mt);
 }
@@ -126,9 +133,59 @@ template <HasrandomMethod T>
 // Concept for random creatable types
 //=================================================================================================
 template <class T>
-concept IsRandomCreatable = requires(std::mt19937_64& mt) {
+concept RandomCreatable = requires(std::mt19937_64& mt) {
   { random<T>(mt) } -> std::convertible_to<T>;
 };
+
+//=================================================================================================
+// Random optional creation for types with random free function
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && RandomCreatable<typename T::value_type> &&
+           !HasRandomMethod<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(random<typename T::value_type>(mt));
+  }
+
+  return std::nullopt;
+}
+
+//=================================================================================================
+// Random optional creation for types with random method
+//=================================================================================================
+template <typename T>
+  requires(OptionalType<T> && HasRandomMethod<typename T::value_type> &&
+           !RandomCreatable<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(T::value_type::random(mt));
+  }
+
+  return std::nullopt;
+}
+
+//=================================================================================================
+// Random optional creation for types that have both
+//=================================================================================================
+/// TODO(@graeter) This is a workaround until we have cpp23 and can introduce the
+/// generic_random_object_creator
+template <typename T>
+  requires(OptionalType<T> && RandomCreatable<typename T::value_type> &&
+           HasRandomMethod<typename T::value_type>)
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  std::bernoulli_distribution dist;
+  const auto has_value = dist(mt);
+  if (has_value) {
+    return std::make_optional(random<typename T::value_type>(mt));
+  }
+
+  return std::nullopt;
+}
 
 //=================================================================================================
 // Internal helper functions for container types
@@ -137,9 +194,8 @@ namespace internal {
 [[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size, bool allow_empty)
     -> size_t {
   if (fixed_size.has_value()) {
-    throwExceptionIf<InvalidParameterException>(
-        allow_empty == false && fixed_size.value() == 0,
-        fmt::format("fixed_size must be non-zero if allow_empty == true"));
+    panicIf(allow_empty == false && fixed_size.value() == 0,
+            fmt::format("fixed_size must be non-zero if allow_empty == true"));
     return fixed_size.value();
   }
 
@@ -154,18 +210,22 @@ namespace internal {
 //=================================================================================================
 // Random string creation
 //=================================================================================================
-template <typename T>
-concept IsString = std::same_as<T, std::string>;
-
 /// Generate a random string of characters, including special case characters and numbers.
-template <IsString T>
+template <StringType T>
 [[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
-                          bool allow_empty = true) -> T {
+                          bool allow_empty = true, bool lower_characters_only = false) -> T {
+  static constexpr auto PRINTABLE_ASCII_START = 32;         // Space
+  static constexpr auto PRINTABLE_ASCII_END = 126;          // Equivalency sign - tilde
+  static constexpr auto LOWER_CHARACTERS_ASCII_START = 97;  // a
+  static constexpr auto LOWER_CHARACTERS_ASCII_END = 122;   // z
+
   const auto size = internal::getSize(mt, fixed_size, allow_empty);
 
-  static constexpr auto PRINTABLE_ASCII_START = 32;  // Space
-  static constexpr auto PRINTABLE_ASCII_END = 126;   // Equivalency sign - tilde
-  std::uniform_int_distribution<unsigned char> char_dist(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
+  auto char_dist =
+      lower_characters_only ?
+          std::uniform_int_distribution<unsigned char>(LOWER_CHARACTERS_ASCII_START,
+                                                       LOWER_CHARACTERS_ASCII_END) :
+          std::uniform_int_distribution<unsigned char>(PRINTABLE_ASCII_START, PRINTABLE_ASCII_END);
 
   std::string random_string;
   random_string.reserve(size);
@@ -179,17 +239,11 @@ template <IsString T>
 //=================================================================================================
 // Random vector creation
 //=================================================================================================
-namespace internal {
 template <typename T>
-concept IsVector =
-    requires { typename T::value_type; } && (std::is_same_v<T, std::vector<typename T::value_type>>);
-}  // namespace internal
-
-template <typename T>
-concept IsRandomCreatableVector = internal::IsVector<T> && IsRandomCreatable<typename T::value_type>;
+concept RandomCreatableVector = VectorType<T> && RandomCreatable<typename T::value_type>;
 
 /// Fill a vector with randomly generated values of type T.
-template <IsRandomCreatableVector T>
+template <RandomCreatableVector T>
 [[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
                           bool allow_empty = true) -> T {
   const auto size = internal::getSize(mt, fixed_size, allow_empty);
@@ -197,6 +251,63 @@ template <IsRandomCreatableVector T>
   T vec;
   vec.reserve(size);
 
+  auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
+  std::generate_n(std::back_inserter(vec), size, gen);
+
+  return vec;
+};
+
+//=================================================================================================
+// Random array creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableArray = ArrayType<T> && RandomCreatable<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableArray T>
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  T array;
+
+  std::ranges::generate(array, [&mt]() { return random<typename T::value_type>(mt); });
+
+  return array;
+};
+
+//=================================================================================================
+// Random vector of vectors creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableVectorOfVectors =
+    VectorOfVectorsType<T> && RandomCreatableVector<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableVectorOfVectors T>
+[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
+                          bool allow_empty = true) -> T {
+  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+
+  T vecs;
+  vecs.reserve(size);
+  auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
+  std::generate_n(std::back_inserter(vecs), size, gen);
+
+  return vecs;
+};
+
+//=================================================================================================
+// Random vector of arrays creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableVectorOfArrays = VectorOfArraysType<T> && RandomCreatableArray<typename T::value_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableVectorOfArrays T>
+[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
+                          bool allow_empty = true) -> T {
+  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+
+  T vec;
+  vec.reserve(size);
   auto gen = [&mt]() -> typename T::value_type { return random<typename T::value_type>(mt); };
   std::generate_n(std::back_inserter(vec), size, gen);
 

@@ -4,13 +4,13 @@
 
 #pragma once
 
+#include <concepts>
 #include <condition_variable>
+#include <cstddef>
 #include <deque>
 #include <mutex>
 #include <optional>
 #include <type_traits>
-
-#include "hephaestus/utils/exception.h"
 
 namespace heph::containers {
 namespace concepts {
@@ -27,8 +27,6 @@ public:
   /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
   /// infinite length is created.
   explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
-    throwExceptionIf<InvalidParameterException>(max_size_.has_value() && *max_size_ == 0,
-                                                "Cannot create a queue with max size 0");
   }
 
   /// Attempt to enqueue the data if there is space in the queue.
@@ -41,8 +39,10 @@ public:
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
+
       queue_.push_back(std::forward<U>(obj));
     }
+
     reader_signal_.notify_one();
     return true;
   }
@@ -60,8 +60,10 @@ public:
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
+
       queue_.push_back(std::forward<U>(obj));
     }
+
     reader_signal_.notify_one();
     return element_dropped;
   }
@@ -78,8 +80,10 @@ public:
       if (stop_) {
         return;
       }
+
       queue_.push_back(std::forward<U>(obj));
     }
+
     reader_signal_.notify_one();
   }
 
@@ -94,8 +98,10 @@ public:
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
+
       queue_.emplace_back(std::forward<Args>(args)...);
     }
+
     reader_signal_.notify_one();
     return true;
   }
@@ -113,8 +119,10 @@ public:
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
+
       queue_.emplace_back(std::forward<Args>(args)...);
     }
+
     reader_signal_.notify_one();
     return element_dropped;
   }
@@ -132,8 +140,10 @@ public:
       if (stop_) {
         return;
       }
+
       queue_.emplace_back(std::forward<Args>(args)...);
     }
+
     reader_signal_.notify_one();
   }
 
@@ -147,6 +157,7 @@ public:
     if (stop_) {
       return {};
     }
+
     auto value = std::move(queue_.front());
     queue_.pop_front();
     writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
@@ -161,6 +172,7 @@ public:
     if (queue_.empty()) {
       return {};
     }
+
     auto value = std::move(queue_.front());
     queue_.pop_front();
     writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
@@ -189,7 +201,7 @@ public:
   }
 
 private:
-  std::deque<T> queue_;
+  std::deque<T> queue_{};
   std::optional<std::size_t> max_size_;
   std::condition_variable reader_signal_;
   std::condition_variable writer_signal_;

@@ -7,120 +7,74 @@
 
 #include <source_location>
 #include <stdexcept>
-#include <type_traits>
+#include <string>
 
+#ifdef DISABLE_EXCEPTIONS
 #include <absl/log/check.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
+#endif
 
 namespace heph {
 
 //=================================================================================================
 /// Base class for exceptions
 /// @include exception_example.cpp
-class Exception : public std::runtime_error {
+class Panic : public std::runtime_error {
 public:
   /// @param message A message describing the error and what caused it
   /// @param location Location in the source where the error was triggered at
-  explicit Exception(const std::string& message, std::source_location location);
+  explicit Panic(const std::string& message, std::source_location location);
 };
 
-/// @brief  User function to throw an exception.
+/// @brief  User function to panic. Internally this throws a Panic exception.
 /// > Note: If macro `DISABLE_EXCEPTIONS` is defined, this function terminates printing the message. In this
 /// case, the whole code should be considered noexcept.
 ///
-/// @tparam T Exception type, derived from heph::Exception
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
-template <typename T>
-  requires std::is_base_of_v<Exception, T>
-constexpr void throwException(const std::string& message,
-                              std::source_location location = std::source_location::current()) {
+inline void panic(const std::string& message,
+                  std::source_location location = std::source_location::current()) {
 #ifndef DISABLE_EXCEPTIONS
-  throw T{ message, location };
+  throw Panic{ message, location };
 #else
-  auto e = T{ message, location };
+  auto e = Panic{ message, location };
   CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
                               location.line());
 #endif
 }
 
-/// @brief  User function to throw a conditional exception. The whole code should be considered noexcept. Will
+/// @brief  User function to panic on condition. The whole code should be considered noexcept. Will
 /// use CHECK if DISABLE_EXCEPTIONS = ON
-/// @tparam T Exception type, derived from heph::Exception
-/// @param condition Condition whether to throw the exception
+/// @param condition Condition whether to panic
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
-template <typename T>
-  requires std::is_base_of_v<Exception, T>
-constexpr void throwExceptionIf(bool condition, const std::string& message,
-                                std::source_location location = std::source_location::current()) {
+inline void panicIf(bool condition, const std::string& message,
+                    std::source_location location = std::source_location::current()) {
 #ifndef DISABLE_EXCEPTIONS
   if (condition) [[unlikely]] {
-    throw T{ message, location };
+    throw Panic{ message, location };
   }
 #else
-  auto e = T{ message, location };
+  auto e = Panic{ message, location };
   CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
                                    location.line());
 #endif
 }
 
-//=================================================================================================
-/// Exception raised on operating with mismatched types. Examples
-/// - serialisation/deserialisation across incompatible types
-/// - Typecasting between incompatible types
-class TypeMismatchException : public heph::Exception {
-public:
-  TypeMismatchException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due to invalid/incomplete/undefined data
-class InvalidDataException : public heph::Exception {
-public:
-  InvalidDataException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due to invalid/incomplete/undefined configuration
-class InvalidConfigurationException : public heph::Exception {
-public:
-  InvalidConfigurationException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due to invalid parameters
-class InvalidParameterException : public heph::Exception {
-public:
-  InvalidParameterException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due to invalid or unsupported operation
-class InvalidOperationException : public heph::Exception {
-public:
-  InvalidOperationException(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due failed Zenoh operation
-class FailedZenohOperation : public heph::Exception {
-public:
-  FailedZenohOperation(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
-//=================================================================================================
-/// Exception raised due failed serdes operation
-class FailedSerdesOperation : public heph::Exception {
-public:
-  FailedSerdesOperation(const std::string& msg, std::source_location loc) : Exception(msg, loc) {
-  }
-};
-
+/// @brief Macro to test if a statement throws an exception or causes a program death depending
+/// on whether the library is compiled with exceptions enabled.
+/// @param statement The statement to be tested.
+/// @param expected_exception The type of exception expected to be thrown.
+/// @param expected_matcher The matcher to be used in case of program death.
+/// @note If `DISABLE_EXCEPTIONS` is defined, this macro uses `EXPECT_DEATH` to check for program death.
+///       Otherwise, it uses `EXPECT_THROW` to check for the expected exception.
+#ifndef DISABLE_EXCEPTIONS
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_THROW(statement, expected_exception)
+#else
+#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
+  EXPECT_DEATH(statement, expected_matcher)
+// NOLINTEND(cppcoreguidelines-macro-usage)
+#endif
 }  // namespace heph

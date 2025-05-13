@@ -12,10 +12,10 @@
 using namespace ::testing;
 
 namespace heph::bag::tests {
-
+namespace {
 using TestCasesT = std::vector<std::pair<std::string, bool>>;
 
-auto runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) -> void {
+void runTestCases(const ipc::TopicFilter& filter, const TestCasesT& test_cases) {
   for (const auto& [input, expected_output] : test_cases) {
     EXPECT_EQ(filter.isAcceptable(input), expected_output) << "input: " << input;
   }
@@ -49,9 +49,9 @@ TEST(TopicFilter, AnyExcluding) {
     runTestCases(filter, test_cases);
   }
   {
-    const ipc::TopicFilterParams params{ .include_topics_only = {},
-                                         .prefix = "",
-                                         .exclude_topics = { "topic" } };
+    const ipc::TopicFilterParams params{
+      .include_topics_only = {}, .prefix = "", .exclude_prefix = "", .exclude_topics = { "topic" }
+    };
     const auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
@@ -69,9 +69,29 @@ TEST(TopicFilter, Prefix) {
     runTestCases(filter, test_cases);
   }
   {
-    const ipc::TopicFilterParams params{ .include_topics_only = {},
-                                         .prefix = "hostname",
-                                         .exclude_topics = {} };
+    const ipc::TopicFilterParams params{
+      .include_topics_only = {}, .prefix = "hostname", .exclude_prefix = "", .exclude_topics = {}
+    };
+    const auto filter = ipc::TopicFilter::create(params);
+    runTestCases(filter, test_cases);
+  }
+}
+
+TEST(TopicFilter, ExcludePrefix) {
+  const TestCasesT test_cases{
+    { "hostname/image", false },
+    { "hostname/video", false },
+    { "topic", true },
+  };
+
+  {
+    const auto filter = ipc::TopicFilter::create().excludePrefix({ "hostname" });
+    runTestCases(filter, test_cases);
+  }
+  {
+    const ipc::TopicFilterParams params{
+      .include_topics_only = {}, .prefix = "", .exclude_prefix = "hostname", .exclude_topics = {}
+    };
     const auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
@@ -89,7 +109,9 @@ TEST(TopicFilter, PrefixWildcard) {
     runTestCases(filter, test_cases);
   }
   {
-    const ipc::TopicFilterParams params{ .include_topics_only = {}, .prefix = "**", .exclude_topics = {} };
+    const ipc::TopicFilterParams params{
+      .include_topics_only = {}, .prefix = "**", .exclude_prefix = "", .exclude_topics = {}
+    };
     const auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
@@ -108,6 +130,7 @@ TEST(TopicFilter, PrefixAndExcluding) {
   {
     const ipc::TopicFilterParams params{ .include_topics_only = {},
                                          .prefix = "hostname",
+                                         .exclude_prefix = "",
                                          .exclude_topics = { "hostname/video" } };
     const auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
@@ -125,12 +148,12 @@ TEST(TopicFilter, IncludeOnly) {
     runTestCases(filter, test_cases);
   }
   {
-    const ipc::TopicFilterParams params{ .include_topics_only = { "hostname/video" },
-                                         .prefix = "",
-                                         .exclude_topics = {} };
+    const ipc::TopicFilterParams params{
+      .include_topics_only = { "hostname/video" }, .prefix = "", .exclude_prefix = "", .exclude_topics = {}
+    };
     auto filter = ipc::TopicFilter::create(params);
     runTestCases(filter, test_cases);
   }
 }
-
+}  // namespace
 }  // namespace heph::bag::tests

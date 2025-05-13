@@ -9,8 +9,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include <cxxabi.h>
 #include <execinfo.h>
@@ -21,15 +23,15 @@ class StackTrace::Impl {
 public:
   Impl();
 
+  static void print(std::ostream& os);
+
 private:
   static constexpr size_t MAX_FRAMES = 64;
-  static constexpr size_t MAX_FUNC_NAME_LEN = 1024;
-  static void print();
   [[noreturn]] static void abort(int signum, siginfo_t* si, void* unused);
 };
 
 StackTrace::Impl::Impl() {
-  struct sigaction sa {};
+  struct sigaction sa{};
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = StackTrace::Impl::abort;  // NOLINT(cppcoreguidelines-pro-type-union-access)
   sigemptyset(&sa.sa_mask);
@@ -42,11 +44,11 @@ StackTrace::Impl::Impl() {
   sigaction(SIGPIPE, &sa, nullptr);
 }
 
-void StackTrace::Impl::print() {
+void StackTrace::Impl::print(std::ostream& os) {
   /// reference: https://oroboro.com/stack-trace-on-crash/
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cert-err33-c)
-  fprintf(stderr, "stack trace:\n");
+  os << "stack trace:\n";
   void* addrlist[MAX_FRAMES];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
   // retrieve current stack addresses
@@ -54,7 +56,7 @@ void StackTrace::Impl::print() {
   auto addrlen = backtrace(addrlist, MAX_FRAMES);
   if (addrlen == 0) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cert-err33-c)
-    fprintf(stderr, "  \n");
+    os << "  \n";
   }
 
   // resolve addresses into strings containing "filename(function+address)",
@@ -62,8 +64,6 @@ void StackTrace::Impl::print() {
   // this array must be free()-ed
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   char** symbol_list = backtrace_symbols(addrlist, addrlen);
-
-  char funcname[MAX_FUNC_NAME_LEN];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
   // iterate over the returned symbol lines. skip the first, it is the
   // address of this function.
@@ -96,26 +96,31 @@ void StackTrace::Impl::print() {
       // offset in [begin_offset, end_offset). now apply
       // __cxa_demangle():
 
-      int status = 0;
-      size_t fun_name_len = MAX_FUNC_NAME_LEN;
+      int status = 0;           // This will be set by __cxa_demangle
+      size_t fun_name_len = 0;  // This will be set by __cxa_demangle
+      // Nullptr as output buffer will allocate the memory needed for the demangled name on the heap. We need
+      // to free manually afterwards.
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-      char* ret = abi::__cxa_demangle(begin_name, funcname, &fun_name_len, &status);
-      char* fname = begin_name;
+      char* ret = abi::__cxa_demangle(begin_name, nullptr, &fun_name_len, &status);
+      std::string_view fname = begin_name;
       if (status == 0) {
-        fname = ret;
+        fname = std::string_view{ ret, fun_name_len };
       }
 
+      // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
       if (begin_offset != nullptr) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-        fprintf(stderr, "  %-30s ( %-40s  + %-6s) %s\n", symbol_list[i], fname, begin_offset, end_offset);
+        os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
+           << "  + " << std::setw(6) << begin_offset << ") " << end_offset << "\n";
       } else {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-        fprintf(stderr, "  %-30s ( %-40s    %-6s) %s\n", symbol_list[i], fname, "", end_offset);
+        os << "  " << std::left << std::setw(30) << symbol_list[i] << " ( " << std::setw(40) << fname
+           << "    " << std::setw(6) << "" << ") " << end_offset << "\n";
       }
+      // NOLINTNEXTLINE(hicpp-no-malloc,cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
+      free(ret);
     } else {
       // couldn't parse the line? print the whole line.
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-bounds-pointer-arithmetic,cert-err33-c)
-      fprintf(stderr, "  %-40s\n", symbol_list[i]);
+      os << "  " << std::setw(40) << symbol_list[i] << "\n";
+      // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
   }
 
@@ -128,7 +133,7 @@ void StackTrace::Impl::abort(int signum, siginfo_t* signal_info, void* unused) {
   (void)unused;
 
   std::cerr << "Caught signal " << strsignal(signum) << "\n";
-  StackTrace::Impl::print();
+  StackTrace::Impl::print(std::cerr);
   exit(signum);
 }
 
@@ -138,6 +143,12 @@ StackTrace::StackTrace() : impl_{ std::make_unique<Impl>() } {
 }
 
 StackTrace::~StackTrace() = default;
+
+auto StackTrace::print() -> std::string {
+  std::stringstream os;
+  Impl::print(os);
+  return os.str();
+}
 
 // NOLINTEND(misc-include-cleaner)
 }  // namespace heph::utils

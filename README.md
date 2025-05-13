@@ -1,33 +1,108 @@
 # Hephaestus
 
-Hephaestus is a C++ framework designed to facilitate robotics development by providing commonly needed functionality and abstractions.
+A high-performance C++ framework for production-ready robotics development.
 
-The goal of Hephaestus is to support the deployment of robotic code in production. This means:
-* Simple, stable, performant functionalities.
-* No focus on simplifying experimentation and no-nonsense functionality.
-    * New features will be added if they make production code better (faster/stable/simpler), not for making running experiments faster (I am looking at you ROS).
-* Abstract from the developer as much of the complexity of writing C++ code as possible:
-    * Memory managment.
-    * Parallelism and multi/threading.
-    * Containers and basic algorithm.
+## Overview
 
-Hephaestus provides functionalities that cover the following domains:
-* Inter Process Comunication (IPC).
-* Data serialization for IPC and storage.
-* Multi-threading, e.g. thread pools and parallelism primitive.
-* Containers, e.g. thread safe containers for sharing data across threads.
-* Memory pool.
-* Functionalities to run real-time code.
+Hephaestus is a C++ framework designed for deploying robotic systems in production environments. It provides essential, performance-critical functionalities while abstracting away common C++ complexities, allowing developers to focus on their robotics-specific implementation.
 
-> NOTE: most of the above functionalities are still work in progress.
+Unlike other robotics frameworks that prioritize rapid prototyping, Hephaestus emphasizes production-ready code with a focus on performance, stability, and simplicity.
+
+### Design Philosophy
+
+- **Production-First**: Features are added only if they improve production code quality through enhanced performance, stability, or simplicity
+- **Focused Scope**: Concentrates on common infrastructure needs across robotic platforms while avoiding use-case specific implementations
+- **C++ Abstraction**: Reduces cognitive load by handling complex C++ patterns and best practices automatically
+
+### Core Features
+
+#### Current Implementation
+
+Hephaestus provides robust abstractions for fundamental robotics infrastructure:
+
+- **Memory Management**
+  - Automated memory handling
+  - Memory pools for efficient allocation
+
+- **Concurrency**
+  - Thread pools
+  - Parallelism primitives
+  - Thread-safe containers for cross-thread data sharing
+
+- **System Communication**
+  - Inter-Process Communication (IPC)
+  - Data serialization for communication and storage
+
+- **Performance Optimization**
+  - Real-time execution capabilities
+  - Telemetry for system monitoring
+
+## Project Status
+
+> **Note**: Many features are currently under development. Please check the issue tracker or project boards for current status.
 
 When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
 
-## Build
+### Scope Limitations
 
-### Env
-The best way to build hephaestus is to do it inside the docker container provided in the `docker` folder. You can build the container with `build.sh` and start it using `run.sh`.
-If you add or update a dependency, bump `DEPS_VERSION`.
+Hephaestus intentionally excludes the following to maintain focus and allow for use-case optimization:
+
+- Data type definitions (images, point clouds, etc.)
+- Visualization tools
+- Geometric operations
+- Autonomy algorithms
+- Use-case specific implementations
+
+This deliberate limitation allows teams to implement these features optimally for their specific robotics applications while leveraging Hephaestus's robust infrastructure.
+
+## Dev Env
+The best way to build Hephaestus is to do it inside the docker container provided in the `docker` folder. You can build and start the container with `make docker-up`.
+
+If you use VS Code, run `make configure-attach-container` and then Command Palette (Ctrl+Shift+P) `Dev Containers: Attach to Running Container...` -> `/hephaestus-dev`
+
+## Bazel
+Bazel is the official tool to build Hephaestus.
+
+### Commands
+* Build:
+  * `bazel build //modules/...`
+  * You can also build a specific module or library by providing the path:
+    * `bazel build //modules/ipc/...`
+    * `bazel build //modules/ipc:zenoh_topic_list`
+* Build with clang-tidy:
+  * `bazel build //modules/... --config clang-tidy`
+* Run tests:
+  * `bazel test //modules/...`
+* Format the code:
+  * `bazel run :format` -> fixes the formatting errors
+  * `bazel run :format.check` -> fails on error
+* Generate `compile_commands.json`, for VS Code `clangd` tool:
+  * `bazel run :refresh_compile_commands`
+* Run binaries:
+  * `bazel run //modules/ipc:zenoh_topic_list`, or
+  * `./bazel-bin/modules/ipc/zenoh_topic_list`
+
+#### Clang-tidy Profiling
+It is possible to run clang-tidy with profiling enabled to see how long each check takes. To do that:
+* in `clang_tidy.bzl` uncomment line `# args.add("--enable-check-profile")`
+* in `run_clang_tidy.sh` comment current `trap` command and uncomment `# trap 'head -n 15 "$logfile" 1>&2' EXIT`
+
+This will print stats for each files sorted by time.
+
+### Folders
+For more details see https://bazel.build/remote/output-directories
+
+Bazel generates three folders in the workspace:
+* `bazel-bin`
+  * Contains the binaries and release artifacts like debians and packages
+* `bazel-out`
+  * Contains build artifacts, build and test logs
+* `bazel-hephaestus`
+  * Can be ignored
+
+
+## CMake
+The following sections contains all the information needed to use Hephaestus with CMake
 
 ### Compilation
 
@@ -48,7 +123,7 @@ ninja check
 
 > TODO: add section on the different flags and options.
 
-## Build system
+### Build system
 You can use the build system of `hephaestus` in your own project by importing the CMake files and recreating the required folder structure.
 
 Create the top level `CMakeLists.txt` as:
@@ -71,7 +146,7 @@ if(NOT hephaestus_POPULATED)
 endif()
 
 # If you want to use hephaestus toolchain add:
-# set(CMAKE_TOOLCHAIN_FILE ${hephaestus_SOURCE_DIR}/toolchains/toolchain_clang.cmake)
+# set(CMAKE_TOOLCHAIN_FILE ${hephaestus_SOURCE_DIR}/cmake/toolchains/toolchain_clang.cmake)
 
 # Include the Cmake functions.
 include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
@@ -80,7 +155,7 @@ include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 Create the `modules` folder and add your modules. You can use the hephaestus script by calling:
 ```bash
 cd modules
-python3 ../build/_deps/hephaestus-src/cmake/create_module.py my_module
+python3 ../cmake/create_module.py my_module
 ```
 
 Create the `external` folder and add a `CMakeLists.txt` file as:
@@ -99,10 +174,10 @@ include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 # )
 ```
 
-## Using Hephaestus
+### Using Hephaestus
 There are multiple ways to use Hephaestus in your repo.
 
-### Global installation
+#### Global installation
 Install hephaestus in a known folder, e.g. `/install`. When you compile your project pass `-DCMAKE_PREFIX_PATH=/install` and in your CMakeLists.txt:
 
 ```cmake
@@ -160,7 +235,7 @@ include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 
 ## Notes
 
-Initially this repo was supporting C++23, but to maximise compatibilty we reverted back to C++20.
+Initially this repo was supporting C++23, but to maximize compatibilty we reverted back to C++20.
 
 When switching again back to C++23 it will be possible to remove `fmt` and `ranges-v3`. The transition will be easy, just rename `fmt::` -> `std::` and remove `fmt::formatter`.
 

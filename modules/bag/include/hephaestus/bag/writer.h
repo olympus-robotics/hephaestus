@@ -4,11 +4,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <span>
+#include <string>
 
-#include "hephaestus/ipc/zenoh/subscriber.h"
+#include <mcap/writer.hpp>
+
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
 
 namespace heph::bag {
@@ -24,6 +28,7 @@ public:
 
 struct McapWriterParams {
   std::filesystem::path output_file;
+  mcap::McapWriterOptions mcap_writer_options = mcap::McapWriterOptions("");
 };
 
 [[nodiscard]] auto createMcapWriter(McapWriterParams params) -> std::unique_ptr<IBagWriter>;

@@ -30,6 +30,10 @@ auto TopicFilter::create(const TopicFilterParams& params) -> TopicFilter {
     filter = std::move(filter).prefix(params.prefix);
   }
 
+  if (!params.exclude_prefix.empty()) {
+    filter = std::move(filter).excludePrefix(params.exclude_prefix);
+  }
+
   return filter;
 }
 
@@ -54,6 +58,12 @@ auto TopicFilter::prefix(std::string prefix) && -> TopicFilter {
   return std::move(*this);
 }
 
+auto TopicFilter::excludePrefix(std::string prefix) && -> TopicFilter {
+  match_cb_.emplace_back(
+      [prefix = std::move(prefix)](const auto& topic) { return !topic.starts_with(prefix); });
+  return std::move(*this);
+}
+
 auto TopicFilter::anyExcluding(const std::vector<std::string>& topic_names) && -> TopicFilter {
   std::unordered_set<std::string> excluding_topic{ topic_names.begin(), topic_names.end() };
   match_cb_.emplace_back([excluding_topic = std::move(excluding_topic)](const auto& topic) mutable {
@@ -64,7 +74,7 @@ auto TopicFilter::anyExcluding(const std::vector<std::string>& topic_names) && -
 
 /// Return true if the input topic passes the concatenated list of filters.
 auto TopicFilter::isAcceptable(const std::string& topic) const -> bool {
-  return std::all_of(match_cb_.begin(), match_cb_.end(), [&topic](const auto& cb) { return cb(topic); });
+  return std::ranges::all_of(match_cb_, [&topic](const auto& cb) { return cb(topic); });
 }
 
 }  // namespace heph::ipc

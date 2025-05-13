@@ -9,9 +9,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <fmt/std.h>  // NOLINT(misc-include-cleaner)
 
 using ValueMap = std::unordered_map<std::string, heph::telemetry::Metric::ValueType>;
@@ -33,6 +34,6 @@ struct fmt::formatter<ValueMap> : fmt::formatter<std::string_view> {
 
 namespace heph::telemetry {
 auto Metric::toString() const -> std::string {
-  return fmt::format("[Metric][{}] [{}] tag: {}, id: {}{}", timestamp, component, tag, id, values);
+  return fmt::format("[Metric][{}] [{}] tag: {}, {}", timestamp, component, tag, values);
 }
 }  // namespace heph::telemetry

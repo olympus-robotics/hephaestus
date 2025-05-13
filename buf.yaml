@@ -1,0 +1,22 @@
+version: v2
+modules:
+  - path: modules/examples/proto
+  - path: modules/ipc/proto
+  - path: modules/serdes/tests
+  - path: modules/types_proto/proto
+  - path: modules/containers_proto/proto
+lint:
+  use:
+    - DEFAULT
+  except:
+    - PACKAGE_VERSION_SUFFIX
+    - PACKAGE_DIRECTORY_MATCH
+    - ENUM_ZERO_VALUE_SUFFIX
+  disallow_comment_ignores: true
+breaking:
+  use:
+    - FILE
+  except:
+    - EXTENSION_NO_DELETE
+    - FIELD_SAME_DEFAULT
+    - FILE_NO_DELETE

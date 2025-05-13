@@ -3,64 +3,199 @@
 //=================================================================================================
 #include "hephaestus/ipc/zenoh/session.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdlib>
+#include <filesystem>
 #include <memory>
+#include <ranges>
+#include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <unistd.h>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 
+#include "hephaestus/ipc/zenoh/conversions.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/string/string_utils.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::ipc::zenoh {
 namespace {
+
+void removeInvalidChar(std::string& str) {
+  const auto [first, last] = std::ranges::remove_if(str, [](char c) { return !isValidIdChar(c); });
+  str.erase(first, last);
+}
+
+[[nodiscard]] auto createSessionId(std::string_view id) -> std::string {
+  static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
+
+  panicIf(!isValidId(id),
+          fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
+
+  std::string session_id{ id };
+
+  if (session_id.size() > MAX_SESSION_ID_SIZE) {
+    heph::log(heph::WARN, "session id is too long, truncating", "session_id", session_id, "max_size",
+              MAX_SESSION_ID_SIZE);
+    session_id = session_id.substr(0, MAX_SESSION_ID_SIZE);
+  }
+
+  // Zenoh reverse this.
+  std::ranges::reverse(session_id);
+  return utils::string::toAsciiHex(session_id);
+}
+
+[[nodiscard]] auto createSessionIdFromBinaryName() -> std::string {
+  auto binary_name = utils::getBinaryPath();
+  panicIf(!binary_name.has_value(), "cannot get binary name");
+  std::string filename = binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access);
+  removeInvalidChar(filename);
+  filename = fmt::format("{}_{}", getpid(), filename);
+  return createSessionId(filename);
+}
+
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> ::zenoh::Config {
-  throwExceptionIf<InvalidParameterException>(config.qos && config.real_time,
-                                              "cannot specify both QoS and Real-Time options");
-  throwExceptionIf<InvalidParameterException>(config.protocol != Protocol::ANY && !config.router.empty(),
-                                              "cannot specify both protocol and the router endpoint");
+  panicIf(config.qos && config.real_time, "cannot specify both QoS and Real-Time options");
+  panicIf(config.protocol != Protocol::ANY && !config.router.empty(),
+          "cannot specify both protocol and the router endpoint");
 
-  auto zconfig = ::zenoh::Config::create_default();
-  // A timestamp is add to every published message.
-  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
+  auto zconfig = [&] {
+    if (config.zenoh_config_path.has_value()) {
+      return ZenohConfig{ *config.zenoh_config_path };
+    }
+    return ZenohConfig{};
+  }();
+
+  if (config.use_binary_name_as_session_id) {
+    setSessionIdFromBinary(zconfig);
+  } else if (config.id.has_value()) {
+    setSessionId(zconfig, config.id.value());
+  }
 
   // Enable shared memory support.
-  if (config.enable_shared_memory) {
-    zconfig.insert_json5("transport/shared_memory/enabled", "true");
-  }
+  setSharedMemory(zconfig, config.enable_shared_memory);
 
-  // Set node in client mode.
-  if (config.mode == Mode::CLIENT) {
-    zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
-  }
+  setMode(zconfig, config.mode);
+
+  // Set multicast settings
+  setMulticastScouting(zconfig, config.multicast_scouting_enabled);
+  setMulticastScoutingInterface(zconfig, config.multicast_scouting_interface);
 
   // Set the transport to UDP, but I am not sure it is the right way.
   // zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, R"(["udp/localhost:7447"])");
   if (config.protocol == Protocol::UDP) {
-    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, R"(["udp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
+    connectToEndpoints(zconfig, { "udp/0.0.0.0:0" });
   } else if (config.protocol == Protocol::TCP) {
-    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, R"(["tcp/0.0.0.0:0"])");  // NOLINT(misc-include-cleaner)
+    connectToEndpoints(zconfig, { "tcp/0.0.0.0:0" });
   }
 
   // Add router endpoint.
   if (!config.router.empty()) {
-    const auto router_endpoint = fmt::format(R"(["tcp/{}"])", config.router);
-    zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, router_endpoint);  // NOLINT(misc-include-cleaner)
+    connectToEndpoints(zconfig, { fmt::format("tcp/{}", config.router) });
   }
-  { zconfig.insert_json5("transport/unicast/qos/enabled", config.qos ? "true" : "false"); }
+  setQos(zconfig, config.qos);
   if (config.real_time) {
-    zconfig.insert_json5("transport/unicast/qos/enabled", "false");
-    zconfig.insert_json5("transport/unicast/lowlatency", "true");
+    setRealTime(zconfig, true);
   }
 
-  return zconfig;
+  return std::move(zconfig.zconfig);
+}
+
+auto toJsonArray(const std::vector<std::string>& values) -> std::string {
+  return fmt::format("[{}]", fmt::join(values | std::views::transform([](const std::string& value) {
+                                         return fmt::format(R"("{}")", value);
+                                       }),
+                                       ","));
 }
 }  // namespace
 
-auto createSession(Config config) -> SessionPtr {
-  auto zconfig = createZenohConfig(config);
-  return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)), std::move(config));
+ZenohConfig::ZenohConfig() {
+  zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
 }
 
+ZenohConfig::ZenohConfig(std::filesystem::path const& path) : zconfig(::zenoh::Config::from_file(path)) {
+}
+
+void setSessionId(ZenohConfig& config, std::string_view id) {
+  config.zconfig.insert_json5("id", fmt::format(R"("{}")", createSessionId(id)));
+}
+
+void setSessionIdFromBinary(ZenohConfig& config) {
+  config.zconfig.insert_json5("id", fmt::format(R"("{}")", createSessionIdFromBinaryName()));
+}
+
+void setSharedMemory(ZenohConfig& config, bool value) {
+  config.zconfig.insert_json5("transport/shared_memory/enabled", fmt::format("{}", value));
+}
+
+void setMode(ZenohConfig& config, Mode mode) {
+  switch (mode) {
+    case Mode::PEER:
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("peer")");  // NOLINT(misc-include-cleaner)
+      break;
+    case Mode::CLIENT:
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("client")");  // NOLINT(misc-include-cleaner)
+      break;
+    case Mode::ROUTER:
+      config.zconfig.insert_json5(Z_CONFIG_MODE_KEY, R"("router")");  // NOLINT(misc-include-cleaner)
+      break;
+    default:
+      std::abort();
+  }
+}
+
+void connectToEndpoints(ZenohConfig& config, const std::vector<std::string>& endpoints) {
+  config.zconfig.insert_json5(Z_CONFIG_CONNECT_KEY, toJsonArray(endpoints));  // NOLINT(misc-include-cleaner)
+}
+
+void listenToEndpoints(ZenohConfig& config, const std::vector<std::string>& endpoints) {
+  config.zconfig.insert_json5(Z_CONFIG_LISTEN_KEY, toJsonArray(endpoints));  // NOLINT(misc-include-cleaner)
+}
+
+void setQos(ZenohConfig& config, bool value) {
+  config.zconfig.insert_json5("transport/unicast/qos/enabled", fmt::format("{}", value));
+}
+
+void setRealTime(ZenohConfig& config, bool value) {
+  if (value) {
+    config.zconfig.insert_json5("transport/unicast/qos/enabled", "false");
+    config.zconfig.insert_json5("transport/unicast/lowlatency", "true");
+  } else {
+    config.zconfig.insert_json5("transport/unicast/qos/enabled", "true");
+    config.zconfig.insert_json5("transport/unicast/lowlatency", "false");
+  }
+}
+
+void setMulticastScouting(ZenohConfig& config, bool value) {
+  config.zconfig.insert_json5("scouting/multicast/enabled", fmt::format("{}", value));
+}
+
+void setMulticastScoutingInterface(ZenohConfig& config, std::string_view interface) {
+  config.zconfig.insert_json5("scouting/multicast/interface", fmt::format(R"("{}")", interface));
+}
+
+auto createLocalConfig() -> Config {
+  Config config;
+  config.multicast_scouting_enabled = false;
+  return config;
+}
+
+auto createSession(const Config& config) -> SessionPtr {
+  auto zconfig = createZenohConfig(config);
+  return std::make_shared<Session>(::zenoh::Session::open(std::move(zconfig)));
+}
+
+auto createSession(ZenohConfig config) -> SessionPtr {
+  return std::make_shared<Session>(::zenoh::Session::open(std::move(config.zconfig)));
+}
 }  // namespace heph::ipc::zenoh

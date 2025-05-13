@@ -4,7 +4,7 @@
 
 #include "hephaestus/telemetry/metric_sinks/terminal_sink.h"
 
-#include <fmt/core.h>
+#include <fmt/base.h>
 
 #include "hephaestus/telemetry/metric_sink.h"
 

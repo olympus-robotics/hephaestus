@@ -12,8 +12,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include <absl/log/log.h>
 #include <absl/strings/ascii.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <mcap/types.hpp>
 #include <mcap/writer.hpp>
@@ -34,6 +36,7 @@ namespace {
 class McapWriter final : public IBagWriter {
 public:
   explicit McapWriter(McapWriterParams params);
+
   ~McapWriter() override = default;
 
   void writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) override;
@@ -50,11 +53,10 @@ private:
 };
 
 McapWriter::McapWriter(McapWriterParams params) : params_(std::move(params)) {
-  auto options = mcap::McapWriterOptions("");
+  auto options = params_.mcap_writer_options;
   const auto status = writer_.open(params_.output_file.string(), options);
-  throwExceptionIf<InvalidParameterException>(
-      !status.ok(), fmt::format("failed to create Mcap writer for file {}, with error: {}",
-                                params_.output_file.string(), status.message));
+  panicIf(!status.ok(), fmt::format("failed to create Mcap writer for file {}, with error: {}",
+                                    params_.output_file.string(), status.message));
 }
 
 void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
@@ -70,8 +72,8 @@ void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
 }
 
 void McapWriter::writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) {
-  throwExceptionIf<InvalidDataException>(!channel_db_.contains(metadata.topic),
-                                         fmt::format("no channel registered for topic {}", metadata.topic));
+  panicIf(!channel_db_.contains(metadata.topic),
+          fmt::format("no channel registered for topic {}", metadata.topic));
 
   auto channel_id = channel_db_[metadata.topic].id;
 
@@ -84,13 +86,12 @@ void McapWriter::writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::s
   msg.dataSize = data.size();
 
   const auto write_res = writer_.write(msg);
-  throwExceptionIf<InvalidOperationException>(
-      !write_res.ok(), fmt::format("failed to write msg from topic {} to bag", metadata.topic));
+  panicIf(!write_res.ok(), fmt::format("failed to write msg from topic {} to bag", metadata.topic));
 }
 
 void McapWriter::registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) {
-  throwExceptionIf<InvalidDataException>(!schema_db_.contains(type_info.name),
-                                         fmt::format("no schema registered for type {}", type_info.name));
+  panicIf(!schema_db_.contains(type_info.name),
+          fmt::format("no schema registered for type {}", type_info.name));
 
   const auto& schema = schema_db_[type_info.name];
   mcap::Channel channel(topic, schema.encoding, schema.id);

@@ -13,12 +13,18 @@
 
 namespace heph::ipc::zenoh {
 
-template <class T>
-class Publisher {
+class PublisherBase {
 public:
-  Publisher(SessionPtr session, TopicConfig topic_config, RawPublisher::MatchCallback&& match_cb = nullptr)
+  virtual ~PublisherBase() = default;
+};
+
+template <class T>
+class Publisher : public PublisherBase {
+public:
+  Publisher(SessionPtr session, TopicConfig topic_config, RawPublisher::MatchCallback&& match_cb = nullptr,
+            const PublisherConfig& config = {})
     : publisher_(std::move(session), std::move(topic_config), serdes::getSerializedTypeInfo<T>(),
-                 std::move(match_cb)) {
+                 std::move(match_cb), config) {
   }
 
   [[nodiscard]] auto publish(const T& data) -> bool {
@@ -26,8 +32,8 @@ public:
     return publisher_.publish(buffer);
   }
 
-  [[nodiscard]] auto id() const -> std::string {
-    return publisher_.id();
+  [[nodiscard]] auto sessionId() const -> std::string {
+    return publisher_.sessionId();
   }
 
 private:

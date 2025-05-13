@@ -12,7 +12,6 @@
 
 #include "gmock/gmock.h"
 #include "hephaestus/containers/blocking_queue.h"
-#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -20,7 +19,7 @@ using namespace ::testing;
 namespace heph::containers::tests {
 
 TEST(BlockingQueue, Failures) {
-  EXPECT_THROW(BlockingQueue<int>{ 0 }, InvalidParameterException);
+  EXPECT_NO_THROW(BlockingQueue<int>{ 0 };);
 }
 
 TEST(BlockingQueue, Push) {
@@ -75,8 +74,8 @@ TEST(BlockingQueue, WaitPush) {
   const std::string message = "hello";
   block_queue.waitAndPush(message);
   auto future = std::async([&block_queue]() {
-    std::string message = "hello again";
-    block_queue.waitAndPush(std::move(message));
+    std::string msg = "hello again";
+    block_queue.waitAndPush(std::move(msg));
   });
   auto data = block_queue.tryPop();
   EXPECT_TRUE(data);

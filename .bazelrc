@@ -1,0 +1,27 @@
+startup --output_user_root=~/.cache/bazel/output/
+
+build --disk_cache=~/.cache/bazel/cache
+build --repository_cache=~/.cache/bazel/repos/
+
+build --features=external_include_paths
+build --generate_json_trace_profile --profile command.profile.gz
+
+test --flaky_test_attempts=10
+
+# https://libcxx.llvm.org/Hardening.html
+build:opt --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
+build:fastbuild --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
+build:dbg --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
+
+build:clang-tidy --output_groups=report,fixes
+build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
+
+build:sanitizer --strip=never
+build:sanitizer --copt -fsanitize=address,undefined
+# The vtable sanitizer currently leads to a linker error
+build:sanitizer --copt -fno-sanitize=vptr
+build:sanitizer --copt -DADDRESS_SANITIZER
+build:sanitizer --copt -fno-omit-frame-pointer
+build:sanitizer --linkopt -fsanitize=address,undefined
+build:sanitizer --linkopt -Wl,--allow-shlib-undefined

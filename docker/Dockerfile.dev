@@ -1,0 +1,74 @@
+ARG BASE_IMAGE
+
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE}
+
+# Here we can install developer tools if needed
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends zsh curl sudo openssh-client xz-utils fzf fd-find silversearcher-ag ripgrep && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install neovim
+RUN curl -L https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz | tar -xz -C /usr/share
+
+ARG USERNAME=hephaestus
+ARG PUID=1000
+ARG PGID=1000
+
+# Create a $USERNAME user
+WORKDIR /workspaces
+RUN useradd -u 1000 -U -d /workspaces -s /bin/zsh $USERNAME && \
+    usermod -G users $USERNAME && \
+    mkdir /workspaces/.vscode-server && \
+    chown -R $USERNAME:$USERNAME /workspaces && \
+    # Add sudo support. Omit if you don't need to install software after connecting.
+    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    groupmod -o -g $PGID $USERNAME && \
+    usermod -o -u $PUID $USERNAME
+
+VOLUME /workspaces/.vscode-server
+
+RUN mkdir -p /dc/shellhistory && \
+    chown -R $USERNAME:$USERNAME /dc/shellhistory
+
+USER $USERNAME
+
+# Add Rust path to environment
+RUN touch "$HOME/.shell_env.sh"
+RUN echo ". /usr/local/cargo/env" >> "$HOME/.shell_env.sh" && \
+    echo "export RUSTC_WRAPPER=sccache" >> "$HOME/.shell_env.sh"
+
+# Create volume for cache
+RUN mkdir -p /workspaces/.cache && \
+    chown -R $USERNAME:$USERNAME /workspaces/.cache
+VOLUME /workspaces/.cache
+
+# Setup Pixi autocompletion
+RUN echo 'eval "$(pixi completion --shell zsh)"' >> "$HOME/.shell_env.sh"
+
+# Setup zsh
+ARG ZSH_THEME=agnoster
+# hadolint ignore=DL4006
+RUN wget -qO- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh | \
+    sh -s -- \
+    -t ${ZSH_THEME} \
+    -p git \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-completions
+
+ENV SHELL=/bin/zsh
+
+RUN echo "source $HOME/.shell_env.sh" >> "$HOME/.zshrc"
+
+# Setup shell history similar to vscode devcontainer
+# https://github.com/stuartleeks/dev-container-features/blob/main/src/shell-history/install.sh
+RUN cat <<eozshrc >> $HOME/.zshrc
+# configure zsh to save history into the docker volume
+export HISTFILE=/dc/shellhistory/.zsh_history
+export HISTSIZE=10000
+export SAVEHIST=10000
+setopt appendhistory
+eozshrc
+
+VOLUME ["/dc/shellhistory"]

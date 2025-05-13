@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include <concepts>
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <string>
 
+#include <fmt/base.h>
 #include <fmt/ostream.h>
 
 #include "hephaestus/random/random_object_creator.h"
@@ -27,24 +28,25 @@ enum class BoundsType : uint8_t {
 /// @brief A class representing range bounds.
 template <NumericType T>
 struct Bounds {
-  [[nodiscard]] inline constexpr auto operator==(const Bounds&) const -> bool = default;
+  [[nodiscard]] constexpr auto operator==(const Bounds&) const -> bool = default;
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> Bounds;
 
   T lower{};
   T upper{};
   BoundsType type{ BoundsType::INCLUSIVE };
+
+  [[nodiscard]] auto format() const -> std::string;
 };
 
 template <NumericType T>
-[[nodiscard]] static inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
+[[nodiscard]] static constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool;
 
 template <NumericType T>
-[[nodiscard]] static inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T;
+[[nodiscard]] static constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T;
 
 template <NumericType T>
 auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream&;
-
 //=================================================================================================
 // IMPLEMENTATION
 //=================================================================================================
@@ -57,7 +59,7 @@ auto Bounds<T>::random(std::mt19937_64& mt) -> Bounds {
 }
 
 template <NumericType T>
-inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
+constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
   switch (bounds.type) {
     case BoundsType::INCLUSIVE:
       return value >= bounds.lower && value <= bounds.upper;
@@ -68,19 +70,21 @@ inline constexpr auto isWithinBounds(T value, const Bounds<T>& bounds) -> bool {
     case BoundsType::OPEN:
       return value > bounds.lower && value < bounds.upper;
     default:
-      throwException<InvalidParameterException>("Incorrect Type");
+      panic("Incorrect Type");
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 template <NumericType T>
-inline constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
+constexpr auto clampValue(T value, const Bounds<T>& bounds) -> T {
   return std::clamp(value, bounds.lower, bounds.upper);
 }
 
 template <NumericType T>
-auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
+auto Bounds<T>::format() const -> std::string {
   std::string bounds_type_str;
-  switch (bounds.type) {
+  switch (type) {
     case BoundsType::INCLUSIVE:
       bounds_type_str = "[]";
       break;
@@ -94,11 +98,16 @@ auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
       bounds_type_str = "()";
       break;
     default:
-      throwException<InvalidParameterException>("Incorrect BoundsType");
+      panic("Incorrect BoundsType");
   }
 
-  return os << "Bounds: " << bounds_type_str[0] << bounds.lower << " - " << bounds.upper << bounds_type_str[1]
-            << "\n";
+  return fmt::format("{}{} - {}{}", bounds_type_str[0], lower, upper, bounds_type_str[1]);
+}
+
+template <NumericType T>
+auto operator<<(std::ostream& os, const Bounds<T>& bounds) -> std::ostream& {
+  os << "Bounds: " << bounds.format();
+  return os;
 }
 
 }  // namespace heph::types

@@ -1,0 +1,107 @@
+{
+  "remoteUser": "hephaestus",
+  "workspaceFolder": "/workspaces/hephaestus",
+  "settings": {
+    "files.associations": {
+      // Add all the default file2language associations
+      // "*.xacro": "xml"
+    },
+    "[cmake]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "cheshirekow.cmake-format"
+    },
+    "[dockerfile]": {
+      // TODO: @weber setup dockerfile formatting on save
+      "editor.formatOnSave": false,
+      "docker.languageserver.formatter.ignoreMultilineInstructions": true,
+      "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+    },
+    "[shellscript]": {
+      "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "vscode.json-language-features",
+      "editor.tabSize": 2
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonl]": {
+      "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[json5]": {
+      "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[yaml]": {
+      "compactSequenceIndent": false,
+      "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[c]": {
+      "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+    },
+    "[cpp]": {
+      "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+      },
+      "editor.tabSize": 4
+    },
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "json.format.enable": true,
+    "json.format.keepLines": true,
+    "yaml.format.enable": true,
+    "html.format.enable": true,
+    "css.format.enable": true,
+    "less.format.enable": true,
+    "scss.format.enable": true,
+    "javascript.format.enable": true,
+    "typescript.format.enable": true,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+      "bash": {
+        "path": "bash",
+        "icon": "terminal-bash"
+      },
+      "zsh": {
+        "path": "zsh"
+      },
+      "fish": {
+        "path": "fish"
+      },
+      "tmux": {
+        "path": "tmux",
+        "icon": "terminal-tmux"
+      },
+      "pwsh": {
+        "path": "pwsh",
+        "icon": "terminal-powershell"
+      }
+    }
+  },
+  "extensions": [
+	"bazelbuild.vscode-bazel",
+	"charliermarsh.ruff",
+	"cheshirekow.cmake-format",
+	"foxundermoon.shell-format",
+	"llvm-vs-code-extensions.vscode-clangd",
+	"ms-azuretools.vscode-docker",
+	"ms-python.debugpy",
+	"ms-python.python",
+	"ms-python.vscode-pylance",
+	"ms-vscode.cmake-tools",
+	"ms-vscode.cpptools",
+	"redhat.vscode-yaml",
+	"streetsidesoftware.code-spell-checker",
+	"twxs.cmake",
+	"zxh404.vscode-proto3"
+],
+}
