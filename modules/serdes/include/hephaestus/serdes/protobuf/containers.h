@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <type_traits>
+#include <ranges>
 #include <vector>
 
 #include <fmt/format.h>
@@ -49,7 +50,7 @@ template <Arithmetic T, typename ProtoT>
 void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec) {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
-  std::transform(proto_repeated_field.cbegin(), proto_repeated_field.cend(), std::back_inserter(vec),
+  std::ranges::transform(proto_repeated_field, std::back_inserter(vec),
                  [](const auto& proto_value) { return static_cast<T>(proto_value); });
 }
 
@@ -58,7 +59,7 @@ void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_
                std::vector<T>& vec) {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_ptr_field.size()));
-  std::transform(proto_repeated_ptr_field.cbegin(), proto_repeated_ptr_field.cend(), std::back_inserter(vec),
+   std::ranges::transform(proto_repeated_ptr_field, std::back_inserter(vec),
                  [](const auto& proto_value) {
                    T value;
                    fromProto(proto_value, value);
@@ -91,7 +92,7 @@ void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_fie
   panicIf(proto_repeated_field.size() != N,
           fmt::format("Mismatch between size of repeated proto field {} and size of array {}.",
                       proto_repeated_field.size(), N));
-  std::transform(proto_repeated_field.cbegin(), proto_repeated_field.cend(), arr.begin(),
+   std::ranges::transform(proto_repeated_field, arr.begin(),
                  [](const auto& proto_value) { return static_cast<T>(proto_value); });
 }
 
@@ -101,7 +102,7 @@ void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_
   panicIf(proto_repeated_ptr_field.size() != N,
           fmt::format("Mismatch between size of repeated proto ptr field {} and size of array {}.",
                       proto_repeated_ptr_field.size(), N));
-  std::transform(proto_repeated_ptr_field.cbegin(), proto_repeated_ptr_field.cend(), arr.begin(),
+   std::ranges::transform(proto_repeated_ptr_field, arr.begin(),
                  [](const auto& proto_value) {
                    T value;
                    fromProto(proto_value, value);
