@@ -4,10 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 #include <vector>
 
 #include <google/protobuf/repeated_field.h>
+#include <google/protobuf/repeated_ptr_field.h>
 
 //=================================================================================================
 // NOTE: In order for namespace resolution to work correctly for container serialization introduced
