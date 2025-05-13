@@ -5,7 +5,6 @@
 #include "hephaestus/types_proto/dummy_type.h"
 
 #include <cstddef>
-#include <vector>
 
 #include "hephaestus/serdes/protobuf/containers.h"
 #include "hephaestus/serdes/protobuf/enums.h"
