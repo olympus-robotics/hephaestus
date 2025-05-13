@@ -26,12 +26,16 @@ auto DummyPrimitivesType::random(std::mt19937_64& mt) -> DummyPrimitivesType {
 }
 
 auto DummyType::random(std::mt19937_64& mt) -> DummyType {
-  return { .dummy_primitives_type = random::random<decltype(dummy_primitives_type)>(mt),
-           .internal_dummy_enum = random::random<decltype(internal_dummy_enum)>(mt),
-           .external_dummy_enum = random::random<decltype(external_dummy_enum)>(mt),
-           .dummy_string = random::random<decltype(dummy_string)>(mt),
-           .dummy_vector = random::random<decltype(dummy_vector)>(mt),
-           .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt) };
+  return {
+    .dummy_primitives_type = random::random<decltype(dummy_primitives_type)>(mt),
+    .internal_dummy_enum = random::random<decltype(internal_dummy_enum)>(mt),
+    .external_dummy_enum = random::random<decltype(external_dummy_enum)>(mt),
+    .dummy_string = random::random<decltype(dummy_string)>(mt),
+    .dummy_vector = random::random<decltype(dummy_vector)>(mt),
+    .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt),
+    .dummy_array = random::random<decltype(dummy_array)>(mt),
+    .dummy_array_encapsulated = random::random<decltype(dummy_array_encapsulated)>(mt),
+  };
 }
 
 }  // namespace heph::types
