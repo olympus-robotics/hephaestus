@@ -6,8 +6,8 @@
 
 #include <array>
 #include <cstddef>
+#include <ranges>  // NOLINT(misc-include-cleaner)
 #include <type_traits>
-#include <ranges> // NOLINT(misc-include-cleaner)
 #include <vector>
 
 #include <fmt/format.h>
@@ -50,21 +50,22 @@ template <Arithmetic T, typename ProtoT>
 void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec) {
   vec.clear();  // Ensure that the vector is empty before adding elements.
   vec.reserve(static_cast<size_t>(proto_repeated_field.size()));
+  // NOLINTNEXTLINE(misc-include-cleaner)
   std::ranges::transform(proto_repeated_field, std::back_inserter(vec),
-                 [](const auto& proto_value) { return static_cast<T>(proto_value); });
+                         [](const auto& proto_value) { return static_cast<T>(proto_value); });
 }
 
 template <typename T, typename ProtoT>
 void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_ptr_field,
                std::vector<T>& vec) {
   vec.clear();  // Ensure that the vector is empty before adding elements.
+                // NOLINTNEXTLINE(misc-include-cleaner)
   vec.reserve(static_cast<size_t>(proto_repeated_ptr_field.size()));
-   std::ranges::transform(proto_repeated_ptr_field, std::back_inserter(vec),
-                 [](const auto& proto_value) {
-                   T value;
-                   fromProto(proto_value, value);
-                   return value;
-                 });
+  std::ranges::transform(proto_repeated_ptr_field, std::back_inserter(vec), [](const auto& proto_value) {
+    T value;
+    fromProto(proto_value, value);
+    return value;
+  });
 }
 
 //=================================================================================================
@@ -92,8 +93,9 @@ void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_fie
   panicIf(proto_repeated_field.size() != N,
           fmt::format("Mismatch between size of repeated proto field {} and size of array {}.",
                       proto_repeated_field.size(), N));
-   std::ranges::transform(proto_repeated_field, arr.begin(),
-                 [](const auto& proto_value) { return static_cast<T>(proto_value); });
+  // NOLINTNEXTLINE(misc-include-cleaner)
+  std::ranges::transform(proto_repeated_field, arr.begin(),
+                         [](const auto& proto_value) { return static_cast<T>(proto_value); });
 }
 
 template <typename T, typename ProtoT, std::size_t N>
@@ -102,12 +104,12 @@ void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_
   panicIf(proto_repeated_ptr_field.size() != N,
           fmt::format("Mismatch between size of repeated proto ptr field {} and size of array {}.",
                       proto_repeated_ptr_field.size(), N));
-   std::ranges::transform(proto_repeated_ptr_field, arr.begin(),
-                 [](const auto& proto_value) {
-                   T value;
-                   fromProto(proto_value, value);
-                   return value;
-                 });
+  // NOLINTNEXTLINE(misc-include-cleaner)
+  std::ranges::transform(proto_repeated_ptr_field, arr.begin(), [](const auto& proto_value) {
+    T value;
+    fromProto(proto_value, value);
+    return value;
+  });
 }
 
 }  // namespace heph::serdes::protobuf
