@@ -18,11 +18,13 @@
 
 namespace heph::serdes::protobuf {
 
+template <typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
 //=================================================================================================
 // Vector (std::vector <-> google::protobuf::RepeatedField)
 //=================================================================================================
-template <typename T, typename ProtoT>
-  requires std::is_arithmetic_v<T>
+template <Arithmetic T, typename ProtoT>
 auto toProto(google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, const std::vector<T>& vec)
     -> void {
   proto_repeated_field.Clear();  // Ensure that the repeated field is empty before adding elements.
@@ -40,8 +42,7 @@ auto toProto(google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_ptr_fiel
   }
 }
 
-template <typename T, typename ProtoT>
-  requires std::is_arithmetic_v<T>
+template <Arithmetic T, typename ProtoT>
 auto fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::vector<T>& vec)
     -> void {
   vec.clear();  // Ensure that the vector is empty before adding elements.
