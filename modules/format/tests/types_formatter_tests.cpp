@@ -15,9 +15,6 @@
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
 
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::testing;
-
 namespace heph::types::tests {
 
 template <class T>
@@ -30,7 +27,7 @@ using TypeImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBounds
 TYPED_TEST_SUITE(TypeFormatTests, TypeImplementations);
 
 TYPED_TEST(TypeFormatTests, OstreamTest) {
-  const TypeParam type;
+  const TypeParam type{};
   std::stringstream ss;
   EXPECT_TRUE(ss.str().empty());
   ss << type;
