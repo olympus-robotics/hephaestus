@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -56,6 +57,10 @@ struct DummyType {
   std::string dummy_string;
   std::vector<int32_t> dummy_vector;
   std::vector<DummyPrimitivesType> dummy_vector_encapsulated;
+
+  static constexpr std::size_t DUMMY_ARRAY_SIZE = 3;
+  std::array<int32_t, DUMMY_ARRAY_SIZE> dummy_array;
+  std::array<DummyPrimitivesType, DUMMY_ARRAY_SIZE> dummy_array_encapsulated;
 };
 
 }  // namespace heph::types
