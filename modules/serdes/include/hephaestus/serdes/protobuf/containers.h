@@ -39,19 +39,6 @@ void fromProto(const ProtoT& proto_value, T& value) {
   value = static_cast<T>(proto_value);
 }
 
-template <typename T>
-concept String = std::is_same_v<T, std::string>;
-
-template <String T, typename ProtoT>
-void toProto(ProtoT& proto_value, const T& value) {
-  proto_value = value;
-}
-
-template <String T, typename ProtoT>
-void fromProto(const ProtoT& proto_value, T& value) {
-  value = proto_value;
-}
-
 //=================================================================================================
 // Vector (std::vector <-> google::protobuf::RepeatedField)
 //=================================================================================================
