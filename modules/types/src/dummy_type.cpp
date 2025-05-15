@@ -35,6 +35,8 @@ auto DummyType::random(std::mt19937_64& mt) -> DummyType {
     .dummy_vector_encapsulated = random::random<decltype(dummy_vector_encapsulated)>(mt),
     .dummy_array = random::random<decltype(dummy_array)>(mt),
     .dummy_array_encapsulated = random::random<decltype(dummy_array_encapsulated)>(mt),
+    .dummy_umap = random::random<decltype(dummy_umap)>(mt),
+    .dummy_umap_encapsulated = random::random<decltype(dummy_umap_encapsulated)>(mt),
   };
 }
 

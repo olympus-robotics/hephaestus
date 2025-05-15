@@ -27,6 +27,19 @@ template <typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
 
 //=================================================================================================
+// Trivial type (value <-> proto value)
+//=================================================================================================
+template <Arithmetic T, typename ProtoT>
+void toProto(const T value, ProtoT& proto_value) {
+  proto_value = static_cast<ProtoT>(value);
+}
+
+template <Arithmetic T, typename ProtoT>
+void fromProto(const ProtoT& proto_value, T& value) {
+  value = static_cast<T>(proto_value);
+}
+
+//=================================================================================================
 // Vector (std::vector <-> google::protobuf::RepeatedField)
 //=================================================================================================
 template <Arithmetic T, typename ProtoT>
@@ -110,6 +123,34 @@ void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_
     fromProto(proto_value, value);
     return value;
   });
+}
+
+//=================================================================================================
+// Unordered map (std::unordered_map <-> google::protobuf::RepeatedField)
+//=================================================================================================
+template <typename K, typename V, typename ProtoK, typename ProtoV>
+void toProto(google::protobuf::Map<ProtoK, ProtoV>& proto_map, const std::unordered_map<K, V>& umap) {
+  proto_map.clear();  // Ensure that the map is empty before adding elements.
+  for (const auto& [key, value] : umap) {
+    std::remove_const_t<ProtoK> proto_key;
+    std::remove_const_t<ProtoV> proto_value;
+    toProto(proto_key, key);
+    toProto(proto_value, value);
+    proto_map.emplace(std::move(proto_key), std::move(proto_value));
+  }
+}
+
+template <typename K, typename V, typename ProtoK, typename ProtoV>
+void fromProto(const google::protobuf::Map<ProtoK, ProtoV>& proto_map, std::unordered_map<K, V>& umap) {
+  umap.clear();  // Ensure that the map is empty before adding elements.
+  umap.reserve(static_cast<size_t>(proto_map.size()));
+  for (const auto& proto_pair : proto_map) {
+    std::remove_const_t<K> key;
+    std::remove_const_t<V> value;
+    fromProto(proto_pair.key(), key);
+    fromProto(proto_pair.value(), value);
+    umap.emplace(std::move(key), std::move(value));
+  }
 }
 
 }  // namespace heph::serdes::protobuf
