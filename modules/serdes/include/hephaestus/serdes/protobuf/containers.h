@@ -30,13 +30,26 @@ concept Arithmetic = std::is_arithmetic_v<T>;
 // Trivial type (value <-> proto value)
 //=================================================================================================
 template <Arithmetic T, typename ProtoT>
-void toProto(const T value, ProtoT& proto_value) {
+void toProto(ProtoT& proto_value, const T value) {
   proto_value = static_cast<ProtoT>(value);
 }
 
 template <Arithmetic T, typename ProtoT>
 void fromProto(const ProtoT& proto_value, T& value) {
   value = static_cast<T>(proto_value);
+}
+
+template <typename T>
+concept String = std::is_same_v<T, std::string>;
+
+template <String T, typename ProtoT>
+void toProto(ProtoT& proto_value, const T& value) {
+  proto_value = value;
+}
+
+template <String T, typename ProtoT>
+void fromProto(const ProtoT& proto_value, T& value) {
+  value = proto_value;
 }
 
 //=================================================================================================
@@ -147,8 +160,9 @@ void fromProto(const google::protobuf::Map<ProtoK, ProtoV>& proto_map, std::unor
   for (const auto& proto_pair : proto_map) {
     std::remove_const_t<K> key;
     std::remove_const_t<V> value;
-    fromProto(proto_pair.key(), key);
-    fromProto(proto_pair.value(), value);
+    const auto & [proto_key, proto_value] = proto_pair;
+    fromProto(proto_key, key);
+    fromProto(proto_value, value);
     umap.emplace(std::move(key), std::move(value));
   }
 }
