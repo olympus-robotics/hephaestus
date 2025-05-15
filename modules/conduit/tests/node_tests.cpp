@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
 #include <chrono>
 #include <cstdlib>
 #include <memory>
@@ -272,7 +273,7 @@ public:
     }
   }
 
-  unsigned num_messages{ 0 };
+  std::atomic<unsigned> num_messages{ 0 };
 };
 
 TEST(NodeTests, nodePeriodicMissingDeadline) {
@@ -289,7 +290,8 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy.executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  EXPECT_GE(sink_ptr->num_messages, dummy.executed - 1);
+  heph::telemetry::flushLogEntries();
+  EXPECT_GE(sink_ptr->num_messages.load(), dummy.executed - 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 
@@ -299,8 +301,8 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
                            .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } } } };
   PeriodicMissingDeadlineOperation dummy;
   auto mock_sink = std::make_unique<MockLogSink>();
-  // MockLogSink* sink_ptr = mock_sink.get();
-  // heph::telemetry::registerLogSink(std::move(mock_sink));
+  MockLogSink* sink_ptr = mock_sink.get();
+  heph::telemetry::registerLogSink(std::move(mock_sink));
 
   engine.addNode(dummy);
 
@@ -310,7 +312,8 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy.executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  // EXPECT_EQ(sink_ptr->num_messages + 1, dummy.executed);
+  heph::telemetry::flushLogEntries();
+  EXPECT_GE(sink_ptr->num_messages.load(), dummy.executed - 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 }  // namespace heph::conduit::tests

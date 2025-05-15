@@ -4,11 +4,15 @@
 
 #include "hephaestus/telemetry/log.h"
 
+#include <atomic>
+#include <chrono>
+#include <cstddef>
 #include <exception>
 #include <future>
 #include <memory>
 #include <new>  // std::bad_alloc
 #include <optional>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -35,6 +39,7 @@ public:
   static void registerSink(std::unique_ptr<ILogSink> sink) noexcept;
 
   static void log(LogEntry&& log_entry) noexcept;
+  static void flush() noexcept;
 
 private:
   [[nodiscard]] static auto instance() noexcept -> Logger&;
@@ -53,6 +58,7 @@ private:
   std::vector<std::unique_ptr<ILogSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
   heph::containers::BlockingQueue<LogEntry> entries_;
   std::future<void> message_process_future_;
+  std::atomic<std::size_t> entries_in_flight_{ 0 };
 };
 
 Logger::Logger() : entries_{ std::nullopt } {
@@ -64,6 +70,7 @@ Logger::Logger() : entries_{ std::nullopt } {
       }
 
       processEntry(message.value());
+      --entries_in_flight_;
     }
     emptyQueue();
   });
@@ -100,9 +107,17 @@ void Logger::log(LogEntry&& log_entry) noexcept {
     log_entry.stack_trace = heph::utils::StackTrace::print();
   }
   try {
+    ++telemetry.entries_in_flight_;
     telemetry.entries_.forcePush(std::move(log_entry));
   } catch (const std::bad_alloc& ex) {
     fmt::println(stderr, "While pushing log entry, bad allocation happened: {}", ex.what());
+  }
+}
+
+void Logger::flush() noexcept {
+  auto& telemetry = instance();
+  while (telemetry.entries_in_flight_.load() > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 }
 
@@ -136,5 +151,9 @@ void internal::log(LogEntry&& log_entry) noexcept {
 
 void registerLogSink(std::unique_ptr<ILogSink> sink) noexcept {
   Logger::registerSink(std::move(sink));
+}
+
+void flushLogEntries() {
+  Logger::flush();
 }
 }  // namespace heph::telemetry

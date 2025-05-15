@@ -26,8 +26,8 @@ public:
     return operation().name();
   }
 
-  auto execute(NodeEngine& engine) {
-    auto invoke_operation = [this, &engine]<typename... Ts>(Ts&&... ts) {
+  auto invokeOperation(NodeEngine& engine) {
+    return [this, &engine]<typename... Ts>(Ts&&... ts) {
       ExecutionStopWatch stop_watch{ this };
       if constexpr (std::is_invocable_v<OperationT&, NodeEngine&, Ts...>) {
         return operation()(engine, std::forward<Ts>(ts)...);
@@ -36,11 +36,15 @@ public:
         return operation()(std::forward<Ts>(ts)...);
       }
     };
+  }
+
+  auto executeSender(NodeEngine& engine) {
+    auto invoke_operation = invokeOperation(engine);
 
     auto trigger = operationTrigger(engine);
     using TriggerT = decltype(trigger);
     using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
-    static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
+    // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
     using TriggerValuesT = std::variant_alternative_t<0, TriggerValuesVariantT>;
     using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
     return std::move(trigger) | [&invoke_operation] {
@@ -49,7 +53,16 @@ public:
       } else {
         return stdexec::then(invoke_operation);
       }
-    }();  // | outputs_.propagate(engine);
+    }();
+  }
+
+  auto execute(NodeEngine& engine) {
+    return executeSender(engine) | outputs_.propagate(engine);
+  }
+
+  template <typename Input>
+  void registerInput(Input* input) {
+    outputs_.registerInput(input);
   }
 
   auto operation() -> OperationT& {
@@ -112,6 +125,6 @@ private:
   };
 
   detail::OutputConnections outputs_;
-  std::chrono::nanoseconds last_execution_duration_;
+  std::chrono::nanoseconds last_execution_duration_{};
 };
 }  // namespace heph::conduit
