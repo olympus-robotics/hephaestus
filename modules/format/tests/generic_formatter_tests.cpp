@@ -92,6 +92,46 @@ TEST(GenericFormatterTests, TestFormatKnownObjectWithChronoDuration) {
   fmt::println("fmt: {}", x);
 }
 
+TEST(GenericFormatterTests, TestYAMLRoundtripWithChronoDuration) {
+  struct TestStruct {
+    std::string a = "test_value";
+    std::chrono::duration<double> b = std::chrono::minutes{ 42 };
+    std::chrono::milliseconds c = std::chrono::milliseconds{ 42 };
+  };
+  const TestStruct x{};
+  const auto yaml = rfl::yaml::write(x);
+  fmt::print("YAML: {}\n", yaml);
+
+  const auto parsed = rfl::yaml::read<TestStruct>(yaml);
+  EXPECT_TRUE(parsed.has_value());
+  EXPECT_EQ(parsed->a, x.a);
+  EXPECT_EQ(parsed->b, x.b);
+  EXPECT_EQ(parsed->c, x.c);
+}
+
+TEST(GenericFormatterTests, TestYAMLWithChronoDurationError) {
+  using namespace std::literals;
+  {
+    const std::string yaml = R"(100s)";
+    const auto parsed = rfl::yaml::read<std::chrono::seconds>(yaml);
+    EXPECT_TRUE(parsed.has_value());
+    EXPECT_EQ(*parsed, 100s);
+  }
+
+  {
+    const std::string yaml = R"(100)";
+    const auto parsed = rfl::yaml::read<std::chrono::seconds>(yaml);
+    EXPECT_TRUE(parsed.has_value());
+    EXPECT_EQ(*parsed, 100s);
+  }
+
+  // {
+  //   const std::string yaml = R"(100ms)";
+  //   const auto parsed = rfl::yaml::read<std::chrono::milliseconds>(yaml);
+  //   EXPECT_FALSE(parsed.has_value());
+  // }
+}
+
 TEST(GenericFormatterTests, TestFormatBounds) {
   const types::Bounds<int> bounds{ .lower = 1, .upper = 2, .type = types::BoundsType::INCLUSIVE };
   const types::Bounds<int> bounds2{ .lower = 3, .upper = 4, .type = types::BoundsType::LEFT_OPEN };
