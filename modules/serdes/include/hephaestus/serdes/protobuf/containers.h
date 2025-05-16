@@ -147,7 +147,7 @@ void fromProto(const google::protobuf::Map<ProtoK, ProtoV>& proto_map, std::unor
   for (const auto& proto_pair : proto_map) {
     std::remove_const_t<K> key;
     std::remove_const_t<V> value;
-    const auto & [proto_key, proto_value] = proto_pair;
+    const auto& [proto_key, proto_value] = proto_pair;
     fromProto(proto_key, key);
     fromProto(proto_value, value);
     umap.emplace(std::move(key), std::move(value));
