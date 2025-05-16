@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace heph::types {
@@ -49,11 +50,14 @@ struct DummyType {
 
   [[nodiscard]] static auto random(std::mt19937_64& mt) -> DummyType;
 
+  // Primitive types
   DummyPrimitivesType dummy_primitives_type{};
 
+  // Enums
   InternalDummyEnum internal_dummy_enum{};
   ExternalDummyEnum external_dummy_enum{};
 
+  // STL containers
   std::string dummy_string;
   std::vector<int32_t> dummy_vector;
   std::vector<DummyPrimitivesType> dummy_vector_encapsulated;
@@ -61,6 +65,9 @@ struct DummyType {
   static constexpr std::size_t DUMMY_ARRAY_SIZE = 3;
   std::array<int32_t, DUMMY_ARRAY_SIZE> dummy_array;
   std::array<DummyPrimitivesType, DUMMY_ARRAY_SIZE> dummy_array_encapsulated;
+
+  std::unordered_map<std::size_t, int32_t> dummy_umap;
+  std::unordered_map<std::size_t, DummyPrimitivesType> dummy_umap_encapsulated;
 };
 
 }  // namespace heph::types

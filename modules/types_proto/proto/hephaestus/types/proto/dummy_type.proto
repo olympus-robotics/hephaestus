@@ -48,4 +48,6 @@ message DummyType {
   repeated DummyPrimitivesType dummy_vector_encapsulated = 6;
   repeated int32 dummy_array = 7;
   repeated DummyPrimitivesType dummy_array_encapsulated = 8;
+  map<uint64, int32> dummy_umap = 9;
+  map<uint64, DummyPrimitivesType> dummy_umap_encapsulated = 10;
 }
