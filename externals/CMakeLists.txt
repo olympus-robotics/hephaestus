@@ -12,7 +12,7 @@ project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
-message("\n\nCMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}\n\n")
+string(REPLACE "|" ";" CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}")
 
 # --------------------------------------------------------------------------------------------------
 # For each target add the list of dependencies. This needs to be done at the beginning to make sure that the macro
