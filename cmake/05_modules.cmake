@@ -494,7 +494,7 @@ macro(define_module_proto_library)
   endif()
 
   find_package(absl REQUIRED)
-  find_package(Protobuf REQUIRED)
+  find_package(Protobuf REQUIRED CONFIG)
 
   set(PROTOBUF_GENERATE_CPP_APPEND_PATH FALSE)
 
@@ -510,6 +510,7 @@ macro(define_module_proto_library)
   # This var should contain paths to all .proto files in use, even imported.
   set(PROTOBUF_IMPORT_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${PROTOBUF_DEP_PATHS})
 
+  include(FindProtobuf)
   protobuf_generate_cpp(PROTOBUF_SOURCES PROTOBUF_HEADERS ${TARGET_ARG_SOURCES})
 
   set(PROTOBUF_LIBRARY ${PROJECT_NAME}_${TARGET_ARG_NAME})

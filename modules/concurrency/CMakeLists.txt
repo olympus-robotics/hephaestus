@@ -10,7 +10,7 @@ declare_module(
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
 
 # library sources
 set(SOURCES
