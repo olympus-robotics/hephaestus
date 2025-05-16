@@ -24,6 +24,10 @@ void Context::run(const std::function<void()>& on_start) {
 }
 
 void Context::enqueue(TaskBase* task) {
+  if (ring_.stopRequested()) {
+    task->setStopped();
+    return;
+  }
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
     tasks_.push_back(task);
     return;
@@ -32,6 +36,10 @@ void Context::enqueue(TaskBase* task) {
 }
 
 void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time) {
+  if (ring_.stopRequested()) {
+    task->setStopped();
+    return;
+  }
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
     timer_.startAt(task, start_time);
     return;
