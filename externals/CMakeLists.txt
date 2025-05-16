@@ -12,6 +12,8 @@ project(hephaestus-external LANGUAGES C CXX)
 
 include(${CMAKE_TEMPLATE_DIR}/external.cmake)
 
+message("\n\nCMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}\n\n")
+
 # --------------------------------------------------------------------------------------------------
 # For each target add the list of dependencies. This needs to be done at the beginning to make sure that the macro
 # correctly includes them.
@@ -91,7 +93,7 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # protobuf
 set(PROTOBUF_TAG v30.0)
-set(PROTOBUF_VERSION 5.30.0)
+set(PROTOBUF_VERSION 6.30.0)
 set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
                         -Dprotobuf_BUILD_CONFORMANCE=OFF
 )

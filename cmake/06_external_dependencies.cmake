@@ -33,7 +33,9 @@ macro(build_external_dependencies)
   # as if it was a separate project. This means: - Variables set there are not shared by the rest of this project -
   # CMake parameters must be explicitly passed as if cmake was called on it from the command line
   message(STATUS "========= External dependencies (from folder: ${TARGET_ARG_FOLDER}): Configuring =========")
-  list(APPEND EXTERNAL_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH})
+  message("Original CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+  list(APPEND EXTERNAL_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_INSTALL_PREFIX})
+  message("EXTERNAL_PREFIX_PATH: ${EXTERNAL_PREFIX_PATH}")
 
   execute_process(
     COMMAND
