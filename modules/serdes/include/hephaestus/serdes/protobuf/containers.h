@@ -8,9 +8,11 @@
 #include <cstddef>
 #include <ranges>  // NOLINT(misc-include-cleaner)
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include <fmt/format.h>
+#include <google/protobuf/map.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/repeated_ptr_field.h>
 
