@@ -81,7 +81,7 @@ archive_override(
 bazel_dep(name = "googletest", version = "1.15.2")
 bazel_dep(name = "abseil-cpp", version = "20250127.0")
 bazel_dep(name = "magic_enum", version = "0.9.5")
-bazel_dep(name = "fmt", version = "11.2.0")
+bazel_dep(name = "fmt", version = "11.1.4")
 bazel_dep(name = "protobuf", version = "30.0")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0")
