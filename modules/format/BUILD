@@ -17,7 +17,7 @@ heph_cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/telemetry/telemetry",
+        "//modules/containers_reflection",
         "//modules/utils",
         "@fmt",
         "@magic_enum",

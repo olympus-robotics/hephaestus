@@ -18,6 +18,8 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
+        "//modules/telemetry/telemetry",
+        "//modules/utils",
         "@reflect-cpp",
     ],
 )

@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -15,13 +14,13 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/std.h>     // NOLINT(misc-include-cleaner)
-#include <hephaestus/utils/exception.h>
-#include <rfl.hpp>  // NOLINT(misc-include-cleaner)
+#include <rfl.hpp>       // NOLINT(misc-include-cleaner)
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
-#include "hephaestus/format/enum.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/containers_reflection/bit_flag.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/containers_reflection/chrono.h"    // NOLINT(misc-include-cleaner)
+#include "hephaestus/format/enum.h"                     // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/format/format.h"
 
@@ -52,38 +51,6 @@ struct Reflector<std::chrono::time_point<Clock, Duration>> {  // NOLINT(misc-inc
 
   static auto from(const std::chrono::time_point<Clock, Duration>& x) noexcept -> ReflType {
     return heph::utils::format::toString(x);
-  }
-};
-
-/// \brief Specialization of the Reflector for chrono based Duration type.
-template <typename Rep, typename Period>
-struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-cleaner)
-  using ReflType = std::string;
-
-  static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
-    return fmt::format("{:.3f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
-  }
-
-  static auto to(const ReflType& value) -> std::chrono::duration<Rep, Period> {
-    heph::panicIf(value.empty(), "Duration string is empty.");
-    std::string numeric_part;
-    // Check if the string ends with 's'
-    if (value.back() == 's') {
-      // Extract the numeric part by removing the 's' at the end
-      numeric_part = value.substr(0, value.length() - 1);
-    } else {
-      heph::log(heph::ERROR,
-                "Duration string does not end with 's'. Expected format like '123.456s' continuing rest of "
-                "the number",
-                "full string", value);
-      numeric_part = value;
-    }
-
-    // Note that those invalid casts may throw in which case reflect-cpp will return an error
-    float value_in_seconds = std::stof(numeric_part);
-    std::chrono::duration<float> duration_sec(value_in_seconds);
-
-    return std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(duration_sec);
   }
 };
 
