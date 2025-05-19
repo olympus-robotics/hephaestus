@@ -3,25 +3,23 @@
 # =================================================================================================
 
 declare_module(
-  NAME format
-  DEPENDS_ON_MODULES utils
+  NAME containers_reflection
+  DEPENDS_ON_MODULES containers utils telemetry
   DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt
 )
 
 find_package(fmt REQUIRED)
 find_package(reflectcpp REQUIRED)
-find_package(magic_enum REQUIRED)
 
 # library sources
-set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generic_formatter.h
-            include/hephaestus/format/enum.h
+set(SOURCES src/bit_flag.cpp src/chrono.cpp include/hephaestus/containers_reflection/bit_flag.h
+            include/hephaestus/containers_reflection/chrono.h
 )
 
 # library target
 define_module_library(
-  NAME format
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp magic_enum::magic_enum hephaestus::telemetry
-                   hephaestus::containers_reflection
+  NAME containers_reflection
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp hephaestus::telemetry
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -31,4 +29,3 @@ define_module_library(
 
 # Subprojects
 add_subdirectory(tests)
-add_subdirectory(examples)
