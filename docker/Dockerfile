@@ -14,12 +14,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip --no-cache-dir install cmakelang==0.6.13
 
-RUN wget -q -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null && \
-    apt-get update && \
-    rm /usr/share/keyrings/kitware-archive-keyring.gpg && \
-    apt-get install -y --no-install-recommends kitware-archive-keyring cmake && \
-    rm -rf /var/lib/apt/lists/*
+ARG CMAKE_VERSION=3.28.3
+RUN wget -q -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh && \
+    chmod +x cmake.sh && \
+    ./cmake.sh --skip-license --prefix /usr/ && \
+    rm cmake.sh
 
 ENV CLANG_VERSION=20
 RUN wget -q https://apt.llvm.org/llvm.sh && \
