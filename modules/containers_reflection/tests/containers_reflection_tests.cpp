@@ -69,8 +69,19 @@ TEST(Reflection, TestYAMLWithChronoDurationError) {
   {
     const std::string yaml = R"(100)";
     const auto parsed = rfl::yaml::read<std::chrono::seconds>(yaml);
-    EXPECT_TRUE(parsed.has_value());
-    EXPECT_EQ(*parsed, std::chrono::seconds(100));
+    EXPECT_FALSE(parsed.has_value());
+  }
+
+  {
+    const std::string yaml = R"(asbms)";
+    const auto parsed = rfl::yaml::read<std::chrono::seconds>(yaml);
+    EXPECT_FALSE(parsed.has_value());
+  }
+
+  {
+    const std::string yaml = R"(100ms)";
+    const auto parsed = rfl::yaml::read<std::chrono::milliseconds>(yaml);
+    EXPECT_FALSE(parsed.has_value());
   }
 }
 

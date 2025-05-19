@@ -20,7 +20,7 @@ set(SOURCES src/generic_formatter.cpp README.md include/hephaestus/format/generi
 # library target
 define_module_library(
   NAME format
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp magic_enum::magic_enum hephaestus::telemetry
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp magic_enum::magic_enum
                    hephaestus::containers_reflection
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
