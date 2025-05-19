@@ -17,7 +17,7 @@ RUN python3 -m pip --no-cache-dir install cmakelang==0.6.13
 ARG CMAKE_VERSION=3.28.3
 RUN wget -q -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh && \
     chmod +x cmake.sh && \
-    ./cmake.sh --skip-license --prefix /usr/ && \
+    ./cmake.sh --skip-license --prefix=/usr/ && \
     rm cmake.sh
 
 ENV CLANG_VERSION=20
