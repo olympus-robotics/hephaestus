@@ -13,7 +13,17 @@ namespace heph::utils::timing {
 /// @brief A class to limit the rate of function execution.
 ///
 /// This class provides a mechanism to ensure that a function is not executed more frequently than a specified
-/// interval. Might be handy to use with logging.
+/// interval. For example:
+/// @code
+/// heph::utils::timing::RateLimiter rate_limiter_map(std::chrono::seconds(1));
+/// heph::utils::timing::RateLimiter rate_limiter_log(std::chrono::milliseconds(100));
+/// while (true){
+///  ...
+/// rate_limiter_log([&]() {heph::log(heph::INFO, "lost track");});
+/// rate_limiter_map([&]() {writeMap(*mapping, path_to_map_directory);});
+///  ...
+/// }
+
 class RateLimiter final {
   using ClockT = std::chrono::steady_clock;
 
