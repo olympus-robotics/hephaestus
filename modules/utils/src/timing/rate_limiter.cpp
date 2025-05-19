@@ -16,7 +16,7 @@ void RateLimiter::operator()(const std::function<void()>& callback) {
   auto now = ClockT::now();
   if (now - timestamp_last_call_ > period_) {
     callback();
-    timestamp_last_call_ = now;
+    timestamp_last_call_ = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
   }
 }
 
