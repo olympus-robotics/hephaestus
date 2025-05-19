@@ -19,7 +19,7 @@ set(SOURCES src/bit_flag.cpp src/chrono.cpp include/hephaestus/containers_reflec
 # library target
 define_module_library(
   NAME containers_reflection
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils hephaestus::containers reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
