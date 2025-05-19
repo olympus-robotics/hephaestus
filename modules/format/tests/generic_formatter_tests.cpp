@@ -3,7 +3,7 @@
 //=================================================================================================
 
 #include <array>
-#include <chrono>
+#include <chrono>  // NOLINT(misc-include-cleaner)
 #include <cstdint>
 #include <iostream>
 #include <sstream>

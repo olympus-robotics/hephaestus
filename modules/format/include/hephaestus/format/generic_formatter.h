@@ -18,7 +18,9 @@
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
-#include "hephaestus/format/enum.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/containers_reflection/bit_flag.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/containers_reflection/chrono.h"    // NOLINT(misc-include-cleaner)
+#include "hephaestus/format/enum.h"                     // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/format/format.h"
 
@@ -49,16 +51,6 @@ struct Reflector<std::chrono::time_point<Clock, Duration>> {  // NOLINT(misc-inc
 
   static auto from(const std::chrono::time_point<Clock, Duration>& x) noexcept -> ReflType {
     return heph::utils::format::toString(x);
-  }
-};
-
-/// \brief Specialization of the Reflector for chrono based Duration type.
-template <typename Rep, typename Period>
-struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-cleaner)
-  using ReflType = std::string;
-
-  static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
-    return fmt::format("{:.3f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
   }
 };
 

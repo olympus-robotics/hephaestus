@@ -18,6 +18,7 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
+        "//modules/utils",
         "@reflect-cpp",
     ],
 )
