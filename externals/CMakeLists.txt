@@ -149,7 +149,7 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # fmt
-set(FMT_VERSION 11.0.2)
+set(FMT_VERSION 11.2.0)
 set(FMT_CMAKE_ARGS -DFMT_MASTER_PROJECT=OFF)
 add_cmake_dependency(
   NAME fmt

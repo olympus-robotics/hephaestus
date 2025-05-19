@@ -97,12 +97,12 @@ jobs:
       - uses: actions/checkout@v4.1.1
       - name: Install Rust
         run: |
-          export PATH=/root/.cargo/bin:$PATH
+          export PATH=/usr/local/cargo/bin:$PATH
           echo $(rustup toolchain install stable)
           echo $(rustup default stable)
           echo $(rustup show)
       - name: Configure CMake
-        run: export PATH=/root/.cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
+        run: export PATH=/usr/local/cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
       - name: Build
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build -- all examples
