@@ -9,12 +9,12 @@
 
 namespace heph::utils::timing {
 
-RateLimiter::RateLimiter(std::chrono::milliseconds rate) : rate_{ rate } {
+RateLimiter::RateLimiter(std::chrono::milliseconds period) : period_{ period } {
 }
 
 void RateLimiter::operator()(const std::function<void()>& callback) {
   auto now = ClockT::now();
-  if (now - timestamp_last_call_ > rate_) {
+  if (now - timestamp_last_call_ > period_) {
     callback();
     timestamp_last_call_ = now;
   }

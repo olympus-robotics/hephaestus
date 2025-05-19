@@ -15,15 +15,15 @@ namespace heph::utils::timing {
 /// This class provides a mechanism to ensure that a function is not executed more frequently than a specified
 /// interval. Might be handy to use with logging.
 class RateLimiter final {
-  using ClockT = std::chrono::system_clock;
+  using ClockT = std::chrono::steady_clock;
 
 public:
-  explicit RateLimiter(std::chrono::milliseconds rate);
+  explicit RateLimiter(std::chrono::milliseconds period);
 
   void operator()(const std::function<void()>& callback);
 
 private:
-  std::chrono::milliseconds rate_;
+  std::chrono::milliseconds period_;
   /// Default: initialized to the epoch to ensure the first call is not rate-limited.
   std::chrono::time_point<ClockT, std::chrono::microseconds> timestamp_last_call_;
 };
