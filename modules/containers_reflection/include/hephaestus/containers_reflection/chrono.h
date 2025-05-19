@@ -36,7 +36,8 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
     const size_t parsed_length = value.length() - 1;  // Remove the 's' at the end
     double value_in_seconds = 0.0;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    const auto [ptr, err] = std::from_chars(value.data(), value.data() + parsed_length, value_in_seconds);
+    const auto [ptr, err] = std::from_chars(value.data(), value.data() + parsed_length, value_in_seconds,
+                                            std::chars_format::general);
     heph::panicIf(err != std::errc(), fmt::format("Error parsing duration string: {}", value));
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     heph::panicIf(ptr != value.data() + parsed_length,
