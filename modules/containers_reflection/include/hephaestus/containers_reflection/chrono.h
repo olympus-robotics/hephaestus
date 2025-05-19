@@ -23,14 +23,14 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
   using ReflType = std::string;
 
   static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
-    return fmt::format("{:.6f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
+    return fmt::format("{:.6f}s", std::chrono::duration_cast<std::chrono::duration<double>>(x).count());
   }
 
   static auto to(const ReflType& value) -> std::chrono::duration<Rep, Period> {
     heph::panicIf(value.empty(), "Duration string is empty.");
     heph::panicIf(
         value.back() != 's',
-        fmt::format("Duration string does not end with 's'. Expected format like '123.456s', got '{}'.",
+        fmt::format("Duration string does not end with 's'. Expected format like '123.456231s', got '{}'.",
                     value));
     // Note that those invalid casts may throw in which case reflect-cpp will return an error
     const size_t parsed_length = value.length() - 1;  // Remove the 's' at the end
