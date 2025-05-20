@@ -58,6 +58,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "rate_limiter_tests",
+    srcs = ["tests/rate_limiter_tests.cpp"],
+    deps = [":utils"],
+)
+
+heph_cc_test(
     name = "string_literal_tests",
     srcs = ["tests/string_literal_tests.cpp"],
     deps = [":utils"],
