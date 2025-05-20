@@ -4,8 +4,8 @@
 
 declare_module(
   NAME format
-  DEPENDS_ON_MODULES utils
-  DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt
+  DEPENDS_ON_MODULES utils containers_reflection
+  DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt magic_enum
 )
 
 find_package(fmt REQUIRED)
