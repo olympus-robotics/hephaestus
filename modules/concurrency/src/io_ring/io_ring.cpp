@@ -68,7 +68,7 @@ struct DispatchOperation {
 };
 
 IoRing::IoRing(IoRingConfig const& config) : config_(config) {
-  int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
+  const int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
   heph::panicIf(res < 0, fmt::format("::io_uring_queue_init failed: {}",
                                      std::error_code(-res, std::system_category()).message()));

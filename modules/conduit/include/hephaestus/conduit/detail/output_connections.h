@@ -7,7 +7,6 @@
 #include <array>
 #include <chrono>
 #include <cstddef>
-#include <functional>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -51,8 +50,7 @@ public:
   static constexpr std::string_view INPUT_OVERFLOW_WARNING =
       "Delaying Output operation because receiving input would overflow";
 
-  template <typename NameT>
-  explicit OutputConnections(NameT name) : name_(std::move(name)) {
+  explicit OutputConnections(std::string name) : name_(std::move(name)) {
   }
 
   auto propagate(NodeEngine& engine) {
@@ -131,8 +129,8 @@ public:
     });
   }
 
-  auto name() -> std::string {
-    return name_();
+  [[nodiscard]] auto name() const -> std::string {
+    return name_;
   }
 
   template <typename Input>
@@ -149,6 +147,6 @@ private:
   std::vector<InputEntry> inputs_;
   std::size_t generation_{ 0 };
   std::size_t retry_{ 0 };
-  std::function<std::string()> name_;
+  std::string name_;
 };
 }  // namespace heph::conduit::detail
