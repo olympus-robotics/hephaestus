@@ -13,15 +13,23 @@ enum struct RetrievalMethod : std::uint8_t {
   POLL,
 };
 
-template <std::size_t DepthV = 1, RetrievalMethod RetrievalMethodV = RetrievalMethod::BLOCK>
+enum struct SetMethod : std::uint8_t {
+  OVERFLOW,
+  OVERWRITE,
+};
+
+template <std::size_t DepthV = 1, RetrievalMethod RetrievalMethodV = RetrievalMethod::BLOCK,
+          SetMethod SetMethodV = SetMethod::OVERFLOW>
 struct InputPolicy {
   static constexpr auto DEPTH = DepthV;
   static constexpr auto RETRIEVAL_METHOD = RetrievalMethodV;
+  static constexpr auto SET_METHOD = SetMethodV;
   static_assert(DepthV > 0, "0 Depth does not make sense");
 };
 
 enum struct InputState : std::uint8_t {
   OK,
   OVERFLOW,
+  // OVERWRITE,
 };
 }  // namespace heph::conduit

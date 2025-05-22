@@ -38,13 +38,13 @@ struct DummyOperation : Node<DummyOperation> {
   static auto trigger() {
     return stdexec::just();
   }
-  auto operator()() {
+  static auto execute() {
   }
 };
 
 TEST(InputOutput, QueuedInputPolling) {
   DummyOperation dummy;
-  QueuedInput<int, InputPolicy<1, RetrievalMethod::POLL>> input{ &dummy };
+  QueuedInput<int, InputPolicy<1, RetrievalMethod::POLL>> input{ &dummy, "input" };
 
   std::optional<std::tuple<std::optional<int>>> res = stdexec::sync_wait(input.get());
   EXPECT_TRUE(res.has_value());
@@ -66,7 +66,7 @@ TEST(InputOutput, QueuedInputPolling) {
 
 TEST(InputOutput, QueuedInputBlocking) {
   DummyOperation dummy;
-  QueuedInput<int, InputPolicy<1, RetrievalMethod::BLOCK>> input{ &dummy };
+  QueuedInput<int, InputPolicy<1, RetrievalMethod::BLOCK>> input{ &dummy, "input" };
 
   exec::async_scope scope;
 
@@ -88,38 +88,39 @@ struct OutputOperation : Node<OutputOperation> {
     return stdexec::just();
   }
   static constexpr int VALUE{ 4711 };
-  auto operator()() -> int {
+  static auto execute() -> int {
     return VALUE;
   }
 };
 
-struct InputOperation : Node<InputOperation> {
-  QueuedInput<int> input1{ this };
+struct InputOperatioData {
   bool called{ false };
+};
 
-  auto trigger() {
-    return input1.get();
+struct InputOperation : Node<InputOperation, InputOperatioData> {
+  QueuedInput<int> input1{ this, "input" };
+
+  static auto trigger(InputOperation& self) {
+    return self.input1.get();
   }
 
-  void operator()(NodeEngine& engine, int input) {
+  static void execute(InputOperation& self, int input) {
     EXPECT_EQ(input, OutputOperation::VALUE);
-    called = true;
-    engine.requestStop();
+    self.data().called = true;
+    self.engine().requestStop();
   }
 };
 
 TEST(InputOutput, QueuedInputBasicInputOutput) {
   NodeEngine engine{ {} };
 
-  OutputOperation out;
-  engine.addNode(out);
-  InputOperation in;
-  engine.addNode(in);
+  auto out = engine.createNode<OutputOperation>();
+  auto in = engine.createNode<InputOperation>();
 
   in.input1.connectTo(out);
   // connect(out, in.input1);
   engine.run();
-  EXPECT_TRUE(in.called);
+  EXPECT_TRUE(in.data().called);
 }
 
 TEST(InputOutput, QueuedInputExplicitOutput) {
@@ -127,8 +128,8 @@ TEST(InputOutput, QueuedInputExplicitOutput) {
   exec::async_scope scope;
   DummyOperation dummy;
 
-  QueuedInput<std::string> input{ &dummy };
-  Output<std::string> output{ &dummy };
+  QueuedInput<std::string> input{ &dummy, "input" };
+  Output<std::string> output{ &dummy, "output" };
   input.connectTo(output);
   scope.spawn(output.setValue(engine, "Hello World!") | stdexec::then([&] { engine.requestStop(); }));
   engine.run();
@@ -161,8 +162,8 @@ TEST(InputOutput, QueuedInputOutputDelay) {
   exec::async_scope scope;
   DummyOperation dummy;
 
-  QueuedInput<std::string> input{ &dummy };
-  Output<std::string> output{ &dummy };
+  QueuedInput<std::string> input{ &dummy, "input" };
+  Output<std::string> output{ &dummy, "output" };
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
@@ -193,8 +194,8 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   exec::async_scope scope;
   DummyOperation dummy;
 
-  QueuedInput<std::string> input{ &dummy };
-  Output<std::string> output{ &dummy };
+  QueuedInput<std::string> input{ &dummy, "input" };
+  Output<std::string> output{ &dummy, "output" };
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
@@ -214,10 +215,10 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
 
 TEST(InputOutput, QueuedInputWhenAny) {
   DummyOperation dummy;
-  QueuedInput<std::string, InputPolicy<1, RetrievalMethod::POLL>> input1{ &dummy };
-  QueuedInput<int> input2{ &dummy };
-  QueuedInput<double, InputPolicy<1, RetrievalMethod::POLL>> input3{ &dummy };
-  QueuedInput<std::string> input4{ &dummy };
+  QueuedInput<std::string, InputPolicy<1, RetrievalMethod::POLL>> input1{ &dummy, "input1" };
+  QueuedInput<int> input2{ &dummy, "input2" };
+  QueuedInput<double, InputPolicy<1, RetrievalMethod::POLL>> input3{ &dummy, "input3" };
+  QueuedInput<std::string> input4{ &dummy, "input4" };
 
   {
     auto res = stdexec::sync_wait_with_variant(exec::when_any(input1.get(), input2.get()));
@@ -264,7 +265,7 @@ TEST(InputOutput, QueuedInputWhenAny) {
   {
     NodeEngine engine{ {} };
     exec::async_scope scope;
-    Output<std::string> output{ &dummy };
+    Output<std::string> output{ &dummy, "output" };
     input4.connectTo(output);
 
     std::variant<int, std::string> res;
@@ -285,19 +286,22 @@ TEST(InputOutput, QueuedInputWhenAny) {
   }
 }
 
-struct OptionalOutputOperation : Node<OptionalOutputOperation> {
+struct OptionalOutputData {
   std::size_t iteration{ 0 };
   bool propagate = false;
-  auto trigger(NodeEngine& engine) const {
-    if (iteration != 0) {
-      engine.requestStop();
+};
+
+struct OptionalOutputOperation : Node<OptionalOutputOperation, OptionalOutputData> {
+  static auto trigger(OptionalOutputOperation& self) {
+    if (self.data().iteration != 0) {
+      self.engine().requestStop();
     }
     return stdexec::just();
   }
   static constexpr int VALUE{ 4711 };
-  auto operator()() -> std::optional<int> {
-    ++iteration;
-    if (propagate) {
+  static auto execute(OptionalOutputOperation& self) -> std::optional<int> {
+    ++self.data().iteration;
+    if (self.data().propagate) {
       return std::optional{ VALUE };
     }
     return std::nullopt;
@@ -306,25 +310,23 @@ struct OptionalOutputOperation : Node<OptionalOutputOperation> {
 
 TEST(InputOutput, QueuedInputOptionalOutput) {
   {
-    DummyOperation dummy;
-    OptionalOutputOperation op;
     NodeEngine engine{ {} };
-    QueuedInput<int> input{ &dummy };
+    DummyOperation dummy;
+    auto op = engine.createNode<OptionalOutputOperation>();
+    QueuedInput<int> input{ &dummy, "input" };
     input.connectTo(op);
 
-    engine.addNode(op);
     engine.run();
     EXPECT_FALSE(input.getValue().has_value());
   }
   {
     DummyOperation dummy;
-    OptionalOutputOperation op;
     NodeEngine engine{ {} };
-    QueuedInput<int> input{ &dummy };
+    auto op = engine.createNode<OptionalOutputOperation>();
+    QueuedInput<int> input{ &dummy, "input" };
     input.connectTo(op);
-    op.propagate = true;
+    op.data().propagate = true;
 
-    engine.addNode(op);
     engine.run();
     auto res = input.getValue();
     EXPECT_TRUE(res.has_value());
@@ -338,16 +340,13 @@ TEST(InputOutput, AccumulatedInput) {
     state.push_back(value);
     return state;
   };
-  AccumulatedInput<int, std::vector<int>, decltype(accumulator)> input{ &dummy, accumulator };
+  AccumulatedInput<int, std::vector<int>, decltype(accumulator), InputPolicy<2>> input{ &dummy, accumulator,
+                                                                                        "input" };
 
   auto res = input.getValue();
   EXPECT_FALSE(res.has_value());
 
   EXPECT_EQ(input.setValue(0), InputState::OK);
-
-  res = input.getValue();
-  EXPECT_FALSE(res.has_value());
-
   EXPECT_EQ(input.setValue(1), InputState::OK);
 
   res = input.getValue();

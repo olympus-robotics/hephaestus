@@ -35,15 +35,6 @@ heph_cc_binary(
     ],
 )
 
-heph_cc_binary(
-    name = "mont_blanc",
-    srcs = ["examples/mont_blanc.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-    ],
-)
-
 #########
 # Tests #
 #########

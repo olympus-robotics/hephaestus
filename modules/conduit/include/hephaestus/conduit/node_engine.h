@@ -27,11 +27,6 @@ class NodeEngine {
 public:
   explicit NodeEngine(NodeEngineConfig config);
 
-  template <typename Node>
-  void addNode(Node& node) {
-    scope_.spawn(createNodeRunner(node));
-  }
-
   void run();
   void requestStop();
 
@@ -45,6 +40,15 @@ public:
 
   auto elapsed() {
     return context_.elapsed();
+  }
+
+  template <typename OperatorT, typename... Ts>
+  auto createNode(Ts&&... ts) -> OperatorT {
+    OperatorT node;
+    node.data_.emplace(std::forward<Ts>(ts)...);
+    node.engine_ = this;
+    scope_.spawn(createNodeRunner(node));
+    return node;
   }
 
 private:
@@ -82,7 +86,7 @@ inline auto NodeEngine::uponError() {
 
 template <typename Node>
 inline auto NodeEngine::createNodeRunner(Node& node) {
-  auto runner = exec::repeat_effect_until(node.execute(*this) |
+  auto runner = exec::repeat_effect_until(node.triggerExecute() |
                                           stdexec::then([this] { return context_.stopRequested(); })) |
                 uponError();
   return std::move(runner);
