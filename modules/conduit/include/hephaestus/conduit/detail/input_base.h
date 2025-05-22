@@ -24,6 +24,7 @@
 #include "hephaestus/conduit/detail/circular_buffer.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
+#include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/output.h"
 
 namespace heph::conduit::detail {
@@ -84,6 +85,11 @@ public:
   void connectTo(Output<U>& output) {
     static_assert(std::is_same_v<U, T>, "Input and output types don't match");
     output.registerInput(static_cast<InputT*>(this));
+  }
+
+  template <typename OperationT>
+  void connectTo(NodeHandle<OperationT>& node) {
+    connectTo(*node);
   }
 
   void enqueueWaiter(detail::AwaiterBase* awaiter) {

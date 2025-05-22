@@ -48,8 +48,8 @@ TEST(NodeTests, nodeBasic) {
   auto dummy = engine.createNode<BasicOperation>();
 
   engine.run();
-  EXPECT_TRUE(dummy.data().triggered);
-  EXPECT_TRUE(dummy.data().executed);
+  EXPECT_TRUE(dummy->data().triggered);
+  EXPECT_TRUE(dummy->data().executed);
   EXPECT_FALSE(BasicOperation::HAS_PERIOD);
 }
 
@@ -80,8 +80,8 @@ TEST(NodeTests, nodeRepeat) {
   auto dummy = engine.createNode<RepeatOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy.data().triggered, RepeatOperation::NUM_REPEATS);
-  EXPECT_EQ(dummy.data().triggered, RepeatOperation::NUM_REPEATS);
+  EXPECT_EQ(dummy->data().triggered, RepeatOperation::NUM_REPEATS);
+  EXPECT_EQ(dummy->data().triggered, RepeatOperation::NUM_REPEATS);
   EXPECT_FALSE(RepeatOperation::HAS_PERIOD);
 }
 
@@ -127,12 +127,12 @@ struct RepeatPoolOperation : Node<RepeatPoolOperation, RepeatPoolOperationData> 
 TEST(NodeTests, nodePoolRepeat) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<RepeatPoolOperation>();
-  dummy.data().parent_thread = std::this_thread::get_id();
+  dummy->data().parent_thread = std::this_thread::get_id();
 
   std::thread runner([&] { engine.run(); });
   runner.join();
-  EXPECT_EQ(dummy.data().triggered, RepeatOperation::NUM_REPEATS);
-  EXPECT_EQ(dummy.data().triggered, RepeatOperation::NUM_REPEATS);
+  EXPECT_EQ(dummy->data().triggered, RepeatOperation::NUM_REPEATS);
+  EXPECT_EQ(dummy->data().triggered, RepeatOperation::NUM_REPEATS);
   EXPECT_FALSE(RepeatOperation::HAS_PERIOD);
 }
 
@@ -157,8 +157,8 @@ TEST(NodeTests, nodeTriggerException) {
   auto dummy = engine.createNode<TriggerExceptionOperation>();
 
   EXPECT_THROW(engine.run(), heph::Panic);
-  EXPECT_TRUE(dummy.data().triggered);
-  EXPECT_FALSE(dummy.data().executed);
+  EXPECT_TRUE(dummy->data().triggered);
+  EXPECT_FALSE(dummy->data().executed);
   EXPECT_FALSE(TriggerExceptionOperation::HAS_PERIOD);
 }
 
@@ -183,8 +183,8 @@ TEST(NodeTests, nodeExecutionException) {
   auto dummy = engine.createNode<ExecutionExceptionOperation>();
 
   EXPECT_THROW(engine.run(), heph::Panic);
-  EXPECT_TRUE(dummy.data().triggered);
-  EXPECT_TRUE(dummy.data().executed);
+  EXPECT_TRUE(dummy->data().triggered);
+  EXPECT_TRUE(dummy->data().executed);
   EXPECT_FALSE(ExecutionExceptionOperation::HAS_PERIOD);
 }
 
@@ -216,8 +216,8 @@ TEST(NodeTests, nodePeriodic) {
   auto dummy = engine.createNode<PeriodicOperation>();
 
   engine.run();
-  EXPECT_GE(dummy.data().period_called, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
-  EXPECT_GE(dummy.data().executed, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy->data().period_called, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy->data().executed, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
   EXPECT_TRUE(PeriodicOperation::HAS_PERIOD);
 }
 
@@ -228,8 +228,8 @@ TEST(NodeTests, nodePeriodicSimulated) {
   auto dummy = engine.createNode<PeriodicOperation>();
 
   engine.run();
-  EXPECT_GE(dummy.data().period_called, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
-  EXPECT_GE(dummy.data().executed, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy->data().period_called, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
+  EXPECT_GE(dummy->data().executed, PeriodicOperation::RUNTIME / PeriodicOperation::PERIOD);
 }
 
 struct PeriodicMissingDeadlineOperation : Node<PeriodicMissingDeadlineOperation, PeriodicOperationData> {
@@ -273,12 +273,12 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy.data().period_called - 1,
+  EXPECT_EQ(dummy->data().period_called - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  EXPECT_EQ(dummy.data().executed - 1,
+  EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), dummy.data().executed - 1);
+  EXPECT_GE(sink_ptr->num_messages.load(), dummy->data().executed - 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 
@@ -293,12 +293,12 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy.data().period_called - 1,
+  EXPECT_EQ(dummy->data().period_called - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
-  EXPECT_EQ(dummy.data().executed - 1,
+  EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), dummy.data().executed - 1);
+  EXPECT_GE(sink_ptr->num_messages.load(), dummy->data().executed - 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 }  // namespace heph::conduit::tests

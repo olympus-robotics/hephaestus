@@ -117,10 +117,10 @@ TEST(InputOutput, QueuedInputBasicInputOutput) {
   auto out = engine.createNode<OutputOperation>();
   auto in = engine.createNode<InputOperation>();
 
-  in.input1.connectTo(out);
+  in->input1.connectTo(out);
   // connect(out, in.input1);
   engine.run();
-  EXPECT_TRUE(in.data().called);
+  EXPECT_TRUE(in->data().called);
 }
 
 TEST(InputOutput, QueuedInputExplicitOutput) {
@@ -325,7 +325,7 @@ TEST(InputOutput, QueuedInputOptionalOutput) {
     auto op = engine.createNode<OptionalOutputOperation>();
     QueuedInput<int> input{ &dummy, "input" };
     input.connectTo(op);
-    op.data().propagate = true;
+    op->data().propagate = true;
 
     engine.run();
     auto res = input.getValue();

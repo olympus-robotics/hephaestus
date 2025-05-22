@@ -14,6 +14,7 @@
 #include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log.h"
@@ -25,8 +26,9 @@ struct Unused {};
 template <typename InputT, typename T, std::size_t Depth>
 class InputBase;
 }  // namespace detail
+
 template <typename OperationT, typename OperationDataT = detail::Unused>
-class Node {
+class Node : detail::NodeBase {
   static constexpr bool HAS_PERIOD_CONSTANT = requires(OperationT&) { OperationT::PERIOD; };
   static constexpr bool HAS_PERIOD_NULLARY = requires(OperationT&) { OperationT::period(); };
   static constexpr bool HAS_PERIOD_ARG = requires(OperationT& op) { OperationT::period(op); };
@@ -64,13 +66,13 @@ public:
     return data_.value();
   }
 
-  [[nodiscard]] auto nodeName() const -> std::string {
+  [[nodiscard]] auto nodeName() const -> std::string final {
     if constexpr (HAS_NAME_ARG) {
-      return OperationT::name(operation());
+      return std::string{ OperationT::name(operation()) };
     } else if constexpr (HAS_NAME_NULLARY) {
-      return OperationT::name();
+      return std::string{ OperationT::name() };
     } else if constexpr (HAS_NAME_CONSTANT) {
-      return OperationT::NAME;
+      return std::string{ OperationT::NAME };
     } else {
       return std::string{ typeid(OperationT).name() };
     }

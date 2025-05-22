@@ -17,6 +17,7 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
+#include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -124,13 +125,13 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::conduit::NodeEngine engine{ {} };
 
-    std::vector<Spinner> spinners;
+    std::vector<heph::conduit::NodeHandle<Spinner>> spinners;
     spinners.reserve(PERIOD.size());
 
     for (auto period : PERIOD) {
       spinners.emplace_back(engine.createNode<Spinner>(period));
     }
-    spinners.back().data().toggleOutput();
+    spinners.back()->data().toggleOutput();
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine] { engine.requestStop(); });
     engine.run();
