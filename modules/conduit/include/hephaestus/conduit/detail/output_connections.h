@@ -7,7 +7,9 @@
 #include <array>
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -36,9 +38,23 @@ auto extractResult(std::optional<T>& t) -> T* {
 }
 
 class OutputConnections {
+  struct InputEntry {
+    using SetValueT = InputState (*)(void*, void*);
+    using NameT = std::string (*)(void*);
+    void* ptr;
+    SetValueT set_value;
+    NameT name;
+    std::size_t generation;
+  };
+
 public:
   static constexpr std::string_view INPUT_OVERFLOW_WARNING =
       "Delaying Output operation because receiving input would overflow";
+
+  template <typename NameT>
+  explicit OutputConnections(NameT name) : name_(std::move(name)) {
+  }
+
   auto propagate(NodeEngine& engine) {
     return stdexec::let_value([this, &engine]<typename... Ts>(Ts&&... ts) {
       // If the continuation didn't get any parameters, the operator
@@ -47,9 +63,10 @@ public:
       if constexpr (sizeof...(Ts) == 1) {
         // TODO: find better way to timeout based on the inputs timing...
         static constexpr std::array TIMEOUTS = {
-          std::chrono::milliseconds(0),    std::chrono::milliseconds(100), std::chrono::milliseconds(200),
-          std::chrono::milliseconds(400),  std::chrono::milliseconds(800), std::chrono::milliseconds(500),
-          std::chrono::milliseconds(1600), std::chrono::milliseconds(3200)
+          std::chrono::milliseconds(0),     std::chrono::milliseconds(100),  std::chrono::milliseconds(200),
+          std::chrono::milliseconds(400),   std::chrono::milliseconds(800),  std::chrono::milliseconds(500),
+          std::chrono::milliseconds(1600),  std::chrono::milliseconds(3200), std::chrono::milliseconds(6400),
+          std::chrono::milliseconds(12800), std::chrono::milliseconds(25600)
         };
         auto args = std::make_tuple(std::forward<Ts>(ts)...);
         return exec::repeat_effect_until(
@@ -58,8 +75,15 @@ public:
 
               if (retry_ > 0) {
                 // TODO: add proper names
-                heph::log(heph::WARN, std::string(INPUT_OVERFLOW_WARNING), "output", "dummy", "input",
-                          "dummy", "retry", retry_, "delay", timeout);
+                auto remaining_inputs =
+                    inputs_ | std::views::filter([this](InputEntry const& entry) {
+                      return entry.generation <= generation_;
+                    }) |
+                    std::views::transform([](InputEntry& entry) { return entry.name(entry.ptr); });
+
+                heph::log(heph::WARN, std::string(INPUT_OVERFLOW_WARNING), "output", name(), "inputs",
+                          fmt::format("[{}]", fmt::join(remaining_inputs, ", ")), "retry", retry_, "delay",
+                          timeout);
               }
               return engine.scheduler().scheduleAfter(timeout);
             }) |
@@ -75,14 +99,14 @@ public:
                     }
 
                     std::size_t propagated_count{ 0 };
-                    for (auto& [input, set_value, generation] : inputs_) {
-                      if (generation != generation_) {
+                    for (InputEntry& entry : inputs_) {
+                      if (entry.generation != generation_) {
                         ++propagated_count;
                         continue;
                       }
-                      if (set_value(input, result_ptr) == InputState::OK) {
+                      if (entry.set_value(entry.ptr, result_ptr) == InputState::OK) {
                         ++propagated_count;
-                        ++generation;
+                        ++entry.generation;
                       }
                     }
                     if (propagated_count == inputs_.size()) {
@@ -107,6 +131,10 @@ public:
     });
   }
 
+  auto name() -> std::string {
+    return name_();
+  }
+
   template <typename Input>
   void registerInput(Input* input) {
     inputs_.emplace_back(
@@ -114,13 +142,13 @@ public:
         [](void* input, void* ptr) {
           return static_cast<Input*>(input)->setValue(*static_cast<typename Input::ValueT*>(ptr));
         },
-        0);
+        [](void* input) { return std::string{ static_cast<Input*>(input)->name() }; }, 0);
   }
 
 private:
-  using InputT = InputState (*)(void*, void*);
-  std::vector<std::tuple<void*, InputT, std::size_t>> inputs_;
+  std::vector<InputEntry> inputs_;
   std::size_t generation_{ 0 };
   std::size_t retry_{ 0 };
+  std::function<std::string()> name_;
 };
 }  // namespace heph::conduit::detail

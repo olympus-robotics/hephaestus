@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include <algorithm>
-#include <array>
 #include <cstddef>
 #include <optional>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -17,56 +16,42 @@
 #include "hephaestus/conduit/node.h"
 
 namespace heph::conduit {
-template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<2>>
-class AccumulatedInput : detail::InputBase<AccumulatedInput<T, F, InputPolicy>> {
-  using BaseT = detail::InputBase<AccumulatedInput<T, F, InputPolicy>>;
+template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<>>
+class AccumulatedInput
+  : public detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH> {
+  using BaseT = detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH>;
 
 public:
   using ValueT = T;
   using InputPolicyT = InputPolicy;
-  static_assert(InputPolicyT::DEPTH >= 2, "Please specify a Depth policy larger than 2");
 
   template <typename OperationT>
-  explicit AccumulatedInput(Node<OperationT>* node, F f, R initial_value = R{})
-    // TODO: pass name
-    : BaseT(""), node_(node), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
-  }
-
-  template <typename U>
-  auto setValue(U&& u) -> InputState {
-    if (size_ == data_.size()) {
-      return InputState::OVERFLOW;
-    }
-    auto index = (current_ + size_) % data_.size();
-    data_[index] = std::forward<U>(u);
-    ++size_;
-    if (size_ > 1) {
-      this->triggerAwaiter();
-    }
-    return InputState::OK;
+  explicit AccumulatedInput(Node<OperationT>* node, F f, std::string_view name, R initial_value = R{})
+    : BaseT(fmt::format("{}/{}", node->nodeName(), name))
+    , node_(node)
+    , f_{ std::move(f) }
+    , initial_value_(std::move(initial_value)) {
   }
 
   auto getValue() -> std::optional<R> {
-    if (size_ < 2) {
+    if (this->buffer_.size() == 0) {
       return std::nullopt;
     }
     R res{ initial_value_ };
-    while (size_ != 0) {
-      auto index = current_;
-      current_ = (current_ + 1) % data_.size();
-      --size_;
-      res = f_(data_.at(index), res);
+    while (true) {
+      auto element = this->buffer_.pop();
+      if (!element.has_value()) {
+        break;
+      }
+      res = f_(*element, res);
     }
-    return std::optional<R>{ std::move(res) };
+    return res;
   }
 
   template <typename Receiver>
   using Awaiter = detail::Awaiter<AccumulatedInput, std::decay_t<Receiver>>;
 
 private:
-  std::array<T, InputPolicyT::DEPTH> data_{};
-  std::size_t size_{ 0 };
-  std::size_t current_{ 0 };
   F f_;
   R initial_value_;
 

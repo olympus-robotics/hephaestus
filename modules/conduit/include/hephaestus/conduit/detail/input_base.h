@@ -5,6 +5,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <deque>
 #include <exception>
 #include <optional>
@@ -20,9 +21,9 @@
 
 #include "hephaestus/concurrency/basic_sender.h"
 #include "hephaestus/conduit/detail/awaiter.h"
+#include "hephaestus/conduit/detail/circular_buffer.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
-#include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/output.h"
 
 namespace heph::conduit::detail {
@@ -37,11 +38,16 @@ struct IsOptional<std::optional<T>> : std::true_type {};
 template <typename T>
 static constexpr bool ISOPTIONAL = IsOptional<std::decay_t<T>>::value;
 
-template <typename InputT>
+template <typename InputT, typename T, std::size_t Depth>
 class InputBase {
 public:
   explicit InputBase(std::string name) : name_(std::move(name)) {
   }
+
+  auto name() {
+    return name_;
+  }
+
   auto get()
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::POLL)
   {
@@ -54,10 +60,10 @@ public:
     return heph::concurrency::makeSenderExpression<detail::InputBlockT>(static_cast<InputT*>(this));
   }
 
-  template <typename OperationT>
-  void connectTo(Node<OperationT>& node) {
+  template <typename OperationT, typename DataT>
+  void connectTo(Node<OperationT, DataT>& node) {
     using ValueT = typename InputT::ValueT;
-    using ExecuteOperationT = decltype(node.executeSender(std::declval<NodeEngine&>()));
+    using ExecuteOperationT = decltype(node.executeSender());
     using ExecuteResultVariantT = stdexec::value_types_of_t<ExecuteOperationT>;
     static_assert(std::variant_size_v<ExecuteResultVariantT> == 1);
     using ExecuteResultTupleT = std::variant_alternative_t<0, ExecuteResultVariantT>;
@@ -74,10 +80,9 @@ public:
     node.registerInput(static_cast<InputT*>(this));
   }
 
-  template <typename T>
-  void connectTo(Output<T>& output) {
-    using ValueT = typename InputT::ValueT;
-    static_assert(std::is_same_v<ValueT, T>, "Input and output types don't match");
+  template <typename U>
+  void connectTo(Output<U>& output) {
+    static_assert(std::is_same_v<U, T>, "Input and output types don't match");
     output.registerInput(static_cast<InputT*>(this));
   }
 
@@ -95,6 +100,20 @@ public:
     awaiters_.erase(it);
   }
 
+  template <typename U>
+  auto setValue(U&& u) -> InputState {
+    auto push_result = buffer_.push(std::forward<U>(u));
+    if (!push_result) {
+      if (InputT::InputPolicyT::SET_METHOD == SetMethod::OVERFLOW) {
+        return InputState::OVERFLOW;
+      }
+      buffer_.pop();
+      return setValue(std::forward<U>(u));
+    }
+    this->triggerAwaiter();
+    return InputState::OK;
+  }
+
 protected:
   void triggerAwaiter() {
     if (!awaiters_.empty()) {
@@ -103,6 +122,13 @@ protected:
       awaiter->trigger();
     }
   }
+
+protected:
+  // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
+  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+  detail::CircularBuffer<T, Depth> buffer_;
+  // NOLINTEND(misc-non-private-member-variables-in-classes)
+  // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
   std::deque<detail::AwaiterBase*> awaiters_;

@@ -19,7 +19,8 @@ thread_local IoRing* IoRing::current_ring = nullptr;
 
 struct DispatchOperation {
   static auto ring() -> IoRing& {
-    static thread_local IoRing r{ {} };
+    static thread_local IoRing r{ { .nentries = IoRingConfig::DEFAULT_ENTRY_COUNT,
+                                    .flags = IORING_SETUP_DEFER_TASKRUN | IORING_SETUP_SINGLE_ISSUER } };
     return r;
   }
 
@@ -66,15 +67,10 @@ struct DispatchOperation {
   std::atomic<bool> submit_done{ false };
 };
 
-IoRing::IoRing(IoRingConfig const& config) {
-  int res = ::io_uring_queue_init(config.nentries, &ring_, config.flags);
+IoRing::IoRing(IoRingConfig const& config) : config_(config) {
+  int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
   heph::panicIf(res < 0, fmt::format("::io_uring_queue_init failed: {}",
-                                     std::error_code(-res, std::system_category()).message()));
-
-  res = ::io_uring_register_ring_fd(&ring_);
-
-  heph::panicIf(res < 0, fmt::format("::io_uring_register_ring_fd failed: {}",
                                      std::error_code(-res, std::system_category()).message()));
 }
 
@@ -139,6 +135,13 @@ void IoRing::runOnce(bool block) {
 
 void IoRing::run(const std::function<void()>& on_started, const std::function<bool()>& on_progress) {
   heph::panicIf(current_ring != nullptr, "Cannot run ring, another ring is already active for this thread");
+
+  int res = 0;
+
+  res = ::io_uring_register_ring_fd(&ring_);
+
+  heph::panicIf(res < 0, fmt::format("::io_uring_register_ring_fd failed: {}",
+                                     std::error_code(-res, std::system_category()).message()));
   current_ring = this;
   running_.store(true, std::memory_order_release);
   on_started();
@@ -147,6 +150,10 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
     runOnce(!more_work);
     more_work = on_progress();
   }
+  res = ::io_uring_unregister_ring_fd(&ring_);
+
+  heph::panicIf(res < 0, fmt::format("::io_uring_unregister_ring_fd failed: {}",
+                                     std::error_code(-res, std::system_category()).message()));
   current_ring = nullptr;
 }
 

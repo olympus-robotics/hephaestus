@@ -67,7 +67,12 @@ struct WrenchStamped {};
 // NOLINTEND(readability-identifier-naming,misc-use-internal-linkage)
 
 struct Cordoba : heph::conduit::Node<Cordoba> {
-  std::string_view name = "cordoba";
+  explicit Cordoba(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Cordoba>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "cordoba";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(100);
@@ -83,21 +88,32 @@ struct Cordoba : heph::conduit::Node<Cordoba> {
 };
 
 struct Lyon : heph::conduit::Node<Lyon> {
-  std::string_view name = "lyon";
-  heph::conduit::QueuedInput<float> amazon{ this, "/amazon" };
+  explicit Lyon(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Lyon>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "lyon";
+  }
+
+  heph::conduit::QueuedInput<float> amazon{ this, "amazon" };
 
   auto trigger() {
     return amazon.get();
   }
 
   auto operator()(float f) -> float {
-    heph::log(heph::INFO, "lyon", "/amazon", f);
+    heph::log(heph::INFO, "lyon", "amazon", f);
     return f;
   }
 };
 
 struct Freeport : heph::conduit::Node<Freeport> {
-  std::string_view name = "freeport";
+  explicit Freeport(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Freeport>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "freeport";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(50);
@@ -113,7 +129,12 @@ struct Freeport : heph::conduit::Node<Freeport> {
 };
 
 struct Medelin : heph::conduit::Node<Medelin> {
-  std::string_view name = "medelin";
+  explicit Medelin(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Medelin>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "medelin";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(10);
@@ -129,7 +150,12 @@ struct Medelin : heph::conduit::Node<Medelin> {
 };
 
 struct Portsmouth : heph::conduit::Node<Portsmouth> {
-  std::string_view name = "portsmouth";
+  explicit Portsmouth(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Portsmouth>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "portsmouth";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(200);
@@ -146,7 +172,12 @@ struct Portsmouth : heph::conduit::Node<Portsmouth> {
 };
 
 struct Delhi : heph::conduit::Node<Delhi> {
-  std::string_view name = "delhi";
+  explicit Delhi(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Delhi>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "delhi";
+  }
 
   static auto period() {
     return std::chrono::seconds(1);
@@ -162,43 +193,41 @@ struct Delhi : heph::conduit::Node<Delhi> {
 };
 
 struct Hamburg : heph::conduit::Node<Hamburg> {
-  std::string_view name = "hamburg";
+  explicit Hamburg(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Hamburg>{ engine } {
+  }
 
-  heph::conduit::QueuedInput<float> tigris{ this, "tigris" };
-  heph::conduit::QueuedInput<std::int64_t, heph::conduit::InputPolicy<2>> ganges{ this, "ganges" };
-  heph::conduit::QueuedInput<std::int32_t, heph::conduit::InputPolicy<10>> nile{ this, "nile" };
+  static auto name() -> std::string_view {
+    return "hamburg";
+  }
+
+  using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
+                                                  heph::conduit::SetMethod::OVERWRITE>;
+
+  heph::conduit::QueuedInput<float, InputPolicyT> tigris{ this, "tigris" };
+  heph::conduit::QueuedInput<std::int64_t, InputPolicyT> ganges{ this, "ganges" };
+  heph::conduit::QueuedInput<std::int32_t, InputPolicyT> nile{ this, "nile" };
   heph::conduit::QueuedInput<std::string> danube{ this, "danube" };
 
   auto trigger() {
-    return exec::when_any(tigris.get(), ganges.get(), nile.get()) | stdexec::let_value([this](auto value) {
-             return stdexec::when_all(danube.get(), stdexec::just(value));
-           });
+    return stdexec::when_all(tigris.get(), ganges.get(), nile.get(), danube.get());
   }
 
-  template <typename T>
-  auto operator()(std::string d, T value) -> std::string {
-    if constexpr (std::is_same_v<T, float>) {
-      tigris_last_value = value;
-    }
-    if constexpr (std::is_same_v<T, std::int64_t>) {
-      ganges_last_value = value;
-    }
-    if constexpr (std::is_same_v<T, std::int32_t>) {
-      nile_last_value = value;
-    }
-
-    heph::log(heph::INFO, "hamburg", "/tigris", tigris_last_value, "/ganges", ganges_last_value, "/nile",
-              nile_last_value, "/danube", d);
+  auto operator()(std::optional<float> t, std::optional<std::int64_t> g, std::optional<std::int32_t> n,
+                  std::string d) -> std::string {
+    heph::log(heph::INFO, "hamburg", "tigris", t, "ganges", g, "nile", n, "danube", d);
 
     return fmt::format("hamburg/parana:{}", d);
   }
-  float tigris_last_value{};
-  std::int64_t ganges_last_value{};
-  std::int32_t nile_last_value{};
 };
 
 struct Taipei : heph::conduit::Node<Taipei> {
-  std::string_view name = "taipei";
+  explicit Taipei(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Taipei>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "taipei";
+  }
+
   heph::conduit::QueuedInput<Image> columbia{ this, "columbia" };
 
   auto trigger() {
@@ -211,8 +240,15 @@ struct Taipei : heph::conduit::Node<Taipei> {
 };
 
 struct Osaka : heph::conduit::Node<Osaka> {
-  std::string_view name = "osaka";
-  heph::conduit::QueuedInput<std::string, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL>>
+  explicit Osaka(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Osaka>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "osaka";
+  }
+
+  heph::conduit::QueuedInput<std::string, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
+                                                                     heph::conduit::SetMethod::OVERWRITE>>
       parana{ this, "parana" };
   heph::conduit::QueuedInput<Image> colorado{ this, "colorado" };
   heph::conduit::QueuedInput<Image, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL>>
@@ -225,15 +261,20 @@ struct Osaka : heph::conduit::Node<Osaka> {
     return stdexec::when_all(parana.get(), colorado.get(), columbia.get());
   }
 
-  auto operator()(heph::conduit::NodeEngine& engine, std::optional<std::string> s, Image,
-                  std::optional<Image>) {
-    heph::log(heph::INFO, "osaka", "/parana", s);
+  auto operator()(heph::conduit::NodeEngine& engine, std::optional<std::string> s, Image /**/,
+                  std::optional<Image> /**/) {
+    heph::log(heph::INFO, "osaka", "parana", s);
     return stdexec::when_all(salween.setValue(engine, PointCloud2{}), godavari.setValue(engine, LaserScan{}));
   }
 };
 
 struct Hebron : heph::conduit::Node<Hebron> {
-  std::string_view name = "hebron";
+  explicit Hebron(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Hebron>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "hebron";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(100);
@@ -245,7 +286,12 @@ struct Hebron : heph::conduit::Node<Hebron> {
 };
 
 struct Kingston : heph::conduit::Node<Kingston> {
-  std::string_view name = "hebron";
+  explicit Kingston(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Kingston>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "kingston";
+  }
 
   static auto period() {
     return std::chrono::milliseconds(100);
@@ -257,10 +303,16 @@ struct Kingston : heph::conduit::Node<Kingston> {
 };
 
 struct Tripoli : heph::conduit::Node<Tripoli> {
-  std::string_view name = "hebron";
+  explicit Tripoli(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Tripoli>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "tripoli";
+  }
 
   heph::conduit::QueuedInput<LaserScan> godavari{ this, "godavari" };
-  heph::conduit::QueuedInput<Image, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL>>
+  heph::conduit::QueuedInput<Image, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
+                                                               heph::conduit::SetMethod::OVERWRITE>>
       columbia{ this, "columbia" };
 
   auto trigger() {
@@ -273,7 +325,12 @@ struct Tripoli : heph::conduit::Node<Tripoli> {
 };
 
 struct Mandalay : heph::conduit::Node<Mandalay> {
-  std::string_view name = "mandalay";
+  explicit Mandalay(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Mandalay>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "mandalay";
+  }
 
   heph::conduit::QueuedInput<std::string> danube{ this, "danube" };
   heph::conduit::QueuedInput<Quaternion> chenab{ this, "chenab" };
@@ -314,17 +371,25 @@ struct Mandalay : heph::conduit::Node<Mandalay> {
 };
 
 struct Ponce : heph::conduit::Node<Ponce> {
-  std::string_view name = "ponce";
+  explicit Ponce(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Ponce>{ engine } {
+  }
 
-  heph::conduit::QueuedInput<Pose> tagus{ this, "tagus" };
-  heph::conduit::QueuedInput<std::string> danube{ this, "danube" };
-  heph::conduit::QueuedInput<Image> missouri{ this, "missouri" };
+  static auto name() -> std::string_view {
+    return "ponce";
+  }
+
+  using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::BLOCK,
+                                                  heph::conduit::SetMethod::OVERWRITE>;
+
+  heph::conduit::QueuedInput<Pose, InputPolicyT> tagus{ this, "tagus" };
+  heph::conduit::QueuedInput<std::string, InputPolicyT> danube{ this, "danube" };
+  heph::conduit::QueuedInput<Image, InputPolicyT> missouri{ this, "missouri" };
   heph::conduit::QueuedInput<PointCloud2> brazos{ this, "brazos" };
-  heph::conduit::QueuedInput<Vector3> yamuna{ this, "yamuna" };
-  heph::conduit::QueuedInput<LaserScan> godavari{ this, "godavari" };
-  heph::conduit::QueuedInput<PointCloud2> loire{ this, "loire" };
-  heph::conduit::QueuedInput<float> ohio{ this, "ohio" };
-  heph::conduit::QueuedInput<double> volga{ this, "volga" };
+  heph::conduit::QueuedInput<Vector3, InputPolicyT> yamuna{ this, "yamuna" };
+  heph::conduit::QueuedInput<LaserScan, InputPolicyT> godavari{ this, "godavari" };
+  heph::conduit::QueuedInput<PointCloud2, InputPolicyT> loire{ this, "loire" };
+  heph::conduit::QueuedInput<float, InputPolicyT> ohio{ this, "ohio" };
+  heph::conduit::QueuedInput<double, InputPolicyT> volga{ this, "volga" };
 
   heph::conduit::Output<Twist> congo{ this, "congo" };
   heph::conduit::Output<TwistWithCovarianceStamped> meckong{ this, "meckong" };
@@ -332,8 +397,9 @@ struct Ponce : heph::conduit::Node<Ponce> {
   auto trigger() {
     return brazos.get();
   }
+
   auto operator()(heph::conduit::NodeEngine& engine, PointCloud2 cloud) {
-    heph::log(heph::INFO, "mandalay",
+    heph::log(heph::INFO, "ponce",
               //
               "tagus", tagus.getValue(),
               //
@@ -360,11 +426,20 @@ struct Ponce : heph::conduit::Node<Ponce> {
 };
 
 struct Geneva : heph::conduit::Node<Geneva> {
-  std::string_view name = "geneva";
+  explicit Geneva(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Geneva>{ engine } {
+  }
+
+  using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
+                                                  heph::conduit::SetMethod::OVERWRITE>;
+
+  static auto name() -> std::string_view {
+    return "geneva";
+  }
+
   heph::conduit::QueuedInput<std::string> parana{ this, "parana" };
-  heph::conduit::QueuedInput<std::string> danube{ this, "danube" };
-  heph::conduit::QueuedInput<Pose> tagus{ this, "tagus" };
-  heph::conduit::QueuedInput<Twist> congo{ this, "congo" };
+  heph::conduit::QueuedInput<std::string, InputPolicyT> danube{ this, "danube" };
+  heph::conduit::QueuedInput<Pose, InputPolicyT> tagus{ this, "tagus" };
+  heph::conduit::QueuedInput<Twist, InputPolicyT> congo{ this, "congo" };
 
   auto trigger() {
     return parana.get();
@@ -387,7 +462,13 @@ struct Geneva : heph::conduit::Node<Geneva> {
 };
 
 struct Monaco : heph::conduit::Node<Monaco> {
-  std::string_view name = "monaco";
+  explicit Monaco(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Monaco>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "monaco";
+  }
+
   heph::conduit::QueuedInput<Twist> congo{ this, "congo" };
 
   auto trigger() {
@@ -400,7 +481,13 @@ struct Monaco : heph::conduit::Node<Monaco> {
 };
 
 struct Rotterdam : heph::conduit::Node<Rotterdam> {
-  std::string_view name = "rotterdam";
+  explicit Rotterdam(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Rotterdam>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "rotterdam";
+  }
+
   heph::conduit::QueuedInput<TwistWithCovarianceStamped> meckong{ this, "meckong" };
 
   auto trigger() {
@@ -413,7 +500,13 @@ struct Rotterdam : heph::conduit::Node<Rotterdam> {
 };
 
 struct Barcelona : heph::conduit::Node<Barcelona> {
-  std::string_view name = "barcelona";
+  explicit Barcelona(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Barcelona>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "barcelona";
+  }
+
   heph::conduit::QueuedInput<TwistWithCovarianceStamped> meckong{ this, "meckong" };
 
   auto trigger() {
@@ -426,7 +519,13 @@ struct Barcelona : heph::conduit::Node<Barcelona> {
 };
 
 struct Arequipa : heph::conduit::Node<Arequipa> {
-  std::string_view name = "arequipa";
+  explicit Arequipa(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Arequipa>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "arequipa";
+  }
+
   heph::conduit::QueuedInput<std::string> arkansas{ this, "arkansas" };
 
   auto trigger() {
@@ -438,16 +537,28 @@ struct Arequipa : heph::conduit::Node<Arequipa> {
 };
 
 struct Georgetown : heph::conduit::Node<Georgetown> {
-  std::string_view name = "georgetown";
-  heph::conduit::QueuedInput<Vector3Stamped> murray{ this, "murray" };
-  heph::conduit::QueuedInput<WrenchStamped> lena{ this, "lena" };
+  explicit Georgetown(heph::conduit::NodeEngine& engine) : heph::conduit::Node<Georgetown>{ engine } {
+  }
+
+  static auto name() -> std::string_view {
+    return "georgetown";
+  }
+  using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::BLOCK,
+                                                  heph::conduit::SetMethod::OVERWRITE>;
+
+  heph::conduit::QueuedInput<Vector3Stamped, InputPolicyT> murray{ this, "murray" };
+  heph::conduit::QueuedInput<WrenchStamped, InputPolicyT> lena{ this, "lena" };
 
   static auto period() {
     return std::chrono::milliseconds(50);
   }
 
-  auto operator()() {
-    heph::log(heph::INFO, "georgetown", "murray", murray.getValue(), "lena", lena.getValue());
+  auto trigger() {
+    return stdexec::when_all(murray.get(), lena.get());
+  }
+
+  auto operator()(Vector3Stamped m, WrenchStamped l) {
+    heph::log(heph::INFO, "georgetown", "murray", m, "lena", l);
 
     return double{};
   }
@@ -459,25 +570,18 @@ auto main() -> int {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
     heph::conduit::NodeEngine engine{ {} };
 
-    mont_blanc::Cordoba cordoba;
+    mont_blanc::Cordoba cordoba{ engine };
 
-    mont_blanc::Lyon lyon;
-    engine.addNode(lyon);
-    mont_blanc::Freeport freeport;
-    engine.addNode(freeport);
-    mont_blanc::Medelin medellin;
-    engine.addNode(medellin);
-    mont_blanc::Portsmouth portsmouth;
-    engine.addNode(portsmouth);
-    mont_blanc::Delhi delhi;
-    engine.addNode(delhi);
+    mont_blanc::Lyon lyon{ engine };
+    mont_blanc::Freeport freeport{ engine };
+    mont_blanc::Medelin medellin{ engine };
+    mont_blanc::Portsmouth portsmouth{ engine };
+    mont_blanc::Delhi delhi{ engine };
 
     lyon.amazon.connectTo(cordoba);
 
-    mont_blanc::Hamburg hamburg;
-    engine.addNode(hamburg);
-    mont_blanc::Taipei taipei;
-    engine.addNode(taipei);
+    mont_blanc::Hamburg hamburg{ engine };
+    mont_blanc::Taipei taipei{ engine };
 
     hamburg.tigris.connectTo(lyon);
     hamburg.ganges.connectTo(freeport);
@@ -486,25 +590,20 @@ auto main() -> int {
 
     taipei.columbia.connectTo(delhi);
 
-    mont_blanc::Osaka osaka;
-    engine.addNode(osaka);
+    mont_blanc::Osaka osaka{ engine };
 
     osaka.parana.connectTo(hamburg);
     osaka.colorado.connectTo(taipei);
     osaka.columbia.connectTo(delhi);
 
-    mont_blanc::Hebron hebron;
-    engine.addNode(hebron);
-    mont_blanc::Kingston kingston;
-    engine.addNode(kingston);
-    mont_blanc::Tripoli tripoli;
-    engine.addNode(tripoli);
+    mont_blanc::Hebron hebron{ engine };
+    mont_blanc::Kingston kingston{ engine };
+    mont_blanc::Tripoli tripoli{ engine };
 
     tripoli.godavari.connectTo(osaka.godavari);
     tripoli.columbia.connectTo(delhi);
 
-    mont_blanc::Mandalay mandalay;
-    engine.addNode(mandalay);
+    mont_blanc::Mandalay mandalay{ engine };
 
     mandalay.danube.connectTo(portsmouth);
     mandalay.chenab.connectTo(hebron);
@@ -513,8 +612,7 @@ auto main() -> int {
     mandalay.yamuna.connectTo(kingston);
     mandalay.loire.connectTo(tripoli);
 
-    mont_blanc::Ponce ponce;
-    engine.addNode(ponce);
+    mont_blanc::Ponce ponce{ engine };
 
     ponce.tagus.connectTo(mandalay.tagus);
     ponce.danube.connectTo(portsmouth);
@@ -524,14 +622,10 @@ auto main() -> int {
     ponce.godavari.connectTo(osaka.godavari);
     ponce.loire.connectTo(tripoli);
 
-    mont_blanc::Geneva geneva;
-    engine.addNode(geneva);
-    mont_blanc::Monaco monaco;
-    engine.addNode(monaco);
-    mont_blanc::Rotterdam rotterdam;
-    engine.addNode(rotterdam);
-    mont_blanc::Barcelona barcelona;
-    engine.addNode(barcelona);
+    mont_blanc::Geneva geneva{ engine };
+    mont_blanc::Monaco monaco{ engine };
+    mont_blanc::Rotterdam rotterdam{ engine };
+    mont_blanc::Barcelona barcelona{ engine };
 
     geneva.parana.connectTo(hamburg);
     geneva.danube.connectTo(portsmouth);
@@ -545,8 +639,8 @@ auto main() -> int {
 
     ponce.ohio.connectTo(monaco);
 
-    mont_blanc::Arequipa arequipa;
-    mont_blanc::Georgetown georgetown;
+    mont_blanc::Arequipa arequipa{ engine };
+    mont_blanc::Georgetown georgetown{ engine };
 
     arequipa.arkansas.connectTo(geneva);
     georgetown.murray.connectTo(rotterdam);

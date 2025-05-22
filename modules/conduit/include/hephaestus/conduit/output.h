@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include <stdexec/execution.hpp>
 
@@ -16,8 +17,10 @@ namespace heph::conduit {
 template <typename T>
 class Output {
 public:
-  template <typename OperationT>
-  explicit Output(Node<OperationT>* node, std::string name = "") : node_(node), name_(std::move(name)) {
+  template <typename OperationT, typename DataT>
+  explicit Output(Node<OperationT, DataT>* node, std::string name)
+    : node_(node)
+    , outputs_([node, name = std::move(name)]() { return fmt::format("{}/{}", node->nodeName(), name); }) {
   }
   auto setValue(NodeEngine& engine, T t) {
     return stdexec::just(std::move(t)) | outputs_.propagate(engine);
@@ -31,6 +34,5 @@ public:
 private:
   detail::OutputConnections outputs_;
   void* node_;
-  std::string name_;
 };
 }  // namespace heph::conduit
