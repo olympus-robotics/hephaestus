@@ -46,6 +46,11 @@ public:
   auto createNode(Ts&&... ts) -> OperatorT {
     OperatorT node;
     node.data_.emplace(std::forward<Ts>(ts)...);
+    // Late initialize special members. This is required for tow reasons:
+    //  1. We don't want to impose a ctor taking the engine parameter on
+    //     an  Operator
+    //  2. The name might only be fully valid after the node is fully constructed.
+    node.outputs_.emplace(node.nodeName());
     node.engine_ = this;
     scope_.spawn(createNodeRunner(node));
     return node;

@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -46,9 +47,6 @@ public:
   static constexpr bool HAS_PERIOD = HAS_PERIOD_CONSTANT || HAS_PERIOD_NULLARY || HAS_PERIOD_ARG;
   static constexpr bool HAS_NAME = HAS_NAME_CONSTANT || HAS_NAME_NULLARY || HAS_NAME_ARG;
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
-
-  Node() : outputs_([this]() { return std::string{ this->nodeName() }; }) {
-  }
 
   auto engine() -> NodeEngine& {
     return *engine_;
@@ -111,12 +109,12 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | outputs_.propagate(*engine_);
+    return executeSender() | outputs_->propagate(*engine_);
   }
 
   template <typename Input>
   void registerInput(Input* input) {
-    outputs_.registerInput(input);
+    outputs_->registerInput(input);
   }
 
   auto operation() -> OperationT& {
@@ -195,7 +193,7 @@ private:
     std::chrono::high_resolution_clock::time_point start_;
   };
 
-  detail::OutputConnections outputs_;
+  std::optional<detail::OutputConnections> outputs_;
   std::chrono::nanoseconds last_execution_duration_{};
   NodeEngine* engine_{ nullptr };
   std::optional<OperationDataT> data_;

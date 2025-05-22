@@ -18,9 +18,7 @@ template <typename T>
 class Output {
 public:
   template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string name)
-    : node_(node)
-    , outputs_([node, name = std::move(name)]() { return fmt::format("{}/{}", node->nodeName(), name); }) {
+  explicit Output(Node<OperationT, DataT>* node, std::string name) : node_(node), outputs_(std::move(name)) {
   }
   auto setValue(NodeEngine& engine, T t) {
     return stdexec::just(std::move(t)) | outputs_.propagate(engine);
