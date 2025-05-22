@@ -1,13 +1,15 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #pragma once
 
 #include <cstdint>
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include <exec/async_scope.hpp>
 #include <exec/repeat_effect_until.hpp>
@@ -15,6 +17,8 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/conduit/detail/node_base.h"
+#include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::conduit {
@@ -43,17 +47,19 @@ public:
   }
 
   template <typename OperatorT, typename... Ts>
-  auto createNode(Ts&&... ts) -> OperatorT {
-    OperatorT node;
-    node.data_.emplace(std::forward<Ts>(ts)...);
+  auto createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
+    auto node_ptr = std::make_unique<OperatorT>();
+    auto* node = node_ptr.get();
+    nodes_.emplace_back(std::unique_ptr<detail::NodeBase>{ node_ptr.release() });
+    node->data_.emplace(std::forward<Ts>(ts)...);
     // Late initialize special members. This is required for tow reasons:
     //  1. We don't want to impose a ctor taking the engine parameter on
     //     an  Operator
     //  2. The name might only be fully valid after the node is fully constructed.
-    node.outputs_.emplace(node.nodeName());
-    node.engine_ = this;
-    scope_.spawn(createNodeRunner(node));
-    return node;
+    node->outputs_.emplace(node->nodeName());
+    node->engine_ = this;
+    scope_.spawn(createNodeRunner(*node));
+    return NodeHandle{ node };
   }
 
 private:
@@ -67,6 +73,8 @@ private:  // Optimal fields order: pool_, exception_, scope_, context_
   std::exception_ptr exception_;
   exec::async_scope scope_;
   heph::concurrency::Context context_{ {} };
+
+  std::vector<std::unique_ptr<detail::NodeBase>> nodes_;
 };
 
 inline auto NodeEngine::uponError() {
