@@ -91,12 +91,12 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | outputs_->propagate(engine());
+    return executeSender() | implicit_output_->propagate(engine());
   }
 
   template <typename Input>
   void registerInput(Input* input) {
-    outputs_->registerInput(input);
+    implicit_output_->registerInput(input);
   }
 
   auto operation() -> OperationT& {
@@ -134,7 +134,7 @@ private:
   template <typename InputT, typename T, std::size_t Depth>
   friend class detail::InputBase;
 
-  std::optional<detail::OutputConnections> outputs_;
+  std::optional<detail::OutputConnections> implicit_output_;
   std::optional<OperationDataT> data_;
 };
 

@@ -93,7 +93,8 @@ void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg)
 namespace telemetry {
 ///@brief Register a sink for logging.
 void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink) noexcept;
-///@brief Flush all log entries to the sink
+///@brief Flush all log entries to the sink. Block until flush is completed.
+/// > NOTE: if messages keep coming, this could block forever.
 void flushLogEntries();
 }  // namespace telemetry
 
