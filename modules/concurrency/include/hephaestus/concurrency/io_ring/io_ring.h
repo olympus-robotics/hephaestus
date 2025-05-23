@@ -20,7 +20,7 @@ namespace heph::concurrency::io_ring {
 struct IoRingConfig {
   static constexpr std::uint32_t DEFAULT_ENTRY_COUNT = 1024;
   std::uint32_t nentries{ DEFAULT_ENTRY_COUNT };
-  std::uint32_t flags{ IORING_SETUP_DEFER_TASKRUN | IORING_SETUP_SINGLE_ISSUER };
+  std::uint32_t flags{ 0 };
 };
 
 class IoRing {
@@ -51,6 +51,7 @@ private:
 
 private:
   ::io_uring ring_{};
+  IoRingConfig config_;
   std::atomic<bool> running_{ false };
   stdexec::inplace_stop_source stop_source_;
 
