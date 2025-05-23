@@ -6,6 +6,9 @@
 
 #include <chrono>
 
+#include <stdexec/stop_token.hpp>
+
+#include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 
@@ -36,5 +39,11 @@ ExecutionStopWatch::~ExecutionStopWatch() noexcept {
 
 ExecutionStopWatch::ExecutionStopWatch(NodeBase* self)
   : self_(self), start_(std::chrono::high_resolution_clock::now()) {
+}
+auto NodeBase::getStopToken() -> stdexec::inplace_stop_token {
+  if (engine_ == nullptr) {
+    return stdexec::inplace_stop_token{};
+  }
+  return engine_->getStopToken();
 }
 }  // namespace heph::conduit::detail

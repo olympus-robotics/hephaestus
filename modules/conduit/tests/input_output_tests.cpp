@@ -213,6 +213,16 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   EXPECT_GE(sink_ptr->num_messages.load(), 1);
 }
 
+TEST(InputOutput, handleStopped) {
+  NodeEngine engine{ {} };
+  [[maybe_unused]] auto dummy = engine.createNode<InputOperation>();
+
+  exec::async_scope scope;
+  scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) | stdexec::then([&] { engine.requestStop(); }));
+
+  engine.run();
+}
+
 TEST(InputOutput, QueuedInputWhenAny) {
   DummyOperation dummy;
   QueuedInput<std::string, InputPolicy<1, RetrievalMethod::POLL>> input1{ &dummy, "input1" };

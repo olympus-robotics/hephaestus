@@ -25,7 +25,7 @@ public:
   using InputPolicyT = InputPolicy;
   template <typename OperationT, typename DataT>
   explicit QueuedInput(Node<OperationT, DataT>* node, std::string_view name)
-    : BaseT(fmt::format("{}/{}", node->nodeName(), name)), node_(node) {
+    : BaseT(node, fmt::format("{}/{}", node->nodeName(), name)) {
   }
 
   auto getValue() -> std::optional<T> {
@@ -34,8 +34,5 @@ public:
 
   template <typename Receiver>
   using Awaiter = detail::Awaiter<QueuedInput, std::decay_t<Receiver>>;
-
-private:
-  void* node_{ nullptr };
 };
 }  // namespace heph::conduit

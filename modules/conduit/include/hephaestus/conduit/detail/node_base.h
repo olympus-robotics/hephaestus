@@ -8,6 +8,8 @@
 #include <string>
 #include <string_view>
 
+#include <stdexec/stop_token.hpp>
+
 // Forward declarations
 namespace heph::conduit {
 class NodeEngine;
@@ -30,6 +32,8 @@ public:
   [[nodiscard]] auto engine() const -> NodeEngine const& {
     return *engine_;
   }
+
+  auto getStopToken() -> stdexec::inplace_stop_token;
 
 protected:
   void updateExecutionTime(std::chrono::nanoseconds duration);

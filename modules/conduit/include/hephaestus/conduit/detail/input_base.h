@@ -15,6 +15,7 @@
 #include <utility>
 #include <variant>
 
+#include <hephaestus/conduit/detail/node_base.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/__detail/__sender_introspection.hpp>
 #include <stdexec/execution.hpp>
@@ -42,7 +43,7 @@ static constexpr bool ISOPTIONAL = IsOptional<std::decay_t<T>>::value;
 template <typename InputT, typename T, std::size_t Depth>
 class InputBase {
 public:
-  explicit InputBase(std::string name) : name_(std::move(name)) {
+  explicit InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
   }
 
   auto name() {
@@ -59,6 +60,10 @@ public:
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::BLOCK)
   {
     return heph::concurrency::makeSenderExpression<detail::InputBlockT>(static_cast<InputT*>(this));
+  }
+
+  auto node() -> NodeBase* {
+    return node_;
   }
 
   template <typename OperationT, typename DataT>
@@ -139,6 +144,7 @@ protected:
 private:
   std::deque<detail::AwaiterBase*> awaiters_;
   std::string name_;
+  NodeBase* node_;
 };
 }  // namespace heph::conduit::detail
 
