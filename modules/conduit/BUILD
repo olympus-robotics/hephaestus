@@ -18,6 +18,7 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
+        "//modules/telemetry/telemetry_influxdb_sink",
     ],
 )
 
@@ -31,7 +32,6 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
-        "//modules/telemetry/telemetry_influxdb_sink",
     ],
 )
 

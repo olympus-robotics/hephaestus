@@ -21,6 +21,8 @@ class NodeBase {
 public:
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
+  NodeBase() noexcept;
+
   virtual ~NodeBase() = default;
   [[nodiscard]] virtual auto nodeName() const -> std::string = 0;
   [[nodiscard]] virtual auto nodePeriod() -> std::chrono::nanoseconds = 0;
@@ -40,10 +42,16 @@ protected:
   auto lastPeriodDuration() -> std::chrono::nanoseconds;
 
 private:
+  void calculateClockDrift();
+
+private:
   friend class heph::conduit::NodeEngine;
   friend class ExecutionStopWatch;
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
+
+  std::chrono::steady_clock::time_point last_steady_;
+  std::chrono::system_clock::time_point last_system_;
 };
 
 class ExecutionStopWatch {
