@@ -97,20 +97,6 @@ public:
     connectTo(*node);
   }
 
-  void enqueueWaiter(detail::AwaiterBase* awaiter) {
-    auto it = std::ranges::find(awaiters_, awaiter);
-    if (it == awaiters_.end()) {
-      awaiters_.push_back(awaiter);
-    }
-  }
-  void dequeueWaiter(detail::AwaiterBase* awaiter) {
-    auto it = std::ranges::find(awaiters_, awaiter);
-    if (it == awaiters_.end()) {
-      return;
-    }
-    awaiters_.erase(it);
-  }
-
   template <typename U>
   auto setValue(U&& u) -> InputState {
     auto push_result = buffer_.push(std::forward<U>(u));
@@ -123,6 +109,21 @@ public:
     }
     this->triggerAwaiter();
     return InputState::OK;
+  }
+
+private:
+  void enqueueWaiter(detail::AwaiterBase* awaiter) {
+    auto it = std::ranges::find(awaiters_, awaiter);
+    if (it == awaiters_.end()) {
+      awaiters_.push_back(awaiter);
+    }
+  }
+  void dequeueWaiter(detail::AwaiterBase* awaiter) {
+    auto it = std::ranges::find(awaiters_, awaiter);
+    if (it == awaiters_.end()) {
+      return;
+    }
+    awaiters_.erase(it);
   }
 
 protected:
@@ -142,7 +143,10 @@ protected:
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
-  std::deque<detail::AwaiterBase*> awaiters_;
+  template <typename OtherInputT, typename ReceiverT>
+  friend class Awaiter;
+
+  std::deque<AwaiterBase*> awaiters_;
   std::string name_;
   NodeBase* node_;
 };
