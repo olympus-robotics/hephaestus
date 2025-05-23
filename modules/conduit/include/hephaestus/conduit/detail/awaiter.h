@@ -25,6 +25,7 @@ class Awaiter : public AwaiterBase {
   using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
   using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
   using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
+  using ContextStopCallbackT = stdexec::stop_callback_for_t<stdexec::inplace_stop_token, StopCallback>;
 
 public:
   Awaiter(InputT* self, ReceiverT receiver) : self_{ self }, receiver_{ std::move(receiver) } {
@@ -43,13 +44,16 @@ public:
 
   void trigger() final {
     auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
-    if (stop_token.stop_requested()) {
+    auto context_stop_token = self_->node()->getStopToken();
+
+    if (stop_token.stop_requested() || context_stop_token.stop_requested()) {
       stdexec::set_stopped(std::move(receiver_));
       return;
     }
     auto res = self_->getValue();
     if (res.has_value()) {
       stop_callback_.reset();
+      context_stop_callback_.reset();
       stdexec::set_value(std::move(receiver_), std::move(*res));
       return;
     }
@@ -60,12 +64,14 @@ public:
     }
     if (!stop_callback_.has_value()) {
       stop_callback_.emplace(stop_token, StopCallback{ this });
+      context_stop_callback_.emplace(context_stop_token, StopCallback{ this });
     }
   }
 
 private:
   void handleStopped() {
     stop_callback_.reset();
+    context_stop_callback_.reset();
     stdexec::set_stopped(std::move(receiver_));
   }
 
@@ -73,6 +79,7 @@ private:
   InputT* self_;
   ReceiverT receiver_;
   std::optional<StopCallbackT> stop_callback_;
+  std::optional<ContextStopCallbackT> context_stop_callback_;
   bool enqueued_{ false };
 };
 }  // namespace heph::conduit::detail

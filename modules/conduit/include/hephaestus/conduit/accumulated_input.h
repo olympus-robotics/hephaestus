@@ -27,8 +27,7 @@ public:
 
   template <typename OperationT>
   explicit AccumulatedInput(Node<OperationT>* node, F f, std::string_view name, R initial_value = R{})
-    : BaseT(fmt::format("{}/{}", node->nodeName(), name))
-    , node_(node)
+    : BaseT(node, fmt::format("{}/{}", node->nodeName(), name))
     , f_{ std::move(f) }
     , initial_value_(std::move(initial_value)) {
   }
@@ -54,7 +53,5 @@ public:
 private:
   F f_;
   R initial_value_;
-
-  void* node_{ nullptr };
 };
 }  // namespace heph::conduit

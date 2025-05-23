@@ -24,6 +24,7 @@
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/utils/signal_handler.h"
 
 namespace mont_blanc {
 // NOLINTBEGIN(readability-identifier-naming,misc-use-internal-linkage)
@@ -568,6 +569,8 @@ auto main() -> int {
     georgetown->lena.connectTo(barcelona);
 
     ponce->volga.connectTo(georgetown);
+
+    heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
 
     engine.run();
 

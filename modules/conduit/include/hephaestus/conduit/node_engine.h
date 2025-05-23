@@ -34,6 +34,10 @@ public:
   void run();
   void requestStop();
 
+  auto getStopToken() {
+    return context_.getStopToken();
+  }
+
   auto scheduler() {
     return context_.scheduler();
   }
