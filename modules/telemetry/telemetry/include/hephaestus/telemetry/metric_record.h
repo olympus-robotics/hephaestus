@@ -9,9 +9,11 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 
 #include "hephaestus/serdes/json.h"
 #include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/utils/unique_function.h"
 
 namespace heph::telemetry {
 namespace internal {
@@ -28,7 +30,8 @@ void registerMetricSink(std::unique_ptr<IMetricSink> sink);
 /// The metric is forwarded to all registered sinks.
 /// Sinks process the metric in a dedicated thread, this means that this function is non-blocking and
 /// deterministic.
-void record(const Metric& metric);
+void record(Metric metric);
+void record(heph::UniqueFunction<Metric()> metric);
 
 /// @brief Record a user defined metric.
 /// NOTE: the data needs to be serializable to JSON.
@@ -39,17 +42,21 @@ void record(const Metric& metric);
 /// @param data The data to record, needs to be json serializable.
 /// @param timestamp The timestamp of the metric, if not provided, the current time is used.
 template <typename DataT>
-void record(const std::string& component, const std::string& tag, const DataT& data,
-            ClockT::time_point timestamp = ClockT::now()) {
-  const auto json = serdes::serializeToJSON(data);
-  const Metric metric{
-    .component = component,
-    .tag = tag,
-    .timestamp = timestamp,
-    .values = internal::jsonToValuesMap(json),
-  };
+void record(std::string component, std::string tag, DataT&& data) {
+  record([component = std::move(component), tag = std::move(tag), data = std::forward<DataT>(data),
+          timestamp = ClockT::now()] {
+    const auto json = serdes::serializeToJSON(data);
+    return Metric{
+      .component = std::move(component),
+      .tag = std::move(tag),
+      .timestamp = timestamp,
+      .values = internal::jsonToValuesMap(json),
+    };
+  });
+  /*
 
-  record(metric);
+  record(std::move(metric));
+*/
 }
 
 }  // namespace heph::telemetry
