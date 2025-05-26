@@ -2,7 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library", "heph_cc_test")
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -32,6 +32,12 @@ heph_cc_library(
 #########
 # Tests #
 #########
+
+heph_cc_binary(
+    name = "unique_function_performance",
+    srcs = ["tests/unique_function_performance.cpp"],
+    deps = [":utils"],
+)
 
 heph_cc_test(
     name = "concepts_tests",
