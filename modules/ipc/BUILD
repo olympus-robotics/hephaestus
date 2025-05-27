@@ -174,5 +174,6 @@ heph_cc_test(
         "tests/ipc_graph_tests.cpp",
     ],
     flaky = True,
+    tags = ["exclusive"],
     deps = IPC_TEST_DEPS,
 )
