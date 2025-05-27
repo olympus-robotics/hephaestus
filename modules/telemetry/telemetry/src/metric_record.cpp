@@ -25,6 +25,7 @@
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/utils/unique_function.h"
 
 namespace heph::telemetry {
 
@@ -103,7 +104,7 @@ public:
 
   static void registerSink(std::unique_ptr<IMetricSink> sink);
 
-  static void record(const Metric& metric);
+  static void record(heph::UniqueFunction<Metric()>&& metric);
 
 private:
   [[nodiscard]] static auto instance() -> MetricRecorder&;
@@ -115,7 +116,7 @@ private:
 private:
   absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  containers::BlockingQueue<Metric> entries_;
+  containers::BlockingQueue<heph::UniqueFunction<Metric()>> entries_;
   std::future<void> message_process_future_;
 };
 
@@ -123,8 +124,12 @@ void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
   MetricRecorder::registerSink(std::move(sink));
 }
 
-void record(const Metric& metric) {
-  MetricRecorder::record(metric);
+void record(heph::UniqueFunction<Metric()>&& metric) {
+  MetricRecorder::record(std::move(metric));
+}
+
+void record(Metric metric) {
+  MetricRecorder::record([metric = std::move(metric)] { return metric; });
 }
 
 MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
@@ -134,8 +139,7 @@ MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
       if (!message.has_value()) {
         break;
       }
-
-      processEntry(message.value());
+      processEntry((*message)());
     }
     emptyQueue();
   });
@@ -161,9 +165,9 @@ void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
   telemetry.sinks_.push_back(std::move(sink));
 }
 
-void MetricRecorder::record(const Metric& metric) {
+void MetricRecorder::record(heph::UniqueFunction<Metric()>&& metric) {
   auto& telemetry = instance();
-  telemetry.entries_.forcePush(metric);
+  telemetry.entries_.forcePush(std::move(metric));
 }
 
 void MetricRecorder::processEntry(const Metric& entry) {
@@ -180,7 +184,7 @@ void MetricRecorder::emptyQueue() {
       return;
     }
 
-    processEntry(message.value());
+    processEntry((*message)());
   }
 }
 
