@@ -18,9 +18,7 @@ class UniqueFunction;
 namespace detail {
 struct FunctorPadding {
   void* ptr{ nullptr };
-  void* padding1{ nullptr };
-  void* padding2{ nullptr };
-  void* padding3{ nullptr };
+  void* padding{ nullptr };
 };
 template <typename R, typename... Args>
 auto emptyCall(FunctorPadding const& /**/, Args... /*unused*/) -> R {
@@ -64,8 +62,8 @@ struct Vtable {
   using moveFunctionT = void (*)(FunctorPadding const&, FunctorPadding&);
 
   invokeFunctionT invoke{ &emptyCall<R, Args...> };
-  destroyFunctionT destroy{ &destroyEmpty };
   moveFunctionT move{ &moveEmpty };
+  destroyFunctionT destroy{ &destroyEmpty };
 };
 
 template <typename F, typename R, typename... Args>
@@ -92,9 +90,8 @@ void moveFunction(FunctorPadding const& source, FunctorPadding& destination) noe
       new (&destination) F{ std::move(*f) };
     }
   } else {
-    F* f = static_cast<F*>(source.ptr);
-    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-    destination.ptr = new F{ std::move(*f) };
+    // simply copy over the pointer, avoid a memory allocation
+    destination.ptr = source.ptr;
   }
 }
 
@@ -122,8 +119,8 @@ inline constexpr Vtable<R, Args...> VTABLE{ .invoke = &invokeFunction<F, R, Args
                                             .destroy = &destroyFunction<F> };
 
 template <typename F, typename R, typename... Args>
-concept invocable = !std::is_same_v<F, UniqueFunction<R(Args...)>> && std::invocable<F, Args...> &&
-                    std::is_same_v<R, std::invoke_result_t<F, Args...>>;
+concept invocable = !std::is_same_v<F, UniqueFunction<R(Args...)>> && std::is_move_constructible_v<F> &&
+                    std::invocable<F, Args...> && std::is_same_v<R, std::invoke_result_t<F, Args...>>;
 
 }  // namespace detail
 
@@ -134,19 +131,20 @@ public:
   }
 
   ~UniqueFunction() {
-    // Delete contained object. This is save since the empty vtable
+    // Delete contained object. This is safe since the empty vtable
     // is a noop.
     vtable_->destroy(storage_);
   }
 
   // NOLINTBEGIN(google-explicit-constructor)
   // NOLINTBEGIN(hicpp-explicit-conversions)
+  // We use non-explicit construction here to allow for example automatic conversion of lambdas.
   UniqueFunction(std::nullptr_t /**/) noexcept : vtable_{ &detail::EMPTY_VTABLE<R, Args...> } {
   }
 
   template <detail::invocable<R, Args...> F>
   UniqueFunction(F&& f) noexcept(std::is_nothrow_move_constructible_v<F>)
-    : vtable_{ &detail::VTABLE<F, R, Args...> } {
+    : vtable_{ &detail::VTABLE<std::decay_t<F>, R, Args...> } {
     initializeStorage(std::forward<F>(f));
   }
   // NOLINTEND(hicpp-explicit-conversions)
@@ -176,7 +174,7 @@ public:
   auto operator=(F&& f) -> UniqueFunction& {
     vtable_->destroy(storage_);
 
-    vtable_ = &detail::VTABLE<F, R, Args...>;
+    vtable_ = &detail::VTABLE<std::decay_t<F>, R, Args...>;
     initializeStorage(std::forward<F>(f));
 
     return *this;

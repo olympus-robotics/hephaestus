@@ -8,7 +8,6 @@
 #include <vector>
 
 #include <fmt/base.h>
-#include <fmt/chrono.h>
 
 #include "hephaestus/utils/unique_function.h"
 
