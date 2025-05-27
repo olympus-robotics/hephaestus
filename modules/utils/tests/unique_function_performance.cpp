@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <fmt/base.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 
 #include "hephaestus/utils/unique_function.h"
 

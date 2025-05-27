@@ -6,37 +6,39 @@
 
 #include <concepts>
 #include <cstddef>
+#include <cstring>
 #include <functional>
 #include <type_traits>
 
 namespace heph {
 /// The `UniqueFunction` is very similar to `std::function` with the
-/// only difference that it is move only.
+/// only difference that it is move only (similar to `std::move_only_function`).
 template <typename Sig>
 class UniqueFunction;
 
 namespace detail {
-struct FunctorPadding {
+struct FunctorStorage {
   void* ptr{ nullptr };
   void* padding{ nullptr };
 };
+
 template <typename R, typename... Args>
-auto emptyCall(FunctorPadding const& /**/, Args... /*unused*/) -> R {
+auto emptyCall(FunctorStorage const& /**/, Args... /*unused*/) -> R {
   throw std::bad_function_call{};
 }
 
-inline void destroyEmpty(FunctorPadding const& /**/) {
+inline void destroyEmpty(FunctorStorage const& /**/) noexcept {
 }
 
-inline void moveEmpty(FunctorPadding const& /**/, FunctorPadding& /**/) {
+inline void moveEmpty(FunctorStorage const& /**/, FunctorStorage& /**/) noexcept {
 }
 
 template <typename T>
 static inline constexpr bool IS_INPLACE_ALLOCATED =
     // Check that it fits
-    sizeof(T) <= sizeof(FunctorPadding)
+    sizeof(T) <= sizeof(FunctorStorage)
     // and that it will be aligned
-    && alignof(FunctorPadding) % alignof(T) == 0;
+    && alignof(FunctorStorage) % alignof(T) == 0;
 
 template <typename T>
 auto isNull(T const& /**/) noexcept -> bool {
@@ -57,9 +59,9 @@ auto isNull(R (Class::*func)(Args...) const) noexcept -> bool {
 
 template <typename R, typename... Args>
 struct Vtable {
-  using invokeFunctionT = R (*)(FunctorPadding const&, Args...);
-  using destroyFunctionT = void (*)(FunctorPadding const&);
-  using moveFunctionT = void (*)(FunctorPadding const&, FunctorPadding&);
+  using invokeFunctionT = R (*)(FunctorStorage const&, Args...);
+  using destroyFunctionT = void (*)(FunctorStorage const&) noexcept;
+  using moveFunctionT = void (*)(FunctorStorage const&, FunctorStorage&) noexcept;
 
   invokeFunctionT invoke{ &emptyCall<R, Args...> };
   moveFunctionT move{ &moveEmpty };
@@ -67,7 +69,7 @@ struct Vtable {
 };
 
 template <typename F, typename R, typename... Args>
-auto invokeFunction(FunctorPadding const& storage, Args... args) -> R {
+auto invokeFunction(FunctorStorage const& storage, Args... args) -> R {
   F* f{ nullptr };
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
     void const* storage_ptr = static_cast<void const*>(&storage);
@@ -79,7 +81,7 @@ auto invokeFunction(FunctorPadding const& storage, Args... args) -> R {
 }
 
 template <typename F>
-void moveFunction(FunctorPadding const& source, FunctorPadding& destination) noexcept {
+void moveFunction(FunctorStorage const& source, FunctorStorage& destination) noexcept {
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
     if constexpr (std::is_trivially_move_constructible_v<F>) {
       destination = source;
@@ -96,7 +98,7 @@ void moveFunction(FunctorPadding const& source, FunctorPadding& destination) noe
 }
 
 template <typename F>
-void destroyFunction(FunctorPadding const& storage) {
+void destroyFunction(FunctorStorage const& storage) noexcept {
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
     if constexpr (!std::is_trivially_destructible_v<F>) {
       F* f{ nullptr };
@@ -130,7 +132,7 @@ public:
   UniqueFunction() noexcept : vtable_{ &detail::EMPTY_VTABLE<R, Args...> } {
   }
 
-  ~UniqueFunction() {
+  ~UniqueFunction() noexcept {
     // Delete contained object. This is safe since the empty vtable
     // is a noop.
     vtable_->destroy(storage_);
@@ -171,7 +173,7 @@ public:
   }
 
   template <detail::invocable<R, Args...> F>
-  auto operator=(F&& f) -> UniqueFunction& {
+  auto operator=(F&& f) noexcept -> UniqueFunction& {
     vtable_->destroy(storage_);
 
     vtable_ = &detail::VTABLE<std::decay_t<F>, R, Args...>;
@@ -180,7 +182,7 @@ public:
     return *this;
   }
 
-  auto operator=(std::nullptr_t /**/) -> UniqueFunction& {
+  auto operator=(std::nullptr_t /**/) noexcept -> UniqueFunction& {
     vtable_->destroy(storage_);
     vtable_ = &detail::EMPTY_VTABLE<R, Args...>;
     return *this;
@@ -200,7 +202,7 @@ public:
 
 private:
   template <typename F>
-  void initializeStorage(F&& f) {
+  void initializeStorage(F&& f) noexcept(std::is_nothrow_move_constructible_v<F>) {
     if (detail::isNull(f)) {
       vtable_ = &detail::EMPTY_VTABLE<R, Args...>;
       return;
@@ -215,7 +217,7 @@ private:
 
 private:
   detail::Vtable<R, Args...> const* vtable_;
-  detail::FunctorPadding storage_;
+  detail::FunctorStorage storage_;
 };
 
 template <typename Sig>
