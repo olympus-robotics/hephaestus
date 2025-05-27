@@ -73,10 +73,11 @@ namespace {
   };
 }
 
-void getListOfZenohEndpoints(const heph::ipc::zenoh::Session& session,
-                             const heph::ipc::TopicFilter& topic_filter) {
-  const auto publishers_info = heph::ipc::zenoh::getListOfEndpoints(session, topic_filter);
-  std::ranges::for_each(publishers_info.begin(), publishers_info.end(), &heph::ipc::zenoh::printEndpointInfo);
+void getListOfZenohEndpoints(heph::ipc::zenoh::SessionPtr session, const heph::ipc::TopicFilter& topic_filter,
+                             bool print_topic_info) {
+  const auto publishers_info = heph::ipc::zenoh::getListOfEndpoints(*session, topic_filter);
+  auto print_endpoint_info_cb = getPrintEndpointInfoCallback(std::move(session), print_topic_info);
+  std::ranges::for_each(publishers_info.begin(), publishers_info.end(), std::move(print_endpoint_info_cb));
 }
 
 void getLiveListOfZenohEndpoints(heph::ipc::zenoh::SessionPtr session, heph::ipc::TopicFilter topic_filter,
@@ -109,9 +110,9 @@ auto main(int argc, const char* argv[]) -> int {
 
     const auto print_type_info = args.getOption<bool>("type_info");
     if (!args.getOption<bool>("live")) {
-      getListOfZenohEndpoints(*session, topic_filter);
+      getListOfZenohEndpoints(std::move(session), topic_filter, print_type_info);
     } else {
-      getLiveListOfZenohEndpoints(session, std::move(topic_filter), print_type_info);
+      getLiveListOfZenohEndpoints(std::move(session), std::move(topic_filter), print_type_info);
     }
 
     return EXIT_SUCCESS;
