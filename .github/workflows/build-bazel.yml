@@ -1,0 +1,71 @@
+name: "Build Bazel"
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: "Bazel Config"
+        required: true
+        type: string
+      compilation-mode:
+        description: "Bazel Compilation-Mode"
+        required: true
+        type: string
+      run-tests:
+        description: "Run Tests"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazelisk
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}-${{ inputs.config }}-${{ inputs.compilation-mode }}
+      - name: Build
+        run: bazelisk build //modules/... --experimental_disk_cache_gc_max_size 5G --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
+
+  test:
+    if: ${{ inputs.run-tests }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazelisk
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}-${{ inputs.config }}-${{ inputs.compilation-mode }}
+      - name: Test
+        run: bazelisk test --test_output=errors //modules/... --experimental_disk_cache_gc_max_size 5G --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
