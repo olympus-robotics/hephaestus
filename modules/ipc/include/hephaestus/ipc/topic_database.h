@@ -19,6 +19,8 @@ public:
   [[nodiscard]] virtual auto getTypeInfo(const std::string& topic) -> std::optional<serdes::TypeInfo> = 0;
   [[nodiscard]] virtual auto getServiceTypeInfo(const std::string& topic)
       -> std::optional<serdes::ServiceTypeInfo> = 0;
+  [[nodiscard]] virtual auto getActionServerTypeInfo(const std::string& topic)
+      -> std::optional<serdes::ActionServerTypeInfo> = 0;
 };
 
 namespace zenoh {

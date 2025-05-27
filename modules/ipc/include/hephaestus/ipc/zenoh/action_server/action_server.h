@@ -16,17 +16,21 @@
 #include <string>
 #include <utility>
 
+#include <zenoh/api/liveliness.hxx>
+
 #include "hephaestus/concurrency/message_queue_consumer.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/action_server/types_proto.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
 
 namespace heph::ipc::zenoh::action_server {
@@ -103,6 +107,10 @@ private:
   ExecuteCallback execute_cb_;
 
   std::unique_ptr<Service<Request<RequestT>, RequestResponse>> request_service_;
+  std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
+  serdes::ActionServerTypeInfo type_info_;
+  std::unique_ptr<Service<std::string, std::string>> type_info_service_;
+
   concurrency::MessageQueueConsumer<Request<RequestT>> request_consumer_;
   std::atomic_bool is_running_{ false };
 };
@@ -145,6 +153,16 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
             .create_liveliness_token = false,
             .create_type_info_service = false,
         }))
+  , liveliness_token_(
+        std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
+            generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
+                                           EndpointType::ACTION_SERVER),
+            ::zenoh::Session::LivelinessDeclarationOptions::create_default())))
+  , type_info_({ .request = serdes::getSerializedTypeInfo<RequestT>(),
+                 .reply = serdes::getSerializedTypeInfo<ReplyT>(),
+                 .status = serdes::getSerializedTypeInfo<StatusT>() })
+  , type_info_service_(createTypeInfoService(
+        session_, topic_config_, [this](const std::string&) { return this->type_info_.toJson(); }))
   , request_consumer_([this](const Request<RequestT>& request) { return execute(request); }, std::nullopt) {
   request_consumer_.start();
   heph::log(heph::DEBUG, "started Action Server", "topic", topic_config_.name);

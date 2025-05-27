@@ -51,4 +51,20 @@ auto ServiceTypeInfo::fromJson(const std::string& info) -> ServiceTypeInfo {
   return { .request = TypeInfo::fromJson(data["request"].dump()),
            .reply = TypeInfo::fromJson(data["reply"].dump()) };
 }
+
+auto ActionServerTypeInfo::toJson() const -> std::string {
+  nlohmann::json data;
+  data["request"] = nlohmann::json::parse(request.toJson());
+  data["reply"] = nlohmann::json::parse(reply.toJson());
+  data["status"] = nlohmann::json::parse(status.toJson());
+
+  return data.dump();
+}
+
+auto ActionServerTypeInfo::fromJson(const std::string& info) -> ActionServerTypeInfo {
+  auto data = nlohmann::json::parse(info);
+  return { .request = TypeInfo::fromJson(data["request"].dump()),
+           .reply = TypeInfo::fromJson(data["reply"].dump()),
+           .status = TypeInfo::fromJson(data["status"].dump()) };
+}
 }  // namespace heph::serdes

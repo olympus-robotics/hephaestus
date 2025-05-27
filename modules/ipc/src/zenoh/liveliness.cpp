@@ -45,7 +45,7 @@ struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view ACTION_SERVER = "hephaestus_action_server";
 };
 
-[[nodiscard]] auto toEndpointnfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
+[[nodiscard]] auto toEndpointInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
       return EndpointInfo::Status::ALIVE;
@@ -130,7 +130,7 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
   return EndpointInfo{ .session_id = items[SESSION_IDX],
                        .topic = std::move(topic),
                        .type = *type,
-                       .status = toEndpointnfoStatus(kind) };
+                       .status = toEndpointInfoStatus(kind) };
 }
 
 auto getListOfEndpoints(const Session& session, const TopicFilter& topic_filter)
