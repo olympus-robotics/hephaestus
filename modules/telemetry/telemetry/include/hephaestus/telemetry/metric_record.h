@@ -31,7 +31,7 @@ void registerMetricSink(std::unique_ptr<IMetricSink> sink);
 /// Sinks process the metric in a dedicated thread, this means that this function is non-blocking and
 /// deterministic.
 void record(Metric metric);
-void record(heph::UniqueFunction<Metric()> metric);
+void record(heph::UniqueFunction<Metric()>&& metric);
 
 /// @brief Record a user defined metric.
 /// NOTE: the data needs to be serializable to JSON.
@@ -42,17 +42,18 @@ void record(heph::UniqueFunction<Metric()> metric);
 /// @param data The data to record, needs to be json serializable.
 /// @param timestamp The timestamp of the metric, if not provided, the current time is used.
 template <typename DataT>
-void record(std::string component, std::string tag, DataT&& data) {
-  record([component = std::move(component), tag = std::move(tag), data = std::forward<DataT>(data),
-          timestamp = ClockT::now()] {
-    const auto json = serdes::serializeToJSON(data);
-    return Metric{
-      .component = std::move(component),
-      .tag = std::move(tag),
-      .timestamp = timestamp,
-      .values = internal::jsonToValuesMap(json),
-    };
-  });
+void record(std::string component, std::string tag, DataT&& data,
+            ClockT::time_point timestamp = ClockT::now()) {
+  record(
+      [component = std::move(component), tag = std::move(tag), data = std::forward<DataT>(data), timestamp] {
+        const auto json = serdes::serializeToJSON(data);
+        return Metric{
+          .component = std::move(component),
+          .tag = std::move(tag),
+          .timestamp = timestamp,
+          .values = internal::jsonToValuesMap(json),
+        };
+      });
   /*
 
   record(std::move(metric));

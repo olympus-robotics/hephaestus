@@ -104,7 +104,7 @@ public:
 
   static void registerSink(std::unique_ptr<IMetricSink> sink);
 
-  static void record(heph::UniqueFunction<Metric()> metric);
+  static void record(heph::UniqueFunction<Metric()>&& metric);
 
 private:
   [[nodiscard]] static auto instance() -> MetricRecorder&;
@@ -124,7 +124,7 @@ void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
   MetricRecorder::registerSink(std::move(sink));
 }
 
-void record(heph::UniqueFunction<Metric()> metric) {
+void record(heph::UniqueFunction<Metric()>&& metric) {
   MetricRecorder::record(std::move(metric));
 }
 
@@ -165,7 +165,7 @@ void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
   telemetry.sinks_.push_back(std::move(sink));
 }
 
-void MetricRecorder::record(heph::UniqueFunction<Metric()> metric) {
+void MetricRecorder::record(heph::UniqueFunction<Metric()>&& metric) {
   auto& telemetry = instance();
   telemetry.entries_.forcePush(std::move(metric));
 }
@@ -184,7 +184,7 @@ void MetricRecorder::emptyQueue() {
       return;
     }
 
-    processEntry(message.value()());
+    processEntry((*message)());
   }
 }
 
