@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <utility>
 
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/detail/output_connections.h"
@@ -18,7 +19,8 @@ template <typename T>
 class Output {
 public:
   template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string name) : node_(node), outputs_(std::move(name)) {
+  explicit Output(Node<OperationT, DataT>* node, std::string_view name)
+    : node_(node), outputs_(fmt::format("{}/{}", node->nodeName(), name)) {
   }
   auto setValue(NodeEngine& engine, T t) {
     return stdexec::just(std::move(t)) | outputs_.propagate(engine);
