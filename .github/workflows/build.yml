@@ -122,13 +122,6 @@ jobs:
           large-packages: false
           docker-images: true
           swap-storage: true
-      - name: Cache Bazel
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}-format
       - name: Format
         run: bazelisk run //:format.check
 
