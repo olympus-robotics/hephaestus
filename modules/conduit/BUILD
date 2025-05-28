@@ -35,6 +35,15 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "mont_blanc",
+    srcs = ["examples/mont_blanc.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+    ],
+)
+
 #########
 # Tests #
 #########
@@ -42,5 +51,11 @@ heph_cc_binary(
 heph_cc_test(
     name = "node_tests",
     srcs = ["tests/node_tests.cpp"],
+    deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "input_output_tests",
+    srcs = ["tests/input_output_tests.cpp"],
     deps = [":conduit"],
 )

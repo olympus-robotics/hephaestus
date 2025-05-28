@@ -17,6 +17,7 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
+#include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -32,24 +33,23 @@ struct ClockJitter {
 // NOLINTNEXTLINE(misc-include-cleaner)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
-class Spinner : public heph::conduit::Node<Spinner> {
+class SpinnerOperation {
 public:
-  explicit Spinner(std::chrono::milliseconds period)
-    : Node()
-    , spin_period_(period)
+  explicit SpinnerOperation(std::chrono::milliseconds period)
+    : spin_period_(period)
     , last_steady_(std::chrono::steady_clock::now())
     , last_system_(std::chrono::system_clock::now()) {
-  }
-
-  [[nodiscard]] auto period() const {
-    return spin_period_;
   }
 
   void toggleOutput() {
     output_ = !output_;
   }
 
-  void operator()() {
+  [[nodiscard]] auto period() const {
+    return spin_period_;
+  }
+
+  void update() {
     auto now_steady = std::chrono::steady_clock::now();
     auto now_system = std::chrono::system_clock::now();
 
@@ -86,6 +86,16 @@ private:
   bool output_{ false };
 };
 
+struct Spinner : heph::conduit::Node<Spinner, SpinnerOperation> {
+  static auto period(Spinner const& self) {
+    return self.data().period();
+  }
+
+  static void execute(Spinner& self) {
+    self.data().update();
+  }
+};
+
 auto main(int argc, const char* argv[]) -> int {
   try {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
@@ -115,14 +125,13 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::conduit::NodeEngine engine{ {} };
 
-    std::vector<Spinner> spinners;
+    std::vector<heph::conduit::NodeHandle<Spinner>> spinners;
     spinners.reserve(PERIOD.size());
 
     for (auto period : PERIOD) {
-      spinners.emplace_back(period);
-      engine.addNode(spinners.back());
+      spinners.emplace_back(engine.createNode<Spinner>(period));
     }
-    spinners.back().toggleOutput();
+    spinners.back()->data().toggleOutput();
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine] { engine.requestStop(); });
     engine.run();
