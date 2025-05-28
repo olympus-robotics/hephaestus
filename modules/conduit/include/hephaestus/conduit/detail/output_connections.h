@@ -61,7 +61,7 @@ public:
       if constexpr (sizeof...(Ts) == 1) {
         auto args = std::make_tuple(std::forward<Ts>(ts)...);
         return exec::repeat_effect_until(
-            stdexec::just(this) | stdexec::let_value([this, &engine](OutputConnections* self) {
+            stdexec::just() | stdexec::let_value([this, &engine]() {
               // TODO: find better way to timeout based on the inputs timing...
               // Currently doing floor(retry^1.5)
               static constexpr float EXP = 1.5f;
