@@ -33,9 +33,9 @@ struct ClockJitter {
 // NOLINTNEXTLINE(misc-include-cleaner)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
-class SpinnerData {
+class SpinnerOperation {
 public:
-  explicit SpinnerData(std::chrono::milliseconds period)
+  explicit SpinnerOperation(std::chrono::milliseconds period)
     : spin_period_(period)
     , last_steady_(std::chrono::steady_clock::now())
     , last_system_(std::chrono::system_clock::now()) {
@@ -86,7 +86,7 @@ private:
   bool output_{ false };
 };
 
-struct Spinner : heph::conduit::Node<Spinner, SpinnerData> {
+struct Spinner : heph::conduit::Node<Spinner, SpinnerOperation> {
   static auto period(Spinner const& self) {
     return self.data().period();
   }
