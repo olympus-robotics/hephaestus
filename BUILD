@@ -27,3 +27,18 @@ refresh_compile_commands(
         "//modules/...": "",
     },
 )
+
+# ghcr.io/olympus-robotics/x86_64/hephaestus-dev:latest
+platform(
+    name = "docker_image_platform",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+        "@bazel_tools//tools/cpp:clang",
+    ],
+    exec_properties = {
+        "OSFamily": "Linux",
+        "dockerNetwork": "off",
+        "container-image": "docker://ghcr.io/olympus-robotics/x86_64/hephaestus-dev:latest",
+    },
+)

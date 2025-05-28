@@ -1,6 +1,6 @@
 startup --output_user_root=~/.cache/bazel/output/
 
-build --disk_cache=~/.cache/bazel/cache
+# build --disk_cache=~/.cache/bazel/cache
 build --repository_cache=~/.cache/bazel/repos/
 
 build --features=external_include_paths
@@ -25,3 +25,20 @@ build:sanitizer --copt -DADDRESS_SANITIZER
 build:sanitizer --copt -fno-omit-frame-pointer
 build:sanitizer --linkopt -fsanitize=address,undefined
 build:sanitizer --linkopt -Wl,--allow-shlib-undefined
+
+build:remote-cache --bes_results_url=https://olympus-robotics.europe.buildbuddy.io/invocation/
+build:remote-cache --bes_backend=grpcs://olympus-robotics.europe.buildbuddy.io
+build:remote-cache --remote_cache=grpcs://olympus-robotics.europe.buildbuddy.io
+build:remote-cache --remote_timeout=2h
+build:remote-cache --remote_header=x-buildbuddy-api-key=uKr1Yf4M58OnnEM6jJaP
+build:remote-cache --remote_cache_compression
+build:remote-cache --nolegacy_important_outputs
+
+build:remote-executor --remote_executor=grpcs://olympus-robotics.europe.buildbuddy.io
+build:remote-executor --host_platform=//:docker_image_platform
+build:remote-executor --jobs=50
+
+
+
+build:remote --config=remote-cache
+build:remote --config=remote-executor
