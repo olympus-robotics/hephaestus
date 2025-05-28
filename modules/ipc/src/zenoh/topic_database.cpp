@@ -30,6 +30,9 @@ public:
   [[nodiscard]] auto getServiceTypeInfo(const std::string& topic)
       -> std::optional<serdes::ServiceTypeInfo> override;
 
+  [[nodiscard]] auto getActionServerTypeInfo(const std::string& topic)
+      -> std::optional<serdes::ActionServerTypeInfo> override;
+
 private:
   zenoh::SessionPtr session_;
 
@@ -39,6 +42,10 @@ private:
   absl::Mutex service_mutex_;
   std::unordered_map<std::string, serdes::ServiceTypeInfo>
       service_topics_type_db_ ABSL_GUARDED_BY(service_mutex_);
+
+  absl::Mutex action_server_mutex_;
+  std::unordered_map<std::string, serdes::ActionServerTypeInfo>
+      action_server_topics_type_db_ ABSL_GUARDED_BY(action_server_mutex_);
 };
 
 ZenohTopicDatabase::ZenohTopicDatabase(zenoh::SessionPtr session) : session_(std::move(session)) {
@@ -97,6 +104,34 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   }
 
   return service_topics_type_db_[topic];
+}
+
+[[nodiscard]] auto ZenohTopicDatabase::getActionServerTypeInfo(const std::string& topic)
+    -> std::optional<serdes::ActionServerTypeInfo> {
+  {
+    const absl::MutexLock lock{ &action_server_mutex_ };
+    if (action_server_topics_type_db_.contains(topic)) {
+      return action_server_topics_type_db_[topic];
+    }
+  }  // Unlock while querying the service.
+
+  auto query_topic = zenoh::getEndpointTypeInfoServiceTopic(topic);
+
+  static constexpr auto TIMEOUT = std::chrono::milliseconds{ 5000 };
+  const auto response =
+      zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
+  if (response.empty()) {
+    heph::log(heph::ERROR, "failed to get type info, no response from service", "topic", topic);
+    return std::nullopt;
+  }
+
+  const absl::MutexLock lock{ &action_server_mutex_ };
+  // While waiting for the query someone else could have added the topic to the DB.
+  if (!action_server_topics_type_db_.contains(topic)) {
+    action_server_topics_type_db_[topic] = serdes::ActionServerTypeInfo::fromJson(response.front().value);
+  }
+
+  return action_server_topics_type_db_[topic];
 }
 
 // ----------------------------------------------------------------------------------------------------------

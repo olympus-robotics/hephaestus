@@ -66,5 +66,20 @@ TEST(ServiceTypeInfo, ToFromJson) {
 
   EXPECT_EQ(service_type_info, new_service_type_info);
 }
+
+TEST(ActionServerTypeInfo, ToFromJson) {
+  auto mt = random::createRNG();
+
+  const auto action_server_type_info = ActionServerTypeInfo{
+    .request = randomTypeInfo(mt),
+    .reply = randomTypeInfo(mt),
+    .status = randomTypeInfo(mt),
+  };
+
+  const auto json = action_server_type_info.toJson();
+  const auto new_action_server_type_info = ActionServerTypeInfo::fromJson(json);
+
+  EXPECT_EQ(action_server_type_info, new_action_server_type_info);
+}
 }  // namespace
 }  // namespace heph::serdes::tests
