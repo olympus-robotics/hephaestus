@@ -101,7 +101,7 @@ public:
   auto setValue(U&& u) -> InputState {
     auto push_result = buffer_.push(std::forward<U>(u));
     if (!push_result) {
-      if (InputT::InputPolicyT::SET_METHOD == SetMethod::OVERFLOW) {
+      if (InputT::InputPolicyT::SET_METHOD == SetMethod::BLOCK) {
         return InputState::OVERFLOW;
       }
       buffer_.pop();

@@ -14,12 +14,12 @@ enum struct RetrievalMethod : std::uint8_t {
 };
 
 enum struct SetMethod : std::uint8_t {
-  OVERFLOW,
+  BLOCK,
   OVERWRITE,
 };
 
 template <std::size_t DepthV = 1, RetrievalMethod RetrievalMethodV = RetrievalMethod::BLOCK,
-          SetMethod SetMethodV = SetMethod::OVERFLOW>
+          SetMethod SetMethodV = SetMethod::BLOCK>
 struct InputPolicy {
   static constexpr auto DEPTH = DepthV;
   static constexpr auto RETRIEVAL_METHOD = RetrievalMethodV;

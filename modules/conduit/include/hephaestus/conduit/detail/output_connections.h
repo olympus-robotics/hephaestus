@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <array>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <optional>
 #include <ranges>
@@ -59,17 +59,14 @@ public:
       // return void, and we can move on ...
       // Otherwise, we attempt to set the result to connected inputs.
       if constexpr (sizeof...(Ts) == 1) {
-        // TODO: find better way to timeout based on the inputs timing...
-        static constexpr std::array TIMEOUTS = {
-          std::chrono::milliseconds(0),     std::chrono::milliseconds(100),  std::chrono::milliseconds(200),
-          std::chrono::milliseconds(400),   std::chrono::milliseconds(800),  std::chrono::milliseconds(500),
-          std::chrono::milliseconds(1600),  std::chrono::milliseconds(3200), std::chrono::milliseconds(6400),
-          std::chrono::milliseconds(12800), std::chrono::milliseconds(25600)
-        };
         auto args = std::make_tuple(std::forward<Ts>(ts)...);
         return exec::repeat_effect_until(
             stdexec::just(this) | stdexec::let_value([this, &engine](OutputConnections* self) {
-              auto timeout = TIMEOUTS.at(self->retry_ % TIMEOUTS.size());
+              // TODO: find better way to timeout based on the inputs timing...
+              // Currently doing floor(retry^1.5)
+              static constexpr float EXP = 1.5f;
+              auto timeout = std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(
+                  std::floor(std::pow(static_cast<float>(retry_), EXP))));
 
               if (retry_ > 0) {
                 // TODO: add proper names
