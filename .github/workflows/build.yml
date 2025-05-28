@@ -107,7 +107,7 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build -- all examples
 
-  build-bazel:
+  format:
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
@@ -122,21 +122,26 @@ jobs:
           large-packages: false
           docker-images: true
           swap-storage: true
-      - name: Cache Bazel
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-
       - name: Format
         run: bazelisk run //:format.check
-      - name: Build
-        run: bazelisk build //modules/... --config clang-tidy
-      - name: Test
-        run: bazelisk test --test_output=errors //modules/...
-      - name: Test Sanitizer (Debug Build)
-        run: bazelisk test --config sanitizer -c dbg --test_output=errors //modules/...
-      - name: Test Sanitizer (Optimized Build)
-        run: bazelisk test --config sanitizer -c opt --test_output=errors //modules/...
+
+  bazel-fastbuild:
+    permissions: read-all
+    uses: ./.github/workflows/build-bazel.yml
+    with:
+      config: "clang-tidy"
+      compilation-mode: "fastbuild"
+
+  bazel-sanitizer-dbg:
+    permissions: read-all
+    uses: ./.github/workflows/build-bazel.yml
+    with:
+      config: "sanitizer"
+      compilation-mode: "dbg"
+
+  bazel-sanitizer-opt:
+    permissions: read-all
+    uses: ./.github/workflows/build-bazel.yml
+    with:
+      config: "sanitizer"
+      compilation-mode: "opt"
