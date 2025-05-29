@@ -108,23 +108,26 @@ private:
   }
 
   auto operationTrigger() {
-    auto schedule_trigger = [&] {
+    auto period_trigger = [&] {
       if constexpr (HAS_PERIOD) {
         return engine().scheduler().scheduleAfter(lastPeriodDuration());
       } else {
-        return engine().scheduler().schedule();
+        return stdexec::just();
       }
     };
-    return stdexec::just() | stdexec::let_value(schedule_trigger) | stdexec::let_value([this] {
-             if constexpr (HAS_TRIGGER_NULLARY) {
-               return OperationT::trigger();
-             } else if constexpr (HAS_TRIGGER_ARG) {
-               return OperationT::trigger(operation());
-             } else {
-               static_assert(HAS_PERIOD,
-                             "An Operation needs to have at least either a trigger or a period function");
-               return stdexec::just();
-             }
+    auto node_trigger = [&] {
+      if constexpr (HAS_TRIGGER_NULLARY) {
+        return OperationT::trigger();
+      } else if constexpr (HAS_TRIGGER_ARG) {
+        return OperationT::trigger(operation());
+      } else {
+        static_assert(HAS_PERIOD,
+                      "An Operation needs to have at least either a trigger or a period function");
+        return stdexec::just();
+      }
+    };
+    return engine().scheduler().schedule() | stdexec::let_value([period_trigger, node_trigger] {
+             return stdexec::when_all(period_trigger(), node_trigger());
            });
   }
 
