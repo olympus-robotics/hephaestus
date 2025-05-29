@@ -65,14 +65,15 @@ void NodeBase::calculateClockDrift() {
   auto drift_system_clock =
       std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
 
-  heph::telemetry::record([this, timestamp = now_system, drift_scheduling, drift_system_clock,
-                           duration_steady] {
+  heph::telemetry::record([name = nodeName(), timestamp = now_system,
+                           last_execution_duration = last_execution_duration_, duration_steady,
+                           drift_scheduling, drift_system_clock] {
     return heph::telemetry::Metric{
-      .component = fmt::format("conduit/{}/clock_drift", nodeName()),
+      .component = fmt::format("conduit/{}/clock_drift", name),
       .tag = "node_timings",
       .timestamp = timestamp,
       .values = { { "execute_duration_microsec",
-                    std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration_).count() },
+                    std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration).count() },
                   { "tick_duration_microsec",
                     std::chrono::duration_cast<std::chrono::microseconds>(duration_steady).count() },
                   { "scheduler_delay_microsec", drift_scheduling.count() },

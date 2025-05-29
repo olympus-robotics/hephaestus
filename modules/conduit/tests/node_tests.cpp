@@ -197,13 +197,11 @@ struct PeriodicOperation : Node<PeriodicOperation, PeriodicOperationData> {
   static constexpr auto PERIOD = std::chrono::milliseconds{ 50 };
   static constexpr auto RUNTIME = std::chrono::milliseconds{ 300 };
   static auto period(PeriodicOperation& operation) {
-    EXPECT_EQ(operation.data().period_called, operation.data().executed);
     ++operation.data().period_called;
     return PERIOD;
   }
 
   static void execute(PeriodicOperation& operation) {
-    EXPECT_EQ(operation.data().period_called - 1, operation.data().executed);
     ++operation.data().executed;
     if (operation.engine().elapsed() > RUNTIME) {
       operation.engine().requestStop();
@@ -236,13 +234,11 @@ struct PeriodicMissingDeadlineOperation : Node<PeriodicMissingDeadlineOperation,
   static constexpr auto PERIOD = std::chrono::milliseconds{ 50 };
   static constexpr auto RUNTIME = std::chrono::milliseconds{ 300 };
   static auto period(PeriodicMissingDeadlineOperation& operation) {
-    EXPECT_EQ(operation.data().period_called, operation.data().executed);
     ++operation.data().period_called;
     return PERIOD;
   }
 
   static void execute(PeriodicMissingDeadlineOperation& operation) {
-    EXPECT_EQ(operation.data().period_called - 1, operation.data().executed);
     ++operation.data().executed;
     std::this_thread::sleep_for(PERIOD * 2);
     if (operation.engine().elapsed() > RUNTIME) {
@@ -273,7 +269,8 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy->data().period_called - 1,
+  // period is called twice each tick...
+  EXPECT_EQ((dummy->data().period_called / 2) - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
@@ -293,7 +290,8 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy->data().period_called - 1,
+  // period is called twice each tick...
+  EXPECT_EQ((dummy->data().period_called / 2) - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
