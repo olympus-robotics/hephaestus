@@ -65,11 +65,11 @@ public:
               // TODO: find better way to timeout based on the inputs timing...
               // Currently doing floor(retry^1.5)
               static constexpr float EXP = 1.5f;
-              auto timeout = std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(
-                  std::floor(std::pow(static_cast<float>(retry_), EXP))));
-
+              std::chrono::milliseconds timeout{ 0 };
               if (retry_ > 0) {
-                // TODO: add proper names
+                timeout = std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(
+                    std::floor(std::pow(static_cast<float>(retry_), EXP))));
+
                 auto remaining_inputs =
                     inputs_ | std::views::filter([this](InputEntry const& entry) {
                       return entry.generation <= generation_;

@@ -48,38 +48,40 @@ ExecutionStopWatch::ExecutionStopWatch(NodeBase* self)
 void NodeBase::calculateClockDrift() {
   auto period = std::chrono::duration_cast<std::chrono::milliseconds>(nodePeriod());
 
-  // If period is zero, don't do the detection...
-  if (period == std::chrono::milliseconds{ 0 }) {
-    return;
-  }
-
   auto now_steady = std::chrono::steady_clock::now();
   auto now_system = std::chrono::system_clock::now();
 
   auto duration_steady = now_steady - last_steady_;
   auto duration_system = now_system - last_system_;
 
-  // a positive duration drift indicates that the clock under consideration took longer than
-  // expected, and vice versa
-  auto drift_scheduling = std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period);
+  std::chrono::microseconds drift_scheduling{ 0 };
+  // If period is zero, we cannot determine the delay...
+  if (period != std::chrono::milliseconds{ 0 }) {
+    // a positive duration drift indicates that the clock under consideration took longer than
+    // expected, and vice versa
+    drift_scheduling = std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period);
+  }
   auto drift_system_clock =
       std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
 
-  heph::telemetry::record([name = nodeName(), timestamp = now_system,
-                           last_execution_duration = last_execution_duration_, duration_steady,
-                           drift_scheduling, drift_system_clock] {
-    return heph::telemetry::Metric{
-      .component = fmt::format("conduit/{}/clock_drift", name),
-      .tag = "node_timings",
-      .timestamp = timestamp,
-      .values = { { "execute_duration_microsec",
-                    std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration).count() },
-                  { "tick_duration_microsec",
-                    std::chrono::duration_cast<std::chrono::microseconds>(duration_steady).count() },
-                  { "scheduler_delay_microsec", drift_scheduling.count() },
-                  { "system_clock_drift_microsec", drift_system_clock.count() } }
-    };
-  });
+  if (last_execution_duration_ != std::chrono::nanoseconds{ 0 }) {
+    heph::telemetry::record([name = nodeName(), timestamp = now_system,
+                             last_execution_duration = last_execution_duration_, duration_steady,
+                             drift_scheduling, drift_system_clock] {
+      return heph::telemetry::Metric{
+        .component = fmt::format("conduit/{}/clock_drift", name),
+        .tag = "node_timings",
+        .timestamp = timestamp,
+        .values = { { "execute_duration_microsec",
+                      std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration)
+                          .count() },
+                    { "tick_duration_microsec",
+                      std::chrono::duration_cast<std::chrono::microseconds>(duration_steady).count() },
+                    { "scheduler_delay_microsec", drift_scheduling.count() },
+                    { "system_clock_drift_microsec", drift_system_clock.count() } }
+      };
+    });
+  }
 
   last_steady_ = now_steady;
   last_system_ = now_system;
