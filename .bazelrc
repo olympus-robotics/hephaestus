@@ -1,6 +1,6 @@
 startup --output_user_root=~/.cache/bazel/output/
 
-# build --disk_cache=~/.cache/bazel/cache
+build --disk_cache=~/.cache/bazel/cache
 build --repository_cache=~/.cache/bazel/repos/
 
 build --features=external_include_paths
