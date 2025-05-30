@@ -41,6 +41,10 @@ void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_ti
     return;
   }
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
+    if (start_time <= timer_.now()) {
+      tasks_.push_back(task);
+      return;
+    }
     timer_.startAt(task, start_time);
     return;
   }

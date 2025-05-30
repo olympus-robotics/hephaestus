@@ -19,8 +19,7 @@ thread_local IoRing* IoRing::current_ring = nullptr;
 
 struct DispatchOperation {
   static auto ring() -> IoRing& {
-    static thread_local IoRing r{ { .nentries = IoRingConfig::DEFAULT_ENTRY_COUNT,
-                                    .flags = IORING_SETUP_DEFER_TASKRUN | IORING_SETUP_SINGLE_ISSUER } };
+    static thread_local IoRing r{ { .nentries = IoRingConfig::DEFAULT_ENTRY_COUNT, .flags = 0 } };
     return r;
   }
 

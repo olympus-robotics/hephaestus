@@ -37,6 +37,7 @@ public:
 
 protected:
   void updateExecutionTime(std::chrono::nanoseconds duration);
+  void calculateClockDrift();
   auto lastPeriodDuration() -> std::chrono::nanoseconds;
 
 private:
@@ -44,6 +45,9 @@ private:
   friend class ExecutionStopWatch;
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
+
+  std::chrono::steady_clock::time_point last_steady_;
+  std::chrono::system_clock::time_point last_system_;
 };
 
 class ExecutionStopWatch {

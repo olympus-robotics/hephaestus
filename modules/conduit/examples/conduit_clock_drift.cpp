@@ -35,10 +35,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, sys
 
 class SpinnerOperation {
 public:
-  explicit SpinnerOperation(std::chrono::milliseconds period)
-    : spin_period_(period)
-    , last_steady_(std::chrono::steady_clock::now())
-    , last_system_(std::chrono::system_clock::now()) {
+  explicit SpinnerOperation(std::chrono::milliseconds period) : spin_period_(period) {
   }
 
   void toggleOutput() {
@@ -49,44 +46,22 @@ public:
     return spin_period_;
   }
 
-  void update() {
-    auto now_steady = std::chrono::steady_clock::now();
-    auto now_system = std::chrono::system_clock::now();
-
-    auto duration_steady = now_steady - last_steady_;
-    auto duration_system = now_system - last_system_;
-
-    // a positive duration drift indicates that the clock under consideration took longer than
-    // expected, and vice versa
-    auto jitter_scheduling =
-        std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period());
-    auto jitter_system_clock =
-        std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
-
+  void update() const {
     if (output_) {
-      heph::log(heph::INFO, "", "scheduling", jitter_scheduling, "clock", jitter_system_clock);
+      heph::log(heph::INFO, "tick");
     }
-    heph::telemetry::record("conduit_clock_jitter", tag_,
-                            ClockJitter{
-                                .period_ms = period().count(),
-                                .scheduler_us = jitter_scheduling.count(),
-                                .system_clock_us = jitter_system_clock.count(),
-                            });
-    last_steady_ = now_steady;
-    last_system_ = now_system;
   }
 
 private:
   std::chrono::milliseconds spin_period_;
 
-  std::chrono::steady_clock::time_point last_steady_;
-  std::chrono::system_clock::time_point last_system_;
-  std::string tag_ = fmt::format("period={}", spin_period_);
-
   bool output_{ false };
 };
 
 struct Spinner : heph::conduit::Node<Spinner, SpinnerOperation> {
+  static auto name(Spinner const& self) -> std::string {
+    return fmt::format("Spinner({})", self.data().period());
+  }
   static auto period(Spinner const& self) {
     return self.data().period();
   }
@@ -112,7 +87,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     using namespace std::chrono_literals;
     // NOLINTNEXTLINE(misc-include-cleaner)
-    static constexpr std::array PERIOD{ 1ms, 10ms, 100ms, 200ms, 500ms };
+    static constexpr std::array PERIOD{ 1ms, 10ms, 20ms, 25ms, 30ms, 40ms, 100ms };
 
     static constexpr auto TELEMETRY_PERIOD = std::chrono::duration<double>(1.0);
 

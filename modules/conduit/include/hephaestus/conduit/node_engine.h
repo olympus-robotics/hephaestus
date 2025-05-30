@@ -52,7 +52,12 @@ public:
 
   template <typename OperatorT, typename... Ts>
   auto createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
-    auto node_ptr = std::make_unique<OperatorT>();
+    std::unique_ptr<OperatorT> node_ptr;
+    if constexpr (std::is_constructible_v<OperatorT, NodeEngine&>) {
+      node_ptr = std::make_unique<OperatorT>(*this);
+    } else {
+      node_ptr = std::make_unique<OperatorT>();
+    }
     auto* node = node_ptr.get();
     nodes_.emplace_back(std::move(node_ptr));
     node->data_.emplace(std::forward<Ts>(ts)...);
