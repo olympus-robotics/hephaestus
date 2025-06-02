@@ -71,6 +71,7 @@ struct TaskBase {
   virtual void setStopped() noexcept = 0;
 
   TaskDispatchOperation dispatch_operation{ this };
+  TaskBase* next{ nullptr };
 };
 
 template <typename Receiver, typename Context>

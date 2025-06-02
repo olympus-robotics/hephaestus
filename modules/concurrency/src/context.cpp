@@ -29,7 +29,7 @@ void Context::enqueue(TaskBase* task) {
     return;
   }
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
-    tasks_.push_back(task);
+    tasks_.enqueue(task);
     return;
   }
   ring_.submit(task->dispatch_operation);
@@ -42,7 +42,7 @@ void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_ti
   }
   if (!ring_.isRunning() || ring_.isCurrentRing()) {
     if (start_time <= timer_.now()) {
-      tasks_.push_back(task);
+      tasks_.enqueue(task);
       return;
     }
     timer_.startAt(task, start_time);
@@ -56,8 +56,7 @@ auto Context::runTasks() -> bool {
     return false;
   }
 
-  TaskBase* task = tasks_.front();
-  tasks_.pop_front();
+  auto* task = tasks_.dequeue();
   runTask(task);
 
   return !tasks_.empty();
