@@ -13,6 +13,9 @@ namespace heph::types {
 /// @brief A class representing a UUID (Universally Unique Identifier) version 4, which is purely (pseudo)
 /// randomly generated. We follow RFC 9562, which defines the UUIDv4 format. For details, see
 /// https://www.rfc-editor.org/rfc/rfc9562.html.
+/// To use a UuidV4 as a key in a hash map, we provide a custom hash function using the Abseil library's
+/// `AbslHashValue`. Include <absl/hash/hash.h> in the implementation file and provide a custom hash function
+/// to the container, e.g. std::unordered_map<heph::types::UuidV4, DataT, absl::Hash<heph::types::UuidV4>>.
 struct UuidV4 {
   /// @brief Default comparison operator. We avoid using the spaceship operator (<=>) as random UUIDs (version
   /// 4) are not ordered.
@@ -38,8 +41,19 @@ struct UuidV4 {
 
   [[nodiscard]] auto format() const -> std::string;
 
+  /// @brief Function to allow the use of UuidV4 in hash-based containers via the Abseil library.
+  template <class H>
+  friend auto AbslHashValue(H h, const UuidV4& id) -> H;  // NOLINT(readability-identifier-naming)
+
   uint64_t high{ 0ULL };  //!< High 64 bits of the 128 bit UUID
   uint64_t low{ 0ULL };   //!< Low 64 bits of the 128 bit UUID
 };
+
+/* --- Implementation --- */
+
+template <class H>
+auto AbslHashValue(H h, const UuidV4& id) -> H {  // NOLINT(readability-identifier-naming)
+  return H::combine(std::move(h), id.high, id.low);
+}
 
 }  // namespace heph::types

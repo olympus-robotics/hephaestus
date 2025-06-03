@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "absl/hash/hash_testing.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
@@ -28,6 +29,20 @@ TYPED_TEST(TypeTests, RandomUnequalTest) {
 
   EXPECT_EQ(TypeParam::random(mt), TypeParam::random(mt_copy));  // Ensure determinism
   EXPECT_NE(TypeParam::random(mt), TypeParam::random(mt));       // Ensure randomness
+}
+
+/* --- Test types which support hashing --- */
+template <class T>
+class HashingTest : public ::testing::Test {};
+using HashingImplementations = ::testing::Types<UuidV4>;
+TYPED_TEST_SUITE(HashingTest, HashingImplementations);
+TYPED_TEST(HashingTest, TestHash) {
+  auto mt = heph::random::createRNG();
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      TypeParam(),
+      types_random::random<TypeParam>(mt),
+  }));
 }
 
 }  // namespace heph::types::tests
