@@ -18,6 +18,7 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/random",
+        "@abseil-cpp//absl/hash:hash",
         "@fmt",
         "@magic_enum",
     ],
