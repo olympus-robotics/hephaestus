@@ -43,6 +43,7 @@ heph_cc_test(
     srcs = ["tests/tests.cpp"],
     deps = TYPES_TEST_DEPS + [
         "//modules/format",
+        "@abseil-cpp//absl/hash:hash_testing",
     ],
 )
 
