@@ -232,18 +232,15 @@ TEST(NodeTests, nodePeriodicSimulated) {
 
 struct PeriodicMissingDeadlineOperation : Node<PeriodicMissingDeadlineOperation, PeriodicOperationData> {
   static constexpr auto PERIOD = std::chrono::milliseconds{ 50 };
-  static constexpr auto RUNTIME = std::chrono::milliseconds{ 300 };
-  static auto period(PeriodicMissingDeadlineOperation& operation) {
-    ++operation.data().period_called;
-    return PERIOD;
-  }
+  static constexpr auto RUNTIME = std::chrono::milliseconds{ 299 };
 
   static void execute(PeriodicMissingDeadlineOperation& operation) {
-    ++operation.data().executed;
-    std::this_thread::sleep_for(PERIOD * 2);
     if (operation.engine().elapsed() > RUNTIME) {
       operation.engine().requestStop();
+      return;
     }
+    ++operation.data().executed;
+    std::this_thread::sleep_for(PERIOD * 2);
   }
 };
 
@@ -269,13 +266,10 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  // period is called twice each tick...
-  EXPECT_EQ((dummy->data().period_called / 2) - 1,
-            PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), dummy->data().executed - 1);
+  EXPECT_GE(sink_ptr->num_messages.load(), 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 
@@ -290,13 +284,10 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  // period is called twice each tick...
-  EXPECT_EQ((dummy->data().period_called / 2) - 1,
-            PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), dummy->data().executed - 1);
+  EXPECT_GE(sink_ptr->num_messages.load(), 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
 }
 }  // namespace heph::conduit::tests

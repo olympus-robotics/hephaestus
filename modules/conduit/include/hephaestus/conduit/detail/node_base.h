@@ -5,10 +5,13 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <string>
 #include <string_view>
 
 #include <stdexec/stop_token.hpp>
+
+#include "hephaestus/concurrency/io_ring/timer.h"
 
 // Forward declarations
 namespace heph::conduit {
@@ -18,6 +21,8 @@ class NodeEngine;
 namespace heph::conduit::detail {
 
 class NodeBase {
+  using ClockT = concurrency::io_ring::TimerClock;
+
 public:
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
@@ -33,12 +38,15 @@ public:
     return *engine_;
   }
 
+  [[nodiscard]] auto runsOnEngine() const -> bool;
+
   auto getStopToken() -> stdexec::inplace_stop_token;
 
 protected:
+  auto operationStart(bool has_period) -> std::chrono::nanoseconds;
+  void operationEnd();
   void updateExecutionTime(std::chrono::nanoseconds duration);
-  void calculateClockDrift();
-  auto lastPeriodDuration() -> std::chrono::nanoseconds;
+  auto nextStartTime(bool has_period) -> std::chrono::nanoseconds;
 
 private:
   friend class heph::conduit::NodeEngine;
@@ -46,8 +54,10 @@ private:
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
 
-  std::chrono::steady_clock::time_point last_steady_;
+  ClockT::time_point last_steady_;
   std::chrono::system_clock::time_point last_system_;
+  ClockT::time_point start_time_;
+  std::size_t iteration_{ 0 };
 };
 
 class ExecutionStopWatch {

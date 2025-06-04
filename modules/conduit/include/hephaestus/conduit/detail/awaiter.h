@@ -7,11 +7,17 @@
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/containers/intrusive_fifo_queue.h"
+
 namespace heph::conduit::detail {
 class AwaiterBase {
 public:
   virtual ~AwaiterBase() = default;
   virtual void trigger() = 0;
+
+private:
+  friend struct containers::IntrusiveFifoQueueAccess;
+  [[maybe_unused]] AwaiterBase* next_{ nullptr };
 };
 
 template <typename InputT, typename ReceiverT>

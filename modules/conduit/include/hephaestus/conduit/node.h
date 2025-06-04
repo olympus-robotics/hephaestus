@@ -75,7 +75,7 @@ private:
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
-    auto trigger = operationTrigger();
+    auto trigger = stdexec::continues_on(operationTrigger(), engine().scheduler());
     using TriggerT = decltype(trigger);
     using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
@@ -91,7 +91,8 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | implicit_output_->propagate(engine());
+    return executeSender() | implicit_output_->propagate(engine()) |
+           stdexec::then([this] { operationEnd(); });
   }
 
   template <typename Input>
@@ -108,9 +109,9 @@ private:
   }
 
   auto operationTrigger() {
-    auto period_trigger = [&] {
+    auto period_trigger = [&](std::chrono::nanoseconds start_after) {
       if constexpr (HAS_PERIOD) {
-        return engine().scheduler().scheduleAfter(lastPeriodDuration());
+        return engine().scheduler().scheduleAfter(start_after);
       } else {
         return stdexec::just();
       }
@@ -126,8 +127,9 @@ private:
         return stdexec::just();
       }
     };
-    return engine().scheduler().schedule() | stdexec::let_value([period_trigger, node_trigger] {
-             return stdexec::when_all(period_trigger(), node_trigger());
+    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
+             auto start_after = operationStart(HAS_PERIOD);
+             return stdexec::when_all(period_trigger(start_after), node_trigger());
            });
   }
 

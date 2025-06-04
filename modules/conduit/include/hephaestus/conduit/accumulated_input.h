@@ -18,8 +18,8 @@
 namespace heph::conduit {
 template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<>>
 class AccumulatedInput
-  : public detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH> {
-  using BaseT = detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH>;
+  : public detail::InputBase<AccumulatedInput<T, R, F, InputPolicy>, T, InputPolicy::DEPTH> {
+  using BaseT = detail::InputBase<AccumulatedInput<T, R, F, InputPolicy>, T, InputPolicy::DEPTH>;
 
 public:
   using ValueT = T;
