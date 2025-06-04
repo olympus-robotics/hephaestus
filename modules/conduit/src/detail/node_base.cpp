@@ -17,14 +17,14 @@
 
 namespace heph::conduit::detail {
 
-auto NodeBase::operationStart(bool has_period) -> std::chrono::nanoseconds {
-  auto start_after = nextStartTime(has_period);
+auto NodeBase::operationStart(bool has_period) -> ClockT::time_point {
+  auto start_at = nextStartTime(has_period);
   last_steady_ = ClockT::now();
   last_system_ = std::chrono::system_clock::now();
   if (iteration_ == 0) {
     start_time_ = last_steady_;
   }
-  return start_after;
+  return start_at;
 }
 
 void NodeBase::operationEnd() {
@@ -67,21 +67,21 @@ void NodeBase::updateExecutionTime(std::chrono::nanoseconds duration) {
   last_execution_duration_ = duration;
 }
 
-auto NodeBase::nextStartTime(bool has_period) -> std::chrono::nanoseconds {
+auto NodeBase::nextStartTime(bool has_period) -> ClockT::time_point {
+  auto now = ClockT::now();
   if (last_execution_duration_ == std::chrono::nanoseconds{ 0 } || !has_period) {
-    return last_execution_duration_;
+    return now;
   }
 
   auto period = nodePeriod();
   auto next_time_point = start_time_ + (iteration_ * period);
-  auto now = ClockT::now();
   if (next_time_point < now) {
-    auto last_duration = ClockT::now() - last_steady_;
+    auto last_duration = now - last_steady_;
     heph::log(heph::WARN, std::string{ MISSED_DEADLINE_WARNING }, "node", nodeName(), "period", period,
               "tick_duration", last_duration, "execution_duration", last_execution_duration_);
-    return std::chrono::nanoseconds{ 0 };
+    return now;
   }
-  return next_time_point - now;
+  return next_time_point;
 };
 
 ExecutionStopWatch::~ExecutionStopWatch() noexcept {

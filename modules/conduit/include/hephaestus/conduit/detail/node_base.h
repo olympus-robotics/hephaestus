@@ -21,9 +21,9 @@ class NodeEngine;
 namespace heph::conduit::detail {
 
 class NodeBase {
+public:
   using ClockT = concurrency::io_ring::TimerClock;
 
-public:
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
   virtual ~NodeBase() = default;
@@ -43,10 +43,10 @@ public:
   auto getStopToken() -> stdexec::inplace_stop_token;
 
 protected:
-  auto operationStart(bool has_period) -> std::chrono::nanoseconds;
+  auto operationStart(bool has_period) -> ClockT::time_point;
   void operationEnd();
   void updateExecutionTime(std::chrono::nanoseconds duration);
-  auto nextStartTime(bool has_period) -> std::chrono::nanoseconds;
+  auto nextStartTime(bool has_period) -> ClockT::time_point;
 
 private:
   friend class heph::conduit::NodeEngine;

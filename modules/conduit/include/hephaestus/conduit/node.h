@@ -109,9 +109,9 @@ private:
   }
 
   auto operationTrigger() {
-    auto period_trigger = [&](std::chrono::nanoseconds start_after) {
+    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
       if constexpr (HAS_PERIOD) {
-        return engine().scheduler().scheduleAfter(start_after);
+        return engine().scheduler().scheduleAt(start_at);
       } else {
         return stdexec::just();
       }
@@ -128,8 +128,8 @@ private:
       }
     };
     return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
-             auto start_after = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_after), node_trigger());
+             auto start_at = operationStart(HAS_PERIOD);
+             return stdexec::when_all(period_trigger(start_at), node_trigger());
            });
   }
 
