@@ -4,23 +4,29 @@
 
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 
 namespace heph::containers {
 struct IntrusiveFifoQueueAccess {
   template <typename T>
+    requires requires(T) { T::next; }
   static auto next(T* t) -> T*& {
-    if constexpr (requires(T* node) { node->next; }) {
-      return t->next;
-    } else if constexpr (requires(T* node) { node->next_; }) {
-      return t->next_;
-    } else {
-      static_assert(false, "Don't know how to access next pointer");
-    }
+    return t->next;
+  }
+  template <typename T>
+    requires requires(T) { T::next_; }
+  static auto next(T* t) -> T*& {
+    return t->next_;
   }
 };
 
 template <typename T>
+concept IntrusiveFifoQueueElement = requires(T t) {
+  { IntrusiveFifoQueueAccess::next(&t) } -> std::same_as<T*&>;
+};
+
+template <IntrusiveFifoQueueElement T>
 class IntrusiveFifoQueue {
 public:
   [[nodiscard]] auto empty() const -> bool {

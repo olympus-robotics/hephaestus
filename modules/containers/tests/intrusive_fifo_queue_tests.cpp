@@ -152,4 +152,15 @@ TEST(IntrusiveFifoQueue, Access) {
   queue.enqueue(&dummy);
   EXPECT_EQ(queue.dequeue(), &dummy);
 }
+
+class DummyPrivateNoAccess {
+private:
+  [[maybe_unused]] DummyPrivate* next_{ nullptr };
+};
+
+TEST(IntrusiveFifoQueue, Concepts) {
+  EXPECT_TRUE(heph::containers::IntrusiveFifoQueueElement<Dummy>);
+  EXPECT_TRUE(heph::containers::IntrusiveFifoQueueElement<DummyPrivate>);
+  EXPECT_FALSE(heph::containers::IntrusiveFifoQueueElement<DummyPrivateNoAccess>);
+}
 }  // namespace heph::containers
