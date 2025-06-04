@@ -59,6 +59,32 @@ public:
     return tmp;
   }
 
+  auto erase(T* t) {
+    if (empty() || t == nullptr) {
+      return;
+    }
+    // Delete from front?
+    if (t == head_) {
+      dequeue();
+      return;
+    }
+    // find the previous element
+    T* prev = head_;
+    while (prev != nullptr) {
+      if (IntrusiveFifoQueueAccess::next(prev) == t) {
+        break;
+      }
+      prev = IntrusiveFifoQueueAccess::next(prev);
+    }
+    if (prev == nullptr) {
+      return;
+    }
+
+    IntrusiveFifoQueueAccess::next(prev) = IntrusiveFifoQueueAccess::next(t);
+    IntrusiveFifoQueueAccess::next(t) = nullptr;
+    --size_;
+  }
+
 private:
   T* head_{ nullptr };
   T* tail_{ nullptr };
