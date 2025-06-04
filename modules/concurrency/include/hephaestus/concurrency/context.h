@@ -40,6 +40,10 @@ public:
     ring_.requestStop();
   }
 
+  auto isCurrent() -> bool {
+    return ring_.isCurrentRing();
+  }
+
   auto stopRequested() -> bool {
     return ring_.stopRequested();
   }

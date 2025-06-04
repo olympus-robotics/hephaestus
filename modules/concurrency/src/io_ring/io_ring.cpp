@@ -42,8 +42,10 @@ struct DispatchOperation {
       submit_done.notify_all();
       return;
     }
-    heph::panicIf(cqe->res < 0, fmt::format("dispatch failed: {}",
-                                            std::error_code(-cqe->res, std::system_category()).message()));
+    if (cqe->res < 0) {
+      heph::panic(
+          fmt::format("dispatch failed: {}", std::error_code(-cqe->res, std::system_category()).message()));
+    }
 
     dispatch_done.store(true, std::memory_order_release);
   }
@@ -69,8 +71,10 @@ struct DispatchOperation {
 IoRing::IoRing(IoRingConfig const& config) : config_(config) {
   const int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
-  heph::panicIf(res < 0, fmt::format("::io_uring_queue_init failed: {}",
-                                     std::error_code(-res, std::system_category()).message()));
+  if (res < 0) {
+    heph::panic(fmt::format("::io_uring_queue_init failed: {}",
+                            std::error_code(-res, std::system_category()).message()));
+  }
 }
 
 struct StopOperation {
@@ -118,9 +122,10 @@ void IoRing::runOnce(bool block) {
   } else {
     res = ::io_uring_submit_and_get_events(&ring_);
   }
-  heph::panicIf(res < 0 && !(res == -EAGAIN || res == -EINTR),
-                fmt::format("::io_uring_submit_and_wait failed: {}",
+  if (res < 0 && !(res == -EAGAIN || res == -EINTR)) {
+    heph::panic(fmt::format("::io_uring_submit_and_wait failed: {}",
                             std::error_code(-res, std::system_category()).message()));
+  }
 
   for (auto* cqe = nextCompletion(); cqe != nullptr; cqe = nextCompletion()) {
     const IoRingOperationPointer operation{ io_uring_cqe_get_data64(cqe) };
@@ -133,14 +138,18 @@ void IoRing::runOnce(bool block) {
 }
 
 void IoRing::run(const std::function<void()>& on_started, const std::function<bool()>& on_progress) {
-  heph::panicIf(current_ring != nullptr, "Cannot run ring, another ring is already active for this thread");
+  if (current_ring != nullptr) {
+    heph::panic("Cannot run ring, another ring is already active for this thread");
+  }
 
   int res = 0;
 
   res = ::io_uring_register_ring_fd(&ring_);
 
-  heph::panicIf(res < 0, fmt::format("::io_uring_register_ring_fd failed: {}",
-                                     std::error_code(-res, std::system_category()).message()));
+  if (res < 0) {
+    heph::panic(fmt::format("::io_uring_register_ring_fd failed: {}",
+                            std::error_code(-res, std::system_category()).message()));
+  }
   current_ring = this;
   running_.store(true, std::memory_order_release);
   on_started();
@@ -151,8 +160,10 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
   }
   res = ::io_uring_unregister_ring_fd(&ring_);
 
-  heph::panicIf(res < 0, fmt::format("::io_uring_unregister_ring_fd failed: {}",
-                                     std::error_code(-res, std::system_category()).message()));
+  if (res < 0) {
+    heph::panic(fmt::format("::io_uring_unregister_ring_fd failed: {}",
+                            std::error_code(-res, std::system_category()).message()));
+  }
   current_ring = nullptr;
 }
 
@@ -189,8 +200,8 @@ auto IoRing::getSqe() -> ::io_uring_sqe* {
     }
     const int res = ::io_uring_submit(&ring_);
     if (res < 0 && !(-res == EAGAIN || -res == EINTR)) {
-      heph::panicIf(res < 0, fmt::format("::io_uring_submit failed: {}",
-                                         std::error_code(-res, std::system_category()).message()));
+      heph::panic(fmt::format("::io_uring_submit failed: {}",
+                              std::error_code(-res, std::system_category()).message()));
     }
   }
   return nullptr;

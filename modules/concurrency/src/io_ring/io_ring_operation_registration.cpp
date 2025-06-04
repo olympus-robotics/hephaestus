@@ -19,11 +19,15 @@ auto IoRingOperationRegistry::instance() -> IoRingOperationRegistry& {
   return self;
 }
 void IoRingOperationRegistry::handleCompletion(std::uint8_t idx, void* operation, ::io_uring_cqe* cqe) {
-  heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
+  if (idx >= size) {
+    heph::panic(fmt::format("Index out of range: {} >= {}", idx, size));
+  }
   handle_completion_function_table.at(idx)(operation, cqe);
 }
 void IoRingOperationRegistry::prepare(std::uint8_t idx, void* operation, ::io_uring_sqe* sqe) {
-  heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
+  if (idx >= size) {
+    heph::panic(fmt::format("Index out of range: {} >= {}", idx, size));
+  }
   prepare_function_table.at(idx)(operation, sqe);
 }
 auto IoRingOperationRegistry::hasPrepare(std::uint8_t idx) -> bool {
@@ -33,7 +37,10 @@ auto IoRingOperationRegistry::hasPrepare(std::uint8_t idx) -> bool {
 void IoRingOperationRegistry::registerOperation(std::uint8_t idx, void const* identifier,
                                                 prepare_function_t prepare,
                                                 handle_completion_function_t handle_completion) {
-  heph::panicIf(idx >= CAPACITY, fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY));
+  if (idx >= CAPACITY) {
+    static auto msg = fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY);
+    heph::panic(msg);
+  }
   operation_identifier_table.at(idx) = identifier;
   prepare_function_table.at(idx) = prepare;
   handle_completion_function_table.at(idx) = handle_completion;

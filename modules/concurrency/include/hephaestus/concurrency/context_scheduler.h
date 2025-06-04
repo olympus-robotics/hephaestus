@@ -107,6 +107,9 @@ struct TimedTask : TaskBase {
   template <typename Rep, typename Period>
   TimedTask(Context* context, std::chrono::duration<Rep, Period> start_after, Receiver&& receiver)
     : context(context), start_time(io_ring::TimerClock::now() + start_after), receiver(std::move(receiver)) {
+    if (start_after == std::chrono::duration<Rep, Period>{ 0 }) {
+      timeout_started = true;
+    }
   }
 
   void start() noexcept final {
