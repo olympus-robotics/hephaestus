@@ -13,6 +13,7 @@
 #include <utility>
 #include <variant>
 
+#include <fmt/format.h>
 #include <hephaestus/conduit/detail/node_base.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/__detail/__sender_introspection.hpp>
@@ -47,7 +48,7 @@ public:
   }
 
   auto name() {
-    return name_;
+    return fmt::format("{}/{}", node_->nodeName(), name_);
   }
 
   auto get()

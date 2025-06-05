@@ -6,8 +6,9 @@
 
 #include <cstddef>
 #include <optional>
-#include <string_view>
+#include <string>
 #include <type_traits>
+#include <utility>
 
 #include "hephaestus/conduit/detail/awaiter.h"
 #include "hephaestus/conduit/detail/input_base.h"
@@ -24,8 +25,7 @@ public:
   using ValueT = T;
   using InputPolicyT = InputPolicy;
   template <typename OperationT, typename DataT>
-  explicit QueuedInput(Node<OperationT, DataT>* node, std::string_view name)
-    : BaseT(node, fmt::format("{}/{}", node->nodeName(), name)) {
+  explicit QueuedInput(Node<OperationT, DataT>* node, std::string name) : BaseT(node, std::move(name)) {
   }
 
   auto getValue() -> std::optional<T> {
