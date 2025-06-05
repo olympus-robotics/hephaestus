@@ -65,7 +65,7 @@ struct WebsocketBridgeConfig {
   heph::ipc::zenoh::Config zenoh_config;  // Default constructor is called here
 
   static constexpr int DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS = 5000;
-  int ipc_service_call_timeout_ms = DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS;
+  int ipc_default_service_call_timeout_ms = DEFAULT_IPC_SERVICE_CALL_TIMEOUT_MS;
   bool ipc_service_service_request_async = true;
 
   bool ipc_advertise_topics_based_on_subscribers = true;
