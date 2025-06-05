@@ -6,7 +6,7 @@
 
 #include <cstddef>
 #include <optional>
-#include <string_view>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -18,18 +18,16 @@
 namespace heph::conduit {
 template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<>>
 class AccumulatedInput
-  : public detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH> {
-  using BaseT = detail::InputBase<AccumulatedInput<T, F, InputPolicy>, T, InputPolicy::DEPTH>;
+  : public detail::InputBase<AccumulatedInput<T, R, F, InputPolicy>, T, InputPolicy::DEPTH> {
+  using BaseT = detail::InputBase<AccumulatedInput<T, R, F, InputPolicy>, T, InputPolicy::DEPTH>;
 
 public:
   using ValueT = T;
   using InputPolicyT = InputPolicy;
 
   template <typename OperationT>
-  explicit AccumulatedInput(Node<OperationT>* node, F f, std::string_view name, R initial_value = R{})
-    : BaseT(node, fmt::format("{}/{}", node->nodeName(), name))
-    , f_{ std::move(f) }
-    , initial_value_(std::move(initial_value)) {
+  explicit AccumulatedInput(Node<OperationT>* node, F f, std::string name, R initial_value = R{})
+    : BaseT(node, std::move(name)), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
   }
 
   auto getValue() -> std::optional<R> {

@@ -4,10 +4,13 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <utility>
 #include <variant>
@@ -369,8 +372,64 @@ TEST(InputOutput, AccumulatedInput) {
   res = input.getValue();
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(*res, std::vector({ 0, 1 }));
+
+  EXPECT_EQ(input.setValue(0), InputState::OK);
+  EXPECT_EQ(input.setValue(1), InputState::OK);
+  stdexec::sync_wait(input.get() | stdexec::then([](const std::vector<int>& state) {
+                       EXPECT_EQ(state, std::vector({ 0, 1 }));
+                     }));
 }
 
+static constexpr std::size_t NUM_REPEATS = 1000;
+struct NodeCompletionData {
+  std::size_t iteration{ 0 };
+  std::optional<std::thread::id> producer_id;
+};
+
+struct NodeCompletionOperation : Node<NodeCompletionOperation, NodeCompletionData> {
+  QueuedInput<int, InputPolicy<1>> input{ this, "input" };
+
+  static auto trigger(NodeCompletionOperation& self) {
+    return self.input.get();
+  }
+
+  static auto execute(NodeCompletionOperation& self, int value) {
+    EXPECT_EQ(value, self.data().iteration);
+    EXPECT_NE(self.data().producer_id.value(), std::this_thread::get_id());
+
+    ++self.data().iteration;
+    if (self.data().iteration == NUM_REPEATS) {
+      self.engine().requestStop();
+    }
+  }
+};
+
+TEST(InputOutput, ConcurrrentAccess) {
+  NodeEngine engine{ {} };
+  auto dummy = engine.createNode<NodeCompletionOperation>();
+
+  std::mutex mtx;
+  std::condition_variable cv;
+  std::thread producer{ [&] {
+    {
+      const std::scoped_lock l{ mtx };
+      dummy->data().producer_id.emplace(std::this_thread::get_id());
+      cv.notify_all();
+    }
+    for (std::size_t i = 0; i != NUM_REPEATS; ++i) {
+      while (dummy->input.setValue(i) != InputState::OK) {
+      }
+      std::this_thread::sleep_for(std::chrono::microseconds(1));
+    }
+  } };
+  {
+    std::unique_lock l{ mtx };
+    cv.wait(l, [&] { return dummy->data().producer_id.has_value(); });
+  }
+  engine.run();
+
+  producer.join();
+}
 // NOLINTEND(bugprone-unchecked-optional-access)
 
 }  // namespace heph::conduit::tests

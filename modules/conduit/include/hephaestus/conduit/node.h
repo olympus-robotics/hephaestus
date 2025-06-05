@@ -75,7 +75,7 @@ private:
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
-    auto trigger = operationTrigger();
+    auto trigger = stdexec::continues_on(operationTrigger(), engine().scheduler());
     using TriggerT = decltype(trigger);
     using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
@@ -91,7 +91,8 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | implicit_output_->propagate(engine());
+    return executeSender() | implicit_output_->propagate(engine()) |
+           stdexec::then([this] { operationEnd(); });
   }
 
   template <typename Input>
@@ -108,23 +109,27 @@ private:
   }
 
   auto operationTrigger() {
-    auto schedule_trigger = [&] {
+    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
       if constexpr (HAS_PERIOD) {
-        return engine().scheduler().scheduleAfter(lastPeriodDuration());
+        return engine().scheduler().scheduleAt(start_at);
       } else {
-        return engine().scheduler().schedule();
+        return stdexec::just();
       }
     };
-    return stdexec::just() | stdexec::let_value(schedule_trigger) | stdexec::let_value([this] {
-             if constexpr (HAS_TRIGGER_NULLARY) {
-               return OperationT::trigger();
-             } else if constexpr (HAS_TRIGGER_ARG) {
-               return OperationT::trigger(operation());
-             } else {
-               static_assert(HAS_PERIOD,
-                             "An Operation needs to have at least either a trigger or a period function");
-               return stdexec::just();
-             }
+    auto node_trigger = [&] {
+      if constexpr (HAS_TRIGGER_NULLARY) {
+        return OperationT::trigger();
+      } else if constexpr (HAS_TRIGGER_ARG) {
+        return OperationT::trigger(operation());
+      } else {
+        static_assert(HAS_PERIOD,
+                      "An Operation needs to have at least either a trigger or a period function");
+        return stdexec::just();
+      }
+    };
+    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
+             auto start_at = operationStart(HAS_PERIOD);
+             return stdexec::when_all(period_trigger(start_at), node_trigger());
            });
   }
 

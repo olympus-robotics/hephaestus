@@ -42,6 +42,10 @@ public:
     return context_.scheduler();
   }
 
+  auto isCurrent() -> bool {
+    return context_.isCurrent();
+  }
+
   auto poolScheduler() {
     return pool_.get_scheduler();
   }

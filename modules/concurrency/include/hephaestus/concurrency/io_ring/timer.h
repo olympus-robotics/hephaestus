@@ -6,10 +6,10 @@
 
 #include <chrono>
 #include <cstdint>
-#include <deque>
 #include <functional>
 #include <optional>
 #include <queue>
+#include <vector>
 
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
@@ -71,7 +71,7 @@ public:
   }
 
   auto elapsed() -> TimerClock::duration {
-    return last_tick_ - start_;
+    return TimerClock::now() - start_;
   }
 
   auto tickSimulated(bool advance) -> bool;
@@ -111,7 +111,7 @@ private:
   __kernel_timespec next_timeout_{};
   std::optional<StoppableIoRingOperation<Operation>> timer_operation_;
   std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_;
-  std::priority_queue<TimerEntry, std::deque<TimerEntry>, std::greater<>> tasks_;
+  std::priority_queue<TimerEntry, std::vector<TimerEntry>, std::greater<>> tasks_;
 
   TimerClock::time_point start_;
   TimerClock::time_point last_tick_;

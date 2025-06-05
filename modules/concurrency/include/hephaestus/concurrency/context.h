@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chrono>
-#include <deque>
 #include <functional>
 
 #include <stdexec/execution.hpp>
@@ -13,6 +12,7 @@
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/containers/intrusive_fifo_queue.h"
 
 namespace heph::concurrency {
 
@@ -38,6 +38,10 @@ public:
   void requestStop() {
     timer_.requestStop();
     ring_.requestStop();
+  }
+
+  auto isCurrent() -> bool {
+    return ring_.isCurrentRing();
   }
 
   auto stopRequested() -> bool {
@@ -68,7 +72,7 @@ private:
 
 private:
   io_ring::IoRing ring_;
-  std::deque<TaskBase*> tasks_;
+  heph::containers::IntrusiveFifoQueue<TaskBase> tasks_;
   io_ring::Timer timer_;
   io_ring::TimerClock::base_clock::time_point start_time_;
   io_ring::TimerClock::base_clock::time_point last_progress_time_;

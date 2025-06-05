@@ -4,9 +4,7 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cstddef>
-#include <deque>
 #include <exception>
 #include <optional>
 #include <string>
@@ -15,6 +13,7 @@
 #include <utility>
 #include <variant>
 
+#include <fmt/format.h>
 #include <hephaestus/conduit/detail/node_base.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/__detail/__sender_introspection.hpp>
@@ -27,6 +26,8 @@
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/output.h"
+#include "hephaestus/containers/intrusive_fifo_queue.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit::detail {
 struct InputPollT {};
@@ -47,7 +48,7 @@ public:
   }
 
   auto name() {
-    return name_;
+    return fmt::format("{}/{}", node_->nodeName(), name_);
   }
 
   auto get()
@@ -99,6 +100,16 @@ public:
 
   template <typename U>
   auto setValue(U&& u) -> InputState {
+    if (!node_->runsOnEngine()) {
+      // Dispatch to the engine scheduler to avoid race conditions
+      auto res = stdexec::sync_wait(
+          node_->engine().scheduler().schedule() |
+          stdexec::then([this, u = std::forward<U>(u)] { return setValue(std::move(u)); }));
+      if (!res.has_value()) {
+        heph::panic("Could not set value, engine was stopped");
+      }
+      return std::get<0>(*res);
+    }
     auto push_result = buffer_.push(std::forward<U>(u));
     if (!push_result) {
       if (InputT::InputPolicyT::SET_METHOD == SetMethod::BLOCK) {
@@ -113,24 +124,18 @@ public:
 
 private:
   void enqueueWaiter(detail::AwaiterBase* awaiter) {
-    auto it = std::ranges::find(awaiters_, awaiter);
-    if (it == awaiters_.end()) {
-      awaiters_.push_back(awaiter);
+    if (containers::IntrusiveFifoQueueAccess::next(awaiter) == nullptr) {
+      awaiters_.enqueue(awaiter);
     }
   }
   void dequeueWaiter(detail::AwaiterBase* awaiter) {
-    auto it = std::ranges::find(awaiters_, awaiter);
-    if (it == awaiters_.end()) {
-      return;
-    }
-    awaiters_.erase(it);
+    awaiters_.erase(awaiter);
   }
 
 protected:
   void triggerAwaiter() {
-    if (!awaiters_.empty()) {
-      auto* awaiter = awaiters_.front();
-      awaiters_.pop_front();
+    auto* awaiter = awaiters_.dequeue();
+    if (awaiter != nullptr) {
       awaiter->trigger();
     }
   }
@@ -146,7 +151,7 @@ private:
   template <typename OtherInputT, typename ReceiverT>
   friend class Awaiter;
 
-  std::deque<AwaiterBase*> awaiters_;
+  containers::IntrusiveFifoQueue<AwaiterBase> awaiters_;
   std::string name_;
   NodeBase* node_;
 };
@@ -158,8 +163,8 @@ template <>
 struct SenderExpressionImpl<heph::conduit::detail::InputPollT> : DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(Sender&&, Ignore = {}) noexcept {
     using InputT = std::remove_pointer_t<stdexec::__data_of<Sender>>;
-    using ValueT = std::conditional_t<std::is_same_v<void, typename InputT::ValueT>,
-                                      std::optional<std::tuple<>>, std::optional<typename InputT::ValueT>>;
+    using ValueT = decltype(std::declval<InputT&>().getValue());
+
     return stdexec::completion_signatures<
         stdexec::set_value_t(ValueT), stdexec::set_error_t(std::exception_ptr), stdexec::set_stopped_t()>{};
   };
@@ -181,10 +186,10 @@ template <>
 struct SenderExpressionImpl<heph::conduit::detail::InputBlockT> : DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(Sender&&, Ignore = {}) noexcept {
     using InputT = std::remove_pointer_t<stdexec::__data_of<Sender>>;
-    using ValueT = std::conditional_t<std::is_same_v<void, typename InputT::ValueT>, stdexec::set_value_t(),
-                                      stdexec::set_value_t(typename InputT::ValueT)>;
-    return stdexec::completion_signatures<ValueT, stdexec::set_error_t(std::exception_ptr),
-                                          stdexec::set_stopped_t()>{};
+    using ValueT = decltype(std::declval<InputT&>().getValue())::value_type;
+
+    return stdexec::completion_signatures<
+        stdexec::set_value_t(ValueT), stdexec::set_error_t(std::exception_ptr), stdexec::set_stopped_t()>{};
   };
 
   static constexpr auto GET_STATE = []<typename Sender, typename Receiver>(Sender&& sender,

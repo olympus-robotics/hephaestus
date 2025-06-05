@@ -17,22 +17,71 @@
 
 namespace heph::conduit::detail {
 
+auto NodeBase::operationStart(bool has_period) -> ClockT::time_point {
+  auto start_at = nextStartTime(has_period);
+  last_steady_ = ClockT::now();
+  last_system_ = std::chrono::system_clock::now();
+  if (iteration_ == 0) {
+    start_time_ = last_steady_;
+  }
+  return start_at;
+}
+
+void NodeBase::operationEnd() {
+  auto now = ClockT::now();
+  auto system_now = std::chrono::system_clock::now();
+
+  auto tick_duration = now - last_steady_;
+  auto clock_drift =
+      std::chrono::duration_cast<std::chrono::microseconds>((system_now - last_system_) - tick_duration);
+
+  std::chrono::microseconds period_drift{ 0 };
+  auto period = nodePeriod();
+  if (period != std::chrono::nanoseconds{ 0 }) {
+    period_drift =
+        std::chrono::duration_cast<std::chrono::microseconds>(now - (start_time_ + (iteration_ * period)));
+  }
+
+  if (iteration_ > 0) {
+    heph::telemetry::record([name = nodeName(), timestamp = std::chrono::system_clock::now(),
+                             last_execution_duration = last_execution_duration_, tick_duration, clock_drift,
+                             period_drift] {
+      return heph::telemetry::Metric{
+        .component = fmt::format("conduit/{}/clock_drift", name),
+        .tag = "node_timings",
+        .timestamp = timestamp,
+        .values = { { "execute_duration_microsec",
+                      std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration)
+                          .count() },
+                    { "tick_duration_microsec",
+                      std::chrono::duration_cast<std::chrono::microseconds>(tick_duration).count() },
+                    { "clock_drift_microsec", clock_drift.count() },
+                    { "period_drift_microsec", period_drift.count() } }
+      };
+    });
+  }
+  ++iteration_;
+}
+
 void NodeBase::updateExecutionTime(std::chrono::nanoseconds duration) {
   last_execution_duration_ = duration;
 }
 
-auto NodeBase::lastPeriodDuration() -> std::chrono::nanoseconds {
-  auto period = nodePeriod();
-  std::chrono::nanoseconds start_after = period - last_execution_duration_;
-  // We attempt to avoid drift by adapting the expiry time with the
-  // measured execution time of the last execution duration.
-  // If execution took longer, we should scheduler immediately (delay of 0).
-  if (last_execution_duration_ >= period) {
-    heph::log(heph::WARN, std::string{ MISSED_DEADLINE_WARNING }, "node", nodeName(), "period", period,
-              "duration", last_execution_duration_);
-    start_after = std::chrono::nanoseconds{ 0 };
+auto NodeBase::nextStartTime(bool has_period) -> ClockT::time_point {
+  auto now = ClockT::now();
+  if (last_execution_duration_ == std::chrono::nanoseconds{ 0 } || !has_period) {
+    return now;
   }
-  return start_after;
+
+  auto period = nodePeriod();
+  auto next_time_point = start_time_ + (iteration_ * period);
+  if (next_time_point < now) {
+    auto last_duration = now - last_steady_;
+    heph::log(heph::WARN, std::string{ MISSED_DEADLINE_WARNING }, "node", nodeName(), "period", period,
+              "tick_duration", last_duration, "execution_duration", last_execution_duration_);
+    return now;
+  }
+  return next_time_point;
 };
 
 ExecutionStopWatch::~ExecutionStopWatch() noexcept {
@@ -42,49 +91,6 @@ ExecutionStopWatch::~ExecutionStopWatch() noexcept {
 
 ExecutionStopWatch::ExecutionStopWatch(NodeBase* self)
   : self_(self), start_(std::chrono::high_resolution_clock::now()) {
-  self_->calculateClockDrift();
-}
-
-void NodeBase::calculateClockDrift() {
-  auto period = std::chrono::duration_cast<std::chrono::milliseconds>(nodePeriod());
-
-  auto now_steady = std::chrono::steady_clock::now();
-  auto now_system = std::chrono::system_clock::now();
-
-  auto duration_steady = now_steady - last_steady_;
-  auto duration_system = now_system - last_system_;
-
-  std::chrono::microseconds drift_scheduling{ 0 };
-  // If period is zero, we cannot determine the delay...
-  if (period != std::chrono::milliseconds{ 0 }) {
-    // a positive duration drift indicates that the clock under consideration took longer than
-    // expected, and vice versa
-    drift_scheduling = std::chrono::duration_cast<std::chrono::microseconds>(duration_steady - period);
-  }
-  auto drift_system_clock =
-      std::chrono::duration_cast<std::chrono::microseconds>(duration_system - duration_steady);
-
-  if (last_execution_duration_ != std::chrono::nanoseconds{ 0 }) {
-    heph::telemetry::record([name = nodeName(), timestamp = now_system,
-                             last_execution_duration = last_execution_duration_, duration_steady,
-                             drift_scheduling, drift_system_clock] {
-      return heph::telemetry::Metric{
-        .component = fmt::format("conduit/{}/clock_drift", name),
-        .tag = "node_timings",
-        .timestamp = timestamp,
-        .values = { { "execute_duration_microsec",
-                      std::chrono::duration_cast<std::chrono::microseconds>(last_execution_duration)
-                          .count() },
-                    { "tick_duration_microsec",
-                      std::chrono::duration_cast<std::chrono::microseconds>(duration_steady).count() },
-                    { "scheduler_delay_microsec", drift_scheduling.count() },
-                    { "system_clock_drift_microsec", drift_system_clock.count() } }
-      };
-    });
-  }
-
-  last_steady_ = now_steady;
-  last_system_ = now_system;
 }
 
 auto NodeBase::getStopToken() -> stdexec::inplace_stop_token {
@@ -92,5 +98,11 @@ auto NodeBase::getStopToken() -> stdexec::inplace_stop_token {
     return stdexec::inplace_stop_token{};
   }
   return engine_->getStopToken();
+}
+auto NodeBase::runsOnEngine() const -> bool {
+  if (engine_ == nullptr) {
+    return true;
+  }
+  return engine_->isCurrent();
 }
 }  // namespace heph::conduit::detail

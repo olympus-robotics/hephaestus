@@ -19,7 +19,7 @@
 namespace heph::concurrency {
 struct Context;
 struct ContextScheduleT {};
-struct ContextScheduleAfterT {};
+struct ContextScheduleAtT {};
 
 struct ContextScheduler {
   Context* self;
@@ -29,9 +29,14 @@ struct ContextScheduler {
     return makeSenderExpression<TagT>(self);
   }
 
-  template <typename Rep, typename Period, typename TagT = ContextScheduleAfterT>
+  template <typename Rep, typename Period, typename TagT = ContextScheduleAtT>
   auto scheduleAfter(std::chrono::duration<Rep, Period> duration) {
-    return makeSenderExpression<TagT>(std::tuple{ self, duration });
+    return scheduleAt(io_ring::TimerClock::now() + duration);
+  }
+
+  template <typename Clock, typename Duration, typename TagT = ContextScheduleAtT>
+  auto scheduleAt(std::chrono::time_point<Clock, Duration> time_point) {
+    return makeSenderExpression<TagT>(std::tuple{ self, time_point });
   }
 
   [[nodiscard]] static constexpr auto query(stdexec::get_forward_progress_guarantee_t /*unused*/) noexcept {
@@ -71,6 +76,7 @@ struct TaskBase {
   virtual void setStopped() noexcept = 0;
 
   TaskDispatchOperation dispatch_operation{ this };
+  TaskBase* next{ nullptr };
 };
 
 template <typename Receiver, typename Context>
@@ -103,9 +109,13 @@ struct TimedTask : TaskBase {
   Receiver receiver;
   bool timeout_started{ false };
 
-  template <typename Rep, typename Period>
-  TimedTask(Context* context, std::chrono::duration<Rep, Period> start_after, Receiver&& receiver)
-    : context(context), start_time(io_ring::TimerClock::now() + start_after), receiver(std::move(receiver)) {
+  template <typename Clock, typename Duration>
+  TimedTask(Context* context, std::chrono::time_point<Clock, Duration> start_time, Receiver&& receiver)
+    : context(context), start_time(start_time), receiver(std::move(receiver)) {
+    // Avoid putting it the task in the timer when the deadline was already exceeded...
+    if (start_time <= io_ring::TimerClock::now()) {
+      timeout_started = true;
+    }
   }
 
   void start() noexcept final {
@@ -146,7 +156,7 @@ struct SenderExpressionImpl<ContextScheduleT> : DefaultSenderExpressionImpl {
 };
 
 template <>
-struct SenderExpressionImpl<ContextScheduleAfterT> : DefaultSenderExpressionImpl {
+struct SenderExpressionImpl<ContextScheduleAtT> : DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = [](Ignore, Ignore = {}) noexcept {
     return stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_error_t(std::exception_ptr),
                                           stdexec::set_stopped_t()>{};
