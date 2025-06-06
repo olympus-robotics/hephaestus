@@ -61,7 +61,7 @@ struct ZenohPublisherOperator {
 
 template <typename T>
 struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T>, ZenohPublisherOperator<T>> {
-  QueuedInput<T> input{ this, "input" };
+  QueuedInput<T> input{ this, "input" };  // TODO(@fbrizzi): how can I set this based on the topic name?
 
   static auto trigger(ZenohPublisherNode& self) {
     return self.input.get();

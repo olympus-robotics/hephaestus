@@ -38,9 +38,24 @@ TEST(ZenohNodeTests, nodeBasic) {
   auto subscriber_node =
       ZenohSubscriberNode(zenoh_session, ipc::TopicConfig{ "test/input/topic" }, publisher_node->input);
 
-  // publisher_node->input.connectTo(subscriber_node);
+  auto publisher =
+      ipc::zenoh::Publisher<types::DummyType>(zenoh_session, ipc::TopicConfig{ "test/input/topic" });
 
-  // engine.run();
+  // std::atomic_flag done = ATOMIC_FLAG_INIT;
+  auto subscriber = ipc::zenoh::Subscriber<types::DummyType>(
+      zenoh_session, ipc::TopicConfig{ "test/input/topic" },
+      [&engine](const auto&, const std::shared_ptr<types::DummyType>& msg) {
+        EXPECT_EQ(msg->dummy_primitives_type.dummy_double, 42.);
+        engine.requestStop();
+        // done.test_and_set();
+        // done.notify_all();
+      });
+
+  types::DummyType msg;
+  msg.dummy_primitives_type.dummy_double = 42.;
+  const auto res = publisher.publish(msg);
+  EXPECT_TRUE(res);
+  engine.run();
 }
 
 }  // namespace heph::conduit::tests
