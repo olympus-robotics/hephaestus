@@ -17,7 +17,7 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
-struct Context;
+class Context;
 struct ContextScheduleT {};
 struct ContextScheduleAtT {};
 

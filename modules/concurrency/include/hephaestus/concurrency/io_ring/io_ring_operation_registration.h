@@ -57,7 +57,7 @@ inline auto IoRingOperationRegistry::registerOperation() -> std::uint8_t {
     return registered_identifier == IDENTIFIER;
   });
   if (it != operation_identifier_table.end()) {
-    return std::distance(operation_identifier_table.begin(), it);
+    return static_cast<std::uint8_t>(std::distance(operation_identifier_table.begin(), it));
   }
 
   prepare_function_t prepare{ nullptr };
