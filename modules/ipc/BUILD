@@ -19,7 +19,6 @@ heph_cc_library(
     deps = [
         "//modules/cli",
         "//modules/concurrency",
-        "//modules/conduit",
         "//modules/containers",
         "//modules/ipc/proto:types_gen_proto",
         "//modules/serdes",

@@ -44,6 +44,8 @@ static constexpr bool ISOPTIONAL = IsOptional<std::decay_t<T>>::value;
 template <typename InputT, typename T, std::size_t Depth>
 class InputBase {
 public:
+  using DataT = T;
+
   explicit InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
   }
 

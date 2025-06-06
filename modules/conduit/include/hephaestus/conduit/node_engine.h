@@ -65,6 +65,7 @@ public:
     auto* node = node_ptr.get();
     nodes_.emplace_back(std::move(node_ptr));
     node->data_.emplace(std::forward<Ts>(ts)...);
+
     // Late initialize special members. This is required for tow reasons:
     //  1. We don't want to impose a ctor taking the engine parameter on
     //     an  Operator
