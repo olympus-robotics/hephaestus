@@ -15,8 +15,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBURING REQUIRED IMPORTED_TARGET liburing)
 find_package(stdexec REQUIRED)
 
-message("liburing: ${LIBURING_LIBRARIES}")
-
 # library sources
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 
