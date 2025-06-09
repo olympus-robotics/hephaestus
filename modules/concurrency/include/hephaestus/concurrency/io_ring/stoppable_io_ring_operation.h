@@ -51,9 +51,10 @@ struct StoppableIoRingOperation {
   std::optional<StopOperation> stop_operation;
 };
 template <typename IoRingOperationT>
-inline StoppableIoRingOperation<IoRingOperationT>::StoppableIoRingOperation(IoRingOperationT op, IoRing& ring,
+inline StoppableIoRingOperation<IoRingOperationT>::StoppableIoRingOperation(IoRingOperationT op,
+                                                                            IoRing& io_ring,
                                                                             stdexec::inplace_stop_token token)
-  : operation(std::move(op)), ring(&ring), stop_callback(token, StopCallback{ this }) {
+  : operation(std::move(op)), ring(&io_ring), stop_callback(token, StopCallback{ this }) {
   if (token.stop_requested()) {
     operation.handleStopped();
   }

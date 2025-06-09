@@ -296,7 +296,7 @@ endif()
 
 # --------------------------------------------------------------------------------------------------
 # stdexec
-set(STDEXEC_VERSION "0242ad9a5ac172324ff51803a1c79facca36b229")
+set(STDEXEC_VERSION "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5")
 add_cmake_dependency(
   NAME stdexec VERSION ${WS_PROTOCOL_VERSION} URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz
 )
