@@ -35,14 +35,14 @@ auto IoRingOperationRegistry::hasPrepare(std::uint8_t idx) -> bool {
   return prepare_function_table.at(idx) != nullptr;
 }
 void IoRingOperationRegistry::registerOperation(std::uint8_t idx, void const* identifier,
-                                                prepare_function_t prepare,
+                                                prepare_function_t prepare_func,
                                                 handle_completion_function_t handle_completion) {
   if (idx >= CAPACITY) {
     static auto msg = fmt::format("IoRingOperationRegistry exceeded capacity of {}", CAPACITY);
     heph::panic(msg);
   }
   operation_identifier_table.at(idx) = identifier;
-  prepare_function_table.at(idx) = prepare;
+  prepare_function_table.at(idx) = prepare_func;
   handle_completion_function_table.at(idx) = handle_completion;
 }
 }  // namespace heph::concurrency::io_ring
