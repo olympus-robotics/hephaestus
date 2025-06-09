@@ -3,27 +3,19 @@
 //=================================================================================================
 
 #include <atomic>
-#include <chrono>
 #include <cstdlib>
+#include <future>
 #include <memory>
-#include <optional>
-#include <thread>
-#include <utility>
 
-#include <fmt/base.h>
-#include <fmt/ranges.h>
 #include <gtest/gtest.h>
-#include <stdexec/execution.hpp>
 
-#include "hephaestus/concurrency/io_ring/timer.h"
-#include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/zenoh_nodes.h"
+#include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/types/dummy_type.h"
-#include "hephaestus/types_proto/dummy_type.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
 namespace heph::conduit::tests {
 
