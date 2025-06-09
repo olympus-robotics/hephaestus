@@ -28,6 +28,7 @@
 namespace heph::conduit::tests {
 
 TEST(ZenohNodeTests, nodeBasic) {
+  static constexpr auto VALUE = 42.;
   NodeEngine engine{ {} };
 
   auto zenoh_session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
@@ -41,21 +42,26 @@ TEST(ZenohNodeTests, nodeBasic) {
   auto publisher =
       ipc::zenoh::Publisher<types::DummyType>(zenoh_session, ipc::TopicConfig{ "test/input/topic" });
 
-  // std::atomic_flag done = ATOMIC_FLAG_INIT;
+  std::atomic_flag done = ATOMIC_FLAG_INIT;
   auto subscriber = ipc::zenoh::Subscriber<types::DummyType>(
-      zenoh_session, ipc::TopicConfig{ "test/input/topic" },
-      [&engine](const auto&, const std::shared_ptr<types::DummyType>& msg) {
-        EXPECT_EQ(msg->dummy_primitives_type.dummy_double, 42.);
-        engine.requestStop();
-        // done.test_and_set();
-        // done.notify_all();
+      zenoh_session, ipc::TopicConfig{ "test/output/topic" },
+      [&done](const auto&, const std::shared_ptr<types::DummyType>& msg) {
+        EXPECT_EQ(msg->dummy_primitives_type.dummy_double, VALUE);
+        done.test_and_set();
+        done.notify_all();
       });
 
+  auto future = std::async(std::launch::async, [&engine]() { engine.run(); });
+
   types::DummyType msg;
-  msg.dummy_primitives_type.dummy_double = 42.;
+  msg.dummy_primitives_type.dummy_double = VALUE;
   const auto res = publisher.publish(msg);
   EXPECT_TRUE(res);
-  engine.run();
+
+  done.wait(false);
+  engine.requestStop();
+
+  future.get();
 }
 
 }  // namespace heph::conduit::tests
