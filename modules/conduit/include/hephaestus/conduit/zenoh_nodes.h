@@ -46,7 +46,8 @@ struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T>, ZenohPublisherO
   QueuedInput<T> input{ this, std::string{ std::string_view{ InputName } } };
 
   static auto name() -> std::string_view {
-    return fmt::format("zenoh_publisher_{}", InputName);
+    static constexpr auto NAME = utils::string::StringLiteral{ "zenoh_publisher_" } + InputName;
+    return std::string_view{ NAME };
   }
 
   static auto trigger(ZenohPublisherNode& self) {
