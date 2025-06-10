@@ -57,13 +57,13 @@ inline auto IoRingOperationRegistry::registerOperation() -> std::uint8_t {
     return registered_identifier == IDENTIFIER;
   });
   if (it != operation_identifier_table.end()) {
-    return std::distance(operation_identifier_table.begin(), it);
+    return static_cast<std::uint8_t>(std::distance(operation_identifier_table.begin(), it));
   }
 
-  prepare_function_t prepare{ nullptr };
+  prepare_function_t prepare_func{ nullptr };
   handle_completion_function_t handle_completion{ nullptr };
   if constexpr (requires() { std::declval<IoRingOperationT>().prepare(std::declval<::io_uring_sqe*>()); }) {
-    prepare = [](void* operation, ::io_uring_sqe* sqe) {
+    prepare_func = [](void* operation, ::io_uring_sqe* sqe) {
       static_cast<IoRingOperationT*>(operation)->prepare(sqe);
     };
     handle_completion = [](void* operation, ::io_uring_cqe* cqe) {
@@ -75,7 +75,7 @@ inline auto IoRingOperationRegistry::registerOperation() -> std::uint8_t {
     };
   }
   const std::uint8_t idx{ size };
-  registerOperation(idx, IDENTIFIER, prepare, handle_completion);
+  registerOperation(idx, IDENTIFIER, prepare_func, handle_completion);
 
   ++size;
 

@@ -134,10 +134,10 @@ public:
   void registerInput(Input* input) {
     inputs_.emplace_back(
         input,
-        [](void* input, void* ptr) {
-          return static_cast<Input*>(input)->setValue(*static_cast<typename Input::ValueT*>(ptr));
+        [](void* input_ptr, void* ptr) {
+          return static_cast<Input*>(input_ptr)->setValue(*static_cast<typename Input::ValueT*>(ptr));
         },
-        [](void* input) { return std::string{ static_cast<Input*>(input)->name() }; }, 0);
+        [](void* input_ptr) { return std::string{ static_cast<Input*>(input_ptr)->name() }; }, 0);
   }
 
 private:
