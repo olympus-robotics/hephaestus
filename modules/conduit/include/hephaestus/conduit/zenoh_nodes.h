@@ -45,6 +45,10 @@ template <typename T, utils::string::StringLiteral InputName = "input">
 struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T>, ZenohPublisherOperator<T>> {
   QueuedInput<T> input{ this, std::string{ std::string_view{ InputName } } };
 
+  static auto name() -> std::string_view {
+    return fmt::format("zenoh_publisher_{}", InputName);
+  }
+
   static auto trigger(ZenohPublisherNode& self) {
     return self.input.get();
   }
