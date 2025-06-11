@@ -37,4 +37,4 @@ jobs:
           # Share repository cache between workflows.
           repository-cache: true
       - name: Test
-        run: bazelisk test --test_output=errors //modules/... --config remote-cache --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
+        run: bazelisk test --test_output=errors //modules/... --config common --config remote-cache --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
