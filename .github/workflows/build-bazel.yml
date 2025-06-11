@@ -18,32 +18,7 @@ on:
         default: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions: read-all
-    steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: true
-          swap-storage: true
-      - name: Cache Bazel
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}-${{ inputs.config }}-${{ inputs.compilation-mode }}
-      - name: Build
-        run: bazelisk build //modules/... --experimental_disk_cache_gc_max_size 5G --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
-
-  test:
+  build-test:
     if: ${{ inputs.run-tests }}
     needs: build
     runs-on: ubuntu-latest
@@ -60,12 +35,13 @@ jobs:
           large-packages: false
           docker-images: true
           swap-storage: true
-      - name: Cache Bazel
-        uses: actions/cache@v4
+      - uses: bazel-contrib/setup-bazel@0.15.0
         with:
-          path: |
-            ~/.cache/bazelisk
-            ~/.cache/bazel
-          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}-${{ inputs.config }}-${{ inputs.compilation-mode }}
+          # Avoid downloading Bazel every time.
+          bazelisk-cache: true
+          # Store build cache per workflow.
+          disk-cache: false
+          # Share repository cache between workflows.
+          repository-cache: true
       - name: Test
-        run: bazelisk test --test_output=errors //modules/... --experimental_disk_cache_gc_max_size 5G --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
+        run: bazelisk test --test_output=errors //modules/... --config remote-cache --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
