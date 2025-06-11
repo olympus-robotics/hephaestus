@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <string_view>
+#include <thread>
 #include <utility>
 
 #include "hephaestus/conduit/node.h"
@@ -23,11 +24,23 @@ class ZenohSubscriberNode {
 public:
   ZenohSubscriberNode(ipc::zenoh::SessionPtr session, ipc::TopicConfig topic_config, InputT& input)
     : input_(&input)
-    , subscriber_(std::move(session), std::move(topic_config),
-                  [this](const auto&, const auto& msg) { input_->setValue(*msg); }) {
+    , subscriber_(
+          std::move(session), std::move(topic_config),
+          [this](const auto&, const auto& msg) { setValue(std::move(*msg)); },
+          heph::ipc::zenoh::SubscriberConfig{ .dedicated_callback_thread = true }) {
   }
 
 private:
+  void setValue(typename InputT::DataT&& data) {
+    auto backoff = BACKOFF_DELAY;
+    while (input_->setValue(std::move(data)) != InputState::OK) {
+      std::this_thread::sleep_for(backoff);
+      backoff = backoff * 2;
+    }
+  }
+
+private:
+  static constexpr auto BACKOFF_DELAY = std::chrono::microseconds{ 1 };
   InputT* input_;
   ipc::zenoh::Subscriber<typename InputT::DataT> subscriber_;
 };
