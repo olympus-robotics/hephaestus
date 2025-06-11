@@ -11,16 +11,9 @@ on:
         description: "Bazel Compilation-Mode"
         required: true
         type: string
-      run-tests:
-        description: "Run Tests"
-        required: false
-        type: boolean
-        default: true
 
 jobs:
   build-test:
-    if: ${{ inputs.run-tests }}
-    needs: build
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
