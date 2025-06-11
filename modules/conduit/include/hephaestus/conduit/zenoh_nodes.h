@@ -9,10 +9,12 @@
 #include <thread>
 #include <utility>
 
+#include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/utils/string/string_literal.h"
