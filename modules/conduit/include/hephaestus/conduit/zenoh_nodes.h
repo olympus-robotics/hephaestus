@@ -42,7 +42,7 @@ struct ZenohPublisherOperator {
 };
 
 template <typename T, utils::string::StringLiteral InputName>
-struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T>, ZenohPublisherOperator<T>> {
+struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T, InputName>, ZenohPublisherOperator<T>> {
   QueuedInput<T> input{ this, std::string{ std::string_view{ InputName } } };
 
   static auto name() -> std::string_view {
