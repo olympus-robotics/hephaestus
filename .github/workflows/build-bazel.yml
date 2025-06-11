@@ -37,4 +37,6 @@ jobs:
           # Share repository cache between workflows.
           repository-cache: true
       - name: Test
-        run: bazelisk test --test_output=errors //modules/... --config remote-cache --remote_header=${{ secrets.BUILDBUDDY_KEY }} --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
+        env:
+          BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
+        run: bazelisk test --test_output=errors //modules/... --config remote-cache --remote_header=$BUILDBUDDY_KEY --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
