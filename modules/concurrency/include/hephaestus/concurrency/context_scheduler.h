@@ -11,6 +11,7 @@
 #include <utility>
 
 #include <stdexec/__detail/__execution_fwd.hpp>
+#include <stdexec/__detail/__tag_invoke.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
@@ -23,6 +24,10 @@ struct ContextScheduleAtT {};
 
 struct ContextScheduler {
   Context* self;
+
+  [[nodiscard]] auto context() const -> Context& {
+    return *self;
+  }
 
   template <typename TagT = ContextScheduleT>
   auto schedule() {
@@ -46,6 +51,24 @@ struct ContextScheduler {
   friend auto operator<=>(ContextScheduler const&, ContextScheduler const&) = default;
 };
 
+struct GetContextT : stdexec::__query<GetContextT> {
+  static constexpr auto query(stdexec::forwarding_query_t /*unused*/) noexcept -> bool {
+    return true;
+  }
+  template <typename Env>
+    requires stdexec::tag_invocable<GetContextT, const Env&>
+  auto operator()(const Env& env) const noexcept -> stdexec::tag_invoke_result_t<GetContextT, const Env&> {
+    static_assert(stdexec::nothrow_tag_invocable<GetContextT, const Env&>);
+    return stdexec::tag_invoke(GetContextT{}, env);
+  }
+
+  template <typename Tag = GetContextT>
+  auto operator()() const noexcept;
+};
+
+// NOLINTNEXTLINE (readability-identifier-naming)
+static constexpr GetContextT getContext{};
+
 struct ContextEnv {
   Context* self;
 
@@ -61,6 +84,8 @@ struct ContextEnv {
 
   [[nodiscard]] auto query(stdexec::get_stop_token_t /*ignore*/) const noexcept
       -> stdexec::inplace_stop_token;
+
+  [[nodiscard]] auto query(GetContextT /*ignore*/) const noexcept -> Context&;
 };
 
 struct TaskBase;

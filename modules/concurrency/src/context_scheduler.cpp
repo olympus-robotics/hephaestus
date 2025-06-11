@@ -15,6 +15,10 @@ namespace heph::concurrency {
   return self->getStopToken();
 }
 
+[[nodiscard]] auto ContextEnv::query(GetContextT /*ignore*/) const noexcept -> Context& {
+  return *self;
+}
+
 void TaskDispatchOperation::handleCompletion() const {
   self->start();
 }
