@@ -28,6 +28,8 @@ auto TimerClock::now() -> time_point {
     case ClockMode::SIMULATED:
       return timer->now();
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 
 void Timer::Operation::prepare(::io_uring_sqe* sqe) const {

@@ -17,7 +17,7 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
-struct Context;
+class Context;
 struct ContextScheduleT {};
 struct ContextScheduleAtT {};
 
@@ -85,8 +85,8 @@ struct Task : TaskBase {
   Receiver receiver;
   stdexec::inplace_stop_token stop_token;
 
-  Task(Context* context, Receiver&& receiver, stdexec::inplace_stop_token stop_token)
-    : context(context), receiver(std::move(receiver)), stop_token(std::move(stop_token)) {
+  Task(Context* context_input, Receiver&& receiver_input, stdexec::inplace_stop_token inplace_stop_token)
+    : context(context_input), receiver(std::move(receiver_input)), stop_token(std::move(inplace_stop_token)) {
   }
 
   void start() noexcept final {
@@ -110,8 +110,9 @@ struct TimedTask : TaskBase {
   bool timeout_started{ false };
 
   template <typename Clock, typename Duration>
-  TimedTask(Context* context, std::chrono::time_point<Clock, Duration> start_time, Receiver&& receiver)
-    : context(context), start_time(start_time), receiver(std::move(receiver)) {
+  TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
+            Receiver&& receiver_input)
+    : context(context_input), start_time(start_time_input), receiver(std::move(receiver_input)) {
     // Avoid putting it the task in the timer when the deadline was already exceeded...
     if (start_time <= io_ring::TimerClock::now()) {
       timeout_started = true;

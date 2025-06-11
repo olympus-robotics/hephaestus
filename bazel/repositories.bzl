@@ -61,12 +61,11 @@ def foreign_cc_repositories():
         sha256 = "1c7d7b874f2e20d841cd04391d9d0be507ccb75b22f84b65a0fc61a30ac30651",
     )
 
-    STDEXEC_VERSION = "0242ad9a5ac172324ff51803a1c79facca36b229"
+    STDEXEC_VERSION = "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5"
     http_archive(
         name = "stdexec",
         urls = ["https://github.com/NVIDIA/stdexec/archive/{version}.zip".format(version = STDEXEC_VERSION)],
         strip_prefix = "stdexec-" + STDEXEC_VERSION,
-        sha256 = "27dfe0c59dcd6b590fbfdf375e2757a9f64f757cd982a3b5b02fee54b22bf165",
-        patches = ["//bazel/foreign_cc:stdexec.patch"],
+        sha256 = "3757e6c935a4b772efbfea69cbdcc7291655dfaf02147b81974e11700fb794db",
         build_file = "//bazel/foreign_cc:stdexec.BUILD",
     )

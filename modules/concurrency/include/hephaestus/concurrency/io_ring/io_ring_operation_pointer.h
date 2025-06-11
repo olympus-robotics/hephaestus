@@ -33,7 +33,7 @@ struct IoRingOperationPointer {
     data = (idx | ptr);
   }
 
-  explicit IoRingOperationPointer(std::size_t data) : data(data) {
+  explicit IoRingOperationPointer(std::size_t input) : data(input) {
   }
 
   [[nodiscard]] auto hasPrepare() const -> bool {
