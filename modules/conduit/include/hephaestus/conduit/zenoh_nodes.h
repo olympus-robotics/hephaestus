@@ -41,7 +41,7 @@ struct ZenohPublisherOperator {
   ipc::zenoh::Publisher<T> publisher;
 };
 
-template <typename T, utils::string::StringLiteral InputName = "input">
+template <typename T, utils::string::StringLiteral InputName>
 struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T>, ZenohPublisherOperator<T>> {
   QueuedInput<T> input{ this, std::string{ std::string_view{ InputName } } };
 

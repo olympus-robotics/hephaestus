@@ -25,8 +25,9 @@ TEST(ZenohNodeTests, nodeBasic) {
 
   auto zenoh_session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
 
-  [[maybe_unused]] auto publisher_node = engine.createNode<ZenohPublisherNode<types::DummyType>>(
-      zenoh_session, ipc::TopicConfig{ "test/output/topic" });
+  [[maybe_unused]] auto publisher_node =
+      engine.createNode<ZenohPublisherNode<types::DummyType, "test_publisher">>(
+          zenoh_session, ipc::TopicConfig{ "test/output/topic" });
 
   auto subscriber_node =
       ZenohSubscriberNode(zenoh_session, ipc::TopicConfig{ "test/input/topic" }, publisher_node->input);
