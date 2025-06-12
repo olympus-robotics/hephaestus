@@ -131,6 +131,7 @@ jobs:
     with:
       config: "clang-tidy"
       compilation-mode: "fastbuild"
+    secrets: inherit
 
   bazel-sanitizer-dbg:
     permissions: read-all
@@ -138,6 +139,7 @@ jobs:
     with:
       config: "sanitizer"
       compilation-mode: "dbg"
+    secrets: inherit
 
   bazel-sanitizer-opt:
     permissions: read-all
@@ -145,3 +147,4 @@ jobs:
     with:
       config: "sanitizer"
       compilation-mode: "opt"
+    secrets: inherit
