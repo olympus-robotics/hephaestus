@@ -43,9 +43,7 @@ public:
       queue_.push_back(std::forward<U>(obj));
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
     return true;
   }
 
@@ -66,9 +64,7 @@ public:
       queue_.push_back(std::forward<U>(obj));
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
     return element_dropped;
   }
 
@@ -79,10 +75,8 @@ public:
   void waitAndPush(U&& obj) {
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      ++waiting_writers_;
       writer_signal_.wait(lock,
                           [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
-      --waiting_writers_;
       if (stop_) {
         return;
       }
@@ -90,9 +84,7 @@ public:
       queue_.push_back(std::forward<U>(obj));
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
   }
 
   /// Attempt to enqueue the data if there is space in the queue. Support constructing a new element
@@ -110,9 +102,7 @@ public:
       queue_.emplace_back(std::forward<Args>(args)...);
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
     return true;
   }
 
@@ -133,9 +123,7 @@ public:
       queue_.emplace_back(std::forward<Args>(args)...);
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
     return element_dropped;
   }
 
@@ -147,10 +135,8 @@ public:
   void waitAndEmplace(Args&&... args) {
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      ++waiting_writers_;
       writer_signal_.wait(lock,
                           [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
-      --waiting_writers_;
       if (stop_) {
         return;
       }
@@ -158,9 +144,7 @@ public:
       queue_.emplace_back(std::forward<Args>(args)...);
     }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
-    }
+    reader_signal_.notify_one();
   }
 
   /// Pop data from the queue, if data is present the function returns immediately,
@@ -169,36 +153,15 @@ public:
   /// \return The first element from the queue if the queue contains data, std::nullopt otherwise.
   [[nodiscard]] auto waitAndPop() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::optional<T> {
     std::unique_lock<std::mutex> lock(mutex_);
-    ++waiting_readers_;
     reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
-    --waiting_readers_;
     if (stop_) {
       return {};
     }
 
     auto value = std::move(queue_.front());
     queue_.pop_front();
-    if (waiting_writers_ > 0) {
-      writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
-    }
+    writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
     return value;
-  }
-
-  [[nodiscard]] auto waitAndPopAll() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::deque<T> {
-    std::unique_lock<std::mutex> lock(mutex_);
-    ++waiting_readers_;
-    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
-    --waiting_readers_;
-    if (stop_) {
-      return {};
-    }
-
-    std::deque<T> res;
-    std::swap(res, queue_);
-    if (waiting_writers_ > 0) {
-      writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
-    }
-    return res;
   }
 
   /// Tries to pop data from the queue, if no data is present it returns nothing.
@@ -212,9 +175,7 @@ public:
 
     auto value = std::move(queue_.front());
     queue_.pop_front();
-    if (waiting_writers_ > 0) {
-      writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
-    }
+    writer_signal_.notify_one();  // Notifying a writer waiting that there is an empty space.
     return value;
   }
 
@@ -244,9 +205,7 @@ private:
   std::optional<std::size_t> max_size_;
   std::condition_variable reader_signal_;
   std::condition_variable writer_signal_;
-  mutable std::mutex mutex_;
-  std::size_t waiting_readers_{ 0 };
-  std::size_t waiting_writers_{ 0 };
   bool stop_{ false };
+  mutable std::mutex mutex_;
 };
 }  // namespace heph::containers
