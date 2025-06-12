@@ -39,4 +39,4 @@ jobs:
       - name: Test
         env:
           BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
-        run: bazelisk test --test_output=errors //modules/... --config remote-cache --remote_header=$BUILDBUDDY_KEY --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
+        run: bazelisk test --test_output=errors //modules/... --config remote-cache --remote_header="$BUILDBUDDY_KEY" --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}
