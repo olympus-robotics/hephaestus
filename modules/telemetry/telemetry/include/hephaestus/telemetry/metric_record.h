@@ -54,10 +54,8 @@ void record(std::string component, std::string tag, DataT&& data,
           .values = internal::jsonToValuesMap(json),
         };
       });
-  /*
-
-  record(std::move(metric));
-*/
 }
+
+void flushMetrics();
 
 }  // namespace heph::telemetry

@@ -106,6 +106,8 @@ public:
 
   static void record(heph::UniqueFunction<Metric()>&& metric);
 
+  static void flush();
+
 private:
   [[nodiscard]] static auto instance() -> MetricRecorder&;
   void processEntry(const Metric& entry);
@@ -130,6 +132,10 @@ void record(heph::UniqueFunction<Metric()>&& metric) {
 
 void record(Metric metric) {
   MetricRecorder::record([metric = std::move(metric)] { return metric; });
+}
+
+void flushMetrics() {
+  MetricRecorder::flush();
 }
 
 MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
@@ -168,6 +174,11 @@ void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
 void MetricRecorder::record(heph::UniqueFunction<Metric()>&& metric) {
   auto& telemetry = instance();
   telemetry.entries_.forcePush(std::move(metric));
+}
+
+void MetricRecorder::flush() {
+  auto& telemetry = instance();
+  telemetry.emptyQueue();
 }
 
 void MetricRecorder::processEntry(const Metric& entry) {
