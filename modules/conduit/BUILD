@@ -18,6 +18,7 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
+        "//modules/ipc",
     ],
 )
 
@@ -58,4 +59,14 @@ heph_cc_test(
     name = "input_output_tests",
     srcs = ["tests/input_output_tests.cpp"],
     deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "zenoh_nodes_tests",
+    srcs = ["tests/zenoh_nodes_tests.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
 )

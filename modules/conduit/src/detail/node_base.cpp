@@ -47,7 +47,7 @@ void NodeBase::operationEnd() {
                              last_execution_duration = last_execution_duration_, tick_duration, clock_drift,
                              period_drift] {
       return heph::telemetry::Metric{
-        .component = fmt::format("conduit/{}/clock_drift", name),
+        .component = fmt::format("conduit/{}", name),
         .tag = "node_timings",
         .timestamp = timestamp,
         .values = { { "execute_duration_microsec",
