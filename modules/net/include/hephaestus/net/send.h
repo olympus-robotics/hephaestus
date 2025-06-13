@@ -67,7 +67,8 @@ struct SendOperation {
     stdexec::set_value(std::move(receiver), buffer.subspan(0, transferred));
   }
 
-  void handleStopped() const {
+  void handleStopped() {
+    stdexec::set_stopped(std::move(receiver));
   }
 
   auto getStopToken() {
