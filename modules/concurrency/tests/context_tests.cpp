@@ -18,6 +18,7 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/context_scheduler.h"
 
 namespace heph::concurrency {}
 
@@ -38,6 +39,8 @@ TEST(ContextTests, SchedulerBasics) {
 
   EXPECT_TRUE(stdexec::sender<decltype(sender)>);
   EXPECT_TRUE((stdexec::sender_in<decltype(sender), stdexec::__sync_wait::__env>));
+
+  EXPECT_EQ(&getContext(stdexec::get_env(context.scheduler().schedule())), &context);
 }
 
 TEST(ContextTests, scheduleException) {

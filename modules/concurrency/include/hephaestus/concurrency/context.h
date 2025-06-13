@@ -56,6 +56,10 @@ public:
     return timer_.elapsed();
   }
 
+  auto ring() -> io_ring::IoRing* {
+    return &ring_;
+  }
+
 private:
   template <typename Receiver, typename Context>
   friend struct Task;
