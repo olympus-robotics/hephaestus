@@ -7,6 +7,7 @@
 #include <cerrno>
 #include <optional>
 #include <system_error>
+#include <type_traits>
 
 #include <fmt/format.h>
 #include <liburing.h>
@@ -99,7 +100,14 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
     }
     return;
   }
-  operation.handleCompletion(cqe);
+  using CompletionReturnT = decltype(operation.handleCompletion(cqe));
+  if constexpr (std::is_same_v<CompletionReturnT, bool>) {
+    if (!operation.handleCompletion(cqe)) {
+      ring->submit(*this);
+    }
+  } else {
+    operation.handleCompletion(cqe);
+  }
 }
 
 template <typename IoRingOperationT>

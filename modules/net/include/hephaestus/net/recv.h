@@ -22,6 +22,7 @@
 #include "hephaestus/net/socket.h"
 
 namespace heph::net {
+template <bool SendAll>
 struct RecvT {
   template <stdexec::sender Sender>
   auto operator()(Sender&& sender, Socket const& socket, std::span<std::byte> buffer) const {
@@ -44,9 +45,11 @@ struct RecvT {
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline RecvT recv{};
+static inline RecvT<false> recv{};
+// NOLINTNEXTLINE (readability-identifier-naming)
+static inline RecvT<true> recvAll{};
 
-template <typename Receiver>
+template <bool RecvAll, typename Receiver>
 struct RecvOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
@@ -56,19 +59,27 @@ struct RecvOperation {
   std::size_t transferred{ 0 };
 
   void prepare(::io_uring_sqe* sqe) const {
-    ::io_uring_prep_recv(sqe, socket->nativeHandle(), buffer.data(), buffer.size(), 0);
+    auto to_transfer = buffer.subspan(transferred);
+    ::io_uring_prep_recv(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), 0);
   }
-  void handleCompletion(::io_uring_cqe* cqe) {
+
+  auto handleCompletion(::io_uring_cqe* cqe) -> bool {
     if (cqe->res < 0) {
       stdexec::set_error(std::move(receiver), std::error_code(-cqe->res, std::system_category()));
-      return;
+      return true;
     }
     if (cqe->res == 0) {
       stdexec::set_stopped(std::move(receiver));
-      return;
+      return true;
     }
     transferred += cqe->res;
+    if constexpr (RecvAll) {
+      if (transferred != buffer.size()) {
+        return false;
+      }
+    }
     stdexec::set_value(std::move(receiver), buffer.subspan(0, transferred));
+    return true;
   }
 
   void handleStopped() {
@@ -80,6 +91,7 @@ struct RecvOperation {
   }
 };
 
+template <bool RecvAll>
 struct RecvSender : heph::concurrency::DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(
                                                         Sender&&, heph::concurrency::Ignore = {}) noexcept {
@@ -102,7 +114,7 @@ struct RecvSender : heph::concurrency::DefaultSenderExpressionImpl {
     auto ring_stop_token = ring->getStopToken();
     auto env_stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
     auto [socket, buffer] = data;
-    using RecvOperationT = RecvOperation<std::decay_t<Receiver>>;
+    using RecvOperationT = RecvOperation<RecvAll, std::decay_t<Receiver>>;
     using OperationStateT = detail::OperationState<RecvOperationT>;
     return OperationStateT{ ring, RecvOperationT{ socket, buffer, std::forward<Receiver>(receiver), 0 } };
   };
@@ -121,6 +133,6 @@ struct RecvSender : heph::concurrency::DefaultSenderExpressionImpl {
 }  // namespace heph::net
 
 namespace heph::concurrency {
-template <>
-struct SenderExpressionImpl<heph::net::RecvT> : heph::net::RecvSender {};
+template <bool RecvAll>
+struct SenderExpressionImpl<heph::net::RecvT<RecvAll>> : heph::net::RecvSender<RecvAll> {};
 }  // namespace heph::concurrency

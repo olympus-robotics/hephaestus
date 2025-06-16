@@ -22,6 +22,7 @@
 #include "hephaestus/net/socket.h"
 
 namespace heph::net {
+template <bool SendAll>
 struct SendT {
   template <stdexec::sender Sender>
   auto operator()(Sender&& sender, Socket const& socket, std::span<std::byte const> buffer) const {
@@ -44,9 +45,11 @@ struct SendT {
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline SendT send{};
+static inline SendT<false> send{};
+// NOLINTNEXTLINE (readability-identifier-naming)
+static inline SendT<true> sendAll{};
 
-template <typename Receiver>
+template <bool SendAll, typename Receiver>
 struct SendOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
@@ -56,15 +59,23 @@ struct SendOperation {
   std::size_t transferred{ 0 };
 
   void prepare(::io_uring_sqe* sqe) const {
-    ::io_uring_prep_send(sqe, socket->nativeHandle(), buffer.data(), buffer.size(), 0);
+    auto to_transfer = buffer.subspan(transferred);
+    ::io_uring_prep_send(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), 0);
   }
-  void handleCompletion(::io_uring_cqe* cqe) {
+
+  auto handleCompletion(::io_uring_cqe* cqe) -> bool {
     if (cqe->res < 0) {
       stdexec::set_error(std::move(receiver), std::error_code(-cqe->res, std::system_category()));
-      return;
+      return true;
     }
     transferred += cqe->res;
+    if constexpr (SendAll) {
+      if (transferred != buffer.size()) {
+        return false;
+      }
+    }
     stdexec::set_value(std::move(receiver), buffer.subspan(0, transferred));
+    return true;
   }
 
   void handleStopped() {
@@ -76,6 +87,7 @@ struct SendOperation {
   }
 };
 
+template <bool SendAll>
 struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(
                                                         Sender&&, heph::concurrency::Ignore = {}) noexcept {
@@ -96,9 +108,9 @@ struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
     auto* ring =
         stdexec::get_completion_scheduler<stdexec::set_value_t>(stdexec::get_env(child)).context().ring();
     auto [socket, buffer] = data;
-    using RecvOperationT = SendOperation<std::decay_t<Receiver>>;
-    using OperationStateT = detail::OperationState<RecvOperationT>;
-    return OperationStateT{ ring, RecvOperationT{ socket, buffer, std::forward<Receiver>(receiver), 0 } };
+    using SendOperationT = SendOperation<SendAll, std::decay_t<Receiver>>;
+    using OperationStateT = detail::OperationState<SendOperationT>;
+    return OperationStateT{ ring, SendOperationT{ socket, buffer, std::forward<Receiver>(receiver), 0 } };
   };
 
   static constexpr auto COMPLETE = []<typename Receiver, typename Tag, typename... Args>(
@@ -115,6 +127,6 @@ struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
 }  // namespace heph::net
 
 namespace heph::concurrency {
-template <>
-struct SenderExpressionImpl<heph::net::SendT> : heph::net::SendSender {};
+template <bool sendAll>
+struct SenderExpressionImpl<heph::net::SendT<sendAll>> : heph::net::SendSender<sendAll> {};
 }  // namespace heph::concurrency

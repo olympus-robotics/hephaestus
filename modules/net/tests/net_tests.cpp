@@ -92,7 +92,7 @@ TEST(Net, Ipv6Endpoint) {
   EXPECT_THROW(Endpoint(IpFamily::V6, ":"), heph::Panic);
 }
 
-TEST(Net, TCPOperations) {
+TEST(Net, TCPOperationsSome) {
   // NOLINTBEGIN
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
@@ -135,6 +135,53 @@ TEST(Net, TCPOperations) {
       EXPECT_LE(buffer.size(), send_buffer.size());
       buffer = buffer.subspan(sent_buffer.size());
     }
+  };
+  scope.spawn(client_sender());
+
+  EXPECT_NE(recv_buffer, send_buffer);
+
+  context.run();
+  EXPECT_EQ(recv_buffer, send_buffer);
+  // NOLINTEND
+}
+
+TEST(Net, TCPOperationsAll) {
+  // NOLINTBEGIN
+  exec::async_scope scope;
+  heph::concurrency::Context context{ {} };
+  const Acceptor acceptor(IpFamily::V4, Protocol::TCP);
+
+  acceptor.bind(Endpoint{ IpFamily::V4 });
+  acceptor.listen();
+
+  auto endpoint = acceptor.localEndpoint();
+  auto schedule = context.scheduler().schedule();
+
+  static constexpr std::size_t MSG_SIZE = 4ull * 1024 * 1024;
+  std::vector<char> recv_buffer(MSG_SIZE);
+
+  auto server_sender = [&]() -> exec::task<void> {
+    auto client = co_await (schedule | accept(acceptor));
+    auto buffer = std::as_writable_bytes(std::span{ recv_buffer });
+
+    buffer = co_await (schedule | recvAll(client, buffer));
+    EXPECT_EQ(buffer.size(), recv_buffer.size());
+    context.requestStop();
+  };
+
+  scope.spawn(server_sender());
+
+  const Socket client{ IpFamily::V4, Protocol::TCP };
+  client.connect(endpoint);
+
+  std::vector<char> send_buffer(MSG_SIZE);
+  std::iota(send_buffer.begin(), send_buffer.end(), 0);
+  // NOLINTNEXTLINE
+  auto client_sender = [&]() -> exec::task<void> {
+    auto buffer = std::as_bytes(std::span{ send_buffer });
+
+    buffer = co_await (schedule | sendAll(client, buffer));
+    EXPECT_EQ(buffer.size(), send_buffer.size());
   };
   scope.spawn(client_sender());
 
