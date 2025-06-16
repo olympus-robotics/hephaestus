@@ -112,6 +112,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
+  ++in_flight;
   stop_operation.emplace(StopOperation{ this });
   ring->submit(stop_operation.value());
 }
