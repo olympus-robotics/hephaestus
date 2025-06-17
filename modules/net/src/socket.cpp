@@ -51,21 +51,21 @@ void Socket::close() noexcept {
   }
 }
 
-void Socket::bind(Endpoint const& endpoint) const {
+void Socket::bind(const Endpoint& endpoint) const {
   auto handle = endpoint.nativeHandle();
   const int res =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      ::bind(fd_, reinterpret_cast<sockaddr const*>(handle.data()), static_cast<socklen_t>(handle.size()));
+      ::bind(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
     heph::panic(fmt::format("bind: {}", std::error_code(errno, std::system_category()).message()));
   }
 }
 
-void Socket::connect(Endpoint const& endpoint) const {
+void Socket::connect(const Endpoint& endpoint) const {
   auto handle = endpoint.nativeHandle();
   const int res =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      ::connect(fd_, reinterpret_cast<sockaddr const*>(handle.data()), static_cast<socklen_t>(handle.size()));
+      ::connect(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
     heph::panic(fmt::format("connect: {}", std::error_code(errno, std::system_category()).message()));
   }

@@ -71,7 +71,7 @@ public:
                     std::floor(std::pow(static_cast<float>(retry_), EXP))));
 
                 auto remaining_inputs =
-                    inputs_ | std::views::filter([this](InputEntry const& entry) {
+                    inputs_ | std::views::filter([this](const InputEntry& entry) {
                       return entry.generation <= generation_;
                     }) |
                     std::views::transform([](InputEntry& entry) { return entry.name(entry.ptr); });

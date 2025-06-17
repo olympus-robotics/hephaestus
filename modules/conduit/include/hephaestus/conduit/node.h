@@ -46,7 +46,7 @@ public:
   static constexpr bool HAS_PERIOD = HAS_PERIOD_CONSTANT || HAS_PERIOD_NULLARY || HAS_PERIOD_ARG;
   static constexpr bool HAS_NAME = HAS_NAME_CONSTANT || HAS_NAME_NULLARY || HAS_NAME_ARG;
 
-  auto data() const -> OperationDataT const& {
+  auto data() const -> const OperationDataT& {
     return data_.value();
   }
 
@@ -104,8 +104,8 @@ private:
     return static_cast<OperationT&>(*this);
   }
 
-  auto operation() const -> OperationT const& {
-    return static_cast<OperationT const&>(*this);
+  auto operation() const -> const OperationT& {
+    return static_cast<const OperationT&>(*this);
   }
 
   auto operationTrigger() {

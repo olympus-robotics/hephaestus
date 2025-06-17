@@ -23,14 +23,14 @@ struct FunctorStorage {
 };
 
 template <typename R, typename... Args>
-auto emptyCall(FunctorStorage const& /**/, Args... /*unused*/) -> R {
+auto emptyCall(const FunctorStorage& /**/, Args... /*unused*/) -> R {
   throw std::bad_function_call{};
 }
 
-inline void destroyEmpty(FunctorStorage const& /**/) noexcept {
+inline void destroyEmpty(const FunctorStorage& /**/) noexcept {
 }
 
-inline void moveEmpty(FunctorStorage const& /**/, FunctorStorage& /**/) noexcept {
+inline void moveEmpty(const FunctorStorage& /**/, FunctorStorage& /**/) noexcept {
 }
 
 template <typename T>
@@ -41,7 +41,7 @@ static inline constexpr bool IS_INPLACE_ALLOCATED =
     && alignof(FunctorStorage) % alignof(T) == 0;
 
 template <typename T>
-auto isNull(T const& /**/) noexcept -> bool {
+auto isNull(const T& /**/) noexcept -> bool {
   return false;
 }
 template <typename R, typename... Args>
@@ -59,9 +59,9 @@ auto isNull(R (Class::*func)(Args...) const) noexcept -> bool {
 
 template <typename R, typename... Args>
 struct Vtable {
-  using invokeFunctionT = R (*)(FunctorStorage const&, Args...);
-  using destroyFunctionT = void (*)(FunctorStorage const&) noexcept;
-  using moveFunctionT = void (*)(FunctorStorage const&, FunctorStorage&) noexcept;
+  using invokeFunctionT = R (*)(const FunctorStorage&, Args...);
+  using destroyFunctionT = void (*)(const FunctorStorage&) noexcept;
+  using moveFunctionT = void (*)(const FunctorStorage&, FunctorStorage&) noexcept;
 
   invokeFunctionT invoke{ &emptyCall<R, Args...> };
   moveFunctionT move{ &moveEmpty };
@@ -69,10 +69,10 @@ struct Vtable {
 };
 
 template <typename F, typename R, typename... Args>
-auto invokeFunction(FunctorStorage const& storage, Args... args) -> R {
+auto invokeFunction(const FunctorStorage& storage, Args... args) -> R {
   F* f{ nullptr };
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
-    void const* storage_ptr = static_cast<void const*>(&storage);
+    const void* storage_ptr = static_cast<const void*>(&storage);
     std::memcpy(&f, &storage_ptr, sizeof(void*));
   } else {
     f = static_cast<F*>(storage.ptr);
@@ -81,13 +81,13 @@ auto invokeFunction(FunctorStorage const& storage, Args... args) -> R {
 }
 
 template <typename F>
-void moveFunction(FunctorStorage const& source, FunctorStorage& destination) noexcept {
+void moveFunction(const FunctorStorage& source, FunctorStorage& destination) noexcept {
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
     if constexpr (std::is_trivially_move_constructible_v<F>) {
       destination = source;
     } else {
       F* f{ nullptr };
-      void const* storage = static_cast<void const*>(&source);
+      const void* storage = static_cast<const void*>(&source);
       std::memcpy(&f, &storage, sizeof(void*));
       new (&destination) F{ std::move(*f) };
     }
@@ -98,11 +98,11 @@ void moveFunction(FunctorStorage const& source, FunctorStorage& destination) noe
 }
 
 template <typename F>
-void destroyFunction(FunctorStorage const& storage) noexcept {
+void destroyFunction(const FunctorStorage& storage) noexcept {
   if constexpr (detail::IS_INPLACE_ALLOCATED<F>) {
     if constexpr (!std::is_trivially_destructible_v<F>) {
       F* f{ nullptr };
-      void const* storage_ptr = static_cast<void const*>(&storage);
+      const void* storage_ptr = static_cast<const void*>(&storage);
       std::memcpy(&f, &storage_ptr, sizeof(void*));
       f->~F();
     }
@@ -152,12 +152,12 @@ public:
   // NOLINTEND(hicpp-explicit-conversions)
   // NOLINTEND(google-explicit-constructor)
 
-  UniqueFunction(UniqueFunction const& other) noexcept = delete;
+  UniqueFunction(const UniqueFunction& other) noexcept = delete;
   UniqueFunction(UniqueFunction&& other) noexcept : vtable_{ other.vtable_ } {
     other.vtable_->move(other.storage_, storage_);
     other.vtable_ = &detail::EMPTY_VTABLE<R, Args...>;
   }
-  auto operator=(UniqueFunction const& other) noexcept -> UniqueFunction& = delete;
+  auto operator=(const UniqueFunction& other) noexcept -> UniqueFunction& = delete;
   auto operator=(UniqueFunction&& other) noexcept -> UniqueFunction& {
     if (this == &other) {
       return *this;
@@ -216,25 +216,25 @@ private:
   }
 
 private:
-  detail::Vtable<R, Args...> const* vtable_;
+  const detail::Vtable<R, Args...>* vtable_;
   detail::FunctorStorage storage_;
 };
 
 template <typename Sig>
-auto operator==(UniqueFunction<Sig> const& func, std::nullptr_t /**/) -> bool {
+auto operator==(const UniqueFunction<Sig>& func, std::nullptr_t /**/) -> bool {
   return !func;
 }
 template <typename Sig>
-auto operator==(std::nullptr_t /**/, UniqueFunction<Sig> const& func) -> bool {
+auto operator==(std::nullptr_t /**/, const UniqueFunction<Sig>& func) -> bool {
   return !func;
 }
 
 template <typename Sig>
-auto operator!=(UniqueFunction<Sig> const& func, std::nullptr_t /**/) -> bool {
+auto operator!=(const UniqueFunction<Sig>& func, std::nullptr_t /**/) -> bool {
   return func;
 }
 template <typename Sig>
-auto operator!=(std::nullptr_t /**/, UniqueFunction<Sig> const& func) -> bool {
+auto operator!=(std::nullptr_t /**/, const UniqueFunction<Sig>& func) -> bool {
   return func;
 }
 }  // namespace heph

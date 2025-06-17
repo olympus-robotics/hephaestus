@@ -34,7 +34,7 @@ public:
     return *engine_;
   }
 
-  [[nodiscard]] auto engine() const -> NodeEngine const& {
+  [[nodiscard]] auto engine() const -> const NodeEngine& {
     return *engine_;
   }
 
@@ -65,8 +65,8 @@ public:
   explicit ExecutionStopWatch(NodeBase* self);
   ~ExecutionStopWatch() noexcept;
 
-  ExecutionStopWatch(ExecutionStopWatch const&) = delete;
-  auto operator=(ExecutionStopWatch const&) -> ExecutionStopWatch& = delete;
+  ExecutionStopWatch(const ExecutionStopWatch&) = delete;
+  auto operator=(const ExecutionStopWatch&) -> ExecutionStopWatch& = delete;
   ExecutionStopWatch(ExecutionStopWatch&&) = delete;
   auto operator=(ExecutionStopWatch&&) -> ExecutionStopWatch& = delete;
 

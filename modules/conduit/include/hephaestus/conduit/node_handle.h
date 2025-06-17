@@ -12,8 +12,8 @@ public:
   explicit NodeHandle(NodeT* node) : node_(node) {
   }
   ~NodeHandle() = default;
-  NodeHandle(NodeHandle const&) = default;
-  auto operator=(NodeHandle const&) -> NodeHandle& = default;
+  NodeHandle(const NodeHandle&) = default;
+  auto operator=(const NodeHandle&) -> NodeHandle& = default;
   NodeHandle(NodeHandle&&) = default;
   auto operator=(NodeHandle&&) -> NodeHandle& = default;
 
@@ -29,7 +29,7 @@ public:
     return *node_;
   }
 
-  auto get() const -> NodeT const& {
+  auto get() const -> const NodeT& {
     return *node_;
   }
 

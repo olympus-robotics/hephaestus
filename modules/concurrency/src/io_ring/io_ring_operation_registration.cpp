@@ -34,7 +34,7 @@ auto IoRingOperationRegistry::hasPrepare(std::uint8_t idx) -> bool {
   heph::panicIf(idx >= size, fmt::format("Index out of range: {} >= {}", idx, size));
   return prepare_function_table.at(idx) != nullptr;
 }
-void IoRingOperationRegistry::registerOperation(std::uint8_t idx, void const* identifier,
+void IoRingOperationRegistry::registerOperation(std::uint8_t idx, const void* identifier,
                                                 prepare_function_t prepare_func,
                                                 handle_completion_function_t handle_completion) {
   if (idx >= CAPACITY) {

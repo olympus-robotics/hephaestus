@@ -51,7 +51,7 @@ struct TimerEntry {
   TaskBase* task{ nullptr };
   TimerClock::time_point start_time;
 
-  friend auto operator<=>(TimerEntry const& lhs, TimerEntry const& rhs) {
+  friend auto operator<=>(const TimerEntry& lhs, const TimerEntry& rhs) {
     return lhs.start_time <=> rhs.start_time;
   }
 };

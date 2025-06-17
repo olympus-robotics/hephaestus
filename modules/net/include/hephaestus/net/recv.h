@@ -26,15 +26,15 @@ namespace heph::net {
 template <bool SendAll>
 struct RecvT {
   template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Socket const& socket, std::span<std::byte> buffer) const {
+  auto operator()(Sender&& sender, const Socket& socket, std::span<std::byte> buffer) const {
     auto domain = stdexec::__get_early_domain(sender);
     return stdexec::transform_sender(domain,
                                      concurrency::makeSenderExpression<RecvT>(std::tuple{ &socket, buffer },
                                                                               std::forward<Sender>(sender)));
   }
 
-  auto operator()(Socket const& socket, std::span<std::byte> buffer) const
-      -> stdexec::__binder_back<RecvT, std::reference_wrapper<Socket const>, std::span<std::byte>> {
+  auto operator()(const Socket& socket, std::span<std::byte> buffer) const
+      -> stdexec::__binder_back<RecvT, std::reference_wrapper<const Socket>, std::span<std::byte>> {
     return { { std::cref(socket), buffer }, {}, {} };
   }
 };
@@ -49,7 +49,7 @@ template <bool RecvAll, typename Receiver>
 struct RecvOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
-  Socket const* socket{ nullptr };
+  const Socket* socket{ nullptr };
   std::span<std::byte> buffer;
   Receiver receiver;
   std::size_t transferred{ 0 };

@@ -53,7 +53,7 @@ TEST(ContextTests, scheduleException) {
                   context.requestStop();
                   heph::panic("testing");
                 }) |
-                stdexec::upon_error([&called](std::exception_ptr const& eptr) {
+                stdexec::upon_error([&called](const std::exception_ptr& eptr) {
                   try {
                     std::rethrow_exception(eptr);
                   } catch (heph::Panic&) {  // NOLINT (bugprone-empty-catch)

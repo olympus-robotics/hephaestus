@@ -19,17 +19,17 @@ public:
   Endpoint() = default;
   ~Endpoint() = default;
   explicit Endpoint(IpFamily family);
-  Endpoint(IpFamily family, std::string const& ip);
-  Endpoint(IpFamily family, std::string const& ip, std::uint16_t port);
+  Endpoint(IpFamily family, const std::string& ip);
+  Endpoint(IpFamily family, const std::string& ip, std::uint16_t port);
 
-  Endpoint(Endpoint const&) = default;
+  Endpoint(const Endpoint&) = default;
   Endpoint(Endpoint&&) = default;
-  auto operator=(Endpoint const&) -> Endpoint& = default;
+  auto operator=(const Endpoint&) -> Endpoint& = default;
   auto operator=(Endpoint&&) -> Endpoint& = default;
 
-  friend auto operator==(Endpoint const& lhs, Endpoint const& rhs) -> bool = default;
+  friend auto operator==(const Endpoint& lhs, const Endpoint& rhs) -> bool = default;
 
-  [[nodiscard]] auto nativeHandle() const -> std::span<std::byte const>;
+  [[nodiscard]] auto nativeHandle() const -> std::span<const std::byte>;
   [[nodiscard]] auto nativeHandle() -> std::span<std::byte>;
 
   [[nodiscard]] auto family() const -> int;
@@ -40,5 +40,5 @@ private:
   std::vector<std::byte> address_;
 };
 
-auto format_as(Endpoint const& endpoint) -> std::string;  // NOLINT(readability-identifier-naming)
+auto format_as(const Endpoint& endpoint) -> std::string;  // NOLINT(readability-identifier-naming)
 }  // namespace heph::net

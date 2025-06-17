@@ -59,10 +59,10 @@ private:
 };
 
 struct Spinner : heph::conduit::Node<Spinner, SpinnerOperation> {
-  static auto name(Spinner const& self) -> std::string {
+  static auto name(const Spinner& self) -> std::string {
     return fmt::format("Spinner({})", self.data().period());
   }
-  static auto period(Spinner const& self) {
+  static auto period(const Spinner& self) {
     return self.data().period();
   }
 

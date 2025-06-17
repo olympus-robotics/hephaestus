@@ -131,7 +131,7 @@ void Timer::tick() {
   }
   last_tick_ = TimerClock::now();
   if (!tasks_.empty()) {
-    auto const& top = tasks_.top();
+    const auto& top = tasks_.top();
     update(top.start_time);
   }
 }
@@ -142,7 +142,7 @@ auto Timer::tickSimulated(bool advance) -> bool {
   }
 
   if (advance) {
-    auto const& top = tasks_.top();
+    const auto& top = tasks_.top();
     if (top.start_time > last_tick_) {
       advanceSimulation(top.start_time - last_tick_);
     }
@@ -161,7 +161,7 @@ auto Timer::tickSimulated(bool advance) -> bool {
 void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
   tasks_.emplace(task, start_time);
 
-  auto const& top = tasks_.top();
+  const auto& top = tasks_.top();
 
   if (top.task != task || clock_mode_ == ClockMode::SIMULATED) {
     return;
@@ -173,7 +173,7 @@ void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
 auto Timer::next(bool advance) -> TaskBase* {
   if (!tasks_.empty()) {
     auto now = TimerClock::now();
-    auto const& top = tasks_.top();
+    const auto& top = tasks_.top();
     if (top.start_time <= now) {
       auto* task = top.task;
       if (advance) {
