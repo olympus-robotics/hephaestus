@@ -25,7 +25,7 @@ struct IoRingConfig {
 
 class IoRing {
 public:
-  explicit IoRing(IoRingConfig const& config);
+  explicit IoRing(const IoRingConfig& config);
 
   auto stopRequested() -> bool;
   void requestStop();

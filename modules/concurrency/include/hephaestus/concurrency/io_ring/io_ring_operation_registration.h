@@ -29,7 +29,7 @@ struct IoRingOperationRegistry {
   static_assert(CAPACITY <= std::numeric_limits<std::uint8_t>::max());
 
   std::uint8_t size{ 0 };
-  std::array<void const*, CAPACITY> operation_identifier_table{ nullptr };
+  std::array<const void*, CAPACITY> operation_identifier_table{ nullptr };
   std::array<prepare_function_t, CAPACITY> prepare_function_table{ nullptr };
   std::array<handle_completion_function_t, CAPACITY> handle_completion_function_table{ nullptr };
 
@@ -45,15 +45,15 @@ struct IoRingOperationRegistry {
   static auto instance() -> IoRingOperationRegistry&;
 
 private:
-  void registerOperation(std::uint8_t idx, void const* identifier, prepare_function_t prepare,
+  void registerOperation(std::uint8_t idx, const void* identifier, prepare_function_t prepare,
                          handle_completion_function_t handle_completion);
 };
 
 template <typename IoRingOperationT>
 inline auto IoRingOperationRegistry::registerOperation() -> std::uint8_t {
-  static constexpr void const* IDENTIFIER = &IO_RING_OPERATION_IDENTIFIER<IoRingOperationT>;
+  static constexpr const void* IDENTIFIER = &IO_RING_OPERATION_IDENTIFIER<IoRingOperationT>;
   // Check if already registered
-  auto it = std::ranges::find_if(operation_identifier_table, [](void const* registered_identifier) {
+  auto it = std::ranges::find_if(operation_identifier_table, [](const void* registered_identifier) {
     return registered_identifier == IDENTIFIER;
   });
   if (it != operation_identifier_table.end()) {

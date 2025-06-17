@@ -219,7 +219,7 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
 
   ring_ptr->requestStop();
   runner.join();
-  for (auto const& op : ops) {
+  for (const auto& op : ops) {
     EXPECT_TRUE(op->operation.stop_called);
   }
 }

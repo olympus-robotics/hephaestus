@@ -25,7 +25,7 @@ enum class Protocol : uint8_t { ANY = 0, UDP, TCP };
 /// See  for more information https://zenoh.io/docs/manual/configuration/#configuration-files
 struct ZenohConfig {
   ZenohConfig();
-  explicit ZenohConfig(std::filesystem::path const& path);
+  explicit ZenohConfig(const std::filesystem::path& path);
 
   ~ZenohConfig() noexcept = default;
   ZenohConfig(const ZenohConfig&) = delete;

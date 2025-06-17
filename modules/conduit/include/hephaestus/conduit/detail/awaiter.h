@@ -43,9 +43,9 @@ public:
     }
   }
 
-  Awaiter(Awaiter const&) = delete;
+  Awaiter(const Awaiter&) = delete;
   Awaiter(Awaiter&&) = delete;
-  auto operator=(Awaiter const&) -> Awaiter& = delete;
+  auto operator=(const Awaiter&) -> Awaiter& = delete;
   auto operator=(Awaiter&&) -> Awaiter& = delete;
 
   void trigger() final {

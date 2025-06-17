@@ -68,7 +68,7 @@ struct DispatchOperation {
   std::atomic<bool> submit_done{ false };
 };
 
-IoRing::IoRing(IoRingConfig const& config) : config_(config) {
+IoRing::IoRing(const IoRingConfig& config) : config_(config) {
   const int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
   if (res < 0) {

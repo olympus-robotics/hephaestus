@@ -25,7 +25,7 @@ class Context {
 public:
   using Scheduler = ContextScheduler;
 
-  explicit Context(ContextConfig const& config)
+  explicit Context(const ContextConfig& config)
     : ring_{ config.io_ring_config }, timer_{ ring_, config.timer_options } {
   }
 

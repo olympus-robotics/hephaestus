@@ -15,7 +15,7 @@ public:
   Acceptor(IpFamily family, Protocol protocol);
 
   void listen(int backlog = DEFAULT_BACKLOG) const;
-  void bind(Endpoint const& endpoint) const;
+  void bind(const Endpoint& endpoint) const;
   [[nodiscard]] auto localEndpoint() const -> Endpoint;
   [[nodiscard]] auto nativeHandle() const -> int;
 

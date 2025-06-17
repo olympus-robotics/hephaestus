@@ -80,7 +80,7 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
   // Initialize WS Server
   {
     // Log handler
-    const auto ws_server_log_handler = [](WsLogLevel level, char const* msg) {
+    const auto ws_server_log_handler = [](WsLogLevel level, const char* msg) {
       WebsocketBridge::callback_Ws_Log(level, msg);
     };
 
@@ -479,7 +479,7 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
 // Websocket Server Callbacks //
 ////////////////////////////////
 
-void WebsocketBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
+void WebsocketBridge::callback_Ws_Log(WsLogLevel level, const char* msg) {
   switch (level) {
     case WsLogLevel::Debug:
       heph::log(heph::DEBUG, fmt::format("\n[WS Server] - {}", msg));

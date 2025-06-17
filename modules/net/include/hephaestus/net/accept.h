@@ -23,13 +23,13 @@
 namespace heph::net {
 struct AcceptT {
   template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Acceptor const& acceptor) const {
+  auto operator()(Sender&& sender, const Acceptor& acceptor) const {
     auto domain = stdexec::__get_early_domain(sender);
     return stdexec::transform_sender(
         domain, concurrency::makeSenderExpression<AcceptT>(&acceptor, std::forward<Sender>(sender)));
   }
 
-  auto operator()(Acceptor const& acceptor) const
+  auto operator()(const Acceptor& acceptor) const
       -> stdexec::__binder_back<AcceptT, std::reference_wrapper<const Acceptor>> {
     return { { std::cref(acceptor) }, {}, {} };
   }
@@ -43,7 +43,7 @@ template <typename Receiver>
 struct AcceptOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
-  Acceptor const* acceptor{ nullptr };
+  const Acceptor* acceptor{ nullptr };
   Receiver receiver;
 
   void prepare(::io_uring_sqe* sqe) const {

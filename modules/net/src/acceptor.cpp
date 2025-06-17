@@ -23,7 +23,7 @@ void Acceptor::listen(int backlog) const {
     heph::panic(fmt::format("listen: {}", std::error_code(errno, std::system_category()).message()));
   }
 }
-void Acceptor::bind(Endpoint const& endpoint) const {
+void Acceptor::bind(const Endpoint& endpoint) const {
   socket_.bind(endpoint);
 }
 auto Acceptor::localEndpoint() const -> Endpoint {

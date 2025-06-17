@@ -43,7 +43,7 @@ private:
 
   // Callbacks triggered by WS Server
   // NOLINTBEGIN(readability-identifier-naming)
-  static void callback_Ws_Log(WsLogLevel level, char const* msg);
+  static void callback_Ws_Log(WsLogLevel level, const char* msg);
   void callback_Ws_Subscribe(WsChannelId channel_id, const WsClientHandle& client_handle);
   void callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle);
   void callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,

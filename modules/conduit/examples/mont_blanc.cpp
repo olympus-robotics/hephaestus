@@ -224,7 +224,7 @@ struct Osaka : heph::conduit::Node<Osaka> {
     return stdexec::when_all(self.parana.get(), self.colorado.get(), self.columbia.get());
   }
 
-  static auto execute(Osaka& self, std::optional<std::string> const& s, Image /**/,
+  static auto execute(Osaka& self, const std::optional<std::string>& s, Image /**/,
                       std::optional<Image> /**/) {
     heph::log(heph::INFO, "osaka", "parana", s);
     return stdexec::when_all(self.salween.setValue(self.engine(), PointCloud2{}),
@@ -384,7 +384,7 @@ struct Geneva : heph::conduit::Node<Geneva> {
     return self.parana.get();
   }
 
-  static auto execute(Geneva& self, std::string const& s) {
+  static auto execute(Geneva& self, const std::string& s) {
     heph::log(heph::INFO, "geneva",
               //
               "parana", s,
@@ -459,7 +459,7 @@ struct Arequipa : heph::conduit::Node<Arequipa> {
     return self.arkansas.get();
   }
 
-  static auto execute(std::string const& /**/) {
+  static auto execute(const std::string& /**/) {
   }
 };
 

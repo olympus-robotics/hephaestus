@@ -48,7 +48,7 @@ struct ContextScheduler {
     return stdexec::forward_progress_guarantee::concurrent;
   }
 
-  friend auto operator<=>(ContextScheduler const&, ContextScheduler const&) = default;
+  friend auto operator<=>(const ContextScheduler&, const ContextScheduler&) = default;
 };
 
 struct GetContextT : stdexec::__query<GetContextT> {

@@ -45,6 +45,7 @@ SpaceBeforeAssignmentOperators: true
 ContinuationIndentWidth: 4
 SpaceAfterCStyleCast: false
 SortIncludes: true
+QualifierAlignment: Left
 IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex:           '^<.*(\.h|\.hpp|\.hxx)>$'

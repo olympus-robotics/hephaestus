@@ -26,15 +26,15 @@ namespace heph::net {
 template <bool SendAll>
 struct SendT {
   template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Socket const& socket, std::span<std::byte const> buffer) const {
+  auto operator()(Sender&& sender, const Socket& socket, std::span<const std::byte> buffer) const {
     auto domain = stdexec::__get_early_domain(sender);
     return stdexec::transform_sender(domain,
                                      concurrency::makeSenderExpression<SendT>(std::tuple{ &socket, buffer },
                                                                               std::forward<Sender>(sender)));
   }
 
-  auto operator()(Socket const& socket, std::span<std::byte const> buffer) const
-      -> stdexec::__binder_back<SendT, std::reference_wrapper<Socket const>, std::span<std::byte const>> {
+  auto operator()(const Socket& socket, std::span<const std::byte> buffer) const
+      -> stdexec::__binder_back<SendT, std::reference_wrapper<const Socket>, std::span<const std::byte>> {
     return { { std::cref(socket), buffer }, {}, {} };
   }
 };
@@ -49,8 +49,8 @@ template <bool SendAll, typename Receiver>
 struct SendOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
-  Socket const* socket{ nullptr };
-  std::span<std::byte const> buffer;
+  const Socket* socket{ nullptr };
+  std::span<const std::byte> buffer;
   Receiver receiver;
   std::size_t transferred{ 0 };
 
@@ -87,7 +87,7 @@ template <bool SendAll>
 struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(
                                                         Sender&&, heph::concurrency::Ignore = {}) noexcept {
-    return stdexec::completion_signatures<stdexec::set_value_t(std::span<std::byte const>),
+    return stdexec::completion_signatures<stdexec::set_value_t(std::span<const std::byte>),
                                           stdexec::set_error_t(std::error_code), stdexec::set_stopped_t()>{};
   };
   static constexpr auto GET_ATTRS =  //

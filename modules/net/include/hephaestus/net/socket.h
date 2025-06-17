@@ -26,9 +26,9 @@ public:
 
   void close() noexcept;
 
-  void bind(Endpoint const& endpoint) const;
+  void bind(const Endpoint& endpoint) const;
 
-  void connect(Endpoint const& endpoint) const;
+  void connect(const Endpoint& endpoint) const;
 
   [[nodiscard]] auto localEndpoint() const -> Endpoint;
 

@@ -22,10 +22,10 @@ namespace heph::net {
 Endpoint::Endpoint(IpFamily family) : Endpoint(family, "", 0) {
 }
 
-Endpoint::Endpoint(IpFamily family, std::string const& ip) : Endpoint(family, ip, 0) {
+Endpoint::Endpoint(IpFamily family, const std::string& ip) : Endpoint(family, ip, 0) {
 }
 
-Endpoint::Endpoint(IpFamily family, std::string const& ip, std::uint16_t port)
+Endpoint::Endpoint(IpFamily family, const std::string& ip, std::uint16_t port)
   : address_(family == IpFamily::V4 ? sizeof(sockaddr_in) : sizeof(sockaddr_in6)) {
   if (family == IpFamily::V4) {
     sockaddr_in addr{};
@@ -104,7 +104,7 @@ auto Endpoint::ip() const -> std::string {
   return std::string{ buffer.data() };
 }
 
-auto Endpoint::nativeHandle() const -> std::span<std::byte const> {
+auto Endpoint::nativeHandle() const -> std::span<const std::byte> {
   return { address_ };
 }
 
@@ -112,7 +112,7 @@ auto Endpoint::nativeHandle() -> std::span<std::byte> {
   return { address_ };
 }
 
-auto format_as(Endpoint const& endpoint) -> std::string {  // NOLINT(readability-identifier-naming)
+auto format_as(const Endpoint& endpoint) -> std::string {  // NOLINT(readability-identifier-naming)
   return fmt::format("{}:{}", endpoint.ip(), endpoint.port());
 }
 }  // namespace heph::net
