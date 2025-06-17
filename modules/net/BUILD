@@ -27,6 +27,15 @@ heph_cc_library(
 # Binaries #
 ############
 
+heph_cc_binary(
+    name = "ping_pong",
+    srcs = ["examples/ping_pong.cpp"],
+    deps = [
+        ":net",
+        "//modules/cli",
+    ],
+)
+
 #########
 # Tests #
 #########

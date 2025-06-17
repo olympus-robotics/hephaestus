@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <span>
 #include <system_error>
 #include <tuple>
@@ -31,24 +32,19 @@ struct RecvT {
                                      concurrency::makeSenderExpression<RecvT>(std::tuple{ &socket, buffer },
                                                                               std::forward<Sender>(sender)));
   }
-  template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Socket const* socket, std::span<std::byte> buffer) const {
-    auto domain = stdexec::__get_early_domain(sender);
-    return stdexec::transform_sender(domain, concurrency::makeSenderExpression<RecvT>(
-                                                 std::tuple{ socket, buffer }, std::forward<Sender>(sender)));
-  }
 
   auto operator()(Socket const& socket, std::span<std::byte> buffer) const
-      -> stdexec::__binder_back<RecvT, Socket const*, std::span<std::byte>> {
-    return { { &socket, buffer }, {}, {} };
+      -> stdexec::__binder_back<RecvT, std::reference_wrapper<Socket const>, std::span<std::byte>> {
+    return { { std::cref(socket), buffer }, {}, {} };
   }
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline RecvT<false> recv{};
+inline constexpr RecvT<false> recv{};
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline RecvT<true> recvAll{};
+inline constexpr RecvT<true> recvAll{};
 
+namespace internal {
 template <bool RecvAll, typename Receiver>
 struct RecvOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
@@ -129,10 +125,10 @@ struct RecvSender : heph::concurrency::DefaultSenderExpressionImpl {
     }
   };
 };
-
+}  // namespace internal
 }  // namespace heph::net
 
 namespace heph::concurrency {
 template <bool RecvAll>
-struct SenderExpressionImpl<heph::net::RecvT<RecvAll>> : heph::net::RecvSender<RecvAll> {};
+struct SenderExpressionImpl<heph::net::RecvT<RecvAll>> : heph::net::internal::RecvSender<RecvAll> {};
 }  // namespace heph::concurrency

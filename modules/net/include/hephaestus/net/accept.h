@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -27,21 +28,17 @@ struct AcceptT {
     return stdexec::transform_sender(
         domain, concurrency::makeSenderExpression<AcceptT>(&acceptor, std::forward<Sender>(sender)));
   }
-  template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Acceptor const* acceptor) const {
-    auto domain = stdexec::__get_early_domain(sender);
-    return stdexec::transform_sender(
-        domain, concurrency::makeSenderExpression<AcceptT>(acceptor, std::forward<Sender>(sender)));
-  }
 
-  auto operator()(Acceptor const& acceptor) const -> stdexec::__binder_back<AcceptT, Acceptor const*> {
-    return { { &acceptor }, {}, {} };
+  auto operator()(Acceptor const& acceptor) const
+      -> stdexec::__binder_back<AcceptT, std::reference_wrapper<const Acceptor>> {
+    return { { std::cref(acceptor) }, {}, {} };
   }
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline AcceptT accept{};
+inline constexpr AcceptT accept{};
 
+namespace internal {
 template <typename Receiver>
 struct AcceptOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
@@ -103,10 +100,10 @@ struct AcceptSender : heph::concurrency::DefaultSenderExpressionImpl {
     }
   };
 };
-
+}  // namespace internal
 }  // namespace heph::net
 
 namespace heph::concurrency {
 template <>
-struct SenderExpressionImpl<heph::net::AcceptT> : heph::net::AcceptSender {};
+struct SenderExpressionImpl<heph::net::AcceptT> : heph::net::internal::AcceptSender {};
 }  // namespace heph::concurrency

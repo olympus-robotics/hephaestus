@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <span>
 #include <system_error>
 #include <tuple>
@@ -31,24 +32,19 @@ struct SendT {
                                      concurrency::makeSenderExpression<SendT>(std::tuple{ &socket, buffer },
                                                                               std::forward<Sender>(sender)));
   }
-  template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, Socket const* socket, std::span<std::byte const> buffer) const {
-    auto domain = stdexec::__get_early_domain(sender);
-    return stdexec::transform_sender(domain, concurrency::makeSenderExpression<SendT>(
-                                                 std::tuple{ socket, buffer }, std::forward<Sender>(sender)));
-  }
 
   auto operator()(Socket const& socket, std::span<std::byte const> buffer) const
-      -> stdexec::__binder_back<SendT, Socket const*, std::span<std::byte const>> {
-    return { { &socket, buffer }, {}, {} };
+      -> stdexec::__binder_back<SendT, std::reference_wrapper<Socket const>, std::span<std::byte const>> {
+    return { { std::cref(socket), buffer }, {}, {} };
   }
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline SendT<false> send{};
+inline constexpr SendT<false> send{};
 // NOLINTNEXTLINE (readability-identifier-naming)
-static inline SendT<true> sendAll{};
+inline constexpr SendT<true> sendAll{};
 
+namespace internal {
 template <bool SendAll, typename Receiver>
 struct SendOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
@@ -123,10 +119,10 @@ struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
     }
   };
 };
-
+}  // namespace internal
 }  // namespace heph::net
 
 namespace heph::concurrency {
 template <bool sendAll>
-struct SenderExpressionImpl<heph::net::SendT<sendAll>> : heph::net::SendSender<sendAll> {};
+struct SenderExpressionImpl<heph::net::SendT<sendAll>> : heph::net::internal::SendSender<sendAll> {};
 }  // namespace heph::concurrency
