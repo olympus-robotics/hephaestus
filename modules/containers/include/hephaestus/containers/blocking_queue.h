@@ -36,6 +36,10 @@ public:
   [[nodiscard]] auto tryPush(U&& obj) -> bool {
     {
       const std::unique_lock<std::mutex> lock(mutex_);
+      if (stop_) {
+        return false;
+      }
+
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
@@ -58,6 +62,11 @@ public:
     std::optional<T> element_dropped;
     {
       const std::unique_lock<std::mutex> lock(mutex_);
+      if (stop_) {
+        return T{ std::forward<U>(obj) };  // We discard the input object if the queue is
+                                           // stopped.
+      }
+
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
@@ -79,13 +88,18 @@ public:
   void waitAndPush(U&& obj) {
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      ++waiting_writers_;
-      writer_signal_.wait(lock,
-                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
-      --waiting_writers_;
       if (stop_) {
         return;
       }
+
+      ++waiting_writers_;
+      writer_signal_.wait(lock,
+                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
+      if (stop_) {
+        --waiting_writers_;
+        return;
+      }
+      --waiting_writers_;
 
       queue_.push_back(std::forward<U>(obj));
     }
@@ -103,6 +117,10 @@ public:
   [[nodiscard]] auto tryEmplace(Args&&... args) -> bool {
     {
       const std::unique_lock<std::mutex> lock(mutex_);
+      if (stop_) {
+        return false;
+      }
+
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         return false;
       }
@@ -124,6 +142,10 @@ public:
   auto forceEmplace(Args&&... args) -> std::optional<T> {
     std::optional<T> element_dropped;
     {
+      if (stop_) {
+        return T{ std::forward<Args>(args)... };
+      }
+
       const std::unique_lock<std::mutex> lock(mutex_);
       if (max_size_.has_value() && queue_.size() == *max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
@@ -147,13 +169,18 @@ public:
   void waitAndEmplace(Args&&... args) {
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      ++waiting_writers_;
-      writer_signal_.wait(lock,
-                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
-      --waiting_writers_;
       if (stop_) {
         return;
       }
+
+      ++waiting_writers_;
+      writer_signal_.wait(lock,
+                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
+      if (stop_) {
+        --waiting_writers_;
+        return;
+      }
+      --waiting_writers_;
 
       queue_.emplace_back(std::forward<Args>(args)...);
     }
@@ -169,12 +196,17 @@ public:
   /// \return The first element from the queue if the queue contains data, std::nullopt otherwise.
   [[nodiscard]] auto waitAndPop() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::optional<T> {
     std::unique_lock<std::mutex> lock(mutex_);
-    ++waiting_readers_;
-    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
-    --waiting_readers_;
     if (stop_) {
       return {};
     }
+
+    ++waiting_readers_;
+    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
+    if (stop_) {
+      --waiting_readers_;
+      return {};
+    }
+    --waiting_readers_;
 
     auto value = std::move(queue_.front());
     queue_.pop_front();
@@ -186,12 +218,17 @@ public:
 
   [[nodiscard]] auto waitAndPopAll() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::deque<T> {
     std::unique_lock<std::mutex> lock(mutex_);
-    ++waiting_readers_;
-    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
-    --waiting_readers_;
     if (stop_) {
       return {};
     }
+
+    ++waiting_readers_;
+    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
+    if (stop_) {
+      --waiting_readers_;
+      return {};
+    }
+    --waiting_readers_;
 
     std::deque<T> res;
     std::swap(res, queue_);
@@ -206,7 +243,7 @@ public:
   /// \return The first element from the queue if the queue contains data, std::nullopt otherwise.
   [[nodiscard]] auto tryPop() noexcept(std::is_nothrow_move_constructible_v<T>) -> std::optional<T> {
     const std::unique_lock<std::mutex> lock(mutex_);
-    if (queue_.empty()) {
+    if (stop_ || queue_.empty()) {
       return {};
     }
 
@@ -221,12 +258,28 @@ public:
   /// Stop the queue, waking up all blocked consumers.
   /// \note This is safe to call from multiple threads.
   void stop() {
-    {
-      const std::unique_lock<std::mutex> lock(mutex_);
-      stop_ = true;
-    }
+    const std::unique_lock<std::mutex> lock(mutex_);
+    stop_ = true;
     reader_signal_.notify_all();
     writer_signal_.notify_all();
+  }
+
+  void restart() {
+    stop();
+
+    // Wait until noone is stuck in the queue.
+    while (true) {
+      // We can do this with a polling loop, because we just need to wait for the condition variable to wake
+      // the code for it to terminate.
+      const std::unique_lock<std::mutex> lock(mutex_);
+      if (waiting_readers_ == 0 && waiting_writers_ == 0) {
+        break;
+      }
+    }
+
+    const std::unique_lock<std::mutex> lock(mutex_);
+    queue_.clear();
+    stop_ = false;
   }
 
   [[nodiscard]] auto size() const -> std::size_t {
