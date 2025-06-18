@@ -10,6 +10,7 @@
 #include <deque>
 #include <mutex>
 #include <optional>
+#include <thread>
 #include <type_traits>
 
 namespace heph::containers {
@@ -268,17 +269,20 @@ public:
     stop();
 
     // Wait until noone is stuck in the queue.
+    std::unique_lock<std::mutex> lock(mutex_);
     while (true) {
       // We can do this with a polling loop, because we just need to wait for the condition variable to wake
       // the code for it to terminate.
       // It is guaranteed that no new readers or writers will be added to the queue as it is stopped.
-      const std::unique_lock<std::mutex> lock(mutex_);
       if (waiting_readers_ == 0 && waiting_writers_ == 0) {
         break;
       }
+
+      lock.unlock();
+      std::this_thread::yield();
+      lock.lock();
     }
 
-    const std::unique_lock<std::mutex> lock(mutex_);
     queue_.clear();
     stop_ = false;
   }
