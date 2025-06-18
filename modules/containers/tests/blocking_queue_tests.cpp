@@ -8,9 +8,9 @@
 #include <tuple>
 #include <utility>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "gmock/gmock.h"
 #include "hephaestus/containers/blocking_queue.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -64,7 +64,7 @@ TEST(BlockingQueue, Push) {
 
   future = std::async([&block_queue]() { return block_queue.waitAndPop(); });
   block_queue.stop();
-  future.wait();
+  future.get();
   EXPECT_TRUE(true);
 }
 
@@ -165,6 +165,13 @@ TEST(BlockingQueue, InfiniteQueue) {
 
   res = block_queue.tryPop();
   EXPECT_FALSE(res);
+}
+
+TEST(BlockingQueue, Restart) {
+  BlockingQueue<double> block_queue{ {} };
+  block_queue.waitAndPush(0.);
+  block_queue.restart();
+  EXPECT_THAT(block_queue, IsEmpty());
 }
 
 }  // namespace heph::containers::tests
