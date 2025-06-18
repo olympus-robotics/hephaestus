@@ -271,6 +271,7 @@ public:
     while (true) {
       // We can do this with a polling loop, because we just need to wait for the condition variable to wake
       // the code for it to terminate.
+      // It is guaranteed that no new readers or writers will be added to the queue as it is stopped.
       const std::unique_lock<std::mutex> lock(mutex_);
       if (waiting_readers_ == 0 && waiting_writers_ == 0) {
         break;
