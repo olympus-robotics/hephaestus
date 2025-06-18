@@ -29,7 +29,6 @@
 
 namespace {
 inline constexpr unsigned PAGE_SIZE = 4096;
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PAGE_SIZE> buffer{};
   while (true) {
@@ -42,18 +41,15 @@ auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socke
   }
 }
 
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto server(heph::concurrency::ContextScheduler scheduler, heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
-  // NOLINTNEXTLINE
   while (true) {
     auto socket = co_await (scheduler.schedule() | heph::net::accept(acceptor));
     scope.spawn(pong(scheduler, std::move(socket)));
   }
 }
 
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto ping(unsigned i, heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint endpoint)
     -> exec::task<void> {
   const heph::net::Socket socket(heph::net::IpFamily::V4, heph::net::Protocol::TCP);

@@ -15,9 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include <exec/repeat_effect_until.hpp>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log_sink.h"
@@ -60,7 +60,7 @@ public:
       // Otherwise, we attempt to set the result to connected inputs.
       if constexpr (sizeof...(Ts) == 1) {
         auto args = std::make_tuple(std::forward<Ts>(ts)...);
-        return exec::repeat_effect_until(
+        return heph::concurrency::repeatUntil(
             stdexec::just() | stdexec::let_value([this, &engine]() {
               // TODO: find better way to timeout based on the inputs timing...
               // Currently doing floor(retry^1.5)
