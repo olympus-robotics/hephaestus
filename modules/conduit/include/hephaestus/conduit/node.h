@@ -34,6 +34,7 @@ class Node : public detail::NodeBase {
   static constexpr bool HAS_NAME_ARG = requires(OperationT& op) { OperationT::name(op); };
   static constexpr bool HAS_TRIGGER_NULLARY = requires(OperationT&) { OperationT::trigger(); };
   static constexpr bool HAS_TRIGGER_ARG = requires(OperationT& op) { OperationT::trigger(op); };
+  static constexpr bool HAS_TRIGGER_ARG_PTR = requires(OperationT& op) { OperationT::trigger(&op); };
 
   template <typename... Ts>
   static constexpr bool HAS_EXECUTE_NULLARY =
@@ -41,6 +42,9 @@ class Node : public detail::NodeBase {
   template <typename... Ts>
   static constexpr bool HAS_EXECUTE_ARG =
       requires(OperationT& op, Ts&&... ts) { OperationT::execute(op, std::forward<Ts>(ts)...); };
+  template <typename... Ts>
+  static constexpr bool HAS_EXECUTE_ARG_PTR =
+      requires(OperationT& op, Ts&&... ts) { OperationT::execute(&op, std::forward<Ts>(ts)...); };
 
 public:
   static constexpr bool HAS_PERIOD = HAS_PERIOD_CONSTANT || HAS_PERIOD_NULLARY || HAS_PERIOD_ARG;
@@ -62,10 +66,12 @@ private:
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
       detail::ExecutionStopWatch stop_watch{ this };
-      static_assert(HAS_EXECUTE_ARG<Ts...> || HAS_EXECUTE_NULLARY<Ts...>,
+      static_assert(HAS_EXECUTE_ARG_PTR<Ts...> || HAS_EXECUTE_ARG<Ts...> || HAS_EXECUTE_NULLARY<Ts...>,
                     "No valid execute function available");
       if constexpr (HAS_EXECUTE_ARG<Ts...>) {
         return OperationT::execute(operation(), std::forward<Ts>(ts)...);
+      } else if constexpr (HAS_EXECUTE_ARG_PTR<Ts...>) {
+        return OperationT::execute(&operation(), std::forward<Ts>(ts)...);
       } else {
         return OperationT::execute(std::forward<Ts>(ts)...);
       }
@@ -121,6 +127,8 @@ private:
         return OperationT::trigger();
       } else if constexpr (HAS_TRIGGER_ARG) {
         return OperationT::trigger(operation());
+      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
+        return OperationT::trigger(&operation());
       } else {
         static_assert(HAS_PERIOD,
                       "An Operation needs to have at least either a trigger or a period function");
