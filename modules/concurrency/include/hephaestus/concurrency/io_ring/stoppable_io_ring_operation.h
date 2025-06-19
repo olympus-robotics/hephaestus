@@ -14,13 +14,13 @@
 #include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"
-#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::io_ring {
 
 template <typename IoRingOperationT>
-struct StoppableIoRingOperation {
+struct StoppableIoRingOperation : IoRingOperationBase {
   struct StopCallback {
     StoppableIoRingOperation* self;
 
@@ -28,19 +28,19 @@ struct StoppableIoRingOperation {
       self->requestStop();
     }
   };
-  struct StopOperation {
-    void prepare(::io_uring_sqe* sqe);
+  struct StopOperation : IoRingOperationBase {
+    void prepare(::io_uring_sqe* sqe) final;
 
-    void handleCompletion(::io_uring_cqe* cqe);
+    void handleCompletion(::io_uring_cqe* cqe) final;
 
     StoppableIoRingOperation* self;
   };
 
   StoppableIoRingOperation(IoRingOperationT op, IoRing& ring, stdexec::inplace_stop_token token);
 
-  void prepare(::io_uring_sqe* sqe);
+  void prepare(::io_uring_sqe* sqe) final;
 
-  void handleCompletion(::io_uring_cqe* cqe);
+  void handleCompletion(::io_uring_cqe* cqe) final;
 
   void requestStop();
 
@@ -62,8 +62,7 @@ inline StoppableIoRingOperation<IoRingOperationT>::StoppableIoRingOperation(IoRi
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::prepare(::io_uring_sqe* sqe) {
-  IoRingOperationPointer ptr{ self };
-  ::io_uring_prep_cancel64(sqe, ptr.data, IORING_ASYNC_CANCEL_ALL);
+  ::io_uring_prep_cancel(sqe, self, IORING_ASYNC_CANCEL_ALL);
 }
 
 template <typename IoRingOperationT>
@@ -101,7 +100,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
   using CompletionReturnT = decltype(operation.handleCompletion(cqe));
   if constexpr (std::is_same_v<CompletionReturnT, bool>) {
     if (!operation.handleCompletion(cqe)) {
-      ring->submit(*this);
+      ring->submit(this);
     }
   } else {
     operation.handleCompletion(cqe);
@@ -111,8 +110,9 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
   ++in_flight;
-  stop_operation.emplace(StopOperation{ this });
-  ring->submit(stop_operation.value());
+  stop_operation.emplace();
+  stop_operation->self = this;
+  ring->submit(&stop_operation.value());
 }
 
 }  // namespace heph::concurrency::io_ring

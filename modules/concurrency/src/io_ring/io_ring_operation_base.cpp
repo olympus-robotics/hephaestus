@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"

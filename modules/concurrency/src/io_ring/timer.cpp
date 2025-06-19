@@ -6,6 +6,8 @@
 
 #include <cerrno>
 #include <chrono>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <system_error>
 
@@ -13,7 +15,6 @@
 #include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/context_scheduler.h"
-#include "hephaestus/concurrency/io_ring/io_ring_operation_pointer.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::io_ring {
@@ -75,7 +76,7 @@ void Timer::update(TimerClock::time_point start_time) {
   next_timeout_.tv_nsec = nanoseconds.count();
   if (!timer_operation_.has_value()) {
     timer_operation_.emplace(Operation{ this }, *ring_, ring_->getStopToken());
-    ring_->submit(timer_operation_.value());
+    ring_->submit(&timer_operation_.value());
     return;
   }
 
@@ -84,13 +85,16 @@ void Timer::update(TimerClock::time_point start_time) {
   }
   update_timer_operation_.emplace(UpdateOperation{ .timer = this, .next_timeout = next_timeout_ }, *ring_,
                                   ring_->getStopToken());
-  ring_->submit(update_timer_operation_.value());
+  ring_->submit(&update_timer_operation_.value());
 }
 
 void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) const {
-  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  const IoRingOperationPointer ptr{ &timer->timer_operation_.value() };
-  ::io_uring_prep_timeout_update(sqe, &timer->next_timeout_, ptr.data, IORING_TIMEOUT_ABS);
+  // NOLINTNEXTLINE (misc-include-cleaner)
+  auto* ptr{ &timer->timer_operation_.value() };
+  std::uint64_t data{};
+  static_assert(sizeof(data) == sizeof(void*));
+  std::memcpy(&data, static_cast<void*>(&ptr), sizeof(data));
+  ::io_uring_prep_timeout_update(sqe, &timer->next_timeout_, data, IORING_TIMEOUT_ABS);
 }
 
 void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
