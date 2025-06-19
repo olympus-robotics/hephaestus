@@ -17,6 +17,7 @@
 #include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
 namespace heph::concurrency::io_ring::tests {
@@ -25,14 +26,14 @@ TEST(IoRingTest, DefaultConstruction) {
   EXPECT_NO_THROW(const IoRing ring{ {} });
 }
 
-struct StopOperation {
+struct StopOperation : IoRingOperationBase {
   IoRing* ring{ nullptr };
 
-  static void prepare(::io_uring_sqe* sqe) {
+  void prepare(::io_uring_sqe* sqe) final {
     ::io_uring_prep_nop(sqe);
   }
 
-  void handleCompletion(::io_uring_cqe* cqe) const {
+  void handleCompletion(::io_uring_cqe* cqe) final {
     EXPECT_EQ(cqe->res, 0);
     ring->requestStop();
   }
@@ -45,7 +46,7 @@ TEST(IoRingTest, startStop) {
   StopOperation stopper;
   stopper.ring = &ring;
 
-  ring.submit(stopper);
+  ring.submit(&stopper);
   EXPECT_FALSE(ring.getStopToken().stop_requested());
 
   EXPECT_NO_THROW(ring.run());
@@ -56,16 +57,10 @@ TEST(IoRingTest, startStop) {
   EXPECT_TRUE(ring.getStopToken().stop_requested());
 }
 
-struct DummyOperation {
+struct DummyOperation : IoRingOperationBase {
   std::size_t* completions{ nullptr };
 
-  DummyOperation() = default;
-
-  static void prepare(::io_uring_sqe* sqe) {
-    ::io_uring_prep_nop(sqe);
-  }
-
-  void handleCompletion(::io_uring_cqe* cqe) const {
+  void handleCompletion(::io_uring_cqe* cqe) final {
     EXPECT_EQ(cqe->res, 0);
     ++(*completions);
   }
@@ -80,13 +75,13 @@ TEST(IoRingTest, submit) {
 
   for (DummyOperation& op : ops) {
     op.completions = &completions;
-    EXPECT_NO_THROW(ring.submit(op));
+    EXPECT_NO_THROW(ring.submit(&op));
   }
 
   StopOperation stopper;
   stopper.ring = &ring;
 
-  ring.submit(stopper);
+  ring.submit(&stopper);
   EXPECT_FALSE(ring.getStopToken().stop_requested());
   EXPECT_NO_THROW(ring.run());
   EXPECT_TRUE(ring.getStopToken().stop_requested());
@@ -121,7 +116,7 @@ TEST(IoRingTest, submitConcurrent) {
 
   for (DummyOperation& op : ops) {
     op.completions = &completions;
-    EXPECT_NO_THROW(ring_ptr->submit(op));
+    EXPECT_NO_THROW(ring_ptr->submit(&op));
   }
 
   ring_ptr->requestStop();
@@ -145,14 +140,14 @@ struct TestOperation1T {
 };
 using TestOperation1 = StoppableIoRingOperation<TestOperation1T>;
 
-struct StopTestOperation {
-  static void prepare(io_uring_sqe* sqe) {
+struct StopTestOperation : IoRingOperationBase {
+  void prepare(io_uring_sqe* sqe) final {
     ::io_uring_prep_nop(sqe);
   }
-  void handleCompletion(io_uring_cqe* /*cqe*/) const {
+  void handleCompletion(io_uring_cqe* /*cqe*/) final {
     ring->requestStop();
   }
-  IoRing* ring;
+  IoRing* ring{ nullptr };
 };
 
 TEST(IoRingTest, stoppableOperation) {
@@ -161,10 +156,11 @@ TEST(IoRingTest, stoppableOperation) {
     IoRing ring{ {} };
 
     TestOperation1 test_operation1{ {}, ring, ring.getStopToken() };
-    [[maybe_unused]] StopTestOperation stop_operation{ &ring };
+    [[maybe_unused]] StopTestOperation stop_operation;
+    stop_operation.ring = &ring;
 
-    ring.submit(test_operation1);
-    ring.submit(stop_operation);
+    ring.submit(&test_operation1);
+    ring.submit(&stop_operation);
 
     ring.run();
 
@@ -175,10 +171,11 @@ TEST(IoRingTest, stoppableOperation) {
     IoRing ring{ {} };
 
     TestOperation1 test_operation1{ {}, ring, ring.getStopToken() };
-    [[maybe_unused]] StopTestOperation stop_operation{ &ring };
+    [[maybe_unused]] StopTestOperation stop_operation;
+    stop_operation.ring = &ring;
 
-    ring.submit(stop_operation);
-    ring.submit(test_operation1);
+    ring.submit(&stop_operation);
+    ring.submit(&test_operation1);
 
     ring.run();
 
@@ -200,7 +197,7 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
     ring.emplace(config);
     for (std::size_t i = 0; i != ops.capacity(); ++i) {
       ops.push_back(std::make_unique<TestOperation1>(TestOperation1T{}, *ring, ring->getStopToken()));
-      EXPECT_NO_THROW(ring->submit(*ops[i]));
+      EXPECT_NO_THROW(ring->submit(ops[i].get()));
     }
 
     ring->run([&] {

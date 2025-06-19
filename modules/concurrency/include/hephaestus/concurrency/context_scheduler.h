@@ -10,11 +10,14 @@
 #include <type_traits>
 #include <utility>
 
+#include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/__detail/__tag_invoke.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
+#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
 
 namespace heph::concurrency {
@@ -89,8 +92,11 @@ struct ContextEnv {
 };
 
 struct TaskBase;
-struct TaskDispatchOperation {
-  void handleCompletion() const;
+struct TaskDispatchOperation : io_ring::IoRingOperationBase {
+  explicit TaskDispatchOperation(TaskBase* task) noexcept : self(task) {
+  }
+
+  void handleCompletion(::io_uring_cqe* cqe) final;
   TaskBase* self;
 };
 
