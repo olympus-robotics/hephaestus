@@ -273,30 +273,28 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # liburing
-set(LIBURING_TAG "liburing-2.5")
+set(LIBURING_VERSION "2.5")
+set(LIBURING_TAG "liburing-${LIBURING_VERSION}")
 if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
-  find_package(Boost ${BOOST_VERSION_REQUIRED} QUIET CONFIG)
-  if(liburing_FOUND)
-    message(STATUS "liburing: Using version ${liburing_VERSION} from ${liburing_DIR}")
-    add_dummy_target(liburing)
-  else()
-    # Build and install project
-    ExternalProject_Add(
-      liburing
-      URL https://github.com/axboe/liburing/archive/refs/tags/${LIBURING_TAG}.tar.gz
-      BUILD_IN_SOURCE 1
-      USES_TERMINAL_BUILD TRUE # make it verbose
-      CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX} --cc=${CMAKE_C_COMPILER}
-                        --cxx=${CMAKE_CXX_COMPILER}
-      BUILD_COMMAND make -j
-      INSTALL_COMMAND make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-  endif(liburing_FOUND)
+  # NOTE: liburing must always be re-built from source as the pkgconfig files has absolute paths and not prefixed with
+  # install prefix.
+  # find_package(PkgConfig REQUIRED) pkg_check_modules(LIBURING REQUIRED liburing) if(LIBURING_FOUND) message(STATUS "
+  # liburing: Using version ${LIBURING_VERSION} from ${LIBURING_PREFIX}") add_dummy_target(liburing) else()
+  # Build and install project
+  message(STATUS "    liburing: Building ${LIBURING_VERSION} from source")
+  ExternalProject_Add(
+    liburing
+    URL https://github.com/axboe/liburing/archive/refs/tags/${LIBURING_TAG}.tar.gz
+    BUILD_IN_SOURCE 1
+    USES_TERMINAL_BUILD TRUE # make it verbose
+    CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX} --cc=${CMAKE_C_COMPILER} --cxx=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND make -j
+    INSTALL_COMMAND make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+# endif(LIBURING_FOUND)
 endif()
 
 # --------------------------------------------------------------------------------------------------
 # stdexec
 set(STDEXEC_VERSION "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5")
-add_cmake_dependency(
-  NAME stdexec VERSION ${WS_PROTOCOL_VERSION} URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz
-)
+add_cmake_dependency(NAME stdexec URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz)
