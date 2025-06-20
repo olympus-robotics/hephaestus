@@ -273,14 +273,17 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # liburing
-set(LIBURING_TAG "liburing-2.5")
+set(LIBURING_VERSION "2.5")
+set(LIBURING_TAG "liburing-${LIBURING_VERSION}")
 if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
-  find_package(Boost ${BOOST_VERSION_REQUIRED} QUIET CONFIG)
-  if(liburing_FOUND)
-    message(STATUS "liburing: Using version ${liburing_VERSION} from ${liburing_DIR}")
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBURING QUIET liburing)
+  if(LIBURING_FOUND)
+    message(STATUS "    liburing: Using version ${LIBURING_VERSION} from ${liburing_DIR}")
     add_dummy_target(liburing)
   else()
     # Build and install project
+    message(STATUS "    liburing: Building ${LIBURING_VERSION} from source")
     ExternalProject_Add(
       liburing
       URL https://github.com/axboe/liburing/archive/refs/tags/${LIBURING_TAG}.tar.gz
@@ -291,12 +294,12 @@ if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
       BUILD_COMMAND make -j
       INSTALL_COMMAND make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
-  endif(liburing_FOUND)
+  endif(LIBURING_FOUND)
 endif()
 
 # --------------------------------------------------------------------------------------------------
 # stdexec
 set(STDEXEC_VERSION "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5")
 add_cmake_dependency(
-  NAME stdexec VERSION ${WS_PROTOCOL_VERSION} URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz
+  NAME stdexec URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz
 )
