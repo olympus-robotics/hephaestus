@@ -291,7 +291,7 @@ if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
     BUILD_COMMAND make -j
     INSTALL_COMMAND make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   )
-endif(LIBURING_FOUND)
+# endif(LIBURING_FOUND)
 endif()
 
 # --------------------------------------------------------------------------------------------------
