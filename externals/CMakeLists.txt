@@ -279,7 +279,7 @@ if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(LIBURING QUIET liburing)
   if(LIBURING_FOUND)
-    message(STATUS "    liburing: Using version ${LIBURING_VERSION} from ${liburing_DIR}")
+    message(STATUS "    liburing: Using version ${LIBURING_VERSION} from ${LIBURING_DIR}")
     add_dummy_target(liburing)
   else()
     # Build and install project
@@ -300,6 +300,4 @@ endif()
 # --------------------------------------------------------------------------------------------------
 # stdexec
 set(STDEXEC_VERSION "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5")
-add_cmake_dependency(
-  NAME stdexec URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz
-)
+add_cmake_dependency(NAME stdexec URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz)
