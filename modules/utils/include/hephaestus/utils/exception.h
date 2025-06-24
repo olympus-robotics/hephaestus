@@ -58,7 +58,7 @@ public:
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panic(internal::StringLiteralWithLocation message, Args... args) {
+void panic(internal::StringLiteralWithLocation message, Args&&... args) {
   std::string formatted_message;
   if constexpr (sizeof...(args) > 0) {
     formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
@@ -80,7 +80,7 @@ void panic(internal::StringLiteralWithLocation message, Args... args) {
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panicIf(bool condition, internal::StringLiteralWithLocation message, Args... args) {
+void panicIf(bool condition, internal::StringLiteralWithLocation message, Args&&... args) {
   if (condition) [[unlikely]] {
     panic(std::move(message), std::forward<Args>(args)...);
   }
