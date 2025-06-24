@@ -161,10 +161,10 @@ auto deserializeRequest(const ::zenoh::Query& query) -> RequestT {
   const auto& keyexpr = query.get_keyexpr().as_string_view();
 
   const auto encoding = query.get_encoding();
-  panicIf(!encoding.has_value(), "Serivce {}: encoding is missing in query.", keyexpr);
+  panicIf(!encoding.has_value(), "Service {}: encoding is missing in query.", keyexpr);
 
   auto payload = query.get_payload();
-  panicIf(!payload.has_value(), "Serivce {}: payload is missing in query.", keyexpr);
+  panicIf(!payload.has_value(), "Service {}: payload is missing in query.", keyexpr);
 
   if constexpr (std::is_same_v<RequestT, std::string>) {
     panicIf(encoding.value().get() !=  // NOLINT(bugprone-unchecked-optional-access)
@@ -290,7 +290,7 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::SERVICE_SERVER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-    panicIf(result != Z_OK, "[Publisher {}] failed to create livelines token, result {}", topic_config_.name,
+    panicIf(result != Z_OK, "[Publisher {}] failed to create liveliness token, result {}", topic_config_.name,
             result);
   }
 }
