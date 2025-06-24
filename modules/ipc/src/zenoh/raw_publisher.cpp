@@ -99,9 +99,23 @@ void RawPublisher::createTypeInfoService() {
     (void)request;
     return type_info_json;
   };
-  auto type_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) };
-  type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
-                                                                      std::move(type_info_callback));
+
+  auto failure_callback = [topic_name = topic_config_.name]() {
+    heph::log(heph::ERROR, "Failed to process type info service", "topic", topic_name);
+  };
+  
+  auto post_reply_callback = []() {
+    // Do nothing.
+  };
+
+  ServiceConfig service_config = {
+    .create_liveliness_token = false,
+    .create_type_info_service = false,
+  };
+
+  type_service_ = std::make_unique<Service<std::string, std::string>>(
+      session_, TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) },
+      std::move(type_info_callback), failure_callback, post_reply_callback, service_config);
 }
 
 void RawPublisher::initializeAttachment() {
