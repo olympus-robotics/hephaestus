@@ -30,7 +30,7 @@ zenoh_config:
   # zenoh_config_path: ""
   enable_shared_memory: false
   mode: PEER
-  router: "127.0.01:7447"
+  router: "127.0.0.1:7447"
   qos: false
   real_time: false
   protocol: ANY
