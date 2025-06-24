@@ -5,48 +5,45 @@
 
 #pragma once
 
+#include <format>
 #include <source_location>
 #include <stdexcept>
 #include <string>
 
+#include <fmt/format.h>
+
 #ifdef DISABLE_EXCEPTIONS
 #include <absl/log/check.h>
-#include <fmt/format.h>
 #endif
 
 namespace heph {
+
+namespace internal {
+///@brief Wrapper around string literals to enhance them with a location.
+///       Note that the message is not owned by this class.
+///       We need to use a const char* here in order to enable implicit conversion from
+///       `log(LogLevel::INFO,"my string");`. The standard guarantees that string literals exist for the
+///       entirety of the program lifetime, so it is fine to use it as `MessageWithLocation("my message");`
+struct StringLiteralWithLocation final {
+  ///@brief Constructor for interface as `log(Level::Warn, "msg");`
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  StringLiteralWithLocation(const char* s, const std::source_location& l = std::source_location::current())
+    : value(s), location(l) {
+  }
+
+  const char* value;  ///< The message describing the error
+  std::source_location location;
+};
+}  // namespace internal
 
 //=================================================================================================
 /// Base class for exceptions
 /// @include exception_example.cpp
 class Panic : public std::runtime_error {
 public:
-
-///@brief Wrapper around string literals to enhance them with a location.
-///       Note that the message is not owned by this class.
-///       We need to use a const char* here in order to enable implicit conversion from
-///       `log(LogLevel::INFO,"my string");`. The standard guarantees that string literals exist for the
-///       entirety of the program lifetime, so it is fine to use it as `MessageWithLocation("my message");`
-struct MessageWithLocation final {
-  ///@brief Constructor for interface as `log(Level::Warn, "msg");`
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  MessageWithLocation(const char* s, const std::source_location& l = std::source_location::current())
-    : value(s), location(l) {
-  }
-
-  ///@brief Constructor for interface as `log(Level::Warn, "msg"s);` or `log(Level::Warn, std::format(...));`
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  MessageWithLocation(std::string s, const std::source_location& l = std::source_location::current())
-    : value(std::move(s)), location(l) {
-  }
-
-  std::string value;
-  std::source_location location;
-};
-
   /// @param message A message describing the error and what caused it
   /// @param location Location in the source where the error was triggered at
-  explicit Panic(MessageWithLocation&& message);
+  explicit Panic(std::string message, const std::source_location& location = std::source_location::current());
 };
 
 /// @brief  User function to panic. Internally this throws a Panic exception.
@@ -56,15 +53,18 @@ struct MessageWithLocation final {
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-inline void panic(Panic::MessageWithLocation&& message, Args... args) {
+inline void panic(internal::StringLiteralWithLocation message, Args... args) {
+  std::string formatted_message;
   if constexpr (sizeof...(args) > 0) {
-    message.value = fmt::format(message.value, std::forward<Args>(args)...);
+    formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
+  } else {
+    formatted_message = message.value;
   }
 #ifndef DISABLE_EXCEPTIONS
-  throw Panic{ std::move(message) };
+  throw Panic{ std::move(formatted_message), message.location };
 #else
-  auto e = Panic{ std::move(message) };
-  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message.value, message.location.file_name(),
+  auto e = Panic{ std::move(formatted_message), message.location };
+  CHECK(false) << fmt::format("[ERROR {}] at {}:{}", e.what(), message.location.file_name(),
                               message.location.line());
 #endif
 }
@@ -75,20 +75,23 @@ inline void panic(Panic::MessageWithLocation&& message, Args... args) {
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-inline void panicIf(bool condition, Panic::MessageWithLocation&& message, Args... args) {
+inline void panicIf(bool condition, internal::StringLiteralWithLocation message, Args... args) {
+  std::string formatted_message;
   if (condition) [[unlikely]] {
     if constexpr (sizeof...(args) > 0) {
-      message.value = fmt::format(message.value, std::forward<Args>(args)...);
+      formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
+    } else {
+      formatted_message = message.value;
     }
   }
 #ifndef DISABLE_EXCEPTIONS
   if (condition) [[unlikely]] {
-    throw Panic{ std::move(message) };
+    throw Panic{ std::move(formatted_message), message.location };
   }
 #else
-  auto e = Panic{ message, location };
-  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                   location.line());
+  auto e = Panic{ std::move(formatted_message), message.location };
+  CHECK(!condition) << fmt::format("[ERROR {}] at {}:{}", e.what(), message.location.file_name(),
+                                   message.location.line());
 #endif
 }
 
