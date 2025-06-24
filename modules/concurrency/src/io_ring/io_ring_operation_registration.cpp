@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <fmt/format.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 

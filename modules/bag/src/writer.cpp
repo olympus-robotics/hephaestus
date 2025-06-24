@@ -14,8 +14,6 @@
 
 #include <absl/log/log.h>
 #include <absl/strings/ascii.h>
-#include <fmt/core.h>
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <mcap/types.hpp>
 #include <mcap/writer.hpp>

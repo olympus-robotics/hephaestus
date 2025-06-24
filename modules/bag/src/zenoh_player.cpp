@@ -16,8 +16,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/format.h>
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 

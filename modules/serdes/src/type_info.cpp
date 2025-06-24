@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>

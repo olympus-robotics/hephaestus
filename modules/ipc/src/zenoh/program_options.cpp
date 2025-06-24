@@ -10,8 +10,6 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_filter.h"

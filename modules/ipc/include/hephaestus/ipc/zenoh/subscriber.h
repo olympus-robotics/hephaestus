@@ -11,8 +11,6 @@
 #include <span>
 #include <utility>
 
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"

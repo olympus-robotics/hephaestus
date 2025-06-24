@@ -7,6 +7,7 @@
 #include <source_location>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "hephaestus/utils/stack_trace.h"
 #include "hephaestus/utils/string/string_utils.h"

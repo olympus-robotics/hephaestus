@@ -8,7 +8,6 @@
 #include <cstring>
 #include <system_error>
 
-#include <fmt/format.h>
 #include <sys/socket.h>
 #include <unistd.h>
 

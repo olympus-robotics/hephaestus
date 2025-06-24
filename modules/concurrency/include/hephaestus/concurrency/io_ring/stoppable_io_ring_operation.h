@@ -9,7 +9,6 @@
 #include <system_error>
 #include <type_traits>
 
-#include <fmt/format.h>
 #include <liburing.h>
 #include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>

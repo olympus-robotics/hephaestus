@@ -18,7 +18,6 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/channels.hxx>

@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 

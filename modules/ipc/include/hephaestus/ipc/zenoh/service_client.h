@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
-
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/service.h"

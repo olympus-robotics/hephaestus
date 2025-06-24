@@ -7,7 +7,6 @@
 #include <cerrno>
 #include <system_error>
 
-#include <fmt/format.h>
 #include <sys/socket.h>
 
 #include "hephaestus/net/endpoint.h"

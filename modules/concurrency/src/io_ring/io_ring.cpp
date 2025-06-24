@@ -6,7 +6,6 @@
 #include <functional>
 #include <system_error>
 
-#include <fmt/format.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>

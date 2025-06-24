@@ -11,7 +11,6 @@
 #include <utility>
 
 #include <fmt/base.h>
-#include <fmt/format.h>
 #include <mcap/errors.hpp>
 #include <mcap/reader.hpp>
 

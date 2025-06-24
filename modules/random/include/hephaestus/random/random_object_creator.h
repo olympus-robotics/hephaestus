@@ -15,7 +15,6 @@
 #include <random>
 #include <string>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/utils/concepts.h"

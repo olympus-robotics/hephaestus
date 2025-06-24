@@ -13,7 +13,6 @@
 #include <utility>
 
 #include <absl/strings/numbers.h>
-#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/ext/advanced_subscriber.hxx>
