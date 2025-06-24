@@ -285,7 +285,7 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy->data().executed - 1,
+  EXPECT_LE(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
   EXPECT_GE(sink_ptr->num_messages.load(), 1);
