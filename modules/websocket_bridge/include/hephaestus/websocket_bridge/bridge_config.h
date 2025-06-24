@@ -59,6 +59,10 @@ struct WebsocketBridgeConfig {
   uint16_t ws_server_port = DEFAULT_WS_SERVER_PORT;
   std::string ws_server_address = "0.0.0.0";
 
+  // If enabled, the bridge will print the full state every time it changes.
+  bool ws_server_verbose_bridge_state = false;
+  bool ws_server_verbose_ipc_graph_state = false;
+
   /////////
   // IPC //
   /////////

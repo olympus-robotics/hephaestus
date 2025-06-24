@@ -24,6 +24,8 @@ ws_server_port: 8765
 # - 0.0.0.0 -> bridge visible on all interfaces, e.g. for local LAN access
 # - localhost or 127.0.0.1 -> bridge only accessible from within this machine
 ws_server_address: 0.0.0.0
+ws_server_verbose_bridge_state: true
+ws_server_verbose_ipc_graph_state: true
 zenoh_config:
   use_binary_name_as_session_id: false
   id: "ws_bridge"

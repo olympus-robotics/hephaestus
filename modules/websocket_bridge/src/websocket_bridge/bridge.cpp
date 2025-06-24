@@ -194,7 +194,9 @@ void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
             type_info.name);
 
   if (state_.hasIpcTopicMapping(topic)) {
-    state_.printBridgeState();
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
     heph::log(
         heph::WARN,
         fmt::format("\n[WS Bridge] - Topic is already advertized! There are likely multiple publishers!",
@@ -218,7 +220,9 @@ void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
 void WebsocketBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
   heph::log(heph::INFO, "[WS Bridge] - Topic will be dropped  ...", "topic", topic);
   if (!state_.hasIpcTopicMapping(topic)) {
-    state_.printBridgeState();
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
     heph::log(
         heph::WARN,
         fmt::format("\n[WS Bridge] - Topic is already unadvertized! There are likely multiple publishers!",
@@ -289,7 +293,9 @@ void WebsocketBridge::callback_IpcGraph_ServiceDropped(const std::string& servic
   heph::log(heph::INFO, "[WS Bridge] - Service will be dropped  ...", "service_name", service_name);
 
   if (!state_.hasIpcServiceMapping(service_name)) {
-    state_.printBridgeState();
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
     heph::log(
         heph::WARN,
         fmt::format(
@@ -313,10 +319,14 @@ void WebsocketBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& 
   // it.
   (void)info;
 
-  ipc_graph_state.printIpcGraphState();
+  if (config_.ws_server_verbose_ipc_graph_state) {
+    ipc_graph_state.printIpcGraphState();
+  }
   CHECK(ipc_graph_state.checkConsistency());
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
   CHECK(state_.checkConsistency());
 
   foxglove::MapOfSets topic_to_pub_node_map;
@@ -535,8 +545,9 @@ void WebsocketBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClie
 
   heph::log(heph::INFO, "[WS Bridge] - Client subcribed to topic successfully. [IPC SUB ADDED]",
             "client_name", client_name, "topic", topic, "channel_id", channel_id);
-
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
@@ -566,8 +577,9 @@ void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsCl
               "\n[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB STILL NEEDED]",
               "client_name", client_name, "topic", topic, "channel_id", channel_id);
   }
-
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
@@ -617,7 +629,9 @@ void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& adver
               "client_name", client_name, "topic", topic, "channel_id", channel_id);
   }
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
@@ -661,7 +675,9 @@ void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_cha
               "client_name", client_name, "topic", topic, "client_channel_id", client_channel_id);
   }
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
