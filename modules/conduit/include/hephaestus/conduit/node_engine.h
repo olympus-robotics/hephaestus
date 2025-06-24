@@ -70,7 +70,7 @@ public:
     //  1. We don't want to impose a ctor taking the engine parameter on
     //     an  Operator
     //  2. The name might only be fully valid after the node is fully constructed.
-    node->implicit_output_.emplace(node->nodeName());
+    node->implicit_output_.emplace(node, "");
     node->engine_ = this;
     scope_.spawn(createNodeRunner(*node));
     return NodeHandle{ node };

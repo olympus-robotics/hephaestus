@@ -18,9 +18,11 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/repeat_until.h"
+#include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "node_base.h"
 
 namespace heph::conduit::detail {
 
@@ -50,7 +52,7 @@ public:
   static constexpr std::string_view INPUT_OVERFLOW_WARNING =
       "Delaying Output operation because receiving input would overflow";
 
-  explicit OutputConnections(std::string name) : name_(std::move(name)) {
+  explicit OutputConnections(detail::NodeBase* node, std::string name) : node_(node), name_(std::move(name)) {
   }
 
   auto propagate(NodeEngine& engine) {
@@ -127,7 +129,7 @@ public:
   }
 
   [[nodiscard]] auto name() const -> std::string {
-    return name_;
+    return fmt::format("{}/{}", node_->nodeName(), name_);
   }
 
   template <typename Input>
@@ -144,6 +146,7 @@ private:
   std::vector<InputEntry> inputs_;
   std::size_t generation_{ 0 };
   std::size_t retry_{ 0 };
+  detail::NodeBase* node_;
   std::string name_;
 };
 }  // namespace heph::conduit::detail
