@@ -51,12 +51,12 @@ TEST(ContextTests, scheduleException) {
   bool called{ false };
   auto sender = stdexec::schedule(context.scheduler()) | stdexec::then([&context] {
                   context.requestStop();
-                  heph::panic("testing");
+                  panic("testing");
                 }) |
                 stdexec::upon_error([&called](const std::exception_ptr& eptr) {
                   try {
                     std::rethrow_exception(eptr);
-                  } catch (heph::Panic&) {  // NOLINT (bugprone-empty-catch)
+                  } catch (Panic&) {  // NOLINT (bugprone-empty-catch)
                   }
                   called = true;
                 });

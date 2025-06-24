@@ -58,7 +58,7 @@ public:
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-inline void panic(internal::StringLiteralWithLocation message, Args... args) {
+void panic(internal::StringLiteralWithLocation message, Args... args) {
   std::string formatted_message;
   if constexpr (sizeof...(args) > 0) {
     formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
@@ -80,24 +80,10 @@ inline void panic(internal::StringLiteralWithLocation message, Args... args) {
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-inline void panicIf(bool condition, internal::StringLiteralWithLocation message, Args... args) {
-  std::string formatted_message;
+void panicIf(bool condition, internal::StringLiteralWithLocation message, Args... args) {
   if (condition) [[unlikely]] {
-    if constexpr (sizeof...(args) > 0) {
-      formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
-    } else {
-      formatted_message = message.value;
-    }
+    panic(std::move(message), std::forward<Args>(args)...);
   }
-#ifndef DISABLE_EXCEPTIONS
-  if (condition) [[unlikely]] {
-    throw Panic{ std::move(formatted_message), message.location };
-  }
-#else
-  auto e = Panic{ std::move(formatted_message), message.location };
-  CHECK(!condition) << fmt::format("[ERROR {}] at {}:{}", e.what(), message.location.file_name(),
-                                   message.location.line());
-#endif
 }
 
 /// @brief Macro to test if a statement throws an exception or causes a program death depending

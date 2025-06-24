@@ -42,7 +42,7 @@ struct DispatchOperation {
       return;
     }
     if (cqe->res < 0) {
-      heph::panic("dispatch failed: {}", std::error_code(-cqe->res, std::system_category()).message());
+      panic("dispatch failed: {}", std::error_code(-cqe->res, std::system_category()).message());
     }
 
     dispatch_done.store(true, std::memory_order_release);
@@ -70,7 +70,7 @@ IoRing::IoRing(const IoRingConfig& config) : config_(config) {
   const int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
   if (res < 0) {
-    heph::panic("::io_uring_queue_init failed: {}", std::error_code(-res, std::system_category()).message());
+    panic("::io_uring_queue_init failed: {}", std::error_code(-res, std::system_category()).message());
   }
 }
 
@@ -120,8 +120,7 @@ void IoRing::runOnce(bool block) {
     res = ::io_uring_submit_and_get_events(&ring_);
   }
   if (res < 0 && !(res == -EAGAIN || res == -EINTR)) {
-    heph::panic("::io_uring_submit_and_wait failed: {}",
-                std::error_code(-res, std::system_category()).message());
+    panic("::io_uring_submit_and_wait failed: {}", std::error_code(-res, std::system_category()).message());
   }
 
   for (auto* cqe = nextCompletion(); cqe != nullptr; cqe = nextCompletion()) {
@@ -136,7 +135,7 @@ void IoRing::runOnce(bool block) {
 
 void IoRing::run(const std::function<void()>& on_started, const std::function<bool()>& on_progress) {
   if (current_ring != nullptr) {
-    heph::panic("Cannot run ring, another ring is already active for this thread");
+    panic("Cannot run ring, another ring is already active for this thread");
   }
 
   int res = 0;
@@ -144,8 +143,7 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
   res = ::io_uring_register_ring_fd(&ring_);
 
   if (res < 0) {
-    heph::panic("::io_uring_register_ring_fd failed: {}",
-                std::error_code(-res, std::system_category()).message());
+    panic("::io_uring_register_ring_fd failed: {}", std::error_code(-res, std::system_category()).message());
   }
   current_ring = this;
   running_.store(true, std::memory_order_release);
@@ -158,8 +156,8 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
   res = ::io_uring_unregister_ring_fd(&ring_);
 
   if (res < 0) {
-    heph::panic("::io_uring_unregister_ring_fd failed: {}",
-                std::error_code(-res, std::system_category()).message());
+    panic("::io_uring_unregister_ring_fd failed: {}",
+          std::error_code(-res, std::system_category()).message());
   }
   current_ring = nullptr;
 }
@@ -197,7 +195,7 @@ auto IoRing::getSqe() -> ::io_uring_sqe* {
     }
     const int res = ::io_uring_submit(&ring_);
     if (res < 0 && !(-res == EAGAIN || -res == EINTR)) {
-      heph::panic("::io_uring_submit failed: {}", std::error_code(-res, std::system_category()).message());
+      panic("::io_uring_submit failed: {}", std::error_code(-res, std::system_category()).message());
     }
   }
   return nullptr;

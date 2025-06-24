@@ -90,13 +90,13 @@ TEST_F(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
 
-  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::Panic, "");
+  EXPECT_THROW_OR_DEATH(spinner.stop(), Panic, "");
   spinner.start();
 
-  EXPECT_THROW_OR_DEATH(spinner.start(), heph::Panic, "");
+  EXPECT_THROW_OR_DEATH(spinner.start(), Panic, "");
   spinner.stop().get();
 
-  EXPECT_THROW_OR_DEATH(spinner.stop(), heph::Panic, "");
+  EXPECT_THROW_OR_DEATH(spinner.stop(), Panic, "");
 }
 
 TEST_F(SpinnerTest, SpinTest) {
@@ -168,7 +168,7 @@ TEST_F(SpinnerTest, ExceptionHandling) {
 
   spinner.start();
   spinner.wait();
-  EXPECT_THROW(spinner.stop().get(), heph::Panic);
+  EXPECT_THROW(spinner.stop().get(), Panic);
   EXPECT_TRUE(callback_called);
 }
 

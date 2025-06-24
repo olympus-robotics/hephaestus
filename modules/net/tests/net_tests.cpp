@@ -58,7 +58,7 @@ TEST(Net, Ipv4Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint(IpFamily::V4, "."), heph::Panic);
+  EXPECT_THROW(Endpoint(IpFamily::V4, "."), Panic);
 }
 
 TEST(Net, Ipv6Endpoint) {
@@ -89,7 +89,7 @@ TEST(Net, Ipv6Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint(IpFamily::V6, ":"), heph::Panic);
+  EXPECT_THROW(Endpoint(IpFamily::V6, ":"), Panic);
 }
 
 TEST(Net, TCPOperationsSome) {

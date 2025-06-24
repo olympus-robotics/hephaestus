@@ -23,7 +23,7 @@ Socket::Socket(IpFamily family, Protocol protocol)
   : fd_(::socket(family == IpFamily::V4 ? AF_INET : AF_INET6,
                  protocol == Protocol::TCP ? SOCK_STREAM : SOCK_DGRAM, 0)) {
   if (fd_ == -1) {
-    heph::panic("socket: {}", std::error_code(errno, std::system_category()).message());
+    panic("socket: {}", std::error_code(errno, std::system_category()).message());
   }
 }
 
@@ -56,7 +56,7 @@ void Socket::bind(const Endpoint& endpoint) const {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       ::bind(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
-    heph::panic("bind: {}", std::error_code(errno, std::system_category()).message());
+    panic("bind: {}", std::error_code(errno, std::system_category()).message());
   }
 }
 
@@ -66,7 +66,7 @@ void Socket::connect(const Endpoint& endpoint) const {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       ::connect(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
-    heph::panic("connect: {}", std::error_code(errno, std::system_category()).message());
+    panic("connect: {}", std::error_code(errno, std::system_category()).message());
   }
 }
 
@@ -76,13 +76,13 @@ auto Socket::localEndpoint() const -> Endpoint {
 
   const int res = ::getsockname(fd_, &addr, &length);
   if (res == -1) {
-    heph::panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
+    panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
   }
 
   Endpoint endpoint(addr.sa_family == AF_INET ? IpFamily::V4 : IpFamily::V6);
   auto handle = endpoint.nativeHandle();
   if (length != handle.size()) {
-    heph::panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());
+    panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());
   }
 
   std::memcpy(handle.data(), &addr, handle.size());
@@ -96,13 +96,13 @@ auto Socket::remoteEndpoint() const -> Endpoint {
 
   const int res = ::getpeername(fd_, &addr, &length);
   if (res == -1) {
-    heph::panic("getpeername: {}", std::error_code(errno, std::system_category()).message());
+    panic("getpeername: {}", std::error_code(errno, std::system_category()).message());
   }
 
   Endpoint endpoint(addr.sa_family == AF_INET ? IpFamily::V4 : IpFamily::V6);
   auto handle = endpoint.nativeHandle();
   if (length != handle.size()) {
-    heph::panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());
+    panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());
   }
 
   std::memcpy(handle.data(), &addr, handle.size());
