@@ -87,8 +87,7 @@ void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ info.topic },
-      [this, type_info = std::move(*type_info)](const MessageMetadata& metadata,
-                                                std::span<const std::byte> data) {
+      [this, type_info = *type_info](const MessageMetadata& metadata, std::span<const std::byte> data) {
         subscriber_cb_(metadata, data, type_info);
       },
       *type_info);

@@ -72,7 +72,12 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   , type_info_(std::move(type_info))
   , dedicated_callback_thread_(config.dedicated_callback_thread) {
   if (config.create_type_info_service) {
-    createTypeInfoService();
+    if (type_info_.isValid()) {
+      createTypeInfoService();
+    } else {
+      heph::log(heph::ERROR, "Cannot offer type info service for sub with invalid type info.", "topic",
+                topic_config_.name, "type_info", type_info_.toJson());
+    }
   }
 
   if (dedicated_callback_thread_) {
