@@ -26,6 +26,7 @@ ws_server_port: 8765
 ws_server_address: 0.0.0.0
 ws_server_verbose_bridge_state: true
 ws_server_verbose_ipc_graph_state: true
+
 zenoh_config:
   use_binary_name_as_session_id: false
   id: "ws_bridge"
