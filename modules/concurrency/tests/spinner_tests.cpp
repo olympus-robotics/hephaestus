@@ -46,7 +46,7 @@ struct SpinnerTest : public ::testing::Test {
   }
 
   [[nodiscard]] static auto createThrowingCallback() -> Spinner::StoppableCallback {
-    auto cb = []() { panic("This is a test exception.", std::source_location::current()); };
+    auto cb = []() { panic("This is a test exception."); };
     return Spinner::createNeverStoppingCallback(std::move(cb));
   }
 

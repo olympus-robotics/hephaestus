@@ -38,8 +38,7 @@ void removeInvalidChar(std::string& str) {
 [[nodiscard]] auto createSessionId(std::string_view id) -> std::string {
   static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
 
-  panicIf(!isValidId(id),
-          fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
+  panicIf(!isValidId(id), "invalid session id: {}, only alphanumeric and _ characters allowed", id);
 
   std::string session_id{ id };
 

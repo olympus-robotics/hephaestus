@@ -34,7 +34,7 @@ Endpoint::Endpoint(IpFamily family, const std::string& ip, std::uint16_t port)
     if (!ip.empty()) {
       const int res = ::inet_pton(AF_INET, ip.c_str(), &addr.sin_addr);
       if (res == 0) {
-        heph::panic(fmt::format("Invalid IPv4 address: {}", ip));
+        heph::panic("Invalid IPv4 address: {}", ip);
       }
       if (res == -1) {
         heph::panic("IPv4 is not supported");
@@ -49,7 +49,7 @@ Endpoint::Endpoint(IpFamily family, const std::string& ip, std::uint16_t port)
     if (!ip.empty()) {
       const int res = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);
       if (res == 0) {
-        heph::panic(fmt::format("Invalid IPv6 address: {}", ip));
+        heph::panic("Invalid IPv6 address: {}", ip);
       }
       if (res == -1) {
         heph::panic("IPv6 is not supported");
@@ -86,8 +86,8 @@ auto Endpoint::ip() const -> std::string {
 
   auto convert = [&](void* addr) {
     if (::inet_ntop(family(), addr, buffer.data(), static_cast<socklen_t>(buffer.size())) == nullptr) {
-      heph::panic(fmt::format("Could not convert sockaddr to ip: {}",
-                              std::error_code(errno, std::system_category()).message()));
+      heph::panic("Could not convert sockaddr to ip: {}",
+                  std::error_code(errno, std::system_category()).message());
     }
   };
 

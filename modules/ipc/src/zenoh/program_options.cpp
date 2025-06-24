@@ -78,7 +78,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args)
   } else if (mode == "client") {
     config.mode = Mode::CLIENT;
   } else {
-    panic(fmt::format("invalid mode value: {}", mode));
+    panic("invalid mode value: {}", mode);
   }
 
   auto protocol = args.getOption<std::string>("protocol");
@@ -89,7 +89,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args)
   } else if (protocol == "tcp") {
     config.protocol = Protocol::TCP;
   } else {
-    panic(fmt::format("invalid value {} for option 'protocol'", protocol));
+    panic("invalid value {} for option 'protocol'", protocol);
   }
 
   config.router = args.getOption<std::string>("router");

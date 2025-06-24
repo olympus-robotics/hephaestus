@@ -75,8 +75,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCom
     return;
   }
   if (res < 0) {
-    heph::panic(
-        fmt::format("StopOperation failed: {}", std::error_code(-res, std::system_category()).message()));
+    heph::panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
   }
   if (self->in_flight == 0) {
     self->operation.handleStopped();

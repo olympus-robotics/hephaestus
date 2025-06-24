@@ -39,8 +39,7 @@ void Timer::Operation::prepare(::io_uring_sqe* sqe) const {
 
 void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
   if (cqe->res < 0 && cqe->res != -ETIME) {
-    heph::panic(
-        fmt::format("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message()));
+    heph::panic("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message());
   }
   timer->timer_operation_.reset();
 
@@ -101,8 +100,7 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
       timer->tick();
       return;
     }
-    heph::panic(
-        fmt::format("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message()));
+    heph::panic("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message());
   }
   if (timer->next_timeout_.tv_sec != next_timeout.tv_sec ||
       timer->next_timeout_.tv_nsec != next_timeout.tv_nsec) {

@@ -20,7 +20,7 @@ Acceptor::Acceptor(IpFamily family, Protocol protocol) : socket_(family, protoco
 void Acceptor::listen(int backlog) const {
   const int res = ::listen(socket_.nativeHandle(), backlog);
   if (res == -1) {
-    heph::panic(fmt::format("listen: {}", std::error_code(errno, std::system_category()).message()));
+    heph::panic("listen: {}", std::error_code(errno, std::system_category()).message());
   }
 }
 void Acceptor::bind(const Endpoint& endpoint) const {

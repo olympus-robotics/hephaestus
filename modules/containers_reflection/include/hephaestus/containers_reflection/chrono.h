@@ -28,20 +28,18 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
 
   static auto to(const ReflType& value) -> std::chrono::duration<Rep, Period> {
     heph::panicIf(value.empty(), "Duration string is empty.");
-    heph::panicIf(
-        value.back() != 's',
-        fmt::format("Duration string does not end with 's'. Expected format like '123.456231s', got '{}'.",
-                    value));
+    heph::panicIf(value.back() != 's',
+                  "Duration string does not end with 's'. Expected format like '123.456231s', got '{}'.",
+                  value);
     // Note that those invalid casts may throw in which case reflect-cpp will return an error
     const size_t parsed_length = value.length() - 1;  // Remove the 's' at the end
     double value_in_seconds = 0.0;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     const auto [ptr, err] = std::from_chars(value.data(), value.data() + parsed_length, value_in_seconds,
                                             std::chars_format::general);
-    heph::panicIf(err != std::errc(), fmt::format("Error parsing duration string: {}", value));
+    heph::panicIf(err != std::errc(), "Error parsing duration string: {}", value);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    heph::panicIf(ptr != value.data() + parsed_length,
-                  fmt::format("Only a part of the string {} was parsed.", value));
+    heph::panicIf(ptr != value.data() + parsed_length, "Only a part of the string {} was parsed.", value);
 
     const std::chrono::duration<double> duration_sec(value_in_seconds);
 

@@ -53,16 +53,16 @@ ServiceClient<RequestT, ReplyT>::ServiceClient(SessionPtr session, TopicConfig t
   ::zenoh::ZResult result{};
   querier_ = std::make_unique<::zenoh::Querier>(session_->zenoh_session.declare_querier(
       keyexpr, std::move(options), &result));  // NOLINT(performance-move-const-arg, hicpp-move-const-arg)
-  panicIf(result != 0, fmt::format("[ServiceClient '{}'] failed to create zenoh querier, err {}",
-                                   topic_config_.name, result));
+  panicIf(result != 0, "[ServiceClient '{}'] failed to create zenoh querier, err {}", topic_config_.name,
+          result);
 
   liveliness_token_ =
       std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
           generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                          EndpointType::SERVICE_CLIENT),
           ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  panicIf(result != 0, fmt::format("[ServiceClient {}] failed to create liveliness token, result {}",
-                                   topic_config_.name, result));
+  panicIf(result != 0, "[ServiceClient {}] failed to create liveliness token, result {}", topic_config_.name,
+          result);
 }
 
 template <typename RequestT, typename ReplyT>
@@ -78,7 +78,7 @@ auto ServiceClient<RequestT, ReplyT>::call(const RequestT& request) -> std::vect
   ::zenoh::ZResult result{};
   auto replies =
       querier_->get("", ::zenoh::channels::FifoChannel(FIFO_QUEUE_SIZE), std::move(get_options), &result);
-  panicIf(result != 0, fmt::format("Failed to call service on '{}'", topic_config_.name));
+  panicIf(result != 0, "Failed to call service on '{}'", topic_config_.name);
 
   return internal::getServiceCallResponses<ReplyT>(replies);
 }
