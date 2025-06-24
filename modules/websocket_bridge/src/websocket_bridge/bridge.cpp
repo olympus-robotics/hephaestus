@@ -53,18 +53,38 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
         IpcGraphCallbacks{
             .topic_discovery_cb =
                 [this](const std::string& topic, const heph::serdes::TypeInfo& type_info) {
-                  this->callback_IpcGraph_TopicFound(topic, type_info);
+                  if (shouldBridgeIpcTopic(topic, config_)) {
+                    this->callback_IpcGraph_TopicFound(topic, type_info);
+                  } else {
+                    heph::log(
+                        heph::INFO,
+                        fmt::format("[WS Bridge] - Ignoring topic '{}' - not whitelisted, or blacklisted.",
+                                    topic));
+                  }
                 },
             .topic_removal_cb =
-                [this](const std::string& topic) { this->callback_IpcGraph_TopicDropped(topic); },
-
+                [this](const std::string& topic) {
+                  if (shouldBridgeIpcTopic(topic, config_)) {
+                    this->callback_IpcGraph_TopicDropped(topic);
+                  }
+                },
             .service_discovery_cb =
                 [this](const std::string& service_name, const serdes::ServiceTypeInfo& service_type_info) {
-                  this->callback_IpcGraph_ServiceFound(service_name, service_type_info);
+                  if (shouldBridgeIpcService(service_name, config_)) {
+                    this->callback_IpcGraph_ServiceFound(service_name, service_type_info);
+                  } else {
+                    heph::log(
+                        heph::INFO,
+                        fmt::format("[WS Bridge] - Ignoring service '{}' - not whitelisted, or blacklisted.",
+                                    service_name));
+                  }
                 },
             .service_removal_cb =
-                [this](const std::string& service) { this->callback_IpcGraph_ServiceDropped(service); },
-
+                [this](const std::string& service) {
+                  if (shouldBridgeIpcService(service, config_)) {
+                    this->callback_IpcGraph_ServiceDropped(service);
+                  }
+                },
             .graph_update_cb =
                 [this](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
                   this->callback_IpcGraph_Updated(info, state);
