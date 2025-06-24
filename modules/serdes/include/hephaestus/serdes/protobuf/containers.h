@@ -11,7 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <fmt/format.h>
 #include <google/protobuf/map.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/repeated_ptr_field.h>
@@ -106,8 +105,8 @@ void toProto(google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_ptr_fiel
 template <Arithmetic T, typename ProtoT, std::size_t N>
 void fromProto(const google::protobuf::RepeatedField<ProtoT>& proto_repeated_field, std::array<T, N>& arr) {
   panicIf(proto_repeated_field.size() != N,
-          fmt::format("Mismatch between size of repeated proto field {} and size of array {}.",
-                      proto_repeated_field.size(), N));
+          "Mismatch between size of repeated proto field {} and size of array {}.",
+          proto_repeated_field.size(), N);
   // NOLINTNEXTLINE(misc-include-cleaner)
   std::ranges::transform(proto_repeated_field, arr.begin(),
                          [](const auto& proto_value) { return static_cast<T>(proto_value); });
@@ -117,8 +116,8 @@ template <typename T, typename ProtoT, std::size_t N>
 void fromProto(const google::protobuf::RepeatedPtrField<ProtoT>& proto_repeated_ptr_field,
                std::array<T, N>& arr) {
   panicIf(proto_repeated_ptr_field.size() != N,
-          fmt::format("Mismatch between size of repeated proto ptr field {} and size of array {}.",
-                      proto_repeated_ptr_field.size(), N));
+          "Mismatch between size of repeated proto ptr field {} and size of array {}.",
+          proto_repeated_ptr_field.size(), N);
   // NOLINTNEXTLINE(misc-include-cleaner)
   std::ranges::transform(proto_repeated_ptr_field, arr.begin(), [](const auto& proto_value) {
     T value;

@@ -66,8 +66,7 @@ template <class T>
   options.add_whitespace = true;
   options.always_print_fields_with_no_presence = true;
   auto status = google::protobuf::util::MessageToJsonString(proto, &json_string, options);
-  panicIf(!status.ok(),
-          fmt::format("failed to convert proto message to JSON with error: {}", status.message()));
+  panicIf(!status.ok(), "failed to convert proto message to JSON with error: {}", status.message());
 
   return json_string;
 }
@@ -96,8 +95,7 @@ void deserializeFromJSON(std::string_view buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto status = google::protobuf::util::JsonStringToMessage(buffer, &proto);
-  panicIf(!status.ok(),
-          fmt::format("failed to load proto message from JSON with error: {}", status.message()));
+  panicIf(!status.ok(), "failed to load proto message from JSON with error: {}", status.message());
 
   fromProto(proto, data);
 }

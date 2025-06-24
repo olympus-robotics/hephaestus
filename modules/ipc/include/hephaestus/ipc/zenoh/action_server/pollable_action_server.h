@@ -162,9 +162,9 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 void PollableActionServer<RequestT, StatusT, ReplyT>::complete(ReplyT reply) {
   std::unique_lock lock(mutex_);
 
-  heph::panicIf(state_ != State::IN_PROGRESS && state_ != State::IN_PROGRESS_SHOULD_ABORT,
-                "PollableActionServer::complete should only be called when the current state is "
-                "IN_PROGRESS or IN_PROGRESS_SHOULD_ABORT.");
+  panicIf(state_ != State::IN_PROGRESS && state_ != State::IN_PROGRESS_SHOULD_ABORT,
+          "PollableActionServer::complete should only be called when the current state is "
+          "IN_PROGRESS or IN_PROGRESS_SHOULD_ABORT.");
 
   reply_ = std::move(reply);
   state_ = State::COMPLETED;
@@ -176,9 +176,9 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 void PollableActionServer<RequestT, StatusT, ReplyT>::setStatus(StatusT status) {
   std::unique_lock lock(mutex_);
 
-  heph::panicIf(state_ != State::IN_PROGRESS && state_ != State::IN_PROGRESS_SHOULD_ABORT,
-                "PollableActionServer::setStatus should only be called when the current state is "
-                "IN_PROGRESS or IN_PROGRESS_SHOULD_ABORT.");
+  panicIf(state_ != State::IN_PROGRESS && state_ != State::IN_PROGRESS_SHOULD_ABORT,
+          "PollableActionServer::setStatus should only be called when the current state is "
+          "IN_PROGRESS or IN_PROGRESS_SHOULD_ABORT.");
 
   status_ = status;
   condition_variable_.notify_one();

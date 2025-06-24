@@ -15,7 +15,6 @@
 #include <random>
 #include <string>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/utils/concepts.h"
@@ -195,7 +194,7 @@ namespace internal {
     -> size_t {
   if (fixed_size.has_value()) {
     panicIf(allow_empty == false && fixed_size.value() == 0,
-            fmt::format("fixed_size must be non-zero if allow_empty == true"));
+            "fixed_size must be non-zero if allow_empty == true");
     return fixed_size.value();
   }
 

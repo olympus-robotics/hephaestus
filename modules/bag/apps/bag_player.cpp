@@ -11,7 +11,6 @@
 #include <utility>
 
 #include <fmt/base.h>
-#include <fmt/format.h>
 #include <mcap/errors.hpp>
 #include <mcap/reader.hpp>
 
@@ -43,8 +42,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 
-    heph::panicIf(!std::filesystem::exists(input_file),
-                  fmt::format("input bag file {} doesn't exist", input_file.string()));
+    heph::panicIf(!std::filesystem::exists(input_file), "input bag file {} doesn't exist",
+                  input_file.string());
     auto bag_reader = std::make_unique<mcap::McapReader>();
     const auto status = bag_reader->open(input_file.string());
     if (status.code != mcap::StatusCode::Success) {

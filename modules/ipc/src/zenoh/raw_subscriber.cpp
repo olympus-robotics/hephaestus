@@ -13,7 +13,6 @@
 #include <utility>
 
 #include <absl/strings/numbers.h>
-#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/ext/advanced_subscriber.hxx>
@@ -99,8 +98,8 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
       session_->zenoh_session.ext().declare_advanced_subscriber(
           keyexpr, [this](const ::zenoh::Sample& sample) { this->callback(sample); }, []() {},
           std::move(sub_options), &result));
-  panicIf(result != Z_OK, fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}",
-                                      topic_config_.name, result));
+  panicIf(result != Z_OK, "[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name,
+          result);
 
   if (config.create_liveliness_token) {
     liveliness_token_ =

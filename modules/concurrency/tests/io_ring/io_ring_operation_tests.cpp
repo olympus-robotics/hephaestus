@@ -68,8 +68,8 @@ TEST(IoRingTest, IoRingOperationRegistry) {
   EXPECT_TRUE(test_operation1.prepare_called);
   EXPECT_TRUE(test_operation1.handle_completion_called);
 
-  EXPECT_THROW(registry.prepare(1, nullptr, nullptr), heph::Panic);
-  EXPECT_THROW(registry.handleCompletion(1, nullptr, nullptr), heph::Panic);
+  EXPECT_THROW(registry.prepare(1, nullptr, nullptr), Panic);
+  EXPECT_THROW(registry.handleCompletion(1, nullptr, nullptr), Panic);
 
   auto idx3 = registry.registerOperation<TestOperation2>();
   EXPECT_EQ(idx3, 1);
@@ -97,8 +97,8 @@ TEST(IoRingTest, IoRingOperationRegistry) {
   EXPECT_TRUE(test_operation2.prepare_called);
   EXPECT_TRUE(test_operation2.handle_completion_called);
 
-  EXPECT_THROW(registry.prepare(2, nullptr, nullptr), heph::Panic);
-  EXPECT_THROW(registry.handleCompletion(2, nullptr, nullptr), heph::Panic);
+  EXPECT_THROW(registry.prepare(2, nullptr, nullptr), Panic);
+  EXPECT_THROW(registry.handleCompletion(2, nullptr, nullptr), Panic);
 }
 
 TEST(IoRingTest, IoRingOperationPointer) {
@@ -138,15 +138,15 @@ TEST(IoRingTest, IoRingOperationPointer) {
 
   EXPECT_THROW(
       IoRingOperationRegistry::instance().prepare(IoRingOperationRegistry::instance().size, nullptr, nullptr),
-      heph::Panic);
+      Panic);
   EXPECT_THROW(IoRingOperationRegistry::instance().handleCompletion(IoRingOperationRegistry::instance().size,
                                                                     nullptr, nullptr),
-               heph::Panic);
+               Panic);
   EXPECT_THROW(IoRingOperationRegistry::instance().prepare(IoRingOperationRegistry::instance().size + 2,
                                                            nullptr, nullptr),
-               heph::Panic);
+               Panic);
   EXPECT_THROW(IoRingOperationRegistry::instance().handleCompletion(
                    IoRingOperationRegistry::instance().size + 2, nullptr, nullptr),
-               heph::Panic);
+               Panic);
 }
 }  // namespace heph::concurrency::io_ring::tests

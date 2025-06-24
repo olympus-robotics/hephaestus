@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
@@ -40,7 +39,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto res = buffer.deserialize(proto);
-  panicIf(!res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
+  panicIf(!res, "Failed to parse {} from incoming buffer", utils::getTypeName<T>());
 
   fromProto(proto, data);
 }

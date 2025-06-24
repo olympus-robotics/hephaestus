@@ -9,7 +9,6 @@
 #include <system_error>
 #include <type_traits>
 
-#include <fmt/format.h>
 #include <liburing.h>
 #include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>
@@ -75,8 +74,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCom
     return;
   }
   if (res < 0) {
-    heph::panic(
-        fmt::format("StopOperation failed: {}", std::error_code(-res, std::system_category()).message()));
+    panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
   }
   if (self->in_flight == 0) {
     self->operation.handleStopped();

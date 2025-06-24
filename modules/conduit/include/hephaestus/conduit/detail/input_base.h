@@ -108,7 +108,7 @@ public:
           node_->engine().scheduler().schedule() |
           stdexec::then([this, u = std::forward<U>(u)] { return setValue(std::move(u)); }));
       if (!res.has_value()) {
-        heph::panic("Could not set value, engine was stopped");
+        panic("Could not set value, engine was stopped");
       }
       return std::get<0>(*res);
     }

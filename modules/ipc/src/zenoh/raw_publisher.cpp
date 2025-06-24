@@ -10,7 +10,6 @@
 #include <string>
 #include <utility>
 
-#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/encoding.hxx>
@@ -60,8 +59,8 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::PUBLISHER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-    panicIf(result != Z_OK, fmt::format("[Publisher {}] failed to create livelines token, result {}",
-                                        topic_config_.name, result));
+    panicIf(result != Z_OK, "[Publisher {}] failed to create liveliness token, result {}", topic_config_.name,
+            result);
   }
 
   if (match_cb_) {

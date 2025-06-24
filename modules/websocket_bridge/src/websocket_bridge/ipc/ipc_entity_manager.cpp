@@ -20,7 +20,6 @@
 
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/format.h>
 
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
@@ -216,8 +215,7 @@ auto IpcEntityManager::hasPublisher(const std::string& topic) const -> bool {
 void IpcEntityManager::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  heph::panicIf(publishers_.contains(topic),
-                fmt::format("[IPC Interface] - Publisher for topic '{}' already exists!", topic));
+  panicIf(publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' already exists!", topic);
 
   auto publisher_config = ipc::zenoh::PublisherConfig{ .cache_size = std::nullopt,
                                                        .create_liveliness_token = true,
@@ -235,8 +233,8 @@ void IpcEntityManager::addPublisher(const std::string& topic, const serdes::Type
 void IpcEntityManager::removePublisher(const std::string& topic) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  heph::panicIf(!publishers_.contains(topic),
-                fmt::format("[IPC Interface] - Publisher for topic '{}' does NOT already exists!", topic));
+  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
+          topic);
 
   publishers_.erase(topic);
 }
@@ -244,8 +242,8 @@ void IpcEntityManager::removePublisher(const std::string& topic) {
 auto IpcEntityManager::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
   const absl::MutexLock lock(&mutex_pub_);
 
-  heph::panicIf(!publishers_.contains(topic),
-                fmt::format("[IPC Interface] - Publisher for topic '{}' does NOT already exists!", topic));
+  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
+          topic);
 
   return publishers_[topic]->publish(data);
 }

@@ -141,7 +141,7 @@ struct TriggerExceptionOperation : Node<TriggerExceptionOperation, BasicOperatio
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().triggered = true;
-    heph::panic("Running around with scissors is dangerous");
+    panic("Running around with scissors is dangerous");
     return stdexec::just();
   }
 
@@ -156,7 +156,7 @@ TEST(NodeTests, nodeTriggerException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<TriggerExceptionOperation>();
 
-  EXPECT_THROW(engine.run(), heph::Panic);
+  EXPECT_THROW(engine.run(), Panic);
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_FALSE(dummy->data().executed);
   EXPECT_FALSE(TriggerExceptionOperation::HAS_PERIOD);
@@ -174,7 +174,7 @@ struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, BasicOper
     EXPECT_TRUE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().executed = true;
-    heph::panic("Running around with scissors is dangerous");
+    panic("Running around with scissors is dangerous");
   }
 };
 
@@ -182,7 +182,7 @@ TEST(NodeTests, nodeExecutionException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<ExecutionExceptionOperation>();
 
-  EXPECT_THROW(engine.run(), heph::Panic);
+  EXPECT_THROW(engine.run(), Panic);
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_TRUE(dummy->data().executed);
   EXPECT_FALSE(ExecutionExceptionOperation::HAS_PERIOD);
