@@ -193,7 +193,15 @@ void EndpointDiscovery::createLivelinessSubscriber() {
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
     auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
     if (info.has_value() && topic_filter_.isAcceptable(info->topic)) {
-      infos_consumer_->queue().forcePush(std::move(*info));
+      auto dropped_element = infos_consumer_->queue().forcePush(std::move(*info));
+      if (dropped_element.has_value()) {
+        heph::log(heph::ERROR,
+                  "Dropped endpoint discovery info before being able to process due to full queue",
+                  "dropped_info", fmt::to_string(dropped_element.value()));
+      }
+    } else {
+      heph::log(heph::ERROR, "failed to parse liveliness token", "keyexpr",
+                sample.get_keyexpr().as_string_view(), "kind", magic_enum::enum_name(sample.get_kind()));
     }
   };
 
@@ -201,8 +209,7 @@ void EndpointDiscovery::createLivelinessSubscriber() {
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
           keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, { .history = true }, &result));
-  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber, err {}",
-          result);
+  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber");
 }
 
 }  // namespace heph::ipc::zenoh
