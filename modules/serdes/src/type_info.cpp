@@ -36,6 +36,20 @@ auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
            .original_type = data["original_type"] };
 }
 
+auto TypeInfo::isValid() const -> bool {
+  switch (serialization) {
+    case Serialization::TEXT:
+    case Serialization::JSON:
+      // For TEXT and JSON, no additional information is technically required.
+      return true;
+    case Serialization::PROTOBUF:
+      // For PROTOBUF, name and schema must not be empty.
+      // The schema should also be a valid protobuf definition, but we will not check that here.
+      return !schema.empty() && !name.empty();
+  }
+  return false;
+}
+
 auto ServiceTypeInfo::toJson() const -> std::string {
   nlohmann::json data;
   data["request"] = nlohmann::json::parse(request.toJson());
@@ -48,6 +62,10 @@ auto ServiceTypeInfo::fromJson(const std::string& info) -> ServiceTypeInfo {
   auto data = nlohmann::json::parse(info);
   return { .request = TypeInfo::fromJson(data["request"].dump()),
            .reply = TypeInfo::fromJson(data["reply"].dump()) };
+}
+
+auto ServiceTypeInfo::isValid() const -> bool {
+  return request.isValid() && reply.isValid();
 }
 
 auto ActionServerTypeInfo::toJson() const -> std::string {
@@ -65,4 +83,5 @@ auto ActionServerTypeInfo::fromJson(const std::string& info) -> ActionServerType
            .reply = TypeInfo::fromJson(data["reply"].dump()),
            .status = TypeInfo::fromJson(data["status"].dump()) };
 }
+
 }  // namespace heph::serdes

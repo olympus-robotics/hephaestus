@@ -22,6 +22,7 @@ struct TypeInfo {
 
   [[nodiscard]] auto toJson() const -> std::string;
   [[nodiscard]] static auto fromJson(const std::string& info) -> TypeInfo;
+  [[nodiscard]] auto isValid() const -> bool;
   [[nodiscard]] auto operator==(const TypeInfo&) const -> bool = default;
 };
 
@@ -31,6 +32,7 @@ struct ServiceTypeInfo {
 
   [[nodiscard]] auto toJson() const -> std::string;
   [[nodiscard]] static auto fromJson(const std::string& info) -> ServiceTypeInfo;
+  [[nodiscard]] auto isValid() const -> bool;
   [[nodiscard]] auto operator==(const ServiceTypeInfo&) const -> bool = default;
 };
 

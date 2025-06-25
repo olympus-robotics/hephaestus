@@ -19,6 +19,7 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <zenoh.h>
+#include <zenoh/api/base.hxx>
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
@@ -33,6 +34,7 @@
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -170,20 +172,7 @@ EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicFilter topic_filte
   , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<EndpointInfo>>(
         [this](const EndpointInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
   infos_consumer_->start();
-  // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
-  // This means that we won't get the list of publisher that are already running.
-  // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfEndpoints(*session_, topic_filter_);
-  for (const auto& info : publishers_info) {
-    infos_consumer_->queue().forcePush(info);
-  }
 
-  // Here we create the subscriber for the liveliness tokens.
-  // NOTE: If a publisher start publishing between the previous call and the time needed to start the
-  // subscriber, we will loose that publisher.
-  // This could be avoided by querying for the list of publisher after we start the subscriber and keeping a
-  // track of what we already advertised so not to call the user callback twice on the same event.
-  // TODO: implement the optimization described above.
   createLivelinessSubscriber();
 }
 
@@ -208,9 +197,12 @@ void EndpointDiscovery::createLivelinessSubscriber() {
     }
   };
 
+  ::zenoh::ZResult result{};
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
-          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none));
+          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, { .history = true }, &result));
+  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber, err {}",
+          result);
 }
 
 }  // namespace heph::ipc::zenoh
