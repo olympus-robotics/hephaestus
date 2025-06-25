@@ -84,5 +84,6 @@ auto ActionServerTypeInfo::fromJson(const std::string& info) -> ActionServerType
   return { .request = TypeInfo::fromJson(data["request"].dump()),
            .reply = TypeInfo::fromJson(data["reply"].dump()),
            .status = TypeInfo::fromJson(data["status"].dump()) };
+}
 
 }  // namespace heph::serdes
