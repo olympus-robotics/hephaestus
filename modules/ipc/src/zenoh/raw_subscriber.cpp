@@ -156,7 +156,7 @@ void RawSubscriber::createTypeInfoService() {
     // Do nothing.
   };
 
-  ServiceConfig service_config = {
+  const ServiceConfig service_config = {
     .create_liveliness_token = false,
     .create_type_info_service = false,
   };

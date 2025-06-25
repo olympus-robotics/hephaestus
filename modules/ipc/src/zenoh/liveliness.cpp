@@ -19,6 +19,7 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <zenoh.h>
+#include <zenoh/api/base.hxx>
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
@@ -33,6 +34,7 @@
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -208,13 +210,12 @@ void EndpointDiscovery::createLivelinessSubscriber() {
     }
   };
 
-  ::zenoh::Session::LivelinessSubscriberOptions options {
-    .history = true,
-  };
-
+  ::zenoh::ZResult result{};
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
-          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, std::move(options)));
+          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, { .history = true }, &result));
+  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber, err {}",
+          result);
 }
 
 }  // namespace heph::ipc::zenoh

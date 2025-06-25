@@ -46,8 +46,6 @@ auto TypeInfo::isValid() const -> bool {
       // For PROTOBUF, name and schema must not be empty.
       // The schema should also be a valid protobuf definition, but we will not check that here.
       return !schema.empty() && !name.empty();
-    default:
-      panic(fmt::format("unknown serialization type: {}", magic_enum::enum_name(serialization)));
   }
   return false;
 }

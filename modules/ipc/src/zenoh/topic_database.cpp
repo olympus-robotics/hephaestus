@@ -65,10 +65,8 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   const auto response =
       zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
 
-  if (response.size() > 1) {
-    heph::log(heph::WARN, "received multiple type info responses for service", "responses", response.size(),
-              "topic", topic, "query_topic", query_topic);
-  }
+  heph::logIf(heph::WARN, response.size() > 1, "received multiple type info responses for topic", "responses",
+              response.size(), "topic", topic, "query_topic", query_topic);
 
   const absl::MutexLock lock{ &topic_mutex_ };
   // While waiting for the query someone else could have added the topic type to the DB.
@@ -100,10 +98,8 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   const auto response =
       zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
 
-  if (response.size() > 1) {
-    heph::log(heph::WARN, "received multiple service type info responses for service", "responses",
-              response.size(), "service", topic, "query_topic", query_topic);
-  }
+  heph::logIf(heph::WARN, response.size() > 1, "received multiple type info responses for service",
+              "responses", response.size(), "service", topic, "query_topic", query_topic);
 
   const absl::MutexLock lock{ &service_mutex_ };
   // While waiting for the query someone else could have added the service type to the DB.

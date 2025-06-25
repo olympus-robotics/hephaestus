@@ -113,7 +113,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
       session_, ipc::TopicConfig{ topic },
       // NOLINTNEXTLINE(bugprone-exception-escape)
       [subscriber_cb, type_info = topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
-                                       std::span<const std::byte> data) {
+                                                   std::span<const std::byte> data) {
         subscriber_cb(metadata, data, type_info);
       },
       topic_type_info, subscriber_config);

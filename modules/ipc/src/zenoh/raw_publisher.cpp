@@ -103,12 +103,12 @@ void RawPublisher::createTypeInfoService() {
   auto failure_callback = [topic_name = topic_config_.name]() {
     heph::log(heph::ERROR, "Failed to process type info service", "topic", topic_name);
   };
-  
+
   auto post_reply_callback = []() {
     // Do nothing.
   };
 
-  ServiceConfig service_config = {
+  const ServiceConfig service_config = {
     .create_liveliness_token = false,
     .create_type_info_service = false,
   };

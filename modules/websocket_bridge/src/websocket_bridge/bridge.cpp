@@ -458,7 +458,7 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
   const auto client_handle = client_handle_w_name.first;
 
   if (responses.empty()) {
-    auto msg = "[WS Bridge] - Timeout - no service responses received.";
+    const auto* msg = "[WS Bridge] - Timeout - no service responses received.";
     heph::log(heph::ERROR, msg, "service_name", service_name, "service_id", service_id, "call_id", call_id);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
@@ -471,7 +471,7 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
 
   const auto& response = responses.front();
   if (response.topic != service_name) {
-    auto msg = "[WS Bridge] - Response and request names do not match!";
+    const auto* msg = "[WS Bridge] - Response and request names do not match!";
     heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id, "response_topic",
               response.topic, "service_name", service_name, "service_name_in_response", response.topic);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
@@ -480,7 +480,8 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
 
   WsServiceResponse ws_server_response;
   if (!convertIpcRawServiceResponseToWsServiceResponse(service_id, call_id, response, ws_server_response)) {
-    auto msg = "[WS Bridge] - Failed to convert IPC service response to WS service response for service";
+    const auto* msg =
+        "[WS Bridge] - Failed to convert IPC service response to WS service response for service";
     heph::log(heph::ERROR, msg, "service_name", service_name, "service_id", service_id, "call_id", call_id,
               "service_name", service_name);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
