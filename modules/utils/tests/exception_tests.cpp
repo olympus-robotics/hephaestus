@@ -37,9 +37,8 @@ TEST(Exception, ThrowNoArg) {
   try {
     throwing_func();
   } catch (Panic& e) {
-    EXPECT_THAT(e.what(), testing::MatchesRegex(fmt::format(
-                              "^.*modules/utils/tests/exception_tests.cpp.*type mismatch no arg.*$",
-                              TEST_FORMAT_VALUE)));
+    EXPECT_THAT(e.what(),
+                testing::MatchesRegex("^.*modules/utils/tests/exception_tests.cpp.*type mismatch no arg.*$"));
   }
 #endif
 }
