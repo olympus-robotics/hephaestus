@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include <string_view>
+#include <string>
 #include <utility>
 
-#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "detail/node_base.h"
