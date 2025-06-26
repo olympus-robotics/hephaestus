@@ -14,14 +14,14 @@
 #include <exec/task.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <hephaestus/concurrency/context_scheduler.h>
-#include <hephaestus/net/endpoint.h>
 #include <sys/socket.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/net/accept.h"
 #include "hephaestus/net/acceptor.h"
+#include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
@@ -30,6 +30,7 @@
 
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
+static constexpr double KB = 1024.;
 // NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
@@ -50,8 +51,9 @@ auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socke
       }
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> duration = end - begin;
+
       fmt::println(stderr, "Receive, {:.2f}s, {:.2f} KB/s", duration.count(),
-                   (static_cast<double>(message.size()) / 1024.) / duration.count());
+                   (static_cast<double>(message.size()) / KB) / duration.count());
     }
 
     {

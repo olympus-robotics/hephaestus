@@ -17,12 +17,12 @@
 #include <exec/task.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <hephaestus/concurrency/context_scheduler.h>
-#include <hephaestus/net/endpoint.h>
 #include <sys/socket.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
@@ -38,12 +38,12 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
   socket.connect(endpoint);
 
   for (std::size_t i : { 1ull, 2ull, 4ull, 8ull, 16ull, 32ull, 64ull, 128ull, 256ull, 512ull, 672ull, 1024ull,
-                         4048ull, 8192ull, 16384ull, 32768ull, 65536ull, 131072ull }) {
+                         4048ull, 8192ull, 16384ull, 32768ull, 65536ull, 131072ull, 1'048'576ull }) {
     std::vector<char> message(i);
     message.back() = 'e';
 
     auto begin = std::chrono::high_resolution_clock::now();
-    static constexpr std::size_t NUM_ITERATIONS = 10;
+    static constexpr std::size_t NUM_ITERATIONS = 1;
     for (std::size_t j = 0; j != NUM_ITERATIONS; ++j) {
       auto send_buffer = std::as_bytes(std::span{ message });
       auto recv_buffer = std::as_writable_bytes(std::span{ message }).subspan(0, 1);
@@ -55,7 +55,8 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
     std::chrono::duration<double> duration = end - begin;
     static constexpr double KB = 1024.;
     auto throughput = (static_cast<double>(message.size() * NUM_ITERATIONS) / duration.count()) / KB;
-    fmt::println(stderr, "Bytes: {}, {:.2f}, {:.2f}KB/s", message.size(), duration.count() / 10., throughput);
+    fmt::println(stderr, "Bytes: {}, Duration: {:.2f}s, {:.2f}KB/s", message.size(),
+                 duration.count() / NUM_ITERATIONS, throughput);
   }
   auto prev = clients_left.fetch_sub(1);
   if (prev == 1) {

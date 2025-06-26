@@ -35,6 +35,7 @@ void Socket::setupBTSocket(bool set_mtu) {
 
     opts.imtu = BT_PACKET_SIZE;
     opts.omtu = BT_PACKET_SIZE;
+    opts.mode = L2CAP_MODE_STREAMING;
 
     if (setsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, optlen) < 0) {
       panic("unable to set l2cap options: {}", std::error_code(errno, std::system_category()).message());
@@ -51,6 +52,11 @@ void Socket::setupBTSocket(bool set_mtu) {
   if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize)) < 0) {
     panic("unable to set send buffer size: {}", std::error_code(errno, std::system_category()).message());
   }
+
+  // int mode = BT_MODE_STREAMING;
+  // if (setsockopt(fd_, SOL_BLUETOOTH, BT_MODE, &mode, sizeof(mode)) < 0) {
+  //   panic("unable to set bluetooth mode: {}", std::error_code(errno, std::system_category()).message());
+  // }
 }
 void Socket::setupUDPSocket() {
   if (localEndpoint().family() == AF_BLUETOOTH) {
