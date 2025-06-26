@@ -12,7 +12,7 @@
 
 namespace heph::net {
 
-enum struct IpFamily : std::uint8_t { V4, V6 };
+enum struct IpFamily : std::uint8_t { V4, V6, BT };
 
 class Endpoint {
 public:

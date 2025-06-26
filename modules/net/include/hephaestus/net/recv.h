@@ -55,7 +55,8 @@ struct RecvOperation {
   std::size_t transferred{ 0 };
 
   void prepare(::io_uring_sqe* sqe) const {
-    auto to_transfer = buffer.subspan(transferred);
+    auto recv_size = std::min(socket->maximumRecvSize(), buffer.size() - transferred);
+    auto to_transfer = buffer.subspan(transferred, recv_size);
     ::io_uring_prep_recv(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), 0);
   }
 
