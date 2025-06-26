@@ -75,7 +75,7 @@ private:
   std::unique_ptr<Service<std::string, std::string>> type_service_;
 
   bool dedicated_callback_thread_;
-  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 100;
+  static constexpr std::size_t DEFAULT_CACHE_RESERVES = 1000;
   std::unique_ptr<concurrency::MessageQueueConsumer<Message>> callback_messages_consumer_;
 };
 
