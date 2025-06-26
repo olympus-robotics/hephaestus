@@ -30,7 +30,10 @@
 
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
+<<<<<<< HEAD
 static constexpr double KB = 1024.;
+=======
+>>>>>>> f0d950f (Adding Bluetooth l2cap support to net module)
 // NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
@@ -51,9 +54,14 @@ auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socke
       }
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> duration = end - begin;
+<<<<<<< HEAD
 
       fmt::println(stderr, "Receive, {:.2f}s, {:.2f} KB/s", duration.count(),
                    (static_cast<double>(message.size()) / KB) / duration.count());
+=======
+      fmt::println(stderr, "Receive, {:.2f}s, {:.2f} KB/s", duration.count(),
+                   (static_cast<double>(message.size()) / 1024.) / duration.count());
+>>>>>>> f0d950f (Adding Bluetooth l2cap support to net module)
     }
 
     {

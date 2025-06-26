@@ -101,7 +101,7 @@ auto convertType(Protocol protocol) {
     case heph::net::Protocol::UDP:
       return SOCK_DGRAM;
     case heph::net::Protocol::BT:
-      return SOCK_STREAM;
+      return SOCK_SEQPACKET;
   }
 }
 }  // namespace

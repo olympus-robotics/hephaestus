@@ -38,12 +38,20 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
   socket.connect(endpoint);
 
   for (std::size_t i : { 1ull, 2ull, 4ull, 8ull, 16ull, 32ull, 64ull, 128ull, 256ull, 512ull, 672ull, 1024ull,
+<<<<<<< HEAD
                          4048ull, 8192ull, 16384ull, 32768ull, 65536ull, 131072ull, 1'048'576ull }) {
+=======
+                         4048ull, 8192ull, 16384ull, 32768ull, 65536ull, 131072ull }) {
+>>>>>>> f0d950f (Adding Bluetooth l2cap support to net module)
     std::vector<char> message(i);
     message.back() = 'e';
 
     auto begin = std::chrono::high_resolution_clock::now();
+<<<<<<< HEAD
     static constexpr std::size_t NUM_ITERATIONS = 1;
+=======
+    static constexpr std::size_t NUM_ITERATIONS = 10;
+>>>>>>> f0d950f (Adding Bluetooth l2cap support to net module)
     for (std::size_t j = 0; j != NUM_ITERATIONS; ++j) {
       auto send_buffer = std::as_bytes(std::span{ message });
       auto recv_buffer = std::as_writable_bytes(std::span{ message }).subspan(0, 1);
@@ -55,8 +63,12 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
     std::chrono::duration<double> duration = end - begin;
     static constexpr double KB = 1024.;
     auto throughput = (static_cast<double>(message.size() * NUM_ITERATIONS) / duration.count()) / KB;
+<<<<<<< HEAD
     fmt::println(stderr, "Bytes: {}, Duration: {:.2f}s, {:.2f}KB/s", message.size(),
                  duration.count() / NUM_ITERATIONS, throughput);
+=======
+    fmt::println(stderr, "Bytes: {}, {:.2f}, {:.2f}KB/s", message.size(), duration.count() / 10., throughput);
+>>>>>>> f0d950f (Adding Bluetooth l2cap support to net module)
   }
   auto prev = clients_left.fetch_sub(1);
   if (prev == 1) {
