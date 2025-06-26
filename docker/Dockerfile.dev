@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 
 # Here we can install developer tools if needed
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends zsh curl sudo openssh-client xz-utils fzf fd-find silversearcher-ag ripgrep && \
+    apt-get install -y --no-install-recommends zsh curl sudo openssh-client xz-utils fzf fd-find silversearcher-ag ripgrep libbluetooth-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Install neovim
