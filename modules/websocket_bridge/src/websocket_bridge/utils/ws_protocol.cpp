@@ -27,10 +27,6 @@ auto convertIpcRawServiceResponseToWsServiceResponse(
     WsServiceId service_id, WsServiceCallId call_id,
     const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response, WsServiceResponse& ws_response)
     -> bool {
-  if (raw_response.value.empty()) {
-    return false;
-  }
-
   std::vector<uint8_t> response_data(raw_response.value.size());
   std::ranges::transform(raw_response.value, response_data.begin(),
                          [](std::byte b) { return static_cast<uint8_t>(b); });

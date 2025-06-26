@@ -64,14 +64,19 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 5000 };
   const auto response =
       zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
-  if (response.empty()) {
-    heph::log(heph::ERROR, "failed to get type info, no response from service", "topic", topic);
-    return std::nullopt;
-  }
+
+  heph::logIf(heph::WARN, response.size() > 1, "received multiple type info responses for topic", "responses",
+              response.size(), "topic", topic, "query_topic", query_topic);
 
   const absl::MutexLock lock{ &topic_mutex_ };
-  // While waiting for the query someone else could have added the topic to the DB.
-  if (!topics_type_db_.contains(topic)) {
+  // While waiting for the query someone else could have added the topic type to the DB.
+  const bool already_in_db = topics_type_db_.contains(topic);
+  if (!already_in_db) {
+    if (response.empty()) {
+      heph::log(heph::ERROR, "failed to get type info, no response from service", "topic", topic);
+      return std::nullopt;
+    }
+
     topics_type_db_[topic] = serdes::TypeInfo::fromJson(response.front().value);
   }
 
@@ -92,14 +97,19 @@ auto ZenohTopicDatabase::getTypeInfo(const std::string& topic) -> std::optional<
   static constexpr auto TIMEOUT = std::chrono::milliseconds{ 5000 };
   const auto response =
       zenoh::callService<std::string, std::string>(*session_, TopicConfig{ query_topic }, "", TIMEOUT);
-  if (response.empty()) {
-    heph::log(heph::ERROR, "failed to get type info, no response from service", "topic", topic);
-    return std::nullopt;
-  }
+
+  heph::logIf(heph::WARN, response.size() > 1, "received multiple type info responses for service",
+              "responses", response.size(), "service", topic, "query_topic", query_topic);
 
   const absl::MutexLock lock{ &service_mutex_ };
-  // While waiting for the query someone else could have added the topic to the DB.
-  if (!service_topics_type_db_.contains(topic)) {
+  // While waiting for the query someone else could have added the service type to the DB.
+  const bool already_in_db = service_topics_type_db_.contains(topic);
+  if (!already_in_db) {
+    if (response.empty()) {
+      heph::log(heph::ERROR, "failed to get service type info, no response from service", "service", topic);
+      return std::nullopt;
+    }
+
     service_topics_type_db_[topic] = serdes::ServiceTypeInfo::fromJson(response.front().value);
   }
 
