@@ -29,6 +29,20 @@ TEST(Exception, Throw) {
 #endif
 }
 
+TEST(Exception, ThrowNoArg) {
+#ifndef DISABLE_EXCEPTIONS
+  auto throwing_func = []() { panic("type mismatch no arg"); };
+  EXPECT_THROW_OR_DEATH(throwing_func(), Panic, "type mismatch no arg");
+
+  try {
+    throwing_func();
+  } catch (Panic& e) {
+    EXPECT_THAT(e.what(),
+                testing::MatchesRegex("^.*modules/utils/tests/exception_tests.cpp.*type mismatch no arg.*$"));
+  }
+#endif
+}
+
 TEST(Exception, ConditionalThrow) {
 #ifndef DISABLE_EXCEPTIONS
   auto throwing_func = []() { panicIf(true, "type mismatch {}", TEST_FORMAT_VALUE); };
