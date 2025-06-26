@@ -136,9 +136,8 @@ void RawSubscriber::callback(const ::zenoh::Sample& sample) {
 
   if (dedicated_callback_thread_) {
     auto dropped_element = callback_messages_consumer_->queue().forceEmplace(metadata, std::move(payload));
-    if (dropped_element.has_value()) {
-      heph::log(heph::ERROR, "Dropped subscriber message due to full queue", "topic", topic_config_.name);
-    }
+    logIf(heph::ERROR, dropped_element.has_value(), "Dropped subscriber message due to full queue", "topic",
+          topic_config_.name);
   } else {
     callback_(metadata, { payload.data(), payload.size() });
   }

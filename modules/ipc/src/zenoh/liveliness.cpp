@@ -193,12 +193,10 @@ void EndpointDiscovery::createLivelinessSubscriber() {
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
     auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
     if (info.has_value() && topic_filter_.isAcceptable(info->topic)) {
-      auto dropped_element = infos_consumer_->queue().forcePush(std::move(*info));
-      if (dropped_element.has_value()) {
-        heph::log(heph::ERROR,
-                  "Dropped endpoint discovery info before being able to process due to full queue",
-                  "dropped_info", fmt::to_string(dropped_element.value()));
-      }
+      const auto dropped_element = infos_consumer_->queue().forcePush(std::move(*info));
+      logIf(heph::ERROR, dropped_element.has_value(),
+            "Dropped endpoint discovery info before being able to process due to full queue",
+            "dropped_endpoint_info_topic", dropped_element.value().topic);
     } else {
       heph::log(heph::ERROR, "failed to parse liveliness token", "keyexpr",
                 sample.get_keyexpr().as_string_view(), "kind", magic_enum::enum_name(sample.get_kind()));
