@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/repeat_until.h"
