@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/concurrency",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "@bluez"
     ],
 )
 

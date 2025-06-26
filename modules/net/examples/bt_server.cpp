@@ -51,6 +51,7 @@ auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socke
       }
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> duration = end - begin;
+
       fmt::println(stderr, "Receive, {:.2f}s, {:.2f} KB/s", duration.count(),
                    (static_cast<double>(message.size()) / KB) / duration.count());
     }

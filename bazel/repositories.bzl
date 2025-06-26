@@ -70,3 +70,12 @@ def foreign_cc_repositories():
         patches = ["//bazel/foreign_cc:stdexec.patch"],
         build_file = "//bazel/foreign_cc:stdexec.BUILD",
     )
+
+    BLUEZ_VERSION = "5.83"
+    http_archive(
+        name = "bluez",
+        urls = ["https://github.com/bluez/bluez/archive/refs/tags/{version}.zip".format(version = BLUEZ_VERSION)],
+        strip_prefix = "bluez-" + BLUEZ_VERSION,
+        sha256 = "eaa70128e6705a24da19d7024ec8c81c689e8619021a7e84e3a9057c71876005",
+        build_file = "//bazel/foreign_cc:bluez.BUILD",
+    )
