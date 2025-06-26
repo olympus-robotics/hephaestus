@@ -35,7 +35,10 @@ void Socket::setupBTSocket(bool set_mtu) {
 
     opts.imtu = BT_PACKET_SIZE;
     opts.omtu = BT_PACKET_SIZE;
-    // opts.mode = L2CAP_MODE_STREAMING;
+    opts.mode = L2CAP_MODE_ERTM;
+    opts.fcs = 1;
+    opts.txwin_size = 64;
+    opts.max_tx = 10;
 
     if (setsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, optlen) < 0) {
       panic("unable to set l2cap options: {}", std::error_code(errno, std::system_category()).message());
@@ -98,7 +101,7 @@ auto convertType(Protocol protocol) {
     case heph::net::Protocol::UDP:
       return SOCK_DGRAM;
     case heph::net::Protocol::BT:
-      return SOCK_SEQPACKET;
+      return SOCK_STREAM;
   }
 }
 }  // namespace
