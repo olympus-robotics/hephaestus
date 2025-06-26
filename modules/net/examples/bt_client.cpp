@@ -13,22 +13,16 @@
 #include <string_view>
 #include <utility>
 
-#include <bluetooth.h>
 #include <exec/async_scope.hpp>
 #include <exec/task.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <hci.h>
-#include <hci_lib.h>
 #include <hephaestus/concurrency/context_scheduler.h>
 #include <hephaestus/net/endpoint.h>
-#include <l2cap.h>
 #include <sys/socket.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
-#include "hephaestus/net/accept.h"
-#include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"

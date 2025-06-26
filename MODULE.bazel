@@ -108,4 +108,4 @@ bazel_dep(name = "liburing", version = "2.5")
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "bluez", "cpr", "influxdb", "mcap", "reflect-cpp", "stdexec", "ws_protocol", "zenohc_builder")
+use_repo(external_dependencies, "cpr", "influxdb", "mcap", "reflect-cpp", "stdexec", "ws_protocol", "zenohc_builder")

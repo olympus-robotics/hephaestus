@@ -9,10 +9,10 @@
 #include <system_error>
 
 #include <asm-generic/socket.h>
-#include <bluetooth.h>
-#include <hci.h>
-#include <hci_lib.h>
-#include <l2cap.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
+#include <bluetooth/l2cap.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
