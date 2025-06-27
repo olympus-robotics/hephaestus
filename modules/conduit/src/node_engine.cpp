@@ -15,13 +15,14 @@ NodeEngine::NodeEngine(NodeEngineConfig config)
 }
 void NodeEngine::run() {
   context_.run();
+  stdexec::sync_wait(scope_.on_empty());
   if (exception_) {
     std::rethrow_exception(exception_);
   }
-  stdexec::sync_wait(scope_.on_empty());
 }
 void NodeEngine::requestStop() {
-  context_.requestStop();
+  scope_.request_stop();
   pool_.request_stop();
+  context_.requestStop();
 }
 }  // namespace heph::conduit

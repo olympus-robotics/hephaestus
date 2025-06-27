@@ -14,12 +14,15 @@
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
 namespace heph::conduit::tests {
 
 TEST(ZenohNodeTests, nodeBasic) {
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
   static constexpr auto VALUE = 42.;
   NodeEngine engine{ {} };
 

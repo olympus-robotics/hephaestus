@@ -34,7 +34,7 @@ public:
     auto* ring = operation_.ring;
     env_stop_.emplace(operation_.operation.getStopToken(), StopCallback{ this });
     ring_stop_.emplace(ring->getStopToken(), StopCallback{ this });
-    ring->submit(operation_);
+    ring->submit(&operation_);
   }
 
 private:

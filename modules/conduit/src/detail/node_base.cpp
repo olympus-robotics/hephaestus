@@ -77,6 +77,10 @@ auto NodeBase::nextStartTime(bool has_period) -> ClockT::time_point {
   auto next_time_point = start_time_ + (iteration_ * period);
   if (next_time_point < now) {
     auto last_duration = now - last_steady_;
+    // reset start time to avoid errors propagating if the deadline miss was too large
+    start_time_ = now;
+    iteration_ = 0;
+
     heph::log(heph::WARN, std::string{ MISSED_DEADLINE_WARNING }, "node", nodeName(), "period", period,
               "tick_duration", last_duration, "execution_duration", last_execution_duration_);
     return now;
