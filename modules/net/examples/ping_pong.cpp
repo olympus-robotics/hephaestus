@@ -29,45 +29,42 @@
 
 namespace {
 inline constexpr unsigned PAGE_SIZE = 4096;
-auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
+auto pong(heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PAGE_SIZE> buffer{};
   while (true) {
-    auto received = co_await (scheduler.schedule() |
-                              heph::net::recv(socket, std::as_writable_bytes(std::span{ buffer })));
+    auto received = co_await heph::net::recv(socket, std::as_writable_bytes(std::span{ buffer }));
 
     fmt::print("{}", std::string_view(buffer.data(), received.size()));
 
-    co_await (scheduler.schedule() | heph::net::sendAll(socket, received));
+    co_await heph::net::sendAll(socket, received);
   }
 }
 
-auto server(heph::concurrency::ContextScheduler scheduler, heph::net::Acceptor acceptor) -> exec::task<void> {
+auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
   while (true) {
-    auto socket = co_await (scheduler.schedule() | heph::net::accept(acceptor));
-    scope.spawn(pong(scheduler, std::move(socket)));
+    auto socket = co_await heph::net::accept(acceptor);
+    scope.spawn(pong(std::move(socket)));
   }
 }
 
 auto ping(unsigned i, heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint endpoint)
     -> exec::task<void> {
-  const heph::net::Socket socket(heph::net::IpFamily::V4, heph::net::Protocol::TCP);
+  const auto socket(heph::net::Socket::createTcpIpV4(scheduler.context()));
   socket.connect(endpoint);
 
   for (unsigned j = 0;; ++j) {
     auto message = fmt::format("Ping {}: {} ", i, j);
-    co_await (scheduler.schedule() | heph::net::sendAll(socket, std::as_bytes(std::span{ message })));
+    co_await heph::net::sendAll(socket, std::as_bytes(std::span{ message }));
 
-    co_await (scheduler.schedule() |
-              heph::net::recvAll(socket, std::as_writable_bytes(std::span{ message })));
+    co_await heph::net::recvAll(socket, std::as_writable_bytes(std::span{ message }));
     fmt::println("Pong {}: {}", i, j);
 
     static constexpr std::chrono::seconds WAIT_TIME{ 5 };
     co_await (scheduler.scheduleAfter(WAIT_TIME));
   }
 }
-
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
@@ -82,15 +79,15 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::concurrency::Context context{ {} };
 
-    heph::net::Acceptor acceptor{ heph::net::IpFamily::V4, heph::net::Protocol::TCP };
-    acceptor.bind(heph::net::Endpoint(heph::net::IpFamily::V4, "127.0.0.1"));
+    auto acceptor = heph::net::Acceptor::createTcpIpV4(context);
+    acceptor.bind(heph::net::Endpoint::createIpV4("127.0.0.1"));
     acceptor.listen();
     auto endpoint = acceptor.localEndpoint();
     fmt::println("Server running on {}", endpoint);
 
     exec::async_scope scope;
 
-    scope.spawn(server(context.scheduler(), std::move(acceptor)));
+    scope.spawn(server(std::move(acceptor)));
 
     for (unsigned i = 0; i != num_clients; ++i) {
       scope.spawn(ping(i, context.scheduler(), endpoint));
