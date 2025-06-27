@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <span>
@@ -55,7 +56,8 @@ struct SendOperation {
   std::size_t transferred{ 0 };
 
   void prepare(::io_uring_sqe* sqe) const {
-    auto to_transfer = buffer.subspan(transferred);
+    auto send_size = std::min(socket->maximumSendSize(), buffer.size() - transferred);
+    auto to_transfer = buffer.subspan(transferred, send_size);
     ::io_uring_prep_send(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), 0);
   }
 
