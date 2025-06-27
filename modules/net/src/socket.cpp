@@ -5,13 +5,13 @@
 #include "hephaestus/net/socket.h"
 
 #include <cerrno>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <system_error>
 
 #include <asm-generic/socket.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
 #include <bluetooth/l2cap.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -25,6 +25,8 @@ void Socket::setupBTSocket(bool set_mtu) {
   if (localEndpoint().family() != AF_BLUETOOTH) {
     return;
   }
+  static constexpr std::uint16_t BT_TX_WIN_SIZE = 256;
+  static constexpr std::uint16_t BT_MAX_TX = 100;
   static constexpr std::size_t BT_PACKET_SIZE = 65535;
   if (set_mtu) {
     struct l2cap_options opts{};
@@ -37,8 +39,9 @@ void Socket::setupBTSocket(bool set_mtu) {
     opts.omtu = BT_PACKET_SIZE;
     opts.mode = L2CAP_MODE_ERTM;
     opts.fcs = 1;
-    opts.txwin_size = 64;
-    opts.max_tx = 10;
+    opts.flush_to = 0;
+    opts.txwin_size = BT_TX_WIN_SIZE;
+    opts.max_tx = BT_MAX_TX;
 
     if (setsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, optlen) < 0) {
       panic("unable to set l2cap options: {}", std::error_code(errno, std::system_category()).message());

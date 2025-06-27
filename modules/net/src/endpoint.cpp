@@ -11,11 +11,10 @@
 #include <cstring>
 #include <span>
 #include <system_error>
+#include <vector>
 
 #include <arpa/inet.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
 #include <bluetooth/l2cap.h>
 #include <fmt/format.h>
 #include <netinet/in.h>
@@ -24,14 +23,14 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::net {
-Endpoint::Endpoint(IpFamily family) : Endpoint(family, "", 0) {
-}
+Endpoint::Endpoint(IpFamily family) : Endpoint(family, "", 0) {}
 
-Endpoint::Endpoint(IpFamily family, const std::string& ip) : Endpoint(family, ip, 0) {
-}
+Endpoint::Endpoint(IpFamily family, const std::string &ip)
+    : Endpoint(family, ip, 0) {}
 
 namespace {
-auto createIpV4(const std::string& ip, std::uint16_t port) -> std::vector<std::byte> {
+auto createIpV4(const std::string &ip, std::uint16_t port)
+    -> std::vector<std::byte> {
   sockaddr_in addr{};
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = 0;
@@ -49,10 +48,11 @@ auto createIpV4(const std::string& ip, std::uint16_t port) -> std::vector<std::b
   std::memcpy(address.data(), &addr, sizeof(addr));
   return address;
 }
-auto createIpV6(const std::string& ip, std::uint16_t port) -> std::vector<std::byte> {
+auto createIpV6(const std::string &ip, std::uint16_t port)
+    -> std::vector<std::byte> {
   sockaddr_in6 addr{};
   addr.sin6_family = AF_INET6;
-  addr.sin6_addr = { { { 0 } } };
+  addr.sin6_addr = {{{0}}};
   if (!ip.empty()) {
     const int res = inet_pton(AF_INET6, ip.c_str(), &addr.sin6_addr);
     if (res == 0) {
@@ -67,7 +67,8 @@ auto createIpV6(const std::string& ip, std::uint16_t port) -> std::vector<std::b
   std::memcpy(address.data(), &addr, sizeof(addr));
   return address;
 }
-auto createBt(const std::string& ip, std::uint16_t port) -> std::vector<std::byte> {
+auto createBt(const std::string &ip, std::uint16_t port)
+    -> std::vector<std::byte> {
   sockaddr_l2 addr{};
   addr.l2_family = AF_BLUETOOTH;
 
@@ -84,21 +85,21 @@ auto createBt(const std::string& ip, std::uint16_t port) -> std::vector<std::byt
   return address;
 }
 
-auto createAddress(IpFamily family, const std::string& ip, std::uint16_t port) -> std::vector<std::byte> {
+auto createAddress(IpFamily family, const std::string &ip, std::uint16_t port)
+    -> std::vector<std::byte> {
   switch (family) {
-    case IpFamily::V4:
-      return createIpV4(ip, port);
-    case IpFamily::V6:
-      return createIpV6(ip, port);
-    case heph::net::IpFamily::BT:
-      return createBt(ip, port);
+  case IpFamily::V4:
+    return createIpV4(ip, port);
+  case IpFamily::V6:
+    return createIpV6(ip, port);
+  case heph::net::IpFamily::BT:
+    return createBt(ip, port);
   }
 }
-}  // namespace
+} // namespace
 
-Endpoint::Endpoint(IpFamily family, const std::string& ip, std::uint16_t port)
-  : address_(createAddress(family, ip, port)) {
-}
+Endpoint::Endpoint(IpFamily family, const std::string &ip, std::uint16_t port)
+    : address_(createAddress(family, ip, port)) {}
 
 auto Endpoint::family() const -> int {
   sockaddr addr{};
@@ -107,61 +108,64 @@ auto Endpoint::family() const -> int {
 }
 
 namespace {
-auto getPortIpV4(const std::vector<std::byte>& address) -> std::uint16_t {
+auto getPortIpV4(const std::vector<std::byte> &address) -> std::uint16_t {
   sockaddr_in addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
   return ::ntohs(addr.sin_port);
 }
-auto getPortIpV6(const std::vector<std::byte>& address) -> std::uint16_t {
+auto getPortIpV6(const std::vector<std::byte> &address) -> std::uint16_t {
   sockaddr_in6 addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
   return ::ntohs(addr.sin6_port);
 }
-auto getPortBt(const std::vector<std::byte>& address) -> std::uint16_t {
+auto getPortBt(const std::vector<std::byte> &address) -> std::uint16_t {
   sockaddr_l2 addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
   return btohs(addr.l2_psm);
 }
-}  // namespace
+} // namespace
 
 auto Endpoint::port() const -> std::uint16_t {
   switch (family()) {
-    case AF_INET:
-      return getPortIpV4(address_);
-    case AF_INET6:
-      return getPortIpV6(address_);
-    case AF_BLUETOOTH:
-      return getPortBt(address_);
-    default:
-      heph::panic("Unknown family");
+  case AF_INET:
+    return getPortIpV4(address_);
+  case AF_INET6:
+    return getPortIpV6(address_);
+  case AF_BLUETOOTH:
+    return getPortBt(address_);
+  default:
+    heph::panic("Unknown family");
   }
   __builtin_unreachable();
 }
 namespace {
-auto getIpV4(const std::vector<std::byte>& address) -> std::string {
+auto getIpV4(const std::vector<std::byte> &address) -> std::string {
   std::array<char, INET_ADDRSTRLEN> buffer{};
 
   sockaddr_in addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
-  if (::inet_ntop(AF_INET, &addr.sin_addr, buffer.data(), static_cast<socklen_t>(buffer.size())) == nullptr) {
-    panic("Could not convert sockaddr to ip: {}", std::error_code(errno, std::system_category()).message());
+  if (::inet_ntop(AF_INET, &addr.sin_addr, buffer.data(),
+                  static_cast<socklen_t>(buffer.size())) == nullptr) {
+    panic("Could not convert sockaddr to ip: {}",
+          std::error_code(errno, std::system_category()).message());
   }
 
-  return std::string{ buffer.data() };
+  return std::string{buffer.data()};
 }
-auto getIpV6(const std::vector<std::byte>& address) -> std::string {
+auto getIpV6(const std::vector<std::byte> &address) -> std::string {
   std::array<char, INET_ADDRSTRLEN> buffer{};
 
   sockaddr_in6 addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
-  if (::inet_ntop(AF_INET6, &addr.sin6_addr, buffer.data(), static_cast<socklen_t>(buffer.size())) ==
-      nullptr) {
-    panic("Could not convert sockaddr to ip: {}", std::error_code(errno, std::system_category()).message());
+  if (::inet_ntop(AF_INET6, &addr.sin6_addr, buffer.data(),
+                  static_cast<socklen_t>(buffer.size())) == nullptr) {
+    panic("Could not convert sockaddr to ip: {}",
+          std::error_code(errno, std::system_category()).message());
   }
 
-  return std::string{ buffer.data() };
+  return std::string{buffer.data()};
 }
-auto getIpBt(const std::vector<std::byte>& address) -> std::string {
+auto getIpBt(const std::vector<std::byte> &address) -> std::string {
   static constexpr std::size_t BT_ADDRSTRLEN = 18;
   std::array<char, BT_ADDRSTRLEN> buffer{};
 
@@ -169,36 +173,36 @@ auto getIpBt(const std::vector<std::byte>& address) -> std::string {
   std::memcpy(&addr, address.data(), sizeof(addr));
 
   if (ba2str(&addr.l2_bdaddr, buffer.data()) == 0) {
-    panic("Could not convert sockaddr to ip: {}", std::error_code(errno, std::system_category()).message());
+    panic("Could not convert sockaddr to ip: {}",
+          std::error_code(errno, std::system_category()).message());
   }
 
-  return std::string{ buffer.data() };
+  return std::string{buffer.data()};
 }
-}  // namespace
+} // namespace
 
 auto Endpoint::ip() const -> std::string {
   switch (family()) {
-    case AF_INET:
-      return getIpV4(address_);
-    case AF_INET6:
-      return getIpV6(address_);
-    case AF_BLUETOOTH:
-      return getIpBt(address_);
-    default:
-      heph::panic("Unknown family");
+  case AF_INET:
+    return getIpV4(address_);
+  case AF_INET6:
+    return getIpV6(address_);
+  case AF_BLUETOOTH:
+    return getIpBt(address_);
+  default:
+    heph::panic("Unknown family");
   }
   __builtin_unreachable();
 }
 
 auto Endpoint::nativeHandle() const -> std::span<const std::byte> {
-  return { address_ };
+  return {address_};
 }
 
-auto Endpoint::nativeHandle() -> std::span<std::byte> {
-  return { address_ };
-}
+auto Endpoint::nativeHandle() -> std::span<std::byte> { return {address_}; }
 
-auto format_as(const Endpoint& endpoint) -> std::string {  // NOLINT(readability-identifier-naming)
+auto format_as(const Endpoint &endpoint)
+    -> std::string { // NOLINT(readability-identifier-naming)
   return fmt::format("{}:{}", endpoint.ip(), endpoint.port());
 }
-}  // namespace heph::net
+} // namespace heph::net
