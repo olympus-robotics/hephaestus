@@ -21,16 +21,16 @@ public:
   Socket(IpFamily family, Protocol protocol);
   ~Socket() noexcept;
 
-  Socket(const Socket &) = delete;
-  auto operator=(const Socket &) -> Socket & = delete;
-  Socket(Socket &&other) noexcept;
-  auto operator=(Socket &&other) noexcept -> Socket &;
+  Socket(const Socket&) = delete;
+  auto operator=(const Socket&) -> Socket& = delete;
+  Socket(Socket&& other) noexcept;
+  auto operator=(Socket&& other) noexcept -> Socket&;
 
   void close() noexcept;
 
-  void bind(const Endpoint &endpoint) const;
+  void bind(const Endpoint& endpoint) const;
 
-  void connect(const Endpoint &endpoint) const;
+  void connect(const Endpoint& endpoint) const;
 
   [[nodiscard]] auto localEndpoint() const -> Endpoint;
 
@@ -38,17 +38,21 @@ public:
 
   [[nodiscard]] auto nativeHandle() const -> int;
 
-  [[nodiscard]] auto maximumRecvSize() const { return maximum_recv_size_; }
+  [[nodiscard]] auto maximumRecvSize() const {
+    return maximum_recv_size_;
+  }
 
-  [[nodiscard]] auto maximumSendSize() const { return maximum_send_size_; }
+  [[nodiscard]] auto maximumSendSize() const {
+    return maximum_send_size_;
+  }
 
 private:
   void setupBTSocket(bool set_mtu);
   void setupUDPSocket();
 
 private:
-  std::size_t maximum_recv_size_{std::numeric_limits<std::size_t>::max()};
-  std::size_t maximum_send_size_{std::numeric_limits<std::size_t>::max()};
-  int fd_{-1};
+  std::size_t maximum_recv_size_{ std::numeric_limits<std::size_t>::max() };
+  std::size_t maximum_send_size_{ std::numeric_limits<std::size_t>::max() };
+  int fd_{ -1 };
 };
-} // namespace heph::net
+}  // namespace heph::net

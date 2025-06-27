@@ -31,8 +31,7 @@ namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
 inline constexpr double KB = 1024.;
 // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-auto pong(heph::concurrency::ContextScheduler scheduler,
-          heph::net::Socket socket) -> exec::task<void> {
+auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
 
   while (true) {
@@ -42,12 +41,9 @@ auto pong(heph::concurrency::ContextScheduler scheduler,
     {
       auto begin = std::chrono::high_resolution_clock::now();
       while (true) {
-        auto received =
-            co_await (scheduler.schedule() |
-                      heph::net::recvAll(
-                          socket, std::as_writable_bytes(std::span{buffer})));
-        message.insert(message.end(), buffer.begin(),
-                       buffer.begin() + received.size());
+        auto received = co_await (scheduler.schedule() |
+                                  heph::net::recvAll(socket, std::as_writable_bytes(std::span{ buffer })));
+        message.insert(message.end(), buffer.begin(), buffer.begin() + received.size());
         if (message.back() == 'e') {
           break;
         }
@@ -56,20 +52,18 @@ auto pong(heph::concurrency::ContextScheduler scheduler,
       const std::chrono::duration<double> duration = end - begin;
 
       fmt::println(stderr, "Receive, {:.2f}s, {:.2f} KB/s", duration.count(),
-                   (static_cast<double>(message.size()) / KB) /
-                       duration.count());
+                   (static_cast<double>(message.size()) / KB) / duration.count());
     }
 
     {
-      auto send_buffer = std::as_bytes(std::span{message}).subspan(0, 1);
+      auto send_buffer = std::as_bytes(std::span{ message }).subspan(0, 1);
       co_await (scheduler.schedule() | heph::net::sendAll(socket, send_buffer));
     }
   }
 }
 
 // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-auto server(heph::concurrency::ContextScheduler scheduler,
-            heph::net::Acceptor acceptor) -> exec::task<void> {
+auto server(heph::concurrency::ContextScheduler scheduler, heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
   // NOLINTNEXTLINE
@@ -79,11 +73,10 @@ auto server(heph::concurrency::ContextScheduler scheduler,
   }
 }
 
-} // namespace
+}  // namespace
 
-auto main(int argc, const char *argv[]) -> int {
-  heph::telemetry::registerLogSink(
-      std::make_unique<heph::telemetry::AbslLogSink>());
+auto main(int argc, const char* argv[]) -> int {
+  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
   try {
     auto desc = heph::cli::ProgramDescription("BT server");
@@ -92,10 +85,9 @@ auto main(int argc, const char *argv[]) -> int {
 
     const auto address = args.getOption<std::string>("address");
 
-    heph::concurrency::Context context{{}};
+    heph::concurrency::Context context{ {} };
 
-    heph::net::Acceptor acceptor{heph::net::IpFamily::BT,
-                                 heph::net::Protocol::BT};
+    heph::net::Acceptor acceptor{ heph::net::IpFamily::BT, heph::net::Protocol::BT };
     acceptor.bind(heph::net::Endpoint(heph::net::IpFamily::BT, address));
     acceptor.listen();
     auto endpoint = acceptor.localEndpoint();
@@ -108,7 +100,7 @@ auto main(int argc, const char *argv[]) -> int {
     context.run();
 
     return 0;
-  } catch (const std::exception &ex) {
+  } catch (const std::exception& ex) {
     fmt::println(stderr, "main terminated with an exception: {}\n", ex.what());
     return 1;
   }
