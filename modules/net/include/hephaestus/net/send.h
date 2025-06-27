@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <functional>
 #include <span>
 #include <system_error>
 #include <tuple>
@@ -16,7 +15,6 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
-#include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
@@ -26,17 +24,8 @@
 namespace heph::net {
 template <bool SendAll>
 struct SendT {
-  template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, const Socket& socket, std::span<const std::byte> buffer) const {
-    auto domain = stdexec::__get_early_domain(sender);
-    return stdexec::transform_sender(domain,
-                                     concurrency::makeSenderExpression<SendT>(std::tuple{ &socket, buffer },
-                                                                              std::forward<Sender>(sender)));
-  }
-
-  auto operator()(const Socket& socket, std::span<const std::byte> buffer) const
-      -> stdexec::__binder_back<SendT, std::reference_wrapper<const Socket>, std::span<const std::byte>> {
-    return { { std::cref(socket), buffer }, {}, {} };
+  auto operator()(const Socket& socket, std::span<const std::byte> buffer) const {
+    return concurrency::makeSenderExpression<SendT>(std::tuple{ &socket, buffer });
   }
 };
 
@@ -92,34 +81,18 @@ struct SendSender : heph::concurrency::DefaultSenderExpressionImpl {
     return stdexec::completion_signatures<stdexec::set_value_t(std::span<const std::byte>),
                                           stdexec::set_error_t(std::error_code), stdexec::set_stopped_t()>{};
   };
-  static constexpr auto GET_ATTRS =  //
-      []<class Child>(heph::concurrency::Ignore, const Child& child) noexcept {
-        return stdexec::__env::__join(
-            stdexec::prop{ stdexec::__is_scheduler_affine_t{},
-                           stdexec::__mbool<stdexec::__is_scheduler_affine<Child>>{} },
-            stdexec::get_env(child));
-      };
 
   static constexpr auto GET_STATE = []<typename Sender, typename Receiver>(Sender&& sender,
                                                                            Receiver&& receiver) noexcept {
-    auto [_, data, child] = std::forward<Sender>(sender);
-    auto* ring =
-        stdexec::get_completion_scheduler<stdexec::set_value_t>(stdexec::get_env(child)).context().ring();
+    auto [_, data] = std::forward<Sender>(sender);
     auto [socket, buffer] = data;
+    auto* ring = socket->context().ring();
     using SendOperationT = SendOperation<SendAll, std::decay_t<Receiver>>;
     using OperationStateT = detail::OperationState<SendOperationT>;
     return OperationStateT{ ring, SendOperationT{ socket, buffer, std::forward<Receiver>(receiver), 0 } };
   };
 
-  static constexpr auto COMPLETE = []<typename Receiver, typename Tag, typename... Args>(
-                                       heph::concurrency::Ignore, auto& operation, Receiver& receiver,
-                                       Tag /*tag*/, Args&&... args) noexcept {
-    if constexpr (std::is_same_v<Tag, stdexec::set_value_t>) {
-      operation.submit();
-    } else {
-      Tag()(std::move(receiver), std::forward<Args>(args)...);
-    }
-  };
+  static constexpr auto START = [](auto& operation, heph::concurrency::Ignore) { operation.submit(); };
 };
 }  // namespace internal
 }  // namespace heph::net
