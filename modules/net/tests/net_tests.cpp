@@ -92,6 +92,37 @@ TEST(Net, Ipv6Endpoint) {
   EXPECT_THROW(Endpoint(IpFamily::V6, ":"), Panic);
 }
 
+TEST(Net, BtEndpoint) {
+  const Endpoint ep0;
+  Endpoint ep1(IpFamily::BT);
+  const Endpoint ep2(IpFamily::BT);
+  Endpoint ep3(IpFamily::BT, "01:02:03:04:05:07");
+  const Endpoint ep4(IpFamily::BT, "01:02:03:04:05:07");
+  const Endpoint ep5(IpFamily::BT, "01:02:03:04:05:07", 1);
+  const Endpoint ep6(IpFamily::BT, "01:02:03:04:05:07", 1);
+  const Endpoint ep7(IpFamily::V4);
+
+  EXPECT_NE(ep0, ep1);
+  EXPECT_EQ(ep1, ep2);
+  EXPECT_EQ(ep3, ep4);
+  EXPECT_EQ(ep5, ep6);
+  EXPECT_NE(ep1, ep3);
+  EXPECT_NE(ep1, ep5);
+  EXPECT_NE(ep3, ep5);
+  EXPECT_NE(ep7, ep4);
+
+  ep3 = ep6;
+  EXPECT_EQ(ep3, ep6);
+  EXPECT_NE(ep3, ep4);
+
+  auto handle1 = ep1.nativeHandle();
+  auto handle2 = ep3.nativeHandle();
+  std::memcpy(handle1.data(), handle2.data(), handle2.size());
+  EXPECT_EQ(ep3, ep1);
+
+  EXPECT_THROW(Endpoint(IpFamily::BT, ":"), Panic);
+}
+
 TEST(Net, TCPOperationsSome) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
@@ -231,5 +262,4 @@ TEST(Net, UDPOperations) {
   context.run();
   EXPECT_EQ(recv_buffer, send_buffer);
 }
-
 }  // namespace heph::net

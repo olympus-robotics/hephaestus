@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/concurrency",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "@bluez",
     ],
 )
 
@@ -30,6 +31,24 @@ heph_cc_library(
 heph_cc_binary(
     name = "ping_pong",
     srcs = ["examples/ping_pong.cpp"],
+    deps = [
+        ":net",
+        "//modules/cli",
+    ],
+)
+
+heph_cc_binary(
+    name = "bt_client",
+    srcs = ["examples/bt_client.cpp"],
+    deps = [
+        ":net",
+        "//modules/cli",
+    ],
+)
+
+heph_cc_binary(
+    name = "bt_server",
+    srcs = ["examples/bt_server.cpp"],
     deps = [
         ":net",
         "//modules/cli",

@@ -3,10 +3,14 @@
 # =================================================================================================
 
 cc_library(
-    name = "cpr",
-    hdrs = glob(["include/cpr/**/*.h"]),
-    includes = ["include"],
+    name = "bluez",
+    srcs = glob([
+        "lib/**/*.c",
+        "lib/**/*.h",
+    ]),
+    hdrs = glob(["lib/**/*.h"]),
+    include_prefix = "bluetooth",
+    includes = ["lib"],
+    strip_include_prefix = "lib",
     visibility = ["//visibility:public"],
-    srcs = glob(["cpr/**/*.cpp"]),
-    deps = ["@curl"],
 )
