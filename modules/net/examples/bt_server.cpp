@@ -30,11 +30,10 @@
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
 inline constexpr double KB = 1024.;
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto pong(heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
 
-  while (!heph::utils::TerminationBlocker::stopRequested()) {
+  while (true) {
     std::vector<char> message;
     message.reserve(PACKET_SIZE * 2);
 
