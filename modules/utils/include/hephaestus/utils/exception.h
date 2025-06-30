@@ -26,18 +26,26 @@ namespace internal {
 ///         String literals are used to enable implicit conversion from string literals.
 ///         The standard guarantees that string literals exist for the entirety of the
 ///         program lifetime, making it safe to use as `StringLiteralWithLocation("my message")`.
-struct StringLiteralWithLocation final {
+template <typename... Ts>
+struct StringLiteralWithLocationImpl final {
   /// @brief Constructor taking a string literal and optional source location
   /// @param s The string literal message
   /// @param l The source location (defaults to current location)
+  template <typename S>
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  StringLiteralWithLocation(const char* s, const std::source_location& l = std::source_location::current())
+  consteval StringLiteralWithLocationImpl(const S& s,
+                                          const std::source_location& l = std::source_location::current())
     : value(s), location(l) {
   }
 
-  const char* value;              ///< The message string literal
-  std::source_location location;  ///< Source code location information
+  fmt::format_string<Ts...> value;  ///< The message string literal
+  std::source_location location;    ///< Source code location information
+
+  using impl = StringLiteralWithLocationImpl;
 };
+
+template <typename... Ts>
+using StringLiteralWithLocation = internal::StringLiteralWithLocationImpl<Ts...>::impl;
 }  // namespace internal
 
 /// @brief Exception class for panic situations
@@ -58,13 +66,8 @@ public:
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panic(internal::StringLiteralWithLocation message, Args&&... args) {
-  std::string formatted_message;
-  if constexpr (sizeof...(args) > 0) {
-    formatted_message = fmt::format(fmt::runtime(message.value), std::forward<Args>(args)...);
-  } else {
-    formatted_message = message.value;
-  }
+void panic(internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
+  std::string formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
 #ifndef DISABLE_EXCEPTIONS
   throw Panic{ std::move(formatted_message), message.location };
 #else
@@ -80,7 +83,7 @@ void panic(internal::StringLiteralWithLocation message, Args&&... args) {
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panicIf(bool condition, internal::StringLiteralWithLocation message, Args&&... args) {
+void panicIf(bool condition, internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
   if (condition) [[unlikely]] {
     panic(std::move(message), std::forward<Args>(args)...);
   }

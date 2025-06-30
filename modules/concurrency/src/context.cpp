@@ -32,7 +32,7 @@ void Context::enqueue(TaskBase* task) {
     tasks_.enqueue(task);
     return;
   }
-  ring_.submit(task->dispatch_operation);
+  ring_.submit(&task->dispatch_operation);
 }
 
 void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time) {
@@ -48,7 +48,7 @@ void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_ti
     timer_.startAt(task, start_time);
     return;
   }
-  ring_.submit(task->dispatch_operation);
+  ring_.submit(&task->dispatch_operation);
 }
 
 auto Context::runTasks() -> bool {

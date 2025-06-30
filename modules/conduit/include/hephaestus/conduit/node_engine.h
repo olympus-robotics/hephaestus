@@ -12,11 +12,11 @@
 #include <vector>
 
 #include <exec/async_scope.hpp>
-#include <exec/repeat_effect_until.hpp>
 #include <exec/static_thread_pool.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/telemetry/log.h"
@@ -70,7 +70,7 @@ public:
     //  1. We don't want to impose a ctor taking the engine parameter on
     //     an  Operator
     //  2. The name might only be fully valid after the node is fully constructed.
-    node->implicit_output_.emplace(node->nodeName());
+    node->implicit_output_.emplace(node, "");
     node->engine_ = this;
     scope_.spawn(createNodeRunner(*node));
     return NodeHandle{ node };
@@ -113,8 +113,9 @@ inline auto NodeEngine::uponError() {
 
 template <typename Node>
 inline auto NodeEngine::createNodeRunner(Node& node) {
-  auto runner = exec::repeat_effect_until(node.triggerExecute() |
-                                          stdexec::then([this] { return context_.stopRequested(); })) |
+  auto runner = heph::concurrency::repeatUntil([&node, this] {
+                  return node.triggerExecute() | stdexec::then([this] { return context_.stopRequested(); });
+                }) |
                 uponError();
   return std::move(runner);
 }

@@ -11,13 +11,13 @@
 #include <vector>
 
 #include <exec/async_scope.hpp>
-#include <exec/repeat_effect_until.hpp>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -70,7 +70,7 @@ auto main(int argc, const char* argv[]) -> int {
                                                                    std::chrono::system_clock::now());
     std::size_t id{ 0 };
     for (auto period : PERIOD) {
-      scope.spawn(exec::repeat_effect_until(
+      scope.spawn(heph::concurrency::repeatUntil(
           context.scheduler().scheduleAfter(period) |
           stdexec::then([period, tag = fmt::format("period={}", period), &last_steady = last_steady[id],
                          &last_system = last_system[id], &context] {

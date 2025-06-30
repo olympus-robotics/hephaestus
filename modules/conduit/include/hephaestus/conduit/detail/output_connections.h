@@ -15,12 +15,15 @@
 #include <utility>
 #include <vector>
 
-#include <exec/repeat_effect_until.hpp>
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/repeat_until.h"
+#include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "node_base.h"
 
 namespace heph::conduit::detail {
 
@@ -50,7 +53,7 @@ public:
   static constexpr std::string_view INPUT_OVERFLOW_WARNING =
       "Delaying Output operation because receiving input would overflow";
 
-  explicit OutputConnections(std::string name) : name_(std::move(name)) {
+  explicit OutputConnections(detail::NodeBase* node, std::string name) : node_(node), name_(std::move(name)) {
   }
 
   auto propagate(NodeEngine& engine) {
@@ -60,7 +63,7 @@ public:
       // Otherwise, we attempt to set the result to connected inputs.
       if constexpr (sizeof...(Ts) == 1) {
         auto args = std::make_tuple(std::forward<Ts>(ts)...);
-        return exec::repeat_effect_until(
+        return heph::concurrency::repeatUntil(
             stdexec::just() | stdexec::let_value([this, &engine]() {
               // TODO: find better way to timeout based on the inputs timing...
               // Currently doing floor(retry^1.5)
@@ -127,7 +130,7 @@ public:
   }
 
   [[nodiscard]] auto name() const -> std::string {
-    return name_;
+    return fmt::format("{}/{}", node_->nodeName(), name_);
   }
 
   template <typename Input>
@@ -144,6 +147,7 @@ private:
   std::vector<InputEntry> inputs_;
   std::size_t generation_{ 0 };
   std::size_t retry_{ 0 };
+  detail::NodeBase* node_;
   std::string name_;
 };
 }  // namespace heph::conduit::detail

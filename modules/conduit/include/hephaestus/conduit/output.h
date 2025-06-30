@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <string_view>
+#include <string>
 #include <utility>
 
-#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
+#include "detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
@@ -19,8 +19,10 @@ template <typename T>
 class Output {
 public:
   template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string_view name)
-    : node_(node), outputs_(fmt::format("{}/{}", node->nodeName(), name)) {
+  explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
+  }
+  auto name() {
+    return outputs_.name();
   }
   auto setValue(NodeEngine& engine, T t) {
     return stdexec::just(std::move(t)) | outputs_.propagate(engine);
@@ -33,6 +35,5 @@ public:
 
 private:
   detail::OutputConnections outputs_;
-  void* node_;
 };
 }  // namespace heph::conduit

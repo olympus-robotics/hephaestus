@@ -97,6 +97,7 @@ private:
     void prepare(::io_uring_sqe* sqe) const;
     void handleCompletion(::io_uring_cqe* cqe) const;
     void handleStopped();
+
     Timer* timer{ nullptr };
     __kernel_timespec next_timeout{};  // NOLINT(misc-include-cleaner)
   };

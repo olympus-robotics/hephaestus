@@ -61,11 +61,21 @@ def foreign_cc_repositories():
         sha256 = "1c7d7b874f2e20d841cd04391d9d0be507ccb75b22f84b65a0fc61a30ac30651",
     )
 
-    STDEXEC_VERSION = "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5"
+    STDEXEC_VERSION = "e8ef02355f809f48229283ade6e788f15631d33f"
     http_archive(
         name = "stdexec",
         urls = ["https://github.com/NVIDIA/stdexec/archive/{version}.zip".format(version = STDEXEC_VERSION)],
         strip_prefix = "stdexec-" + STDEXEC_VERSION,
-        sha256 = "3757e6c935a4b772efbfea69cbdcc7291655dfaf02147b81974e11700fb794db",
+        sha256 = "d0055af1eb42340197f6233502277226204a6693fb999b58d5bba8f9152835cc",
+        patches = ["//bazel/foreign_cc:stdexec.patch"],
         build_file = "//bazel/foreign_cc:stdexec.BUILD",
+    )
+
+    BLUEZ_VERSION = "5.83"
+    http_archive(
+        name = "bluez",
+        urls = ["https://github.com/bluez/bluez/archive/refs/tags/{version}.zip".format(version = BLUEZ_VERSION)],
+        strip_prefix = "bluez-" + BLUEZ_VERSION,
+        sha256 = "eaa70128e6705a24da19d7024ec8c81c689e8619021a7e84e3a9057c71876005",
+        build_file = "//bazel/foreign_cc:bluez.BUILD",
     )

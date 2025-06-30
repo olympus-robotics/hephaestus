@@ -5,9 +5,14 @@
 #include "hephaestus/net/socket.h"
 
 #include <cerrno>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <system_error>
 
+#include <asm-generic/socket.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -16,14 +21,111 @@
 
 namespace heph::net {
 
-Socket::Socket(int fd) : fd_(fd) {
+void Socket::setupBTSocket(bool set_mtu) {
+  if (localEndpoint().family() != AF_BLUETOOTH) {
+    return;
+  }
+  static constexpr std::uint16_t BT_TX_WIN_SIZE = 256;
+  static constexpr std::uint16_t BT_MAX_TX = 100;
+  static constexpr std::size_t BT_PACKET_SIZE = 65535;
+  if (set_mtu) {
+    struct l2cap_options opts{};
+    socklen_t optlen = sizeof(opts);
+    if (getsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, &optlen) < 0) {
+      panic("unable to get l2cap options: {}", std::error_code(errno, std::system_category()).message());
+    }
+
+    opts.imtu = BT_PACKET_SIZE;
+    opts.omtu = BT_PACKET_SIZE;
+    opts.mode = L2CAP_MODE_ERTM;
+    opts.fcs = 1;
+    opts.flush_to = 0;
+    opts.txwin_size = BT_TX_WIN_SIZE;
+    opts.max_tx = BT_MAX_TX;
+
+    if (setsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, optlen) < 0) {
+      panic("unable to set l2cap options: {}", std::error_code(errno, std::system_category()).message());
+    }
+  }
+  maximum_recv_size_ = BT_PACKET_SIZE;
+  maximum_send_size_ = BT_PACKET_SIZE;
+
+  static constexpr int KB = 1024;
+  int bufsize = 4 * KB * KB;
+  if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize)) < 0) {
+    panic("unable to set receive buffer size: {}", std::error_code(errno, std::system_category()).message());
+  }
+  if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize)) < 0) {
+    panic("unable to set send buffer size: {}", std::error_code(errno, std::system_category()).message());
+  }
 }
 
+void Socket::setupUDPSocket() {
+  if (localEndpoint().family() == AF_BLUETOOTH) {
+    return;
+  }
+  static constexpr std::size_t MAX_UDP_PACKET_SIZE = 65507;
+  maximum_recv_size_ = MAX_UDP_PACKET_SIZE;
+  maximum_send_size_ = MAX_UDP_PACKET_SIZE;
+}
+
+Socket::Socket(int fd) : fd_(fd) {
+  setupBTSocket(false);
+  setupUDPSocket();
+}
+
+namespace {
+auto familyToDomain(IpFamily family) {
+  switch (family) {
+    case heph::net::IpFamily::V4:
+      return AF_INET;
+    case heph::net::IpFamily::V6:
+      return AF_INET6;
+    case heph::net::IpFamily::BT:
+      return AF_BLUETOOTH;
+  }
+}
+auto domainToFamily(int domain) {
+  switch (domain) {
+    case AF_INET:
+      return heph::net::IpFamily::V4;
+    case AF_INET6:
+      return heph::net::IpFamily::V6;
+    case AF_BLUETOOTH:
+      return heph::net::IpFamily::BT;
+    default:
+      heph::panic("Unknown domain {}", domain);
+  }
+  __builtin_unreachable();
+}
+auto convertType(Protocol protocol) {
+  switch (protocol) {
+    case heph::net::Protocol::TCP:
+      return SOCK_STREAM;
+    case heph::net::Protocol::UDP:
+      return SOCK_DGRAM;
+    case heph::net::Protocol::BT:
+      return SOCK_SEQPACKET;
+  }
+}
+}  // namespace
+
 Socket::Socket(IpFamily family, Protocol protocol)
-  : fd_(::socket(family == IpFamily::V4 ? AF_INET : AF_INET6,
-                 protocol == Protocol::TCP ? SOCK_STREAM : SOCK_DGRAM, 0)) {
+  : fd_(::socket(familyToDomain(family), convertType(protocol), 0)) {
   if (fd_ == -1) {
     panic("socket: {}", std::error_code(errno, std::system_category()).message());
+  }
+
+  if (protocol == Protocol::BT) {
+    int reuse = 1;
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+      panic("unable to set socket to reuse address: {}",
+            std::error_code(errno, std::system_category()).message());
+    }
+    setupBTSocket(true);
+  }
+  if (protocol == Protocol::UDP) {
+    setupUDPSocket();
   }
 }
 
@@ -31,12 +133,17 @@ Socket::~Socket() noexcept {
   close();
 }
 
-Socket::Socket(Socket&& other) noexcept : fd_(other.fd_) {
+Socket::Socket(Socket&& other) noexcept
+  : maximum_recv_size_(other.maximum_recv_size_)
+  , maximum_send_size_(other.maximum_send_size_)
+  , fd_(other.fd_) {
   other.fd_ = -1;
 }
 
 auto Socket::operator=(Socket&& other) noexcept -> Socket& {
   close();
+  maximum_recv_size_ = other.maximum_recv_size_;
+  maximum_send_size_ = other.maximum_send_size_;
   fd_ = other.fd_;
   other.fd_ = -1;
 
@@ -79,7 +186,7 @@ auto Socket::localEndpoint() const -> Endpoint {
     panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
   }
 
-  Endpoint endpoint(addr.sa_family == AF_INET ? IpFamily::V4 : IpFamily::V6);
+  Endpoint endpoint(domainToFamily(addr.sa_family));
   auto handle = endpoint.nativeHandle();
   if (length != handle.size()) {
     panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());
@@ -99,7 +206,7 @@ auto Socket::remoteEndpoint() const -> Endpoint {
     panic("getpeername: {}", std::error_code(errno, std::system_category()).message());
   }
 
-  Endpoint endpoint(addr.sa_family == AF_INET ? IpFamily::V4 : IpFamily::V6);
+  Endpoint endpoint(domainToFamily(addr.sa_family));
   auto handle = endpoint.nativeHandle();
   if (length != handle.size()) {
     panic("mismatch of sockaddr length got {}, expected {}", length, handle.size());

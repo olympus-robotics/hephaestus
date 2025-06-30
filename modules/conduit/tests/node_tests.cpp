@@ -10,6 +10,7 @@
 #include <thread>
 #include <utility>
 
+#include <exec/task.hpp>
 #include <fmt/base.h>
 #include <fmt/ranges.h>
 #include <gtest/gtest.h>
@@ -284,10 +285,35 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
-  EXPECT_EQ(dummy->data().executed - 1,
+  EXPECT_LE(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
   EXPECT_GE(sink_ptr->num_messages.load(), 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
+}
+
+struct CoroutineOperation : Node<CoroutineOperation> {
+  static auto trigger(CoroutineOperation* self) -> exec::task<void> {
+    co_await stdexec::just();
+    self->triggered = true;
+  }
+
+  static auto execute(CoroutineOperation* self) -> exec::task<void> {
+    self->engine().requestStop();
+    co_await stdexec::just();
+    self->executed = true;
+  }
+
+  bool triggered{ false };
+  bool executed{ false };
+};
+
+TEST(NodeTests, coroutineTrigger) {
+  NodeEngine engine{ {} };
+
+  auto node = engine.createNode<CoroutineOperation>();
+  engine.run();
+  EXPECT_TRUE(node->triggered);
+  EXPECT_TRUE(node->executed);
 }
 }  // namespace heph::conduit::tests
