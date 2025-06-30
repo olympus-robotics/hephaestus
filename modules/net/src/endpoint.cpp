@@ -66,15 +66,15 @@ auto createIpV6(const std::string& ip, std::uint16_t port) -> std::vector<std::b
   std::memcpy(address.data(), &addr, sizeof(addr));
   return address;
 }
-auto createBt(const std::string& ip, std::uint16_t port) -> std::vector<std::byte> {
+auto createBt(const std::string& mac_address, std::uint16_t port) -> std::vector<std::byte> {
   sockaddr_l2 addr{};
   addr.l2_family = AF_BLUETOOTH;
 
   addr.l2_bdaddr = {};
-  if (!ip.empty()) {
-    const int res = str2ba(ip.c_str(), &addr.l2_bdaddr);
+  if (!mac_address.empty()) {
+    const int res = str2ba(mac_address.c_str(), &addr.l2_bdaddr);
     if (res != 0) {
-      panic("Invalid BT address {}", ip);
+      panic("Invalid BT address {}", mac_address);
     }
   }
   addr.l2_psm = htobs(port);

@@ -26,6 +26,7 @@
 #include "hephaestus/net/socket.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/utils/signal_handler.h"
 
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
@@ -34,7 +35,7 @@ inline constexpr double KB = 1024.;
 auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
 
-  while (true) {
+  while (!heph::utils::TerminationBlocker::stopRequested()) {
     std::vector<char> message;
     message.reserve(PACKET_SIZE * 2);
 
@@ -67,7 +68,7 @@ auto server(heph::concurrency::ContextScheduler scheduler, heph::net::Acceptor a
   exec::async_scope scope;
 
   // NOLINTNEXTLINE
-  while (true) {
+  while (!heph::utils::TerminationBlocker::stopRequested()) {
     auto socket = co_await (scheduler.schedule() | heph::net::accept(acceptor));
     scope.spawn(pong(scheduler, std::move(socket)));
   }
