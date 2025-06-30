@@ -9,8 +9,10 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include <absl/strings/str_split.h>
+#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
