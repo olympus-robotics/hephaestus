@@ -9,6 +9,10 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
+
+#include <absl/strings/str_split.h>
+#include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
@@ -19,12 +23,22 @@
 namespace heph::ipc::zenoh {
 namespace {
 constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
+constexpr auto TOPICS_LIST_SPLIT_CHAR = ',';
+
+[[nodiscard]] auto splitTopicsList(const std::string& topics_list) -> std::vector<std::string> {
+  panicIf(topics_list.empty(), "Empty topics list");
+  std::vector<std::string> topics = absl::StrSplit(topics_list, TOPICS_LIST_SPLIT_CHAR);
+  panicIf(topics.empty(), "Invalid topics list: {}", topics_list);
+  return topics;
 }
+}  // namespace
 
 void appendProgramOption(cli::ProgramDescription& program_description,
                          const std::string& default_topic /*= ""*/) {
   program_description.defineOption<std::string>("topic", "Key expression", default_topic)
       .defineOption<std::string>("topic_prefix", "Key expression", "")
+      .defineOption<std::string>("topics_list",
+                                 fmt::format("List of topics separated by '{}'", TOPICS_LIST_SPLIT_CHAR), "")
       .defineFlag("use_binary_name_as_session_id", "Use the binary name as the session id")
       .defineOption<std::string>("session_id", "the session id", "")
       .defineOption<std::string>("zenoh_config",
@@ -51,6 +65,8 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args)
   TopicFilterParams topic_filter_params;
   if (!topic.empty()) {
     topic_filter_params.include_topics_only.push_back(topic);
+  } else if (const auto topics_list = args.getOption<std::string>("topics_list"); !topics_list.empty()) {
+    topic_filter_params.include_topics_only = splitTopicsList(topics_list);
   } else if (auto topic_prefix = args.getOption<std::string>("topic_prefix"); !topic_prefix.empty()) {
     topic_filter_params.prefix = std::move(topic_prefix);
   }
