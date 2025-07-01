@@ -122,8 +122,16 @@ def heph_cc_test(
         linkopts = [],
         deps = [],
         tags = [],
+        env = [],
         size = "small",
         **kwargs):
+    merged_env = dict(env)
+    merged_env.update({
+        # Leak detection currently doesn't work due to zenoh
+        "ASAN_OPTIONS": "detect_leaks=0",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
+        "RUST_BACKTRACE": "full",
+    })
     cc_test(
         copts = heph_copts() + copts,
         linkopts = heph_linkopts() + linkopts,
@@ -131,12 +139,7 @@ def heph_cc_test(
             "@googletest//:gtest",
             "@googletest//:gtest_main",
         ],
-        env = {
-            # Leak detection currently doesn't work due to zenoh
-            "ASAN_OPTIONS": "detect_leaks=0",
-            "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
-            "RUST_BACKTRACE": "full",
-        },
+        env = merged_env,
         tags = tags,
         size = size,
         **kwargs
