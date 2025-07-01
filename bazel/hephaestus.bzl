@@ -122,7 +122,7 @@ def heph_cc_test(
         linkopts = [],
         deps = [],
         tags = [],
-        env = [],
+        env = {},
         size = "small",
         **kwargs):
     merged_env = dict(env)
