@@ -25,6 +25,7 @@
 #include "hephaestus/net/socket.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/utils/signal_handler.h"
 
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
@@ -59,17 +60,14 @@ auto pong(heph::net::Socket socket) -> exec::task<void> {
   }
 }
 
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
-  // NOLINTNEXTLINE
   while (true) {
     auto socket = co_await heph::net::accept(acceptor);
     scope.spawn(pong(std::move(socket)));
   }
 }
-
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
@@ -93,6 +91,8 @@ auto main(int argc, const char* argv[]) -> int {
     exec::async_scope scope;
 
     scope.spawn(server(std::move(acceptor)));
+
+    heph::utils::TerminationBlocker::registerInterruptCallback([&context] { context.requestStop(); });
 
     context.run();
 

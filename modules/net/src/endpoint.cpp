@@ -100,13 +100,13 @@ auto getPortBt(const std::vector<std::byte>& address) -> std::uint16_t {
 
 auto Endpoint::port() const -> std::uint16_t {
   switch (type()) {
-    case heph::net::EndpointType::IPV4:
+    case EndpointType::IPV4:
       return getPortIpV4(address_);
-    case heph::net::EndpointType::IPV6:
+    case EndpointType::IPV6:
       return getPortIpV6(address_);
-    case heph::net::EndpointType::BT:
+    case EndpointType::BT:
       return getPortBt(address_);
-    default:
+    case EndpointType::INVALID:
       heph::panic("Unknown family");
   }
   __builtin_unreachable();
@@ -159,7 +159,7 @@ auto Endpoint::address() const -> std::string {
       return getAddressIpV6(address_);
     case heph::net::EndpointType::BT:
       return getAddressBt(address_);
-    default:
+    case EndpointType::INVALID:
       heph::panic("Unknown family");
   }
   __builtin_unreachable();
