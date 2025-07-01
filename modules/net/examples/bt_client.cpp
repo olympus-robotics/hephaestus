@@ -31,7 +31,7 @@ namespace {
 std::atomic<std::size_t> clients_left{ 0 };
 
 auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint endpoint) -> exec::task<void> {
-  const heph::net::Socket socket(heph::net::IpFamily::BT, heph::net::Protocol::BT);
+  const auto socket = heph::net::Socket::createL2cap(scheduler.context());
 
   socket.connect(endpoint);
 
@@ -47,8 +47,8 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
       auto send_buffer = std::as_bytes(std::span{ message });
       auto recv_buffer = std::as_writable_bytes(std::span{ message }).subspan(0, 1);
 
-      co_await (scheduler.schedule() | heph::net::sendAll(socket, send_buffer) |
-                heph::net::recvAll(socket, recv_buffer));
+      co_await heph::net::sendAll(socket, send_buffer);
+      co_await heph::net::recvAll(socket, recv_buffer);
     }
     auto end = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> duration = end - begin;
@@ -81,7 +81,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::concurrency::Context context{ {} };
 
-    auto endpoint = heph::net::Endpoint(heph::net::IpFamily::BT, address, port);
+    auto endpoint = heph::net::Endpoint::createBt(address, port);
 
     exec::async_scope scope;
 

@@ -17,7 +17,6 @@
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
-#include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/net/accept.h"
 #include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/endpoint.h"
@@ -31,19 +30,17 @@
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
 inline constexpr double KB = 1024.;
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
-auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socket) -> exec::task<void> {
+auto pong(heph::net::Socket socket) -> exec::task<void> {
   std::array<char, PACKET_SIZE> buffer{};
 
-  while (!heph::utils::TerminationBlocker::stopRequested()) {
+  while (true) {
     std::vector<char> message;
     message.reserve(PACKET_SIZE * 2);
 
     {
       auto begin = std::chrono::high_resolution_clock::now();
       while (true) {
-        auto received = co_await (scheduler.schedule() |
-                                  heph::net::recvAll(socket, std::as_writable_bytes(std::span{ buffer })));
+        auto received = co_await heph::net::recv(socket, std::as_writable_bytes(std::span{ buffer }));
         message.insert(message.end(), buffer.begin(), buffer.begin() + received.size());
         if (message.back() == 'e') {
           break;
@@ -58,22 +55,19 @@ auto pong(heph::concurrency::ContextScheduler scheduler, heph::net::Socket socke
 
     {
       auto send_buffer = std::as_bytes(std::span{ message }).subspan(0, 1);
-      co_await (scheduler.schedule() | heph::net::sendAll(socket, send_buffer));
+      co_await heph::net::sendAll(socket, send_buffer);
     }
   }
 }
 
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
-auto server(heph::concurrency::ContextScheduler scheduler, heph::net::Acceptor acceptor) -> exec::task<void> {
+auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
-  // NOLINTNEXTLINE
-  while (!heph::utils::TerminationBlocker::stopRequested()) {
-    auto socket = co_await (scheduler.schedule() | heph::net::accept(acceptor));
-    scope.spawn(pong(scheduler, std::move(socket)));
+  while (true) {
+    auto socket = co_await heph::net::accept(acceptor);
+    scope.spawn(pong(std::move(socket)));
   }
 }
-
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
@@ -88,15 +82,17 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::concurrency::Context context{ {} };
 
-    heph::net::Acceptor acceptor{ heph::net::IpFamily::BT, heph::net::Protocol::BT };
-    acceptor.bind(heph::net::Endpoint(heph::net::IpFamily::BT, address));
+    auto acceptor = heph::net::Acceptor::createL2cap(context);
+    acceptor.bind(heph::net::Endpoint::createBt(address));
     acceptor.listen();
     auto endpoint = acceptor.localEndpoint();
     fmt::println("Server running on {}", endpoint);
 
     exec::async_scope scope;
 
-    scope.spawn(server(context.scheduler(), std::move(acceptor)));
+    scope.spawn(server(std::move(acceptor)));
+
+    heph::utils::TerminationBlocker::registerInterruptCallback([&context] { context.requestStop(); });
 
     context.run();
 

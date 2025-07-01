@@ -61,6 +61,7 @@ ZenohRecorder::Impl::Impl(ZenohRecorderParams params)
               const absl::MutexLock lock{ &writer_mutex_ };
               bag_writer_->registerSchema(type_info);
               bag_writer_->registerChannel(topic, type_info);
+              heph::log(heph::INFO, "Recording new topic", "topic", topic, "type", type_info.original_type);
             },
         .subscriber_cb =
             [this](const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data,

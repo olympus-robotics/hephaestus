@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <utility>
+
+#include "hephaestus/concurrency/context.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
 
@@ -12,12 +15,26 @@ class Acceptor {
 public:
   static constexpr int DEFAULT_BACKLOG = 10;
 
-  Acceptor(IpFamily family, Protocol protocol);
+  static auto createTcpIpV4(concurrency::Context& context) -> Acceptor;
+  static auto createTcpIpV6(concurrency::Context& context) -> Acceptor;
+  static auto createL2cap(concurrency::Context& context) -> Acceptor;
 
   void listen(int backlog = DEFAULT_BACKLOG) const;
   void bind(const Endpoint& endpoint) const;
   [[nodiscard]] auto localEndpoint() const -> Endpoint;
   [[nodiscard]] auto nativeHandle() const -> int;
+
+  [[nodiscard]] auto type() const {
+    return socket_.type();
+  }
+
+  [[nodiscard]] auto context() const -> concurrency::Context& {
+    return socket_.context();
+  }
+
+private:
+  explicit Acceptor(Socket socket) noexcept : socket_(std::move(socket)) {
+  }
 
 private:
   Socket socket_;

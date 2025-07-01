@@ -28,13 +28,13 @@ namespace heph::net {
 
 TEST(Net, Ipv4Endpoint) {
   const Endpoint ep0;
-  Endpoint ep1(IpFamily::V4);
-  const Endpoint ep2(IpFamily::V4);
-  Endpoint ep3(IpFamily::V4, "127.0.0.1");
-  const Endpoint ep4(IpFamily::V4, "127.0.0.1");
-  const Endpoint ep5(IpFamily::V4, "127.0.0.1", 1);
-  const Endpoint ep6(IpFamily::V4, "127.0.0.1", 1);
-  const Endpoint ep7(IpFamily::V6);
+  auto ep1(Endpoint::createIpV4());
+  const auto ep2(Endpoint::createIpV4());
+  auto ep3(Endpoint::createIpV4("127.0.0.1"));
+  const auto ep4(Endpoint::createIpV4("127.0.0.1"));
+  const auto ep5(Endpoint::createIpV4("127.0.0.1", 1));
+  const auto ep6(Endpoint::createIpV4("127.0.0.1", 1));
+  const auto ep7(Endpoint::createIpV6());
 
   EXPECT_NE(ep0, ep1);
   EXPECT_NE(ep7, ep4);
@@ -58,18 +58,18 @@ TEST(Net, Ipv4Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint(IpFamily::V4, "."), Panic);
+  EXPECT_THROW(Endpoint::createIpV4("."), Panic);
 }
 
 TEST(Net, Ipv6Endpoint) {
   const Endpoint ep0;
-  Endpoint ep1(IpFamily::V6);
-  const Endpoint ep2(IpFamily::V6);
-  Endpoint ep3(IpFamily::V6, "0:0:0:0:0:FFFF:204.152.189.116");
-  const Endpoint ep4(IpFamily::V6, "0:0:0:0:0:FFFF:204.152.189.116");
-  const Endpoint ep5(IpFamily::V6, "0:0:0:0:0:FFFF:204.152.189.116", 1);
-  const Endpoint ep6(IpFamily::V6, "0:0:0:0:0:FFFF:204.152.189.116", 1);
-  const Endpoint ep7(IpFamily::V4);
+  auto ep1(Endpoint::createIpV6());
+  const auto ep2(Endpoint::createIpV6());
+  auto ep3(Endpoint::createIpV6("0:0:0:0:0:FFFF:204.152.189.116"));
+  const auto ep4(Endpoint::createIpV6("0:0:0:0:0:FFFF:204.152.189.116"));
+  const auto ep5(Endpoint::createIpV6("0:0:0:0:0:FFFF:204.152.189.116", 1));
+  const auto ep6(Endpoint::createIpV6("0:0:0:0:0:FFFF:204.152.189.116", 1));
+  const auto ep7(Endpoint::createIpV4());
 
   EXPECT_NE(ep0, ep1);
   EXPECT_EQ(ep1, ep2);
@@ -89,18 +89,18 @@ TEST(Net, Ipv6Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint(IpFamily::V6, ":"), Panic);
+  EXPECT_THROW(Endpoint::createIpV6(":"), Panic);
 }
 
 TEST(Net, BtEndpoint) {
   const Endpoint ep0;
-  Endpoint ep1(IpFamily::BT);
-  const Endpoint ep2(IpFamily::BT);
-  Endpoint ep3(IpFamily::BT, "01:02:03:04:05:07");
-  const Endpoint ep4(IpFamily::BT, "01:02:03:04:05:07");
-  const Endpoint ep5(IpFamily::BT, "01:02:03:04:05:07", 1);
-  const Endpoint ep6(IpFamily::BT, "01:02:03:04:05:07", 1);
-  const Endpoint ep7(IpFamily::V4);
+  auto ep1(Endpoint::createBt());
+  const auto ep2(Endpoint::createBt());
+  auto ep3(Endpoint::createBt("01:02:03:04:05:07"));
+  const auto ep4(Endpoint::createBt("01:02:03:04:05:07"));
+  const auto ep5(Endpoint::createBt("01:02:03:04:05:07", 1));
+  const auto ep6(Endpoint::createBt("01:02:03:04:05:07", 1));
+  const auto ep7(Endpoint::createIpV4());
 
   EXPECT_NE(ep0, ep1);
   EXPECT_EQ(ep1, ep2);
@@ -120,30 +120,29 @@ TEST(Net, BtEndpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint(IpFamily::BT, ":"), Panic);
+  EXPECT_THROW(Endpoint::createBt(":"), Panic);
 }
 
 TEST(Net, TCPOperationsSome) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
-  const Acceptor acceptor(IpFamily::V4, Protocol::TCP);
+  const auto acceptor = Acceptor::createTcpIpV4(context);
 
-  acceptor.bind(Endpoint{ IpFamily::V4 });
+  acceptor.bind(Endpoint::createIpV4());
   acceptor.listen();
 
   auto endpoint = acceptor.localEndpoint();
-  auto schedule = context.scheduler().schedule();
 
   static constexpr std::size_t MSG_SIZE = 4ull * 1024 * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
 
   // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
-    auto client = co_await (schedule | accept(acceptor));
+    auto client = co_await accept(acceptor);
     auto buffer = std::as_writable_bytes(std::span{ recv_buffer });
 
     while (!buffer.empty()) {
-      auto recvd_buffer = co_await (schedule | recv(client, buffer));
+      auto recvd_buffer = co_await recv(client, buffer);
       EXPECT_LE(buffer.size(), recv_buffer.size());
       buffer = buffer.subspan(recvd_buffer.size());
     }
@@ -152,17 +151,18 @@ TEST(Net, TCPOperationsSome) {
 
   scope.spawn(server_sender());
 
-  const Socket client{ IpFamily::V4, Protocol::TCP };
+  const auto client{ Socket::createTcpIpV4(context) };
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
   std::iota(send_buffer.begin(), send_buffer.end(), 0);
+
   // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = std::as_bytes(std::span{ send_buffer });
 
     while (!buffer.empty()) {
-      auto sent_buffer = co_await (schedule | send(client, buffer));
+      auto sent_buffer = co_await send(client, buffer);
       EXPECT_LE(buffer.size(), send_buffer.size());
       buffer = buffer.subspan(sent_buffer.size());
     }
@@ -178,30 +178,29 @@ TEST(Net, TCPOperationsSome) {
 TEST(Net, TCPOperationsAll) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
-  const Acceptor acceptor(IpFamily::V4, Protocol::TCP);
+  const auto acceptor = Acceptor::createTcpIpV4(context);
 
-  acceptor.bind(Endpoint{ IpFamily::V4 });
+  acceptor.bind(Endpoint::createIpV4());
   acceptor.listen();
 
   auto endpoint = acceptor.localEndpoint();
-  auto schedule = context.scheduler().schedule();
 
   static constexpr std::size_t MSG_SIZE = 4ull * 1024 * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
 
   // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
-    auto client = co_await (schedule | accept(acceptor));
+    auto client = co_await accept(acceptor);
     auto buffer = std::as_writable_bytes(std::span{ recv_buffer });
 
-    buffer = co_await (schedule | recvAll(client, buffer));
+    buffer = co_await recvAll(client, buffer);
     EXPECT_EQ(buffer.size(), recv_buffer.size());
     context.requestStop();
   };
 
   scope.spawn(server_sender());
 
-  const Socket client{ IpFamily::V4, Protocol::TCP };
+  const auto client{ Socket::createTcpIpV4(context) };
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
@@ -210,7 +209,7 @@ TEST(Net, TCPOperationsAll) {
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = std::as_bytes(std::span{ send_buffer });
 
-    buffer = co_await (schedule | sendAll(client, buffer));
+    buffer = co_await sendAll(client, buffer);
     EXPECT_EQ(buffer.size(), send_buffer.size());
   };
   scope.spawn(client_sender());
@@ -224,12 +223,11 @@ TEST(Net, TCPOperationsAll) {
 TEST(Net, UDPOperations) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
-  const Socket server(IpFamily::V4, Protocol::UDP);
+  const auto server{ Socket::createUdpIpV4(context) };
 
-  server.bind(Endpoint{ IpFamily::V4 });
+  server.bind(Endpoint::createIpV4());
 
   auto endpoint = server.localEndpoint();
-  auto schedule = context.scheduler().schedule();
 
   static constexpr std::size_t MSG_SIZE = 16ull * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
@@ -237,14 +235,14 @@ TEST(Net, UDPOperations) {
   // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
     auto buffer =
-        co_await (schedule | recv(server, std::as_writable_bytes(std::span{ recv_buffer })) |
+        co_await (recv(server, std::as_writable_bytes(std::span{ recv_buffer })) |
                   stdexec::upon_error([](std::error_code /*ec*/) { return std::span<std::byte>{}; }));
     EXPECT_EQ(buffer.size(), recv_buffer.size());
     context.requestStop();
   };
   scope.spawn(server_sender());
 
-  const Socket client{ IpFamily::V4, Protocol::UDP };
+  const auto client{ Socket::createUdpIpV4(context) };
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
@@ -252,7 +250,7 @@ TEST(Net, UDPOperations) {
 
   // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
-    auto buffer = co_await (schedule | send(client, std::as_bytes(std::span{ send_buffer })));
+    auto buffer = co_await send(client, std::as_bytes(std::span{ send_buffer }));
     EXPECT_EQ(buffer.size(), send_buffer.size());
   };
   scope.spawn(client_sender());

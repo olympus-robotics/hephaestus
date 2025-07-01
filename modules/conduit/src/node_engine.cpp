@@ -15,13 +15,13 @@ NodeEngine::NodeEngine(NodeEngineConfig config)
 }
 void NodeEngine::run() {
   context_.run();
+  scope_.request_stop();
   stdexec::sync_wait(scope_.on_empty());
   if (exception_) {
     std::rethrow_exception(exception_);
   }
 }
 void NodeEngine::requestStop() {
-  scope_.request_stop();
   pool_.request_stop();
   context_.requestStop();
 }
