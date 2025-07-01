@@ -25,7 +25,6 @@
 #include "hephaestus/net/socket.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/utils/signal_handler.h"
 
 namespace {
 inline constexpr std::size_t PACKET_SIZE = 65535;
