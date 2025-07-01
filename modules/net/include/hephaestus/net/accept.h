@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <functional>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -12,7 +11,6 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
-#include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
@@ -21,22 +19,15 @@
 #include "hephaestus/net/socket.h"
 
 namespace heph::net {
+template <typename TagT>
 struct AcceptT {
-  template <stdexec::sender Sender>
-  auto operator()(Sender&& sender, const Acceptor& acceptor) const {
-    auto domain = stdexec::__get_early_domain(sender);
-    return stdexec::transform_sender(
-        domain, concurrency::makeSenderExpression<AcceptT>(&acceptor, std::forward<Sender>(sender)));
-  }
-
-  auto operator()(const Acceptor& acceptor) const
-      -> stdexec::__binder_back<AcceptT, std::reference_wrapper<const Acceptor>> {
-    return { { std::cref(acceptor) }, {}, {} };
+  auto operator()(const Acceptor& acceptor) const {
+    return concurrency::makeSenderExpression<AcceptT>(&acceptor);
   }
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
-inline constexpr AcceptT accept{};
+inline constexpr AcceptT<void> accept{};
 
 namespace internal {
 template <typename Receiver>
@@ -54,7 +45,7 @@ struct AcceptOperation {
       stdexec::set_error(std::move(receiver), std::error_code(-cqe->res, std::system_category()));
       return;
     }
-    stdexec::set_value(std::move(receiver), Socket{ cqe->res });
+    stdexec::set_value(std::move(receiver), Socket{ &acceptor->context(), cqe->res, acceptor->type() });
   }
 
   void handleStopped() {
@@ -72,38 +63,22 @@ struct AcceptSender : heph::concurrency::DefaultSenderExpressionImpl {
     return stdexec::completion_signatures<stdexec::set_value_t(Socket), stdexec::set_error_t(std::error_code),
                                           stdexec::set_stopped_t()>{};
   };
-  static constexpr auto GET_ATTRS =  //
-      []<class Child>(heph::concurrency::Ignore, const Child& child) noexcept {
-        return stdexec::__env::__join(
-            stdexec::prop{ stdexec::__is_scheduler_affine_t{},
-                           stdexec::__mbool<stdexec::__is_scheduler_affine<Child>>{} },
-            stdexec::get_env(child));
-      };
 
   static constexpr auto GET_STATE = []<typename Sender, typename Receiver>(Sender&& sender,
                                                                            Receiver&& receiver) noexcept {
-    auto [_, acceptor, child] = std::forward<Sender>(sender);
-    auto* ring =
-        stdexec::get_completion_scheduler<stdexec::set_value_t>(stdexec::get_env(child)).context().ring();
+    auto [_, acceptor] = std::forward<Sender>(sender);
+    auto* ring = acceptor->context().ring();
     using AcceptOperationT = AcceptOperation<std::decay_t<Receiver>>;
     using OperationStateT = detail::OperationState<AcceptOperationT>;
     return OperationStateT{ ring, AcceptOperationT{ acceptor, std::forward<Receiver>(receiver) } };
   };
 
-  static constexpr auto COMPLETE = []<typename Receiver, typename Tag, typename... Args>(
-                                       heph::concurrency::Ignore, auto& operation, Receiver& receiver,
-                                       Tag /*tag*/, Args&&... args) noexcept {
-    if constexpr (std::is_same_v<Tag, stdexec::set_value_t>) {
-      operation.submit();
-    } else {
-      Tag()(std::move(receiver), std::forward<Args>(args)...);
-    }
-  };
+  static constexpr auto START = [](auto& operation, heph::concurrency::Ignore) { operation.submit(); };
 };
 }  // namespace internal
 }  // namespace heph::net
 
 namespace heph::concurrency {
 template <>
-struct SenderExpressionImpl<heph::net::AcceptT> : heph::net::internal::AcceptSender {};
+struct SenderExpressionImpl<heph::net::AcceptT<void>> : heph::net::internal::AcceptSender {};
 }  // namespace heph::concurrency
