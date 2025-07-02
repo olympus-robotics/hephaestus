@@ -15,25 +15,46 @@
 #include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes {
+/// Serdes module provides generic support for serialization and deserialization of data types.
+/// It is built to support any serialization library via template specialization.
+/// Right now it only support Protobuf, but can be easily extended to support other libraries by simply
+/// writing a new concept for your serialization library.
 
 template <class T>
-[[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte>;
+[[nodiscard]] auto serialize([[maybe_unused]] const T& data) -> std::vector<std::byte> {
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
+}
 
 template <class T>
-[[nodiscard]] auto serializeToText(const T& data) -> std::string;
+[[nodiscard]] auto serializeToText([[maybe_unused]] const T& data) -> std::string {
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
+}
 
 template <class T>
-void deserialize(std::span<const std::byte> buffer, T& data);
+void deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] T& data) {
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
+}
 
 template <class T>
-void deserializeFromText(std::string_view buffer, T& data);
+void deserializeFromText([[maybe_unused]] std::string_view buffer, [[maybe_unused]] T& data) {
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
+}
 
 template <class T>
-auto getSerializedTypeInfo() -> TypeInfo;
+auto getSerializedTypeInfo() -> TypeInfo {
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
+}
 
 // -----------------------------------------------------------------------------------------------
-// Specialization
+// Specializations
 // -----------------------------------------------------------------------------------------------
+
+// -- Protobuf -----------------------------------------------------------------------------------
 
 template <protobuf::ProtobufSerializable T>
 auto serialize(const T& data) -> std::vector<std::byte> {
