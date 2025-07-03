@@ -3,14 +3,10 @@
 //=================================================================================================
 
 #include <chrono>
-#include <cstdint>
 #include <cstdlib>
 #include <memory>
-#include <optional>
-#include <random>
 #include <string>
 #include <string_view>
-#include <type_traits>
 
 #include <exec/when_any.hpp>
 #include <fmt/base.h>
@@ -20,9 +16,7 @@
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 
