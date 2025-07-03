@@ -89,9 +89,9 @@ private:
     using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
     return std::move(trigger) | [&invoke_operation] {
       if constexpr (stdexec::sender<ResultT>) {
-        return stdexec::let_value(invoke_operation);
+        return stdexec::let_value(std::move(invoke_operation));
       } else {
-        return stdexec::then(invoke_operation);
+        return stdexec::then(std::move(invoke_operation));
       }
     }();
   }
@@ -137,7 +137,9 @@ private:
     };
     return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
              auto start_at = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_at), node_trigger());
+             // return stdexec::when_all(period_trigger(start_at), node_trigger());
+             return period_trigger(start_at) |
+                    stdexec::let_value([node_trigger]() { return node_trigger(); });
            });
   }
 

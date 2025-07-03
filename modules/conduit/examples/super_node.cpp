@@ -86,10 +86,12 @@ struct NodeMerger : Node<NodeMerger> {
   }
 
   static auto execute(NodeMerger& self, double value) {
+    fmt::println(stderr, "double result");
     return self.output_from_input_.setValue(self.engine(), value);
   }
 
   static auto execute(NodeMerger& self, float value) {
+    fmt::println(stderr, "float result");
     return self.output.setValue(self.engine(), value);
   }
 
