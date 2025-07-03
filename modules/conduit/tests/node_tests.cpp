@@ -23,20 +23,20 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::conduit::tests {
-struct BasicOperationData {
+struct ReceivingOperationData {
   bool triggered{ false };
   bool executed{ false };
 };
 
-struct BasicOperation : Node<BasicOperation, BasicOperationData> {
-  static auto trigger(BasicOperation& operation) {
+struct ReceivingOperation : Node<ReceivingOperation, ReceivingOperationData> {
+  static auto trigger(ReceivingOperation& operation) {
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().triggered = true;
     return stdexec::just();
   }
 
-  static void execute(BasicOperation& operation) {
+  static void execute(ReceivingOperation& operation) {
     EXPECT_TRUE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().executed = true;
@@ -46,12 +46,12 @@ struct BasicOperation : Node<BasicOperation, BasicOperationData> {
 
 TEST(NodeTests, nodeBasic) {
   NodeEngine engine{ {} };
-  auto dummy = engine.createNode<BasicOperation>();
+  auto dummy = engine.createNode<ReceivingOperation>();
 
   engine.run();
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_TRUE(dummy->data().executed);
-  EXPECT_FALSE(BasicOperation::HAS_PERIOD);
+  EXPECT_FALSE(ReceivingOperation::HAS_PERIOD);
 }
 
 struct RepeatOperationData {
@@ -137,7 +137,7 @@ TEST(NodeTests, nodePoolRepeat) {
   EXPECT_FALSE(RepeatOperation::HAS_PERIOD);
 }
 
-struct TriggerExceptionOperation : Node<TriggerExceptionOperation, BasicOperationData> {
+struct TriggerExceptionOperation : Node<TriggerExceptionOperation, ReceivingOperationData> {
   static auto trigger(TriggerExceptionOperation& operation) {
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
@@ -163,7 +163,7 @@ TEST(NodeTests, nodeTriggerException) {
   EXPECT_FALSE(TriggerExceptionOperation::HAS_PERIOD);
 }
 
-struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, BasicOperationData> {
+struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, ReceivingOperationData> {
   static auto trigger(ExecutionExceptionOperation& operation) {
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
@@ -221,9 +221,11 @@ TEST(NodeTests, nodePeriodic) {
 }
 
 TEST(NodeTests, nodePeriodicSimulated) {
-  NodeEngine engine{ { .context_config = {
-                           .io_ring_config = {},
-                           .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } } } };
+  NodeEngine engine{
+    { .context_config = { .io_ring_config = {},
+                          .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } },
+      .endpoints = {} }
+  };
   auto dummy = engine.createNode<PeriodicOperation>();
 
   engine.run();
@@ -275,9 +277,11 @@ TEST(NodeTests, nodePeriodicMissingDeadline) {
 }
 
 TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
-  NodeEngine engine{ { .context_config = {
-                           .io_ring_config = {},
-                           .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } } } };
+  NodeEngine engine{
+    { .context_config = { .io_ring_config = {},
+                          .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } },
+      .endpoints = {} }
+  };
   auto mock_sink = std::make_unique<MockLogSink>();
   MockLogSink* sink_ptr = mock_sink.get();
   heph::telemetry::registerLogSink(std::move(mock_sink));

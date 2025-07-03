@@ -45,6 +45,7 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type)
   if (fd_ == -1) {
     panic("socket: {}", std::error_code(errno, std::system_category()).message());
   }
+
   switch (type) {
     case SocketType::L2CAP:
       setupL2capSocket(true);
@@ -81,7 +82,8 @@ Socket::Socket(Socket&& other) noexcept
   : context_(other.context_)
   , maximum_recv_size_(other.maximum_recv_size_)
   , maximum_send_size_(other.maximum_send_size_)
-  , fd_(other.fd_) {
+  , fd_(other.fd_)
+  , type_(other.type_) {
   other.fd_ = -1;
 }
 
@@ -91,6 +93,7 @@ auto Socket::operator=(Socket&& other) noexcept -> Socket& {
   maximum_recv_size_ = other.maximum_recv_size_;
   maximum_send_size_ = other.maximum_send_size_;
   fd_ = other.fd_;
+  type_ = other.type_;
   other.fd_ = -1;
 
   return *this;
@@ -98,6 +101,7 @@ auto Socket::operator=(Socket&& other) noexcept -> Socket& {
 
 void Socket::close() noexcept {
   if (fd_ != -1) {
+    ::shutdown(fd_, SHUT_RDWR);
     ::close(fd_);
     fd_ = -1;
   }

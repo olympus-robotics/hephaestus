@@ -33,6 +33,7 @@
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 
@@ -134,7 +135,8 @@ TEST(InputOutput, QueuedInputExplicitOutput) {
   QueuedInput<std::string> input{ &dummy, "input" };
   Output<std::string> output{ &dummy, "output" };
   input.connectTo(output);
-  scope.spawn(output.setValue(engine, "Hello World!") | stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine.scheduler(), "Hello World!") |
+              stdexec::then([&] { engine.requestStop(); }));
   engine.run();
   auto res = input.getValue();
   EXPECT_TRUE(res.has_value());
@@ -170,7 +172,8 @@ TEST(InputOutput, QueuedInputOutputDelay) {
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
-  scope.spawn(output.setValue(engine, "Hello World Again!") | stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine.scheduler(), "Hello World Again!") |
+              stdexec::then([&] { engine.requestStop(); }));
   scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) | stdexec::let_value([&] { return input.get(); }) |
               stdexec::then([&](std::string value) { res.emplace(std::move(value)); }));
   // scope.spawn(output.setValue(engine, "Hello World!"));
@@ -192,7 +195,8 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
                           .timer_options = { .clock_mode = concurrency::io_ring::ClockMode::SIMULATED } },
-      .number_of_threads = 1 }
+      .number_of_threads = 1,
+      .endpoints = {} }
   };
   exec::async_scope scope;
   DummyOperation dummy;
@@ -202,7 +206,8 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
-  scope.spawn(output.setValue(engine, "Hello World Again!") | stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine.scheduler(), "Hello World Again!") |
+              stdexec::then([&] { engine.requestStop(); }));
   scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) | stdexec::let_value([&] { return input.get(); }) |
               stdexec::then([&](std::string value) { res.emplace(std::move(value)); }));
   // scope.spawn(output.setValue(engine, "Hello World!"));
@@ -227,6 +232,7 @@ TEST(InputOutput, handleStopped) {
 }
 
 TEST(InputOutput, QueuedInputWhenAny) {
+  NodeEngine engine{ {} };
   DummyOperation dummy;
   QueuedInput<std::string, InputPolicy<1, RetrievalMethod::POLL>> input1{ &dummy, "input1" };
   QueuedInput<int> input2{ &dummy, "input2" };
@@ -276,14 +282,13 @@ TEST(InputOutput, QueuedInputWhenAny) {
     EXPECT_EQ(res2, "b");
   }
   {
-    NodeEngine engine{ {} };
     exec::async_scope scope;
     Output<std::string> output{ &dummy, "output" };
     input4.connectTo(output);
 
     std::variant<int, std::string> res;
     scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) |
-                stdexec::let_value([&] { return output.setValue(engine, "..."); }));
+                stdexec::let_value([&] { return output.setValue(engine.scheduler(), "..."); }));
     scope.spawn(exec::when_any(input2.get(), input4.get()) |
                 stdexec::then([&]<typename ValueT>(ValueT value) {
                   engine.requestStop();

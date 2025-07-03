@@ -60,14 +60,17 @@ auto pong(heph::net::Socket socket) -> exec::task<void> {
   }
 }
 
+// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
+  // NOLINTNEXTLINE
   while (true) {
     auto socket = co_await heph::net::accept(acceptor);
     scope.spawn(pong(std::move(socket)));
   }
 }
+
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
@@ -92,8 +95,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     scope.spawn(server(std::move(acceptor)));
 
-    heph::utils::TerminationBlocker::registerInterruptCallback([&context] { context.requestStop(); });
-
+    heph::utils::TerminationBlocker::registerInterruptCallback([&context]() { context.requestStop(); });
     context.run();
 
     return 0;

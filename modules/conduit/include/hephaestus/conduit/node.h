@@ -15,7 +15,6 @@
 
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/conduit/node_engine.h"
 
 namespace heph::conduit {
 namespace detail {
@@ -23,6 +22,8 @@ struct Unused {};
 template <typename InputT, typename T, std::size_t Depth>
 class InputBase;
 }  // namespace detail
+
+class NodeEngine;
 
 template <typename OperationT, typename OperationDataT = detail::Unused>
 class Node : public detail::NodeBase {
@@ -62,6 +63,10 @@ public:
 
   [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
 
+  void removeOutputConnection(void* node) final {
+    implicit_output_->removeConnection(node);
+  }
+
 private:
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
@@ -97,7 +102,7 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | implicit_output_->propagate(engine()) |
+    return executeSender() | implicit_output_->propagate(engine().scheduler()) |
            stdexec::then([this] { operationEnd(); });
   }
 
