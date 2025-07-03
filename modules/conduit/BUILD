@@ -45,6 +45,15 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "conduit_super_node",
+    srcs = ["examples/super_node.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+    ],
+)
+
 #########
 # Tests #
 #########
