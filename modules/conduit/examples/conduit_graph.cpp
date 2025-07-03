@@ -8,14 +8,12 @@
 #include <string>
 #include <string_view>
 
-#include <exec/when_any.hpp>
 #include <fmt/base.h>
-#include <fmt/format.h>
-#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
+#include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
