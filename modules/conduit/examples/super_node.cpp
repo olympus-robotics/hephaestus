@@ -22,7 +22,6 @@
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
@@ -62,45 +61,24 @@ struct Node2 : Node<Node2> {
   }
 };
 
-struct NodeMerger : Node<NodeMerger> {
-  explicit NodeMerger(heph::conduit::NodeEngine& engine)
+class Graph {
+public:
+  explicit Graph(NodeEngine& engine)
     : node1_(engine.createNode<Node1>()), node2_(engine.createNode<Node2>()) {
-    input_from_output_.connectTo(node2_);
-    node1_->input.connectTo(output_from_input_);
-    input_from_output_.connectTo(node2_);
+    node2_->input.connectTo(node1_);
   }
 
-  static auto name() -> std::string_view {
-    return "NodeMerger";
+  [[nodiscard]] auto input() {
+    return &node1_->input;
   }
 
-  using InputPolicyT = InputPolicy<1, RetrievalMethod::BLOCK, SetMethod::OVERWRITE>;
-
-  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes
-  QueuedInput<double, InputPolicyT> input{ this, "input" };
-  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes
-  Output<float> output{ this, "output" };
-
-  static auto trigger(NodeMerger& self) {
-    return exec::when_any(self.input.get(), self.input_from_output_.get());
-  }
-
-  static auto execute(NodeMerger& self, double value) {
-    fmt::println(stderr, "double result");
-    return self.output_from_input_.setValue(self.engine(), value);
-  }
-
-  static auto execute(NodeMerger& self, float value) {
-    fmt::println(stderr, "float result");
-    return self.output.setValue(self.engine(), value);
+  [[nodiscard]] auto output() -> NodeHandle<Node2>& {
+    return node2_;
   }
 
 private:
   NodeHandle<Node1> node1_;
   NodeHandle<Node2> node2_;
-
-  QueuedInput<float, InputPolicyT> input_from_output_{ this, "input_from_output" };
-  Output<double> output_from_input_{ this, "output1" };
 };
 
 struct ProducerNode : Node<ProducerNode> {
@@ -113,7 +91,7 @@ struct ProducerNode : Node<ProducerNode> {
   }
 };
 
-struct ConsumerNode : Node<ProducerNode> {
+struct ConsumerNode : Node<ConsumerNode> {
   static constexpr auto NAME = "Consumer";
 
   using InputPolicyT = InputPolicy<1, RetrievalMethod::BLOCK, SetMethod::OVERWRITE>;
@@ -136,11 +114,11 @@ auto main() -> int {
     heph::conduit::NodeEngine engine{ {} };
 
     auto producer = engine.createNode<heph::conduit::ProducerNode>();
-    auto super_node = engine.createNode<heph::conduit::NodeMerger>();
+    auto graph = heph::conduit::Graph(engine);
     auto consumer = engine.createNode<heph::conduit::ConsumerNode>();
 
-    super_node->input.connectTo(producer);
-    consumer->input.connectTo(super_node->output);
+    graph.input()->connectTo(producer);
+    consumer->input.connectTo(graph.output());
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
     engine.run();
@@ -148,4 +126,6 @@ auto main() -> int {
   } catch (...) {
     fmt::println("unexcepted exception...");
   }
+
+  return EXIT_SUCCESS;
 }
