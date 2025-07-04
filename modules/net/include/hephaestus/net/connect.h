@@ -44,7 +44,7 @@ struct ConnectOperation {
     auto addr = endpoint->nativeHandle();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     ::io_uring_prep_connect(sqe, socket->nativeHandle(), reinterpret_cast<const sockaddr*>(addr.data()),
-                            addr.size());
+                            static_cast<socklen_t>(addr.size()));
   }
   void handleCompletion(::io_uring_cqe* cqe) {
     if (cqe->res < 0) {
