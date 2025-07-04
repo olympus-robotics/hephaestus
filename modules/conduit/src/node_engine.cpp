@@ -33,8 +33,10 @@ NodeEngine::NodeEngine(const NodeEngineConfig& config)
 
   auto create_acceptor = [&](net::EndpointType type) {
     switch (type) {
+#ifndef DISABLE_BLUETOOTH
       case heph::net::EndpointType::BT:
         return heph::net::Acceptor::createL2cap(context_);
+#endif
       case heph::net::EndpointType::IPV4:
         return heph::net::Acceptor::createTcpIpV4(context_);
       case heph::net::EndpointType::IPV6:

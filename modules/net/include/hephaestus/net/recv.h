@@ -59,7 +59,7 @@ struct RecvOperation {
       stdexec::set_stopped(std::move(receiver));
       return true;
     }
-    transferred += cqe->res;
+    transferred += static_cast<std::size_t>(cqe->res);
     if constexpr (RecvAll) {
       if (transferred != buffer.size()) {
         return false;

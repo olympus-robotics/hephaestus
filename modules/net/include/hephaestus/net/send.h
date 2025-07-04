@@ -55,7 +55,7 @@ struct SendOperation {
       stdexec::set_error(std::move(receiver), std::error_code(-cqe->res, std::system_category()));
       return true;
     }
-    transferred += cqe->res;
+    transferred += static_cast<std::size_t>(cqe->res);
     if constexpr (SendAll) {
       if (transferred != buffer.size()) {
         return false;

@@ -39,8 +39,10 @@ namespace internal {
 template <typename T>
 auto createNetEntity(const heph::net::Endpoint& endpoint, heph::concurrency::Context& context) {
   switch (endpoint.type()) {
+#ifndef DISABLE_BLUETOOTH
     case heph::net::EndpointType::BT:
       return T::createL2cap(context);
+#endif
     case heph::net::EndpointType::IPV4:
       return T::createTcpIpV4(context);
     case heph::net::EndpointType::IPV6:
