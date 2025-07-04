@@ -5,8 +5,11 @@
 declare_module(
   NAME net
   DEPENDS_ON_MODULES concurrency
-  DEPENDS_ON_EXTERNAL_PROJECTS ""
+  DEPENDS_ON_EXTERNAL_PROJECTS libbluetooth
 )
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBBLUETOOTH REQUIRED IMPORTED_TARGET libbluetooth)
 
 # library sources
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
@@ -14,7 +17,7 @@ file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 # library target
 define_module_library(
   NAME net
-  PUBLIC_LINK_LIBS hephaestus::concurrency
+  PUBLIC_LINK_LIBS hephaestus::concurrency PkgConfig::LIBBLUETOOTH
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

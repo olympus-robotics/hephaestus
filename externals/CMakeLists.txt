@@ -295,6 +295,24 @@ if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
 endif()
 
 # --------------------------------------------------------------------------------------------------
+# libbluetooth
+set(LIBBLUETOOTH_VERSION "5.66")
+set(LIBBLUETOOTH_TAG "bluez-${LIBBLUETOOTH_VERSION}")
+if(libbluetooth IN_LIST EXTERNAL_PROJECTS_LIST)
+  message(STATUS "    libbluetooth: Building ${LIBBLUETOOTH_VERSION} from source")
+  ExternalProject_Add(
+    libbluetooth
+    URL http://www.kernel.org/pub/linux/bluetooth/${LIBBLUETOOTH_TAG}.tar.xz 
+    BUILD_IN_SOURCE 1
+    USES_TERMINAL_BUILD TRUE # make it verbose
+    CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX} --cc=${CMAKE_C_COMPILER} --cxx=${CMAKE_CXX_COMPILER} --enable-library --disable-tools --disable-cups --disable-monitor --disable-client
+    BUILD_COMMAND make -j
+    INSTALL_COMMAND make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+# endif(LIBURING_FOUND)
+endif()
+
+# --------------------------------------------------------------------------------------------------
 # stdexec
 set(STDEXEC_VERSION "0f1b477daf3ff20076ae0cfcbbf0a18ca2726be5")
 add_cmake_dependency(NAME stdexec URL https://github.com/NVIDIA/stdexec/archive/${STDEXEC_VERSION}.tar.gz)
