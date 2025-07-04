@@ -11,7 +11,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 add_link_options("$<$<CONFIG:Debug>:-rdynamic>" "$<$<CONFIG:RelWithDebInfo>:-rdynamic>")
 
 # Baseline compiler warning settings for project and external targets
-set(HEPHAESTUS_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror)
+set(HEPHAESTUS_COMPILER_WARNINGS -Wall -Wextra -Wpedantic -Werror -Wno-error=subobject-linkage)
 set(THIRD_PARTY_COMPILER_WARNINGS -Wall -Wextra -Wpedantic)
 
 # clang warnings
