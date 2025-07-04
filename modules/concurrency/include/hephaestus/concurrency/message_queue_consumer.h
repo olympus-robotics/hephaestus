@@ -19,7 +19,7 @@ namespace heph::concurrency {
 template <typename T>
 class MessageQueueConsumer {
 public:
-  using Callback = std::function<void(const T&)>;
+  using Callback = std::function<void(T&&)>;
   [[nodiscard]] MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size);
   ~MessageQueueConsumer() = default;
   MessageQueueConsumer(const MessageQueueConsumer&) = delete;
@@ -72,7 +72,7 @@ auto MessageQueueConsumer<T>::stop() -> std::future<void> {
         return;
       }
 
-      callback_(message.value());
+      callback_(std::forward<T>(message.value()));
     }
   });
 }
@@ -89,7 +89,7 @@ void MessageQueueConsumer<T>::consume() {
     return;
   }
 
-  callback_(message.value());
+  callback_(std::forward<T>(message.value()));
 }
 
 }  // namespace heph::concurrency
