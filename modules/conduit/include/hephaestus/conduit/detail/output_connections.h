@@ -117,7 +117,6 @@ inline auto OutputConnections::propagate(NodeEngine& engine) {
                        if (inputs_.empty()) {
                          return true;
                        }
-                       // fmt::println(stderr, "GOTCHA");
                        //  Extract result: In case of an optional without a value, we
                        //  get a nullptr and return immediately without propagating
                        //  anything.

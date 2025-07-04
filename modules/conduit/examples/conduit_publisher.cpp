@@ -11,7 +11,6 @@
 
 #include <fmt/base.h>
 #include <fmt/ranges.h>
-#include <stdexec/execution.hpp>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
@@ -29,10 +28,6 @@ struct Generator : heph::conduit::Node<Generator> {
   static constexpr std::chrono::seconds PERIOD{ 1 };
   std::random_device rd;
   std::mt19937_64 mt{ rd() };
-
-  static auto trigger() {
-    return stdexec::just();
-  }
 
   static auto execute(Generator& self) {
     return heph::types::DummyType::random(self.mt);

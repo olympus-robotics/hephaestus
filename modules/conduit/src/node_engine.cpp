@@ -5,21 +5,21 @@
 #include "hephaestus/conduit/node_engine.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <exception>
-#include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include <exec/task.hpp>
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/detail/node_base.h"
+#include "hephaestus/conduit/remote_nodes.h"
 #include "hephaestus/net/accept.h"
 #include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/net/recv.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
@@ -77,6 +77,7 @@ auto NodeEngine::acceptClients(std::size_t index) -> exec::task<void> {
     scope_.spawn(handleClient(std::move(client)));
   }
 }
+
 auto NodeEngine::handleClient(heph::net::Socket client) -> exec::task<void> {
   // The protocol is as follows:
   // Datatypes:
@@ -91,51 +92,34 @@ auto NodeEngine::handleClient(heph::net::Socket client) -> exec::task<void> {
   // 2. Value loop:
   //  1. Send Data
 
-  std::uint16_t size = 0;
-  if (auto res = co_await (heph::net::recvAll(client, std::as_writable_bytes(std::span{ &size, 1 })) |
-                           stdexec::stopped_as_optional());
-      !res.has_value()) {
-    heph::log(heph::WARN, "Connection closed");
-    co_return;
-  }
-  std::string name(size, 0);
-  if (auto res = co_await (heph::net::recvAll(client, std::as_writable_bytes(std::span{ name })) |
-                           stdexec::stopped_as_optional());
-      !res.has_value()) {
-    heph::log(heph::WARN, "Connection closed", "name", name);
-    co_return;
-  }
-
-  if (auto res = co_await (heph::net::recvAll(client, std::as_writable_bytes(std::span{ &size, 1 })) |
-                           stdexec::stopped_as_optional());
-      !res.has_value()) {
-    heph::log(heph::WARN, "Connection closed", "name", name);
-    co_return;
-  }
-  std::string type_info(size, 0);
-  if (auto res = co_await (heph::net::recvAll(client, std::as_writable_bytes(std::span{ type_info })) |
-                           stdexec::stopped_as_optional());
-      !res.has_value()) {
-    heph::log(heph::WARN, "Connection closed", "name", name);
-    co_return;
-  }
+  auto name = co_await internal::recv<std::string>(client);
+  auto type_info = co_await internal::recv<std::string>(client);
 
   auto it = registered_outputs_.find(name);
 
   if (it == registered_outputs_.end()) {
-    heph::log(heph::ERROR, "Output not found", "name", name);
+    const std::string error = "Output not found";
+    heph::log(heph::ERROR, error, "name", name);
+    co_await internal::send(client, error);
+
     co_return;
   }
 
   auto& [_, entry] = *it;
 
   if (type_info != entry.type_info) {
-    heph::log(heph::ERROR, "Output type mismatch", "name", name, "expected", type_info, "actual",
-              entry.type_info);
+    heph::log(heph::ERROR, "Type mismatch", "name", name, "expected", type_info, "actual", entry.type_info,
+              "client", client.remoteEndpoint());
+    auto error = fmt::format("Type mismatch: Expected {}, got {}", entry.type_info, type_info);
+    co_await internal::send(client, error);
     co_return;
   }
 
-  heph::log(heph::INFO, "Connected output forwarding client", "name", name);
+  // No error, just send back a "zero" string. to acknowledge the full negotiation.
+  static constexpr std::string_view SUCCESS{ "success" };
+  co_await internal::send(client, SUCCESS);
+
+  heph::log(heph::INFO, "Connected subscriber", "name", name, "client", client.remoteEndpoint());
   entry.publisher_factory(std::move(client));
 
   co_return;

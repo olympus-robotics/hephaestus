@@ -36,6 +36,35 @@
 
 namespace heph::conduit {
 namespace internal {
+template <typename Container, typename... Ts>
+auto recv(heph::net::Socket& socket, Ts&&... ts) {
+  auto message = Container{ std::forward<Ts>(ts)... };
+  return stdexec::just(static_cast<std::uint16_t>(0)) |
+         stdexec::let_value([&socket, message = std::move(message)](auto& size) {
+           return heph::net::recvAll(socket, std::as_writable_bytes(std::span{ &size, 1 })) |
+                  stdexec::let_value([&socket, &size, message = std::move(message)](auto /*unused*/) mutable {
+                    message.resize(size);
+                    return heph::net::recvAll(socket, std::as_writable_bytes(std::span{ message })) |
+                           stdexec::then([&message](auto /*unused*/) { return std::move(message); });
+                  });
+         });
+}
+template <typename Container>
+auto send(heph::net::Socket& socket, const Container& message) {
+  if (message.size() > std::numeric_limits<std::uint16_t>::max()) {
+    heph::panic("message too big ({})", message.size());
+  }
+
+  return stdexec::just(static_cast<std::uint16_t>(message.size())) |
+         stdexec::let_value([&socket, &message](const std::uint16_t& size) {
+           return heph::net::sendAll(socket, std::as_bytes(std::span{ &size, 1 })) |
+                  stdexec::let_value([&socket, &message](auto /*unused*/) {
+                    return heph::net::sendAll(socket, std::as_bytes(std::span{ message })) |
+                           stdexec::then([](auto /*unused*/) {});
+                  });
+         });
+}
+
 template <typename T>
 auto createNetEntity(const heph::net::Endpoint& endpoint, heph::concurrency::Context& context) {
   switch (endpoint.type()) {
@@ -55,24 +84,6 @@ auto createNetEntity(const heph::net::Endpoint& endpoint, heph::concurrency::Con
 }  // namespace internal
 
 class RemoteSubscriberOperator {
-  auto connect(std::string* type_info) {
-    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-    return heph::net::connect(socket_.value(), endpoint_) |
-           stdexec::let_value([this, size = static_cast<std::uint16_t>(name_.size())]() {
-             return heph::net::sendAll(socket_.value(), std::as_bytes(std::span{ &size, 1 })) |
-                    stdexec::let_value([this](auto /*unused*/) {
-                      return heph::net::sendAll(socket_.value(), std::as_bytes(std::span{ name_ }));
-                    });
-           }) |
-           stdexec::let_value(
-               [this, type_info, size = static_cast<std::uint16_t>(type_info->size())](auto /*unused*/) {
-                 return heph::net::sendAll(socket_.value(), std::as_bytes(std::span{ &size, 1 })) |
-                        stdexec::let_value([this, type_info](auto /*unused*/) {
-                          return heph::net::sendAll(socket_.value(), std::as_bytes(std::span{ *type_info }));
-                        });
-               });
-  }
-
 public:
   using MsgT = std::pmr::vector<std::byte>;
 
@@ -84,71 +95,72 @@ public:
     return fmt::format("{}/{}", endpoint_, name_);
   }
 
-  auto trigger(heph::concurrency::Context* context, std::string* type_info) -> exec::task<MsgT> {
-    try {
-      if (!socket_.has_value()) {
-        socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context));
-
-        co_await connect(type_info);
-      }
-
-      // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-      auto msg = co_await receiveData();
-      if (!msg.empty()) {
-        co_return msg;
-      }
-      heph::log(heph::ERROR, "Reconnecting subscriber, connection was closed", "node", name());
-
-    } catch (std::exception& exception) {
-      std::string error = exception.what();
-      if (last_error_.has_value()) {
-        if (*last_error_ == error) {
-          error.clear();
-        } else {
-          last_error_.emplace(error);
-        }
-      } else {
-        last_error_.emplace(error);
-      }
-
-      if (!error.empty()) {
-        heph::log(heph::ERROR, "Retrying", "node", name(), "error", error);
-      }
-    }
-
-    socket_.reset();
-    co_return {};
-  }
+  auto trigger(heph::concurrency::Context* context, std::string* type_info) -> exec::task<MsgT>;
 
 private:
-  auto receiveData() -> exec::task<MsgT> {
-    std::uint16_t size = 0;
-    auto size_buffer = std::as_writable_bytes(std::span{ &size, 1 });
-    auto size_result =
-        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-        co_await (heph::net::recvAll(socket_.value(), size_buffer) | stdexec::stopped_as_optional());
-    if (!size_result.has_value()) {
-      co_return {};
-    }
-    std::pmr::vector<std::byte> msg(size, &memory_resource_);
-    auto msg_result =
-        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-        co_await (heph::net::recvAll(socket_.value(), std::span{ msg }) | stdexec::stopped_as_optional());
-    if (!msg_result.has_value()) {
-      co_return {};
-    }
-
-    co_return msg;
-  }
+  auto connect(const std::string& type_info);
 
 private:
   std::optional<heph::net::Socket> socket_;
   heph::net::Endpoint endpoint_;
-  std::string name_;
   std::pmr::unsynchronized_pool_resource memory_resource_;
+  std::string name_;
   std::string type_info_;
   std::optional<std::string> last_error_;
 };
+
+inline auto RemoteSubscriberOperator::connect(const std::string& type_info) {
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  return heph::net::connect(socket_.value(), endpoint_) | stdexec::let_value([this, &type_info] {
+           // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+           return internal::send(socket_.value(), name_) | stdexec::let_value([this, &type_info] {
+                    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+                    return internal::send(socket_.value(), type_info);
+                  });
+         }) |
+         stdexec::let_value([this] { return internal::recv<std::string>(socket_.value()); });
+}
+
+inline auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std::string* type_info)
+    -> exec::task<MsgT> {
+  try {
+    if (!socket_.has_value()) {
+      socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context));
+
+      auto error = co_await connect(*type_info);
+      if (error != "success") {
+        heph::panic("Could not connect: {}", error);
+      }
+    }
+
+    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
+    auto msg = co_await (internal::recv<std::pmr::vector<std::byte>>(socket_.value(), &memory_resource_) |
+                         stdexec::upon_stopped([] { return std::pmr::vector<std::byte>{}; }));
+    if (!msg.empty()) {
+      co_return msg;
+    }
+    heph::log(heph::ERROR, "Reconnecting subscriber, connection was closed", "node", name());
+
+  } catch (std::exception& exception) {
+    std::string error = exception.what();
+    if (last_error_.has_value()) {
+      if (*last_error_ == error) {
+        error.clear();
+      } else {
+        last_error_.emplace(error);
+      }
+    } else {
+      last_error_.emplace(error);
+    }
+
+    if (!error.empty()) {
+      heph::log(heph::ERROR, "Retrying", "node", name(), "error", error);
+    }
+  }
+
+  socket_.reset();
+  co_return {};
+}
 
 template <typename T>
 struct RemoteSubscriberNode : heph::conduit::Node<RemoteSubscriberNode<T>, RemoteSubscriberOperator> {
@@ -190,28 +202,23 @@ public:
     if (msg_size > std::numeric_limits<std::uint16_t>::max()) {
       heph::panic("Message size too big");
     }
-    return stdexec::just(static_cast<std::uint16_t>(msg_size)) |
-           stdexec::let_value([this](std::uint16_t& size) {
-             auto size_buffer = std::as_bytes(std::span{ &size, 1 });
-             return heph::net::sendAll(client_, size_buffer);
-           }) |
-           stdexec::let_value([this, msg = std::move(msg)](auto /*unused*/) {
-             auto msg_buffer = std::span{ msg };
-             return heph::net::sendAll(client_, msg_buffer) | stdexec::then([](auto /*unused*/) {});
-           }) |
+    return stdexec::just(std::move(msg)) |
+           stdexec::let_value([this](const auto& data) { return internal::send(client_, data); }) |
            stdexec::let_error([this]<typename Error>(const Error& error) {
              if constexpr (std::is_same_v<std::error_code, Error>) {
                heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", error.message());
 
              } else {
+               std::string reason;
                try {
                  std::rethrow_exception(error);
                } catch (std::exception& exception) {
-                 heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", exception.what());
+                 reason = exception.what();
 
                } catch (...) {
-                 heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", "unknown");
+                 reason = "unknown exception";
                }
+               heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", reason);
              }
              return stdexec::just_stopped();
            });
