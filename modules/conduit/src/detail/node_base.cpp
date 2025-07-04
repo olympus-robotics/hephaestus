@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include <stdexec/stop_token.hpp>
 
+#include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
@@ -102,6 +103,13 @@ auto NodeBase::getStopToken() -> stdexec::inplace_stop_token {
     return stdexec::inplace_stop_token{};
   }
   return engine_->getStopToken();
+}
+
+auto NodeBase::scheduler() const -> concurrency::Context::Scheduler {
+  if (engine_ == nullptr) {
+    return { nullptr };
+  }
+  return engine_->scheduler();
 }
 auto NodeBase::runsOnEngine() const -> bool {
   if (engine_ == nullptr) {

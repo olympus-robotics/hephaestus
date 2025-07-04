@@ -40,6 +40,7 @@ set(GCC_WARNINGS
     -Wlogical-op # warn about logical operations being used where bitwise were probably wanted
     -Wuseless-cast # warn if you perform a cast to the same type
     -Wno-attributes
+    -Wno-subobject-linkage
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")

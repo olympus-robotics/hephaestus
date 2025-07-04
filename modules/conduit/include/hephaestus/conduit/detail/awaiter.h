@@ -53,6 +53,10 @@ public:
     auto context_stop_token = self_->node()->getStopToken();
 
     if (stop_token.stop_requested() || context_stop_token.stop_requested()) {
+      if (enqueued_) {
+        enqueued_ = false;
+        self_->dequeueWaiter(this);
+      }
       stdexec::set_stopped(std::move(receiver_));
       return;
     }
@@ -60,6 +64,10 @@ public:
     if (res.has_value()) {
       stop_callback_.reset();
       context_stop_callback_.reset();
+      if (enqueued_) {
+        enqueued_ = false;
+        self_->dequeueWaiter(this);
+      }
       stdexec::set_value(std::move(receiver_), std::move(*res));
       return;
     }
@@ -78,6 +86,10 @@ private:
   void handleStopped() {
     stop_callback_.reset();
     context_stop_callback_.reset();
+    if (enqueued_) {
+      enqueued_ = false;
+      self_->dequeueWaiter(this);
+    }
     stdexec::set_stopped(std::move(receiver_));
   }
 

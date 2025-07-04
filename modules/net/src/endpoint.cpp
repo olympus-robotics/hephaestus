@@ -16,8 +16,10 @@
 #include <vector>
 
 #include <arpa/inet.h>
+#ifndef DISABLE_BLUETOOTH
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
+#endif
 #include <fmt/format.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -63,6 +65,7 @@ auto Endpoint::createIpV6(const std::string& ip, std::uint16_t port) -> Endpoint
   return Endpoint{ EndpointType::IPV6, std::move(address) };
 }
 
+#ifndef DISABLE_BLUETOOTH
 auto Endpoint::createBt(const std::string& mac, std::uint16_t psm) -> Endpoint {
   sockaddr_l2 addr{};
   addr.l2_family = AF_BLUETOOTH;
@@ -79,6 +82,7 @@ auto Endpoint::createBt(const std::string& mac, std::uint16_t psm) -> Endpoint {
   std::memcpy(address.data(), &addr, sizeof(addr));
   return Endpoint{ EndpointType::BT, std::move(address) };
 }
+#endif
 
 namespace {
 auto getPortIpV4(const std::vector<std::byte>& address) -> std::uint16_t {
@@ -91,22 +95,26 @@ auto getPortIpV6(const std::vector<std::byte>& address) -> std::uint16_t {
   std::memcpy(&addr, address.data(), sizeof(addr));
   return ::ntohs(addr.sin6_port);
 }
+#ifndef DISABLE_BLUETOOTH
 auto getPortBt(const std::vector<std::byte>& address) -> std::uint16_t {
   sockaddr_l2 addr{};
   std::memcpy(&addr, address.data(), sizeof(addr));
   return btohs(addr.l2_psm);
 }
+#endif
 }  // namespace
 
 auto Endpoint::port() const -> std::uint16_t {
   switch (type()) {
-    case EndpointType::IPV4:
+    case heph::net::EndpointType::IPV4:
       return getPortIpV4(address_);
-    case EndpointType::IPV6:
+    case heph::net::EndpointType::IPV6:
       return getPortIpV6(address_);
-    case EndpointType::BT:
+#ifndef DISABLE_BLUETOOTH
+    case heph::net::EndpointType::BT:
       return getPortBt(address_);
-    case EndpointType::INVALID:
+#endif
+    default:
       heph::panic("Unknown family");
   }
   __builtin_unreachable();
@@ -136,6 +144,7 @@ auto getAddressIpV6(const std::vector<std::byte>& address) -> std::string {
 
   return std::string{ buffer.data() };
 }
+#ifndef DISABLE_BLUETOOTH
 auto getAddressBt(const std::vector<std::byte>& address) -> std::string {
   static constexpr std::size_t BT_ADDRSTRLEN = 18;
   std::array<char, BT_ADDRSTRLEN> buffer{};
@@ -149,6 +158,7 @@ auto getAddressBt(const std::vector<std::byte>& address) -> std::string {
 
   return std::string{ buffer.data() };
 }
+#endif
 }  // namespace
 
 auto Endpoint::address() const -> std::string {
@@ -157,9 +167,11 @@ auto Endpoint::address() const -> std::string {
       return getAddressV4(address_);
     case heph::net::EndpointType::IPV6:
       return getAddressIpV6(address_);
+#ifndef DISABLE_BLUETOOTH
     case heph::net::EndpointType::BT:
       return getAddressBt(address_);
-    case EndpointType::INVALID:
+#endif
+    default:
       heph::panic("Unknown family");
   }
   __builtin_unreachable();
