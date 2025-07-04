@@ -17,7 +17,9 @@ public:
 
   static auto createTcpIpV4(concurrency::Context& context) -> Acceptor;
   static auto createTcpIpV6(concurrency::Context& context) -> Acceptor;
+#ifndef DISABLE_BLUETOOTH
   static auto createL2cap(concurrency::Context& context) -> Acceptor;
+#endif
 
   void listen(int backlog = DEFAULT_BACKLOG) const;
   void bind(const Endpoint& endpoint) const;

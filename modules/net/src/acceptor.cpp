@@ -21,9 +21,11 @@ auto Acceptor::createTcpIpV4(concurrency::Context& context) -> Acceptor {
 auto Acceptor::createTcpIpV6(concurrency::Context& context) -> Acceptor {
   return Acceptor{ Socket::createTcpIpV6(context) };
 }
+#ifndef DISABLE_BLUETOOTH
 auto Acceptor::createL2cap(concurrency::Context& context) -> Acceptor {
   return Acceptor{ Socket::createL2cap(context) };
 }
+#endif
 
 void Acceptor::listen(int backlog) const {
   const int res = ::listen(socket_.nativeHandle(), backlog);

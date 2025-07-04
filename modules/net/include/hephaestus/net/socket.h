@@ -17,7 +17,11 @@ template <typename>
 struct AcceptOperation;
 }
 
+#ifndef DISABLE_BLUETOOTH
 enum struct SocketType : std::uint8_t { TCP, UDP, L2CAP, INVALID };
+#else
+enum struct SocketType : std::uint8_t { TCP, UDP, INVALID };
+#endif
 
 class Socket {
 public:
@@ -33,7 +37,9 @@ public:
   static auto createTcpIpV6(concurrency::Context& context) -> Socket;
   static auto createUdpIpV4(concurrency::Context& context) -> Socket;
   static auto createUdpIpV6(concurrency::Context& context) -> Socket;
+#ifndef DISABLE_BLUETOOTH
   static auto createL2cap(concurrency::Context& context) -> Socket;
+#endif
 
   [[nodiscard]] auto type() const {
     return type_;
@@ -67,7 +73,9 @@ public:
 
 private:
   Socket(concurrency::Context* context, int fd, SocketType type);
+#ifndef DISABLE_BLUETOOTH
   void setupL2capSocket(bool set_mtu);
+#endif
   void setupUDPSocket();
 
   template <typename>
