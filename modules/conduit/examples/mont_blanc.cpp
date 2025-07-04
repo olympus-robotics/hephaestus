@@ -227,8 +227,8 @@ struct Osaka : heph::conduit::Node<Osaka> {
   static auto execute(Osaka& self, const std::optional<std::string>& s, Image /**/,
                       std::optional<Image> /**/) {
     heph::log(heph::INFO, "osaka", "parana", s);
-    return stdexec::when_all(self.salween.setValue(self.engine().scheduler(), PointCloud2{}),
-                             self.godavari.setValue(self.engine().scheduler(), LaserScan{}));
+    return stdexec::when_all(self.salween.setValue(self.engine(), PointCloud2{}),
+                             self.godavari.setValue(self.engine(), LaserScan{}));
   }
 };
 
@@ -309,9 +309,9 @@ struct Mandalay : heph::conduit::Node<Mandalay> {
               "loire", fmt::format("{}", self.loire.getValue())
               //
     );
-    return stdexec::when_all(self.tagus.setValue(self.engine().scheduler(), Pose{}),
-                             self.missouri.setValue(self.engine().scheduler(), Image{}),
-                             self.brazos.setValue(self.engine().scheduler(), PointCloud2{}));
+    return stdexec::when_all(self.tagus.setValue(self.engine(), Pose{}),
+                             self.missouri.setValue(self.engine(), Image{}),
+                             self.brazos.setValue(self.engine(), PointCloud2{}));
   }
 };
 
@@ -362,8 +362,8 @@ struct Ponce : heph::conduit::Node<Ponce> {
               "volga", self.volga.getValue()
               //
     );
-    return stdexec::when_all(self.congo.setValue(self.engine().scheduler(), Twist{}),
-                             self.meckong.setValue(self.engine().scheduler(), TwistWithCovarianceStamped{}));
+    return stdexec::when_all(self.congo.setValue(self.engine(), Twist{}),
+                             self.meckong.setValue(self.engine(), TwistWithCovarianceStamped{}));
   }
 };
 

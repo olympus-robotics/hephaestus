@@ -31,6 +31,7 @@
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/detail/node_base.h"
+#include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/remote_nodes.h"
 #include "hephaestus/net/endpoint.h"
@@ -252,4 +253,5 @@ inline auto NodeEngine::createNodeRunner(Node& node) {
                 uponError() | uponStopped(&node);
   return std::move(runner);
 }
+
 }  // namespace heph::conduit

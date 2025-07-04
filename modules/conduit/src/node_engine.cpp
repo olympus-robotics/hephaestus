@@ -149,4 +149,8 @@ auto NodeEngine::endpoints() const -> std::vector<heph::net::Endpoint> {
   }
   return res;
 }
+
+auto scheduler(NodeEngine& engine) -> concurrency::Context::Scheduler {
+  return engine.scheduler();
+}
 }  // namespace heph::conduit

@@ -86,7 +86,7 @@ private:
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
-    auto trigger = stdexec::continues_on(operationTrigger(), engine().scheduler());
+    auto trigger = stdexec::continues_on(operationTrigger(), heph::conduit::scheduler(engine()));
     using TriggerT = decltype(trigger);
     using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
@@ -102,7 +102,7 @@ private:
   }
 
   auto triggerExecute() {
-    return executeSender() | implicit_output_->propagate(engine().scheduler()) |
+    return executeSender() | implicit_output_->propagate(engine()) |
            stdexec::then([this] { operationEnd(); });
   }
 
@@ -122,7 +122,7 @@ private:
   auto operationTrigger() {
     auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
       if constexpr (HAS_PERIOD) {
-        return engine().scheduler().scheduleAt(start_at);
+        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
       } else {
         return stdexec::just();
       }

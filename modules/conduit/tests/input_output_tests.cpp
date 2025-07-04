@@ -135,8 +135,7 @@ TEST(InputOutput, QueuedInputExplicitOutput) {
   QueuedInput<std::string> input{ &dummy, "input" };
   Output<std::string> output{ &dummy, "output" };
   input.connectTo(output);
-  scope.spawn(output.setValue(engine.scheduler(), "Hello World!") |
-              stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine, "Hello World!") | stdexec::then([&] { engine.requestStop(); }));
   engine.run();
   auto res = input.getValue();
   EXPECT_TRUE(res.has_value());
@@ -172,8 +171,7 @@ TEST(InputOutput, QueuedInputOutputDelay) {
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
-  scope.spawn(output.setValue(engine.scheduler(), "Hello World Again!") |
-              stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine, "Hello World Again!") | stdexec::then([&] { engine.requestStop(); }));
   scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) | stdexec::let_value([&] { return input.get(); }) |
               stdexec::then([&](std::string value) { res.emplace(std::move(value)); }));
   // scope.spawn(output.setValue(engine, "Hello World!"));
@@ -206,8 +204,7 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   input.connectTo(output);
   EXPECT_EQ(input.setValue("Hello World!"), InputState::OK);
   std::optional<std::string> res;
-  scope.spawn(output.setValue(engine.scheduler(), "Hello World Again!") |
-              stdexec::then([&] { engine.requestStop(); }));
+  scope.spawn(output.setValue(engine, "Hello World Again!") | stdexec::then([&] { engine.requestStop(); }));
   scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) | stdexec::let_value([&] { return input.get(); }) |
               stdexec::then([&](std::string value) { res.emplace(std::move(value)); }));
   // scope.spawn(output.setValue(engine, "Hello World!"));
@@ -288,7 +285,7 @@ TEST(InputOutput, QueuedInputWhenAny) {
 
     std::variant<int, std::string> res;
     scope.spawn(engine.scheduler().scheduleAfter(TIMEOUT) |
-                stdexec::let_value([&] { return output.setValue(engine.scheduler(), "..."); }));
+                stdexec::let_value([&] { return output.setValue(engine, "..."); }));
     scope.spawn(exec::when_any(input2.get(), input4.get()) |
                 stdexec::then([&]<typename ValueT>(ValueT value) {
                   engine.requestStop();

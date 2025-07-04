@@ -9,11 +9,12 @@
 
 #include <stdexec/execution.hpp>
 
-#include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node.h"
 
 namespace heph::conduit {
+
+class NodeEngine;
 
 template <typename T>
 class Output {
@@ -29,8 +30,8 @@ public:
     return outputs_.name();
   }
 
-  auto setValue(heph::concurrency::Context::Scheduler scheduler, T t) {
-    return stdexec::just(std::move(t)) | outputs_.propagate(scheduler);
+  auto setValue(NodeEngine& engine, T t) {
+    return stdexec::just(std::move(t)) | outputs_.propagate(engine);
   }
 
   template <typename Input>
