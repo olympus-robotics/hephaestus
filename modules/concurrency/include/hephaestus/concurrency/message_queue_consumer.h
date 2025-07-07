@@ -72,7 +72,7 @@ auto MessageQueueConsumer<T>::stop() -> std::future<void> {
         return;
       }
 
-      callback_(std::forward<T>(message.value()));
+      callback_(std::move(message.value()));
     }
   });
 }
