@@ -89,7 +89,7 @@ void MessageQueueConsumer<T>::consume() {
     return;
   }
 
-  callback_(std::forward<T>(message.value()));
+  callback_(std::move(message.value()));
 }
 
 }  // namespace heph::concurrency
