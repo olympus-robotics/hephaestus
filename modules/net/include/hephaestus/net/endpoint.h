@@ -13,7 +13,11 @@
 
 namespace heph::net {
 
+#ifndef DISABLE_BLUETOOTH
 enum struct EndpointType : std::uint8_t { IPV4, IPV6, BT, INVALID };
+#else
+enum struct EndpointType : std::uint8_t { IPV4, IPV6, INVALID };
+#endif
 
 class Endpoint {
 public:
@@ -30,7 +34,9 @@ public:
 
   static auto createIpV6(const std::string& ip = "", std::uint16_t port = 0) -> Endpoint;
 
+#ifndef DISABLE_BLUETOOTH
   static auto createBt(const std::string& mac = "", std::uint16_t psm = 0) -> Endpoint;
+#endif
 
   [[nodiscard]] auto nativeHandle() const -> std::span<const std::byte>;
   [[nodiscard]] auto nativeHandle() -> std::span<std::byte>;

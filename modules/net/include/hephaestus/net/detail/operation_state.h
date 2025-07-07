@@ -19,7 +19,7 @@ public:
   struct StopCallback {
     OperationState* self;
     void operator()() const noexcept {
-      self->stop_source_.request_stop();
+      self->requestStop();
     }
   };
 
@@ -35,6 +35,13 @@ public:
     env_stop_.emplace(operation_.operation.getStopToken(), StopCallback{ this });
     ring_stop_.emplace(ring->getStopToken(), StopCallback{ this });
     ring->submit(&operation_);
+  }
+
+private:
+  void requestStop() {
+    env_stop_.reset();
+    ring_stop_.reset();
+    stop_source_.request_stop();
   }
 
 private:

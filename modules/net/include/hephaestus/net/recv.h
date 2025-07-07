@@ -47,7 +47,7 @@ struct RecvOperation {
   void prepare(::io_uring_sqe* sqe) const {
     auto recv_size = std::min(socket->maximumRecvSize(), buffer.size() - transferred);
     auto to_transfer = buffer.subspan(transferred, recv_size);
-    ::io_uring_prep_recv(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), 0);
+    ::io_uring_prep_recv(sqe, socket->nativeHandle(), to_transfer.data(), to_transfer.size(), MSG_NOSIGNAL);
   }
 
   auto handleCompletion(::io_uring_cqe* cqe) -> bool {
@@ -59,7 +59,7 @@ struct RecvOperation {
       stdexec::set_stopped(std::move(receiver));
       return true;
     }
-    transferred += cqe->res;
+    transferred += static_cast<std::size_t>(cqe->res);
     if constexpr (RecvAll) {
       if (transferred != buffer.size()) {
         return false;

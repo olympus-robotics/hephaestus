@@ -59,6 +59,7 @@ struct TimerEntry {
 class Timer {
 public:
   explicit Timer(IoRing& ring, TimerOptions options);
+  ~Timer() noexcept;
 
   void requestStop();
 

@@ -13,8 +13,10 @@
 #include <vector>
 
 #include <asm-generic/socket.h>
+#ifndef DISABLE_BLUETOOTH
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
+#endif
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -31,8 +33,10 @@ auto familyToEndpointType(int domain) {
       return heph::net::EndpointType::IPV4;
     case AF_INET6:
       return heph::net::EndpointType::IPV6;
+#ifndef DISABLE_BLUETOOTH
     case AF_BLUETOOTH:
       return heph::net::EndpointType::BT;
+#endif
     default:
       heph::panic("Unknown domain {}", domain);
   }
@@ -45,10 +49,13 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type)
   if (fd_ == -1) {
     panic("socket: {}", std::error_code(errno, std::system_category()).message());
   }
+
   switch (type) {
+#ifndef DISABLE_BLUETOOTH
     case SocketType::L2CAP:
       setupL2capSocket(true);
       break;
+#endif
     case SocketType::UDP:
       setupUDPSocket();
       break;
@@ -69,9 +76,12 @@ auto Socket::createUdpIpV4(concurrency::Context& context) -> Socket {
 auto Socket::createUdpIpV6(concurrency::Context& context) -> Socket {
   return Socket{ &context, socket(AF_INET6, SOCK_DGRAM, 0), SocketType::UDP };
 }
+
+#ifndef DISABLE_BLUETOOTH
 auto Socket::createL2cap(concurrency::Context& context) -> Socket {
   return Socket{ &context, socket(AF_BLUETOOTH, SOCK_SEQPACKET, 0), SocketType::L2CAP };
 }
+#endif
 
 Socket::~Socket() noexcept {
   close();
@@ -81,7 +91,8 @@ Socket::Socket(Socket&& other) noexcept
   : context_(other.context_)
   , maximum_recv_size_(other.maximum_recv_size_)
   , maximum_send_size_(other.maximum_send_size_)
-  , fd_(other.fd_) {
+  , fd_(other.fd_)
+  , type_(other.type_) {
   other.fd_ = -1;
 }
 
@@ -91,6 +102,7 @@ auto Socket::operator=(Socket&& other) noexcept -> Socket& {
   maximum_recv_size_ = other.maximum_recv_size_;
   maximum_send_size_ = other.maximum_send_size_;
   fd_ = other.fd_;
+  type_ = other.type_;
   other.fd_ = -1;
 
   return *this;
@@ -98,6 +110,7 @@ auto Socket::operator=(Socket&& other) noexcept -> Socket& {
 
 void Socket::close() noexcept {
   if (fd_ != -1) {
+    ::shutdown(fd_, SHUT_RDWR);
     ::close(fd_);
     fd_ = -1;
   }
@@ -169,6 +182,7 @@ auto Socket::remoteEndpoint() const -> Endpoint {
   return Endpoint{ familyToEndpointType(addr.sa_family), std::move(address) };
 }
 
+#ifndef DISABLE_BLUETOOTH
 void Socket::setupL2capSocket(bool set_mtu) {
   static constexpr std::uint16_t BT_TX_WIN_SIZE = 256;
   static constexpr std::uint16_t BT_MAX_TX = 100;
@@ -204,6 +218,7 @@ void Socket::setupL2capSocket(bool set_mtu) {
     panic("unable to set send buffer size: {}", std::error_code(errno, std::system_category()).message());
   }
 }
+#endif
 
 void Socket::setupUDPSocket() {
   static constexpr std::size_t MAX_UDP_PACKET_SIZE = 65507;

@@ -33,6 +33,7 @@
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
 
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 
@@ -192,7 +193,8 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
                           .timer_options = { .clock_mode = concurrency::io_ring::ClockMode::SIMULATED } },
-      .number_of_threads = 1 }
+      .number_of_threads = 1,
+      .endpoints = {} }
   };
   exec::async_scope scope;
   DummyOperation dummy;
@@ -227,6 +229,7 @@ TEST(InputOutput, handleStopped) {
 }
 
 TEST(InputOutput, QueuedInputWhenAny) {
+  NodeEngine engine{ {} };
   DummyOperation dummy;
   QueuedInput<std::string, InputPolicy<1, RetrievalMethod::POLL>> input1{ &dummy, "input1" };
   QueuedInput<int> input2{ &dummy, "input2" };
@@ -276,7 +279,6 @@ TEST(InputOutput, QueuedInputWhenAny) {
     EXPECT_EQ(res2, "b");
   }
   {
-    NodeEngine engine{ {} };
     exec::async_scope scope;
     Output<std::string> output{ &dummy, "output" };
     input4.connectTo(output);
