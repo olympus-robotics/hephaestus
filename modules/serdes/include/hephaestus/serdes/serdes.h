@@ -20,43 +20,38 @@ namespace heph::serdes {
 /// Right now it only support Protobuf, but can be easily extended to support other libraries by simply
 /// writing a new concept for your serialization library.
 
-template <class T>
+template <typename T>
 [[nodiscard]] auto serialize([[maybe_unused]] const T& data) -> std::vector<std::byte> {
-  static_assert(!std::is_same_v<T, void>,
-                "serialize is not implemented for this type, did you forget to include the header "
-                "with the serialization implementation?");
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
   __builtin_unreachable();
 }
 
-template <class T>
+template <typename T>
 [[nodiscard]] auto serializeToText([[maybe_unused]] const T& data) -> std::string {
-  static_assert(!std::is_same_v<T, void>,
-                "serialize is not implemented for this type, did you forget to include the header "
-                "with the serialization implementation?");
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
   __builtin_unreachable();
 }
 
-template <class T>
+template <typename T>
 void deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] T& data) {
-  static_assert(!std::is_same_v<T, void>,
-                "serialize is not implemented for this type, did you forget to include the header "
-                "with the serialization implementation?");
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
   __builtin_unreachable();
 }
 
-template <class T>
+template <typename T>
 void deserializeFromText([[maybe_unused]] std::string_view buffer, [[maybe_unused]] T& data) {
-  static_assert(!std::is_same_v<T, void>,
-                "serialize is not implemented for this type, did you forget to include the header "
-                "with the serialization implementation?");
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
   __builtin_unreachable();
 }
 
-template <class T>
+template <typename T>
 auto getSerializedTypeInfo() -> TypeInfo {
-  static_assert(!std::is_same_v<T, void>,
-                "serialize is not implemented for this type, did you forget to include the header "
-                "with the serialization implementation?");
+  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
+                       "with the serialization implementation?");
   __builtin_unreachable();
 }
 
