@@ -1,0 +1,23 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
+syntax = "proto3";
+
+package heph.types.proto;
+
+message Bool {
+  bool value = 1;
+}
+
+message Int {
+  int32 value = 1;
+}
+
+message Float {
+  float value = 1;
+}
+
+message Double {
+  double value = 1;
+}

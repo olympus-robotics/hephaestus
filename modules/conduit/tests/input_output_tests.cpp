@@ -34,6 +34,7 @@
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/string.h"
 
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 

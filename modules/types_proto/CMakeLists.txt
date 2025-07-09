@@ -12,13 +12,13 @@ add_subdirectory(proto)
 
 # library sources
 set(SOURCES
-    src/bool.cpp
+    src/primitive_types.cpp
     src/bounds.cpp
     src/dummy_type.cpp
     src/numeric_value.cpp
     src/uuid_v4.cpp
     README.md
-    include/hephaestus/types_proto/bool.h
+    include/hephaestus/types_proto/primitive_types.h
     include/hephaestus/types_proto/bounds.h
     include/hephaestus/types_proto/dummy_type.h
     include/hephaestus/types_proto/numeric_value.h
@@ -28,11 +28,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME types_proto
-  PUBLIC_LINK_LIBS
-    hephaestus::random
-    hephaestus::serdes
-    hephaestus::types
-    hephaestus::types_gen_proto
+  PUBLIC_LINK_LIBS hephaestus::random hephaestus::serdes hephaestus::types hephaestus::types_gen_proto
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

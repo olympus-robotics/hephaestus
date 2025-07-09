@@ -16,6 +16,7 @@
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/types_proto/primitive_types.h"
 #include "hephaestus/utils/signal_handler.h"
 
 namespace heph::conduit {

@@ -6,6 +6,6 @@ syntax = "proto3";
 
 package heph.types.proto;
 
-message Bool {
-  bool value = 1;
+message String {
+  string value = 1;
 }

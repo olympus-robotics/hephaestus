@@ -21,79 +21,76 @@ namespace heph::serdes {
 /// writing a new concept for your serialization library.
 
 template <typename T>
-[[nodiscard]] auto serialize([[maybe_unused]] const T& data) -> std::vector<std::byte> {
-  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
-                       "with the serialization implementation?");
+static inline constexpr bool NOT_SERIALIZABLE = false;
+
+template <typename T>
+[[nodiscard]] auto serialize(const T& data) -> std::vector<std::byte> {
+  if constexpr (protobuf::ProtobufSerializable<T>) {
+    return protobuf::serialize(data);
+  } else {
+    static_assert(NOT_SERIALIZABLE<T>,
+                  "serialize is not implemented for this type, did you forget to include the header "
+                  "with the serialization implementation?");
+  }
+
   __builtin_unreachable();
 }
 
 template <typename T>
-[[nodiscard]] auto serializeToText([[maybe_unused]] const T& data) -> std::string {
-  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
-                       "with the serialization implementation?");
-  __builtin_unreachable();
-}
-
-template <typename T>
-void deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] T& data) {
-  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
-                       "with the serialization implementation?");
-  __builtin_unreachable();
-}
-
-template <typename T>
-void deserializeFromText([[maybe_unused]] std::string_view buffer, [[maybe_unused]] T& data) {
-  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
-                       "with the serialization implementation?");
-  __builtin_unreachable();
-}
-
-template <typename T>
-auto getSerializedTypeInfo() -> TypeInfo {
-  static_assert(false, "serialize is not implemented for this type, did you forget to include the header "
-                       "with the serialization implementation?");
-  __builtin_unreachable();
-}
-
-// -----------------------------------------------------------------------------------------------
-// Specializations
-// -----------------------------------------------------------------------------------------------
-
-// -- Protobuf -----------------------------------------------------------------------------------
-
-template <protobuf::ProtobufSerializable T>
-auto serialize(const T& data) -> std::vector<std::byte> {
-  return protobuf::serialize(data);
-}
-
-template <protobuf::ProtobufSerializable T>
 [[nodiscard]] auto serializeToText(const T& data) -> std::string {
-  return protobuf::serializeToText(data);
+  if constexpr (protobuf::ProtobufSerializable<T>) {
+    return protobuf::serializeToText(data);
+  } else {
+    static_assert(NOT_SERIALIZABLE<T>,
+                  "serialize is not implemented for this type, did you forget to include the header "
+                  "with the serialization implementation?");
+  }
+
+  __builtin_unreachable();
 }
 
-template <protobuf::ProtobufSerializable T>
+template <typename T>
 void deserialize(std::span<const std::byte> buffer, T& data) {
-  protobuf::deserialize(buffer, data);
+  if constexpr (protobuf::ProtobufSerializable<T>) {
+    protobuf::deserialize(buffer, data);
+    return;
+  } else {
+    static_assert(NOT_SERIALIZABLE<T>,
+                  "serialize is not implemented for this type, did you forget to include the header "
+                  "with the serialization implementation?");
+  }
 }
 
-template <protobuf::ProtobufSerializable T>
+template <typename T>
 void deserializeFromText(std::string_view buffer, T& data) {
-  protobuf::deserializeFromText(buffer, data);
+  if constexpr (protobuf::ProtobufSerializable<T>) {
+    protobuf::deserializeFromText(buffer, data);
+    return;
+  } else {
+    static_assert(NOT_SERIALIZABLE<T>,
+                  "serialize is not implemented for this type, did you forget to include the header "
+                  "with the serialization implementation?");
+  }
 }
 
-template <protobuf::ProtobufSerializable T>
+template <typename T>
 auto getSerializedTypeInfo() -> TypeInfo {
-  return protobuf::getTypeInfo<T>();
-}
+  if constexpr (protobuf::ProtobufSerializable<T>) {
+    return protobuf::getTypeInfo<T>();
+  } else if constexpr (StringType<T>) {
+    return {
+      .name = "string",
+      .schema = {},
+      .serialization = TypeInfo::Serialization::TEXT,
+      .original_type = "string",
+    };
+  } else {
+    static_assert(NOT_SERIALIZABLE<T>,
+                  "serialize is not implemented for this type, did you forget to include the header "
+                  "with the serialization implementation?");
+  }
 
-template <StringType T>
-auto getSerializedTypeInfo() -> TypeInfo {
-  return {
-    .name = "string",
-    .schema = {},
-    .serialization = TypeInfo::Serialization::TEXT,
-    .original_type = "string",
-  };
+  __builtin_unreachable();
 }
 
 }  // namespace heph::serdes
