@@ -43,6 +43,8 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/format",
+        "//modules/types_proto",
     ],
 )
 
@@ -52,6 +54,7 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/types_proto",
     ],
 )
 

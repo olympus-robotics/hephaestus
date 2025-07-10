@@ -110,4 +110,7 @@ CheckOptions:
       key: misc-include-cleaner.IgnoreHeaders,
       value: "./build/externals/deploy/include/.*",
     }
-  - { key: misc-include-cleaner.IgnoreHeaders, value: "log.h|log_sink.h" }
+  - {
+      key: misc-include-cleaner.IgnoreHeaders,
+      value: "log.h|log_sink.h|.*/types_proto/.*|.*/format/generic_formatter.h",
+    }

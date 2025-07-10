@@ -21,57 +21,17 @@
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/queued_input.h"
+#include "hephaestus/format/generic_formatter.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"
+#include "hephaestus/types_proto/numeric_value.h"
+#include "hephaestus/types_proto/string.h"
 #include "hephaestus/utils/signal_handler.h"
 
 namespace mont_blanc {
-// NOLINTBEGIN(readability-identifier-naming,misc-use-internal-linkage)
-struct Image {
-  std::int32_t width;
-  std::int32_t height;
-};
-auto format_as(Image image) {
-  return fmt::format("Image(width={}, height={})", image.width, image.height);
-}
-struct PointCloud2 {};
-auto format_as(PointCloud2 /**/) {
-  return fmt::format("PointCloud2()");
-}
-struct LaserScan {};
-auto format_as(LaserScan /**/) {
-  return fmt::format("LaserScan()");
-}
-struct Quaternion {};
-auto format_as(Quaternion /**/) {
-  return fmt::format("Quaternion()");
-}
-struct Vector3 {};
-auto format_as(Vector3 /**/) {
-  return fmt::format("Vector3()");
-}
-struct Pose {};
-auto format_as(Pose /**/) {
-  return fmt::format("Pose()");
-}
-struct Twist {};
-auto format_as(Twist /**/) {
-  return fmt::format("Twist()");
-}
-struct TwistWithCovarianceStamped {};
-auto format_as(TwistWithCovarianceStamped /**/) {
-  return fmt::format("TwistWithCovarianceStamped()");
-}
-struct Vector3Stamped {};
-auto format_as(Vector3Stamped /**/) {
-  return fmt::format("Vector3Stamped()");
-}
-struct WrenchStamped {};
-auto format_as(WrenchStamped /**/) {
-  return fmt::format("WrenchStamped()");
-}
-// NOLINTEND(readability-identifier-naming,misc-use-internal-linkage)
 
 template <typename T>
 class RandomData {
@@ -88,7 +48,6 @@ private:
                      std::uniform_int_distribution<T>>
       distribution_;
 };
-
 struct Cordoba : heph::conduit::Node<Cordoba, RandomData<float>> {
   static constexpr auto NAME = "cordoba";
   static constexpr auto PERIOD = std::chrono::milliseconds(100);
@@ -159,8 +118,11 @@ struct Delhi : heph::conduit::Node<Delhi, RandomData<std::int32_t>> {
 
   static constexpr auto PERIOD = std::chrono::seconds(1);
 
-  static auto execute(Delhi& self) -> Image {
-    return { .width = self.data().generate(), .height = self.data().generate() };
+  static auto execute(Delhi& self) -> heph::types::DummyType {
+    heph::types::DummyType dummy;
+    dummy.dummy_primitives_type.dummy_int32_t = self.data().generate();
+
+    return dummy;
   }
 };
 
@@ -194,13 +156,13 @@ struct Taipei : heph::conduit::Node<Taipei> {
     return "taipei";
   }
 
-  heph::conduit::QueuedInput<Image> columbia{ this, "columbia" };
+  heph::conduit::QueuedInput<heph::types::DummyType> columbia{ this, "columbia" };
 
   static auto trigger(Taipei& self) {
     return self.columbia.get();
   }
 
-  static auto execute(Image image) {
+  static auto execute(heph::types::DummyType image) {
     return image;
   }
 };
@@ -213,22 +175,23 @@ struct Osaka : heph::conduit::Node<Osaka> {
   heph::conduit::QueuedInput<std::string, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
                                                                      heph::conduit::SetMethod::OVERWRITE>>
       parana{ this, "parana" };
-  heph::conduit::QueuedInput<Image> colorado{ this, "colorado" };
-  heph::conduit::QueuedInput<Image, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL>>
+  heph::conduit::QueuedInput<heph::types::DummyType> colorado{ this, "colorado" };
+  heph::conduit::QueuedInput<heph::types::DummyType,
+                             heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL>>
       columbia{ this, "columbia" };
 
-  heph::conduit::Output<PointCloud2> salween{ this, "salween" };
-  heph::conduit::Output<LaserScan> godavari{ this, "godawari" };
+  heph::conduit::Output<heph::types::DummyType> salween{ this, "salween" };
+  heph::conduit::Output<heph::types::DummyPrimitivesType> godavari{ this, "godawari" };
 
   static auto trigger(Osaka& self) {
     return stdexec::when_all(self.parana.get(), self.colorado.get(), self.columbia.get());
   }
 
-  static auto execute(Osaka& self, const std::optional<std::string>& s, Image /**/,
-                      std::optional<Image> /**/) {
+  static auto execute(Osaka& self, const std::optional<std::string>& s, const heph::types::DummyType& /**/,
+                      const std::optional<heph::types::DummyType>& /**/) {
     heph::log(heph::INFO, "osaka", "parana", s);
-    return stdexec::when_all(self.salween.setValue(self.engine(), PointCloud2{}),
-                             self.godavari.setValue(self.engine(), LaserScan{}));
+    return stdexec::when_all(self.salween.setValue(self.engine(), heph::types::DummyType{}),
+                             self.godavari.setValue(self.engine(), heph::types::DummyPrimitivesType{}));
   }
 };
 
@@ -240,7 +203,7 @@ struct Hebron : heph::conduit::Node<Hebron> {
   static constexpr auto PERIOD = std::chrono::milliseconds(100);
 
   static auto execute() {
-    return Quaternion{};
+    return size_t{};
   }
 };
 
@@ -252,7 +215,7 @@ struct Kingston : heph::conduit::Node<Kingston> {
   static constexpr auto PERIOD = std::chrono::milliseconds(100);
 
   static auto execute() {
-    return Vector3{};
+    return std::string{};
   }
 };
 
@@ -261,17 +224,19 @@ struct Tripoli : heph::conduit::Node<Tripoli> {
     return "tripoli";
   }
 
-  heph::conduit::QueuedInput<LaserScan> godavari{ this, "godavari" };
-  heph::conduit::QueuedInput<Image, heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
-                                                               heph::conduit::SetMethod::OVERWRITE>>
+  heph::conduit::QueuedInput<heph::types::DummyPrimitivesType> godavari{ this, "godavari" };
+  heph::conduit::QueuedInput<heph::types::DummyType,
+                             heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::POLL,
+                                                        heph::conduit::SetMethod::OVERWRITE>>
       columbia{ this, "columbia" };
 
   static auto trigger(Tripoli& self) {
     return stdexec::when_all(self.godavari.get(), self.columbia.get());
   }
 
-  static auto execute(LaserScan /*scan*/, std::optional<Image> /*image*/) {
-    return PointCloud2{};
+  static auto execute(const heph::types::DummyPrimitivesType& /*scan*/,
+                      const std::optional<heph::types::DummyType>& /*image*/) {
+    return heph::types::DummyType{};
   }
 };
 
@@ -281,15 +246,15 @@ struct Mandalay : heph::conduit::Node<Mandalay> {
   }
 
   heph::conduit::QueuedInput<std::string> danube{ this, "danube" };
-  heph::conduit::QueuedInput<Quaternion> chenab{ this, "chenab" };
-  heph::conduit::QueuedInput<PointCloud2> salween{ this, "salween" };
-  heph::conduit::QueuedInput<LaserScan> godavari{ this, "godavari" };
-  heph::conduit::QueuedInput<Vector3> yamuna{ this, "yamuna" };
-  heph::conduit::QueuedInput<PointCloud2> loire{ this, "loire" };
+  heph::conduit::QueuedInput<size_t> chenab{ this, "chenab" };
+  heph::conduit::QueuedInput<heph::types::DummyType> salween{ this, "salween" };
+  heph::conduit::QueuedInput<heph::types::DummyPrimitivesType> godavari{ this, "godavari" };
+  heph::conduit::QueuedInput<std::string> yamuna{ this, "yamuna" };
+  heph::conduit::QueuedInput<heph::types::DummyType> loire{ this, "loire" };
 
-  heph::conduit::Output<Pose> tagus{ this, "tagus" };
-  heph::conduit::Output<Image> missouri{ this, "missouri" };
-  heph::conduit::Output<PointCloud2> brazos{ this, "brazos" };
+  heph::conduit::Output<int16_t> tagus{ this, "tagus" };
+  heph::conduit::Output<heph::types::DummyType> missouri{ this, "missouri" };
+  heph::conduit::Output<heph::types::DummyType> brazos{ this, "brazos" };
 
   static constexpr auto PERIOD = std::chrono::milliseconds(100);
 
@@ -309,9 +274,9 @@ struct Mandalay : heph::conduit::Node<Mandalay> {
               "loire", fmt::format("{}", self.loire.getValue())
               //
     );
-    return stdexec::when_all(self.tagus.setValue(self.engine(), Pose{}),
-                             self.missouri.setValue(self.engine(), Image{}),
-                             self.brazos.setValue(self.engine(), PointCloud2{}));
+    return stdexec::when_all(self.tagus.setValue(self.engine(), int16_t{}),
+                             self.missouri.setValue(self.engine(), heph::types::DummyType{}),
+                             self.brazos.setValue(self.engine(), heph::types::DummyType{}));
   }
 };
 
@@ -323,24 +288,24 @@ struct Ponce : heph::conduit::Node<Ponce> {
   using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::BLOCK,
                                                   heph::conduit::SetMethod::OVERWRITE>;
 
-  heph::conduit::QueuedInput<Pose, InputPolicyT> tagus{ this, "tagus" };
+  heph::conduit::QueuedInput<int16_t, InputPolicyT> tagus{ this, "tagus" };
   heph::conduit::QueuedInput<std::string, InputPolicyT> danube{ this, "danube" };
-  heph::conduit::QueuedInput<Image, InputPolicyT> missouri{ this, "missouri" };
-  heph::conduit::QueuedInput<PointCloud2> brazos{ this, "brazos" };
-  heph::conduit::QueuedInput<Vector3, InputPolicyT> yamuna{ this, "yamuna" };
-  heph::conduit::QueuedInput<LaserScan, InputPolicyT> godavari{ this, "godavari" };
-  heph::conduit::QueuedInput<PointCloud2, InputPolicyT> loire{ this, "loire" };
+  heph::conduit::QueuedInput<heph::types::DummyType, InputPolicyT> missouri{ this, "missouri" };
+  heph::conduit::QueuedInput<heph::types::DummyType> brazos{ this, "brazos" };
+  heph::conduit::QueuedInput<std::string, InputPolicyT> yamuna{ this, "yamuna" };
+  heph::conduit::QueuedInput<heph::types::DummyPrimitivesType, InputPolicyT> godavari{ this, "godavari" };
+  heph::conduit::QueuedInput<heph::types::DummyType, InputPolicyT> loire{ this, "loire" };
   heph::conduit::QueuedInput<float, InputPolicyT> ohio{ this, "ohio" };
   heph::conduit::QueuedInput<double, InputPolicyT> volga{ this, "volga" };
 
-  heph::conduit::Output<Twist> congo{ this, "congo" };
-  heph::conduit::Output<TwistWithCovarianceStamped> meckong{ this, "meckong" };
+  heph::conduit::Output<int64_t> congo{ this, "congo" };
+  heph::conduit::Output<int8_t> meckong{ this, "meckong" };
 
   static auto trigger(Ponce& self) {
     return self.brazos.get();
   }
 
-  static auto execute(Ponce& self, PointCloud2 cloud) {
+  static auto execute(Ponce& self, const heph::types::DummyType& cloud) {
     heph::log(heph::INFO, "ponce",
               //
               "tagus", self.tagus.getValue(),
@@ -362,8 +327,8 @@ struct Ponce : heph::conduit::Node<Ponce> {
               "volga", self.volga.getValue()
               //
     );
-    return stdexec::when_all(self.congo.setValue(self.engine(), Twist{}),
-                             self.meckong.setValue(self.engine(), TwistWithCovarianceStamped{}));
+    return stdexec::when_all(self.congo.setValue(self.engine(), int64_t{}),
+                             self.meckong.setValue(self.engine(), int8_t{}));
   }
 };
 
@@ -377,8 +342,8 @@ struct Geneva : heph::conduit::Node<Geneva> {
 
   heph::conduit::QueuedInput<std::string> parana{ this, "parana" };
   heph::conduit::QueuedInput<std::string, InputPolicyT> danube{ this, "danube" };
-  heph::conduit::QueuedInput<Pose, InputPolicyT> tagus{ this, "tagus" };
-  heph::conduit::QueuedInput<Twist, InputPolicyT> congo{ this, "congo" };
+  heph::conduit::QueuedInput<int16_t, InputPolicyT> tagus{ this, "tagus" };
+  heph::conduit::QueuedInput<int64_t, InputPolicyT> congo{ this, "congo" };
 
   static auto trigger(Geneva& self) {
     return self.parana.get();
@@ -405,13 +370,13 @@ struct Monaco : heph::conduit::Node<Monaco> {
     return "monaco";
   }
 
-  heph::conduit::QueuedInput<Twist> congo{ this, "congo" };
+  heph::conduit::QueuedInput<int64_t> congo{ this, "congo" };
 
   static auto trigger(Monaco& self) {
     return self.congo.get();
   }
 
-  static auto execute(Twist /**/) {
+  static auto execute(int64_t /**/) {
     return float{};
   }
 };
@@ -421,14 +386,14 @@ struct Rotterdam : heph::conduit::Node<Rotterdam> {
     return "rotterdam";
   }
 
-  heph::conduit::QueuedInput<TwistWithCovarianceStamped> meckong{ this, "meckong" };
+  heph::conduit::QueuedInput<int8_t> meckong{ this, "meckong" };
 
   static auto trigger(Rotterdam& self) {
     return self.meckong.get();
   }
 
-  static auto execute(TwistWithCovarianceStamped /**/) {
-    return Vector3Stamped{};
+  static auto execute(int8_t /**/) {
+    return uint64_t{};
   }
 };
 
@@ -437,14 +402,14 @@ struct Barcelona : heph::conduit::Node<Barcelona> {
     return "barcelona";
   }
 
-  heph::conduit::QueuedInput<TwistWithCovarianceStamped> meckong{ this, "meckong" };
+  heph::conduit::QueuedInput<int8_t> meckong{ this, "meckong" };
 
   static auto trigger(Barcelona& self) {
     return self.meckong.get();
   }
 
-  static auto execute(TwistWithCovarianceStamped /**/) {
-    return WrenchStamped{};
+  static auto execute(int8_t /**/) {
+    return uint16_t{};
   }
 };
 
@@ -470,8 +435,8 @@ struct Georgetown : heph::conduit::Node<Georgetown> {
   using InputPolicyT = heph::conduit::InputPolicy<1, heph::conduit::RetrievalMethod::BLOCK,
                                                   heph::conduit::SetMethod::OVERWRITE>;
 
-  heph::conduit::QueuedInput<Vector3Stamped, InputPolicyT> murray{ this, "murray" };
-  heph::conduit::QueuedInput<WrenchStamped, InputPolicyT> lena{ this, "lena" };
+  heph::conduit::QueuedInput<uint64_t, InputPolicyT> murray{ this, "murray" };
+  heph::conduit::QueuedInput<uint16_t, InputPolicyT> lena{ this, "lena" };
 
   static constexpr auto PERIOD = std::chrono::milliseconds(50);
 
@@ -479,7 +444,7 @@ struct Georgetown : heph::conduit::Node<Georgetown> {
     return stdexec::when_all(self.murray.get(), self.lena.get());
   }
 
-  static auto execute(Vector3Stamped m, WrenchStamped l) {
+  static auto execute(uint64_t m, uint16_t l) {
     heph::log(heph::INFO, "georgetown", "murray", m, "lena", l);
 
     return double{};
