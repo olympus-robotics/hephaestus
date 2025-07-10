@@ -4,6 +4,8 @@
 
 #include "hephaestus/types_proto/string.h"
 
+#include <string>
+
 #include "hephaestus/types/proto/string.pb.h"
 
 namespace heph::types::proto {

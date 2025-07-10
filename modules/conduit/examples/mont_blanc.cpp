@@ -187,8 +187,8 @@ struct Osaka : heph::conduit::Node<Osaka> {
     return stdexec::when_all(self.parana.get(), self.colorado.get(), self.columbia.get());
   }
 
-  static auto execute(Osaka& self, const std::optional<std::string>& s, heph::types::DummyType /**/,
-                      std::optional<heph::types::DummyType> /**/) {
+  static auto execute(Osaka& self, const std::optional<std::string>& s, const heph::types::DummyType& /**/,
+                      const std::optional<heph::types::DummyType>& /**/) {
     heph::log(heph::INFO, "osaka", "parana", s);
     return stdexec::when_all(self.salween.setValue(self.engine(), heph::types::DummyType{}),
                              self.godavari.setValue(self.engine(), heph::types::DummyPrimitivesType{}));
@@ -234,8 +234,8 @@ struct Tripoli : heph::conduit::Node<Tripoli> {
     return stdexec::when_all(self.godavari.get(), self.columbia.get());
   }
 
-  static auto execute(heph::types::DummyPrimitivesType /*scan*/,
-                      std::optional<heph::types::DummyType> /*image*/) {
+  static auto execute(const heph::types::DummyPrimitivesType& /*scan*/,
+                      const std::optional<heph::types::DummyType>& /*image*/) {
     return heph::types::DummyType{};
   }
 };
@@ -305,7 +305,7 @@ struct Ponce : heph::conduit::Node<Ponce> {
     return self.brazos.get();
   }
 
-  static auto execute(Ponce& self, heph::types::DummyType cloud) {
+  static auto execute(Ponce& self, const heph::types::DummyType& cloud) {
     heph::log(heph::INFO, "ponce",
               //
               "tagus", self.tagus.getValue(),
