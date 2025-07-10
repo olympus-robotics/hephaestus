@@ -116,12 +116,16 @@ static constexpr auto SERVICE_ATTACHMENT_REQUEST_TYPE_INFO = "0";
 static constexpr auto SERVICE_ATTACHMENT_REPLY_TYPE_INFO = "1";
 
 template <typename T>
-[[nodiscard]] auto getSerializedTypeName() -> std::string {
+[[nodiscard]] auto getSerializedTypeInfo() -> serdes::TypeInfo {
   if constexpr (std::is_same_v<T, std::string>) {
-    // NOTE: we manually write the type name to avoid namespace conflicts between GCC and clang.
-    return "std::string";
+    return {
+      .name = "std::string",
+      .schema = {},
+      .serialization = serdes::TypeInfo::Serialization::TEXT,
+      .original_type = "std::string",
+    };
   } else {
-    return serdes::getSerializedTypeInfo<T>().name;
+    return serdes::getSerializedTypeInfo<T>();
   }
 }
 
@@ -150,8 +154,8 @@ template <typename RequestT, typename ReplyT>
   const auto request_type_info = attachment_data[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO];
   const auto reply_type_info = attachment_data[SERVICE_ATTACHMENT_REPLY_TYPE_INFO];
 
-  const auto this_request_type = getSerializedTypeName<RequestT>();
-  const auto this_reply_type = getSerializedTypeName<ReplyT>();
+  const auto this_request_type = getSerializedTypeInfo<RequestT>().name;
+  const auto this_reply_type = getSerializedTypeInfo<ReplyT>().name;
 
   return request_type_info == this_request_type && reply_type_info == this_reply_type;
 }
@@ -223,8 +227,8 @@ template <typename RequestT, typename ReplyT>
   }
 
   std::unordered_map<std::string, std::string> attachments;
-  attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = getSerializedTypeName<RequestT>();
-  attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = getSerializedTypeName<ReplyT>();
+  attachments[SERVICE_ATTACHMENT_REQUEST_TYPE_INFO] = getSerializedTypeInfo<RequestT>().name;
+  attachments[SERVICE_ATTACHMENT_REPLY_TYPE_INFO] = getSerializedTypeInfo<ReplyT>().name;
   options.attachment = ::zenoh::ext::serialize(attachments);
 
   return options;
@@ -264,8 +268,8 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
   , callback_(std::move(callback))
   , failure_callback_(std::move(failure_callback))
   , post_reply_callback_(std::move(post_reply_callback))
-  , type_info_({ .request = serdes::getSerializedTypeInfo<RequestT>(),
-                 .reply = serdes::getSerializedTypeInfo<ReplyT>() }) {
+  , type_info_({ .request = internal::getSerializedTypeInfo<RequestT>(),
+                 .reply = internal::getSerializedTypeInfo<ReplyT>() }) {
   internal::checkTemplatedTypes<RequestT, ReplyT>();
   heph::log(heph::DEBUG, "started service", "name", topic_config_.name);
 
