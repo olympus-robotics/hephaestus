@@ -12,11 +12,11 @@
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/uuid_v4.h"
-#include "hephaestus/types_proto/bounds.h"           // NOLINT(misc-include-cleaner)
-#include "hephaestus/types_proto/dummy_type.h"       // NOLINT(misc-include-cleaner)
-#include "hephaestus/types_proto/numeric_value.h"    // NOLINT(misc-include-cleaner)
-#include "hephaestus/types_proto/primitive_types.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/types_proto/uuid_v4.h"          // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/bool.h"           // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/bounds.h"         // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/uuid_v4.h"        // NOLINT(misc-include-cleaner)
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
