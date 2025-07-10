@@ -12,7 +12,6 @@
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/protobuf/protobuf.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/concepts.h"
 
 namespace heph::serdes {
 /// Serdes module provides generic support for serialization and deserialization of data types.
@@ -77,13 +76,6 @@ template <typename T>
 auto getSerializedTypeInfo() -> TypeInfo {
   if constexpr (protobuf::ProtobufSerializable<T>) {
     return protobuf::getTypeInfo<T>();
-  } else if constexpr (StringType<T>) {
-    return {
-      .name = "string",
-      .schema = {},
-      .serialization = TypeInfo::Serialization::TEXT,
-      .original_type = "string",
-    };
   } else {
     static_assert(NOT_SERIALIZABLE<T>,
                   "serialize is not implemented for this type, did you forget to include the header "

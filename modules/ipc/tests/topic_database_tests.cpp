@@ -80,9 +80,9 @@ TEST(ZenohTests, TopicDatabase) {
   auto service_string_type_info = topic_database->getServiceTypeInfo(service_string_topic.name);
   EXPECT_TRUE(service_string_type_info.has_value());
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(service_string_type_info->request, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_EQ(service_string_type_info->request.name, "std::string");
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(service_string_type_info->reply, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_EQ(service_string_type_info->reply.name, "std::string");
 
   auto result = topic_database->getTypeInfo("non_existent_topic");
   EXPECT_FALSE(result.has_value());
