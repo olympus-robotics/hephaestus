@@ -143,6 +143,29 @@ TEST(InputOutput, QueuedInputExplicitOutput) {
   EXPECT_EQ(*res, "Hello World!");
 }
 
+struct InputOperationWithUniquePtrData {
+  std::unique_ptr<std::string> test{ std::make_unique<std::string>("test test test") };
+  bool called{ false };
+};
+
+struct InputOperationWithUniquePtr : Node<InputOperationWithUniquePtr, InputOperationWithUniquePtrData> {
+  static constexpr auto NAME = "input_with_unique_ptr";
+  static constexpr auto PERIOD = std::chrono::milliseconds(100);
+
+  static void execute(InputOperation& self) {
+    self.data().called = true;
+    self.engine().requestStop();
+  }
+};
+
+TEST(InputOutput, CreateNodeWithUniquePtr) {
+  NodeEngine engine{ {} };
+
+  [[maybe_unused]] auto in = engine.createNode<InputOperationWithUniquePtr>();
+
+  engine.run();
+}
+
 namespace ht = heph::telemetry;
 class MockLogSink final : public ht::ILogSink {
 public:
