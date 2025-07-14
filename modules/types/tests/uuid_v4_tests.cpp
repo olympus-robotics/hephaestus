@@ -29,19 +29,22 @@ TEST(UuidV4Test, Create) {
 }
 
 TEST(UuidV4Test, CreateNil) {
-  const auto uuid = UuidV4::createNil();
+  constexpr auto UUID = UuidV4::createNil();
+  static_assert(UUID.high == 0ULL && UUID.low == 0ULL, "ensure compile-time evaluation");
 
   // Expect all bits to be zero
-  EXPECT_EQ(uuid.high, 0ULL);
-  EXPECT_EQ(uuid.low, 0ULL);
+  EXPECT_EQ(UUID.high, 0ULL);
+  EXPECT_EQ(UUID.low, 0ULL);
 }
 
 TEST(UuidV4Test, CreateMax) {
-  const auto uuid = UuidV4::createMax();
+  constexpr auto MAX = std::numeric_limits<uint64_t>::max();
+  constexpr auto UUID = UuidV4::createMax();
+  static_assert(UUID.high == MAX && UUID.low == MAX, "ensure compile-time evaluation");
 
   // Expect all bits to be one
-  EXPECT_EQ(uuid.high, std::numeric_limits<uint64_t>::max());
-  EXPECT_EQ(uuid.low, std::numeric_limits<uint64_t>::max());
+  EXPECT_EQ(UUID.high, MAX);
+  EXPECT_EQ(UUID.low, MAX);
 }
 
 TEST(UuidV4Test, Format) {
