@@ -47,6 +47,33 @@ TEST(UuidV4Test, CreateMax) {
   EXPECT_EQ(UUID.low, MAX);
 }
 
+TEST(UuidV4Test, IsValid) {
+  const auto uuid = UuidV4::create();
+  const auto nil_uuid = UuidV4::createNil();
+  const auto max_uuid = UuidV4::createMax();
+  EXPECT_TRUE(uuid.isValid());
+  EXPECT_FALSE(nil_uuid.isValid());
+  EXPECT_FALSE(max_uuid.isValid());
+
+  // Modify the UUID to make it invalid
+  constexpr auto VERSION_MASK = 0x000000000000F000ULL;
+  constexpr auto VERSION_1 = 0x0000000000001000ULL;
+  auto invalid_uuid = uuid;
+  invalid_uuid.high &= ~VERSION_MASK;  // Clear the version bits
+  EXPECT_FALSE(invalid_uuid.isValid());
+  invalid_uuid.high |= VERSION_1;  // Set the version to 1 (not 4)
+  EXPECT_FALSE(invalid_uuid.isValid());
+
+  // Set an invalid variant
+  constexpr auto VARIANT_MASK = 0xC000000000000000ULL;
+  constexpr auto VARIANT_11XX = 0xC000000000000000ULL;
+  invalid_uuid = uuid;
+  invalid_uuid.low &= ~VARIANT_MASK;  // Clear the variant bits
+  EXPECT_FALSE(invalid_uuid.isValid());
+  invalid_uuid.low |= VARIANT_11XX;  // Set the variant to 11xx
+  EXPECT_FALSE(invalid_uuid.isValid());
+}
+
 TEST(UuidV4Test, Format) {
   const auto uuid = UuidV4::create();
 
