@@ -40,6 +40,10 @@ struct UuidV4 {
   /// implementation-specific situations.
   [[nodiscard]] static constexpr auto createMax() -> UuidV4;
 
+  /// @brief Checks if the UUID is valid. A valid UUIDv4 must neither be Nil nor Max, and it must conform to
+  /// the UUIDv4 format as defined in RFC 9562.
+  [[nodiscard]] constexpr auto isValid() const -> bool;
+
   [[nodiscard]] auto format() const -> std::string;
 
   /// @brief Function to allow the use of UuidV4 in hash-based containers via the Abseil library.
@@ -65,4 +69,20 @@ constexpr auto UuidV4::createMax() -> UuidV4 {
   return { .high = std::numeric_limits<uint64_t>::max(), .low = std::numeric_limits<uint64_t>::max() };
 }
 
+constexpr auto UuidV4::isValid() const -> bool {
+  constexpr auto NIL = createNil();
+  constexpr auto MAX = createMax();
+
+  // clang-format off
+  constexpr auto VERSION_MASK = 0x000000000000F000ULL;
+  constexpr auto VERSION_4    = 0x0000000000004000ULL;
+
+  constexpr auto VARIANT_MASK = 0xC000000000000000ULL;
+  constexpr auto VARIANT_RFC  = 0x8000000000000000ULL;
+
+  return (*this != NIL) && (*this != MAX) &&
+         ((this->high & VERSION_MASK) == VERSION_4) &&
+         ((this->low  & VARIANT_MASK) == VARIANT_RFC);
+  // clang-format on
+}
 }  // namespace heph::types
