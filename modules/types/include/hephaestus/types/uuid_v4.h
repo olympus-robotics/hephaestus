@@ -70,8 +70,8 @@ constexpr auto UuidV4::createMax() -> UuidV4 {
 }
 
 constexpr auto UuidV4::isValid() const -> bool {
-  static constexpr auto NIL = createNil();
-  static constexpr auto MAX = createMax();
+  constexpr auto NIL = createNil();
+  constexpr auto MAX = createMax();
 
   // clang-format off
   constexpr auto VERSION_MASK = 0x000000000000F000ULL;
