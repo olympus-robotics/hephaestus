@@ -120,14 +120,14 @@ private:
   }
 
   auto operationTrigger() {
-    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
+    auto period_trigger = [this](detail::NodeBase::ClockT::time_point start_at) {
       if constexpr (HAS_PERIOD) {
         return heph::conduit::scheduler(engine()).scheduleAt(start_at);
       } else {
         return stdexec::just();
       }
     };
-    auto node_trigger = [&] {
+    auto node_trigger = [this] {
       if constexpr (HAS_TRIGGER_NULLARY) {
         return OperationT::trigger();
       } else if constexpr (HAS_TRIGGER_ARG) {
@@ -140,10 +140,11 @@ private:
         return stdexec::just();
       }
     };
-    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
+    return stdexec::just() | stdexec::let_value([this, period_trigger] {
              auto start_at = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_at), node_trigger());
-           });
+             return period_trigger(start_at);
+           }) |
+           stdexec::let_value([node_trigger] { return node_trigger(); });
   }
 
 private:
