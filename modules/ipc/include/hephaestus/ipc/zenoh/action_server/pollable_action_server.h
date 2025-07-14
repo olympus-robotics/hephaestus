@@ -133,7 +133,7 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
             }
 
             if (status_.has_value()) {
-              status_publisher.publish(*std::move(status_));
+              status_publisher.publish(std::move(*status_));
               status_.reset();
             }
           }
