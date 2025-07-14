@@ -48,14 +48,6 @@ auto UuidV4::create() -> UuidV4 {
   return random(mt);
 }
 
-auto UuidV4::createNil() -> UuidV4 {
-  return { .high = 0, .low = 0 };
-}
-
-auto UuidV4::createMax() -> UuidV4 {
-  return { .high = std::numeric_limits<uint64_t>::max(), .low = std::numeric_limits<uint64_t>::max() };
-}
-
 auto UuidV4::format() const -> std::string {
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   return fmt::format("{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",

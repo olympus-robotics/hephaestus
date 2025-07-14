@@ -31,13 +31,13 @@ struct UuidV4 {
   /// A Nil UUID value can be useful to communicate the absence of any other UUID value in situations that
   /// otherwise require or use a 128-bit UUID. A Nil UUID can express the concept "no such value here". Thus,
   /// it is reserved for such use as needed for implementation-specific situations.
-  [[nodiscard]] static auto createNil() -> UuidV4;
+  [[nodiscard]] static constexpr auto createNil() -> UuidV4;
 
   /// @brief Creates a UUIDv4 with all bits set to one, FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF.
   /// A Max UUID value can be used as a sentinel value in situations where a 128-bit UUID is required, but a
   /// concept such as "end of UUID list" needs to be expressed and is reserved for such use as needed for
   /// implementation-specific situations.
-  [[nodiscard]] static auto createMax() -> UuidV4;
+  [[nodiscard]] static constexpr auto createMax() -> UuidV4;
 
   [[nodiscard]] auto format() const -> std::string;
 
@@ -54,6 +54,14 @@ struct UuidV4 {
 template <class H>
 auto AbslHashValue(H h, const UuidV4& id) -> H {  // NOLINT(readability-identifier-naming)
   return H::combine(std::move(h), id.high, id.low);
+}
+
+constexpr auto UuidV4::createNil() -> UuidV4 {
+  return { .high = 0, .low = 0 };
+}
+
+constexpr auto UuidV4::createMax() -> UuidV4 {
+  return { .high = std::numeric_limits<uint64_t>::max(), .low = std::numeric_limits<uint64_t>::max() };
 }
 
 }  // namespace heph::types
