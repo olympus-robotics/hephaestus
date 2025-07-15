@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <exec/async_scope.hpp>
+#include <exec/when_any.hpp>
 #include <gtest/gtest.h>
 #include <hephaestus/concurrency/io_ring/timer.h>
 #include <hephaestus/utils/exception.h>
@@ -156,6 +157,21 @@ TEST(ContextTests, scheduleAfterStopWaiting) {
     EXPECT_EQ(called, 1);
   }
   EXPECT_GE(duration, DELAY_TIME);
+}
+
+TEST(ContextTests, scheduleAfterStopWaitingAny) {
+  Context context{ {} };
+  exec::async_scope scope;
+  static constexpr auto DELAY_TIME = std::chrono::minutes(5);
+
+  auto begin = std::chrono::steady_clock::now();
+  scope.spawn(exec::when_any(context.scheduler().scheduleAfter(DELAY_TIME), stdexec::just()) |
+              stdexec::then([&] { context.requestStop(); }));
+
+  context.run();
+  auto end = std::chrono::steady_clock::now();
+  auto duration = end - begin;
+  EXPECT_LT(duration, DELAY_TIME);
 }
 
 TEST(ContextTests, scheduleAfterSimulated) {

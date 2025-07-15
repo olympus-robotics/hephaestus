@@ -6,6 +6,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -381,6 +382,47 @@ TEST(InputOutput, AccumulatedInput) {
   stdexec::sync_wait(input.get() | stdexec::then([](const std::vector<int>& state) {
                        EXPECT_EQ(state, std::vector({ 0, 1 }));
                      }));
+}
+
+struct AccumulatedNodeData {};
+
+struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
+  using AccumulatedT = std::vector<int>;
+
+  using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
+                                                        heph::conduit::SetMethod::OVERWRITE>;
+  heph::conduit::AccumulatedInput<AccumulatedT::value_type, AccumulatedT,
+                                  std::function<AccumulatedT(AccumulatedT::value_type, AccumulatedT)>,
+                                  AccumulatedPolicyT>
+      input{
+        this,
+        [](AccumulatedT::value_type value, AccumulatedT state) {
+          state.push_back(value);
+          return state;
+        },
+        "test_accumulated_input",
+      };
+
+  static auto period() {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+    return std::chrono::milliseconds(100);
+  }
+
+  static auto trigger(AccumulatedNode& self) {
+    return self.input.get();
+  }
+
+  static auto execute([[maybe_unused]] AccumulatedNode& self,
+                      [[maybe_unused]] const std::optional<AccumulatedT>& value) {
+    self.engine().requestStop();
+  }
+};
+
+TEST(InputOutput, ConstructAccumulatedNode) {
+  NodeEngine engine{ {} };
+  [[maybe_unused]] auto dummy = engine.createNode<AccumulatedNode>();
+  engine.run();
+  SUCCEED();
 }
 
 static constexpr std::size_t NUM_REPEATS = 1000;

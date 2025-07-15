@@ -25,8 +25,8 @@ public:
   using ValueT = T;
   using InputPolicyT = InputPolicy;
 
-  template <typename OperationT>
-  explicit AccumulatedInput(Node<OperationT>* node, F f, std::string name, R initial_value = R{})
+  template <typename OperationT, typename DataT>
+  explicit AccumulatedInput(Node<OperationT, DataT>* node, F f, std::string name, R initial_value = R{})
     : BaseT(node, std::move(name)), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
   }
 
