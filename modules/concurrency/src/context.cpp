@@ -51,6 +51,10 @@ void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_ti
   ring_.submit(&task->dispatch_operation);
 }
 
+void Context::dequeueTimer(TaskBase* task) {
+  timer_.dequeue(task);
+}
+
 auto Context::runTasks() -> bool {
   if (tasks_.empty()) {
     return false;

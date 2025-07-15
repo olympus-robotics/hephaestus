@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <exception>
+#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -114,10 +115,9 @@ template <typename Receiver, typename Context>
 struct Task : TaskBase {
   Context* context{ nullptr };
   Receiver receiver;
-  stdexec::inplace_stop_token stop_token;
 
-  Task(Context* context_input, Receiver&& receiver_input, stdexec::inplace_stop_token inplace_stop_token)
-    : context(context_input), receiver(std::move(receiver_input)), stop_token(std::move(inplace_stop_token)) {
+  Task(Context* context_input, Receiver&& receiver_input)
+    : context(context_input), receiver(std::move(receiver_input)) {
   }
 
   void start() noexcept final {
@@ -133,16 +133,27 @@ struct Task : TaskBase {
   }
 };
 
-template <typename Receiver, typename Context>
+template <typename ReceiverT, typename ContextT>
 struct TimedTask : TaskBase {
-  Context* context{ nullptr };
+  struct StopCallback {
+    void operator()() const noexcept {
+      self->setStopped();
+    }
+    TimedTask* self;
+  };
+  using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
+  using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
+  using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
+
+  ContextT* context{ nullptr };
   io_ring::TimerClock::time_point start_time;
-  Receiver receiver;
+  ReceiverT receiver;
+  std::optional<StopCallbackT> stop_callback;
   bool timeout_started{ false };
 
   template <typename Clock, typename Duration>
   TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
-            Receiver&& receiver_input)
+            ReceiverT&& receiver_input)
     : context(context_input), start_time(start_time_input), receiver(std::move(receiver_input)) {
     // Avoid putting it the task in the timer when the deadline was already exceeded...
     if (start_time <= io_ring::TimerClock::now()) {
@@ -152,6 +163,8 @@ struct TimedTask : TaskBase {
 
   void start() noexcept final {
     if (!timeout_started) {
+      auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
+      stop_callback.emplace(stop_token, StopCallback{ this });
       timeout_started = true;
       context->enqueueAt(this, start_time);
       return;
@@ -160,10 +173,13 @@ struct TimedTask : TaskBase {
   }
 
   void setValue() noexcept final {
+    stop_callback.reset();
     stdexec::set_value(std::move(receiver));
   }
 
   void setStopped() noexcept final {
+    context->dequeueTimer(this);
+    stop_callback.reset();
     stdexec::set_stopped(std::move(receiver));
   }
 };
@@ -180,7 +196,7 @@ struct SenderExpressionImpl<ContextScheduleT> : DefaultSenderExpressionImpl {
   static constexpr auto GET_STATE = []<typename Sender, typename Receiver>(Sender&& sender,
                                                                            Receiver& receiver) {
     auto [_, context] = std::forward<Sender>(sender);
-    return Task<std::decay_t<Receiver>, Context>{ context, std::move(receiver), context->getStopToken() };
+    return Task<std::decay_t<Receiver>, Context>{ context, std::move(receiver) };
   };
 
   static constexpr auto START = []<typename Receiver>(Task<std::decay_t<Receiver>, Context>& task,

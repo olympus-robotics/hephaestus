@@ -4,10 +4,12 @@
 
 #include "hephaestus/concurrency/io_ring/timer.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <limits>
 #include <system_error>
 
@@ -57,8 +59,9 @@ void Timer::requestStop() {
     update_timer_operation_->requestStop();
   }
   while (!tasks_.empty()) {
-    auto entry = tasks_.top();
-    tasks_.pop();
+    auto entry = tasks_.front();
+    std::ranges::pop_heap(tasks_, std::greater<>{});
+    tasks_.pop_back();
 
     entry.task->setStopped();
   }
@@ -133,7 +136,7 @@ void Timer::tick() {
   }
   last_tick_ = TimerClock::now();
   if (!tasks_.empty()) {
-    const auto& top = tasks_.top();
+    const auto& top = tasks_.front();
     update(top.start_time);
   }
 }
@@ -144,12 +147,13 @@ auto Timer::tickSimulated(bool advance) -> bool {
   }
 
   if (advance) {
-    const auto& top = tasks_.top();
+    const auto& top = tasks_.front();
     if (top.start_time > last_tick_) {
       advanceSimulation(top.start_time - last_tick_);
     }
     top.task->start();
-    tasks_.pop();
+    std::ranges::pop_heap(tasks_, std::greater<>{});
+    tasks_.pop_back();
     return !tasks_.empty();
   }
 
@@ -161,9 +165,10 @@ auto Timer::tickSimulated(bool advance) -> bool {
 }
 
 void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
-  tasks_.emplace(task, start_time);
+  tasks_.emplace_back(task, start_time);
+  std::ranges::push_heap(tasks_, std::greater<>{});
 
-  const auto& top = tasks_.top();
+  const auto& top = tasks_.front();
 
   if (top.task != task || clock_mode_ == ClockMode::SIMULATED) {
     return;
@@ -172,16 +177,26 @@ void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
   update(start_time);
 }
 
+void Timer::dequeue(TaskBase* task) {
+  auto it = std::ranges::find_if(tasks_, [task](const TimerEntry& entry) { return task == entry.task; });
+  if (it == tasks_.end()) {
+    return;
+  }
+  tasks_.erase(it);
+  std::ranges::make_heap(tasks_, std::greater<>{});
+}
+
 auto Timer::next(bool advance) -> TaskBase* {
   if (!tasks_.empty()) {
     auto now = TimerClock::now();
-    const auto& top = tasks_.top();
+    const auto& top = tasks_.front();
     if (top.start_time <= now) {
       auto* task = top.task;
       if (advance) {
         last_tick_ += (top.start_time - last_tick_);
       }
-      tasks_.pop();
+      std::ranges::pop_heap(tasks_, std::greater<>{});
+      tasks_.pop_back();
       return task;
     }
   }
