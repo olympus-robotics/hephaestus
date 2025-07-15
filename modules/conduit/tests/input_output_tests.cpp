@@ -389,9 +389,7 @@ struct AccumulatedNodeData {};
 struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
   using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
                                                         heph::conduit::SetMethod::OVERWRITE>;
-  heph::conduit::AccumulatedInput<int, AccumulatedPolicyT> input{ this,
-                                                                  "test_accumulated_input",
-                                                                  { 1, 2, 3 } };
+  heph::conduit::AccumulatedInput<int, AccumulatedPolicyT> input{ this, "test_accumulated_input" };
 
   static auto period() {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)

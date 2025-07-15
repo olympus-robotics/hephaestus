@@ -43,7 +43,7 @@ public:
       if (!element.has_value()) {
         break;
       }
-      res = f_(*element, res);
+      res = f_(std::move(element.value()), res);
     }
     return res;
   }
