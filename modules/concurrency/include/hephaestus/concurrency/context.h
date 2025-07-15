@@ -67,6 +67,7 @@ private:
   template <typename Receiver, typename Context>
   friend struct TimedTask;
   void enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time);
+  void dequeueTimer(TaskBase* task);
 
   auto runTimedTasks() -> bool;
   auto runTasks() -> bool;
