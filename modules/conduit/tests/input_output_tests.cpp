@@ -388,21 +388,16 @@ TEST(InputOutput, AccumulatedInputBase) {
 struct AccumulatedNodeData {};
 
 struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
-  using AccumulatedT = std::vector<int>;
-
   using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
                                                         heph::conduit::SetMethod::OVERWRITE>;
-  heph::conduit::AccumulatedInputBase<AccumulatedT::value_type, AccumulatedT,
-                                      std::function<AccumulatedT(AccumulatedT::value_type, AccumulatedT)>,
-                                      AccumulatedPolicyT>
-      input{
-        this,
-        [](AccumulatedT::value_type value, AccumulatedT state) {
-          state.push_back(value);
-          return state;
-        },
-        "test_accumulated_input",
-      };
+  heph::conduit::AccumulatedInput<std::vector<int>, AccumulatedPolicyT> input{
+    this,
+    [](int value, std::vector<int> state) {
+      state.push_back(value);
+      return state;
+    },
+    "test_accumulated_input",
+  };
 
   static auto period() {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
