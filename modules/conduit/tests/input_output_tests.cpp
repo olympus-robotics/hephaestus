@@ -383,12 +383,50 @@ TEST(InputOutput, AccumulatedInput) {
                      }));
 }
 
-static constexpr std::size_t NUM_REPEATS = 1000;
+struct AccumulatedNodeData {};
+
+struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
+  using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
+                                                        heph::conduit::SetMethod::OVERWRITE>;
+  heph::conduit::AccumulatedInput<int, std::vector<int>,
+                                  std::function<std::vector<int>(int, std::vector<int>)>, AccumulatedPolicyT>
+      input{
+        this,
+        [](int value, std::vector<int> state) {
+          state.push_back(value);
+          return state;
+        },
+        "test_accumulated_input",
+      };
+
+  static auto period() {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+    return std::chrono::milliseconds(100);
+  }
+
+  static auto trigger(AccumulatedNode& self) {
+    return self.input.get();
+  }
+
+  static auto execute([[maybe_unused]] AccumulatedNode& self,
+                      [[maybe_unused]] const std::optional<std::vector<int>>& value) {
+    self.engine().requestStop();
+  }
+};
+
+TEST(InputOutput, ConstructAccumulatedNode) {
+  NodeEngine engine{ {} };
+  [[maybe_unused]] auto dummy = engine.createNode<AccumulatedNode>();
+  engine.run();
+  SUCCEED();
+}
+
 struct NodeCompletionData {
   std::size_t iteration{ 0 };
   std::optional<std::thread::id> producer_id;
 };
 
+static constexpr std::size_t NUM_REPEATS = 1000;
 struct NodeCompletionOperation : Node<NodeCompletionOperation, NodeCompletionData> {
   QueuedInput<int, InputPolicy<1>> input{ this, "input" };
 
