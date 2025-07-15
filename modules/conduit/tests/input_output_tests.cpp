@@ -6,7 +6,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -351,15 +350,15 @@ TEST(InputOutput, QueuedInputOptionalOutput) {
   }
 }
 
-TEST(InputOutput, AccumulatedInputBase) {
+TEST(InputOutput, AccumulatedTransformInputBase) {
   DummyOperation dummy;
   auto accumulator = [](int value, std::vector<int> state) {
     state.push_back(value);
     return state;
   };
-  AccumulatedInputBase<int, std::vector<int>, decltype(accumulator), InputPolicy<2>> input{ &dummy,
-                                                                                            accumulator,
-                                                                                            "input" };
+  AccumulatedTransformInputBase<int, std::vector<int>, decltype(accumulator), InputPolicy<2>> input{
+    &dummy, accumulator, "input"
+  };
 
   auto res = input.getValue();
   EXPECT_FALSE(res.has_value());
@@ -390,14 +389,9 @@ struct AccumulatedNodeData {};
 struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
   using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
                                                         heph::conduit::SetMethod::OVERWRITE>;
-  heph::conduit::AccumulatedInput<std::vector<int>, AccumulatedPolicyT> input{
-    this,
-    [](int value, std::vector<int> state) {
-      state.push_back(value);
-      return state;
-    },
-    "test_accumulated_input",
-  };
+  heph::conduit::AccumulatedInput<int, AccumulatedPolicyT> input{ this,
+                                                                  "test_accumulated_input",
+                                                                  { 1, 2, 3 } };
 
   static auto period() {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
