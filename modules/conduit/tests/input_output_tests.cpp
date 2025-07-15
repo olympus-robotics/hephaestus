@@ -351,14 +351,15 @@ TEST(InputOutput, QueuedInputOptionalOutput) {
   }
 }
 
-TEST(InputOutput, AccumulatedInput) {
+TEST(InputOutput, AccumulatedInputBase) {
   DummyOperation dummy;
   auto accumulator = [](int value, std::vector<int> state) {
     state.push_back(value);
     return state;
   };
-  AccumulatedInput<int, std::vector<int>, decltype(accumulator), InputPolicy<2>> input{ &dummy, accumulator,
-                                                                                        "input" };
+  AccumulatedInputBase<int, std::vector<int>, decltype(accumulator), InputPolicy<2>> input{ &dummy,
+                                                                                            accumulator,
+                                                                                            "input" };
 
   auto res = input.getValue();
   EXPECT_FALSE(res.has_value());
@@ -391,9 +392,9 @@ struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
 
   using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
                                                         heph::conduit::SetMethod::OVERWRITE>;
-  heph::conduit::AccumulatedInput<AccumulatedT::value_type, AccumulatedT,
-                                  std::function<AccumulatedT(AccumulatedT::value_type, AccumulatedT)>,
-                                  AccumulatedPolicyT>
+  heph::conduit::AccumulatedInputBase<AccumulatedT::value_type, AccumulatedT,
+                                      std::function<AccumulatedT(AccumulatedT::value_type, AccumulatedT)>,
+                                      AccumulatedPolicyT>
       input{
         this,
         [](AccumulatedT::value_type value, AccumulatedT state) {
@@ -413,7 +414,7 @@ struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
   }
 
   static auto execute([[maybe_unused]] AccumulatedNode& self,
-                      [[maybe_unused]] const std::optional<AccumulatedT>& value) {
+                      [[maybe_unused]] const std::optional<std::vector<int>>& value) {
     self.engine().requestStop();
   }
 };
