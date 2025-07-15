@@ -6,6 +6,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -386,13 +387,16 @@ TEST(InputOutput, AccumulatedInput) {
 struct AccumulatedNodeData {};
 
 struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
+  using AccumulatedT = std::vector<int>;
+
   using AccumulatedPolicyT = heph::conduit::InputPolicy<3, heph::conduit::RetrievalMethod::POLL,
                                                         heph::conduit::SetMethod::OVERWRITE>;
-  heph::conduit::AccumulatedInput<int, std::vector<int>,
-                                  std::function<std::vector<int>(int, std::vector<int>)>, AccumulatedPolicyT>
+  heph::conduit::AccumulatedInput<AccumulatedT::value_type, AccumulatedT,
+                                  std::function<AccumulatedT(AccumulatedT::value_type, AccumulatedT)>,
+                                  AccumulatedPolicyT>
       input{
         this,
-        [](int value, std::vector<int> state) {
+        [](AccumulatedT::value_type value, AccumulatedT state) {
           state.push_back(value);
           return state;
         },
@@ -409,7 +413,7 @@ struct AccumulatedNode : Node<AccumulatedNode, AccumulatedNodeData> {
   }
 
   static auto execute([[maybe_unused]] AccumulatedNode& self,
-                      [[maybe_unused]] const std::optional<std::vector<int>>& value) {
+                      [[maybe_unused]] const std::optional<AccumulatedT>& value) {
     self.engine().requestStop();
   }
 };
@@ -421,12 +425,12 @@ TEST(InputOutput, ConstructAccumulatedNode) {
   SUCCEED();
 }
 
+static constexpr std::size_t NUM_REPEATS = 1000;
 struct NodeCompletionData {
   std::size_t iteration{ 0 };
   std::optional<std::thread::id> producer_id;
 };
 
-static constexpr std::size_t NUM_REPEATS = 1000;
 struct NodeCompletionOperation : Node<NodeCompletionOperation, NodeCompletionData> {
   QueuedInput<int, InputPolicy<1>> input{ this, "input" };
 
