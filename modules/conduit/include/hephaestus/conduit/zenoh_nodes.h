@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -26,10 +27,10 @@ class ZenohSubscriberNode {
 public:
   ZenohSubscriberNode(ipc::zenoh::SessionPtr session, ipc::TopicConfig topic_config, InputT& input)
     : input_(&input)
-    , subscriber_(
+    , subscriber_(std::make_unique<ipc::zenoh::Subscriber<typename InputT::DataT>>(
           std::move(session), std::move(topic_config),
           [this](const auto&, const auto& msg) { setValue(std::move(*msg)); },
-          heph::ipc::zenoh::SubscriberConfig{ .dedicated_callback_thread = true }) {
+          heph::ipc::zenoh::SubscriberConfig{ .dedicated_callback_thread = true })) {
   }
 
 private:
@@ -44,7 +45,7 @@ private:
 private:
   static constexpr auto BACKOFF_DELAY = std::chrono::microseconds{ 1 };
   InputT* input_;
-  ipc::zenoh::Subscriber<typename InputT::DataT> subscriber_;
+  std::unique_ptr<ipc::zenoh::Subscriber<typename InputT::DataT>> subscriber_;
 };
 
 template <typename T>

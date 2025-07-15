@@ -19,6 +19,7 @@ heph_cc_library(
     deps = [
         "//modules/concurrency",
         "//modules/ipc",
+        "//modules/net",
     ],
 )
 
@@ -42,6 +43,41 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/format",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_binary(
+    name = "conduit_graph",
+    srcs = ["examples/conduit_graph.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_binary(
+    name = "conduit_publisher",
+    srcs = ["examples/conduit_publisher.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_binary(
+    name = "conduit_subscriber",
+    srcs = ["examples/conduit_subscriber.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+        "//modules/format",
+        "//modules/types",
+        "//modules/types_proto",
     ],
 )
 
@@ -58,12 +94,25 @@ heph_cc_test(
 heph_cc_test(
     name = "input_output_tests",
     srcs = ["tests/input_output_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "zenoh_nodes_tests",
     srcs = ["tests/zenoh_nodes_tests.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_test(
+    name = "remote_publisher_tests",
+    srcs = ["tests/remote_publisher_tests.cpp"],
     deps = [
         ":conduit",
         "//modules/types",

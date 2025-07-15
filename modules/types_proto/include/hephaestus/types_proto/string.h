@@ -4,19 +4,20 @@
 
 #pragma once
 
+#include <string>
+
 #include "hephaestus/serdes/protobuf/concepts.h"
-#include "hephaestus/types/proto/bool.pb.h"
+#include "hephaestus/types/proto/string.pb.h"
 
 namespace heph::serdes::protobuf {
 template <>
-struct ProtoAssociation<bool> {
-  using Type = types::proto::Bool;
+struct ProtoAssociation<std::string> {
+  using Type = types::proto::String;
 };
 }  // namespace heph::serdes::protobuf
 
 namespace heph::types::proto {
-
-void toProto(Bool& proto_value, bool value);
-void fromProto(const Bool& proto_value, bool& value);
+void toProto(String& proto_value, std::string value);
+void fromProto(const String& proto_value, std::string& value);
 
 }  // namespace heph::types::proto

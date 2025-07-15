@@ -104,9 +104,10 @@ public:
   auto setValue(U&& u) -> InputState {
     if (!node_->runsOnEngine()) {
       // Dispatch to the engine scheduler to avoid race conditions
-      auto res = stdexec::sync_wait(
-          node_->engine().scheduler().schedule() |
-          stdexec::then([this, u = std::forward<U>(u)] { return setValue(std::move(u)); }));
+      auto res =
+          stdexec::sync_wait(node_->scheduler().schedule() | stdexec::then([this, u = std::forward<U>(u)] {
+                               return setValue(std::move(u));
+                             }));
       if (!res.has_value()) {
         panic("Could not set value, engine was stopped");
       }

@@ -5,7 +5,6 @@
 #include "hephaestus/types/uuid_v4.h"
 
 #include <cstdint>
-#include <limits>
 #include <random>
 #include <string>
 
@@ -46,14 +45,6 @@ auto UuidV4::create() -> UuidV4 {
   static auto mt = std::mt19937_64(rng());
 
   return random(mt);
-}
-
-auto UuidV4::createNil() -> UuidV4 {
-  return { .high = 0, .low = 0 };
-}
-
-auto UuidV4::createMax() -> UuidV4 {
-  return { .high = std::numeric_limits<uint64_t>::max(), .low = std::numeric_limits<uint64_t>::max() };
 }
 
 auto UuidV4::format() const -> std::string {

@@ -2,4 +2,10 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/serdes/serdes.h"  // NOLINT(misc-include-cleaner)
+syntax = "proto3";
+
+package heph.types.proto;
+
+message String {
+  string value = 1;
+}

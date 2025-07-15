@@ -164,7 +164,7 @@ TEST(ZenohTests, ServiceTypeInfo) {
 
   auto type_info = serdes::ServiceTypeInfo::fromJson(replies.front().value);
   EXPECT_EQ(type_info.request, serdes::getSerializedTypeInfo<types::DummyType>());
-  EXPECT_EQ(type_info.reply, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_EQ(type_info.reply.name, "std::string");
 }
 
 }  // namespace

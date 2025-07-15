@@ -15,7 +15,6 @@
 
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/conduit/node_engine.h"
 
 namespace heph::conduit {
 namespace detail {
@@ -23,6 +22,8 @@ struct Unused {};
 template <typename InputT, typename T, std::size_t Depth>
 class InputBase;
 }  // namespace detail
+
+class NodeEngine;
 
 template <typename OperationT, typename OperationDataT = detail::Unused>
 class Node : public detail::NodeBase {
@@ -62,6 +63,10 @@ public:
 
   [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
 
+  void removeOutputConnection(void* node) final {
+    implicit_output_->removeConnection(node);
+  }
+
 private:
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
@@ -81,7 +86,7 @@ private:
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
-    auto trigger = stdexec::continues_on(operationTrigger(), engine().scheduler());
+    auto trigger = stdexec::continues_on(operationTrigger(), heph::conduit::scheduler(engine()));
     using TriggerT = decltype(trigger);
     using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
@@ -117,7 +122,7 @@ private:
   auto operationTrigger() {
     auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
       if constexpr (HAS_PERIOD) {
-        return engine().scheduler().scheduleAt(start_at);
+        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
       } else {
         return stdexec::just();
       }

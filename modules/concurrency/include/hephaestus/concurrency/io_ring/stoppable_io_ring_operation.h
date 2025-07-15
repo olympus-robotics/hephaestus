@@ -56,6 +56,7 @@ inline StoppableIoRingOperation<IoRingOperationT>::StoppableIoRingOperation(IoRi
                                                                             stdexec::inplace_stop_token token)
   : operation(std::move(op)), ring(&io_ring), stop_callback(token, StopCallback{ this }) {
   if (token.stop_requested()) {
+    in_flight = 0;
     operation.handleStopped();
   }
 }
@@ -69,11 +70,10 @@ template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCompletion(::io_uring_cqe* cqe) {
   --self->in_flight;
   const int res = cqe->res;
-  if (res == -ENOENT || res == -EALREADY) {
-    return;
-  }
   if (res < 0) {
-    panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
+    if (res != -ENOENT && res != -EALREADY) {
+      panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
+    }
   }
   if (self->in_flight == 0) {
     self->operation.handleStopped();
@@ -83,6 +83,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCom
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* sqe) {
   if (stop_operation.has_value()) {
+    io_uring_prep_nop(sqe);
     return;
   }
   operation.prepare(sqe);
@@ -90,8 +91,8 @@ inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* 
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_uring_cqe* cqe) {
+  --in_flight;
   if (cqe->res == -ECANCELED || stop_operation.has_value()) {
-    --in_flight;
     if (in_flight == 0) {
       operation.handleStopped();
     }
@@ -100,6 +101,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
   using CompletionReturnT = decltype(operation.handleCompletion(cqe));
   if constexpr (std::is_same_v<CompletionReturnT, bool>) {
     if (!operation.handleCompletion(cqe)) {
+      ++in_flight;
       ring->submit(this);
     }
   } else {
@@ -109,9 +111,12 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
-  ++in_flight;
+  if (in_flight == 0) {
+    return;
+  }
   stop_operation.emplace();
   stop_operation->self = this;
+  ++in_flight;
   ring->submit(&stop_operation.value());
 }
 

@@ -9,13 +9,24 @@
 
 #include <sys/socket.h>
 
+#include "hephaestus/concurrency/context.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::net {
-Acceptor::Acceptor(IpFamily family, Protocol protocol) : socket_(family, protocol) {
+auto Acceptor::createTcpIpV4(concurrency::Context& context) -> Acceptor {
+  return Acceptor{ Socket::createTcpIpV4(context) };
 }
+auto Acceptor::createTcpIpV6(concurrency::Context& context) -> Acceptor {
+  return Acceptor{ Socket::createTcpIpV6(context) };
+}
+#ifndef DISABLE_BLUETOOTH
+auto Acceptor::createL2cap(concurrency::Context& context) -> Acceptor {
+  return Acceptor{ Socket::createL2cap(context) };
+}
+#endif
+
 void Acceptor::listen(int backlog) const {
   const int res = ::listen(socket_.nativeHandle(), backlog);
   if (res == -1) {

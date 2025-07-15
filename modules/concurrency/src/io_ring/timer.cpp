@@ -19,17 +19,14 @@
 
 namespace heph::concurrency::io_ring {
 Timer* TimerClock::timer{ nullptr };
+
 auto TimerClock::now() -> time_point {
-  switch (timer->clock_mode_) {
-    case ClockMode::WALLCLOCK: {
-      auto now = TimerClock::base_clock::now();
-      return time_point{ now - TimerClock::base_clock::time_point{} };
-    }
-    case ClockMode::SIMULATED:
-      return timer->now();
+  if (TimerClock::timer == nullptr) {
+    auto now = TimerClock::base_clock::now();
+    return time_point{ now - TimerClock::base_clock::time_point{} };
   }
 
-  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
+  return TimerClock::timer->now();
 }
 
 void Timer::Operation::prepare(::io_uring_sqe* sqe) const {
@@ -118,12 +115,16 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
 
 Timer::Timer(IoRing& ring, TimerOptions options)
   : ring_(&ring)
-  , start_(TimerClock::base_clock::now() -
-           TimerClock::base_clock::time_point{})  //(std::chrono::system_clock::now() -
-                                                  // std::chrono::system_clock::time_point{})
+  , start_(TimerClock::base_clock::now() - TimerClock::base_clock::time_point{})
   , last_tick_(start_)
   , clock_mode_(options.clock_mode) {
-  TimerClock::timer = this;
+  if (clock_mode_ == ClockMode::SIMULATED) {
+    TimerClock::timer = this;
+  }
+}
+
+Timer::~Timer() noexcept {
+  TimerClock::timer = nullptr;
 }
 
 void Timer::tick() {

@@ -8,20 +8,21 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace heph::net {
 
-enum struct IpFamily : std::uint8_t { V4, V6, BT };
+#ifndef DISABLE_BLUETOOTH
+enum struct EndpointType : std::uint8_t { IPV4, IPV6, BT, INVALID };
+#else
+enum struct EndpointType : std::uint8_t { IPV4, IPV6, INVALID };
+#endif
 
 class Endpoint {
 public:
   Endpoint() = default;
   ~Endpoint() = default;
-  explicit Endpoint(IpFamily family);
-  Endpoint(IpFamily family, const std::string& ip);
-  Endpoint(IpFamily family, const std::string& ip, std::uint16_t port);
-
   Endpoint(const Endpoint&) = default;
   Endpoint(Endpoint&&) = default;
   auto operator=(const Endpoint&) -> Endpoint& = default;
@@ -29,15 +30,33 @@ public:
 
   friend auto operator==(const Endpoint& lhs, const Endpoint& rhs) -> bool = default;
 
+  static auto createIpV4(const std::string& ip = "", std::uint16_t port = 0) -> Endpoint;
+
+  static auto createIpV6(const std::string& ip = "", std::uint16_t port = 0) -> Endpoint;
+
+#ifndef DISABLE_BLUETOOTH
+  static auto createBt(const std::string& mac = "", std::uint16_t psm = 0) -> Endpoint;
+#endif
+
   [[nodiscard]] auto nativeHandle() const -> std::span<const std::byte>;
   [[nodiscard]] auto nativeHandle() -> std::span<std::byte>;
 
-  [[nodiscard]] auto family() const -> int;
-  [[nodiscard]] auto ip() const -> std::string;
+  [[nodiscard]] auto type() const {
+    return type_;
+  }
+  [[nodiscard]] auto address() const -> std::string;
   [[nodiscard]] auto port() const -> std::uint16_t;
 
 private:
+  Endpoint(EndpointType type, std::vector<std::byte> address) noexcept
+    : address_(std::move(address)), type_(type) {
+  }
+
+  friend class Socket;
+
+private:
   std::vector<std::byte> address_;
+  EndpointType type_{ EndpointType::INVALID };
 };
 
 auto format_as(const Endpoint& endpoint) -> std::string;  // NOLINT(readability-identifier-naming)

@@ -9,9 +9,11 @@
 #include <string>
 #include <string_view>
 
+#include <hephaestus/concurrency/context.h>
 #include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/conduit/detail/output_connections.h"
 
 // Forward declarations
 namespace heph::conduit {
@@ -29,6 +31,7 @@ public:
   virtual ~NodeBase() = default;
   [[nodiscard]] virtual auto nodeName() const -> std::string = 0;
   [[nodiscard]] virtual auto nodePeriod() -> std::chrono::nanoseconds = 0;
+  virtual void removeOutputConnection(void* node) = 0;
 
   auto engine() -> NodeEngine& {
     return *engine_;
@@ -37,8 +40,17 @@ public:
   [[nodiscard]] auto engine() const -> const NodeEngine& {
     return *engine_;
   }
+  auto enginePtr() -> NodeEngine* {
+    return engine_;
+  }
+
+  [[nodiscard]] auto enginePtr() const -> const NodeEngine* {
+    return engine_;
+  }
 
   [[nodiscard]] auto runsOnEngine() const -> bool;
+
+  [[nodiscard]] auto scheduler() const -> concurrency::Context::Scheduler;
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
@@ -74,5 +86,4 @@ private:
   NodeBase* self_;
   std::chrono::high_resolution_clock::time_point start_;
 };
-
 }  // namespace heph::conduit::detail

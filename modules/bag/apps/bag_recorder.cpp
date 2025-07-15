@@ -38,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
     };
 
     auto zeno_recorder = heph::bag::ZenohRecorder::create(std::move(params));
-    zeno_recorder.start().wait();
+    zeno_recorder.start().get();
 
     heph::utils::TerminationBlocker::waitForInterrupt();
 
