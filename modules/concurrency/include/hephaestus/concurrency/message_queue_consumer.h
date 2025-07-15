@@ -63,7 +63,7 @@ void MessageQueueConsumer<T>::start() {
 template <typename T>
 auto MessageQueueConsumer<T>::stop() -> std::future<void> {
   message_queue_.stop();
-  spinner_.stop();
+  spinner_.stop().get();
 
   return std::async(std::launch::async, [this]() {
     while (!message_queue_.empty()) {
