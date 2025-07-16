@@ -11,6 +11,7 @@
 #include <utility>
 
 #include <exec/task.hpp>
+#include <exec/when_any.hpp>
 #include <fmt/base.h>
 #include <fmt/ranges.h>
 #include <gtest/gtest.h>
@@ -51,6 +52,80 @@ TEST(NodeTests, nodeBasic) {
   engine.run();
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_TRUE(dummy->data().executed);
+  EXPECT_FALSE(ReceivingOperation::HAS_PERIOD);
+}
+
+struct WhenAnyOperationData {
+  bool triggered{ false };
+  bool executed{ false };
+};
+
+struct WhenAnyOperation : Node<WhenAnyOperation, WhenAnyOperationData> {
+  static auto trigger(WhenAnyOperation& operation) {
+    EXPECT_FALSE(operation.data().triggered);
+    EXPECT_FALSE(operation.data().executed);
+    operation.data().triggered = true;
+    return exec::when_any(stdexec::just(3), stdexec::just(1.0));
+  }
+
+  static void execute(WhenAnyOperation& operation, auto /*unused*/) {
+    EXPECT_TRUE(operation.data().triggered);
+    EXPECT_FALSE(operation.data().executed);
+    operation.data().executed = true;
+    operation.engine().requestStop();
+  }
+};
+
+TEST(NodeTests, nodeWhenAny) {
+  NodeEngine engine{ {} };
+  auto dummy = engine.createNode<WhenAnyOperation>();
+
+  engine.run();
+  EXPECT_TRUE(dummy->data().triggered);
+  EXPECT_TRUE(dummy->data().executed);
+  EXPECT_FALSE(ReceivingOperation::HAS_PERIOD);
+}
+
+struct WhenAnyOperationData2 {
+  bool triggered{ false };
+  bool int_executed{ false };
+  bool double_executed{ false };
+};
+
+struct WhenAnyOperation2 : Node<WhenAnyOperation2, WhenAnyOperationData2> {
+  static auto trigger(WhenAnyOperation2& operation) {
+    EXPECT_FALSE(operation.data().triggered);
+    EXPECT_FALSE(operation.data().int_executed);
+    EXPECT_FALSE(operation.data().double_executed);
+    operation.data().triggered = true;
+    return exec::when_any(stdexec::just(3), stdexec::just(1.0));
+  }
+
+  static void execute(WhenAnyOperation2& operation, int /*unused*/) {
+    EXPECT_TRUE(operation.data().triggered);
+    EXPECT_FALSE(operation.data().int_executed);
+    EXPECT_FALSE(operation.data().double_executed);
+    operation.data().int_executed = true;
+    operation.engine().requestStop();
+  }
+
+  static void execute(WhenAnyOperation2& operation, double /*unused*/) {
+    EXPECT_TRUE(operation.data().triggered);
+    EXPECT_FALSE(operation.data().int_executed);
+    EXPECT_FALSE(operation.data().double_executed);
+    operation.data().double_executed = true;
+    operation.engine().requestStop();
+  }
+};
+
+TEST(NodeTests, nodeWhenAny2) {
+  NodeEngine engine{ {} };
+  auto dummy = engine.createNode<WhenAnyOperation2>();
+
+  engine.run();
+  EXPECT_TRUE(dummy->data().triggered);
+  EXPECT_TRUE(dummy->data().int_executed);
+  EXPECT_FALSE(dummy->data().double_executed);
   EXPECT_FALSE(ReceivingOperation::HAS_PERIOD);
 }
 

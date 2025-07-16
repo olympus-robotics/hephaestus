@@ -141,7 +141,7 @@ inline auto NodeEngine::createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
   node->implicit_output_.emplace(node, "");
   node->engine_ = this;
 
-  registerImplicitOutput(*node);
+  // registerImplicitOutput(*node);
 
   scope_.spawn(createNodeRunner(*node));
   return NodeHandle{ node };
