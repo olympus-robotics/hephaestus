@@ -52,6 +52,7 @@ void Context::enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_ti
 }
 
 void Context::dequeueTimer(TaskBase* task) {
+  tasks_.erase(task);
   timer_.dequeue(task);
 }
 
