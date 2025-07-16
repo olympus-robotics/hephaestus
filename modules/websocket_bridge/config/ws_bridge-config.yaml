@@ -15,7 +15,7 @@ ws_server_config:
   certfile: ""
   keyfile: ""
   sessionId: websocket_bridge
-  numWorkerThreads: 10
+  numWorkerThreads: 20
   useCompression: true
   clientTopicWhitelistPatterns:
     - .*
@@ -40,9 +40,9 @@ zenoh_config:
   multicast_scouting_enabled: true
   multicast_scouting_interface: auto
 
-ipc_service_call_timeout_ms: 10000
-# Async service calls are currently not supported.
-ipc_service_service_request_async: true
+ipc_default_service_call_timeout_ms: 100
+
+ipc_service_service_request_async: false
 
 ipc_advertise_topics_based_on_subscribers: true
 
