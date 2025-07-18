@@ -24,7 +24,9 @@
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/input.h"
+// #include "hephaestus/conduit/detaiinput.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::conduit {
 class NodeEngine;
@@ -62,8 +64,7 @@ public:
   static constexpr std::string_view INPUT_OVERFLOW_WARNING =
       "Delaying Output operation because receiving input would overflow";
 
-  explicit OutputConnections(detail::NodeBase* node, std::string name) : node_(node), name_(std::move(name)) {
-  }
+  OutputConnections(detail::NodeBase* node, std::string name);
 
   auto propagate(NodeEngine& engine);
 
@@ -78,6 +79,8 @@ public:
         },
         [](void* input_ptr) { return std::string{ static_cast<Input*>(input_ptr)->name() }; }, input->node(),
         generation_);
+
+    registerInputToEngine(input->name(), heph::utils::getTypeName<typename Input::ValueT>(), input->node());
   }
 
   void removeConnection(void* node) {
@@ -91,6 +94,8 @@ public:
   }
 
 private:
+  void registerInputToEngine(std::string name, std::string type, detail::NodeBase* node);
+
   using ScheduleAfterResultT = std::decay_t<decltype(std::declval<SchedulerT>().scheduleAfter(
       std::declval<std::chrono::milliseconds>()))>;
   auto retryTimeout(NodeEngine& engine) -> ScheduleAfterResultT;

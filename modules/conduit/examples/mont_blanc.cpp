@@ -537,7 +537,9 @@ auto main() -> int {
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
 
-    engine.run();
+    const auto dot_graph = engine.getDotGraph();
+    fmt::println("Dot graph:\n{}", dot_graph);
+    // engine.run();
 
   } catch (...) {
     fmt::println("unexcepted exception...");

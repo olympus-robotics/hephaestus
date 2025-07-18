@@ -22,6 +22,18 @@ class NodeEngine;
 
 namespace heph::conduit::detail {
 
+struct InputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
+
+struct OutputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
+
 class NodeBase {
 public:
   using ClockT = concurrency::io_ring::TimerClock;
@@ -54,6 +66,26 @@ public:
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
+  void addInputSpec(InputSpecification input) {
+    input_specs_.push_back(std::move(input));
+  }
+
+  void addOutputSpec(OutputSpecification output) {
+    output_specs_.push_back(std::move(output));
+  }
+
+  [[nodiscard]] auto inputSpecs() const -> const std::vector<InputSpecification>& {
+    return input_specs_;
+  }
+
+  [[nodiscard]] auto outputSpecs() const -> const std::vector<OutputSpecification>& {
+    return output_specs_;
+  }
+
+  [[nodiscard]] auto lastExecutionDuration() const -> std::chrono::nanoseconds {
+    return last_execution_duration_;
+  }
+
 protected:
   auto operationStart(bool has_period) -> ClockT::time_point;
   void operationEnd();
@@ -70,6 +102,9 @@ private:
   std::chrono::system_clock::time_point last_system_;
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
+
+  std::vector<InputSpecification> input_specs_;
+  std::vector<OutputSpecification> output_specs_;
 };
 
 class ExecutionStopWatch {
