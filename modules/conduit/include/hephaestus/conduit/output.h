@@ -11,6 +11,7 @@
 
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::conduit {
 
@@ -22,8 +23,15 @@ public:
   using ResultT = T;
   template <typename OperationT, typename DataT>
   explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
-    if (node != nullptr && node->enginePtr() != nullptr) {
-      node->engine().registerOutput(*this);
+    if (node != nullptr) {
+      node->addOutputSpec({
+          .name = name,
+          .node_name = node->nodeName(),
+          .type = heph::utils::getTypeName<T>(),
+      });
+      if (node->enginePtr() != nullptr) {
+        node->engine().registerOutput(*this);
+      }
     }
   }
   auto name() {
@@ -41,5 +49,6 @@ public:
 
 private:
   detail::OutputConnections outputs_;
+  std::string name_;
 };
 }  // namespace heph::conduit
