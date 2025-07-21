@@ -76,7 +76,7 @@ auto Context::runTasksSimulated() -> bool {
 
   runTasks();
 
-  if (tasks_.empty() && stopRequested()) {
+  if (tasks_.empty() && timer_.empty() && stopRequested()) {
     return false;
   }
   return true;

@@ -18,6 +18,7 @@ public:
 private:
   friend struct containers::IntrusiveFifoQueueAccess;
   [[maybe_unused]] AwaiterBase* next_{ nullptr };
+  [[maybe_unused]] AwaiterBase* prev_{ nullptr };
 };
 
 template <typename InputT, typename ReceiverT>

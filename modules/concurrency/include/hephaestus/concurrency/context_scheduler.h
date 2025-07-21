@@ -109,6 +109,7 @@ struct TaskBase {
 
   TaskDispatchOperation dispatch_operation{ this };
   TaskBase* next{ nullptr };
+  TaskBase* prev{ nullptr };
 };
 
 template <typename Receiver, typename Context>

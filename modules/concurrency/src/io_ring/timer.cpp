@@ -45,7 +45,15 @@ void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
   timer->tick();
 }
 
-void Timer::Operation::handleStopped() {
+void Timer::Operation::handleStopped() const {
+  while (!timer->tasks_.empty()) {
+    auto entry = timer->tasks_.front();
+
+    std::ranges::pop_heap(timer->tasks_, std::greater<>{});
+    timer->tasks_.pop_back();
+
+    entry.task->setStopped();
+  }
 }
 
 void Timer::UpdateOperation::handleStopped() {
@@ -57,13 +65,6 @@ void Timer::requestStop() {
   }
   if (update_timer_operation_.has_value()) {
     update_timer_operation_->requestStop();
-  }
-  while (!tasks_.empty()) {
-    auto entry = tasks_.front();
-    std::ranges::pop_heap(tasks_, std::greater<>{});
-    tasks_.pop_back();
-
-    entry.task->setStopped();
   }
 }
 
@@ -147,13 +148,13 @@ auto Timer::tickSimulated(bool advance) -> bool {
   }
 
   if (advance) {
-    const auto& top = tasks_.front();
+    auto top = tasks_.front();
+    std::ranges::pop_heap(tasks_, std::greater<>{});
+    tasks_.pop_back();
     if (top.start_time > last_tick_) {
       advanceSimulation(top.start_time - last_tick_);
     }
     top.task->start();
-    std::ranges::pop_heap(tasks_, std::greater<>{});
-    tasks_.pop_back();
     return !tasks_.empty();
   }
 

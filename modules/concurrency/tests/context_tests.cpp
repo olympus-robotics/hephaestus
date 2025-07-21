@@ -36,6 +36,7 @@ TEST(ContextTests, SchedulerBasics) {
                 });
   scope.spawn(sender);
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   EXPECT_TRUE(called);
 
   EXPECT_TRUE(stdexec::sender<decltype(sender)>);
@@ -63,6 +64,7 @@ TEST(ContextTests, scheduleException) {
                 });
   scope.spawn(sender);
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   EXPECT_TRUE(called);
 }
 
@@ -126,6 +128,7 @@ TEST(ContextTests, scheduleAfter) {
     scope.spawn(sender);
   }
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   auto end = std::chrono::steady_clock::now();
   EXPECT_EQ(called, 2);
   EXPECT_EQ(call_sequence, call_sequence_ref);
@@ -169,6 +172,7 @@ TEST(ContextTests, scheduleAfterStopWaitingAny) {
               stdexec::then([&] { context.requestStop(); }));
 
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   auto end = std::chrono::steady_clock::now();
   auto duration = end - begin;
   EXPECT_LT(duration, DELAY_TIME);
@@ -199,6 +203,7 @@ TEST(ContextTests, scheduleAfterSimulated) {
     scope.spawn(sender);
   }
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   auto end = std::chrono::system_clock::now();
   EXPECT_EQ(called, 2);
   EXPECT_EQ(call_sequence, call_sequence_ref);
@@ -225,10 +230,11 @@ TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
   auto begin = std::chrono::steady_clock::now();
   context.run();
   auto end = std::chrono::steady_clock::now();
+  stdexec::sync_wait(scope.on_empty());
   EXPECT_EQ(called, 1);
   EXPECT_LE(end - begin, delay_time);
   EXPECT_GE(context.elapsed(), delay_time);
-  EXPECT_LT(context.elapsed(), delay_time * 2);
+  EXPECT_LE(context.elapsed(), delay_time * 2);
 }
 
 }  // namespace heph::concurrency::tests
