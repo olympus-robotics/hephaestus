@@ -59,6 +59,10 @@ public:
   explicit Timer(IoRing& ring, TimerOptions options);
   ~Timer() noexcept;
 
+  auto empty() const -> bool {
+    return tasks_.empty();
+  }
+
   void requestStop();
 
   void tick();
@@ -88,7 +92,7 @@ private:
   struct Operation {
     void prepare(::io_uring_sqe* sqe) const;
     void handleCompletion(::io_uring_cqe* cqe) const;
-    void handleStopped();
+    void handleStopped() const;
 
     Timer* timer{ nullptr };
   };
