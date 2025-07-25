@@ -137,4 +137,34 @@ auto NodeEngine::endpoints() const -> std::vector<heph::net::Endpoint> {
 auto scheduler(NodeEngine& engine) -> concurrency::Context::Scheduler {
   return engine.scheduler();
 }
+
+auto NodeEngine::getDotGraph() const -> std::string {
+  fmt::println("Node: {}, connections: {}", nodes_.size(), connection_specs_.size());
+
+  std::string dot_graph = "digraph {\n";
+  std::size_t counter = 0;
+  for (const auto& node : nodes_) {
+    dot_graph += fmt::format("  subgraph cluster_{} {{\n", counter++);
+    dot_graph += fmt::format("    label=\"{}\";\n", node->nodeName());
+    for (const auto& input : node->inputSpecs()) {
+      dot_graph += fmt::format("    {}_{} [label=\"{}\", shape=ellipse, color=green];\n", input.node_name,
+                               input.name, input.name);
+    }
+
+    for (const auto& output : node->outputSpecs()) {
+      dot_graph += fmt::format("    {}_{} [label=\"{}\", shape=box, color=blue];\n", output.node_name,
+                               output.name, output.name);
+    }
+    dot_graph += fmt::format("    {}_output [label=\"output\", shape=box, color=blue];\n", node->nodeName());
+    dot_graph += "  }\n";
+  }
+
+  for (const auto& spec : connection_specs_) {
+    dot_graph += fmt::format("  {}_{} -> {}_{};\n", spec.output.node_name, spec.output.name,
+                             spec.input.node_name, spec.input.name);
+  }
+
+  dot_graph += "}\n";
+  return dot_graph;
+}
 }  // namespace heph::conduit
