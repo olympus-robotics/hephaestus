@@ -82,6 +82,9 @@ public:
   template <typename Node>
   void registerImplicitOutput(Node& node);
 
+  void addConnectionSpecification();
+  [[nodiscard]] auto getDotGraph() const -> std::string;
+
 private:
   auto uponError();
   template <typename Node>
@@ -99,12 +102,23 @@ private:
   auto acceptClients(std::size_t index) -> exec::task<void>;
   auto handleClient(heph::net::Socket client) -> exec::task<void>;
 
+  struct ConnectionSpecification {
+    detail::InputSpecification input;
+    detail::OutputSpecification output;
+  };
+
+  void addConnectionSpec(ConnectionSpecification spec) {
+    connection_specs_.push_back(std::move(spec));
+  }
+
+private:  // Optimal fields order: pool_, exception_, scope_, context_
+  friend detail::OutputConnections;
+
   struct OutputRegistryEntry {
     std::string type_info;
     heph::UniqueFunction<void(heph::net::Socket)> publisher_factory;
   };
 
-private:  // Optimal fields order: pool_, exception_, scope_, context_
   exec::static_thread_pool pool_;
   std::exception_ptr exception_;
   exec::async_scope scope_;
@@ -115,6 +129,8 @@ private:  // Optimal fields order: pool_, exception_, scope_, context_
   std::vector<std::unique_ptr<detail::NodeBase>> nodes_;
 
   std::vector<heph::net::Acceptor> acceptors_;
+
+  std::vector<ConnectionSpecification> connection_specs_;
 };
 
 template <typename OperatorT, typename... Ts>
@@ -138,7 +154,7 @@ inline auto NodeEngine::createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
   //  1. We don't want to impose a ctor taking the engine parameter on
   //     an  Operator
   //  2. The name might only be fully valid after the node is fully constructed.
-  node->implicit_output_.emplace(node, "");
+  node->implicit_output_.emplace(node, "output");
   node->engine_ = this;
 
   registerImplicitOutput(*node);

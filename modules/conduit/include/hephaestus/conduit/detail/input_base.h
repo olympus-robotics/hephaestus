@@ -28,6 +28,7 @@
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
 #include "hephaestus/utils/exception.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::conduit::detail {
 struct InputPollT {};
@@ -46,7 +47,14 @@ class InputBase {
 public:
   using DataT = T;
 
-  explicit InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
+  InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
+    node_->addInputSpec([this] {
+      return InputSpecification{
+        .name = name_,
+        .node_name = node_->nodeName(),
+        .type = heph::utils::getTypeName<DataT>(),
+      };
+    });
   }
 
   auto name() {

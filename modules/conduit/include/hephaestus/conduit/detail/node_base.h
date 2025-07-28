@@ -6,8 +6,13 @@
 
 #include <chrono>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <hephaestus/concurrency/context.h>
 #include <stdexec/stop_token.hpp>
@@ -21,6 +26,18 @@ class NodeEngine;
 }
 
 namespace heph::conduit::detail {
+
+struct InputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
+
+struct OutputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
 
 class NodeBase {
 public:
@@ -54,6 +71,28 @@ public:
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
+  void addInputSpec(std::function<InputSpecification()> input) {
+    input_specs_.push_back(std::move(input));
+  }
+
+  void addOutputSpec(std::function<OutputSpecification()> output) {
+    output_specs_.push_back(std::move(output));
+  }
+
+  [[nodiscard]] auto inputSpecs() const -> std::vector<InputSpecification> {
+    auto specs_range = input_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
+  }
+
+  [[nodiscard]] auto outputSpecs() const -> std::vector<OutputSpecification> {
+    auto specs_range = output_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
+  }
+
+  [[nodiscard]] auto lastExecutionDuration() const -> std::chrono::nanoseconds {
+    return last_execution_duration_;
+  }
+
 protected:
   auto operationStart(bool has_period) -> ClockT::time_point;
   void operationEnd();
@@ -70,6 +109,9 @@ private:
   std::chrono::system_clock::time_point last_system_;
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
+
+  std::vector<std::function<InputSpecification()>> input_specs_;
+  std::vector<std::function<OutputSpecification()>> output_specs_;
 };
 
 class ExecutionStopWatch {
