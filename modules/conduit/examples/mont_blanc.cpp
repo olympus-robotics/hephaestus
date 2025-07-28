@@ -538,8 +538,8 @@ auto main() -> int {
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
 
     const auto dot_graph = engine.getDotGraph();
-    fmt::println("Dot graph:\n{}", dot_graph);
-    // engine.run();
+    fmt::println("Dot graph:\n-------\n{}\n-------\n", dot_graph);
+    engine.run();
 
   } catch (...) {
     fmt::println("unexcepted exception...");
