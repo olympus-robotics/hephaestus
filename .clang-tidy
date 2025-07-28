@@ -55,6 +55,7 @@ Checks: "-*,
   -readability-function-cognitive-complexity,
   -readability-redundant-access-specifiers,
   -readability-identifier-length,
+  -readability-static-accessed-through-instance,
   -cert-dcl58-cpp
   "
 
