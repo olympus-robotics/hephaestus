@@ -6,8 +6,13 @@
 
 #include <chrono>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <hephaestus/concurrency/context.h>
 #include <stdexec/stop_token.hpp>
@@ -66,20 +71,22 @@ public:
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
-  void addInputSpec(InputSpecification input) {
+  void addInputSpec(std::function<InputSpecification()> input) {
     input_specs_.push_back(std::move(input));
   }
 
-  void addOutputSpec(OutputSpecification output) {
+  void addOutputSpec(std::function<OutputSpecification()> output) {
     output_specs_.push_back(std::move(output));
   }
 
-  [[nodiscard]] auto inputSpecs() const -> const std::vector<InputSpecification>& {
-    return input_specs_;
+  [[nodiscard]] auto inputSpecs() const -> std::vector<InputSpecification> {
+    auto specs_range = input_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
   }
 
-  [[nodiscard]] auto outputSpecs() const -> const std::vector<OutputSpecification>& {
-    return output_specs_;
+  [[nodiscard]] auto outputSpecs() const -> std::vector<OutputSpecification> {
+    auto specs_range = output_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
   }
 
   [[nodiscard]] auto lastExecutionDuration() const -> std::chrono::nanoseconds {
@@ -103,8 +110,8 @@ private:
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
 
-  std::vector<InputSpecification> input_specs_;
-  std::vector<OutputSpecification> output_specs_;
+  std::vector<std::function<InputSpecification()>> input_specs_;
+  std::vector<std::function<OutputSpecification()>> output_specs_;
 };
 
 class ExecutionStopWatch {

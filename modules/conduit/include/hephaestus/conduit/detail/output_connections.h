@@ -24,7 +24,6 @@
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/input.h"
-// #include "hephaestus/conduit/detaiinput.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/utils/utils.h"
 
@@ -94,7 +93,7 @@ public:
   }
 
 private:
-  void registerInputToEngine(std::string name, std::string type, detail::NodeBase* node);
+  void registerInputToEngine(const std::string& name, std::string type, detail::NodeBase* node);
 
   using ScheduleAfterResultT = std::decay_t<decltype(std::declval<SchedulerT>().scheduleAfter(
       std::declval<std::chrono::milliseconds>()))>;

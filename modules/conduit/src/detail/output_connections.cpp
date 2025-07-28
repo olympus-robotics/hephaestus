@@ -5,7 +5,10 @@
 
 #include "hephaestus/conduit/detail/output_connections.h"
 
+#include <span>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
@@ -24,16 +27,20 @@ auto OutputConnections::name() const -> std::string {
   return fmt::format("{}/{}", node_->nodeName(), name_);
 }
 
-void OutputConnections::registerInputToEngine(std::string name, std::string type, detail::NodeBase* node) {
+void OutputConnections::registerInputToEngine(const std::string& name, std::string type,
+                                              detail::NodeBase* node) {
+  if (node->enginePtr() == nullptr) {
+    return;
+  }
+
   std::string input_name;
-  std::list<std::string> name_parts = absl::StrSplit(name, '/');
+  std::vector<std::string> name_parts = absl::StrSplit(name, '/');
   if (name_parts.size() == 1) {
     input_name = name_parts.front();
   } else if (name_parts.size() == 2) {
     input_name = name_parts.back();
   } else {
-    name_parts.pop_front();
-    input_name = absl::StrJoin(name_parts, "/");
+    input_name = absl::StrJoin(std::span{ name_parts }.subspan(1), "/");
   }
   node_->engine().addConnectionSpec({
       .input = {

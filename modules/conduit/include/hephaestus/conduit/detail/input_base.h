@@ -48,10 +48,12 @@ public:
   using DataT = T;
 
   InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
-    node_->addInputSpec({
+    node_->addInputSpec([this] {
+      return InputSpecification{
         .name = name_,
         .node_name = node_->nodeName(),
         .type = heph::utils::getTypeName<DataT>(),
+      };
     });
   }
 

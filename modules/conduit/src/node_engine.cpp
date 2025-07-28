@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <exec/task.hpp>
+#include <fmt/base.h>
 #include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
