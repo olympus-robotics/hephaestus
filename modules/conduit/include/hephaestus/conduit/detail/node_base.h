@@ -23,9 +23,12 @@
 // Forward declarations
 namespace heph::conduit {
 class NodeEngine;
-}
+class RemoteNodeHandler;
+}  // namespace heph::conduit
 
 namespace heph::conduit::detail {
+template <typename InputT>
+void registerInput(NodeEngine& engine, InputT* input);
 
 struct InputSpecification {
   std::string name;
@@ -71,12 +74,20 @@ public:
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
-  void addInputSpec(std::function<InputSpecification()> input) {
-    input_specs_.push_back(std::move(input));
+  template <typename InputT>
+  void addInputSpec(InputT* input, std::function<InputSpecification()> input_spec) {
+    input_registrations_.push_back([this, input]() { registerInput(*engine_, static_cast<InputT*>(input)); });
+    input_specs_.push_back(std::move(input_spec));
   }
 
   void addOutputSpec(std::function<OutputSpecification()> output) {
     output_specs_.push_back(std::move(output));
+  }
+
+  void registerInputs() {
+    for (auto& f : input_registrations_) {
+      f();
+    }
   }
 
   [[nodiscard]] auto inputSpecs() const -> std::vector<InputSpecification> {
@@ -101,6 +112,7 @@ protected:
 
 private:
   friend class heph::conduit::NodeEngine;
+  friend class heph::conduit::RemoteNodeHandler;
   friend class ExecutionStopWatch;
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
@@ -110,6 +122,7 @@ private:
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
 
+  std::vector<std::function<void()>> input_registrations_;
   std::vector<std::function<InputSpecification()>> input_specs_;
   std::vector<std::function<OutputSpecification()>> output_specs_;
 };

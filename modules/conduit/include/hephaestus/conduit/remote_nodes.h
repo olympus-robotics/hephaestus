@@ -35,6 +35,9 @@
 #include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {
+
+enum class RemoteNodeType : std::uint8_t { INPUT = 0, OUTPUT = 1 };
+
 namespace internal {
 template <typename Container, typename... Ts>
 auto recv(heph::net::Socket& socket, Ts&&... ts) {
@@ -81,7 +84,92 @@ auto createNetEntity(const heph::net::Endpoint& endpoint, heph::concurrency::Con
   }
   __builtin_unreachable();
 }
+
+inline auto connect(heph::net::Socket& socket, const heph::net::Endpoint& endpoint,
+                    const std::string& type_info, RemoteNodeType& type, const std::string& name) {
+  return heph::net::connect(socket, endpoint) | stdexec::let_value([&] {
+           return net::sendAll(socket, std::as_bytes(std::span{ &type, 1 })) |
+                  stdexec::let_value([&](std::span<const std::byte> /*recv_buffer*/) {
+                    return internal::send(socket, name) |
+                           stdexec::let_value([&] { return internal::send(socket, type_info); });
+                  }) |
+                  stdexec::let_value([&socket] { return internal::recv<std::string>(socket); });
+         });
+}
+
+inline auto sendMsg(heph::net::Socket& socket, std::string name, std::vector<std::byte> msg) {
+  const auto msg_size = msg.size();
+  if (msg_size > std::numeric_limits<std::uint16_t>::max()) {
+    heph::panic("Message size too big");
+  }
+
+  return (stdexec::just(std::move(msg)) |
+          stdexec::let_value([&socket](const auto& data) { return internal::send(socket, data); }) |
+          stdexec::let_error([name = std::move(name)]<typename Error>(const Error& error) {
+            if constexpr (std::is_same_v<std::error_code, Error>) {
+              heph::log(heph::INFO, "Stop publishing", "node", name, "reason", error.message());
+
+            } else {
+              std::string reason;
+              try {
+                std::rethrow_exception(error);
+              } catch (std::exception& exception) {
+                reason = exception.what();
+
+              } catch (...) {
+                reason = "unknown exception";
+              }
+              heph::log(heph::INFO, "Stop publishing", "node", name, "reason", reason);
+            }
+            return stdexec::just_stopped();
+          }));
+}
 }  // namespace internal
+
+class RemoteInputSubscriberOperator {
+public:
+  using MsgT = std::pmr::vector<std::byte>;
+
+  [[nodiscard]] auto name() const -> std::string {
+    return fmt::format("{}/{}", socket_.remoteEndpoint(), name_);
+  }
+
+  RemoteInputSubscriberOperator(heph::net::Socket socket, std::string name)
+    : socket_(std::move(socket)), name_(std::move(name)) {
+  }
+
+  auto trigger() {
+    return internal::recv<std::pmr::vector<std::byte>>(socket_, &memory_resource_);
+  }
+
+private:
+  heph::net::Socket socket_;
+  std::string name_;
+  std::pmr::unsynchronized_pool_resource memory_resource_;
+};
+
+template <typename T>
+struct RemoteInputSubscriber : heph::conduit::Node<RemoteInputSubscriber<T>, RemoteInputSubscriberOperator> {
+  static auto name(const RemoteInputSubscriber& self) {
+    return self.data().name();
+  }
+
+  static auto trigger(RemoteInputSubscriber& self) {
+    return self.data().trigger();
+  }
+
+  static auto execute(RemoteInputSubscriberOperator::MsgT msg) -> std::optional<T> {
+    auto msg_buffer = std::span{ msg };
+    if (msg_buffer.empty()) {
+      // No data received...
+      return std::nullopt;
+    }
+
+    T value;
+    heph::serdes::deserialize(msg_buffer, value);
+    return value;
+  }
+};
 
 class RemoteSubscriberOperator {
 public:
@@ -98,9 +186,8 @@ public:
   auto trigger(heph::concurrency::Context* context, std::string* type_info) -> exec::task<MsgT>;
 
 private:
-  auto connect(const std::string& type_info);
-
 private:
+  RemoteNodeType type_{ RemoteNodeType::OUTPUT };
   std::optional<heph::net::Socket> socket_;
   heph::net::Endpoint endpoint_;
   std::pmr::unsynchronized_pool_resource memory_resource_;
@@ -109,25 +196,13 @@ private:
   std::optional<std::string> last_error_;
 };
 
-inline auto RemoteSubscriberOperator::connect(const std::string& type_info) {
-  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  return heph::net::connect(socket_.value(), endpoint_) | stdexec::let_value([this, &type_info] {
-           // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-           return internal::send(socket_.value(), name_) | stdexec::let_value([this, &type_info] {
-                    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-                    return internal::send(socket_.value(), type_info);
-                  });
-         }) |
-         stdexec::let_value([this] { return internal::recv<std::string>(socket_.value()); });
-}
-
 inline auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std::string* type_info)
     -> exec::task<MsgT> {
   try {
     if (!socket_.has_value()) {
       socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context));
 
-      auto error = co_await connect(*type_info);
+      auto error = co_await internal::connect(*socket_, endpoint_, *type_info, type_, name_);
       if (error != "success") {
         heph::panic("Could not connect: {}", error);
       }
@@ -198,30 +273,7 @@ public:
   }
 
   auto publish(std::vector<std::byte> msg) {
-    const auto msg_size = msg.size();
-    if (msg_size > std::numeric_limits<std::uint16_t>::max()) {
-      heph::panic("Message size too big");
-    }
-    return stdexec::just(std::move(msg)) |
-           stdexec::let_value([this](const auto& data) { return internal::send(client_, data); }) |
-           stdexec::let_error([this]<typename Error>(const Error& error) {
-             if constexpr (std::is_same_v<std::error_code, Error>) {
-               heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", error.message());
-
-             } else {
-               std::string reason;
-               try {
-                 std::rethrow_exception(error);
-               } catch (std::exception& exception) {
-                 reason = exception.what();
-
-               } catch (...) {
-                 reason = "unknown exception";
-               }
-               heph::log(heph::INFO, "Stop publishing", "node", name(), "reason", reason);
-             }
-             return stdexec::just_stopped();
-           });
+    return internal::sendMsg(client_, name(), std::move(msg));
   }
 
 private:

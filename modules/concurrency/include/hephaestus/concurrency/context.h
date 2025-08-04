@@ -26,7 +26,9 @@ public:
   using Scheduler = ContextScheduler;
 
   explicit Context(const ContextConfig& config)
-    : ring_{ config.io_ring_config }, timer_{ ring_, config.timer_options } {
+    : ring_{ config.io_ring_config }
+    , timer_{ ring_, config.timer_options }
+    , stop_callback_(ring_.getStopToken(), StopCallback{ this }) {
   }
 
   auto scheduler() -> Scheduler {
@@ -36,7 +38,6 @@ public:
   void run(const std::function<void()>& on_start = [] {});
 
   void requestStop() {
-    timer_.requestStop();
     ring_.requestStop();
   }
 
@@ -66,6 +67,14 @@ private:
   void enqueue(TaskBase* task);
   template <typename Receiver, typename Context>
   friend struct TimedTask;
+
+  struct StopCallback {
+    Context* self;
+    void operator()() const noexcept {
+      self->timer_.requestStop();
+    }
+  };
+
   void enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time);
   void dequeueTimer(TaskBase* task);
 
@@ -81,6 +90,7 @@ private:
   io_ring::Timer timer_;
   io_ring::TimerClock::base_clock::time_point start_time_;
   io_ring::TimerClock::base_clock::time_point last_progress_time_;
+  stdexec::inplace_stop_callback<StopCallback> stop_callback_;
 };
 
 }  // namespace heph::concurrency
