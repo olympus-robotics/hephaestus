@@ -1,11 +1,8 @@
 //=================================================================================================
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
-#include <sstream>
 
-#include <bits/types/stack_t.h>
-#include <fmt/format.h>
-#include <gmock/gmock.h>
+#include <fmt/base.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/stack_trace.h"
@@ -15,9 +12,9 @@ using namespace ::testing;
 
 namespace heph::utils::stack_trace::tests {
 TEST(StackTrace, print) {
-  heph::utils::StackTrace stack_trace;
+  const StackTrace stack_trace;
 
-  std::string trace = heph::utils::StackTrace::print();
+  const auto trace = StackTrace::print();
   fmt::println("{}", trace);
   ASSERT_FALSE(trace.empty());
 }

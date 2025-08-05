@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <ranges>
 #include <string>
@@ -37,8 +38,7 @@ void removeInvalidChar(std::string& str) {
 [[nodiscard]] auto createSessionId(std::string_view id) -> std::string {
   static constexpr std::size_t MAX_SESSION_ID_SIZE = 16;
 
-  panicIf(!isValidId(id),
-          fmt::format("invalid session id: {}, only alphanumeric and _ characters allowed", id));
+  panicIf(!isValidId(id), "invalid session id: {}, only alphanumeric and _ characters allowed", id);
 
   std::string session_id{ id };
 
@@ -122,7 +122,7 @@ ZenohConfig::ZenohConfig() {
   zconfig.insert_json5(Z_CONFIG_ADD_TIMESTAMP_KEY, "true");  // NOLINT(misc-include-cleaner)
 }
 
-ZenohConfig::ZenohConfig(std::filesystem::path const& path) : zconfig(::zenoh::Config::from_file(path)) {
+ZenohConfig::ZenohConfig(const std::filesystem::path& path) : zconfig(::zenoh::Config::from_file(path)) {
 }
 
 void setSessionId(ZenohConfig& config, std::string_view id) {

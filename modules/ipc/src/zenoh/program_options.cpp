@@ -5,21 +5,40 @@
 #include "hephaestus/ipc/zenoh/program_options.h"
 
 #include <cstddef>
+#include <cstdlib>
 #include <string>
+#include <tuple>
 #include <utility>
+#include <vector>
 
+#include <absl/strings/str_split.h>
 #include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
+namespace {
+constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
+constexpr auto TOPICS_LIST_SPLIT_CHAR = ',';
+
+[[nodiscard]] auto splitTopicsList(const std::string& topics_list) -> std::vector<std::string> {
+  panicIf(topics_list.empty(), "Empty topics list");
+  std::vector<std::string> topics = absl::StrSplit(topics_list, TOPICS_LIST_SPLIT_CHAR);
+  panicIf(topics.empty(), "Invalid topics list: {}", topics_list);
+  return topics;
+}
+}  // namespace
 
 void appendProgramOption(cli::ProgramDescription& program_description,
-                         const std::string& default_topic /*= DEFAULT_TOPIC*/) {
+                         const std::string& default_topic /*= ""*/) {
   program_description.defineOption<std::string>("topic", "Key expression", default_topic)
+      .defineOption<std::string>("topic_prefix", "Key expression", "")
+      .defineOption<std::string>("topics_list",
+                                 fmt::format("List of topics separated by '{}'", TOPICS_LIST_SPLIT_CHAR), "")
       .defineFlag("use_binary_name_as_session_id", "Use the binary name as the session id")
       .defineOption<std::string>("session_id", "the session id", "")
       .defineOption<std::string>("zenoh_config",
@@ -38,8 +57,19 @@ void appendProgramOption(cli::ProgramDescription& program_description,
       .defineFlag("realtime", "Enable real-time communication");
 }
 
-auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Config, TopicConfig> {
-  TopicConfig topic_config{ args.getOption<std::string>("topic") };
+auto parseProgramOptions(const heph::cli::ProgramOptions& args)
+    -> std::tuple<Config, TopicConfig, TopicFilterParams> {
+  const auto topic = args.getOption<std::string>("topic");
+  auto topic_config = TopicConfig{ topic.empty() ? "**" : topic };
+
+  TopicFilterParams topic_filter_params;
+  if (!topic.empty()) {
+    topic_filter_params.include_topics_only.push_back(topic);
+  } else if (const auto topics_list = args.getOption<std::string>("topics_list"); !topics_list.empty()) {
+    topic_filter_params.include_topics_only = splitTopicsList(topics_list);
+  } else if (auto topic_prefix = args.getOption<std::string>("topic_prefix"); !topic_prefix.empty()) {
+    topic_filter_params.prefix = std::move(topic_prefix);
+  }
 
   Config config;
   if (args.getOption<bool>("use_binary_name_as_session_id")) {
@@ -51,6 +81,9 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   auto zenoh_config_path = args.getOption<std::string>("zenoh_config");
   if (!zenoh_config_path.empty()) {
     config.zenoh_config_path.emplace(std::move(zenoh_config_path));
+  } else if (const auto* zenoh_config_file = std::getenv(ZENOH_CONFIG_FILE_ENV_VAR);
+             zenoh_config_file != nullptr) {
+    config.zenoh_config_path.emplace(zenoh_config_file);
   }
 
   auto mode = args.getOption<std::string>("mode");
@@ -59,7 +92,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   } else if (mode == "client") {
     config.mode = Mode::CLIENT;
   } else {
-    panic(fmt::format("invalid mode value: {}", mode));
+    panic("invalid mode value: {}", mode);
   }
 
   auto protocol = args.getOption<std::string>("protocol");
@@ -70,7 +103,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   } else if (protocol == "tcp") {
     config.protocol = Protocol::TCP;
   } else {
-    panic(fmt::format("invalid value {} for option 'protocol'", protocol));
+    panic("invalid value {} for option 'protocol'", protocol);
   }
 
   config.router = args.getOption<std::string>("router");
@@ -80,7 +113,7 @@ auto parseProgramOptions(const heph::cli::ProgramOptions& args) -> std::pair<Con
   config.qos = args.getOption<bool>("qos");
   config.real_time = args.getOption<bool>("realtime");
 
-  return { std::move(config), std::move(topic_config) };
+  return { std::move(config), std::move(topic_config), std::move(topic_filter_params) };
 }
 
 }  // namespace heph::ipc::zenoh

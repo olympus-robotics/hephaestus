@@ -80,7 +80,7 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = heph::cli::ProgramDescription("Action server example");
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::ACTION_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, topic_config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
     auto stop_session_config = session_config;
     auto session = heph::ipc::zenoh::createSession(session_config);

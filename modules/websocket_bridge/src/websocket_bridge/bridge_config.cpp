@@ -15,11 +15,11 @@
 
 #include <absl/log/log.h>
 #include <fmt/core.h>
-#include <hephaestus/telemetry/log.h>
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml/read.hpp>
 #include <rfl/yaml/write.hpp>
 
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace rfl {

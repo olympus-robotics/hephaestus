@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>

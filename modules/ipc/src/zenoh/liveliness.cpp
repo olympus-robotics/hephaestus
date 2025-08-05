@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/zenoh/liveliness.h"
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <optional>
@@ -18,6 +19,7 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 #include <zenoh.h>
+#include <zenoh/api/base.hxx>
 #include <zenoh/api/channels.hxx>
 #include <zenoh/api/closures.hxx>
 #include <zenoh/api/enums.hxx>
@@ -28,10 +30,11 @@
 #include <zenoh/api/subscriber.hxx>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/telemetry/log.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {
@@ -44,7 +47,7 @@ struct LivelinessTokenKeyexprSuffix {
   static constexpr std::string_view ACTION_SERVER = "hephaestus_action_server";
 };
 
-[[nodiscard]] auto toEndpointnfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
+[[nodiscard]] auto toEndpointInfoStatus(::zenoh::SampleKind kind) -> EndpointInfo::Status {
   switch (kind) {
     case Z_SAMPLE_KIND_PUT:
       return EndpointInfo::Status::ALIVE;
@@ -91,6 +94,13 @@ auto livelinessTokenKeyexprSuffixTActionType(std::string_view type) -> std::opti
 
   return std::nullopt;
 }
+
+[[nodiscard]] auto endpointAlreadyDiscovered(const std::vector<EndpointInfo>& endpoints,
+                                             const EndpointInfo& info) -> bool {
+  return std::ranges::find_if(endpoints, [&info](const EndpointInfo& endpoint) {
+           return endpoint == info;
+         }) != endpoints.end();
+}
 }  // namespace
 
 auto generateLivelinessTokenKeyexpr(std::string_view topic, const ::zenoh::Id& session_id,
@@ -122,25 +132,27 @@ auto parseLivelinessToken(std::string_view keyexpr, ::zenoh::SampleKind kind) ->
   return EndpointInfo{ .session_id = items[SESSION_IDX],
                        .topic = std::move(topic),
                        .type = *type,
-                       .status = toEndpointnfoStatus(kind) };
+                       .status = toEndpointInfoStatus(kind) };
 }
 
-auto getListOfEndpoints(const Session& session, std::string_view topic) -> std::vector<EndpointInfo> {
+auto getListOfEndpoints(const Session& session, const TopicFilter& topic_filter)
+    -> std::vector<EndpointInfo> {
   static constexpr auto FIFO_BOUND = 100;
-  const ::zenoh::KeyExpr keyexpr(topic);
+  const ::zenoh::KeyExpr keyexpr("**");
   auto replies = session.zenoh_session.liveliness_get(keyexpr, ::zenoh::channels::FifoChannel(FIFO_BOUND));
 
   std::vector<EndpointInfo> endpoints;
   for (auto res = replies.recv(); std::holds_alternative<::zenoh::Reply>(res); res = replies.recv()) {
     const auto& reply = std::get<::zenoh::Reply>(res);
     if (!reply.is_ok()) {
-      heph::log(heph::ERROR, "invalid reply for liveliness", "topic", topic);
+      heph::log(heph::ERROR, "invalid reply for liveliness");
       continue;
     }
 
     const auto& sample = reply.get_ok();
     auto actor_info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
-    if (actor_info) {
+    if (actor_info && topic_filter.isAcceptable(actor_info->topic) &&
+        !endpointAlreadyDiscovered(endpoints, *actor_info)) {
       endpoints.push_back(std::move(*actor_info));
     }
   }
@@ -153,28 +165,14 @@ void printEndpointInfo(const EndpointInfo& info) {
                magic_enum::enum_name(info.type), info.session_id, info.topic);
 }
 
-EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicConfig topic_config /* = "**"*/,
-                                     Callback&& callback)
+EndpointDiscovery::EndpointDiscovery(SessionPtr session, TopicFilter topic_filter, Callback&& callback)
   : session_(std::move(session))
-  , topic_config_(std::move(topic_config))
+  , topic_filter_(std::move(topic_filter))
   , callback_(std::move(callback))
   , infos_consumer_(std::make_unique<concurrency::MessageQueueConsumer<EndpointInfo>>(
         [this](const EndpointInfo& info) { callback_(info); }, DEFAULT_CACHE_RESERVES)) {
   infos_consumer_->start();
-  // NOTE: the liveliness token subscriber is called only when the status of the publisher changes.
-  // This means that we won't get the list of publisher that are already running.
-  // To do that we need to query the list of publisher beforehand.
-  auto publishers_info = getListOfEndpoints(*session_, topic_config_.name);
-  for (const auto& info : publishers_info) {
-    infos_consumer_->queue().forcePush(info);
-  }
 
-  // Here we create the subscriber for the liveliness tokens.
-  // NOTE: If a publisher start publishing between the previous call and the time needed to start the
-  // subscriber, we will loose that publisher.
-  // This could be avoided by querying for the list of publisher after we start the subscriber and keeping a
-  // track of what we already advertised so not to call the user callback twice on the same event.
-  // TODO: implement the optimization described above.
   createLivelinessSubscriber();
 }
 
@@ -185,24 +183,35 @@ EndpointDiscovery::~EndpointDiscovery() {
   try {
     std::move(*liveliness_subscriber_).undeclare();
   } catch (std::exception& e) {
-    heph::log(heph::ERROR, "failed to undeclare liveliness subscriber", "topic", topic_config_.name,
-              "exception", e.what());
+    heph::log(heph::ERROR, "failed to undeclare liveliness subscriber", "exception", e.what());
   }
 }
 
 void EndpointDiscovery::createLivelinessSubscriber() {
-  const ::zenoh::KeyExpr keyexpr(topic_config_.name);
+  const ::zenoh::KeyExpr keyexpr("**");
 
   auto liveliness_callback = [this](const ::zenoh::Sample& sample) mutable {
     auto info = parseLivelinessToken(sample.get_keyexpr().as_string_view(), sample.get_kind());
-    if (info.has_value()) {
-      infos_consumer_->queue().forcePush(std::move(*info));
+    if (!info.has_value()) {
+      heph::log(heph::ERROR, "failed to parse liveliness token", "keyexpr",
+                sample.get_keyexpr().as_string_view(), "kind", magic_enum::enum_name(sample.get_kind()));
+    }
+
+    if (topic_filter_.isAcceptable(info->topic)) {
+      const auto dropped_element = infos_consumer_->queue().forcePush(std::move(*info));
+      if (dropped_element.has_value()) {
+        heph::log(heph::ERROR,
+                  "Dropped endpoint discovery info before being able to process due to full queue",
+                  "dropped_endpoint_info_topic", dropped_element.value().topic);
+      }
     }
   };
 
+  ::zenoh::ZResult result{};
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
-          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none));
+          keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, { .history = true }, &result));
+  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber");
 }
 
 }  // namespace heph::ipc::zenoh

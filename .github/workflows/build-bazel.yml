@@ -1,0 +1,42 @@
+name: "Build Bazel"
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: "Bazel Config"
+        required: true
+        type: string
+      compilation-mode:
+        description: "Bazel Compilation-Mode"
+        required: true
+        type: string
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          # Avoid downloading Bazel every time.
+          bazelisk-cache: true
+          # Store build cache per workflow.
+          disk-cache: false
+          # Share repository cache between workflows.
+          repository-cache: true
+      - name: Test
+        env:
+          BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
+        run: bazelisk test --test_output=errors //modules/... --config remote-cache --remote_header="$BUILDBUDDY_KEY" --config ${{ inputs.config }} -c ${{ inputs.compilation-mode }}

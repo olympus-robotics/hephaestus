@@ -31,18 +31,18 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = heph::cli::ProgramDescription("String service server example");
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, topic_config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
     auto session = heph::ipc::zenoh::createSession(session_config);
 
     auto callback = [](const std::string& sample) {
-      heph::log(heph::DEBUG, "received query", "query", sample);
+      heph::log(heph::INFO, "received query", "query", sample);
       return (sample == "Marco") ? "Polo" : "What?";
     };
 
     const heph::ipc::zenoh::Service<std::string, std::string> server(session, topic_config, callback);
 
-    heph::log(heph::DEBUG, "string server started, waiting for queries", "topic", topic_config.name);
+    heph::log(heph::INFO, "string server started, waiting for queries", "topic", topic_config.name);
 
     heph::utils::TerminationBlocker::waitForInterrupt();
 

@@ -1,3 +1,7 @@
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <chrono>
 #include <cstddef>
 #include <memory>
@@ -13,6 +17,8 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/serdes/serdes.h"
+#include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
@@ -25,7 +31,7 @@ using namespace ::testing;
 
 class MyEnvironment : public Environment {
 public:
-  ~MyEnvironment() = default;
+  ~MyEnvironment() override = default;
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
   }
@@ -158,7 +164,7 @@ TEST(ZenohTests, ServiceTypeInfo) {
 
   auto type_info = serdes::ServiceTypeInfo::fromJson(replies.front().value);
   EXPECT_EQ(type_info.request, serdes::getSerializedTypeInfo<types::DummyType>());
-  EXPECT_EQ(type_info.reply, serdes::getSerializedTypeInfo<std::string>());
+  EXPECT_EQ(type_info.reply.name, "std::string");
 }
 
 }  // namespace

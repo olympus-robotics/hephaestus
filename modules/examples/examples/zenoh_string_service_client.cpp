@@ -34,13 +34,13 @@ auto main(int argc, const char* argv[]) -> int {
     auto desc = heph::cli::ProgramDescription("String service client example");
     heph::ipc::zenoh::appendProgramOption(desc, getDefaultTopic(ExampleType::SERVICE_SERVER));
     const auto args = std::move(desc).parse(argc, argv);
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, topic_config, _] = heph::ipc::zenoh::parseProgramOptions(args);
 
     auto session = heph::ipc::zenoh::createSession(session_config);
 
     static constexpr auto K_TIMEOUT = std::chrono::seconds(10);
     const std::string query = "Marco";
-    heph::log(heph::DEBUG, "calling service", "topic", topic_config.name, "query", query);
+    heph::log(heph::INFO, "calling service", "topic", topic_config.name, "query", query);
     const auto replies =
         heph::ipc::zenoh::callService<std::string, std::string>(*session, topic_config, query, K_TIMEOUT);
     if (!replies.empty()) {
@@ -48,7 +48,7 @@ auto main(int argc, const char* argv[]) -> int {
       std::ranges::for_each(replies, [&reply_str](const auto& reply) {
         reply_str = fmt::format("{}\n-\t{}: {}", reply_str, reply.topic, reply.value);
       });
-      heph::log(heph::DEBUG, "received", "reply", reply_str);
+      heph::log(heph::INFO, "received", "reply", reply_str);
     } else {
       heph::log(heph::ERROR, "error happened or no messages received", "timeout", K_TIMEOUT);
     }

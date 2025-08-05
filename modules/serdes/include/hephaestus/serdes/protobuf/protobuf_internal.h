@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
@@ -40,7 +39,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto res = buffer.deserialize(proto);
-  panicIf(!res, fmt::format("Failed to parse {} from incoming buffer", utils::getTypeName<T>()));
+  panicIf(!res, "Failed to parse {} from incoming buffer", utils::getTypeName<T>());
 
   fromProto(proto, data);
 }
@@ -60,7 +59,7 @@ template <class ProtoT>
                  [](char c) { return static_cast<std::byte>(c); });
 
   auto original_type_tmp = std::move(original_type);  // NOTE: this is need otherwise clang-tidy will complain
-  return { .name = proto_descriptor->full_name(),
+  return { .name = std::string{ proto_descriptor->full_name() },
            .schema = schema,
            .serialization = TypeInfo::Serialization::PROTOBUF,
            .original_type = std::move(original_type_tmp) };

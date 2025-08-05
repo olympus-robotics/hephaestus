@@ -15,10 +15,10 @@
 #include <vector>
 
 #include <fmt/format.h>
-#include <hephaestus/ipc/zenoh/service.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
+#include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {
@@ -27,10 +27,6 @@ auto convertIpcRawServiceResponseToWsServiceResponse(
     WsServiceId service_id, WsServiceCallId call_id,
     const ipc::zenoh::ServiceResponse<std::vector<std::byte>>& raw_response, WsServiceResponse& ws_response)
     -> bool {
-  if (raw_response.value.empty()) {
-    return false;
-  }
-
   std::vector<uint8_t> response_data(raw_response.value.size());
   std::ranges::transform(raw_response.value, response_data.begin(),
                          [](std::byte b) { return static_cast<uint8_t>(b); });

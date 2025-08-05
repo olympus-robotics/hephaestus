@@ -1,5 +1,7 @@
 #pragma once
 
+#include <numbers>
+#include <optional>
 #include <random>
 
 #include "hephaestus/examples/types/pose.h"
@@ -12,7 +14,7 @@ inline auto randomPose(std::mt19937_64& mt) -> Pose {
 
   using DistT = std::uniform_real_distribution<double>;
   DistT t_distribution(RANDOM_TRANSLATION_RANGE);
-  DistT r_distribution(-M_PI, M_PI);
+  DistT r_distribution(-std::numbers::pi, std::numbers::pi);
 
   return { .orientation = Eigen::Quaterniond{ r_distribution(mt), r_distribution(mt), r_distribution(mt),
                                               r_distribution(mt) }

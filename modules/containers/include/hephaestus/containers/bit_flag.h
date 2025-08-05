@@ -5,6 +5,9 @@
 #pragma once
 
 #include <algorithm>
+#include <concepts>
+#include <cstddef>
+#include <random>
 #include <type_traits>
 
 #include <magic_enum.hpp>
@@ -64,10 +67,11 @@ concept UnsignedEnum =
 /// your enum contains larger values, then 'magic_enum::customize::enum_range<EnumT>' needs to be implemented
 /// for that type. See https://github.com/Neargye/magic_enum/blob/master/doc/limitations.md#enum-range for
 /// more details.
-template <UnsignedEnum EnumT>
+template <UnsignedEnum Enum>
 class BitFlag {
 public:
   // see https://dietertack.medium.com/using-bit-flags-in-c-d39ec6e30f08
+  using EnumT = Enum;
   using T = std::underlying_type_t<EnumT>;
 
   constexpr BitFlag() : value_{ 0 } {
@@ -153,4 +157,26 @@ private:
              // do not reprenset any enum value.
 };
 
+template <typename T>
+concept IsBitFlag = requires {
+  typename T::EnumT;
+  requires std::same_as<T, heph::containers::BitFlag<typename T::EnumT>>;
+};
+
 }  // namespace heph::containers
+
+namespace heph::random {
+template <containers::IsBitFlag T>
+[[nodiscard]] auto random(std::mt19937_64& mt) -> T {
+  T bit_flag{};
+
+  std::bernoulli_distribution dist;
+  for (const auto enum_value : magic_enum::enum_values<typename T::EnumT>()) {
+    if (dist(mt)) {
+      bit_flag.set(enum_value);
+    }
+  }
+
+  return bit_flag;
+}
+}  // namespace heph::random

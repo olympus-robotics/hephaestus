@@ -20,11 +20,13 @@
 
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
-#include <hephaestus/ipc/zenoh/raw_publisher.h>
-#include <hephaestus/ipc/zenoh/raw_subscriber.h>
-#include <hephaestus/ipc/zenoh/service.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/serdes/type_info.h>
+
+#include "hephaestus/ipc/zenoh/raw_publisher.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::ws {
 
@@ -81,7 +83,7 @@ void IpcEntityManager::stop() {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 bool IpcEntityManager::hasSubscriberImpl(const std::string& topic) const {
-  return subscribers_.find(topic) != subscribers_.end();
+  return subscribers_.contains(topic);
 }
 
 auto IpcEntityManager::hasSubscriber(const std::string& topic) const -> bool {
@@ -110,9 +112,9 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
   subscribers_[topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ topic },
       // NOLINTNEXTLINE(bugprone-exception-escape)
-      [subscriber_cb, topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
-                                       std::span<const std::byte> data) {
-        subscriber_cb(metadata, data, topic_type_info);
+      [subscriber_cb, type_info = topic_type_info](const ipc::zenoh::MessageMetadata& metadata,
+                                                   std::span<const std::byte> data) {
+        subscriber_cb(metadata, data, type_info);
       },
       topic_type_info, subscriber_config);
 }
@@ -207,15 +209,13 @@ auto IpcEntityManager::callServiceAsync(uint32_t call_id, const ipc::TopicConfig
 
 auto IpcEntityManager::hasPublisher(const std::string& topic) const -> bool {
   const absl::MutexLock lock(&mutex_pub_);
-  return publishers_.find(topic) != publishers_.end();
+  return publishers_.contains(topic);
 }
 
 void IpcEntityManager::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  if (publishers_.find(topic) != publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic already exists!", "topic", topic);
-  }
+  panicIf(publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' already exists!", topic);
 
   auto publisher_config = ipc::zenoh::PublisherConfig{ .cache_size = std::nullopt,
                                                        .create_liveliness_token = true,
@@ -233,9 +233,8 @@ void IpcEntityManager::addPublisher(const std::string& topic, const serdes::Type
 void IpcEntityManager::removePublisher(const std::string& topic) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  if (publishers_.find(topic) == publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
-  }
+  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
+          topic);
 
   publishers_.erase(topic);
 }
@@ -243,9 +242,8 @@ void IpcEntityManager::removePublisher(const std::string& topic) {
 auto IpcEntityManager::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
   const absl::MutexLock lock(&mutex_pub_);
 
-  if (publishers_.find(topic) == publishers_.end()) {
-    heph::log(heph::FATAL, "[IPC Interface] - Publisher for topic does not exist!", "topic", topic);
-  }
+  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
+          topic);
 
   return publishers_[topic]->publish(data);
 }

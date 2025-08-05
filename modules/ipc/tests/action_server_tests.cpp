@@ -3,6 +3,8 @@
 //=================================================================================================
 #include <atomic>
 #include <chrono>
+#include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <thread>
@@ -120,7 +122,7 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
       action_server_data.session, action_server_data.topic_config, request,
       [&status_mtx, &received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
         {
-          std::scoped_lock l{ status_mtx };
+          const std::scoped_lock lock{ status_mtx };
           received_status = status;
         }
         received_status_flag.test_and_set();
@@ -132,7 +134,7 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
     received_status_flag.wait(false);
   }
   {
-    std::scoped_lock l{ status_mtx };
+    const std::scoped_lock lock{ status_mtx };
     EXPECT_EQ(status, received_status);
   }
 

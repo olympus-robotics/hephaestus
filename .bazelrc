@@ -6,6 +6,8 @@ build --repository_cache=~/.cache/bazel/repos/
 build --features=external_include_paths
 build --generate_json_trace_profile --profile command.profile.gz
 
+test --flaky_test_attempts=10
+
 # https://libcxx.llvm.org/Hardening.html
 build:opt --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
 build:fastbuild --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
@@ -23,3 +25,11 @@ build:sanitizer --copt -DADDRESS_SANITIZER
 build:sanitizer --copt -fno-omit-frame-pointer
 build:sanitizer --linkopt -fsanitize=address,undefined
 build:sanitizer --linkopt -Wl,--allow-shlib-undefined
+
+build:remote-cache --bes_results_url=https://olympus-robotics.buildbuddy.io/invocation/
+build:remote-cache --bes_backend=grpcs://olympus-robotics.buildbuddy.io
+build:remote-cache --remote_cache=grpcs://olympus-robotics.buildbuddy.io
+build:remote-cache --remote_timeout=3600
+# build:remote-cache --remote_header=x-buildbuddy-api-key=XXX # Fill this to use it
+build:remote-cache --remote_cache_compression
+build:remote-cache --nolegacy_important_outputs

@@ -26,6 +26,8 @@ struct OperationParams {
     case Result::REPEAT:
       return current_state;
   }
+
+  __builtin_unreachable();  // TODO(C++23): replace with std::unreachable.
 }
 }  // namespace
 

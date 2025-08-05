@@ -1,5 +1,6 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2025 HEPHAESTUS Contributors
+//=================================================================================================
 
 #include <fmt/base.h>
 #if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
@@ -8,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>

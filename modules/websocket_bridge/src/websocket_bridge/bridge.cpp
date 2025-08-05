@@ -24,14 +24,14 @@
 #include <fmt/format.h>
 #include <foxglove/websocket/serialization.hpp>
 #include <foxglove/websocket/server_interface.hpp>
-#include <hephaestus/ipc/topic.h>
-#include <hephaestus/ipc/zenoh/ipc_graph.h>
-#include <hephaestus/ipc/zenoh/liveliness.h>
-#include <hephaestus/ipc/zenoh/raw_subscriber.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
 
+#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/zenoh/ipc_graph.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/raw_subscriber.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 #include "hephaestus/websocket_bridge/bridge_state.h"
 #include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
@@ -53,18 +53,38 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
         IpcGraphCallbacks{
             .topic_discovery_cb =
                 [this](const std::string& topic, const heph::serdes::TypeInfo& type_info) {
-                  this->callback_IpcGraph_TopicFound(topic, type_info);
+                  if (shouldBridgeIpcTopic(topic, config_)) {
+                    this->callback_IpcGraph_TopicFound(topic, type_info);
+                  } else {
+                    heph::log(
+                        heph::INFO,
+                        fmt::format("[WS Bridge] - Ignoring topic '{}' - not whitelisted, or blacklisted.",
+                                    topic));
+                  }
                 },
             .topic_removal_cb =
-                [this](const std::string& topic) { this->callback_IpcGraph_TopicDropped(topic); },
-
+                [this](const std::string& topic) {
+                  if (shouldBridgeIpcTopic(topic, config_)) {
+                    this->callback_IpcGraph_TopicDropped(topic);
+                  }
+                },
             .service_discovery_cb =
                 [this](const std::string& service_name, const serdes::ServiceTypeInfo& service_type_info) {
-                  this->callback_IpcGraph_ServiceFound(service_name, service_type_info);
+                  if (shouldBridgeIpcService(service_name, config_)) {
+                    this->callback_IpcGraph_ServiceFound(service_name, service_type_info);
+                  } else {
+                    heph::log(
+                        heph::INFO,
+                        fmt::format("[WS Bridge] - Ignoring service '{}' - not whitelisted, or blacklisted.",
+                                    service_name));
+                  }
                 },
             .service_removal_cb =
-                [this](const std::string& service) { this->callback_IpcGraph_ServiceDropped(service); },
-
+                [this](const std::string& service) {
+                  if (shouldBridgeIpcService(service, config_)) {
+                    this->callback_IpcGraph_ServiceDropped(service);
+                  }
+                },
             .graph_update_cb =
                 [this](const ipc::zenoh::EndpointInfo& info, const IpcGraphState& state) {
                   this->callback_IpcGraph_Updated(info, state);
@@ -80,7 +100,7 @@ WebsocketBridge::WebsocketBridge(const std::shared_ptr<ipc::zenoh::Session>& ses
   // Initialize WS Server
   {
     // Log handler
-    const auto ws_server_log_handler = [](WsLogLevel level, char const* msg) {
+    const auto ws_server_log_handler = [](WsLogLevel level, const char* msg) {
       WebsocketBridge::callback_Ws_Log(level, msg);
     };
 
@@ -190,15 +210,15 @@ void WebsocketBridge::stop() {
 void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
                                                    const heph::serdes::TypeInfo& type_info) {
   CHECK(ipc_graph_);
-  heph::log(heph::INFO, "[WS Bridge] - New topic will be added  ...", "topic", topic, "type_name",
+  heph::log(heph::DEBUG, "[WS Bridge] - New topic will be added  ...", "topic", topic, "type_name",
             type_info.name);
 
   if (state_.hasIpcTopicMapping(topic)) {
-    state_.printBridgeState();
-    heph::log(
-        heph::WARN,
-        fmt::format("\n[WS Bridge] - Topic is already advertized! There are likely multiple publishers!",
-                    "topic", topic));
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
+    heph::log(heph::WARN, "[WS Bridge] - Topic is already advertised! There are likely multiple publishers!",
+              "topic", topic);
     return;
   }
 
@@ -216,13 +236,13 @@ void WebsocketBridge::callback_IpcGraph_TopicFound(const std::string& topic,
 }
 
 void WebsocketBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
-  heph::log(heph::INFO, "[WS Bridge] - Topic will be dropped  ...", "topic", topic);
+  heph::log(heph::DEBUG, "[WS Bridge] - Topic will be dropped  ...", "topic", topic);
   if (!state_.hasIpcTopicMapping(topic)) {
-    state_.printBridgeState();
-    heph::log(
-        heph::WARN,
-        fmt::format("\n[WS Bridge] - Topic is already unadvertized! There are likely multiple publishers!",
-                    "topic", topic));
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
+    heph::log(heph::WARN, "[WS Bridge] - Topic is already dropped! There are likely multiple publishers!",
+              "topic", topic);
     return;
   }
 
@@ -248,7 +268,7 @@ void WebsocketBridge::callback_IpcGraph_TopicDropped(const std::string& topic) {
 
 void WebsocketBridge::callback_IpcGraph_ServiceFound(const std::string& service_name,
                                                      const heph::serdes::ServiceTypeInfo& type_info) {
-  heph::log(heph::INFO, "[WS Bridge] - Service will be added  ...", "service_name", service_name,
+  heph::log(heph::DEBUG, "[WS Bridge] - Service will be added  ...", "service_name", service_name,
             "request_type_name", type_info.request.name, "reply_type_name", type_info.reply.name);
 
   const WsServiceInfo new_ws_server_service = {
@@ -286,15 +306,15 @@ void WebsocketBridge::callback_IpcGraph_ServiceFound(const std::string& service_
 }
 
 void WebsocketBridge::callback_IpcGraph_ServiceDropped(const std::string& service_name) {
-  heph::log(heph::INFO, "[WS Bridge] - Service will be dropped  ...", "service_name", service_name);
+  heph::log(heph::DEBUG, "[WS Bridge] - Service will be dropped  ...", "service_name", service_name);
 
   if (!state_.hasIpcServiceMapping(service_name)) {
-    state_.printBridgeState();
-    heph::log(
-        heph::WARN,
-        fmt::format(
-            "\n[WS Bridge] - Service is already unadvertized! There are likely multiple service servers!",
-            "service_name", service_name));
+    if (config_.ws_server_verbose_bridge_state) {
+      state_.printBridgeState();
+    }
+    heph::log(heph::WARN,
+              "[WS Bridge] - Service is already dropped! There are likely multiple service servers!",
+              "service_name", service_name);
     return;
   }
 
@@ -313,10 +333,14 @@ void WebsocketBridge::callback_IpcGraph_Updated(const ipc::zenoh::EndpointInfo& 
   // it.
   (void)info;
 
-  ipc_graph_state.printIpcGraphState();
+  if (config_.ws_server_verbose_ipc_graph_state) {
+    ipc_graph_state.printIpcGraphState();
+  }
   CHECK(ipc_graph_state.checkConsistency());
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
   CHECK(state_.checkConsistency());
 
   foxglove::MapOfSets topic_to_pub_node_map;
@@ -392,6 +416,7 @@ void WebsocketBridge::callback_Ipc_MessageReceived(const heph::ipc::zenoh::Messa
                                   std::chrono::system_clock::now().time_since_epoch())
                                   .count());
     ws_server_->sendMessage(client_handle.first, channel_id, timestamp_now_ns,
+                            // NOLINTNEXTLINE(bugprone-bitwise-pointer-cast)
                             std::bit_cast<const uint8_t*>(message_data.data()), message_data.size());
   }
 }
@@ -421,7 +446,7 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
     const auto client_handle_w_name_lookup = state_.getClientForCallId(call_id);
     if (!client_handle_w_name_lookup.has_value()) {
       heph::log(heph::ERROR,
-                "\n[WS Bridge] - No client handle found for service call id. Dropping service respose.",
+                "[WS Bridge] - No client handle found for service call id. Dropping service respose.",
                 "call_id", call_id, "service_id", service_id);
       return;
     }
@@ -433,9 +458,8 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
   const auto client_handle = client_handle_w_name.first;
 
   if (responses.empty()) {
-    auto msg = fmt::format("\n[WS Bridge] - Timeout - no service responses received.", "service_name",
-                           service_name, "service_id", service_id);
-    heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id);
+    const auto* msg = "[WS Bridge] - Timeout - no service responses received.";
+    heph::log(heph::ERROR, msg, "service_name", service_name, "service_id", service_id, "call_id", call_id);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
@@ -447,22 +471,19 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
 
   const auto& response = responses.front();
   if (response.topic != service_name) {
-    auto msg = fmt::format("\n[WS Bridge] - Response and request names do not "
-                           "match!",
-                           "service_name_in_response", response.topic, "service_name", service_name);
-
+    const auto* msg = "[WS Bridge] - Response and request names do not match!";
     heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id, "response_topic",
-              response.topic, "service_name", service_name);
+              response.topic, "service_name", service_name, "service_name_in_response", response.topic);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
 
   WsServiceResponse ws_server_response;
   if (!convertIpcRawServiceResponseToWsServiceResponse(service_id, call_id, response, ws_server_response)) {
-    auto msg = fmt::format("\n[WS Bridge] - Failed to convert IPC service response "
-                           "to WS service response for service",
-                           "service_name", service_name, "service_id", service_id);
-    heph::log(heph::ERROR, msg, "service_id", service_id, "call_id", call_id, "service_name", service_name);
+    const auto* msg =
+        "[WS Bridge] - Failed to convert IPC service response to WS service response for service";
+    heph::log(heph::ERROR, msg, "service_name", service_name, "service_id", service_id, "call_id", call_id,
+              "service_name", service_name);
     ws_server_->sendServiceFailure(client_handle, service_id, call_id, msg);
     return;
   }
@@ -478,22 +499,22 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
 // Websocket Server Callbacks //
 ////////////////////////////////
 
-void WebsocketBridge::callback_Ws_Log(WsLogLevel level, char const* msg) {
+void WebsocketBridge::callback_Ws_Log(WsLogLevel level, const char* msg) {
   switch (level) {
     case WsLogLevel::Debug:
-      heph::log(heph::DEBUG, fmt::format("\n[WS Server] - {}", msg));
+      heph::log(heph::DEBUG, fmt::format("[WS Server] - {}", msg));
       break;
     case WsLogLevel::Info:
-      heph::log(heph::INFO, fmt::format("\n[WS Server] - {}", msg));
+      heph::log(heph::INFO, fmt::format("[WS Server] - {}", msg));
       break;
     case WsLogLevel::Warn:
-      heph::log(heph::WARN, fmt::format("\n[WS Server] - {}", msg));
+      heph::log(heph::WARN, fmt::format("[WS Server] - {}", msg));
       break;
     case WsLogLevel::Error:
-      heph::log(heph::ERROR, fmt::format("\n[WS Server] - {}", msg));
+      heph::log(heph::ERROR, fmt::format("[WS Server] - {}", msg));
       break;
     case WsLogLevel::Critical:
-      heph::log(heph::FATAL, fmt::format("\n[WS Server] - {}", msg));
+      heph::log(heph::FATAL, fmt::format("[WS Server] - {}", msg));
       break;
   }
 }
@@ -534,8 +555,9 @@ void WebsocketBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClie
 
   heph::log(heph::INFO, "[WS Bridge] - Client subcribed to topic successfully. [IPC SUB ADDED]",
             "client_name", client_name, "topic", topic, "channel_id", channel_id);
-
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsClientHandle& client_handle) {
@@ -556,17 +578,16 @@ void WebsocketBridge::callback_Ws_Unsubscribe(WsChannelId channel_id, const WsCl
       heph::log(heph::INFO, "[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB REMOVED]",
                 "client_name", client_name, "topic", topic, "channel_id", channel_id);
     } else {
-      heph::log(heph::INFO,
-                "\n[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB NOT FOUND]",
+      heph::log(heph::INFO, "[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB NOT FOUND]",
                 "client_name", client_name, "topic", topic, "channel_id", channel_id);
     }
   } else {
-    heph::log(heph::INFO,
-              "\n[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB STILL NEEDED]",
+    heph::log(heph::INFO, "[WS Bridge] - Client unsubscribed from topic successfully. [IPC SUB STILL NEEDED]",
               "client_name", client_name, "topic", topic, "channel_id", channel_id);
   }
-
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& advertisement,
@@ -616,7 +637,9 @@ void WebsocketBridge::callback_Ws_ClientAdvertise(const WsClientChannelAd& adver
               "client_name", client_name, "topic", topic, "channel_id", channel_id);
   }
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_channel_id,
@@ -636,10 +659,9 @@ void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_cha
   auto client_handle_with_name = state_.getClientForClientChannel(client_channel_id);
 
   if (!client_handle_with_name.has_value()) {
-    heph::log(
-        heph::ERROR,
-        "\n[WS Bridge] - Client tried to unadvertise topic but the channel is not owned by this client!",
-        "client_name", client_name, "channel_id", client_channel_id, "topic", topic);
+    heph::log(heph::ERROR,
+              "[WS Bridge] - Client tried to unadvertise topic but the channel is not owned by this client!",
+              "client_name", client_name, "channel_id", client_channel_id, "topic", topic);
     return;
   }
 
@@ -649,18 +671,20 @@ void WebsocketBridge::callback_Ws_ClientUnadvertise(WsClientChannelId client_cha
   if (!state_.hasClientChannelsForTopic(topic)) {
     if (ipc_entity_manager_->hasPublisher(topic)) {
       ipc_entity_manager_->removePublisher(topic);
-      heph::log(heph::INFO, "[WS Bridge] - Client unadvertised topic successfully. [IPC PUB REMOVED]",
+      heph::log(heph::INFO, "[WS Bridge] - Client dropped topic successfully. [IPC PUB REMOVED]",
                 "client_name", client_name, "topic", topic, "client_channel_id", client_channel_id);
     } else {
-      heph::log(heph::INFO, "[WS Bridge] - Client unadvertised topic successfully. [IPC PUB NOT FOUND]",
+      heph::log(heph::INFO, "[WS Bridge] - Client dropped topic successfully. [IPC PUB NOT FOUND]",
                 "client_name", client_name, "topic", topic, "client_channel_id", client_channel_id);
     }
   } else {
-    heph::log(heph::INFO, "[WS Bridge] - Client unadvertised topic successfully. [IPC PUB STILL NEEDED]",
+    heph::log(heph::INFO, "[WS Bridge] - Client dropped topic successfully. [IPC PUB STILL NEEDED]",
               "client_name", client_name, "topic", topic, "client_channel_id", client_channel_id);
   }
 
-  state_.printBridgeState();
+  if (config_.ws_server_verbose_bridge_state) {
+    state_.printBridgeState();
+  }
 }
 
 void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
@@ -670,8 +694,8 @@ void WebsocketBridge::callback_Ws_ClientMessage(const WsClientMessage& message,
   const auto& channel_id = message.advertisement.channelId;
 
   if (!ipc_entity_manager_->hasPublisher(topic)) {
-    heph::log(heph::ERROR, "[WS Bridge] - Client sent message for unadvertised topic!", "client_name",
-              client_name, "topic", topic);
+    heph::log(heph::ERROR, "[WS Bridge] - Client sent message for dropped topic!", "client_name", client_name,
+              "topic", topic);
     return;
   }
 
@@ -724,9 +748,8 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
   const std::string client_name = ws_server_->remoteEndpointString(client_handle);
 
   if (!state_.hasWsServiceMapping(request.serviceId)) {
-    auto msg =
-        fmt::format("\n[WS Bridge] - Client '{}' sent service request for unadvertised service [{}/{}]!",
-                    client_name, request.serviceId, request.callId);
+    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request for dropped service [{}/{}]!",
+                           client_name, request.serviceId, request.callId);
     heph::log(heph::ERROR, msg, "service_id", request.serviceId, "call_id", request.callId, "client_name",
               client_name);
     ws_server_->sendServiceFailure(client_handle, request.serviceId, request.callId, msg);
@@ -734,7 +757,7 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
   }
 
   if (request.encoding != "protobuf") {
-    auto msg = fmt::format("\n[WS Bridge] - Client '{}' sent service request [{}/{}] with unsuported "
+    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request [{}/{}] with unsuported "
                            "encoding ({})!",
                            client_name, request.serviceId, request.callId, request.encoding);
     heph::log(heph::ERROR, msg, "service_id", request.serviceId, "call_id", request.callId, "client_name",

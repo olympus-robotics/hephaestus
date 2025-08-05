@@ -23,8 +23,9 @@
 #include <google/protobuf/descriptor_database.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/message.h>
-#include <hephaestus/serdes/type_info.h>
-#include <hephaestus/telemetry/log.h>
+
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
 
 namespace heph::ws {
 

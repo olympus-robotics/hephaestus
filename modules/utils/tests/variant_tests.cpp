@@ -1,11 +1,10 @@
 //=================================================================================================
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
-#include <exception>
+#include <string>
 #include <variant>
 
 #include <fmt/format.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/utils/variant.h"

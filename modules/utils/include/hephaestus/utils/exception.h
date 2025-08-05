@@ -8,22 +8,55 @@
 #include <source_location>
 #include <stdexcept>
 #include <string>
+#include <utility>
+
+#include <fmt/base.h>
+#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
+#include <fmt/format.h>
 
 #ifdef DISABLE_EXCEPTIONS
 #include <absl/log/check.h>
-#include <fmt/format.h>
 #endif
 
 namespace heph {
 
-//=================================================================================================
-/// Base class for exceptions
+namespace internal {
+/// @brief  Wrapper around string literals to enhance them with a location.
+///         Note that the message is not owned by this class.
+///         String literals are used to enable implicit conversion from string literals.
+///         The standard guarantees that string literals exist for the entirety of the
+///         program lifetime, making it safe to use as `StringLiteralWithLocation("my message")`.
+template <typename... Ts>
+struct StringLiteralWithLocationImpl final {
+  /// @brief Constructor taking a string literal and optional source location
+  /// @param s The string literal message
+  /// @param l The source location (defaults to current location)
+  template <typename S>
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  consteval StringLiteralWithLocationImpl(const S& s,
+                                          const std::source_location& l = std::source_location::current())
+    : value(s), location(l) {
+  }
+
+  fmt::format_string<Ts...> value;  ///< The message string literal
+  std::source_location location;    ///< Source code location information
+
+  using impl = StringLiteralWithLocationImpl;
+};
+
+template <typename... Ts>
+using StringLiteralWithLocation = internal::StringLiteralWithLocationImpl<Ts...>::impl;
+}  // namespace internal
+
+/// @brief Exception class for panic situations
+///        This should not be instantiated directly, but rather through the `panic` or `panicIf` function.
 /// @include exception_example.cpp
 class Panic : public std::runtime_error {
 public:
-  /// @param message A message describing the error and what caused it
-  /// @param location Location in the source where the error was triggered at
-  explicit Panic(const std::string& message, std::source_location location);
+  /// @brief Constructs a panic exception
+  /// @param message Message describing the error cause
+  /// @param location Source location where the error occurred
+  explicit Panic(std::string message, const std::source_location& location = std::source_location::current());
 };
 
 /// @brief  User function to panic. Internally this throws a Panic exception.
@@ -32,33 +65,28 @@ public:
 ///
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
-inline void panic(const std::string& message,
-                  std::source_location location = std::source_location::current()) {
+template <typename... Args>
+void panic(internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
+  std::string formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
 #ifndef DISABLE_EXCEPTIONS
-  throw Panic{ message, location };
+  throw Panic{ std::move(formatted_message), message.location };
 #else
-  auto e = Panic{ message, location };
-  CHECK(false) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                              location.line());
+  auto e = Panic{ std::move(formatted_message), message.location };
+  CHECK(false) << fmt::format("[ERROR {}] at {}:{}", e.what(), message.location.file_name(),
+                              message.location.line());
 #endif
 }
 
-/// @brief  User function to panic on condition. The whole code should be considered noexcept. Will
-/// use CHECK if DISABLE_EXCEPTIONS = ON
+/// @brief  User function to panic on condition lazily formatting the message. The whole code should be
+/// considered noexcept. Will use CHECK if DISABLE_EXCEPTIONS = ON
 /// @param condition Condition whether to panic
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
-inline void panicIf(bool condition, const std::string& message,
-                    std::source_location location = std::source_location::current()) {
-#ifndef DISABLE_EXCEPTIONS
+template <typename... Args>
+void panicIf(bool condition, internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
   if (condition) [[unlikely]] {
-    throw Panic{ message, location };
+    panic(std::move(message), std::forward<Args>(args)...);
   }
-#else
-  auto e = Panic{ message, location };
-  CHECK(!condition) << fmt::format("[ERROR {}] {} at {}:{}", e.what(), message, location.file_name(),
-                                   location.line());
-#endif
 }
 
 /// @brief Macro to test if a statement throws an exception or causes a program death depending

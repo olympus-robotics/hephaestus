@@ -16,8 +16,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
-#include <fmt/format.h>
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 
@@ -71,7 +69,7 @@ ZenohPlayer::Impl::Impl(ZenohPlayerParams params)
 
 auto ZenohPlayer::Impl::start() -> std::future<void> {
   const auto status = bag_reader_->readSummary(mcap::ReadSummaryMethod::AllowFallbackScan);
-  panicIf(!status.ok(), fmt::format("Failed to read bag summary: {}", status.message));
+  panicIf(!status.ok(), "Failed to read bag summary: {}", status.message);
 
   const auto channels = bag_reader_->channels();
   channel_count_ = channels.size();
@@ -101,7 +99,7 @@ void ZenohPlayer::Impl::wait() const {
 
 void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
   panicIf(publishers_.contains(channel.topic),
-          fmt::format("failed to create publisher for topic: {}; topic already exist", channel.topic));
+          "failed to create publisher for topic: {}; topic already exist", channel.topic);
 
   const auto& schema = bag_reader_->schema(channel.schemaId);
   auto type_info = serdes::TypeInfo{

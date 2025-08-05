@@ -10,13 +10,14 @@ declare_module(
 
 find_package(absl REQUIRED)
 find_package(magic_enum REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
 find_package(utf8_range REQUIRED)
 find_package(range-v3 REQUIRED)
 
 # library sources
 set(SOURCES
     src/protobuf/buffers.cpp
+    src/protobuf/containers.cpp
     src/protobuf/dynamic_deserializer.cpp
     src/protobuf/enums.cpp
     src/protobuf/protobuf_internal.cpp
@@ -27,6 +28,7 @@ set(SOURCES
     README.md
     include/hephaestus/serdes/protobuf/buffers.h
     include/hephaestus/serdes/protobuf/concepts.h
+    include/hephaestus/serdes/protobuf/containers.h
     include/hephaestus/serdes/protobuf/dynamic_deserializer.h
     include/hephaestus/serdes/protobuf/enums.h
     include/hephaestus/serdes/protobuf/protobuf_internal.h

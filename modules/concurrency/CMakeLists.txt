@@ -5,23 +5,18 @@
 declare_module(
   NAME concurrency
   DEPENDS_ON_MODULES utils containers random
-  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt Protobuf
+  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt Protobuf liburing stdexec
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBURING REQUIRED IMPORTED_TARGET liburing)
+find_package(stdexec REQUIRED)
 
 # library sources
-set(SOURCES
-    src/message_queue_consumer.cpp
-    src/spinner.cpp
-    src/spinners_manager.cpp
-    README.md
-    include/hephaestus/concurrency/message_queue_consumer.h
-    include/hephaestus/concurrency/spinner.h
-    include/hephaestus/concurrency/spinners_manager.h
-)
+file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 
 # library target
 define_module_library(
@@ -32,6 +27,8 @@ define_module_library(
     hephaestus::telemetry
     hephaestus::utils
     protobuf::libprotobuf
+    PkgConfig::LIBURING
+    STDEXEC::stdexec
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

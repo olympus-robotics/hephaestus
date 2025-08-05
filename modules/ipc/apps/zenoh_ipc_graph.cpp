@@ -12,14 +12,21 @@
 
 #include <fmt/base.h>
 #include <fmt/core.h>
-#include <hephaestus/cli/program_options.h>
-#include <hephaestus/ipc/zenoh/ipc_graph.h>
-#include <hephaestus/ipc/zenoh/program_options.h>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/telemetry/log.h>
-#include <hephaestus/telemetry/log_sinks/absl_sink.h>
-#include <hephaestus/utils/signal_handler.h>
-#include <hephaestus/utils/stack_trace.h>
+
+#include "hephaestus/cli/program_options.h"
+#include "hephaestus/ipc/zenoh/ipc_graph.h"
+#include "hephaestus/ipc/zenoh/liveliness.h"
+#include "hephaestus/ipc/zenoh/program_options.h"
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/utils/signal_handler.h"
+#include "hephaestus/utils/stack_trace.h"
+
+namespace {
+constexpr auto DEFAULT_DURATION = std::chrono::seconds{ 10 };
+}
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
@@ -29,11 +36,12 @@ auto main(int argc, const char* argv[]) -> int {
   try {
     auto desc = heph::cli::ProgramDescription("IPC Graph monitoring example");
     heph::ipc::zenoh::appendProgramOption(desc);
-    desc.defineOption<int>("duration", 'd', "Duration to listen for IPC events in seconds", 10);
+    desc.defineOption<int>("duration", 'd', "Duration to listen for IPC events in seconds",
+                           DEFAULT_DURATION.count());
     desc.defineFlag("live", 'l', "If set, the app will continue running until interrupted");
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, _, __] = heph::ipc::zenoh::parseProgramOptions(args);
     const auto duration_sec = args.getOption<int>("duration");
     const bool live_mode = args.getOption<bool>("live");
 
@@ -89,9 +97,10 @@ auto main(int argc, const char* argv[]) -> int {
     } else {
       // Use the original timeout-based approach
       const auto end_time = std::chrono::steady_clock::now() + std::chrono::seconds(duration_sec);
+      static constexpr auto POLLING_PERIOD = std::chrono::milliseconds{ 100 };
       while (std::chrono::steady_clock::now() < end_time &&
              !heph::utils::TerminationBlocker::stopRequested()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(POLLING_PERIOD));
       }
     }
 

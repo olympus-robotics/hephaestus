@@ -19,6 +19,7 @@ struct StringLiteral {
   // non-type template parameter.
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, google-explicit-constructor, hicpp-explicit-conversions)
   constexpr StringLiteral(const char (&str)[Size]);
+  constexpr explicit StringLiteral(std::array<char, Size> v);
 
   [[nodiscard]] constexpr explicit operator std::string_view() const noexcept;
 
@@ -26,6 +27,10 @@ struct StringLiteral {
 
   std::array<char, Size> value;  // Does include the null terminator.
 };
+
+template <std::size_t SizeL, std::size_t SizeR>
+[[nodiscard]] constexpr auto operator+(const StringLiteral<SizeL>& lhs, const StringLiteral<SizeR>& rhs)
+    -> StringLiteral<SizeL + SizeR - 1>;
 
 //=================================================================================================
 // Implementation
@@ -38,8 +43,22 @@ constexpr StringLiteral<Size>::StringLiteral(
 }
 
 template <size_t Size>
+constexpr StringLiteral<Size>::StringLiteral(std::array<char, Size> v) : value(std::move(v)) {
+}
+
+template <size_t Size>
 constexpr StringLiteral<Size>::StringLiteral::operator std::string_view() const noexcept {
   return { value.data(), Size - 1 };  // Remove the null terminator.
+}
+
+template <std::size_t SizeL, std::size_t SizeR>
+[[nodiscard]] constexpr auto operator+(const StringLiteral<SizeL>& lhs, const StringLiteral<SizeR>& rhs)
+    -> StringLiteral<SizeL + SizeR - 1> {
+  std::array<char, SizeL + SizeR - 1> value{};
+  std::copy_n(lhs.value.data(), SizeL - 1, value.data());
+  std::copy_n(rhs.value.data(), SizeR, value.data() + SizeL - 1);
+
+  return StringLiteral<SizeL + SizeR - 1>{ std::move(value) };
 }
 
 }  // namespace heph::utils::string

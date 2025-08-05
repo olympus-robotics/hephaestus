@@ -14,9 +14,9 @@
 #include <fmt/core.h>
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/server_interface.hpp>
-#include <hephaestus/ipc/zenoh/session.h>
-#include <hephaestus/telemetry/log.h>
 
+#include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {
@@ -58,6 +58,10 @@ struct WebsocketBridgeConfig {
   static constexpr uint16_t DEFAULT_WS_SERVER_PORT = 8765;
   uint16_t ws_server_port = DEFAULT_WS_SERVER_PORT;
   std::string ws_server_address = "0.0.0.0";
+
+  // If enabled, the bridge will print the full state every time it changes.
+  bool ws_server_verbose_bridge_state = false;
+  bool ws_server_verbose_ipc_graph_state = false;
 
   /////////
   // IPC //

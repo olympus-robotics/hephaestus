@@ -48,3 +48,9 @@ heph_cc_test(
     srcs = ["tests/bit_flag_tests.cpp"],
     deps = [":containers"],
 )
+
+heph_cc_test(
+    name = "intrusive_fifo_queue_tests",
+    srcs = ["tests/intrusive_fifo_queue_tests.cpp"],
+    deps = [":containers"],
+)

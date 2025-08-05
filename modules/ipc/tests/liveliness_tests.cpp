@@ -2,13 +2,21 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
 #include <memory>
+#include <optional>
+#include <random>
 #include <string>
+#include <vector>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <zenoh/api/enums.hxx>
+#include <zenoh/api/id.hxx>
 
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
@@ -55,7 +63,7 @@ TEST(Liveliness, TokenGeneration) {
                                               .type = actor_type,
                                               .status = EndpointInfo::Status::ALIVE };
   EXPECT_THAT(endpoint_info, Ne(std::nullopt));
-  EXPECT_EQ(*endpoint_info, expected_endpoint_info);
+  EXPECT_EQ(*endpoint_info, expected_endpoint_info);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 TEST(Liveliness, TokenGenerationCustomSessionId) {
@@ -73,7 +81,7 @@ TEST(Liveliness, TokenGenerationCustomSessionId) {
                                               .type = actor_type,
                                               .status = EndpointInfo::Status::ALIVE };
   EXPECT_THAT(endpoint_info, Ne(std::nullopt));
-  EXPECT_EQ(*endpoint_info, expected_endpoint_info);
+  EXPECT_EQ(*endpoint_info, expected_endpoint_info);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 }  // namespace

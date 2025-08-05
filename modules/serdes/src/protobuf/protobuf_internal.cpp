@@ -5,7 +5,7 @@
 #include "hephaestus/serdes/protobuf/protobuf_internal.h"
 
 #include <queue>
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include <google/protobuf/descriptor.h>
@@ -17,7 +17,7 @@ auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descrip
   google::protobuf::FileDescriptorSet fd_set;
   std::queue<const google::protobuf::FileDescriptor*> to_add;
   to_add.push(toplevel_descriptor->file());
-  std::unordered_set<std::string> seen_dependencies;
+  std::unordered_set<std::string_view> seen_dependencies;
 
   while (!to_add.empty()) {
     const google::protobuf::FileDescriptor* next = to_add.front();
@@ -25,7 +25,7 @@ auto buildFileDescriptorSet(const google::protobuf::Descriptor* toplevel_descrip
     next->CopyTo(fd_set.add_file());
     for (int i = 0; i < next->dependency_count(); ++i) {
       const auto& dep = next->dependency(i);
-      if (seen_dependencies.find(dep->name()) == seen_dependencies.end()) {
+      if (!seen_dependencies.contains(dep->name())) {
         seen_dependencies.insert(dep->name());
         to_add.push(dep);
       }

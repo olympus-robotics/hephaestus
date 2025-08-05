@@ -2,8 +2,8 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <fmt/format.h>
 #include <foxglove/websocket/base64.hpp>
-#include <foxglove/websocket/common.hpp>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/util/json_util.h>

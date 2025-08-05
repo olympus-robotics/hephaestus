@@ -26,6 +26,8 @@ def heph_basic_copts():
         "-Wdouble-promotion",  # warn if float is implicit promoted to double
         "-Wformat=2",  # warn on security issues around functions that format output (ie printf)
         "-Wimplicit-fallthrough",  # warn on statements that fallthrough without an explicit annotation
+        "-Wno-nullability-extension",
+        "-Wno-private-header",
         "-Iexternal/abseil-cpp~",  # This is needed to avoid the error: file not found with <angled> include; use "quotes" instead
     ] + select({
         "@hephaestus//bazel:opt_compilation": ["-O3"],
@@ -120,8 +122,16 @@ def heph_cc_test(
         linkopts = [],
         deps = [],
         tags = [],
+        env = {},
         size = "small",
         **kwargs):
+    merged_env = dict(env)
+    merged_env.update({
+        # Leak detection currently doesn't work due to zenoh
+        "ASAN_OPTIONS": "detect_leaks=0",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
+        "RUST_BACKTRACE": "full",
+    })
     cc_test(
         copts = heph_copts() + copts,
         linkopts = heph_linkopts() + linkopts,
@@ -129,13 +139,8 @@ def heph_cc_test(
             "@googletest//:gtest",
             "@googletest//:gtest_main",
         ],
-        env = {
-            # Leak detection currently doesn't work due to zenoh
-            "ASAN_OPTIONS": "detect_leaks=0",
-            "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
-            "RUST_BACKTRACE": "full",
-        },
-        tags = tags + ["no-clang-tidy"],  # NOTE: we need this to avoid all googletest issues
+        env = merged_env,
+        tags = tags,
         size = size,
         **kwargs
     )

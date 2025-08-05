@@ -3,5 +3,3 @@
 //=================================================================================================
 
 #include "hephaestus/serdes/serdes.h"  // NOLINT(misc-include-cleaner)
-
-namespace heph::serdes {}  // namespace heph::serdes

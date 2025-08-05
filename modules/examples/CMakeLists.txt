@@ -9,7 +9,7 @@ find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(mcap REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
 find_package(zstd REQUIRED)
 
 add_subdirectory(proto)
@@ -49,7 +49,7 @@ set(types_proto_SOURCES
 define_module_library(
   NAME examples_types_proto
   PUBLIC_LINK_LIBS
-    Eigen3::Eigen 
+    Eigen3::Eigen
     hephaestus::utils
     hephaestus::serdes
     hephaestus::random

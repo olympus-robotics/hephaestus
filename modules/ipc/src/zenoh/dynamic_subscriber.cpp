@@ -32,7 +32,7 @@ DynamicSubscriber::DynamicSubscriber(DynamicSubscriberParams&& params)
 
 [[nodiscard]] auto DynamicSubscriber::start() -> std::future<void> {
   discover_publishers_ = std::make_unique<EndpointDiscovery>(
-      session_, TopicConfig{ "**" }, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
+      session_, topic_filter_, [this](const EndpointInfo& info) { onEndpointDiscovered(info); });
 
   std::promise<void> promise;
   promise.set_value();
@@ -57,10 +57,6 @@ void DynamicSubscriber::onEndpointDiscovered(const EndpointInfo& info) {
 }
 
 void DynamicSubscriber::onPublisher(const EndpointInfo& info) {
-  if (!topic_filter_.isAcceptable(info.topic)) {
-    return;
-  }
-
   switch (info.status) {
     case ipc::zenoh::EndpointInfo::Status::ALIVE:
       onPublisherAdded(info);
@@ -91,8 +87,7 @@ void DynamicSubscriber::onPublisherAdded(const EndpointInfo& info) {
   heph::log(heph::DEBUG, "create subscriber", "topic", info.topic);
   subscribers_[info.topic] = std::make_unique<ipc::zenoh::RawSubscriber>(
       session_, ipc::TopicConfig{ info.topic },
-      [this, type_info = std::move(*type_info)](const MessageMetadata& metadata,
-                                                std::span<const std::byte> data) {
+      [this, type_info = *type_info](const MessageMetadata& metadata, std::span<const std::byte> data) {
         subscriber_cb_(metadata, data, type_info);
       },
       *type_info);

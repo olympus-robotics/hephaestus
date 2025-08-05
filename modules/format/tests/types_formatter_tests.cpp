@@ -10,13 +10,10 @@
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <hephaestus/types/bounds.h>
-#include <hephaestus/types/dummy_type.h>
 
 #include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
-
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::testing;
+#include "hephaestus/types/bounds.h"
+#include "hephaestus/types/dummy_type.h"
 
 namespace heph::types::tests {
 
@@ -30,7 +27,7 @@ using TypeImplementations = ::testing::Types<IntegerBoundsT, FloatingPointBounds
 TYPED_TEST_SUITE(TypeFormatTests, TypeImplementations);
 
 TYPED_TEST(TypeFormatTests, OstreamTest) {
-  const TypeParam type;
+  const TypeParam type{};
   std::stringstream ss;
   EXPECT_TRUE(ss.str().empty());
   ss << type;

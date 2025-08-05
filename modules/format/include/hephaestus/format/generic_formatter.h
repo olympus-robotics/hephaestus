@@ -12,11 +12,15 @@
 #include <fmt/base.h>
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
-#include <rfl.hpp>  // NOLINT(misc-include-cleaner)
+#include <fmt/ranges.h>  // NOLINT(misc-include-cleaner)
+#include <fmt/std.h>     // NOLINT(misc-include-cleaner)
+#include <rfl.hpp>       // NOLINT(misc-include-cleaner)
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml.hpp>  // NOLINT(misc-include-cleaner)
 
-#include "hephaestus/format/enum.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/containers_reflection/bit_flag.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/containers_reflection/chrono.h"    // NOLINT(misc-include-cleaner)
+#include "hephaestus/format/enum.h"                     // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/concepts.h"
 #include "hephaestus/utils/format/format.h"
 
@@ -50,16 +54,6 @@ struct Reflector<std::chrono::time_point<Clock, Duration>> {  // NOLINT(misc-inc
   }
 };
 
-/// \brief Specialization of the Reflector for chrono based Duration type.
-template <typename Rep, typename Period>
-struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-cleaner)
-  using ReflType = std::string;
-
-  static auto from(const std::chrono::duration<Rep, Period>& x) noexcept -> ReflType {
-    return fmt::format("{:.3f}s", std::chrono::duration_cast<std::chrono::duration<float>>(x).count());
-  }
-};
-
 /// \brief Specialization of the Reflector for custom format that is defined as described by Formattable<T>.
 template <heph::Formattable T>
 struct Reflector<T> {  // NOLINT(misc-include-cleaner)
@@ -87,6 +81,13 @@ struct formatter<T, Char> : formatter<std::string_view, Char> {
 
 namespace std {
 /// \brief Generic operator<< for all types that are not handled by the standard.
+///        If you want or need to deactivate this for certain types, you can delete the operator explicitly
+///        ```
+///        // needs to be in the public std namespace to work
+///        namespace std {
+///          auto operator<<(ostream& os, const UncontrollableType&) -> ostream& = delete;
+///        }  // namespace std
+///        ```
 template <typename T>
   requires(heph::format::IsReflectable<T> && !heph::StringLike<T>)
 auto operator<<(ostream& os, const T& data) -> ostream& {

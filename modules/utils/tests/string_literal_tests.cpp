@@ -27,4 +27,12 @@ TEST(StringLiteralTests, OperatorStringViewTest) {
   EXPECT_EQ(STRING_VIEW, "foo");
 }
 
+TEST(StringLiteralTests, Concatenation) {
+  static constexpr auto STRING_LITERAL1 = StringLiteral{ "foo" };
+  static constexpr auto STRING_LITERAL2 = StringLiteral{ "bar" };
+  static constexpr auto STRING_LITERAL_CONCATENATION = STRING_LITERAL1 + STRING_LITERAL2;
+  static constexpr auto STRING_LITERAL_VIEW = std::string_view{ STRING_LITERAL_CONCATENATION };
+  EXPECT_EQ(STRING_LITERAL_VIEW, "foobar");
+}
+
 }  // namespace heph::utils::string::tests

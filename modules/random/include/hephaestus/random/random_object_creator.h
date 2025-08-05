@@ -15,7 +15,6 @@
 #include <random>
 #include <string>
 
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include "hephaestus/utils/concepts.h"
@@ -195,7 +194,7 @@ namespace internal {
     -> size_t {
   if (fixed_size.has_value()) {
     panicIf(allow_empty == false && fixed_size.value() == 0,
-            fmt::format("fixed_size must be non-zero if allow_empty == true"));
+            "fixed_size must be non-zero if allow_empty == true");
     return fixed_size.value();
   }
 
@@ -271,6 +270,30 @@ template <RandomCreatableArray T>
   std::ranges::generate(array, [&mt]() { return random<typename T::value_type>(mt); });
 
   return array;
+};
+
+//=================================================================================================
+// Random unordered_map creation
+//=================================================================================================
+template <typename T>
+concept RandomCreatableUnorderedMap =
+    UnorderedMapType<T> && RandomCreatable<typename T::key_type> && RandomCreatable<typename T::mapped_type>;
+
+/// Fill a vector with randomly generated values of type T.
+template <RandomCreatableUnorderedMap T>
+[[nodiscard]] auto random(std::mt19937_64& mt, std::optional<size_t> fixed_size = std::nullopt,
+                          bool allow_empty = true) -> T {
+  const auto size = internal::getSize(mt, fixed_size, allow_empty);
+
+  T umap;
+  umap.reserve(size);
+
+  auto key_gen = [&mt]() -> typename T::key_type { return random<typename T::key_type>(mt); };
+  auto value_gen = [&mt]() -> typename T::mapped_type { return random<typename T::mapped_type>(mt); };
+  auto gen = [&key_gen, &value_gen]() -> T::value_type { return { key_gen(), value_gen() }; };
+  std::generate_n(std::inserter(umap, umap.end()), size, gen);
+
+  return umap;
 };
 
 //=================================================================================================

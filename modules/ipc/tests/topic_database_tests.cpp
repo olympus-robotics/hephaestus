@@ -1,10 +1,12 @@
-#include <chrono>
+//=================================================================================================
+// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+//=================================================================================================
+
 #include <cstddef>
 #include <memory>
 #include <string>
 
 #include <fmt/format.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/ipc/topic.h"
@@ -15,6 +17,7 @@
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
@@ -27,7 +30,7 @@ using namespace ::testing;
 
 class MyEnvironment : public Environment {
 public:
-  ~MyEnvironment() = default;
+  ~MyEnvironment() override = default;
   void SetUp() override {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
   }
@@ -69,13 +72,17 @@ TEST(ZenohTests, TopicDatabase) {
 
   auto service_type_info = topic_database->getServiceTypeInfo(service_topic.name);
   EXPECT_TRUE(service_type_info.has_value());
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(service_type_info->request, serdes::getSerializedTypeInfo<types::DummyType>());
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(service_type_info->reply, serdes::getSerializedTypeInfo<types::DummyPrimitivesType>());
 
   auto service_string_type_info = topic_database->getServiceTypeInfo(service_string_topic.name);
   EXPECT_TRUE(service_string_type_info.has_value());
-  EXPECT_EQ(service_string_type_info->request, serdes::getSerializedTypeInfo<std::string>());
-  EXPECT_EQ(service_string_type_info->reply, serdes::getSerializedTypeInfo<std::string>());
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  EXPECT_EQ(service_string_type_info->request.name, "std::string");
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  EXPECT_EQ(service_string_type_info->reply.name, "std::string");
 
   auto result = topic_database->getTypeInfo("non_existent_topic");
   EXPECT_FALSE(result.has_value());

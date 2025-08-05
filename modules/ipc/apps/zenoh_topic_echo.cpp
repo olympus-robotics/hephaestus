@@ -21,7 +21,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/ipc/topic.h"
+#include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
@@ -62,12 +62,11 @@ void truncateLongItems(std::string& msg_json, bool noarr, size_t max_length) {
 namespace heph::ipc::zenoh::apps {
 class TopicEcho {
 public:
-  TopicEcho(SessionPtr session, TopicConfig topic_config, bool noarr, std::size_t max_array_length)
-    : noarr_(noarr), max_array_length_(max_array_length), topic_config_(std::move(topic_config)) {
+  TopicEcho(SessionPtr session, TopicFilterParams topic_filter_params, bool noarr,
+            std::size_t max_array_length)
+    : noarr_(noarr), max_array_length_(max_array_length) {
     DynamicSubscriberParams params{ .session = std::move(session),
-                                    .topics_filter_params = { .include_topics_only = {},
-                                                              .prefix = topic_config_.name,
-                                                              .exclude_topics = {} },
+                                    .topics_filter_params = std::move(topic_filter_params),
                                     .init_subscriber_cb =
                                         [this](const auto& topic, const auto& type_info) {
                                           (void)topic;
@@ -106,7 +105,6 @@ private:
 private:
   bool noarr_;
   std::size_t max_array_length_;
-  TopicConfig topic_config_;
   serdes::DynamicDeserializer dynamic_deserializer_;
   std::unique_ptr<DynamicSubscriber> dynamic_subscriber_;
 };
@@ -129,7 +127,7 @@ auto main(int argc, const char* argv[]) -> int {
         DEFAULT_MAX_ARRAY_LENGTH);
     const auto args = std::move(desc).parse(argc, argv);
 
-    auto [session_config, topic_config] = heph::ipc::zenoh::parseProgramOptions(args);
+    auto [session_config, _, topic_filter_params] = heph::ipc::zenoh::parseProgramOptions(args);
     const auto noarr = args.getOption<bool>("noarr");
     const auto max_array_length = args.getOption<std::size_t>("noarr-max-size");
 
@@ -137,7 +135,8 @@ auto main(int argc, const char* argv[]) -> int {
 
     auto session = heph::ipc::zenoh::createSession(session_config);
 
-    heph::ipc::zenoh::apps::TopicEcho topic_echo{ std::move(session), topic_config, noarr, max_array_length };
+    heph::ipc::zenoh::apps::TopicEcho topic_echo{ std::move(session), topic_filter_params, noarr,
+                                                  max_array_length };
     topic_echo.start().wait();
 
     heph::utils::TerminationBlocker::waitForInterrupt();

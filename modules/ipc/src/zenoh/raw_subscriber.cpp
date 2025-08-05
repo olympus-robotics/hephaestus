@@ -13,7 +13,6 @@
 #include <utility>
 
 #include <absl/strings/numbers.h>
-#include <fmt/format.h>
 #include <zenoh.h>
 #include <zenoh/api/base.hxx>
 #include <zenoh/api/ext/advanced_subscriber.hxx>
@@ -73,7 +72,22 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   , type_info_(std::move(type_info))
   , dedicated_callback_thread_(config.dedicated_callback_thread) {
   if (config.create_type_info_service) {
-    createTypeInfoService();
+    if (type_info_.isValid()) {
+      createTypeInfoService();
+    } else {
+      heph::log(heph::ERROR, "Cannot offer type info service for sub with invalid type info.", "topic",
+                topic_config_.name, "type_info", type_info_.toJson());
+    }
+  }
+
+  if (dedicated_callback_thread_) {
+    callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
+        [this](const Message& message) {
+          const auto& [metadata, buffer] = message;
+          callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
+        },
+        DEFAULT_CACHE_RESERVES);
+    callback_messages_consumer_->start();
   }
 
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
@@ -89,8 +103,8 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
       session_->zenoh_session.ext().declare_advanced_subscriber(
           keyexpr, [this](const ::zenoh::Sample& sample) { this->callback(sample); }, []() {},
           std::move(sub_options), &result));
-  panicIf(result != Z_OK, fmt::format("[Subscriber {}] failed to create zenoh subscriber, err {}",
-                                      topic_config_.name, result));
+  panicIf(result != Z_OK, "[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name,
+          result);
 
   if (config.create_liveliness_token) {
     liveliness_token_ =
@@ -98,16 +112,6 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::SUBSCRIBER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  }
-
-  if (dedicated_callback_thread_) {
-    callback_messages_consumer_ = std::make_unique<concurrency::MessageQueueConsumer<Message>>(
-        [this](const Message& message) {
-          const auto& [metadata, buffer] = message;
-          callback_(metadata, std::span<const std::byte>(buffer.begin(), buffer.end()));
-        },
-        DEFAULT_CACHE_RESERVES);
-    callback_messages_consumer_->start();
   }
 }
 
@@ -131,7 +135,9 @@ void RawSubscriber::callback(const ::zenoh::Sample& sample) {
   auto payload = toByteVector(sample.get_payload());
 
   if (dedicated_callback_thread_) {
-    callback_messages_consumer_->queue().forceEmplace(metadata, std::move(payload));
+    auto dropped_element = callback_messages_consumer_->queue().forceEmplace(metadata, std::move(payload));
+    logIf(heph::ERROR, dropped_element.has_value(), "Dropped subscriber message due to full queue", "topic",
+          topic_config_.name);
   } else {
     callback_(metadata, { payload.data(), payload.size() });
   }
@@ -143,9 +149,23 @@ void RawSubscriber::createTypeInfoService() {
     (void)request;
     return type_info_json;
   };
-  auto type_service_topic = TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) };
-  type_service_ = std::make_unique<Service<std::string, std::string>>(session_, type_service_topic,
-                                                                      std::move(type_info_callback));
+
+  auto failure_callback = [topic_name = topic_config_.name]() {
+    heph::log(heph::ERROR, "Failed to process type info service", "topic", topic_name);
+  };
+
+  auto post_reply_callback = []() {
+    // Do nothing.
+  };
+
+  const ServiceConfig service_config = {
+    .create_liveliness_token = false,
+    .create_type_info_service = false,
+  };
+
+  type_service_ = std::make_unique<Service<std::string, std::string>>(
+      session_, TopicConfig{ getEndpointTypeInfoServiceTopic(topic_config_.name) },
+      std::move(type_info_callback), failure_callback, post_reply_callback, service_config);
 }
 
 }  // namespace heph::ipc::zenoh
