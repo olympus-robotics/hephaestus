@@ -12,6 +12,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -43,6 +44,8 @@ struct RemoteNodeType {
   std::uint8_t type{ INPUT };
   bool reliable{ false };
 };
+
+inline constexpr std::string_view CONNECT_SUCCESS = "success";
 
 namespace internal {
 template <typename Container, typename... Ts>
@@ -93,7 +96,7 @@ auto createNetEntity(const heph::net::Endpoint& endpoint, heph::concurrency::Con
 
 inline auto connect(heph::net::Socket& socket, const heph::net::Endpoint& endpoint,
                     const std::string& type_info, RemoteNodeType& type, const std::string& name) {
-  return heph::net::connect(socket, endpoint) | stdexec::let_value([&] {
+  return net::connect(socket, endpoint) | stdexec::let_value([&] {
            return net::sendAll(socket, std::as_bytes(std::span{ &type, 1 })) |
                   stdexec::let_value([&](std::span<const std::byte> /*recv_buffer*/) {
                     return internal::send(socket, name) |

@@ -67,22 +67,17 @@ private:
   }
 
 private:
-  struct InputRegistryEntry {
+  struct RegistryEntry {
     std::string type_info;
-    heph::UniqueFunction<void(heph::net::Socket, bool)> subscriber_factory;
-  };
-
-  struct OutputRegistryEntry {
-    std::string type_info;
-    heph::UniqueFunction<void(heph::net::Socket, bool)> publisher_factory;
+    heph::UniqueFunction<void(heph::net::Socket, bool)> factory;
   };
 
   std::exception_ptr& exception_;
   exec::async_scope scope_;
 
   std::vector<heph::net::Acceptor> acceptors_;
-  std::unordered_map<std::string, InputRegistryEntry> registered_inputs_;
-  std::unordered_map<std::string, OutputRegistryEntry> registered_outputs_;
+  std::unordered_map<std::string, RegistryEntry> registered_inputs_;
+  std::unordered_map<std::string, RegistryEntry> registered_outputs_;
 };
 
 template <typename Engine, typename Output>
@@ -91,24 +86,23 @@ inline void RemoteNodeHandler::registerOutput(Engine& engine, Output& output) {
   if constexpr (detail::ISOPTIONAL<ResultT>) {
     using ValueT = typename ResultT::value_type;
     registered_outputs_.emplace(
-        output.name(),
-        OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                             .publisher_factory =
-                                 [this, &engine, &output](heph::net::Socket socket, bool reliable) {
-                                   createPublisherNode<ValueT>(engine, output, std::move(socket),
-                                                               output.name(), reliable);
-                                 }
+        output.name(), RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
+                                      .factory =
+                                          [this, &engine, &output](heph::net::Socket socket, bool reliable) {
+                                            createPublisherNode<ValueT>(engine, output, std::move(socket),
+                                                                        output.name(), reliable);
+                                          }
 
-        });
+                       });
   } else {
     if constexpr (!std::is_same_v<void, ResultT>) {
       registered_outputs_.emplace(
           output.name(),
-          OutputRegistryEntry{
-              .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-              .publisher_factory = [this, &engine, &output](heph::net::Socket socket, bool reliable) {
-                createPublisherNode<ResultT>(engine, output, std::move(socket), output.name(), reliable);
-              } });
+          RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
+                         .factory = [this, &engine, &output](heph::net::Socket socket, bool reliable) {
+                           createPublisherNode<ResultT>(engine, output, std::move(socket), output.name(),
+                                                        reliable);
+                         } });
     }
   }
 }
@@ -127,23 +121,23 @@ inline void RemoteNodeHandler::registerImplicitOutput(Engine& engine, Node& node
       using ValueT = typename ResultT::value_type;
       registered_outputs_.emplace(
           node.nodeName(),
-          OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                               .publisher_factory =
-                                   [this, &engine, &node](heph::net::Socket socket, bool reliable) {
-                                     createPublisherNode<ValueT>(engine, node, std::move(socket),
-                                                                 node.nodeName(), reliable);
-                                   }
+          RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
+                         .factory =
+                             [this, &engine, &node](heph::net::Socket socket, bool reliable) {
+                               createPublisherNode<ValueT>(engine, node, std::move(socket), node.nodeName(),
+                                                           reliable);
+                             }
 
           });
     } else {
       if constexpr (!std::is_same_v<void, ResultT>) {
         registered_outputs_.emplace(
             node.nodeName(),
-            OutputRegistryEntry{
-                .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-                .publisher_factory = [this, &engine, &node](heph::net::Socket socket, bool reliable) {
-                  createPublisherNode<ResultT>(engine, node, std::move(socket), node.nodeName(), reliable);
-                } });
+            RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
+                           .factory = [this, &engine, &node](heph::net::Socket socket, bool reliable) {
+                             createPublisherNode<ResultT>(engine, node, std::move(socket), node.nodeName(),
+                                                          reliable);
+                           } });
       }
     }
   }
@@ -153,11 +147,10 @@ void RemoteNodeHandler::registerInput(Engine& engine, InputT* input) {
   using ValueT = typename InputT::ValueT;
   registered_inputs_.emplace(
       input->name(),
-      InputRegistryEntry{
-          .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-          .subscriber_factory = [this, &engine, input](heph::net::Socket socket, bool reliable) {
-            createSubscriberNode<ValueT>(engine, input, std::move(socket), reliable);
-          } });
+      RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
+                     .factory = [this, &engine, input](heph::net::Socket socket, bool reliable) {
+                       createSubscriberNode<ValueT>(engine, input, std::move(socket), reliable);
+                     } });
 }
 
 }  // namespace heph::conduit

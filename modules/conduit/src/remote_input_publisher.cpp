@@ -27,7 +27,7 @@ auto SetRemoteInputOperator::execute(std::vector<std::byte> msg, std::string* ty
       socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context_));
 
       auto error = co_await internal::connect(*socket_, endpoint_, *type_info, type_, name_);
-      if (error != "success") {
+      if (error != CONNECT_SUCCESS) {
         heph::panic("Could not connect: {}", error);
       }
     }
@@ -39,7 +39,6 @@ auto SetRemoteInputOperator::execute(std::vector<std::byte> msg, std::string* ty
       co_await ((heph::net::recvAll(socket_.value(), std::span<std::byte>{ &ack, 1 }) |
                  stdexec::then([](std::span<std::byte> /*unused*/) {})) |
                 stdexec::upon_stopped([this] { socket_.reset(); }));
-      ;
     }
 
   } catch (std::exception& exception) {

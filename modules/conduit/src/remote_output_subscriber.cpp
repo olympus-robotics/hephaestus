@@ -27,7 +27,7 @@ auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std:
       socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context));
 
       auto error = co_await internal::connect(*socket_, endpoint_, *type_info, type_, name_);
-      if (error != "success") {
+      if (error != CONNECT_SUCCESS) {
         heph::panic("Could not connect: {}", error);
       }
     }

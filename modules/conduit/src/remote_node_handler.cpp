@@ -8,7 +8,6 @@
 #include <exception>
 #include <span>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -161,13 +160,11 @@ auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client, bool reliab
       co_return;
     }
 
-    // No error, just send back a "zero" string. to acknowledge the full negotiation.
-    static constexpr std::string_view SUCCESS{ "success" };
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    co_await internal::send(client, SUCCESS);
+    co_await internal::send(client, CONNECT_SUCCESS);
 
     heph::log(heph::INFO, "Connected output subscriber", "name", name, "client", client.remoteEndpoint());
-    entry.publisher_factory(std::move(client), reliable);
+    entry.factory(std::move(client), reliable);
   } catch (std::exception& exception) {
     heph::log(heph::ERROR, "Output subscriber disconnected", "exception", exception.what());
   }
@@ -196,13 +193,11 @@ auto RemoteNodeHandler::handleInputClient(heph::net::Socket client, bool reliabl
       co_return;
     }
 
-    // No error, just send back a "zero" string. to acknowledge the full negotiation.
-    static constexpr std::string_view SUCCESS{ "success" };
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    co_await internal::send(client, SUCCESS);
+    co_await internal::send(client, CONNECT_SUCCESS);
 
     heph::log(heph::INFO, "Connected input publisher", "name", name, "client", client.remoteEndpoint());
-    entry.subscriber_factory(std::move(client), reliable);
+    entry.factory(std::move(client), reliable);
   } catch (std::exception& exception) {
     heph::log(heph::ERROR, "Input publisher disconnected", "exception", exception.what());
   }
