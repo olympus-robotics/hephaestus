@@ -36,7 +36,13 @@
 
 namespace heph::conduit {
 
-enum class RemoteNodeType : std::uint8_t { INPUT = 0, OUTPUT = 1 };
+struct RemoteNodeType {
+  static constexpr std::uint8_t INPUT = 0;
+  static constexpr std::uint8_t OUTPUT = 1;
+
+  std::uint8_t type{ INPUT };
+  bool reliable{ false };
+};
 
 namespace internal {
 template <typename Container, typename... Ts>
@@ -134,18 +140,24 @@ public:
     return fmt::format("{}/{}", socket_.remoteEndpoint(), name_);
   }
 
-  RemoteInputSubscriberOperator(heph::net::Socket socket, std::string name)
-    : socket_(std::move(socket)), name_(std::move(name)) {
+  RemoteInputSubscriberOperator(heph::net::Socket socket, std::string name, bool reliable)
+    : socket_(std::move(socket)), name_(std::move(name)), reliable_(reliable) {
   }
 
-  auto trigger() {
-    return internal::recv<std::pmr::vector<std::byte>>(socket_, &memory_resource_);
+  auto trigger() -> exec::task<MsgT> {
+    auto msg = co_await internal::recv<std::pmr::vector<std::byte>>(socket_, &memory_resource_);
+    if (reliable_) {
+      std::byte ack{};
+      co_await heph::net::sendAll(socket_, std::span{ &ack, 1 });
+    }
+    co_return msg;
   }
 
 private:
   heph::net::Socket socket_;
   std::string name_;
   std::pmr::unsynchronized_pool_resource memory_resource_;
+  bool reliable_;
 };
 
 template <typename T>
@@ -171,130 +183,48 @@ struct RemoteInputSubscriber : heph::conduit::Node<RemoteInputSubscriber<T>, Rem
   }
 };
 
-class RemoteSubscriberOperator {
+class RemoteOutputPublisherOperator {
 public:
-  using MsgT = std::pmr::vector<std::byte>;
-
-  explicit RemoteSubscriberOperator(heph::net::Endpoint endpoint, std::string name)
-    : endpoint_(std::move(endpoint)), name_(std::move(name)) {
-  }
-
-  [[nodiscard]] auto name() const -> std::string {
-    return fmt::format("{}/{}", endpoint_, name_);
-  }
-
-  auto trigger(heph::concurrency::Context* context, std::string* type_info) -> exec::task<MsgT>;
-
-private:
-private:
-  RemoteNodeType type_{ RemoteNodeType::OUTPUT };
-  std::optional<heph::net::Socket> socket_;
-  heph::net::Endpoint endpoint_;
-  std::pmr::unsynchronized_pool_resource memory_resource_;
-  std::string name_;
-  std::string type_info_;
-  std::optional<std::string> last_error_;
-};
-
-inline auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std::string* type_info)
-    -> exec::task<MsgT> {
-  try {
-    if (!socket_.has_value()) {
-      socket_.emplace(internal::createNetEntity<heph::net::Socket>(endpoint_, *context));
-
-      auto error = co_await internal::connect(*socket_, endpoint_, *type_info, type_, name_);
-      if (error != "success") {
-        heph::panic("Could not connect: {}", error);
-      }
-    }
-
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    auto msg = co_await (internal::recv<std::pmr::vector<std::byte>>(socket_.value(), &memory_resource_) |
-                         stdexec::upon_stopped([] { return std::pmr::vector<std::byte>{}; }));
-    if (!msg.empty()) {
-      co_return msg;
-    }
-    heph::log(heph::ERROR, "Reconnecting subscriber, connection was closed", "node", name());
-
-  } catch (std::exception& exception) {
-    std::string error = exception.what();
-    if (last_error_.has_value()) {
-      if (*last_error_ == error) {
-        error.clear();
-      } else {
-        last_error_.emplace(error);
-      }
-    } else {
-      last_error_.emplace(error);
-    }
-
-    if (!error.empty()) {
-      heph::log(heph::ERROR, "Retrying", "node", name(), "error", error);
-    }
-  }
-
-  socket_.reset();
-  co_return {};
-}
-
-template <typename T>
-struct RemoteSubscriberNode : heph::conduit::Node<RemoteSubscriberNode<T>, RemoteSubscriberOperator> {
-  std::string type_info = heph::serdes::getSerializedTypeInfo<T>().toJson();
-
-  static auto name(const RemoteSubscriberNode& self) {
-    return self.data().name();
-  }
-
-  static auto trigger(RemoteSubscriberNode* self) {
-    return self->data().trigger(&self->engine().scheduler().context(), &self->type_info);
-  }
-
-  static auto execute(RemoteSubscriberOperator::MsgT msg) -> std::optional<T> {
-    auto msg_buffer = std::span{ msg };
-    if (msg_buffer.empty()) {
-      // No data received...
-      return std::nullopt;
-    }
-
-    T value;
-    heph::serdes::deserialize(msg_buffer, value);
-    return value;
-  }
-};
-
-class RemotePublisherOperator {
-public:
-  explicit RemotePublisherOperator(heph::net::Socket client, std::string name)
-    : client_(std::move(client)), remote_endpoint_(client_.remoteEndpoint()), name_(std::move(name)) {
+  explicit RemoteOutputPublisherOperator(heph::net::Socket client, std::string name, bool reliable)
+    : socket_(std::move(client))
+    , remote_endpoint_(socket_.remoteEndpoint())
+    , name_(std::move(name))
+    , reliable_(reliable) {
   }
 
   [[nodiscard]] auto name() const -> std::string {
     return fmt::format("{}/{}", remote_endpoint_, name_);
   }
 
-  auto publish(std::vector<std::byte> msg) {
-    return internal::sendMsg(client_, name(), std::move(msg));
+  auto publish(std::vector<std::byte> msg) -> exec::task<void> {
+    co_await internal::sendMsg(socket_, name(), std::move(msg));
+    if (reliable_) {
+      std::byte ack{};
+      co_await heph::net::recvAll(socket_, std::span<std::byte>{ &ack, 1 });
+    }
   }
 
 private:
-  heph::net::Socket client_;
+  heph::net::Socket socket_;
   heph::net::Endpoint remote_endpoint_;
   std::string name_;
+  bool reliable_;
 };
 
 template <typename T, typename InputPolicyT = InputPolicy<>>
-struct RemotePublisherNode : conduit::Node<RemotePublisherNode<T, InputPolicyT>, RemotePublisherOperator> {
+struct RemoteOutputPublisherNode
+  : conduit::Node<RemoteOutputPublisherNode<T, InputPolicyT>, RemoteOutputPublisherOperator> {
   QueuedInput<T, InputPolicyT> input{ this, "input" };
 
-  static auto name(const RemotePublisherNode& self) {
+  static auto name(const RemoteOutputPublisherNode& self) {
     return self.data().name();
   }
 
-  static auto trigger(RemotePublisherNode& self) {
+  static auto trigger(RemoteOutputPublisherNode& self) {
     return self.input.get();
   }
 
-  static auto execute(RemotePublisherNode& self, const T& t) {
+  static auto execute(RemoteOutputPublisherNode& self, const T& t) {
     return self.data().publish(heph::serdes::serialize(t));
   }
 };

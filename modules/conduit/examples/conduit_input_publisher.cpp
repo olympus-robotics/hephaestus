@@ -1,6 +1,7 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
+
 #include <chrono>
 #include <cstdint>
 #include <exception>
@@ -14,7 +15,7 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/conduit/remote_input.h"
+#include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -54,7 +55,7 @@ auto main(int argc, const char* argv[]) -> int {
     fmt::println("Publishing to {}", endpoint);
 
     auto generator = engine.createNode<Generator>();
-    heph::conduit::RemoteInput<heph::types::DummyType> input{ engine, endpoint, "sink/input" };
+    heph::conduit::RemoteInputPublisher<heph::types::DummyType> input{ engine, endpoint, "sink/input" };
 
     input.connectTo(generator);
 

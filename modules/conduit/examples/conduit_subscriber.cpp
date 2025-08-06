@@ -14,7 +14,7 @@
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/conduit/remote_nodes.h"
+#include "hephaestus/conduit/remote_output_subscriber.h"
 #include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log.h"
@@ -55,7 +55,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     fmt::println("Subcribing to {}", endpoint);
 
-    auto subscriber = engine.createNode<heph::conduit::RemoteSubscriberNode<heph::types::DummyType>>(
+    auto subscriber = engine.createNode<heph::conduit::RemoteOutputSubscriber<heph::types::DummyType>>(
         endpoint, std::string{ "generator" });
     auto node = engine.createNode<Sink>();
 

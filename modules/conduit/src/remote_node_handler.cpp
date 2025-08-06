@@ -87,12 +87,15 @@ auto RemoteNodeHandler::acceptClients(std::size_t index) -> exec::task<void> {
       auto client = co_await heph::net::accept(server);
       RemoteNodeType type{};
       co_await heph::net::recvAll(client, std::as_writable_bytes(std::span{ &type, 1 }));
-      switch (type) {
+      switch (type.type) {
         case RemoteNodeType::INPUT:
-          scope_.spawn(handleInputClient(std::move(client)));
+          scope_.spawn(handleInputClient(std::move(client), type.reliable));
           break;
         case RemoteNodeType::OUTPUT:
-          scope_.spawn(handleOutputClient(std::move(client)));
+          scope_.spawn(handleOutputClient(std::move(client), type.reliable));
+          break;
+        default:
+          __builtin_unreachable();
           break;
       }
     } catch (...) {
@@ -123,7 +126,7 @@ auto checkTypeInfo(heph::net::Socket* client, const std::string* name, std::stri
 }
 }  // namespace
 
-auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client) -> exec::task<void> {
+auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client, bool reliable) -> exec::task<void> {
   // The protocol is as follows:
   // Datatypes:
   //  - int: int16_t
@@ -164,13 +167,13 @@ auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client) -> exec::ta
     co_await internal::send(client, SUCCESS);
 
     heph::log(heph::INFO, "Connected output subscriber", "name", name, "client", client.remoteEndpoint());
-    entry.publisher_factory(std::move(client));
+    entry.publisher_factory(std::move(client), reliable);
   } catch (std::exception& exception) {
     heph::log(heph::ERROR, "Output subscriber disconnected", "exception", exception.what());
   }
 }
 
-auto RemoteNodeHandler::handleInputClient(heph::net::Socket client) -> exec::task<void> {
+auto RemoteNodeHandler::handleInputClient(heph::net::Socket client, bool reliable) -> exec::task<void> {
   try {
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     auto [name, type_info] = co_await recvNameInfo(&client);
@@ -199,7 +202,7 @@ auto RemoteNodeHandler::handleInputClient(heph::net::Socket client) -> exec::tas
     co_await internal::send(client, SUCCESS);
 
     heph::log(heph::INFO, "Connected input publisher", "name", name, "client", client.remoteEndpoint());
-    entry.subscriber_factory(std::move(client));
+    entry.subscriber_factory(std::move(client), reliable);
   } catch (std::exception& exception) {
     heph::log(heph::ERROR, "Input publisher disconnected", "exception", exception.what());
   }

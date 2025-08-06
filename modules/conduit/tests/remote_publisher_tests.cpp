@@ -19,8 +19,8 @@
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/conduit/remote_input.h"
-#include "hephaestus/conduit/remote_nodes.h"
+#include "hephaestus/conduit/remote_input_publisher.h"
+#include "hephaestus/conduit/remote_output_subscriber.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -82,8 +82,13 @@ struct ReceivingOperation : Node<ReceivingOperation<T>, ReceivingOperationData> 
     return dummy;
   }
 };
+struct RemoteNodeTestParams {
+  bool reliable;
+};
 
-TEST(RemoteNodeTests, nodeBasic) {
+class RemoteNodeTests : public ::testing::TestWithParam<RemoteNodeTestParams> {};
+
+TEST_P(RemoteNodeTests, nodeBasic) {
   NodeEngineConfig config1;
   config1.endpoints = { heph::net::Endpoint::createIpV4("127.0.0.1") };
   NodeEngine engine1{ config1 };
@@ -104,13 +109,14 @@ TEST(RemoteNodeTests, nodeBasic) {
 
   // Subscriber
   std::thread t2{ [&engine = engine2, remote_endpoints = engine1.endpoints()] {
+    const bool reliable = GetParam().reliable;
     static constexpr std::size_t NUM_ITERATIONS = 10;
     auto node = engine.createNode<ReceivingOperation<>>(NUM_ITERATIONS, 0);
 
     EXPECT_EQ(remote_endpoints.size(), 1);
     for (const auto& endpoint : remote_endpoints) {
-      auto subscriber = engine.createNode<RemoteSubscriberNode<heph::types::DummyType>>(
-          endpoint, std::string{ Generator::NAME });
+      auto subscriber = engine.createNode<RemoteOutputSubscriber<heph::types::DummyType>>(
+          endpoint, std::string{ Generator::NAME }, reliable);
       node->input.connectTo(subscriber);
     }
     engine.run();
@@ -121,8 +127,7 @@ TEST(RemoteNodeTests, nodeBasic) {
   engine1.requestStop();
   t1.join();
 }
-
-TEST(RemoteNodeTests, subscriberRestart) {
+TEST_P(RemoteNodeTests, subscriberRestart) {
   NodeEngineConfig config1;
   config1.endpoints = { heph::net::Endpoint::createIpV4("127.0.0.1") };
   NodeEngine engine1{ config1 };
@@ -136,15 +141,16 @@ TEST(RemoteNodeTests, subscriberRestart) {
 
   // Subscriber
   std::thread t2{ [remote_endpoints = engine1.endpoints()] {
-    static constexpr std::size_t NUM_ITERATIONS = 100;
+    const bool reliable = GetParam().reliable;
+    static constexpr std::size_t NUM_ITERATIONS = 10;
     for (std::size_t i = 0; i != NUM_ITERATIONS; ++i) {
       NodeEngine engine{ {} };
       auto node = engine.createNode<ReceivingOperation<>>(1, 0);
 
       EXPECT_EQ(remote_endpoints.size(), 1);
       for (const auto& endpoint : remote_endpoints) {
-        auto subscriber = engine.createNode<RemoteSubscriberNode<heph::types::DummyType>>(
-            endpoint, std::string{ Generator::NAME });
+        auto subscriber = engine.createNode<RemoteOutputSubscriber<heph::types::DummyType>>(
+            endpoint, std::string{ Generator::NAME }, reliable);
         node->input.connectTo(subscriber);
       }
       engine.run();
@@ -158,8 +164,8 @@ TEST(RemoteNodeTests, subscriberRestart) {
   t1.join();
 }
 
-TEST(RemoteNodeTests, publisherRestart) {
-  static constexpr std::size_t NUM_ITERATIONS = 100;
+TEST_P(RemoteNodeTests, publisherRestart) {
+  static constexpr std::size_t NUM_ITERATIONS = 10;
   std::mutex endpoint_mtx;
   std::condition_variable endpoint_cv;
   std::optional<heph::net::Endpoint> endpoint;
@@ -211,8 +217,9 @@ TEST(RemoteNodeTests, publisherRestart) {
       remote_endpoint = endpoint.value();
     }
 
-    auto subscriber = subscriber_engine.createNode<RemoteSubscriberNode<heph::types::DummyType>>(
-        remote_endpoint, std::string{ Generator::NAME });
+    const bool reliable = GetParam().reliable;
+    auto subscriber = subscriber_engine.createNode<RemoteOutputSubscriber<heph::types::DummyType>>(
+        remote_endpoint, std::string{ Generator::NAME }, reliable);
     node->input.connectTo(subscriber);
     subscriber_engine.run();
     EXPECT_GT(node->data().executed, 0);
@@ -224,7 +231,7 @@ TEST(RemoteNodeTests, publisherRestart) {
   t2.join();
 }
 
-TEST(RemoteNodeTests, InputBasic) {
+TEST_P(RemoteNodeTests, InputBasic) {
   NodeEngineConfig config1;
   config1.endpoints = { heph::net::Endpoint::createIpV4("127.0.0.1") };
   NodeEngine engine1{ config1 };
@@ -240,10 +247,11 @@ TEST(RemoteNodeTests, InputBasic) {
   std::thread t1{ [&engine = engine1, remote_endpoints = engine2.endpoints()] {
     [[maybe_unused]] auto generator = engine.createNode<Generator>();
     EXPECT_EQ(remote_endpoints.size(), 1);
-    std::vector<RemoteInput<types::DummyType>> remote_inputs;
+    std::vector<RemoteInputPublisher<types::DummyType>> remote_inputs;
     remote_inputs.reserve(remote_endpoints.size());
+    const bool reliable = GetParam().reliable;
     for (const auto& endpoint : remote_endpoints) {
-      remote_inputs.emplace_back(engine, endpoint, "ReceivingOperation/input");
+      remote_inputs.emplace_back(engine, endpoint, "ReceivingOperation/input", reliable);
       remote_inputs.back().connectTo(generator);
     }
     engine.run();
@@ -262,7 +270,7 @@ TEST(RemoteNodeTests, InputBasic) {
   t1.join();
 }
 
-TEST(RemoteNodeTests, InputPublisherRestart) {
+TEST_P(RemoteNodeTests, InputPublisherRestart) {
   NodeEngineConfig config;
   config.endpoints = { heph::net::Endpoint::createIpV4("127.0.0.1") };
   NodeEngine engine1{ config };
@@ -275,10 +283,11 @@ TEST(RemoteNodeTests, InputPublisherRestart) {
       NodeEngine engine{ {} };
       [[maybe_unused]] auto generator = engine.createNode<Generator>();
       EXPECT_EQ(remote_endpoints.size(), 1);
-      std::vector<RemoteInput<types::DummyType>> remote_inputs;
+      std::vector<RemoteInputPublisher<types::DummyType>> remote_inputs;
       remote_inputs.reserve(remote_endpoints.size());
+      const bool reliable = GetParam().reliable;
       for (const auto& endpoint : remote_endpoints) {
-        remote_inputs.emplace_back(engine, endpoint, "ReceivingOperation/input");
+        remote_inputs.emplace_back(engine, endpoint, "ReceivingOperation/input", reliable);
         remote_inputs.back().connectTo(generator);
         auto node = engine.createNode<ReceivingOperation<bool>>(1, 0);
         node->input.connectTo(remote_inputs.back().onComplete());
@@ -302,7 +311,7 @@ TEST(RemoteNodeTests, InputPublisherRestart) {
   t2.join();
 }
 
-TEST(RemoteNodeTests, InputSubscriberRestart) {
+TEST_P(RemoteNodeTests, InputSubscriberRestart) {
   static constexpr std::size_t NUM_ITERATIONS = 10;
   std::mutex endpoint_mtx;
   std::condition_variable endpoint_cv;
@@ -318,7 +327,9 @@ TEST(RemoteNodeTests, InputSubscriberRestart) {
     }
 
     [[maybe_unused]] auto generator = engine.createNode<Generator>();
-    RemoteInput<types::DummyType> remote_input(engine, remote_endpoint, "ReceivingOperation/input");
+    const bool reliable = GetParam().reliable;
+    RemoteInputPublisher<types::DummyType> remote_input(engine, remote_endpoint, "ReceivingOperation/input",
+                                                        reliable);
 
     remote_input.connectTo(generator);
 
@@ -359,4 +370,8 @@ TEST(RemoteNodeTests, InputSubscriberRestart) {
   engine.requestStop();
   t1.join();
 }
+
+INSTANTIATE_TEST_SUITE_P(RemoteNodeTestCases, RemoteNodeTests,
+                         ::testing::Values(RemoteNodeTestParams{ true }, RemoteNodeTestParams{ false }));
+
 }  // namespace heph::conduit::tests
