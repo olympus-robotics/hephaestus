@@ -14,7 +14,7 @@ file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 # library target
 define_module_library(
   NAME conduit
-  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::ipc hephaestus::net
+  PUBLIC_LINK_LIBS hephaestus::concurrency hephaestus::ipc hephaestus::net hephaestus::types_proto
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

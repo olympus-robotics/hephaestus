@@ -11,16 +11,12 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <exec/async_scope.hpp>
 #include <exec/static_thread_pool.hpp>
-#include <exec/task.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
@@ -29,13 +25,9 @@
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node_handle.h"
-#include "hephaestus/conduit/remote_nodes.h"
-#include "hephaestus/net/acceptor.h"
+#include "hephaestus/conduit/remote_node_handler.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/net/socket.h"
-#include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/utils/unique_function.h"
 
 namespace heph::conduit {
 struct NodeEngineConfig {
@@ -78,9 +70,12 @@ public:
 
   template <typename Output>
   void registerOutput(Output& output);
-
   template <typename Node>
   void registerImplicitOutput(Node& node);
+  template <typename InputT>
+  void registerInput(InputT* input) {
+    remote_node_handler_.registerInput(*this, input);
+  }
 
   void addConnectionSpecification();
   [[nodiscard]] auto getDotGraph() const -> std::string;
@@ -92,15 +87,6 @@ private:
 
   template <typename Node>
   auto createNodeRunner(Node& node);
-
-  template <typename T, typename Node>
-  auto createPublisherNode(Node& node, heph::net::Socket socket, std::string name) {
-    auto publisher = createNode<RemotePublisherNode<T>>(std::move(socket), std::move(name));
-    publisher->input.connectTo(node);
-  }
-
-  auto acceptClients(std::size_t index) -> exec::task<void>;
-  auto handleClient(heph::net::Socket client) -> exec::task<void>;
 
   struct ConnectionSpecification {
     detail::InputSpecification input;
@@ -114,24 +100,25 @@ private:
 private:  // Optimal fields order: pool_, exception_, scope_, context_
   friend detail::OutputConnections;
 
-  struct OutputRegistryEntry {
-    std::string type_info;
-    heph::UniqueFunction<void(heph::net::Socket)> publisher_factory;
-  };
-
   exec::static_thread_pool pool_;
   std::exception_ptr exception_;
   exec::async_scope scope_;
   heph::concurrency::Context context_{ {} };
   std::vector<heph::net::Endpoint> endpoints_;
-  std::unordered_map<std::string, OutputRegistryEntry> registered_outputs_;
 
   std::vector<std::unique_ptr<detail::NodeBase>> nodes_;
 
-  std::vector<heph::net::Acceptor> acceptors_;
+  RemoteNodeHandler remote_node_handler_;
 
   std::vector<ConnectionSpecification> connection_specs_;
 };
+
+namespace detail {
+template <typename InputT>
+void registerInput(NodeEngine& engine, InputT* input) {
+  engine.registerInput(input);
+}
+}  // namespace detail
 
 template <typename OperatorT, typename... Ts>
 inline auto NodeEngine::createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
@@ -156,6 +143,7 @@ inline auto NodeEngine::createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
   //  2. The name might only be fully valid after the node is fully constructed.
   node->implicit_output_.emplace(node, "output");
   node->engine_ = this;
+  node->registerInputs();
 
   registerImplicitOutput(*node);
 
@@ -165,62 +153,12 @@ inline auto NodeEngine::createNode(Ts&&... ts) -> NodeHandle<OperatorT> {
 
 template <typename Output>
 inline void NodeEngine::registerOutput(Output& output) {
-  using ResultT = typename Output::ResultT;
-  if constexpr (detail::ISOPTIONAL<ResultT>) {
-    using ValueT = typename ResultT::value_type;
-    registered_outputs_.emplace(
-        output.name(),
-        OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                             .publisher_factory =
-                                 [this, &output](heph::net::Socket socket) {
-                                   createPublisherNode<ValueT>(output, std::move(socket), output.name());
-                                 }
-
-        });
-  } else {
-    if constexpr (!std::is_same_v<void, ResultT>) {
-      registered_outputs_.emplace(
-          output.name(),
-          OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-                               .publisher_factory = [this, &output](heph::net::Socket socket) {
-                                 createPublisherNode<ResultT>(output, std::move(socket), output.name());
-                               } });
-    }
-  }
+  remote_node_handler_.registerOutput(*this, output);
 }
 
 template <typename Node>
 inline void NodeEngine::registerImplicitOutput(Node& node) {
-  using ExecuteOperationT = decltype(node.executeSender());
-  using ExecuteResultVariantT = stdexec::value_types_of_t<ExecuteOperationT>;
-  static_assert(std::variant_size_v<ExecuteResultVariantT> == 1);
-  using ExecuteResultTupleT = std::variant_alternative_t<0, ExecuteResultVariantT>;
-
-  if constexpr (std::tuple_size_v<ExecuteResultTupleT> == 1) {
-    using ResultT = std::tuple_element_t<0, ExecuteResultTupleT>;
-
-    if constexpr (detail::ISOPTIONAL<ResultT>) {
-      using ValueT = typename ResultT::value_type;
-      registered_outputs_.emplace(
-          node.nodeName(),
-          OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                               .publisher_factory =
-                                   [this, &node](heph::net::Socket socket) {
-                                     createPublisherNode<ValueT>(node, std::move(socket), node.nodeName());
-                                   }
-
-          });
-    } else {
-      if constexpr (!std::is_same_v<void, ResultT>) {
-        registered_outputs_.emplace(
-            node.nodeName(),
-            OutputRegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-                                 .publisher_factory = [this, &node](heph::net::Socket socket) {
-                                   createPublisherNode<ResultT>(node, std::move(socket), node.nodeName());
-                                 } });
-      }
-    }
-  }
+  remote_node_handler_.registerImplicitOutput(*this, node);
 }
 
 inline auto NodeEngine::uponError() {

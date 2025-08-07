@@ -20,6 +20,7 @@ heph_cc_library(
         "//modules/concurrency",
         "//modules/ipc",
         "//modules/net",
+        "//modules/types_proto",
     ],
 )
 
@@ -72,6 +73,29 @@ heph_cc_binary(
 heph_cc_binary(
     name = "conduit_subscriber",
     srcs = ["examples/conduit_subscriber.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+        "//modules/format",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_binary(
+    name = "conduit_input_publisher",
+    srcs = ["examples/conduit_input_publisher.cpp"],
+    deps = [
+        ":conduit",
+        "//modules/cli",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
+)
+
+heph_cc_binary(
+    name = "conduit_input_subscriber",
+    srcs = ["examples/conduit_input_subscriber.cpp"],
     deps = [
         ":conduit",
         "//modules/cli",

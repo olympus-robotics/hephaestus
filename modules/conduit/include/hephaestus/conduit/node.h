@@ -148,6 +148,7 @@ private:
 
 private:
   friend class NodeEngine;
+  friend class RemoteNodeHandler;
 
   template <typename InputT, typename T, std::size_t Depth>
   friend class detail::InputBase;

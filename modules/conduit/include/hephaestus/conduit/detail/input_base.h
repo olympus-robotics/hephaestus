@@ -30,7 +30,11 @@
 #include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
+namespace heph::conduit {
+class NodeEngine;
+}
 namespace heph::conduit::detail {
+
 struct InputPollT {};
 struct InputBlockT {};
 
@@ -48,7 +52,7 @@ public:
   using DataT = T;
 
   InputBase(NodeBase* node, std::string name) : node_{ node }, name_(std::move(name)) {
-    node_->addInputSpec([this] {
+    node_->addInputSpec(static_cast<InputT*>(this), [this] {
       return InputSpecification{
         .name = name_,
         .node_name = node_->nodeName(),
