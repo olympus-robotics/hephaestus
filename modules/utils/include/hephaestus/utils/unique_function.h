@@ -170,6 +170,8 @@ public:
     vtable_ = other.vtable_;
     other.vtable_->move(other.storage_, storage_);
     other.vtable_ = &detail::EMPTY_VTABLE<R, Args...>;
+
+    return *this;
   }
 
   template <detail::invocable<R, Args...> F>

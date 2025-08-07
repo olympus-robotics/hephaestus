@@ -46,10 +46,11 @@ public:
   void registerInput(Engine& engine, InputT* input);
 
 private:
+  template <typename ResultT, typename Engine, typename Output>
+  void registerOutput(Engine& engine, Output& output, std::string name);
+
   auto acceptClients(std::size_t index) -> exec::task<void>;
-  auto handleClient(heph::net::Socket client) -> exec::task<void>;
-  auto handleInputClient(heph::net::Socket client, bool reliable) -> exec::task<void>;
-  auto handleOutputClient(heph::net::Socket client, bool reliable) -> exec::task<void>;
+  auto handleClient(heph::net::Socket client, RemoteNodeType type) -> exec::task<void>;
 
   template <typename T, typename Engine, typename Node>
   auto createPublisherNode(Engine& engine, Node& node, heph::net::Socket socket, std::string name,
@@ -76,39 +77,17 @@ private:
   exec::async_scope scope_;
 
   std::vector<heph::net::Acceptor> acceptors_;
-  std::unordered_map<std::string, RegistryEntry> registered_inputs_;
-  std::unordered_map<std::string, RegistryEntry> registered_outputs_;
+  std::unordered_map<std::string, RegistryEntry> client_handlers_;
 };
 
 template <typename Engine, typename Output>
-inline void RemoteNodeHandler::registerOutput(Engine& engine, Output& output) {
+void RemoteNodeHandler::registerOutput(Engine& engine, Output& output) {
   using ResultT = typename Output::ResultT;
-  if constexpr (detail::ISOPTIONAL<ResultT>) {
-    using ValueT = typename ResultT::value_type;
-    registered_outputs_.emplace(
-        output.name(), RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                                      .factory =
-                                          [this, &engine, &output](heph::net::Socket socket, bool reliable) {
-                                            createPublisherNode<ValueT>(engine, output, std::move(socket),
-                                                                        output.name(), reliable);
-                                          }
-
-                       });
-  } else {
-    if constexpr (!std::is_same_v<void, ResultT>) {
-      registered_outputs_.emplace(
-          output.name(),
-          RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-                         .factory = [this, &engine, &output](heph::net::Socket socket, bool reliable) {
-                           createPublisherNode<ResultT>(engine, output, std::move(socket), output.name(),
-                                                        reliable);
-                         } });
-    }
-  }
+  registerOutput<ResultT>(engine, output, output.name());
 }
 
 template <typename Engine, typename Node>
-inline void RemoteNodeHandler::registerImplicitOutput(Engine& engine, Node& node) {
+void RemoteNodeHandler::registerImplicitOutput(Engine& engine, Node& node) {
   using ExecuteOperationT = decltype(node.executeSender());
   using ExecuteResultVariantT = stdexec::value_types_of_t<ExecuteOperationT>;
   static_assert(std::variant_size_v<ExecuteResultVariantT> == 1);
@@ -116,41 +95,43 @@ inline void RemoteNodeHandler::registerImplicitOutput(Engine& engine, Node& node
 
   if constexpr (std::tuple_size_v<ExecuteResultTupleT> == 1) {
     using ResultT = std::tuple_element_t<0, ExecuteResultTupleT>;
-
-    if constexpr (detail::ISOPTIONAL<ResultT>) {
-      using ValueT = typename ResultT::value_type;
-      registered_outputs_.emplace(
-          node.nodeName(),
-          RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
-                         .factory =
-                             [this, &engine, &node](heph::net::Socket socket, bool reliable) {
-                               createPublisherNode<ValueT>(engine, node, std::move(socket), node.nodeName(),
-                                                           reliable);
-                             }
-
-          });
-    } else {
-      if constexpr (!std::is_same_v<void, ResultT>) {
-        registered_outputs_.emplace(
-            node.nodeName(),
-            RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
-                           .factory = [this, &engine, &node](heph::net::Socket socket, bool reliable) {
-                             createPublisherNode<ResultT>(engine, node, std::move(socket), node.nodeName(),
-                                                          reliable);
-                           } });
-      }
-    }
+    registerOutput<ResultT>(engine, node, node.nodeName());
   }
 }
+
+template <typename ResultT, typename Engine, typename Output>
+void RemoteNodeHandler::registerOutput(Engine& engine, Output& output, std::string name) {
+  RegistryEntry entry;
+  if constexpr (detail::ISOPTIONAL<ResultT>) {
+    using ValueT = typename ResultT::value_type;
+    entry =
+        RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
+                       .factory =
+                           [this, &engine, &output, name](heph::net::Socket socket, bool reliable) {
+                             createPublisherNode<ValueT>(engine, output, std::move(socket), name, reliable);
+                           }
+
+        };
+  } else {
+    if constexpr (!std::is_same_v<void, ResultT>) {
+      entry =
+          RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ResultT>().toJson(),
+                         .factory = [this, &engine, &output, name](heph::net::Socket socket, bool reliable) {
+                           createPublisherNode<ResultT>(engine, output, std::move(socket), name, reliable);
+                         } };
+    }
+    client_handlers_.emplace(name, std::move(entry));
+  }
+}
+
 template <typename Engine, typename InputT>
 void RemoteNodeHandler::registerInput(Engine& engine, InputT* input) {
   using ValueT = typename InputT::ValueT;
-  registered_inputs_.emplace(
+  client_handlers_.emplace(
       input->name(),
       RegistryEntry{ .type_info = heph::serdes::getSerializedTypeInfo<ValueT>().toJson(),
                      .factory = [this, &engine, input](heph::net::Socket socket, bool reliable) {
                        createSubscriberNode<ValueT>(engine, input, std::move(socket), reliable);
                      } });
 }
-
 }  // namespace heph::conduit
