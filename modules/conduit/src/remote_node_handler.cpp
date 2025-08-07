@@ -86,17 +86,7 @@ auto RemoteNodeHandler::acceptClients(std::size_t index) -> exec::task<void> {
       auto client = co_await heph::net::accept(server);
       RemoteNodeType type{};
       co_await heph::net::recvAll(client, std::as_writable_bytes(std::span{ &type, 1 }));
-      switch (type.type) {
-        case RemoteNodeType::INPUT:
-          scope_.spawn(handleInputClient(std::move(client), type.reliable));
-          break;
-        case RemoteNodeType::OUTPUT:
-          scope_.spawn(handleOutputClient(std::move(client), type.reliable));
-          break;
-        default:
-          __builtin_unreachable();
-          break;
-      }
+      scope_.spawn(handleClient(std::move(client), type));
     } catch (...) {
       exception_ = std::current_exception();
       co_return;
@@ -125,7 +115,7 @@ auto checkTypeInfo(heph::net::Socket* client, const std::string* name, std::stri
 }
 }  // namespace
 
-auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client, bool reliable) -> exec::task<void> {
+auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType type) -> exec::task<void> {
   // The protocol is as follows:
   // Datatypes:
   //  - int: int16_t
@@ -142,10 +132,10 @@ auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client, bool reliab
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     auto [name, type_info] = co_await recvNameInfo(&client);
 
-    auto it = registered_outputs_.find(name);
+    auto it = client_handlers_.find(name);
 
-    if (it == registered_outputs_.end()) {
-      const std::string error = "Output not found";
+    if (it == client_handlers_.end()) {
+      const std::string error = fmt::format("{} client handler not found", type.type);
       heph::log(heph::ERROR, error, "name", name);
       // NOLINTNEXTLINE (readability-static-accessed-through-instance)
       co_await internal::send(client, error);
@@ -163,43 +153,11 @@ auto RemoteNodeHandler::handleOutputClient(heph::net::Socket client, bool reliab
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     co_await internal::send(client, CONNECT_SUCCESS);
 
-    heph::log(heph::INFO, "Connected output subscriber", "name", name, "client", client.remoteEndpoint());
-    entry.factory(std::move(client), reliable);
+    heph::log(heph::INFO, "Client connected", "name", name, "type", type.type, "reliable", type.reliable,
+              "client", client.remoteEndpoint());
+    entry.factory(std::move(client), type.reliable);
   } catch (std::exception& exception) {
     heph::log(heph::ERROR, "Output subscriber disconnected", "exception", exception.what());
-  }
-}
-
-auto RemoteNodeHandler::handleInputClient(heph::net::Socket client, bool reliable) -> exec::task<void> {
-  try {
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    auto [name, type_info] = co_await recvNameInfo(&client);
-
-    auto it = registered_inputs_.find(name);
-
-    if (it == registered_inputs_.end()) {
-      const std::string error = "Input not found";
-      heph::log(heph::ERROR, error, "name", name);
-      // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-      co_await internal::send(client, error);
-
-      co_return;
-    }
-
-    auto& [_, entry] = *it;
-
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    if (!co_await checkTypeInfo(&client, &name, std::move(type_info), &entry.type_info)) {
-      co_return;
-    }
-
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
-    co_await internal::send(client, CONNECT_SUCCESS);
-
-    heph::log(heph::INFO, "Connected input publisher", "name", name, "client", client.remoteEndpoint());
-    entry.factory(std::move(client), reliable);
-  } catch (std::exception& exception) {
-    heph::log(heph::ERROR, "Input publisher disconnected", "exception", exception.what());
   }
 }
 
