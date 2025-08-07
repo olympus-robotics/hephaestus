@@ -48,7 +48,7 @@ auto extractResult(std::optional<T>& t) -> T* {
 
 class OutputConnections {
   struct InputEntry {
-    using SetValueT = InputState (*)(void*, void*, bool);
+    using SetValueT = InputState (*)(void*, void*);
     using NameT = std::string (*)(void*);
     void* ptr;
     SetValueT set_value;
@@ -73,11 +73,7 @@ public:
   void registerInput(Input* input) {
     inputs_.emplace_back(
         input,
-        [](void* input_ptr, void* ptr, bool move) {
-          if (move) {
-            return static_cast<Input*>(input_ptr)->setValue(
-                std::move(*static_cast<typename Input::ValueT*>(ptr)));
-          }
+        [](void* input_ptr, void* ptr) {
           return static_cast<Input*>(input_ptr)->setValue(*static_cast<typename Input::ValueT*>(ptr));
         },
         [](void* input_ptr) { return std::string{ static_cast<Input*>(input_ptr)->name() }; }, input->node(),
@@ -139,8 +135,7 @@ inline auto OutputConnections::propagate(NodeEngine& engine) {
                            ++propagated_count;
                            continue;
                          }
-                         if (entry.set_value(entry.ptr, result_ptr, propagated_count + 1 == inputs_.size()) ==
-                             InputState::OK) {
+                         if (entry.set_value(entry.ptr, result_ptr) == InputState::OK) {
                            ++propagated_count;
                            ++entry.generation;
                          }
