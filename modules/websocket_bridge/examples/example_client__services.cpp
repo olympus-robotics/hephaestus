@@ -35,11 +35,11 @@ using heph::ws::WsServiceFailure;
 using heph::ws::WsServiceRequest;
 using heph::ws::WsServiceResponse;
 
-constexpr int SERVICE_REQUEST_COUNT = 8;
+constexpr int SERVICE_REQUEST_COUNT = 20;
 constexpr int SPINNING_SLEEP_DURATION_MS = 1000;
 constexpr int LAUNCHING_SLEEP_DURATION_MS = 0;
 constexpr int RESPONSE_WAIT_DURATION_S = 1;
-
+constexpr int SERVCE_CALL_TIMEOUT_MS = 1000;
 namespace {
 
 std::atomic<bool> g_abort{ false };  // NOLINT
@@ -70,6 +70,8 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsAdvertisements& w
       heph::log(heph::ERROR, "Failed to deserialize service response", "exception", e.what());
       return;
     }
+
+    auto lock = state.scopedLock();
 
     // Check that we already have dispatched a service call with this ID.
     auto state_it = state.find(response.callId);
@@ -108,6 +110,8 @@ void handleJsonMessage(const std::string& json_msg, WsAdvertisements& ws_server_
     heph::log(heph::ERROR, "Service call failed with error.", "call_id", service_failure.call_id,
               "error_message", service_failure.error_message);
 
+    auto lock = state.scopedLock();
+
     auto state_it = state.find(service_failure.call_id);
     if (state_it == state.end()) {
       heph::log(heph::ERROR, "No record of a service call with this id.", "call_id", service_failure.call_id);
@@ -126,6 +130,7 @@ void sendTestServiceRequests(WsClientNoTls& client, const WsServiceAd& foxglove_
     WsServiceRequest request;
     request.callId = static_cast<uint32_t>(i);
     request.serviceId = foxglove_service_id;
+    request.timeoutMs = SERVCE_CALL_TIMEOUT_MS;
 
     if (!foxglove_service.request.has_value()) {
       fmt::println("Service '{}' has no request definition", foxglove_service.name);
@@ -155,8 +160,12 @@ void sendTestServiceRequests(WsClientNoTls& client, const WsServiceAd& foxglove_
     request.data.assign(message_buffer.begin(), message_buffer.end());
     request.encoding = "protobuf";
 
-    // Init the service call as dispatched.
-    state.emplace(request.callId, ServiceCallState(request.callId));
+    {
+      auto lock = state.scopedLock();
+
+      // Init the service call as dispatched.
+      state.emplace(request.callId, ServiceCallState(request.callId));
+    }
 
     // Dispatch the service request.
     client.sendServiceRequest(request);
@@ -239,16 +248,14 @@ auto main(int argc, char** argv) -> int try {
 
   sendTestServiceRequests(client, foxglove_service, ws_server_ads, state);
 
+  printServiceCallStateMap(state);
+
   while (!allServiceCallsFinished(state) && !g_abort) {
     fmt::println("Waiting for responses... [Ctrl-C to abort]");
     std::this_thread::sleep_for(std::chrono::seconds(RESPONSE_WAIT_DURATION_S));
 
     printServiceCallStateMap(state);
   }
-
-  // IF we wait between launching the requests (LAUNCHING_SLEEP_DURATION_MS), the above loop will not even
-  // execute, so we print here again.
-  printServiceCallStateMap(state);
 
   fmt::println("Closing client...");
   client.close();
