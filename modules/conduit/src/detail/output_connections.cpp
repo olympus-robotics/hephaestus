@@ -24,14 +24,7 @@ OutputConnections::OutputConnections(detail::NodeBase* node, std::string name)
 }
 
 auto OutputConnections::name() const -> std::string {
-  if (node_->enginePtr() == nullptr) {
-    return name("");
-  }
-  return name(node_->engine().prefix());
-}
-
-auto OutputConnections::name(const std::string& prefix) const -> std::string {
-  return fmt::format("{}/{}", node_->nodeName(prefix), name_);
+  return fmt::format("{}/{}", node_->nodeName(), name_);
 }
 
 void OutputConnections::registerInputToEngine(const std::string& name, std::string type,

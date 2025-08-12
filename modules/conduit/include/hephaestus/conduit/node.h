@@ -61,7 +61,6 @@ public:
   }
 
   using detail::NodeBase::nodeName;
-  [[nodiscard]] auto nodeName(const std::string& prefix) const -> std::string final;
 
   [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
 
@@ -70,6 +69,8 @@ public:
   }
 
 private:
+  [[nodiscard]] auto nodeName(const std::string& prefix) const -> std::string final;
+
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
       detail::ExecutionStopWatch stop_watch{ this };

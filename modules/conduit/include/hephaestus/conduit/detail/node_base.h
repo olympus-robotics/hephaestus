@@ -49,7 +49,6 @@ public:
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
   virtual ~NodeBase() = default;
-  [[nodiscard]] virtual auto nodeName(const std::string& prefix) const -> std::string = 0;
   [[nodiscard]] auto nodeName() const -> std::string;
   [[nodiscard]] virtual auto nodePeriod() -> std::chrono::nanoseconds = 0;
   virtual void removeOutputConnection(void* node) = 0;
@@ -106,6 +105,7 @@ public:
   }
 
 protected:
+  [[nodiscard]] virtual auto nodeName(const std::string& prefix) const -> std::string = 0;
   auto operationStart(bool has_period) -> ClockT::time_point;
   void operationEnd();
   void updateExecutionTime(std::chrono::nanoseconds duration);
