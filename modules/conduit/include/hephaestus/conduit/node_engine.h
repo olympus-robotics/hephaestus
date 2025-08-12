@@ -32,6 +32,7 @@
 namespace heph::conduit {
 struct NodeEngineConfig {
   heph::concurrency::ContextConfig context_config;
+  std::string prefix;
   std::uint32_t number_of_threads{ 1 };
   std::vector<heph::net::Endpoint> endpoints;
 };
@@ -61,6 +62,10 @@ public:
 
   auto elapsed() {
     return context_.elapsed();
+  }
+
+  auto prefix() const -> std::string {
+    return prefix_;
   }
 
   auto endpoints() const -> std::vector<heph::net::Endpoint>;
@@ -104,6 +109,7 @@ private:  // Optimal fields order: pool_, exception_, scope_, context_
   std::exception_ptr exception_;
   exec::async_scope scope_;
   heph::concurrency::Context context_{ {} };
+  std::string prefix_;
   std::vector<heph::net::Endpoint> endpoints_;
 
   std::vector<std::unique_ptr<detail::NodeBase>> nodes_;

@@ -68,6 +68,7 @@ public:
   auto propagate(NodeEngine& engine);
 
   [[nodiscard]] auto name() const -> std::string;
+  [[nodiscard]] auto name(const std::string& prefix) const -> std::string;
 
   template <typename Input>
   void registerInput(Input* input) {

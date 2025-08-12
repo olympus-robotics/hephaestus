@@ -22,6 +22,7 @@ namespace heph::conduit {
 NodeEngine::NodeEngine(const NodeEngineConfig& config)
   : pool_(config.number_of_threads)
   , context_(config.context_config)
+  , prefix_(config.prefix)
   , remote_node_handler_(context_, config.endpoints, exception_) {
 }
 

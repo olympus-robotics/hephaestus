@@ -64,6 +64,9 @@ public:
   auto name() {
     return fmt::format("{}/{}", node_->nodeName(), name_);
   }
+  auto name(const std::string& prefix) {
+    return fmt::format("{}/{}", node_->nodeName(prefix), name_);
+  }
 
   auto get()
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::POLL)

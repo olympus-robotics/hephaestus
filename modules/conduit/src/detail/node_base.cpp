@@ -5,6 +5,7 @@
 #include "hephaestus/conduit/detail/node_base.h"
 
 #include <chrono>
+#include <string>
 
 #include <fmt/format.h>
 #include <stdexec/stop_token.hpp>
@@ -17,6 +18,13 @@
 #include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::conduit::detail {
+
+[[nodiscard]] auto NodeBase::nodeName() const -> std::string {
+  if (engine_ == nullptr) {
+    return nodeName("");
+  }
+  return nodeName(engine_->prefix());
+}
 
 auto NodeBase::operationStart(bool has_period) -> ClockT::time_point {
   auto start_at = nextStartTime(has_period);

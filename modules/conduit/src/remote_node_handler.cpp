@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <exception>
+#include <ranges>
 #include <span>
 #include <string>
 #include <tuple>
@@ -14,6 +15,7 @@
 
 #include <exec/task.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
@@ -133,9 +135,11 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
     auto [name, type_info] = co_await recvNameInfo(&client);
 
     auto it = client_handlers_.find(name);
+    const auto type_string = type.type == RemoteNodeType::INPUT ? std::string_view{ "Input" } : "Output";
 
     if (it == client_handlers_.end()) {
-      const std::string error = fmt::format("{} client handler not found", type.type);
+      const std::string error = fmt::format("{} client handler not found. Registered: {}", type_string,
+                                            fmt::join(client_handlers_ | std::views::keys, ","));
       heph::log(heph::ERROR, error, "name", name);
       // NOLINTNEXTLINE (readability-static-accessed-through-instance)
       co_await internal::send(client, error);
@@ -153,7 +157,7 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
     // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     co_await internal::send(client, CONNECT_SUCCESS);
 
-    heph::log(heph::INFO, "Client connected", "name", name, "type", type.type, "reliable", type.reliable,
+    heph::log(heph::INFO, "Client connected", "name", name, "type", type_string, "reliable", type.reliable,
               "client", client.remoteEndpoint());
     entry.factory(std::move(client), type.reliable);
   } catch (std::exception& exception) {
