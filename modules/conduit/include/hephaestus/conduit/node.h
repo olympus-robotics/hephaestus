@@ -10,6 +10,7 @@
 #include <string>
 #include <variant>
 
+#include <fmt/format.h>
 #include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
@@ -59,7 +60,7 @@ public:
     return data_.value();
   }
 
-  [[nodiscard]] auto nodeName() const -> std::string final;
+  using detail::NodeBase::nodeName;
 
   [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
 
@@ -68,6 +69,8 @@ public:
   }
 
 private:
+  [[nodiscard]] auto nodeName(const std::string& prefix) const -> std::string final;
+
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
       detail::ExecutionStopWatch stop_watch{ this };
@@ -171,15 +174,19 @@ inline auto Node<OperationT, OperationDataT>::nodePeriod() -> std::chrono::nanos
 }
 
 template <typename OperationT, typename OperationDataT>
-inline auto Node<OperationT, OperationDataT>::nodeName() const -> std::string {
+inline auto Node<OperationT, OperationDataT>::nodeName(const std::string& prefix) const -> std::string {
+  std::string name_prefix;
+  if (!prefix.empty()) {
+    name_prefix = fmt::format("/{}/", prefix);
+  }
   if constexpr (HAS_NAME_ARG) {
-    return std::string{ OperationT::name(operation()) };
+    return fmt::format("{}{}", name_prefix, OperationT::name(operation()));
   } else if constexpr (HAS_NAME_NULLARY) {
-    return std::string{ OperationT::name() };
+    return fmt::format("{}{}", name_prefix, OperationT::name());
   } else if constexpr (HAS_NAME_CONSTANT) {
-    return std::string{ OperationT::NAME };
+    return fmt::format("{}{}", name_prefix, OperationT::NAME);
   } else {
-    return std::string{ typeid(OperationT).name() };
+    return fmt::format("{}{}", name_prefix, typeid(OperationT).name());
   }
 }
 

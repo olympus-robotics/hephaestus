@@ -194,6 +194,7 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
                           .timer_options = { .clock_mode = concurrency::io_ring::ClockMode::SIMULATED } },
+      .prefix = "",
       .number_of_threads = 1,
       .endpoints = {} }
   };

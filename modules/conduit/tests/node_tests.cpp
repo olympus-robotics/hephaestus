@@ -29,6 +29,8 @@ struct ReceivingOperationData {
 };
 
 struct ReceivingOperation : Node<ReceivingOperation, ReceivingOperationData> {
+  static constexpr auto NAME = "ReceivingOperation";
+
   static auto trigger(ReceivingOperation& operation) {
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
@@ -45,13 +47,16 @@ struct ReceivingOperation : Node<ReceivingOperation, ReceivingOperationData> {
 };
 
 TEST(NodeTests, nodeBasic) {
-  NodeEngine engine{ {} };
+  NodeEngineConfig config;
+  config.prefix = "test";
+  NodeEngine engine{ config };
   auto dummy = engine.createNode<ReceivingOperation>();
 
   engine.run();
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_TRUE(dummy->data().executed);
   EXPECT_FALSE(ReceivingOperation::HAS_PERIOD);
+  EXPECT_EQ(dummy->nodeName(), "/test/ReceivingOperation");
 }
 
 struct RepeatOperationData {
@@ -224,6 +229,7 @@ TEST(NodeTests, nodePeriodicSimulated) {
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
                           .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } },
+      .prefix = "",
       .endpoints = {} }
   };
   auto dummy = engine.createNode<PeriodicOperation>();
@@ -280,6 +286,7 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
                           .timer_options = { heph::concurrency::io_ring::ClockMode::SIMULATED } },
+      .prefix = "",
       .endpoints = {} }
   };
   auto mock_sink = std::make_unique<MockLogSink>();
