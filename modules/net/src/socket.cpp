@@ -13,10 +13,13 @@
 #include <vector>
 
 #include <asm-generic/socket.h>
+#include <linux/can/raw.h>
+#include <sys/ioctl.h>
 #ifndef DISABLE_BLUETOOTH
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
 #endif
+#include <linux/can.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -37,10 +40,29 @@ auto familyToEndpointType(int domain) {
     case AF_BLUETOOTH:
       return heph::net::EndpointType::BT;
 #endif
+    case PF_CAN:
+      return heph::net::EndpointType::SOCKETCAN;
     default:
-      heph::panic("Unknown domain {}", domain);
+      panic("Unknown domain {}", domain);
   }
   __builtin_unreachable();
+}
+
+auto connectSocketDefault(int fd, std::span<const std::byte> handle) {
+  const int res =
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      ::connect(fd, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
+  if (res == -1) {
+    panic("connect: {}", std::error_code(errno, std::system_category()).message());
+  }
+}
+
+auto connectSocketcan(int fd, std::span<const std::byte> handle) {
+  // TODO: this is actually very bad, as we are changing the handle...
+  SocketcanAddress* addr = reinterpret_cast<SocketcanAddress*>(const_cast<std::byte*>(handle.data()));
+  const auto res = ::ioctl(fd, SIOCGIFINDEX, &addr->ifr);
+  panicIf(res < 0, "could not find CAN: {}", addr->ifr.ifr_name);
+  addr->addr.can_ifindex = addr->ifr.ifr_ifindex;
 }
 }  // namespace
 
@@ -50,7 +72,7 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type)
     panic("socket: {}", std::error_code(errno, std::system_category()).message());
   }
 
-  switch (type) {
+  switch (type_) {
 #ifndef DISABLE_BLUETOOTH
     case SocketType::L2CAP:
       setupL2capSocket(true);
@@ -58,6 +80,9 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type)
 #endif
     case SocketType::UDP:
       setupUDPSocket();
+      break;
+    case SocketType::SOCKETCAN:
+      setupSocketcan();
       break;
     default:
       break;
@@ -82,6 +107,10 @@ auto Socket::createL2cap(concurrency::Context& context) -> Socket {
   return Socket{ &context, socket(AF_BLUETOOTH, SOCK_SEQPACKET, 0), SocketType::L2CAP };
 }
 #endif
+
+auto Socket::createSocketcan(concurrency::Context& context) -> Socket {
+  return Socket{ &context, socket(PF_CAN, SOCK_RAW | SOCK_NONBLOCK, CAN_RAW), SocketType::SOCKETCAN };
+}
 
 Socket::~Socket() noexcept {
   close();
@@ -118,6 +147,10 @@ void Socket::close() noexcept {
 
 void Socket::bind(const Endpoint& endpoint) const {
   auto handle = endpoint.nativeHandle();
+  if (type_ == SocketType::SOCKETCAN) {
+    // If this is socketcan the handle contains SocketcanAddr, so we need to get the first part.
+    handle = { handle.begin(), sizeof(sockaddr_can) };
+  }
   const int res =
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       ::bind(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
@@ -128,11 +161,19 @@ void Socket::bind(const Endpoint& endpoint) const {
 
 void Socket::connect(const Endpoint& endpoint) const {
   auto handle = endpoint.nativeHandle();
-  const int res =
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      ::connect(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
-  if (res == -1) {
-    panic("connect: {}", std::error_code(errno, std::system_category()).message());
+  switch (type_) {
+#ifndef DISABLE_BLUETOOTH
+    case SocketType::L2CAP:
+#endif
+    case SocketType::UDP:
+    case SocketType::TCP:
+      connectSocketDefault(fd_, handle);
+      break;
+    case SocketType::SOCKETCAN:
+      connectSocketcan(fd_, handle);
+      break;
+    case SocketType::INVALID:
+      panic("Invalid socket type");
   }
 }
 
@@ -224,5 +265,11 @@ void Socket::setupUDPSocket() {
   static constexpr std::size_t MAX_UDP_PACKET_SIZE = 65507;
   maximum_recv_size_ = MAX_UDP_PACKET_SIZE;
   maximum_send_size_ = MAX_UDP_PACKET_SIZE;
+}
+
+void Socket::setupSocketcan() {
+  const int enable_canfd = 1;
+  const auto res = ::setsockopt(fd_, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable_canfd, sizeof(enable_canfd));
+  panicIf(res != 0, "could not set CAN-FD mode");
 }
 }  // namespace heph::net

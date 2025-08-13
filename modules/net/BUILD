@@ -38,6 +38,15 @@ heph_cc_binary(
 )
 
 heph_cc_binary(
+    name = "socketcan_ping_pong",
+    srcs = ["examples/socketcan_ping_pong.cpp"],
+    deps = [
+        ":net",
+        "//modules/cli",
+    ],
+)
+
+heph_cc_binary(
     name = "bt_client",
     srcs = ["examples/bt_client.cpp"],
     deps = [

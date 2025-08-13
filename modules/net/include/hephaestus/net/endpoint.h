@@ -11,13 +11,21 @@
 #include <utility>
 #include <vector>
 
+#include <linux/can.h>
+#include <net/if.h>
+
 namespace heph::net {
 
 #ifndef DISABLE_BLUETOOTH
-enum struct EndpointType : std::uint8_t { IPV4, IPV6, BT, INVALID };
+enum struct EndpointType : std::uint8_t { IPV4, IPV6, BT, SOCKETCAN, INVALID };
 #else
 enum struct EndpointType : std::uint8_t { IPV4, IPV6, INVALID };
 #endif
+
+struct SocketcanAddress {
+  sockaddr_can addr;
+  ifreq ifr;
+};
 
 class Endpoint {
 public:
@@ -37,6 +45,8 @@ public:
 #ifndef DISABLE_BLUETOOTH
   static auto createBt(const std::string& mac = "", std::uint16_t psm = 0) -> Endpoint;
 #endif
+
+  [[nodiscard]] static auto createSocketcan(const std::string& interface) -> Endpoint;
 
   [[nodiscard]] auto nativeHandle() const -> std::span<const std::byte>;
   [[nodiscard]] auto nativeHandle() -> std::span<std::byte>;

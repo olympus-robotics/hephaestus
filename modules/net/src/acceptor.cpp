@@ -27,6 +27,10 @@ auto Acceptor::createL2cap(concurrency::Context& context) -> Acceptor {
 }
 #endif
 
+auto Acceptor::createSocketcan(concurrency::Context& context) -> Acceptor {
+  return Acceptor{ Socket::createSocketcan(context) };
+}
+
 void Acceptor::listen(int backlog) const {
   const int res = ::listen(socket_.nativeHandle(), backlog);
   if (res == -1) {
