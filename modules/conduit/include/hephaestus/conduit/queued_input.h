@@ -28,11 +28,15 @@ public:
   explicit QueuedInput(Node<OperationT, DataT>* node, std::string name) : BaseT(node, std::move(name)) {
   }
 
+  auto peekValue() -> std::optional<T> {
+    return this->buffer_.peek();
+  }
+
   auto getValue() -> std::optional<T> {
     return this->buffer_.pop();
   }
 
-  template <typename Receiver>
-  using Awaiter = detail::Awaiter<QueuedInput, std::decay_t<Receiver>>;
+  template <typename Receiver, bool Peek>
+  using Awaiter = detail::Awaiter<QueuedInput, std::decay_t<Receiver>, Peek>;
 };
 }  // namespace heph::conduit

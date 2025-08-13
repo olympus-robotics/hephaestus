@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <vector>
 
 namespace heph::conduit::detail {
 template <typename T, std::size_t Capacity>
@@ -37,6 +38,28 @@ public:
     return res;
   }
 
+  auto peek() -> std::optional<T> {
+    if (size_ == 0) {
+      return std::nullopt;
+    }
+
+    return std::optional{ data_[read_index_] };
+  }
+
+  auto peekAll() -> std::vector<T> {
+    std::vector<T> res;
+    if (size_ == 0) {
+      return res;
+    }
+    res.reserve(size_);
+    std::size_t index = read_index_;
+    for (std::size_t i = size_; i != 0; --i) {
+      res.push_back(data_[index]);
+      index = (index + 1) % data_.size();
+    }
+    return res;
+  }
+
   auto size() -> std::size_t {
     return size_;
   }
@@ -59,6 +82,10 @@ public:
     data_.emplace(std::move(t));
 
     return true;
+  }
+
+  auto peek() -> std::optional<T> {
+    return data_;
   }
 
   auto pop() -> std::optional<T> {

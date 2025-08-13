@@ -36,6 +36,7 @@ class NodeEngine;
 namespace heph::conduit::detail {
 
 struct InputPollT {};
+template <bool Peek>
 struct InputBlockT {};
 
 template <typename T>
@@ -71,10 +72,17 @@ public:
     return heph::concurrency::makeSenderExpression<detail::InputPollT>(static_cast<InputT*>(this));
   }
 
+  /// Returns a sender which is getting triggered when there is a value
   auto get()
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::BLOCK)
   {
-    return heph::concurrency::makeSenderExpression<detail::InputBlockT>(static_cast<InputT*>(this));
+    return heph::concurrency::makeSenderExpression<detail::InputBlockT<false>>(static_cast<InputT*>(this));
+  }
+
+  /// Returns a sender which is getting triggered when there is a value. In contrast to `get`,
+  /// the data is not getting consumed. This function is used to subscribe to an input.
+  auto peek() {
+    return heph::concurrency::makeSenderExpression<detail::InputBlockT<true>>(static_cast<InputT*>(this));
   }
 
   auto node() -> NodeBase* {
@@ -140,15 +148,35 @@ public:
 private:
   void enqueueWaiter(detail::AwaiterBase* awaiter) {
     if (containers::IntrusiveFifoQueueAccess::next(awaiter) == nullptr) {
-      awaiters_.enqueue(awaiter);
+      if (awaiter->isPeeker()) {
+        peekers_.enqueue(awaiter);
+
+      } else {
+        awaiters_.enqueue(awaiter);
+      }
     }
   }
   void dequeueWaiter(detail::AwaiterBase* awaiter) {
-    awaiters_.erase(awaiter);
+    if (awaiter->isPeeker()) {
+      peekers_.erase(awaiter);
+    } else {
+      awaiters_.erase(awaiter);
+    }
   }
 
 protected:
   void triggerAwaiter() {
+    // First trigger all peekers, we need them to come first in order to observe
+    // the value. An awaiter always consumes
+    while (true) {
+      auto* awaiter = peekers_.dequeue();
+      if (awaiter == nullptr) {
+        break;
+      }
+      awaiter->trigger();
+    }
+
+    // We only need to trigger one awaiter as they consume the input value
     auto* awaiter = awaiters_.dequeue();
     if (awaiter != nullptr) {
       awaiter->trigger();
@@ -163,9 +191,10 @@ protected:
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
-  template <typename OtherInputT, typename ReceiverT>
+  template <typename OtherInputT, typename ReceiverT, bool Peek>
   friend class Awaiter;
 
+  containers::IntrusiveFifoQueue<AwaiterBase> peekers_;
   containers::IntrusiveFifoQueue<AwaiterBase> awaiters_;
   std::string name_;
   NodeBase* node_;
@@ -197,8 +226,8 @@ struct SenderExpressionImpl<heph::conduit::detail::InputPollT> : DefaultSenderEx
 
 // Sender implementation for blocking input retrieval
 namespace heph::concurrency {
-template <>
-struct SenderExpressionImpl<heph::conduit::detail::InputBlockT> : DefaultSenderExpressionImpl {
+template <bool Peek>
+struct SenderExpressionImpl<heph::conduit::detail::InputBlockT<Peek>> : DefaultSenderExpressionImpl {
   static constexpr auto GET_COMPLETION_SIGNATURES = []<typename Sender>(Sender&&, Ignore = {}) noexcept {
     using InputT = std::remove_pointer_t<stdexec::__data_of<Sender>>;
     using ValueT = decltype(std::declval<InputT&>().getValue())::value_type;
@@ -211,7 +240,7 @@ struct SenderExpressionImpl<heph::conduit::detail::InputBlockT> : DefaultSenderE
                                                                            Receiver&& receiver) {
     using InputT = std::remove_pointer_t<stdexec::__data_of<Sender>>;
     auto [_, self] = std::forward<Sender>(sender);
-    return typename InputT::template Awaiter<Receiver>{ self, std::forward<Receiver>(receiver) };
+    return typename InputT::template Awaiter<Receiver, Peek>{ self, std::forward<Receiver>(receiver) };
   };
 
   static constexpr auto START = [](auto& awaiter, Ignore) { awaiter.trigger(); };

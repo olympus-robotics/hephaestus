@@ -14,6 +14,7 @@ class AwaiterBase {
 public:
   virtual ~AwaiterBase() = default;
   virtual void trigger() = 0;
+  [[nodiscard]] virtual auto isPeeker() const -> bool = 0;
 
 private:
   friend struct containers::IntrusiveFifoQueueAccess;
@@ -21,7 +22,7 @@ private:
   [[maybe_unused]] AwaiterBase* prev_{ nullptr };
 };
 
-template <typename InputT, typename ReceiverT>
+template <typename InputT, typename ReceiverT, bool Peek>
 class Awaiter : public AwaiterBase {
   struct StopCallback {
     void operator()() const noexcept {
@@ -49,6 +50,10 @@ public:
   auto operator=(const Awaiter&) -> Awaiter& = delete;
   auto operator=(Awaiter&&) -> Awaiter& = delete;
 
+  [[nodiscard]] auto isPeeker() const -> bool final {
+    return Peek;
+  }
+
   void trigger() final {
     auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
     auto context_stop_token = self_->node()->getStopToken();
@@ -61,7 +66,8 @@ public:
       stdexec::set_stopped(std::move(receiver_));
       return;
     }
-    auto res = self_->getValue();
+    // either peek or consume...
+    auto res = Peek ? self_->peekValue() : self_->getValue();
     if (res.has_value()) {
       stop_callback_.reset();
       context_stop_callback_.reset();

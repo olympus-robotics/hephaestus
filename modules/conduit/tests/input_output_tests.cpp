@@ -9,7 +9,9 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <tuple>
 #include <utility>
@@ -19,6 +21,7 @@
 #include <exec/async_scope.hpp>
 #include <exec/when_any.hpp>
 #include <fmt/base.h>
+#include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <gtest/gtest.h>
 #include <stdexec/execution.hpp>
@@ -27,14 +30,17 @@
 #include "hephaestus/conduit/accumulated_input.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/input.h"
+#include "hephaestus/conduit/input_subscriber.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/types_proto/string.h"
+#include "hephaestus/types/dummy_type.h"
+#include "hephaestus/types_proto/dummy_type.h"     // IWYU pragma: keep
+#include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
+#include "hephaestus/types_proto/string.h"         // IWYU pragma: keep
 
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 
@@ -56,17 +62,23 @@ TEST(InputOutput, QueuedInputPolling) {
   EXPECT_FALSE(std::get<0>(*res).has_value());
 
   EXPECT_EQ(input.setValue(4711), InputState::OK);
+  auto res_peek = stdexec::sync_wait(input.peek());
   res = stdexec::sync_wait(input.get());
+  EXPECT_TRUE(res_peek.has_value());
   EXPECT_TRUE(res.has_value());
   EXPECT_TRUE(std::get<0>(*res).has_value());
   EXPECT_EQ(*std::get<0>(*res), 4711);
+  EXPECT_EQ(*std::get<0>(*res), std::get<0>(*res_peek));
 
   EXPECT_EQ(input.setValue(76), InputState::OK);
   EXPECT_EQ(input.setValue(9031), InputState::OVERFLOW);
+  res_peek = stdexec::sync_wait(input.peek());
   res = stdexec::sync_wait(input.get());
+  EXPECT_TRUE(res_peek.has_value());
   EXPECT_TRUE(res.has_value());
   EXPECT_TRUE(std::get<0>(*res).has_value());
   EXPECT_EQ(*std::get<0>(*res), 76);
+  EXPECT_EQ(*std::get<0>(*res), std::get<0>(*res_peek));
 }
 
 TEST(InputOutput, QueuedInputBlocking) {
@@ -77,15 +89,20 @@ TEST(InputOutput, QueuedInputBlocking) {
 
   static constexpr int REFERENCE = 9485;
   int res = 0;
+  int res_peek = 0;
 
   scope.spawn(input.get() | stdexec::then([&](int value) { res = value; }));
+  scope.spawn(input.peek() | stdexec::then([&](int value) { res_peek = value; }));
   EXPECT_EQ(input.setValue(REFERENCE), InputState::OK);
   EXPECT_EQ(res, REFERENCE);
+  EXPECT_EQ(res_peek, REFERENCE);
 
   EXPECT_EQ(input.setValue(REFERENCE + 1), InputState::OK);
   EXPECT_EQ(input.setValue(9031), InputState::OVERFLOW);
+  scope.spawn(input.peek() | stdexec::then([&](int value) { res_peek = value; }));
   scope.spawn(input.get() | stdexec::then([&](int value) { res = value; }));
   EXPECT_EQ(res, REFERENCE + 1);
+  EXPECT_EQ(res_peek, REFERENCE + 1);
 }
 
 struct OutputOperation : Node<OutputOperation> {
@@ -123,7 +140,6 @@ TEST(InputOutput, QueuedInputBasicInputOutput) {
   auto in = engine.createNode<InputOperation>();
 
   in->input1.connectTo(out);
-  // connect(out, in.input1);
   engine.run();
   EXPECT_TRUE(in->data().called);
 }
@@ -361,25 +377,37 @@ TEST(InputOutput, AccumulatedTransformInputBase) {
     &dummy, accumulator, "input"
   };
 
+  auto res_peek = input.peekValue();
   auto res = input.getValue();
   EXPECT_FALSE(res.has_value());
+  EXPECT_FALSE(res_peek.has_value());
 
   EXPECT_EQ(input.setValue(0), InputState::OK);
   EXPECT_EQ(input.setValue(1), InputState::OK);
 
+  res_peek = input.peekValue();
   res = input.getValue();
   EXPECT_TRUE(res.has_value());
+  EXPECT_TRUE(res_peek.has_value());
+  EXPECT_FALSE(input.peekValue().has_value());
   EXPECT_EQ(*res, std::vector({ 0, 1 }));
+  EXPECT_EQ(*res, *res_peek);
 
   EXPECT_EQ(input.setValue(0), InputState::OK);
   EXPECT_EQ(input.setValue(1), InputState::OK);
   EXPECT_EQ(input.setValue(2), InputState::OVERFLOW);
+  res_peek = input.peekValue();
   res = input.getValue();
   EXPECT_TRUE(res.has_value());
+  EXPECT_TRUE(res_peek.has_value());
   EXPECT_EQ(*res, std::vector({ 0, 1 }));
+  EXPECT_EQ(*res, *res_peek);
 
   EXPECT_EQ(input.setValue(0), InputState::OK);
   EXPECT_EQ(input.setValue(1), InputState::OK);
+  stdexec::sync_wait(input.peek() | stdexec::then([](const std::vector<int>& state) {
+                       EXPECT_EQ(state, std::vector({ 0, 1 }));
+                     }));
   stdexec::sync_wait(input.get() | stdexec::then([](const std::vector<int>& state) {
                        EXPECT_EQ(state, std::vector({ 0, 1 }));
                      }));
@@ -463,6 +491,63 @@ TEST(InputOutput, ConcurrrentAccess) {
   engine.run();
 
   producer.join();
+}
+
+struct Generator : heph::conduit::Node<Generator> {
+  static constexpr std::string_view NAME = "generator";
+  static constexpr auto PERIOD = std::chrono::seconds(0);
+
+  std::random_device rd;
+  std::mt19937_64 mt{ rd() };
+  static constexpr std::size_t NUMBER_OF_ITERATIONS = 100;
+  std::size_t iteration{ 0 };
+
+  static auto trigger(Generator& self) {
+    if (self.iteration > NUMBER_OF_ITERATIONS) {
+      self.engine().requestStop();
+    }
+    ++self.iteration;
+    return stdexec::just();
+  }
+
+  static auto execute(Generator& self) {
+    return heph::types::DummyType::random(self.mt);
+  }
+};
+
+struct Sink : heph::conduit::Node<Sink> {
+  QueuedInput<types::DummyType> input{ this, "input" };
+  std::vector<types::DummyType> values;
+
+  static auto trigger(Sink& self) {
+    return self.input.get();
+  }
+
+  static auto execute(Sink& self, types::DummyType value) {
+    self.values.push_back(std::move(value));
+  }
+};
+
+TEST(InputOutput, InputSubscriber) {
+  NodeEngine engine{ {} };
+
+  auto generator = engine.createNode<Generator>();
+  auto sink1 = engine.createNode<Sink>();
+  auto sink2 = engine.createNode<Sink>();
+
+  auto subscriber = InputSubscriber{ engine, sink1->input };
+
+  sink1->input.connectTo(generator);
+
+  sink2->input.connectTo(subscriber.output());
+
+  engine.run();
+
+  EXPECT_EQ(subscriber.name(), fmt::format("{}/subscriber", sink1->input.name()));
+
+  EXPECT_EQ(sink1->values.size(), Generator::NUMBER_OF_ITERATIONS);
+  EXPECT_EQ(sink1->values.size(), sink2->values.size());
+  EXPECT_EQ(sink1->values, sink2->values);
 }
 // NOLINTEND(bugprone-unchecked-optional-access)
 
