@@ -33,6 +33,17 @@ public:
     : BaseT(node, std::move(name)), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
   }
 
+  auto peekValue() -> std::optional<R> {
+    if (this->buffer_.size() == 0) {
+      return std::nullopt;
+    }
+    R res{ initial_value_ };
+    for (auto& element : this->buffer_.peekAll()) {
+      res = f_(std::move(element), res);
+    }
+    return res;
+  }
+
   auto getValue() -> std::optional<R> {
     if (this->buffer_.size() == 0) {
       return std::nullopt;
@@ -48,8 +59,8 @@ public:
     return res;
   }
 
-  template <typename Receiver>
-  using Awaiter = detail::Awaiter<AccumulatedTransformInputBase, std::decay_t<Receiver>>;
+  template <typename Receiver, bool Peek>
+  using Awaiter = detail::Awaiter<AccumulatedTransformInputBase, std::decay_t<Receiver>, Peek>;
 
 private:
   F f_;
