@@ -32,14 +32,16 @@ class InputSubscriber {
 
 public:
   InputSubscriber(NodeEngine& engine, InputT& input)
-    : input_(&input), node_(engine.createNode<Node>(this)), name_([&] {
+    : input_(&input)
+    , name_([&] {
       // The name is /<prefix>/<node>/<input>. We need to remove the prefix
       // and then append 'subscriber'. If we don't remove <prefix> it will end
       // up twice in the nodes name as it is implicitly appended via the engine
       auto prefix = engine.prefix();
       auto stripped_name = input.name().substr(prefix.size());
       return fmt::format("{}/subscriber", stripped_name);
-    }()) {
+    }())
+    , node_(engine.createNode<Node>(this)) {
   }
 
   auto output() -> NodeHandle<Node>& {
@@ -52,7 +54,7 @@ public:
 
 private:
   InputT* input_;
-  NodeHandle<Node> node_;
   std::string name_;
+  NodeHandle<Node> node_;
 };
 }  // namespace heph::conduit
