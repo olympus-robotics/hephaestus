@@ -143,7 +143,6 @@ def heph_cc_test(
         env = merged_env,
         tags = tags,
         size = size,
-        malloc = "@tcmalloc//tcmalloc",
         **kwargs
     )
 
