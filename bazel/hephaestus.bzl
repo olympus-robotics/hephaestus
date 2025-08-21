@@ -114,6 +114,7 @@ def heph_cc_binary(
             "ASAN_OPTIONS": "detect_leaks=0",
             "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1",
         },
+        malloc = "@tcmalloc//tcmalloc",
         **kwargs
     )
 
