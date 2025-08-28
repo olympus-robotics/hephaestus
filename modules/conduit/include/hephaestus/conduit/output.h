@@ -23,11 +23,12 @@ class Output {
 public:
   using ResultT = T;
   template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
+  explicit Output(Node<OperationT, DataT>* node, std::string name)
+    : name_(std::move(name)), outputs_(node, name_) {
     if (node != nullptr) {
       node->addOutputSpec([this, node] {
         return detail::OutputSpecification{
-          .name = outputs_.name(),
+          .name = name_,
           .node_name = node->nodeName(),
           .type = heph::utils::getTypeName<T>(),
         };
@@ -51,7 +52,7 @@ public:
   }
 
 private:
-  detail::OutputConnections outputs_;
   std::string name_;
+  detail::OutputConnections outputs_;
 };
 }  // namespace heph::conduit

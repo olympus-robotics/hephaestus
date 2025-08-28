@@ -33,14 +33,12 @@ void OutputConnections::registerInputToEngine(const std::string& name, std::stri
     return;
   }
 
-  std::string input_name;
-  std::vector<std::string> name_parts = absl::StrSplit(name, '/');
-  if (name_parts.size() == 1) {
-    input_name = name_parts.front();
-  } else if (name_parts.size() == 2) {
-    input_name = name_parts.back();
-  } else {
-    input_name = absl::StrJoin(std::span{ name_parts }.subspan(1), "/");
+  auto input_name = name;
+  // If the input contains the node name, we need to extract it.
+  const auto pos = name.find(node->nodeName());
+  if (pos != std::string::npos) {
+    input_name =
+        name.substr(node->nodeName().size() + 1);  // Remove the node name plus the separator character
   }
   node_->engine().addConnectionSpec({
       .input = {
