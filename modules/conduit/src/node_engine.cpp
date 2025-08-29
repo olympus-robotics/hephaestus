@@ -4,6 +4,7 @@
 
 #include "hephaestus/conduit/node_engine.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <exception>
 #include <string>
