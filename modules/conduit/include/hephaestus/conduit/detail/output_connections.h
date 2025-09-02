@@ -66,8 +66,11 @@ public:
   OutputConnections(detail::NodeBase* node, std::string name);
 
   auto propagate(NodeEngine& engine);
-
+  /// Returns the name uniquely identifying the input of the node.
   [[nodiscard]] auto name() const -> std::string;
+
+  /// Returns the name of the input without any prefix.
+  [[nodiscard]] auto rawName() const -> std::string;
 
   template <typename Input>
   void registerInput(Input* input) {
@@ -79,7 +82,8 @@ public:
         [](void* input_ptr) { return std::string{ static_cast<Input*>(input_ptr)->name() }; }, input->node(),
         generation_);
 
-    registerInputToEngine(input->name(), heph::utils::getTypeName<typename Input::ValueT>(), input->node());
+    registerInputToEngine(input->rawName(), heph::utils::getTypeName<typename Input::ValueT>(),
+                          input->node());
   }
 
   void removeConnection(void* node) {
@@ -93,7 +97,7 @@ public:
   }
 
 private:
-  void registerInputToEngine(const std::string& name, std::string type, detail::NodeBase* node);
+  void registerInputToEngine(std::string name, std::string type, detail::NodeBase* node);
 
   using ScheduleAfterResultT = std::decay_t<decltype(std::declval<SchedulerT>().scheduleAfter(
       std::declval<std::chrono::milliseconds>()))>;

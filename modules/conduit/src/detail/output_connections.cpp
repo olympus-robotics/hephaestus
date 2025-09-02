@@ -23,24 +23,21 @@ auto OutputConnections::name() const -> std::string {
   return fmt::format("{}/{}", node_->nodeName(), name_);
 }
 
-void OutputConnections::registerInputToEngine(const std::string& name, std::string type,
+auto OutputConnections::rawName() const -> std::string {
+  return name_;
+}
+
+void OutputConnections::registerInputToEngine(std::string input_name, std::string input_type,
                                               detail::NodeBase* node) {
   if (node->enginePtr() == nullptr) {
     return;
   }
 
-  auto input_name = name;
-  // If the input contains the node name, we need to extract it.
-  const auto pos = name.find(node->nodeName());
-  if (pos != std::string::npos) {
-    input_name =
-        name.substr(node->nodeName().size() + 1);  // Remove the node name plus the separator character
-  }
   node_->engine().addConnectionSpec({
       .input = {
           .name = std::move(input_name),
           .node_name = node->nodeName(),  // Include the node name for better identification
-          .type = std::move(type),
+          .type = std::move(input_type),
 
       },
       .output = {
