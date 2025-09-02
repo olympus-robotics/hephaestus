@@ -62,18 +62,22 @@ public:
     });
   }
 
-  auto name() {
+  [[nodiscard]] auto name() {
     return fmt::format("{}/{}", node_->nodeName(), name_);
   }
 
-  auto get()
+  [[nodiscard]] auto rawName() {
+    return name_;
+  }
+
+  [[nodiscard]] auto get()
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::POLL)
   {
     return heph::concurrency::makeSenderExpression<detail::InputPollT>(static_cast<InputT*>(this));
   }
 
   /// Returns a sender which is getting triggered when there is a value
-  auto get()
+  [[nodiscard]] auto get()
     requires(InputT::InputPolicyT::RETRIEVAL_METHOD == RetrievalMethod::BLOCK)
   {
     return heph::concurrency::makeSenderExpression<detail::InputBlockT<false>>(static_cast<InputT*>(this));
@@ -81,11 +85,11 @@ public:
 
   /// Returns a sender which is getting triggered when there is a value. In contrast to `get`,
   /// the data is not getting consumed. This function is used to subscribe to an input.
-  auto peek() {
+  [[nodiscard]] auto peek() {
     return heph::concurrency::makeSenderExpression<detail::InputBlockT<true>>(static_cast<InputT*>(this));
   }
 
-  auto node() -> NodeBase* {
+  [[nodiscard]] auto node() -> NodeBase* {
     return node_;
   }
 

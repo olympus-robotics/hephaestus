@@ -27,7 +27,7 @@ public:
     if (node != nullptr) {
       node->addOutputSpec([this, node] {
         return detail::OutputSpecification{
-          .name = outputs_.name(),
+          .name = outputs_.rawName(),
           .node_name = node->nodeName(),
           .type = heph::utils::getTypeName<T>(),
         };
@@ -37,6 +37,7 @@ public:
       }
     }
   }
+
   auto name() {
     return outputs_.name();
   }
@@ -52,6 +53,5 @@ public:
 
 private:
   detail::OutputConnections outputs_;
-  std::string name_;
 };
 }  // namespace heph::conduit
