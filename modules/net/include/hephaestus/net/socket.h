@@ -72,7 +72,7 @@ public:
   }
 
 private:
-  Socket(concurrency::Context* context, int fd, SocketType type);
+  Socket(concurrency::Context* context, int fd, SocketType type, bool set_mtu = true);
 #ifndef DISABLE_BLUETOOTH
   void setupL2capSocket(bool set_mtu);
 #endif

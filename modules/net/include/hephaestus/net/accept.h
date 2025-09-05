@@ -45,7 +45,8 @@ struct AcceptOperation {
       stdexec::set_error(std::move(receiver), std::error_code(-cqe->res, std::system_category()));
       return;
     }
-    stdexec::set_value(std::move(receiver), Socket{ &acceptor->context(), cqe->res, acceptor->type() });
+    stdexec::set_value(std::move(receiver),
+                       Socket{ &acceptor->context(), cqe->res, acceptor->type(), false });
   }
 
   void handleStopped() {
