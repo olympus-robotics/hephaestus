@@ -55,6 +55,9 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type, bool set_
     case SocketType::L2CAP:
       setupL2capSocket(set_mtu);
       break;
+#else
+    // Silence unused parameter warning
+    (void)set_mtu;
 #endif
     case SocketType::UDP:
       setupUDPSocket();
