@@ -44,7 +44,7 @@ auto familyToEndpointType(int domain) {
 }
 }  // namespace
 
-Socket::Socket(concurrency::Context* context, int fd, SocketType type)
+Socket::Socket(concurrency::Context* context, int fd, SocketType type, bool set_mtu)
   : context_(context), fd_(fd), type_(type) {
   if (fd_ == -1) {
     panic("socket: {}", std::error_code(errno, std::system_category()).message());
@@ -53,8 +53,11 @@ Socket::Socket(concurrency::Context* context, int fd, SocketType type)
   switch (type) {
 #ifndef DISABLE_BLUETOOTH
     case SocketType::L2CAP:
-      setupL2capSocket(true);
+      setupL2capSocket(set_mtu);
       break;
+#else
+    // Silence unused parameter warning
+    (void)set_mtu;
 #endif
     case SocketType::UDP:
       setupUDPSocket();
