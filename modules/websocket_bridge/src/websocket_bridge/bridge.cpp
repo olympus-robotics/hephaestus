@@ -776,7 +776,11 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
 
   auto buffer = std::as_bytes(std::span(request.data.data(), request.data.size()));
 
-  const std::chrono::milliseconds timeout_ms = std::chrono::milliseconds(config_.ipc_service_call_timeout_ms);
+  std::chrono::milliseconds timeout_ms =
+      std::chrono::milliseconds(config_.ipc_default_service_call_timeout_ms);
+  if (request.timeoutMs > 0) {
+    timeout_ms = std::chrono::milliseconds(request.timeoutMs);
+  }
 
   if (config_.ipc_service_service_request_async) {
     ///////////
@@ -785,9 +789,11 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
 
     state_.addCallIdToClientMapping(call_id, client_handle, client_name);
 
-    auto response_callback = [this, service_id, call_id](const RawServiceResponses& responses) -> void {
+    auto response_callback = [this, service_id, call_id,
+                              timeout_ms](const RawServiceResponses& responses) -> void {
       heph::log(heph::INFO, "[WS Bridge] - Service response callback triggered for service [ASYNC]",
-                "num_responses", responses.size(), "service_id", service_id, "call_id", call_id);
+                "num_responses", responses.size(), "service_id", service_id, "call_id", call_id, "timeout_ms",
+                timeout_ms);
 
       callback_Ipc_ServiceResponsesReceived(service_id, call_id, responses);
     };
@@ -795,7 +801,8 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
     ipc_entity_manager_->callServiceAsync(call_id, topic_config, buffer, timeout_ms, response_callback);
 
     heph::log(heph::INFO, "[WS Bridge] - Client service request dispatched [ASYNC]", "client_name",
-              client_name, "service_name", service_name, "service_id", service_id, "call_id", call_id);
+              client_name, "service_name", service_name, "service_id", service_id, "call_id", call_id,
+              "timeout_ms", timeout_ms);
   } else {
     //////////
     // SYNC //
