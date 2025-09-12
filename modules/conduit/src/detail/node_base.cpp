@@ -28,31 +28,31 @@ namespace heph::conduit::detail {
 
 auto NodeBase::operationStart(bool has_period) -> ClockT::time_point {
   auto start_at = nextStartTime(has_period);
-  last_steady_ = ClockT::now();
-  last_system_ = std::chrono::system_clock::now();
+  last_steady_ = std::chrono::steady_clock::now();
+  last_system_ = ClockT::now();
   if (iteration_ == 0) {
-    start_time_ = last_steady_;
+    start_time_ = ClockT::now();
   }
   return start_at;
 }
 
 void NodeBase::operationEnd() {
-  auto now = ClockT::now();
+  auto steady_now = std::chrono::steady_clock::now();
   auto system_now = std::chrono::system_clock::now();
 
-  auto tick_duration = now - last_steady_;
+  auto tick_duration = steady_now - last_steady_;
   auto clock_drift =
       std::chrono::duration_cast<std::chrono::microseconds>((system_now - last_system_) - tick_duration);
 
   std::chrono::microseconds period_drift{ 0 };
   auto period = nodePeriod();
   if (period != std::chrono::nanoseconds{ 0 }) {
-    period_drift =
-        std::chrono::duration_cast<std::chrono::microseconds>(now - (start_time_ + (iteration_ * period)));
+    period_drift = std::chrono::duration_cast<std::chrono::microseconds>(
+        ClockT::now() - (start_time_ + (iteration_ * period)));
   }
 
   if (iteration_ > 0) {
-    heph::telemetry::record([name = nodeName(), timestamp = std::chrono::system_clock::now(),
+    heph::telemetry::record([name = nodeName(), timestamp = system_now,
                              last_execution_duration = last_execution_duration_, tick_duration, clock_drift,
                              period_drift] {
       return heph::telemetry::Metric{
@@ -82,10 +82,10 @@ auto NodeBase::nextStartTime(bool has_period) -> ClockT::time_point {
     return now;
   }
 
-  auto period = nodePeriod();
+  auto period = std::chrono::duration_cast<ClockT::duration>(nodePeriod());
   auto next_time_point = start_time_ + (iteration_ * period);
   if (next_time_point < now) {
-    auto last_duration = now - last_steady_;
+    auto last_duration = now - last_system_;
     // reset start time to avoid errors propagating if the deadline miss was too large
     start_time_ = now;
     iteration_ = 0;

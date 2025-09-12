@@ -16,9 +16,12 @@
 
 namespace heph::concurrency {
 
+using TimerOptionsT = io_ring::TimerOptions;
+using ClockT = io_ring::TimerClock;
+
 struct ContextConfig {
   io_ring::IoRingConfig io_ring_config;
-  io_ring::TimerOptions timer_options;
+  TimerOptionsT timer_options;
 };
 
 class Context {
@@ -75,7 +78,7 @@ private:
     }
   };
 
-  void enqueueAt(TaskBase* task, io_ring::TimerClock::time_point start_time);
+  void enqueueAt(TaskBase* task, ClockT::time_point start_time);
   void dequeueTimer(TaskBase* task);
 
   auto runTimedTasks() -> bool;
@@ -88,8 +91,8 @@ private:
   io_ring::IoRing ring_;
   heph::containers::IntrusiveFifoQueue<TaskBase> tasks_;
   io_ring::Timer timer_;
-  io_ring::TimerClock::base_clock::time_point start_time_;
-  io_ring::TimerClock::base_clock::time_point last_progress_time_;
+  ClockT::base_clock::time_point start_time_;
+  ClockT::base_clock::time_point last_progress_time_;
   stdexec::inplace_stop_callback<StopCallback> stop_callback_;
 };
 

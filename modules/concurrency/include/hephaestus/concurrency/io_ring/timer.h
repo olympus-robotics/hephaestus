@@ -29,13 +29,13 @@ struct TimerOptions {
 class Timer;
 
 struct TimerClock {
-  using base_clock = std::chrono::steady_clock;
+  using base_clock = std::chrono::system_clock;
 
-  using duration = std::chrono::nanoseconds;
+  using duration = std::chrono::microseconds;
   using rep = duration::rep;
   using period = duration::period;
 
-  using time_point = std::chrono::time_point<TimerClock, duration>;
+  using time_point = std::chrono::time_point<base_clock, duration>;
 
   // NOLINTNEXTLINE(readability-identifier-naming)
   static constexpr bool is_steady = base_clock::is_steady;

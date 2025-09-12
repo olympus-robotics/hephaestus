@@ -155,7 +155,9 @@ struct TimedTask : TaskBase {
   template <typename Clock, typename Duration>
   TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
             ReceiverT&& receiver_input)
-    : context(context_input), start_time(start_time_input), receiver(std::move(receiver_input)) {
+    : context(context_input)
+    , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input))
+    , receiver(std::move(receiver_input)) {
     // Avoid putting it the task in the timer when the deadline was already exceeded...
     if (start_time <= io_ring::TimerClock::now()) {
       timeout_started = true;

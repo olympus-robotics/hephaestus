@@ -33,7 +33,7 @@ auto TimerClock::now() -> time_point {
 
 void Timer::Operation::prepare(::io_uring_sqe* sqe) const {
   io_uring_prep_timeout(sqe, &timer->next_timeout_, std::numeric_limits<unsigned>::max(),
-                        IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS);
+                        IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS | IORING_TIMEOUT_REALTIME);
 }
 
 void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
