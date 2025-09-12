@@ -12,6 +12,7 @@
 
 #include <fmt/format.h>
 #include <stdexec/__detail/__senders_core.hpp>
+#include <stdexec/__detail/__sync_wait.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/detail/node_base.h"
@@ -86,12 +87,39 @@ private:
     };
   }
 
+  auto operationTrigger() {
+    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
+      if constexpr (HAS_PERIOD) {
+        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
+      } else {
+        return stdexec::just();
+      }
+    };
+    auto node_trigger = [&] {
+      if constexpr (HAS_TRIGGER_NULLARY) {
+        return OperationT::trigger();
+      } else if constexpr (HAS_TRIGGER_ARG) {
+        return OperationT::trigger(operation());
+      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
+        return OperationT::trigger(&operation());
+      } else {
+        static_assert(HAS_PERIOD,
+                      "An Operation needs to have at least either a trigger or a period function");
+        return stdexec::just();
+      }
+    };
+    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
+             auto start_at = operationStart(HAS_PERIOD);
+             return stdexec::when_all(period_trigger(start_at), node_trigger());
+           });
+  }
+
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
     auto trigger = stdexec::continues_on(operationTrigger(), heph::conduit::scheduler(engine()));
     using TriggerT = decltype(trigger);
-    using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
+    using TriggerValuesVariantT = stdexec::__sync_wait::__sync_wait_with_variant_result_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
     using TriggerValuesT = std::variant_alternative_t<0, TriggerValuesVariantT>;
     using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
@@ -120,33 +148,6 @@ private:
 
   auto operation() const -> const OperationT& {
     return static_cast<const OperationT&>(*this);
-  }
-
-  auto operationTrigger() {
-    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
-      if constexpr (HAS_PERIOD) {
-        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
-      } else {
-        return stdexec::just();
-      }
-    };
-    auto node_trigger = [&] {
-      if constexpr (HAS_TRIGGER_NULLARY) {
-        return OperationT::trigger();
-      } else if constexpr (HAS_TRIGGER_ARG) {
-        return OperationT::trigger(operation());
-      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
-        return OperationT::trigger(&operation());
-      } else {
-        static_assert(HAS_PERIOD,
-                      "An Operation needs to have at least either a trigger or a period function");
-        return stdexec::just();
-      }
-    };
-    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
-             auto start_at = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_at), node_trigger());
-           });
   }
 
 private:

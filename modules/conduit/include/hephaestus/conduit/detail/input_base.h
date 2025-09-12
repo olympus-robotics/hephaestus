@@ -17,6 +17,7 @@
 #include <hephaestus/conduit/detail/node_base.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/__detail/__sender_introspection.hpp>
+#include <stdexec/__detail/__sync_wait.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
@@ -97,7 +98,7 @@ public:
   void connectTo(Node<OperationT, DataT>& node) {
     using ValueT = typename InputT::ValueT;
     using ExecuteOperationT = decltype(node.executeSender());
-    using ExecuteResultVariantT = stdexec::value_types_of_t<ExecuteOperationT>;
+    using ExecuteResultVariantT = stdexec::__sync_wait::__sync_wait_with_variant_result_t<ExecuteOperationT>;
     static_assert(std::variant_size_v<ExecuteResultVariantT> == 1);
     using ExecuteResultTupleT = std::variant_alternative_t<0, ExecuteResultVariantT>;
     static_assert(std::tuple_size_v<ExecuteResultTupleT> != 0, "Attempt to connect to node output of void");

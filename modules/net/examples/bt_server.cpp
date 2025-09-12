@@ -60,11 +60,9 @@ auto pong(heph::net::Socket socket) -> exec::task<void> {
   }
 }
 
-// NOLINTNEXTLINE (readability-static-accessed-through-instance)
 auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
   exec::async_scope scope;
 
-  // NOLINTNEXTLINE
   while (true) {
     auto socket = co_await heph::net::accept(acceptor);
     scope.spawn(pong(std::move(socket)));
