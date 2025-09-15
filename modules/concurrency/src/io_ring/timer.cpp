@@ -119,7 +119,8 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
 
 Timer::Timer(IoRing& ring, TimerOptions options)
   : ring_(&ring)
-  , start_(TimerClock::base_clock::now() - TimerClock::base_clock::time_point{})
+  , start_(std::chrono::duration_cast<TimerClock::duration>(TimerClock::base_clock::now() -
+                                                            TimerClock::base_clock::time_point{}))
   , last_tick_(start_)
   , clock_mode_(options.clock_mode) {
   if (clock_mode_ == ClockMode::SIMULATED) {
