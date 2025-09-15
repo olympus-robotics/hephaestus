@@ -25,7 +25,7 @@ Timer* TimerClock::timer{ nullptr };
 auto TimerClock::now() -> time_point {
   if (TimerClock::timer == nullptr) {
     auto now = TimerClock::base_clock::now();
-    return time_point{ now - TimerClock::base_clock::time_point{} };
+    return time_point{ std::chrono::duration_cast<duration>(now - TimerClock::base_clock::time_point{}) };
   }
 
   return TimerClock::timer->now();
