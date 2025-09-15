@@ -80,7 +80,8 @@ public:
 
   auto tickSimulated(bool advance) -> bool;
 
-  void advanceSimulation(TimerClock::duration duration) {
+  template <typename Rep, typename Period>
+  void advanceSimulation(std::chrono::duration<Rep, Period> duration) {
     last_tick_ += duration;
   }
 

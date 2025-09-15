@@ -190,7 +190,7 @@ struct RemoteInputSubscriber : heph::conduit::Node<RemoteInputSubscriber<T>, Rem
 
 class RemoteOutputPublisherOperator {
 public:
-  explicit RemoteOutputPublisherOperator(heph::net::Socket client, std::string name, bool reliable)
+  explicit RemoteOutputPublisherOperator(heph::net::Socket client, const std::string& name, bool reliable)
     : socket_(std::move(client))
     , remote_endpoint_(socket_.remoteEndpoint())
     , name_(fmt::format("{}/{}", remote_endpoint_, name))
