@@ -17,7 +17,6 @@
 #include <hephaestus/concurrency/context.h>
 #include <stdexec/stop_token.hpp>
 
-#include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 
 // Forward declarations
@@ -44,7 +43,7 @@ struct OutputSpecification {
 
 class NodeBase {
 public:
-  using ClockT = concurrency::io_ring::TimerClock;
+  using ClockT = concurrency::ClockT;
 
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
@@ -118,8 +117,8 @@ private:
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
 
-  ClockT::time_point last_steady_;
-  std::chrono::system_clock::time_point last_system_;
+  std::chrono::steady_clock::time_point last_steady_;
+  ClockT::time_point last_system_;
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
 

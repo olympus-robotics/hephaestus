@@ -4,6 +4,7 @@
 
 #include "hephaestus/conduit/remote_output_subscriber.h"
 
+#include <cstddef>
 #include <exception>
 #include <span>
 #include <string>
@@ -32,7 +33,6 @@ auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std:
       }
     }
 
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     auto msg = co_await (internal::recv<std::pmr::vector<std::byte>>(socket_.value(), &memory_resource_) |
                          stdexec::upon_stopped([] { return std::pmr::vector<std::byte>{}; }));
     if (type_.reliable) {

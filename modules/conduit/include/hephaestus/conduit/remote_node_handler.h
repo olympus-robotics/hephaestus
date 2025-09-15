@@ -15,6 +15,7 @@
 
 #include <exec/async_scope.hpp>
 #include <exec/task.hpp>
+#include <stdexec/__detail/__sync_wait.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
@@ -89,7 +90,7 @@ void RemoteNodeHandler::registerOutput(Engine& engine, Output& output) {
 template <typename Engine, typename Node>
 void RemoteNodeHandler::registerImplicitOutput(Engine& engine, Node& node) {
   using ExecuteOperationT = decltype(node.executeSender());
-  using ExecuteResultVariantT = stdexec::value_types_of_t<ExecuteOperationT>;
+  using ExecuteResultVariantT = stdexec::__sync_wait::__sync_wait_with_variant_result_t<ExecuteOperationT>;
   static_assert(std::variant_size_v<ExecuteResultVariantT> == 1);
   using ExecuteResultTupleT = std::variant_alternative_t<0, ExecuteResultVariantT>;
 

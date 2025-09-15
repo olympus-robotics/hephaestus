@@ -25,7 +25,7 @@ Timer* TimerClock::timer{ nullptr };
 auto TimerClock::now() -> time_point {
   if (TimerClock::timer == nullptr) {
     auto now = TimerClock::base_clock::now();
-    return time_point{ now - TimerClock::base_clock::time_point{} };
+    return time_point{ std::chrono::duration_cast<duration>(now - TimerClock::base_clock::time_point{}) };
   }
 
   return TimerClock::timer->now();
@@ -33,7 +33,7 @@ auto TimerClock::now() -> time_point {
 
 void Timer::Operation::prepare(::io_uring_sqe* sqe) const {
   io_uring_prep_timeout(sqe, &timer->next_timeout_, std::numeric_limits<unsigned>::max(),
-                        IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS);
+                        IORING_TIMEOUT_ETIME_SUCCESS | IORING_TIMEOUT_ABS | IORING_TIMEOUT_REALTIME);
 }
 
 void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
@@ -119,7 +119,8 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
 
 Timer::Timer(IoRing& ring, TimerOptions options)
   : ring_(&ring)
-  , start_(TimerClock::base_clock::now() - TimerClock::base_clock::time_point{})
+  , start_(std::chrono::duration_cast<TimerClock::duration>(TimerClock::base_clock::now() -
+                                                            TimerClock::base_clock::time_point{}))
   , last_tick_(start_)
   , clock_mode_(options.clock_mode) {
   if (clock_mode_ == ClockMode::SIMULATED) {

@@ -140,11 +140,13 @@ public:
   using MsgT = std::pmr::vector<std::byte>;
 
   [[nodiscard]] auto name() const -> std::string {
-    return fmt::format("{}/{}", socket_.remoteEndpoint(), name_);
+    return name_;
   }
 
-  RemoteInputSubscriberOperator(heph::net::Socket socket, std::string name, bool reliable)
-    : socket_(std::move(socket)), name_(std::move(name)), reliable_(reliable) {
+  RemoteInputSubscriberOperator(heph::net::Socket socket, const std::string& name, bool reliable)
+    : socket_(std::move(socket))
+    , name_(fmt::format("{}/{}", socket_.remoteEndpoint(), name))
+    , reliable_(reliable) {
   }
 
   auto trigger() -> exec::task<MsgT> {
@@ -188,15 +190,15 @@ struct RemoteInputSubscriber : heph::conduit::Node<RemoteInputSubscriber<T>, Rem
 
 class RemoteOutputPublisherOperator {
 public:
-  explicit RemoteOutputPublisherOperator(heph::net::Socket client, std::string name, bool reliable)
+  explicit RemoteOutputPublisherOperator(heph::net::Socket client, const std::string& name, bool reliable)
     : socket_(std::move(client))
     , remote_endpoint_(socket_.remoteEndpoint())
-    , name_(std::move(name))
+    , name_(fmt::format("{}/{}", remote_endpoint_, name))
     , reliable_(reliable) {
   }
 
   [[nodiscard]] auto name() const -> std::string {
-    return fmt::format("{}/{}", remote_endpoint_, name_);
+    return name_;
   }
 
   auto publish(std::vector<std::byte> msg) -> exec::task<void> {

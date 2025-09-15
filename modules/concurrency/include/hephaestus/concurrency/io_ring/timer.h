@@ -29,13 +29,13 @@ struct TimerOptions {
 class Timer;
 
 struct TimerClock {
-  using base_clock = std::chrono::steady_clock;
+  using base_clock = std::chrono::system_clock;
 
-  using duration = std::chrono::nanoseconds;
+  using duration = std::chrono::microseconds;
   using rep = duration::rep;
   using period = duration::period;
 
-  using time_point = std::chrono::time_point<TimerClock, duration>;
+  using time_point = std::chrono::time_point<base_clock, duration>;
 
   // NOLINTNEXTLINE(readability-identifier-naming)
   static constexpr bool is_steady = base_clock::is_steady;
@@ -80,8 +80,9 @@ public:
 
   auto tickSimulated(bool advance) -> bool;
 
-  void advanceSimulation(TimerClock::duration duration) {
-    last_tick_ += duration;
+  template <typename Rep, typename Period>
+  void advanceSimulation(std::chrono::duration<Rep, Period> duration) {
+    last_tick_ += std::chrono::duration_cast<TimerClock::duration>(duration);
   }
 
   auto clockMode() {

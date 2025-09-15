@@ -131,7 +131,6 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
   // 2. Value loop:
   //  1. Send Data
   try {
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     auto [name, type_info] = co_await recvNameInfo(&client);
 
     auto it = client_handlers_.find(name);
@@ -141,7 +140,6 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
       const std::string error = fmt::format("{} client handler not found. Registered: {}", type_string,
                                             fmt::join(client_handlers_ | std::views::keys, ","));
       heph::log(heph::ERROR, error, "name", name);
-      // NOLINTNEXTLINE (readability-static-accessed-through-instance)
       co_await internal::send(client, error);
 
       co_return;
@@ -149,12 +147,10 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
 
     auto& [_, entry] = *it;
 
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     if (!co_await checkTypeInfo(&client, &name, std::move(type_info), &entry.type_info)) {
       co_return;
     }
 
-    // NOLINTNEXTLINE (readability-static-accessed-through-instance)
     co_await internal::send(client, CONNECT_SUCCESS);
 
     heph::log(heph::INFO, "Client connected", "name", name, "type", type_string, "reliable", type.reliable,
