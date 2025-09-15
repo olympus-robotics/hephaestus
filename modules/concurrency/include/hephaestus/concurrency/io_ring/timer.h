@@ -82,7 +82,7 @@ public:
 
   template <typename Rep, typename Period>
   void advanceSimulation(std::chrono::duration<Rep, Period> duration) {
-    last_tick_ += duration;
+    last_tick_ += std::chrono::duration_cast<TimerClock::duration>(duration);
   }
 
   auto clockMode() {
