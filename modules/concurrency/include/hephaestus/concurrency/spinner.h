@@ -53,7 +53,7 @@ public:
   auto operator=(Spinner&&) -> Spinner& = delete;
 
   void start();
-  auto stop() -> std::future<void>;
+  [[nodiscard]] auto stop() -> std::future<void>;
   void wait();
 
   /// @brief  Set a callback that will be called when the spinner is stopped.
