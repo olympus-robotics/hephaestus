@@ -1,4 +1,3 @@
-
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
@@ -9,12 +8,12 @@
 #include <utility>
 
 #include <fmt/base.h>
+#include <fmt/ranges.h>
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/conduit/remote_output_subscriber.h"
 #include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log.h"
@@ -32,7 +31,7 @@ struct Sink : heph::conduit::Node<Sink> {
   }
 
   static auto execute(heph::types::DummyType dummy) {
-    fmt::println("Received {}", dummy);
+    fmt::println("Received {}", dummy.dummy_primitives_type.dummy_float);
   }
 };
 
@@ -49,17 +48,13 @@ auto main(int argc, const char* argv[]) -> int {
     const auto address = args.getOption<std::string>("address");
     const auto port = args.getOption<std::uint16_t>("port");
 
-    auto endpoint = heph::net::Endpoint::createIpV4(address, port);
+    heph::conduit::NodeEngineConfig config;
+    config.endpoints = { heph::net::Endpoint::createIpV4(address, port) };
+    heph::conduit::NodeEngine engine{ config };
 
-    heph::conduit::NodeEngine engine{ {} };
+    fmt::println("Subcribing from {}", fmt::join(engine.endpoints(), ","));
 
-    fmt::println("Subcribing to {}", endpoint);
-
-    auto subscriber = engine.createNode<heph::conduit::RemoteOutputSubscriber<heph::types::DummyType>>(
-        endpoint, std::string{ "generator" });
-    auto node = engine.createNode<Sink>();
-
-    node->input.connectTo(subscriber);
+    engine.createNode<Sink>();
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
 

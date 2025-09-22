@@ -10,6 +10,7 @@ namespace heph::containers {
 
 struct Dummy {
   Dummy* next{ nullptr };
+  Dummy* prev{ nullptr };
 };
 
 TEST(IntrusiveFifoQueue, Empty) {
@@ -144,6 +145,7 @@ class DummyPrivate {
 private:
   friend struct IntrusiveFifoQueueAccess;
   [[maybe_unused]] DummyPrivate* next_{ nullptr };
+  [[maybe_unused]] DummyPrivate* prev_{ nullptr };
 };
 TEST(IntrusiveFifoQueue, Access) {
   IntrusiveFifoQueue<DummyPrivate> queue;

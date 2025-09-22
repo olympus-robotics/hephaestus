@@ -1,10 +1,12 @@
+//=================================================================================================
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
+//=================================================================================================
 
-//=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
-//=================================================================================================
+#include <chrono>
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <random>
 #include <string_view>
 #include <utility>
 
@@ -13,9 +15,7 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/conduit/remote_output_subscriber.h"
-#include "hephaestus/format/generic_formatter.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -23,16 +23,15 @@
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/signal_handler.h"
 
-struct Sink : heph::conduit::Node<Sink> {
-  static constexpr std::string_view NAME = "sink";
-  heph::conduit::QueuedInput<heph::types::DummyType> input{ this, "input" };
+struct Generator : heph::conduit::Node<Generator> {
+  static constexpr std::string_view NAME = "generator";
 
-  static auto trigger(Sink& self) {
-    return self.input.get();
-  }
+  static constexpr std::chrono::seconds PERIOD{ 1 };
+  std::random_device rd;
+  std::mt19937_64 mt{ rd() };
 
-  static auto execute(heph::types::DummyType dummy) {
-    fmt::println("Received {}", dummy);
+  static auto execute(Generator& self) {
+    return heph::types::DummyType::random(self.mt);
   }
 };
 
@@ -53,13 +52,12 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::conduit::NodeEngine engine{ {} };
 
-    fmt::println("Subcribing to {}", endpoint);
+    fmt::println("Publishing to {}", endpoint);
 
-    auto subscriber = engine.createNode<heph::conduit::RemoteOutputSubscriber<heph::types::DummyType>>(
-        endpoint, std::string{ "generator" });
-    auto node = engine.createNode<Sink>();
+    auto generator = engine.createNode<Generator>();
+    heph::conduit::RemoteInputPublisher<heph::types::DummyType> input{ engine, endpoint, "sink/input" };
 
-    node->input.connectTo(subscriber);
+    input.connectTo(generator);
 
     heph::utils::TerminationBlocker::registerInterruptCallback([&engine]() { engine.requestStop(); });
 

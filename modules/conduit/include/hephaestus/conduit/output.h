@@ -7,10 +7,12 @@
 #include <string>
 #include <utility>
 
+#include <hephaestus/conduit/detail/node_base.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/detail/output_connections.h"
 #include "hephaestus/conduit/node.h"
+#include "hephaestus/utils/utils.h"
 
 namespace heph::conduit {
 
@@ -22,10 +24,20 @@ public:
   using ResultT = T;
   template <typename OperationT, typename DataT>
   explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
-    if (node != nullptr && node->enginePtr() != nullptr) {
-      node->engine().registerOutput(*this);
+    if (node != nullptr) {
+      node->addOutputSpec([this, node] {
+        return detail::OutputSpecification{
+          .name = outputs_.rawName(),
+          .node_name = node->nodeName(),
+          .type = heph::utils::getTypeName<T>(),
+        };
+      });
+      if (node->enginePtr() != nullptr) {
+        node->engine().registerOutput(*this);
+      }
     }
   }
+
   auto name() {
     return outputs_.name();
   }

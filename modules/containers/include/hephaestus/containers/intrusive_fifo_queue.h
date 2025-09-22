@@ -19,11 +19,22 @@ struct IntrusiveFifoQueueAccess {
   static auto next(T* t) -> T*& {
     return t->next_;
   }
+  template <typename T>
+    requires requires(T) { T::prev; }
+  static auto prev(T* t) -> T*& {
+    return t->prev;
+  }
+  template <typename T>
+    requires requires(T) { T::prev_; }
+  static auto prev(T* t) -> T*& {
+    return t->prev_;
+  }
 };
 
 template <typename T>
 concept IntrusiveFifoQueueElement = requires(T t) {
   { IntrusiveFifoQueueAccess::next(&t) } -> std::same_as<T*&>;
+  { IntrusiveFifoQueueAccess::prev(&t) } -> std::same_as<T*&>;
 };
 
 template <IntrusiveFifoQueueElement T>
@@ -38,14 +49,22 @@ public:
   }
 
   auto enqueue(T* t) {
-    if (tail_ == nullptr) {
-      head_ = t;
-    } else {
-      IntrusiveFifoQueueAccess::next(tail_) = t;
-    }
-
-    tail_ = t;
     ++size_;
+
+    // Linked list is empty
+    if (head_ == nullptr) {
+      IntrusiveFifoQueueAccess::prev(t) = t;
+      IntrusiveFifoQueueAccess::next(t) = t;
+      head_ = t;
+      return;
+    }
+    auto* tail = IntrusiveFifoQueueAccess::prev(head_);
+
+    IntrusiveFifoQueueAccess::next(t) = head_;
+    IntrusiveFifoQueueAccess::prev(t) = tail;
+
+    IntrusiveFifoQueueAccess::next(tail) = t;
+    IntrusiveFifoQueueAccess::prev(head_) = t;
   }
 
   auto dequeue() -> T* {
@@ -53,15 +72,26 @@ public:
       return nullptr;
     }
     --size_;
-    T* tmp = head_;
-    head_ = IntrusiveFifoQueueAccess::next(head_);
 
-    if (head_ == nullptr) {
-      tail_ = nullptr;
+    auto* tmp = head_;
+
+    // Last element...
+    if (size_ == 0) {
+      head_ = nullptr;
+      IntrusiveFifoQueueAccess::next(tmp) = nullptr;
+      IntrusiveFifoQueueAccess::prev(tmp) = nullptr;
+      return tmp;
     }
 
-    IntrusiveFifoQueueAccess::next(tmp) = nullptr;
+    auto* tail = IntrusiveFifoQueueAccess::prev(head_);
 
+    head_ = IntrusiveFifoQueueAccess::next(head_);
+
+    IntrusiveFifoQueueAccess::next(tail) = head_;
+    IntrusiveFifoQueueAccess::prev(head_) = tail;
+
+    IntrusiveFifoQueueAccess::next(tmp) = nullptr;
+    IntrusiveFifoQueueAccess::prev(tmp) = nullptr;
     return tmp;
   }
 
@@ -74,26 +104,39 @@ public:
       dequeue();
       return;
     }
-    // find the previous element
-    T* prev = head_;
-    while (prev != nullptr) {
-      if (IntrusiveFifoQueueAccess::next(prev) == t) {
-        break;
-      }
-      prev = IntrusiveFifoQueueAccess::next(prev);
-    }
-    if (prev == nullptr) {
+
+    auto* prev = IntrusiveFifoQueueAccess::prev(t);
+    auto* next = IntrusiveFifoQueueAccess::next(t);
+
+    if (prev == nullptr || next == nullptr) {
       return;
     }
 
-    IntrusiveFifoQueueAccess::next(prev) = IntrusiveFifoQueueAccess::next(t);
-    IntrusiveFifoQueueAccess::next(t) = nullptr;
+    if (IntrusiveFifoQueueAccess::next(prev) != t) {
+      return;
+    }
+    if (IntrusiveFifoQueueAccess::prev(next) != t) {
+      return;
+    }
+
+    // Check if last node...
+    if (IntrusiveFifoQueueAccess::next(t) == head_) {
+      IntrusiveFifoQueueAccess::next(prev) = head_;
+      IntrusiveFifoQueueAccess::prev(head_) = prev;
+    } else {
+      auto* tmp = IntrusiveFifoQueueAccess::next(t);
+
+      IntrusiveFifoQueueAccess::next(prev) = tmp;
+      IntrusiveFifoQueueAccess::prev(tmp) = prev;
+    }
+
     --size_;
+    IntrusiveFifoQueueAccess::next(t) = nullptr;
+    IntrusiveFifoQueueAccess::prev(t) = nullptr;
   }
 
 private:
   T* head_{ nullptr };
-  T* tail_{ nullptr };
   std::size_t size_{ 0 };
 };
 }  // namespace heph::containers

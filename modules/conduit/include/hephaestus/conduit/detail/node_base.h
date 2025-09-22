@@ -6,30 +6,49 @@
 
 #include <chrono>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <hephaestus/concurrency/context.h>
 #include <stdexec/stop_token.hpp>
 
-#include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/conduit/detail/output_connections.h"
 
 // Forward declarations
 namespace heph::conduit {
 class NodeEngine;
-}
+class RemoteNodeHandler;
+}  // namespace heph::conduit
 
 namespace heph::conduit::detail {
+template <typename InputT>
+void registerInput(NodeEngine& engine, InputT* input);
+
+struct InputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
+
+struct OutputSpecification {
+  std::string name;
+  std::string node_name;
+  std::string type;
+};
 
 class NodeBase {
 public:
-  using ClockT = concurrency::io_ring::TimerClock;
+  using ClockT = concurrency::ClockT;
 
   static constexpr std::string_view MISSED_DEADLINE_WARNING = "Missed deadline";
 
   virtual ~NodeBase() = default;
-  [[nodiscard]] virtual auto nodeName() const -> std::string = 0;
+  [[nodiscard]] auto nodeName() const -> std::string;
   [[nodiscard]] virtual auto nodePeriod() -> std::chrono::nanoseconds = 0;
   virtual void removeOutputConnection(void* node) = 0;
 
@@ -54,7 +73,38 @@ public:
 
   auto getStopToken() -> stdexec::inplace_stop_token;
 
+  template <typename InputT>
+  void addInputSpec(InputT* input, std::function<InputSpecification()> input_spec) {
+    input_registrations_.push_back([this, input]() { registerInput(*engine_, static_cast<InputT*>(input)); });
+    input_specs_.push_back(std::move(input_spec));
+  }
+
+  void addOutputSpec(std::function<OutputSpecification()> output) {
+    output_specs_.push_back(std::move(output));
+  }
+
+  void registerInputs() {
+    for (auto& f : input_registrations_) {
+      f();
+    }
+  }
+
+  [[nodiscard]] auto inputSpecs() const -> std::vector<InputSpecification> {
+    auto specs_range = input_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
+  }
+
+  [[nodiscard]] auto outputSpecs() const -> std::vector<OutputSpecification> {
+    auto specs_range = output_specs_ | std::views::transform([](const auto& factory) { return factory(); });
+    return { std::begin(specs_range), std::end(specs_range) };
+  }
+
+  [[nodiscard]] auto lastExecutionDuration() const -> std::chrono::nanoseconds {
+    return last_execution_duration_;
+  }
+
 protected:
+  [[nodiscard]] virtual auto nodeName(const std::string& prefix) const -> std::string = 0;
   auto operationStart(bool has_period) -> ClockT::time_point;
   void operationEnd();
   void updateExecutionTime(std::chrono::nanoseconds duration);
@@ -62,14 +112,19 @@ protected:
 
 private:
   friend class heph::conduit::NodeEngine;
+  friend class heph::conduit::RemoteNodeHandler;
   friend class ExecutionStopWatch;
   NodeEngine* engine_{ nullptr };
   std::chrono::nanoseconds last_execution_duration_{};
 
-  ClockT::time_point last_steady_;
-  std::chrono::system_clock::time_point last_system_;
+  std::chrono::steady_clock::time_point last_steady_;
+  ClockT::time_point last_system_;
   ClockT::time_point start_time_;
   std::size_t iteration_{ 0 };
+
+  std::vector<std::function<void()>> input_registrations_;
+  std::vector<std::function<InputSpecification()>> input_specs_;
+  std::vector<std::function<OutputSpecification()>> output_specs_;
 };
 
 class ExecutionStopWatch {

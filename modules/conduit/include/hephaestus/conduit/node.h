@@ -10,7 +10,9 @@
 #include <string>
 #include <variant>
 
+#include <fmt/format.h>
 #include <stdexec/__detail/__senders_core.hpp>
+#include <stdexec/__detail/__sync_wait.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/detail/node_base.h"
@@ -59,7 +61,7 @@ public:
     return data_.value();
   }
 
-  [[nodiscard]] auto nodeName() const -> std::string final;
+  using detail::NodeBase::nodeName;
 
   [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
 
@@ -68,6 +70,8 @@ public:
   }
 
 private:
+  [[nodiscard]] auto nodeName(const std::string& prefix) const -> std::string final;
+
   auto invokeOperation() {
     return [this]<typename... Ts>(Ts&&... ts) {
       detail::ExecutionStopWatch stop_watch{ this };
@@ -83,12 +87,39 @@ private:
     };
   }
 
+  auto operationTrigger() {
+    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
+      if constexpr (HAS_PERIOD) {
+        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
+      } else {
+        return stdexec::just();
+      }
+    };
+    auto node_trigger = [&] {
+      if constexpr (HAS_TRIGGER_NULLARY) {
+        return OperationT::trigger();
+      } else if constexpr (HAS_TRIGGER_ARG) {
+        return OperationT::trigger(operation());
+      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
+        return OperationT::trigger(&operation());
+      } else {
+        static_assert(HAS_PERIOD,
+                      "An Operation needs to have at least either a trigger or a period function");
+        return stdexec::just();
+      }
+    };
+    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
+             auto start_at = operationStart(HAS_PERIOD);
+             return stdexec::when_all(period_trigger(start_at), node_trigger());
+           });
+  }
+
   auto executeSender() {
     auto invoke_operation = invokeOperation();
 
     auto trigger = stdexec::continues_on(operationTrigger(), heph::conduit::scheduler(engine()));
     using TriggerT = decltype(trigger);
-    using TriggerValuesVariantT = stdexec::value_types_of_t<TriggerT>;
+    using TriggerValuesVariantT = stdexec::__sync_wait::__sync_wait_with_variant_result_t<TriggerT>;
     // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
     using TriggerValuesT = std::variant_alternative_t<0, TriggerValuesVariantT>;
     using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
@@ -119,35 +150,9 @@ private:
     return static_cast<const OperationT&>(*this);
   }
 
-  auto operationTrigger() {
-    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
-      if constexpr (HAS_PERIOD) {
-        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
-      } else {
-        return stdexec::just();
-      }
-    };
-    auto node_trigger = [&] {
-      if constexpr (HAS_TRIGGER_NULLARY) {
-        return OperationT::trigger();
-      } else if constexpr (HAS_TRIGGER_ARG) {
-        return OperationT::trigger(operation());
-      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
-        return OperationT::trigger(&operation());
-      } else {
-        static_assert(HAS_PERIOD,
-                      "An Operation needs to have at least either a trigger or a period function");
-        return stdexec::just();
-      }
-    };
-    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
-             auto start_at = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_at), node_trigger());
-           });
-  }
-
 private:
   friend class NodeEngine;
+  friend class RemoteNodeHandler;
 
   template <typename InputT, typename T, std::size_t Depth>
   friend class detail::InputBase;
@@ -170,15 +175,19 @@ inline auto Node<OperationT, OperationDataT>::nodePeriod() -> std::chrono::nanos
 }
 
 template <typename OperationT, typename OperationDataT>
-inline auto Node<OperationT, OperationDataT>::nodeName() const -> std::string {
+inline auto Node<OperationT, OperationDataT>::nodeName(const std::string& prefix) const -> std::string {
+  std::string name_prefix;
+  if (!prefix.empty()) {
+    name_prefix = fmt::format("/{}/", prefix);
+  }
   if constexpr (HAS_NAME_ARG) {
-    return std::string{ OperationT::name(operation()) };
+    return fmt::format("{}{}", name_prefix, OperationT::name(operation()));
   } else if constexpr (HAS_NAME_NULLARY) {
-    return std::string{ OperationT::name() };
+    return fmt::format("{}{}", name_prefix, OperationT::name());
   } else if constexpr (HAS_NAME_CONSTANT) {
-    return std::string{ OperationT::NAME };
+    return fmt::format("{}{}", name_prefix, OperationT::NAME);
   } else {
-    return std::string{ typeid(OperationT).name() };
+    return fmt::format("{}{}", name_prefix, typeid(OperationT).name());
   }
 }
 

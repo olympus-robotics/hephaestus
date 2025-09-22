@@ -62,7 +62,7 @@ struct ZenohPublisherNode : conduit::Node<ZenohPublisherNode<T, InputName>, Zeno
   QueuedInput<T> input{ this, std::string{ std::string_view{ InputName } } };
 
   static auto name() -> std::string_view {
-    static constexpr auto NAME = utils::string::StringLiteral{ "zenoh_publisher:" } + InputName;
+    static constexpr auto NAME = utils::string::StringLiteral{ "zenoh_publisher/" } + InputName;
     return std::string_view{ NAME };
   }
 
