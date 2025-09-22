@@ -48,6 +48,7 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
     pub_options.cache->max_samples = *config.cache_size;
   }
 
+  std::unique_lock lock(session_->mutex);
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   publisher_ = std::make_unique<::zenoh::ext::AdvancedPublisher>(
       session_->zenoh_session.ext().declare_advanced_publisher(keyexpr, std::move(pub_options)));
@@ -80,6 +81,7 @@ auto RawPublisher::publish(std::span<const std::byte> data) -> bool {
   auto bytes = toZenohBytes(data);
 
   auto options = createPublisherOptions();
+  std::unique_lock lock(session_->mutex);
   publisher_->put(std::move(bytes), std::move(options), &result);
   return result == Z_OK;
 }

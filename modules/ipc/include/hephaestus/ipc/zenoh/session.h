@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -68,6 +69,7 @@ struct Config {
 
 struct Session {
   ::zenoh::Session zenoh_session;
+  std::mutex mutex;
 };
 
 /// Create configuration for a session that doesn't connect to any other session.

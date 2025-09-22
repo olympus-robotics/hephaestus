@@ -97,6 +97,8 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
     sub_options.history->max_samples = *config.cache_size;
   }
 
+  std::unique_lock lock(session_->mutex);
+
   ::zenoh::ZResult result{};
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   subscriber_ = std::make_unique<::zenoh::ext::AdvancedSubscriber<void>>(

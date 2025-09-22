@@ -278,10 +278,14 @@ Service<RequestT, ReplyT>::Service(SessionPtr session, TopicConfig topic_config,
         session_, topic_config_, [this](const std::string&) { return this->type_info_.toJson(); });
   }
 
+
   auto on_query_cb = [this](const ::zenoh::Query& query) mutable { onQuery(query); };
 
   ::zenoh::ZResult result{};
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
+
+  std::unique_lock lock(session_->mutex);
+  
   queryable_ = std::make_unique<::zenoh::Queryable<void>>(session_->zenoh_session.declare_queryable(
       keyexpr, std::move(on_query_cb), []() {}, ::zenoh::Session::QueryableOptions::create_default(),
       &result));

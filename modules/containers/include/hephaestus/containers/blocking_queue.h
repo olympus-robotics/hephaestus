@@ -35,18 +35,16 @@ public:
   /// \return true if the new data is added to the queue, false otherwise.
   template <concepts::SimilarTo<T> U>
   [[nodiscard]] auto tryPush(U&& obj) -> bool {
-    {
-      const std::unique_lock<std::mutex> lock(mutex_);
-      if (stop_) {
-        return false;
-      }
-
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
-        return false;
-      }
-
-      queue_.push_back(std::forward<U>(obj));
+    const std::unique_lock<std::mutex> lock(mutex_);
+    if (stop_) {
+      return false;
     }
+
+    if (max_size_.has_value() && queue_.size() == *max_size_) {
+      return false;
+    }
+
+    queue_.push_back(std::forward<U>(obj));
 
     if (waiting_readers_ > 0) {
       reader_signal_.notify_one();
@@ -74,10 +72,10 @@ public:
       }
 
       queue_.push_back(std::forward<U>(obj));
-    }
 
-    if (waiting_readers_ > 0) {
-      reader_signal_.notify_one();
+      if (waiting_readers_ > 0) {
+        reader_signal_.notify_one();
+      }
     }
     return element_dropped;
   }
