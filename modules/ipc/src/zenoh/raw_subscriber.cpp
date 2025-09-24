@@ -127,6 +127,7 @@ RawSubscriber::~RawSubscriber() {
     if (liveliness_token_ != nullptr) {
       std::move(*liveliness_token_).undeclare();
     }
+
   } catch (std::exception& e) {
     heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
               e.what());
