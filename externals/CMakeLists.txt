@@ -288,7 +288,7 @@ if(liburing IN_LIST EXTERNAL_PROJECTS_LIST)
     USES_TERMINAL_BUILD TRUE # make it verbose
     CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX} --cc=${CMAKE_C_COMPILER} --cxx=${CMAKE_CXX_COMPILER}
     # NOTE: the following is awful, but is the only way I found to avoid linking against the shared library.
-    BUILD_COMMAND make -j &&. make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    BUILD_COMMAND make -j && make install DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     INSTALL_COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/lib/liburing.so && rm -rf ${CMAKE_INSTALL_PREFIX}/lib/liburing.so.2
                     rm -rf ${CMAKE_INSTALL_PREFIX}/lib/liburing.so.2.5
   )
