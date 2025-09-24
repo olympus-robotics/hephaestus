@@ -113,6 +113,9 @@ private:
 
   concurrency::MessageQueueConsumer<Request<RequestT>> request_consumer_;
   std::atomic_bool is_running_{ false };
+
+  std::unique_ptr<Service<std::string, std::string>> stop_service_;
+  std::atomic_bool stop_requested_{ false };
 };
 
 template <typename StatusT>
@@ -142,7 +145,7 @@ template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicConfig topic_config,
                                                       TriggerCallback&& action_trigger_cb,
                                                       ExecuteCallback&& execute_cb)
-  : session_(std::move((session)))
+  : session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , action_trigger_cb_(std::move(action_trigger_cb))
   , execute_cb_(std::move(execute_cb))
@@ -163,11 +166,22 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
                  .status = serdes::getSerializedTypeInfo<StatusT>() })
   , type_info_service_(createTypeInfoService(
         session_, topic_config_, [this](const std::string&) { return this->type_info_.toJson(); }))
-  , request_consumer_([this](const Request<RequestT>& request) { return execute(request); }, std::nullopt) {
+  , request_consumer_([this](const Request<RequestT>& request) { return execute(request); }, std::nullopt)
+  , stop_service_(std::make_unique<Service<std::string, std::string>>(
+        session_, internal::getStopServiceTopic(topic_config_),
+        [this](const std::string&) {  // Main callback using 'this'
+          this->stop_requested_ = true;
+          return "stopped";
+        },
+        []() {},  // Failure callback (empty)
+        []() {},  // Post-reply callback (empty)
+        ServiceConfig{
+            .create_liveliness_token = false,
+            .create_type_info_service = false,
+        })) {
   request_consumer_.start();
   heph::log(heph::DEBUG, "started Action Server", "topic", topic_config_.name);
 }
-
 template <typename RequestT, typename StatusT, typename ReplyT>
 ActionServer<RequestT, StatusT, ReplyT>::~ActionServer() {
   auto stopped = request_consumer_.stop();
@@ -215,6 +229,7 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const Request<RequestT>&
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& request) {
   is_running_ = true;
+  stop_requested_ = false;
   // NOTE: we create the publisher and the subscriber only if the request is successful.
   // This has the limit that that some status updates could be lost if the pub/sub are still discovering each
   // other, but has the great advantage that we do not risk receiving messages from other requests if our
@@ -226,17 +241,6 @@ void ActionServer<RequestT, StatusT, ReplyT>::execute(const Request<RequestT>& r
       session_, internal::getStatusPublisherTopic(topic_config_, request.uid), nullptr, config);
 
   std::atomic_bool stop_requested{ false };  // NOLINT(misc-const-correctness) False positive
-  auto stop_service = Service<std::string, std::string>(
-      session_, internal::getStopServiceTopic(topic_config_),
-      [&stop_requested](const std::string&) {
-        stop_requested = true;
-        return "stopped";
-      },
-      []() {}, []() {},
-      {
-          .create_liveliness_token = false,
-          .create_type_info_service = false,
-      });
 
   const auto reply = [this, session = session_, request,
                       status_update_publisher = std::move(status_update_publisher),
