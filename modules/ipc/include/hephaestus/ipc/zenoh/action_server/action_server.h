@@ -169,12 +169,11 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
   , request_consumer_([this](const Request<RequestT>& request) { return execute(request); }, std::nullopt)
   , stop_service_(std::make_unique<Service<std::string, std::string>>(
         session_, internal::getStopServiceTopic(topic_config_),
-        [this](const std::string&) {  // Main callback using 'this'
+        [this](const std::string&) {
           this->stop_requested_ = true;
           return "stopped";
         },
-        []() {},  // Failure callback (empty)
-        []() {},  // Post-reply callback (empty)
+        []() {}, []() {},
         ServiceConfig{
             .create_liveliness_token = false,
             .create_type_info_service = false,
