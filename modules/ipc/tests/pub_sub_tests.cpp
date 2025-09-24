@@ -127,5 +127,76 @@ TEST(PublisherSubscriber, SubscriberTypeInfo) {
   EXPECT_EQ(type_info, serdes::getSerializedTypeInfo<types::DummyType>());
 }
 
+TEST(PublisherSubscriber, DestroySubscriberWithPendingMessage) {
+  auto mt = random::createRNG();
+
+  auto session = createSession(createLocalConfig());
+  const auto topic =
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
+
+  const auto message = types::DummyType::random(mt);
+
+  static constexpr auto PUBLISHER_COUNT = 2;
+  std::vector<std::unique_ptr<Publisher<types::DummyType>>> publishers;
+  std::vector<std::unique_ptr<concurrency::Spinner>> publisher_spinners;
+  publishers.reserve(PUBLISHER_COUNT);
+  publisher_spinners.reserve(PUBLISHER_COUNT);
+  for (std::size_t i = 0; i < PUBLISHER_COUNT; ++i) {
+    publishers.push_back(std::make_unique<Publisher<types::DummyType>>(session, topic));
+    publisher_spinners.push_back(
+        std::make_unique<concurrency::Spinner>([publisher = publishers.back().get(), &message]() {
+          std::ignore = publisher->publish(message);
+          return concurrency::Spinner::SpinResult::CONTINUE;
+        }));
+  }
+
+  for (auto& spinner : publisher_spinners) {
+    spinner->start();
+  }
+
+  auto callback = [&session, &topic, &message]() {
+    std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
+    auto subscriber = createSubscriber<types::DummyType>(
+        session, topic,
+        [&stop_flag, &message]([[maybe_unused]] const MessageMetadata& metadata,
+                               const std::shared_ptr<types::DummyType>& msg) {
+          EXPECT_EQ(*msg, message);
+          stop_flag.test_and_set();
+          stop_flag.notify_all();
+        });
+    stop_flag.wait(false);
+
+    static constexpr auto ITERATIONS = 1000;
+    static auto counter = 0;
+    if (++counter >= ITERATIONS) {
+      return concurrency::Spinner::SpinResult::STOP;
+    }
+    return concurrency::Spinner::SpinResult::CONTINUE;
+  };
+
+  static constexpr auto SUBSCRIBER_SPINNER_COUNT = 10;
+  std::vector<std::unique_ptr<concurrency::Spinner>> subscriber_spinners;
+  subscriber_spinners.reserve(SUBSCRIBER_SPINNER_COUNT);
+  for (std::size_t i = 0; i < SUBSCRIBER_SPINNER_COUNT; ++i) {
+    subscriber_spinners.push_back(std::make_unique<concurrency::Spinner>(callback));
+  }
+
+  for (auto& spinner : subscriber_spinners) {
+    spinner->start();
+  }
+
+  for (auto& spinner : subscriber_spinners) {
+    spinner->wait();
+  }
+
+  for (auto& spinner : subscriber_spinners) {
+    spinner->stop().get();
+  }
+
+  for (auto& spinner : publisher_spinners) {
+    spinner->stop().get();
+  }
+}
+
 }  // namespace
 }  // namespace heph::ipc::zenoh::tests
