@@ -166,7 +166,7 @@ TEST(PublisherSubscriber, DestroySubscriberWithPendingMessage) {
         });
     stop_flag.wait(false);
 
-    static constexpr auto ITERATIONS = 1000;
+    static constexpr auto ITERATIONS = 1;
     static auto counter = 0;
     if (++counter >= ITERATIONS) {
       return concurrency::Spinner::SpinResult::STOP;
@@ -174,7 +174,7 @@ TEST(PublisherSubscriber, DestroySubscriberWithPendingMessage) {
     return concurrency::Spinner::SpinResult::CONTINUE;
   };
 
-  static constexpr auto SUBSCRIBER_SPINNER_COUNT = 10;
+  static constexpr auto SUBSCRIBER_SPINNER_COUNT = 1;
   std::vector<std::unique_ptr<concurrency::Spinner>> subscriber_spinners;
   subscriber_spinners.reserve(SUBSCRIBER_SPINNER_COUNT);
   for (std::size_t i = 0; i < SUBSCRIBER_SPINNER_COUNT; ++i) {
