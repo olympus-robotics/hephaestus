@@ -60,7 +60,7 @@ private:
 
   std::unique_ptr<ITopicDatabase> topic_db_;
 
-  std::unordered_map<std::string, std::unique_ptr<RawSubscriber>> subscribers_;
+  std::unordered_map<std::string, std::shared_ptr<RawSubscriber>> subscribers_;
   TopicWithTypeInfoCallback init_subscriber_cb_;
   SubscriberWithTypeCallback subscriber_cb_;
 };
