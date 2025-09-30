@@ -41,15 +41,16 @@ struct SubscriberConfig {
   bool create_type_info_service{ true };
 };
 
-class RawSubscriber {
+class RawSubscriber : public std::enable_shared_from_this<RawSubscriber> {
 public:
   using DataCallback = std::function<void(const MessageMetadata&, std::span<const std::byte>)>;
 
   /// Note: setting dedicated_callback_thread to true will consume the messages in a dedicated thread.
   /// While this avoid blocking the Zenoh session thread to process other messages,
   /// it also introduce an overhead due to the message data being copied.
-  RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                serdes::TypeInfo type_info, const SubscriberConfig& config = {});
+  [[nodiscard]] static auto create(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+                                   serdes::TypeInfo type_info, SubscriberConfig config)
+      -> std::shared_ptr<RawSubscriber>;
   ~RawSubscriber();
   RawSubscriber(const RawSubscriber&) = delete;
   RawSubscriber(RawSubscriber&&) = delete;
@@ -57,12 +58,16 @@ public:
   auto operator=(RawSubscriber&&) -> RawSubscriber& = delete;
 
 private:
+  RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+                serdes::TypeInfo type_info, SubscriberConfig config);
+  void setup();
   void callback(const ::zenoh::Sample& sample);
   void createTypeInfoService();
 
 private:
   using Message = std::pair<MessageMetadata, std::vector<std::byte>>;
 
+  SubscriberConfig config_;
   SessionPtr session_;
   TopicConfig topic_config_;
 

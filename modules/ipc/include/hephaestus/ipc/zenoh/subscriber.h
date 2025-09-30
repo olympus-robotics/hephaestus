@@ -31,7 +31,7 @@ public:
   using DataCallback = std::function<void(const MessageMetadata&, const std::shared_ptr<T>&)>;
   Subscriber(zenoh::SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
              const SubscriberConfig& config = {})
-    : subscriber_(
+    : subscriber_(RawSubscriber::create(
           std::move(session), std::move(topic_config),
           [callback = std::move(callback), this](const MessageMetadata& metadata,
                                                  std::span<const std::byte> buffer) mutable {
@@ -41,7 +41,7 @@ public:
             serdes::deserialize(buffer, *data);
             callback(metadata, std::move(data));
           },
-          serdes::getSerializedTypeInfo<T>(), config) {
+          serdes::getSerializedTypeInfo<T>(), config)) {
   }
 
 private:
@@ -56,7 +56,7 @@ private:
   }
 
 private:
-  RawSubscriber subscriber_;
+  std::shared_ptr<RawSubscriber> subscriber_;
   std::once_flag subscriber_check_flag_;
 };
 
