@@ -155,7 +155,7 @@ void LokiLogSink::send(const LogEntry& entry) {
   }
 
   const absl::MutexLock lock{ &mutex_ };
-  log_entries_[entry.level].push_back(entry);
+  log_entries_[entry.level][entry.module].push_back(entry);
 }
 
 }  // namespace heph::telemetry
