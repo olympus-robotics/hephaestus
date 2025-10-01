@@ -65,6 +65,7 @@ struct PushRequest {
   // Add metadata
   value.emplace_back(std::map<std::string, std::string>{
       { "location", fmt::format("{}:{}", entry.location.file_name(), entry.location.line()) },
+      { "module", entry.module },
       { "thread_id", fmt::format("{}", fmt::streamed(entry.thread_id)) } });
 
   return value;
