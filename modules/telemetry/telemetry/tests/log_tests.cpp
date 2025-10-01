@@ -2,10 +2,6 @@
 // Copyright (C) 2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <fmt/base.h>
-#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE >= 13
-#include <format>
-#endif
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -14,7 +10,9 @@
 #include <string>
 #include <utility>
 
+#include <fmt/base.h>
 #include <fmt/format.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/containers/blocking_queue.h"
@@ -205,4 +203,23 @@ TEST_F(LogTestFixture, logIfWithFields) {
   EXPECT_TRUE(sink_ptr->empty());
 }
 
+TEST_F(LogTestFixture, LogWithScope) {
+  using namespace std::literals::string_literals;
+
+  heph::log(heph::INFO, "a message in global scope");
+  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=global"));
+
+  Scope scope1("module1");
+  heph::log(heph::INFO, "a message in module1 scope");
+  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=module1"));
+
+  {
+    Scope scope2("module2");
+    heph::log(heph::INFO, "a message in module1/module2 scope");
+    EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=module1/module2"));
+  }
+
+  heph::log(heph::INFO, "another message in module1 scope");
+  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=module1"));
+}
 }  // namespace heph::telemetry::tests
