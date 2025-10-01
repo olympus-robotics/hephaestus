@@ -65,17 +65,17 @@ struct PushRequest {
   // Add metadata
   value.emplace_back(std::map<std::string, std::string>{
       { "location", fmt::format("{}:{}", entry.location.file_name(), entry.location.line()) },
-      { "module", entry.module },
       { "thread_id", fmt::format("{}", fmt::streamed(entry.thread_id)) } });
 
   return value;
 }
 
-[[nodiscard]] auto toStream(LogLevel level, const std::vector<LogEntry>& entries,
+[[nodiscard]] auto toStream(LogLevel level, const std::string& module, const std::vector<LogEntry>& entries,
                             const std::map<std::string, std::string>& stream_labels) -> Stream {
   Stream stream;
   stream.stream = stream_labels;
   stream.stream["level"] = magic_enum::enum_name(level);
+  stream.stream["module"] = module;
 
   stream.values.reserve(entries.size());
   for (const auto& entry : entries) {
@@ -85,11 +85,13 @@ struct PushRequest {
   return stream;
 }
 
-[[nodiscard]] auto createPushRequest(const std::unordered_map<LogLevel, std::vector<LogEntry>>& entries,
+[[nodiscard]] auto createPushRequest(const LokiLogSink::LogEntryPerLevel& entries,
                                      const std::map<std::string, std::string>& stream_labels) -> PushRequest {
   PushRequest request;
-  for (const auto& [level, logs] : entries) {
-    request.streams.push_back(toStream(level, logs, stream_labels));
+  for (const auto& [level, module_logs] : entries) {
+    for (const auto& [module, logs] : module_logs) {
+      request.streams.push_back(toStream(level, module, logs, stream_labels));
+    }
   }
 
   return request;
@@ -123,7 +125,7 @@ LokiLogSink::~LokiLogSink() {
 }
 
 void LokiLogSink::spinOnce() {
-  std::unordered_map<LogLevel, std::vector<LogEntry>> entries;
+  LogEntryPerLevel entries;
   {
     const absl::MutexLock lock{ &mutex_ };
     if (log_entries_.empty()) {
