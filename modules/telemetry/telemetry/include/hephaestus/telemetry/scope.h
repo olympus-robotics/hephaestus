@@ -11,7 +11,11 @@ namespace heph::telemetry {
 
 class Scope {
 public:
-  explicit Scope(std::string module);
+  struct Value {
+    std::string robot_name;
+    std::string module;
+  };
+  explicit Scope(std::string robot_name, std::string module);
   ~Scope();
 
   Scope(const Scope&) = delete;
@@ -20,6 +24,6 @@ public:
   auto operator=(Scope&&) -> Scope& = delete;
 };
 
-[[nodiscard]] auto getModulesStack() -> const std::vector<std::string>&;
+[[nodiscard]] auto getCurrentScopeValue() -> const Scope::Value*;
 
 }  // namespace heph::telemetry

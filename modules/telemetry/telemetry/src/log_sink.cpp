@@ -12,8 +12,9 @@
 namespace heph::telemetry {
 namespace {
 [[nodiscard]] auto getModuleFromScope() -> std::string {
-  const auto& module_stack = getModulesStack();
-  return module_stack.empty() ? "global" : fmt::format("{}", fmt::join(module_stack, "/"));
+  const auto* current_scope = getCurrentScopeValue();
+  return current_scope != nullptr ? fmt::format("/{}/{}", current_scope->robot_name, current_scope->module) :
+                                    "global";
 }
 }  // namespace
 
