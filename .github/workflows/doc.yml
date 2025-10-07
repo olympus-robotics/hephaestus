@@ -30,7 +30,7 @@ jobs:
           disk-cache: false
           # Share repository cache between workflows.
           repository-cache: true
-      - name: Test
+      - name: Build Docs
         env:
           BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
         run: bazelisk build docs --config remote-cache --remote_header="$BUILDBUDDY_KEY"
