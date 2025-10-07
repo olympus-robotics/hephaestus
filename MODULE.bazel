@@ -12,6 +12,8 @@ bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "aspect_rules_lint", version = "1.0.3")
 bazel_dep(name = "buildifier_prebuilt", version = "7.3.1")
 
+bazel_dep(name = "platforms", version = "1.0.0", dev_dependency = True)
+
 ##############
 # Toolchains #
 ##############
@@ -73,6 +75,32 @@ archive_override(
     strip_prefix = "bazel-compile-commands-extractor-{commit}".format(commit = COMPILE_COMMANDS_COMMIT),
     url = "https://github.com/hedronvision/bazel-compile-commands-extractor/archive/{commit}.tar.gz".format(commit = COMPILE_COMMANDS_COMMIT),
 )
+
+############################
+# Documentation tools
+############################
+
+bazel_dep(name = "rules_python", version = "1.2.0", dev_dependency = True)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi",
+    python_version = "3.11",
+    requirements_lock = "//doc:requirements.lock",
+)
+use_repo(pip, "pypi")
+
+bazel_dep(name = "rules_doxygen", version = "2.5.0", dev_dependency = True)
+
+doxygen_extension = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
+
+# Download doxygen version 1.10.0 on linux, default version on all other platforms
+doxygen_extension.configuration(
+    platform = "linux",
+    sha256 = "e5d6ae24d0bf3f0cdc4d8f146726b89ca323922f19441af99b1872d503665ad6",
+    version = "1.14.0",
+)
+use_repo(doxygen_extension, "doxygen")
 
 ############################
 # Third-party dependencies #

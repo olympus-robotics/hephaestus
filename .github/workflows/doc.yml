@@ -1,0 +1,43 @@
+name: "Build Documentation"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          # Avoid downloading Bazel every time.
+          bazelisk-cache: true
+          # Store build cache per workflow.
+          disk-cache: false
+          # Share repository cache between workflows.
+          repository-cache: true
+      - name: Test
+        env:
+          BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
+        run: bazelisk build docs --config remote-cache --remote_header="$BUILDBUDDY_KEY"
+      - name: upload
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{github.workspace}}/bazel-out/k8-fastbuild/bin/docs/_build/html
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

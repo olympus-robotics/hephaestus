@@ -1,7 +1,13 @@
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@doxygen//:doxygen.bzl", "doxygen")
+
 # =================================================================================================
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
+load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
+load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,4 +32,59 @@ refresh_compile_commands(
     targets = {
         "//modules/...": "",
     },
+)
+
+############################
+# Documentation generation
+############################
+
+sphinx_docs_library(
+    name = "sources",
+    srcs = glob(["doc/*.rst"]),
+)
+
+sphinx_build_binary(
+    name = "sphinx",
+    deps = [
+        "@pypi//breathe",
+        "@pypi//sphinx",
+        "@pypi//sphinx_book_theme",
+        "@pypi//sphinxcontrib_mermaid",
+    ],
+)
+
+heph_cc_api_doc(
+    name = "apidoc",
+    targets = [
+        "//modules/bag:bag",
+        "//modules/cli:cli",
+        "//modules/concurrency:concurrency",
+        "//modules/conduit:conduit",
+        "//modules/containers:containers",
+        "//modules/containers_proto:containers_proto",
+        "//modules/containers_reflection:containers_reflection",
+        "//modules/format:format",
+        "//modules/ipc:ipc",
+        "//modules/net:net",
+        "//modules/random:random",
+        "//modules/serdes:serdes",
+        "//modules/telemetry/telemetry:telemetry",
+        "//modules/types:types",
+        "//modules/types_proto:types_proto",
+        "//modules/utils:utils",
+        "//modules/websocket_bridge:websocket_bridge",
+    ],
+)
+
+sphinx_docs(
+    name = "docs",
+    config = "doc/conf.py",
+    formats = [
+        "html",
+    ],
+    sphinx = ":sphinx",
+    deps = [
+        ":apidoc",
+        ":sources",
+    ],
 )
