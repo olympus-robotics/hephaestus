@@ -4,9 +4,13 @@
 #include "hephaestus/telemetry/log_sink.h"
 
 #include <optional>
+#include <string>
 #include <thread>
 #include <utility>
 
+#include <fmt/format.h>
+
+#include "hephaestus/telemetry/scope.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::telemetry {

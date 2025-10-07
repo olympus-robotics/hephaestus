@@ -5,6 +5,7 @@
 #include "hephaestus/telemetry/scope.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace heph::telemetry {

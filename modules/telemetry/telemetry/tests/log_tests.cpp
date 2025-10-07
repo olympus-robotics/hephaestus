@@ -18,6 +18,7 @@
 #include "hephaestus/containers/blocking_queue.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/scope.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -209,12 +210,12 @@ TEST_F(LogTestFixture, LogWithScope) {
   heph::log(heph::INFO, "a message in global scope");
   EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=global"));
 
-  Scope scope1("robot1", "module1");
+  const Scope scope1("robot1", "module1");
   heph::log(heph::INFO, "a message in module1 scope");
   EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=/robot1/module1"));
 
   {
-    Scope scope2("robot1", "module2");
+    const Scope scope2("robot1", "module2");
     heph::log(heph::INFO, "a message in module1/module2 scope");
     EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=/robot1/module2"));
   }

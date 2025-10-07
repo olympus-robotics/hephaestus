@@ -23,8 +23,6 @@
 #include <fmt/std.h>  // NOLINT(misc-include-cleaner)
 #include <magic_enum.hpp>
 
-#include "hephaestus/telemetry/scope.h"
-
 namespace heph {
 ///@brief Forward declaration of LogLevel. Definition is in log.h, since we only want to include that when
 /// logging.
