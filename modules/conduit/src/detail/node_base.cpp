@@ -92,6 +92,14 @@ auto NodeBase::nextStartTime(bool has_period) -> ClockT::time_point {
 
     heph::log(heph::WARN, std::string{ MISSED_DEADLINE_WARNING }, "node", nodeName(), "period", period,
               "tick_duration", last_duration, "execution_duration", last_execution_duration_);
+
+    heph::telemetry::record([name = nodeName(), timestamp = now] {
+      return heph::telemetry::Metric{ .component = fmt::format("conduit/{}", name),
+                                      .tag = "node_warnings",
+                                      .timestamp = timestamp,
+                                      .values = { { "missing_deadline", true } } };
+    });
+
     return now;
   }
   return next_time_point;
