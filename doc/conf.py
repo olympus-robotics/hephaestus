@@ -1,6 +1,6 @@
 import os
 
-project = 'hephaestus'
+project = 'Hephaestus'
 author = 'Hephaestus Contributors'
 copyright = f'2025, Hephaestus Contributors'
 release = '0.0.1'

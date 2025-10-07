@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  build-test:
+  build-docs:
     runs-on: ubuntu-latest
     permissions: read-all
     steps:

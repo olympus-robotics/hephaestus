@@ -43,6 +43,11 @@ sphinx_docs_library(
     srcs = glob(["doc/*.rst"]),
 )
 
+sphinx_docs_library(
+    name = "examples",
+    srcs = [ "//modules/conduit:examples/mont_blanc.cpp" ],
+)
+
 sphinx_build_binary(
     name = "sphinx",
     deps = [
@@ -85,6 +90,7 @@ sphinx_docs(
     sphinx = ":sphinx",
     deps = [
         ":apidoc",
+        ":examples",
         ":sources",
     ],
 )
