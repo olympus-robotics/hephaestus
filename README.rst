@@ -280,6 +280,10 @@ if you are using Hephaestus build system for your project you need to backup the
   set(BUILD_MODULES ${BUILD_MODULES_BAK})
   include(${hephaestus_SOURCE_DIR}/cmake/build.cmake)
 
+Linting
+=======
+We've added shell script linting using shellcheck. To do use this locally, add `.github/scripts/shellcheck.sh` to your pre-commit file.
+
 Notes
 =====
 

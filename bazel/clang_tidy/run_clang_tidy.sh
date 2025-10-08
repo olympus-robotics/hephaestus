@@ -19,12 +19,12 @@ shift
 # clang-tidy doesn't create a patchfile if there are no errors.
 # make sure the output exists, and empty if there are no errors,
 # so the build system will not be confused.
-touch $OUTPUT
-truncate -s 0 $OUTPUT
+touch "$OUTPUT"
+truncate -s 0 "$OUTPUT"
 
 # if $CONFIG is provided by some external workspace, we need to
 # place it in the current directory
-test -e .clang-tidy || ln -s -f $CONFIG .clang-tidy
+test -e .clang-tidy || ln -s -f "$CONFIG" .clang-tidy
 
 # Print output on failure only
 logfile="$(mktemp)"
