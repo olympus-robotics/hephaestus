@@ -80,17 +80,17 @@ archive_override(
 # Documentation tools
 ############################
 
-bazel_dep(name = "rules_python", version = "1.2.0", dev_dependency = True)
+bazel_dep(name = "rules_python", version = "1.2.0")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
-    hub_name = "pypi",
+    hub_name = "pypi-heph",
     python_version = "3.11",
     requirements_lock = "//:requirements_lock.txt",
 )
-use_repo(pip, "pypi")
+use_repo(pip, "pypi-heph")
 
-bazel_dep(name = "rules_doxygen", version = "2.5.0", dev_dependency = True)
+bazel_dep(name = "rules_doxygen", version = "2.5.0")
 
 doxygen_extension = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
 
