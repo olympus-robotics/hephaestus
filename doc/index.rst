@@ -34,11 +34,6 @@
 
    api
 
-.. toctree::
-   :hidden:
-
-   overview
-
 *****
 Index
 *****

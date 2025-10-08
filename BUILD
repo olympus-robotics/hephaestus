@@ -45,7 +45,7 @@ compile_pip_requirements(
 
 sphinx_docs_library(
     name = "sources",
-  srcs = glob(["doc/*.rst"]) + ["//:README.rst"],
+    srcs = glob(["doc/*.rst"]) + ["//:README.rst"],
 )
 
 sphinx_docs_library(

@@ -32,13 +32,13 @@ To get a live preview of the documentation use the following:
 Module Documentation
 ********************
 
-We are using `reStructuredText <rst>`_. The documentation of a module is done via ``doc/<module>.rst``. Make sure that this document is referenced in the respective toctree of ``doc/index.rst``.
+We are using `reStructuredText`_. The documentation of a module is done via ``doc/<module>.rst``. Make sure that this document is referenced in the respective toctree of ``doc/index.rst``.
 
-In addition, you can add C++ API reference documentation. This is done with the help of `Breathe <breathe_doc>`_. To include your library documentation, add it it to the  ``heph_cc_api_doc`` call in the top level ``BUILD`` file. To reference an entitiy of the reference documentation, use `Breathe Domains <breathe_domain>`_.
+In addition, you can add C++ API reference documentation. This is done with the help of `Breathe`_. To include your library documentation, add it it to the  ``heph_cc_api_doc`` call in the top level ``BUILD`` file. To reference an entitiy of the reference documentation, use `Breathe Domains`_.
 
-.. _rst: https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
-.. _breathe_doc: https://breathe.readthedocs.io/en/latest
-.. _breathe_domain: https://breathe.readthedocs.io/en/latest/domains.html
+.. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
+.. _Breathe: https://breathe.readthedocs.io/en/latest
+.. _Breathe Domains: https://breathe.readthedocs.io/en/latest/domains.html
 
 *********************
 Documentation tooling

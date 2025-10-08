@@ -289,6 +289,5 @@ When switching again back to C++23 it will be possible to remove ``fmt`` and ``r
 
 TODO
 ====
-Hephaestus is under active development. The list of tasks to be carried out can be found under the `Hephaestus Masterplan <masterplan>`_ project.
+Hephaestus is under active development. The list of tasks to be carried out can be found under the `Hephaestus Masterplan <https://github.com/orgs/olympus-robotics/projects/2>`__ project.
 
-.. _masterplan: https://github.com/orgs/olympus-robotics/projects/2
