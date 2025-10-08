@@ -6,15 +6,18 @@ on:
   pull_request:
     branches: ["main"]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   build-docs:
     runs-on: ubuntu-latest
-    permissions: read-all
+    permissions:
+      contents: read
+      pages: write
+      id-token:
+        write
+        # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Free Disk Space (Ubuntu)
