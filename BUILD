@@ -45,7 +45,7 @@ sphinx_docs_library(
 
 sphinx_docs_library(
     name = "examples",
-    srcs = [ "//modules/conduit:examples/mont_blanc.cpp" ],
+    srcs = ["//modules/conduit:examples/mont_blanc.cpp"],
 )
 
 sphinx_build_binary(
