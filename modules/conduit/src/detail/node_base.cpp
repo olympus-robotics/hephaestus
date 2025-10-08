@@ -119,6 +119,14 @@ auto NodeBase::scheduler() const -> concurrency::Context::Scheduler {
   }
   return engine_->scheduler();
 }
+
+auto NodeBase::enginePrefix() const -> std::string {
+  if (engine_ == nullptr) {
+    return "";
+  }
+  return engine_->prefix();
+}
+
 auto NodeBase::runsOnEngine() const -> bool {
   if (engine_ == nullptr) {
     return true;

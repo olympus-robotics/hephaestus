@@ -67,6 +67,8 @@ public:
     return engine_;
   }
 
+  [[nodiscard]] auto enginePrefix() const -> std::string;
+
   [[nodiscard]] auto runsOnEngine() const -> bool;
 
   [[nodiscard]] auto scheduler() const -> concurrency::Context::Scheduler;
