@@ -47,6 +47,6 @@ jobs:
         with:
           path: ${{github.workspace}}/bazel-out/k8-fastbuild/bin/docs/_build/html
       - name: deploy
-        # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
