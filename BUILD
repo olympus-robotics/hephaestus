@@ -6,6 +6,7 @@ load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
 load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -35,6 +36,13 @@ refresh_compile_commands(
 ############################
 # Documentation generation
 ############################
+
+
+compile_pip_requirements(
+    name = "python_requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements_lock.txt",
+)
 
 sphinx_docs_library(
     name = "sources",

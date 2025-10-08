@@ -45,11 +45,10 @@ Documentation tooling
 *********************
 
 The tooling is provided by ``pypi`` managed by bazel. In order to add new tooling related
-dependencies, you need to add your pip package to ``requirements.txt`` and freeze these packages:
+dependencies, you need to add your pip package to ``requirements.in`` and update the lock file:
 
 .. code-block:: bash
 
-   python3 -m venv venv && . venv/bin/activate
-   pip install -r requirements.txt && python3 -m pip freeze > requirements.lock  && deactivate
+   bazel run python_requirements.update
 
 After having executed these steps, the newly updated packages are used in the next build invocation.
