@@ -1,9 +1,7 @@
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-load("@doxygen//:doxygen.bzl", "doxygen")
-
 # =================================================================================================
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
+
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
