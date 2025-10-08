@@ -81,6 +81,21 @@ heph_cc_api_doc(
     ],
 )
 
+doc_deps = [
+    ":examples",
+    ":sources",
+]
+
+sphinx_docs(
+    name = "docs-fast",
+    config = "doc/conf.py",
+    formats = [
+        "html",
+    ],
+    sphinx = ":sphinx",
+    deps = doc_deps,
+)
+
 sphinx_docs(
     name = "docs",
     config = "doc/conf.py",
@@ -90,7 +105,5 @@ sphinx_docs(
     sphinx = ":sphinx",
     deps = [
         ":apidoc",
-        ":examples",
-        ":sources",
-    ],
+    ] + doc_deps,
 )

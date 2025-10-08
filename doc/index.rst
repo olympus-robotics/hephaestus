@@ -1,4 +1,4 @@
-.. _hephaestus:
+.. _heph:
 
 ##########
 Hephaestus
@@ -45,6 +45,12 @@ Hephaestus provides robust abstractions for fundamental robotics infrastructure:
 - **Performance Optimization**
   - Real-time execution capabilities
   - Telemetry for system monitoring
+
+.. toctree::
+   :caption: Development
+   :maxdepth: 1
+
+   documentation
 
 .. toctree::
    :caption: Modules
