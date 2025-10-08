@@ -12,7 +12,7 @@ namespace heph::telemetry {
 namespace {
 // thread_local ensures that each thread gets its own instance of module_stack.
 // This is crucial for correctness in multi-threaded applications.
-thread_local std::vector<Scope::Value>
+thread_local std::vector<Scope::Context>
     modules_stack;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 }  // namespace
 
@@ -24,7 +24,7 @@ Scope::~Scope() {
   modules_stack.pop_back();
 }
 
-auto getCurrentScopeValue() -> const Scope::Value* {
+auto getCurrentContext() -> const Scope::Context* {
   return modules_stack.empty() ? nullptr : &modules_stack.back();
 }
 

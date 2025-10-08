@@ -16,7 +16,7 @@
 namespace heph::telemetry {
 namespace {
 [[nodiscard]] auto getModuleFromScope() -> std::string {
-  const auto* current_scope = getCurrentScopeValue();
+  const auto* current_scope = getCurrentContext();
   return current_scope != nullptr ? fmt::format("/{}/{}", current_scope->robot_name, current_scope->module) :
                                     "global";
 }

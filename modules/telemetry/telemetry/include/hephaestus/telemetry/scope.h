@@ -10,7 +10,7 @@ namespace heph::telemetry {
 
 class Scope {
 public:
-  struct Value {
+  struct Context {
     std::string robot_name;
     std::string module;
   };
@@ -23,6 +23,6 @@ public:
   auto operator=(Scope&&) -> Scope& = delete;
 };
 
-[[nodiscard]] auto getCurrentScopeValue() -> const Scope::Value*;
+[[nodiscard]] auto getCurrentContext() -> const Scope::Context*;
 
 }  // namespace heph::telemetry
