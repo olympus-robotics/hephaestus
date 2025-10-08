@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# shellcheck source=/dev/null
 source ./version.sh
 
 HOST_ARCH=$(uname -m)
 ARCH=${1:-${HOST_ARCH}}
 if [ "${ARCH}" == "aarch64" ]; then
-    ARCH = "arm64"
+    ARCH="arm64"
 fi
 
 if [ "${ARCH}" == "x86_64" ]; then
@@ -18,12 +19,12 @@ else
     exit 1
 fi
 
-ncores=$(cat /proc/cpuinfo | grep processor | wc -l)
+ncores=$(cat /proc/cpuinfo | grep -c processor)
 
 IMAGE_NAME="${HOST}/${ARCH}/${IMAGE}"
 
 function docker_tag_exists() {
-    docker manifest inspect ${IMAGE_NAME}:${VERSION} > /dev/null
+    docker manifest inspect "${IMAGE_NAME}:${VERSION}" > /dev/null
 }
 
 if docker_tag_exists; then
@@ -31,7 +32,7 @@ if docker_tag_exists; then
     echo "$ docker pull ${IMAGE_NAME}:${VERSION}"
 else
     echo "Building image: ${IMAGE_NAME}:${VERSION}"
-    docker build -t ${IMAGE_NAME}:${VERSION} -f Dockerfile --cpuset-cpus "0-$ncores" --build-arg BASE_IMAGE=${BASE_IMAGE} . --tag ${IMAGE_NAME}:latest
-    docker push ${IMAGE_NAME}:${VERSION}
-    docker push ${IMAGE_NAME}:latest
+    docker build -t "${IMAGE_NAME}:${VERSION}" -f Dockerfile --cpuset-cpus "0-$ncores" --build-arg "BASE_IMAGE=${BASE_IMAGE}" . --tag "${IMAGE_NAME}:latest"
+    docker push "${IMAGE_NAME}:${VERSION}"
+    docker push "${IMAGE_NAME}:latest"
 fi

@@ -1,0 +1,11 @@
+name: Lint on Scripts
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Makeself
+      uses: actions/checkout@v2
+    - name: Run ShellCheck
+      run: .github/scripts/shellcheck.sh
