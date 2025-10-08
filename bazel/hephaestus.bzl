@@ -2,10 +2,13 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
+load("@doxygen//:doxygen.bzl", "doxygen")
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@rules_buf//buf:defs.bzl", "buf_lint_test")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
+load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
 
 def heph_basic_copts():
     return [
@@ -100,6 +103,119 @@ def heph_cc_library(
         name = name + "_hdrs",
         target = name,
         visibility = kwargs.get("visibility"),
+    )
+
+def _cc_lib_header_impl(ctx):
+    headers = []
+    if CcInfo in ctx.attr.target:
+        cc_info = ctx.attr.target[CcInfo]
+        headers = depset(cc_info.compilation_context.direct_headers)
+    return [DefaultInfo(files = headers)]
+
+heph_cc_extract_library_headers = rule(
+    attrs = {
+        "target": attr.label(mandatory = True),
+    },
+    implementation = _cc_lib_header_impl,
+)
+
+def _heph_generate_api_overview(ctx):
+    outfiles = []
+    names = []
+    for target in ctx.attr.targets:
+        name = target.label.name.split(":")[-1]
+        out = ctx.actions.declare_file("doc/api/" + name + ".rst")
+        content = """
+================
+{name}
+================
+
+""".format(name = name)
+        if CcInfo in target:
+            cc_info = target[CcInfo]
+            headers = cc_info.compilation_context.direct_headers
+            for header in headers:
+                header_name = "/".join(header.short_path.split("/")[3:])
+
+                content += """
+
+.. doxygenfile:: {header_name}
+   :sections: briefdescription detaileddescription enum func protected-func protected-static-func protected-type prototype innernamespace innerclass public-type public-attrib public-func public-static-attrib public-static-func related typedef var
+
+""".format(header_name = header_name)
+
+        ctx.actions.write(
+            output = out,
+            content = content,
+        )
+        outfiles += [out]
+        names += [name]
+
+    out = ctx.actions.declare_file("doc/api.rst")
+    content = """
+.. _api_overview:
+
+=============
+API Reference
+=============
+
+.. toctree::
+   :maxdepth: 1
+
+"""
+    for name in names:
+        content += """   api/{name}
+""".format(name = name)
+
+    ctx.actions.write(
+        output = out,
+        content = content,
+    )
+    return [DefaultInfo(files = depset([out] + outfiles))]
+
+heph_generate_api_overview = rule(
+    attrs = {
+        "targets": attr.label_list(mandatory = True),
+    },
+    implementation = _heph_generate_api_overview,
+)
+
+def _get_strip_inc_paths(targets = []):
+    strip_inc_paths = []
+    for target in targets:
+        name = target.split(":")[-1]
+        strip_inc_paths += ["./modules/" + name + "/include"]
+    return strip_inc_paths
+
+def heph_cc_api_doc(
+        name,
+        targets = []):
+    doxygen(
+        name = "doxygen",
+        project_name = "hephaestus",
+        generate_xml = True,
+        generate_html = False,
+        xml_output = "doc/doxygen/xml",
+        hide_undoc_classes = True,
+        hide_undoc_members = True,
+        hide_undoc_namespaces = True,
+        directory_graph = False,
+        extract_private = False,
+        full_path_names = True,
+        force_local_includes = True,
+        strip_from_inc_path = _get_strip_inc_paths(targets),
+        exclude_patterns = ["*/external/*"],
+        exclude_symbols = ["internal", "detail"],
+        file_patterns = ["*h"],
+        outs = ["doc/doxygen/xml"],
+        srcs = [target + "_hdrs" for target in targets],
+    )
+
+    heph_generate_api_overview(name = "api_overview", targets = targets)
+
+    sphinx_docs_library(
+        name = name,
+        srcs = [":api_overview", ":doxygen"],
     )
 
 def heph_cc_binary(
