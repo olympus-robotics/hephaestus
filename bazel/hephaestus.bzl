@@ -183,8 +183,8 @@ heph_generate_api_overview = rule(
 def _get_strip_inc_paths(targets = []):
     strip_inc_paths = []
     for target in targets:
-      name = target.split(':')[-1]
-      strip_inc_paths += ["./modules/" + name + "/include"]
+        name = target.split(":")[-1]
+        strip_inc_paths += ["./modules/" + name + "/include"]
     return strip_inc_paths
 
 def heph_cc_api_doc(
@@ -203,7 +203,7 @@ def heph_cc_api_doc(
         extract_private = False,
         full_path_names = True,
         force_local_includes = True,
-        strip_from_inc_path = _get_strip_inc_paths(targets), 
+        strip_from_inc_path = _get_strip_inc_paths(targets),
         exclude_patterns = ["*/external/*"],
         exclude_symbols = ["internal", "detail"],
         file_patterns = ["*h"],
