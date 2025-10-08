@@ -1,6 +1,6 @@
 .. _heph:
 
-.. include:: overview.rst
+.. include:: ../README.rst
 
 
 .. toctree::
