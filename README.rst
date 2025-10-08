@@ -1,2 +1,2 @@
 
-.. include:: doc/overview.rst
+.. input:: doc/overview.rst
