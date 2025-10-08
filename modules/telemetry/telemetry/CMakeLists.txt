@@ -18,12 +18,14 @@ set(SOURCES
     src/metric_record.cpp
     src/log_sink.cpp
     src/log.cpp
+    src/scope.cpp
     src/log_sinks/absl_sink.cpp
     src/metric_sinks/terminal_sink.cpp
     include/hephaestus/telemetry/metric_sink.h
     include/hephaestus/telemetry/metric_record.h
     include/hephaestus/telemetry/log_sink.h
     include/hephaestus/telemetry/log.h
+    include/hephaestus/telemetry/scope.h
     include/hephaestus/telemetry/log_sinks/absl_sink.h
     include/hephaestus/telemetry/metric_sinks/terminal_sink.h
 )

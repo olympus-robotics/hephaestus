@@ -16,6 +16,7 @@ build:dbg --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
 build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
+build:clang-tidy --keep_going
 
 build:sanitizer --strip=never
 build:sanitizer --copt -fsanitize=address,undefined

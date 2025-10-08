@@ -35,6 +35,9 @@ struct LokiLogSinkConfig {
 ///        Per default entry is formatted via heph::telemetry::format.
 class LokiLogSink final : public ILogSink {
 public:
+  using LogEntryPerModule = std::unordered_map<std::string, std::vector<LogEntry>>;
+  using LogEntryPerLevel = std::unordered_map<LogLevel, LogEntryPerModule>;
+
   explicit LokiLogSink(const LokiLogSinkConfig& config);
   ~LokiLogSink() override;
 
@@ -51,7 +54,7 @@ private:
   std::map<std::string, std::string> stream_labels_;
 
   absl::Mutex mutex_;
-  std::unordered_map<LogLevel, std::vector<LogEntry>> log_entries_ ABSL_GUARDED_BY(mutex_);
+  LogEntryPerLevel log_entries_ ABSL_GUARDED_BY(mutex_);
 
   concurrency::Spinner spinner_;
 };

@@ -117,6 +117,7 @@ struct LogEntry {
   std::thread::id thread_id;
   ClockT::time_point time;
   std::string hostname;
+  std::string module;
 
   // Stack trace is optional, since it is only available in error and fatal log (because its expensive)
   // TODO(@graeter): Replace with c++23 std::stack_trace when available
@@ -158,8 +159,9 @@ struct fmt::formatter<heph::telemetry::LogEntry> : fmt::formatter<std::string_vi
   static auto format(const heph::telemetry::LogEntry& log, fmt::format_context& ctx) {
     return fmt::format_to(
         ctx.out(),
-        "level={} hostname={:?} location=\"{}:{}\" thread-id={} time={:%Y-%m-%dT%H:%M:%SZ} message={:?} {}",
+        "level={} hostname={:?} location=\"{}:{}\" thread-id={} time={:%Y-%m-%dT%H:%M:%SZ} "
+        "module={}, message={:?} {}",
         log.level, log.hostname, std::filesystem::path{ log.location.file_name() }.filename().string(),
-        log.location.line(), log.thread_id, log.time, log.message, fmt::join(log.fields, " "));
+        log.location.line(), log.thread_id, log.time, log.module, log.message, fmt::join(log.fields, " "));
   }
 };

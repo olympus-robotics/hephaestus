@@ -17,6 +17,7 @@
 
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
+#include "hephaestus/telemetry/scope.h"
 
 namespace heph::conduit {
 namespace detail {
@@ -77,6 +78,7 @@ private:
       detail::ExecutionStopWatch stop_watch{ this };
       static_assert(HAS_EXECUTE_ARG_PTR<Ts...> || HAS_EXECUTE_ARG<Ts...> || HAS_EXECUTE_NULLARY<Ts...>,
                     "No valid execute function available");
+      const telemetry::Scope scope{ enginePrefix(), nodeName("") };
       if constexpr (HAS_EXECUTE_ARG<Ts...>) {
         return OperationT::execute(operation(), std::forward<Ts>(ts)...);
       } else if constexpr (HAS_EXECUTE_ARG_PTR<Ts...>) {
