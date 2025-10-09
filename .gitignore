@@ -38,6 +38,9 @@ build-gcc/
 *.out
 *.app
 
+# Runtime Artifacts
+*.report
+
 # Bazel
 bazel-*
 MODULE.bazel.lock
