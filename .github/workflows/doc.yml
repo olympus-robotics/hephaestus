@@ -3,19 +3,14 @@ name: "Build Documentation"
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
   build-docs:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token:
-        write
-        # Deploy to the github-pages environment
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Free Disk Space (Ubuntu)
@@ -41,10 +36,24 @@ jobs:
           BUILDBUDDY_KEY: ${{ secrets.BUILDBUDDY_KEY }}
         run: bazelisk build docs --config remote-cache --remote_header="$BUILDBUDDY_KEY"
       - name: upload
+        id: deployment
         uses: actions/upload-pages-artifact@v3
         with:
           path: ${{github.workspace}}/bazel-out/k8-fastbuild/bin/docs/_build/html
+  deploy-docs:
+    needs: build-docs
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token:
+        write
+        # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ needs.build-docs.outputs.page_url }}
+    steps:
       - name: deploy
-        if: github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
