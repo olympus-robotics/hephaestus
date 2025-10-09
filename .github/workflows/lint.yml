@@ -1,4 +1,4 @@
-name: Lint on Scripts
+name: Linting
 on:
   push:
     branches:
