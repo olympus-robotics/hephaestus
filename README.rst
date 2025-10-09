@@ -282,7 +282,20 @@ if you are using Hephaestus build system for your project you need to backup the
 
 Linting
 =======
-We've added shell script linting using shellcheck. To do use this locally, add `.github/scripts/shellcheck.sh` to your pre-commit file.
+We've added shell script linting using shellcheck and docker linting using hadolint. To do use this locally, add the following to your pre-commit hook file.
+```
+git_root=$(git rev-parse --show-toplevel)
+
+if result=$(git status --porcelain | grep -E '^[MATRC]. docker/'); then
+    echo "Running Hadolint"
+    ".github/scripts/hadolint.sh"
+fi
+
+if result=$(git status --porcelain | grep -E '^[MATRC].*.sh'); then
+    echo "Running Shellcheck"
+    "$git_root/.github/scripts/shellcheck.sh"
+fi
+```
 
 Notes
 =====
