@@ -19,7 +19,7 @@ else
 fi
 
 # download bazilisk and it's buildtools
-wget -L ${BAZELISK_REPO}${BAZELISK_VERSION}/bazelisk-${OS}-${ARCH} -O $BIN_PATH/bazel
-wget -L ${BUILDTOOLS_REPO}${BUILDTOOLS_VERSION}/buildifier-${OS}-${ARCH} -O $BIN_PATH/buildifier
-wget -L ${BUILDTOOLS_REPO}${BUILDTOOLS_VERSION}/buildozer-${OS}-${ARCH} -O $BIN_PATH/buildozer
-chmod +x $BIN_PATH/bazel $BIN_PATH/buildifier $BIN_PATH/buildozer
+wget -L "${BAZELISK_REPO}${BAZELISK_VERSION}/bazelisk-${OS}-${ARCH}" -O "$BIN_PATH/bazel"
+wget -L "${BUILDTOOLS_REPO}${BUILDTOOLS_VERSION}/buildifier-${OS}-${ARCH}" -O "$BIN_PATH/buildifier"
+wget -L "${BUILDTOOLS_REPO}${BUILDTOOLS_VERSION}/buildozer-${OS}-${ARCH}" -O "$BIN_PATH/buildozer"
+chmod +x "$BIN_PATH/bazel" "$BIN_PATH/buildifier" "$BIN_PATH/buildozer"
