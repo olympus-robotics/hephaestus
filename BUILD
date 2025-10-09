@@ -56,10 +56,10 @@ sphinx_docs_library(
 sphinx_build_binary(
     name = "sphinx",
     deps = [
-        "@pypi//breathe",
-        "@pypi//sphinx",
-        "@pypi//sphinx_book_theme",
-        "@pypi//sphinxcontrib_mermaid",
+        "@pypi-heph//breathe",
+        "@pypi-heph//sphinx",
+        "@pypi-heph//sphinx_book_theme",
+        "@pypi-heph//sphinxcontrib_mermaid",
     ],
 )
 
