@@ -268,7 +268,7 @@ public:
   void restart() {
     stop();
 
-    // Wait until noone is stuck in the queue.
+    // Wait until no one is stuck in the queue.
     std::unique_lock<std::mutex> lock(mutex_);
     while (true) {
       // We can do this with a polling loop, because we just need to wait for the condition variable to wake

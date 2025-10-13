@@ -157,7 +157,7 @@ concept TimeType = CTimeType<T> || ChronoTimestampType<T>;
 template <typename T>
 concept NumericType = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
 
-/// Types that are convertable to and from a string
+/// Types that are convertible to and from a string
 template <typename T>
 concept StringStreamable = requires(std::string str, T value) {
   std::istringstream{ str } >> value;

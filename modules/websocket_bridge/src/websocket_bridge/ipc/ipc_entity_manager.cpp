@@ -105,7 +105,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
                                     // We do want to make the bridge subscriber discoverable.
                                     .create_liveliness_token = true,
                                     // We do not want this subscriber to advertise the type as it is anyways
-                                    // only dyanmically derived/discovered, i.e. this subscriber only exists
+                                    // only dynamically derived/discovered, i.e. this subscriber only exists
                                     // if the publisher does.
                                     .create_type_info_service = false };
 

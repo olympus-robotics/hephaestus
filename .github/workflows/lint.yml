@@ -1,11 +1,22 @@
-name: Lint on Scripts
-on: [push, pull_request]
+name: Linting
+on:
+  pull_request:
+  push:
+    branches: main
 jobs:
-  lint:
+  lint-bash:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Makeself
+    - name: Checkout self
       uses: actions/checkout@v2
     - name: Run ShellCheck
       run: .github/scripts/shellcheck.sh
+  lint-spell:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout self
+      uses: actions/checkout@v2
+    - name: Run Spell check
+      run: |
+        sudo apt-get update && sudo apt-get install codespell -y
+        make spellcheck

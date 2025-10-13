@@ -446,7 +446,7 @@ void WebsocketBridge::callback_Ipc_ServiceResponsesReceived(
     const auto client_handle_w_name_lookup = state_.getClientForCallId(call_id);
     if (!client_handle_w_name_lookup.has_value()) {
       heph::log(heph::ERROR,
-                "[WS Bridge] - No client handle found for service call id. Dropping service respose.",
+                "[WS Bridge] - No client handle found for service call id. Dropping service response.",
                 "call_id", call_id, "service_id", service_id);
       return;
     }
@@ -533,7 +533,7 @@ void WebsocketBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClie
   state_.addWsChannelToClientMapping(channel_id, client_handle, client_name);
 
   if (ipc_entity_manager_->hasSubscriber(topic)) {
-    heph::log(heph::INFO, "[WS Bridge] - Client subcribed to topic successfully [IPC SUB EXISTS].",
+    heph::log(heph::INFO, "[WS Bridge] - Client subscribed to topic successfully [IPC SUB EXISTS].",
               "client_name", client_name, "topic", topic, "channel_id", channel_id);
     return;
   }
@@ -553,7 +553,7 @@ void WebsocketBridge::callback_Ws_Subscribe(WsChannelId channel_id, const WsClie
                                        this->callback_Ipc_MessageReceived(metadata, data, type_info);
                                      });
 
-  heph::log(heph::INFO, "[WS Bridge] - Client subcribed to topic successfully. [IPC SUB ADDED]",
+  heph::log(heph::INFO, "[WS Bridge] - Client subscribed to topic successfully. [IPC SUB ADDED]",
             "client_name", client_name, "topic", topic, "channel_id", channel_id);
   if (config_.ws_server_verbose_bridge_state) {
     state_.printBridgeState();
@@ -757,7 +757,7 @@ void WebsocketBridge::callback_Ws_ServiceRequest(const WsServiceRequest& request
   }
 
   if (request.encoding != "protobuf") {
-    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request [{}/{}] with unsuported "
+    auto msg = fmt::format("[WS Bridge] - Client '{}' sent service request [{}/{}] with unsupported "
                            "encoding ({})!",
                            client_name, request.serviceId, request.callId, request.encoding);
     heph::log(heph::ERROR, msg, "service_id", request.serviceId, "call_id", request.callId, "client_name",

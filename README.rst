@@ -75,6 +75,12 @@ The best way to build Hephaestus is to do it inside the docker container provide
 
 If you use VS Code, run ``make configure-attach-container`` and then Command Palette (Ctrl+Shift+P) ``Dev Containers: Attach to Running Container...`` -> ``/hephaestus-dev``
 
+Spelling
+========
+
+We use codespell to check spelling in the repository. The We've added Makefil targets of ``spellcheck`` and ``spellfix`` in ``Makefile`` to allow checking and fixing spelling mistakes before pushing and creating PRs.
+CI will also run ``spellcheck`` and will fail if any problem are detected.
+
 Bazel
 =====
 
@@ -126,7 +132,7 @@ For more details see https://bazel.build/remote/output-directories
 
 Bazel generates three folders in the workspace:
 
-- ``bazel-bin``: Contains the binaries and release artifacts like debians and packages
+- ``bazel-bin``: Contains the binaries and release artifacts like debian's and packages
 - ``bazel-out``: Contains build artifacts, build and test logs
 - ``bazel-hephaestus``: Can be ignored
 
@@ -287,7 +293,7 @@ We've added shell script linting using shellcheck. To do use this locally, add `
 Notes
 =====
 
-Initially this repo was supporting C++23, but to maximize compatibilty we reverted back to C++20.
+Initially this repo was supporting C++23, but to maximize compatibility we reverted back to C++20.
 
 When switching again back to C++23 it will be possible to remove ``fmt`` and ``ranges-v3``. The transition will be easy, just rename ``fmt::`` -> ``std::`` and remove ``fmt::formatter``.
 

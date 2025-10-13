@@ -246,7 +246,7 @@ void IpcGraph::removeSubscriberEndpoint(const ipc::zenoh::EndpointInfo& info) {
     return;
   }
 
-  // If the last subsriber is removed, remove the map entry.
+  // If the last subscriber is removed, remove the map entry.
   state_.topic_to_subscribers_map.erase(info.topic);
 
   if (config_.track_topics_based_on_subscribers) {

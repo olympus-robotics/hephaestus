@@ -40,3 +40,20 @@ endif
 configure-attach-container:
 	mkdir -p "$(CONFIG_DEST)"
 	ln -sf $(shell pwd)/.devcontainer/nameConfigs/hephaestus-dev.json $(CONFIG_DEST)/$(HEPHAESTUS_DEV_CONTAINER_NAME).json
+
+# Variables
+SKIP := "*.0,*.bsd-3-clause,*.mit,*.zlib,*.drawio,*.lock,externals"
+IGNORE := "lama,LAMA,HomeState,ConnectT,parana,SoM,Collet,thirdparty"
+
+.PHONY: spellcheck
+spellcheck:
+	codespell \
+		--skip $(SKIP) \
+		--ignore-words-list $(IGNORE)
+
+.PHONY: spellfix
+spellfix:
+	codespell \
+		--skip $(SKIP) \
+		--ignore-words-list $(IGNORE) \
+		-w

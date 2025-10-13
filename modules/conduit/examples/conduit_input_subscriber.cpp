@@ -52,7 +52,7 @@ auto main(int argc, const char* argv[]) -> int {
     config.endpoints = { heph::net::Endpoint::createIpV4(address, port) };
     heph::conduit::NodeEngine engine{ config };
 
-    fmt::println("Subcribing from {}", fmt::join(engine.endpoints(), ","));
+    fmt::println("Subscribing from {}", fmt::join(engine.endpoints(), ","));
 
     engine.createNode<Sink>();
 

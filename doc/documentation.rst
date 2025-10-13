@@ -34,7 +34,7 @@ Module Documentation
 
 We are using `reStructuredText`_. The documentation of a module is done via ``doc/<module>.rst``. Make sure that this document is referenced in the respective toctree of ``doc/index.rst``.
 
-In addition, you can add C++ API reference documentation. This is done with the help of `Breathe`_. To include your library documentation, add it it to the  ``heph_cc_api_doc`` call in the top level ``BUILD`` file. To reference an entitiy of the reference documentation, use `Breathe Domains`_.
+In addition, you can add C++ API reference documentation. This is done with the help of `Breathe`_. To include your library documentation, add it it to the  ``heph_cc_api_doc`` call in the top level ``BUILD`` file. To reference an entity of the reference documentation, use `Breathe Domains`_.
 
 .. _reStructuredText: https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
 .. _Breathe: https://breathe.readthedocs.io/en/latest

@@ -9,9 +9,9 @@ Module **types** provides some general types.
 Types defined here are rather abstract and general. Project specific types are out of scope of this module.
 
 ### Goals
-* Define data types which generalize accross projects.
-* Aid testing of modules which requre data to test IO.
-* Reduce redundancy accross modules.
+* Define data types which generalize across projects.
+* Aid testing of modules which require data to test IO.
+* Reduce redundancy across modules.
 * `types` module shall serve as an example on how `types` can be integrated when using Hephaestus.
 
 ### Non-goals

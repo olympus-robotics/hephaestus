@@ -52,7 +52,7 @@ TEST(IoRingTest, startStop) {
   EXPECT_NO_THROW(ring.run());
   EXPECT_TRUE(ring.getStopToken().stop_requested());
 
-  // Running it agin should not panic, but return immediately.
+  // Running it again should not panic, but return immediately.
   EXPECT_NO_THROW(ring.run());
   EXPECT_TRUE(ring.getStopToken().stop_requested());
 }

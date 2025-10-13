@@ -34,7 +34,7 @@ struct Reflector<std::regex> {
   static ReflType from(const std::regex& v) {  // NOLINT
     (void)v;
     // NOTE: there is currently no nice way to serialize an std::regex because std::regex is lacking
-    // the API to retreive the original string.
+    // the API to retrieve the original string.
     return ".*";
   }
 };

@@ -140,7 +140,7 @@ macro(configure_modules)
   configure_file(${CMAKE_TEMPLATES_DIR}/doxyfile.in ${CMAKE_BINARY_DIR}/doxyfile @ONLY)
 
   # Define installation rules for module targets
-  option(DISABLE_MODULES_INSTALL "Disable installtion of modules, this is usefull when building statically" OFF)
+  option(DISABLE_MODULES_INSTALL "Disable installation of modules, this is useful when building statically" OFF)
   if(NOT DISABLE_MODULES_INSTALL)
     install_modules()
   endif()
@@ -212,7 +212,7 @@ macro(declare_module)
 
     set(MODULE_${MODULE_ARG_NAME}_DEPENDS_ON_NO_PREFIX
         ${MODULE_ARG_DEPENDS_ON_MODULES}
-        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME} withot prefix"
+        CACHE INTERNAL "Dependencies of ${MODULE_ARG_NAME} without prefix"
     )
 
     # Add prefix
@@ -410,7 +410,7 @@ endmacro()
 # ==================================================================================================
 # macro: define_module_executable
 #
-# Description: Macro to define exectuable targets Note: - An executable target belongs to the enclosing module - A
+# Description: Macro to define executable targets Note: - An executable target belongs to the enclosing module - A
 # module can have multiple executables - Executables are installed on call to `make install`
 #
 # Parameters: SOURCES     : (list) Source files to compile [PUBLIC_INCLUDE_PATHS] : (list, optional) Publicly included
