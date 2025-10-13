@@ -64,14 +64,46 @@ namespace {
 }
 }  // namespace
 
+auto RawSubscriber::create(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
+                           serdes::TypeInfo type_info, SubscriberConfig config)
+    -> std::shared_ptr<RawSubscriber> {
+  auto raw_subscriber = std::shared_ptr<RawSubscriber>(new RawSubscriber{
+      std::move(session), std::move(topic_config), std::move(callback), std::move(type_info), config });
+  raw_subscriber->setup();
+  return raw_subscriber;
+}
+
 RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataCallback&& callback,
-                             serdes::TypeInfo type_info, const SubscriberConfig& config)
-  : session_(std::move(session))
+                             serdes::TypeInfo type_info, SubscriberConfig config)
+  : config_(config)
+  , session_(std::move(session))
   , topic_config_(std::move(topic_config))
   , callback_(std::move(callback))
   , type_info_(std::move(type_info))
-  , dedicated_callback_thread_(config.dedicated_callback_thread) {
-  if (config.create_type_info_service) {
+  , dedicated_callback_thread_(config_.dedicated_callback_thread) {
+}
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
+RawSubscriber::~RawSubscriber() {
+  if (callback_messages_consumer_ != nullptr) {
+    auto stopped = callback_messages_consumer_->stop();
+    stopped.get();
+  }
+
+  try {
+    std::move(*subscriber_).undeclare();
+    if (liveliness_token_ != nullptr) {
+      std::move(*liveliness_token_).undeclare();
+    }
+
+  } catch (std::exception& e) {
+    heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
+              e.what());
+  }
+}
+
+void RawSubscriber::setup() {
+  if (config_.create_type_info_service) {
     if (type_info_.isValid()) {
       createTypeInfoService();
     } else {
@@ -91,42 +123,27 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
   }
 
   auto sub_options = ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::create_default();
-  if (config.cache_size.has_value() && *config.cache_size > 0) {
+  if (config_.cache_size.has_value() && *config_.cache_size > 0) {
     sub_options.history =
         ::zenoh::ext::SessionExt::AdvancedSubscriberOptions::HistoryOptions::create_default();
-    sub_options.history->max_samples = *config.cache_size;
+    sub_options.history->max_samples = *config_.cache_size;
   }
 
   ::zenoh::ZResult result{};
   const ::zenoh::KeyExpr keyexpr{ topic_config_.name };
   subscriber_ = std::make_unique<::zenoh::ext::AdvancedSubscriber<void>>(
       session_->zenoh_session.ext().declare_advanced_subscriber(
-          keyexpr, [this](const ::zenoh::Sample& sample) { this->callback(sample); }, []() {},
-          std::move(sub_options), &result));
+          keyexpr, [self = shared_from_this()](const ::zenoh::Sample& sample) { self->callback(sample); },
+          []() {}, std::move(sub_options), &result));
   panicIf(result != Z_OK, "[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name,
           result);
 
-  if (config.create_liveliness_token) {
+  if (config_.create_liveliness_token) {
     liveliness_token_ =
         std::make_unique<::zenoh::LivelinessToken>(session_->zenoh_session.liveliness_declare_token(
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::SUBSCRIBER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-  }
-}
-
-// NOLINTNEXTLINE(bugprone-exception-escape)
-RawSubscriber::~RawSubscriber() {
-  if (callback_messages_consumer_ != nullptr) {
-    auto stopped = callback_messages_consumer_->stop();
-    stopped.get();
-  }
-
-  try {
-    std::move(*subscriber_).undeclare();
-  } catch (std::exception& e) {
-    heph::log(heph::ERROR, "failed to undeclare subscriber", "topic", topic_config_.name, "exception",
-              e.what());
   }
 }
 
