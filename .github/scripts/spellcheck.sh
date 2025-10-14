@@ -15,24 +15,11 @@ while getopts "w" opt; do
   esac
 done
 
-# shellcheck disable=SC2329 # This is used in TRAP
-function cleanup()
-{
-    rm -rf "${tmp_typo}"
-}
-
-trap cleanup EXIT
-
-# Create tmp dir for binary
-tmp_typo="$(mktemp -d)"
-TYPOS_VERSION="$(curl -s "https://api.github.com/repos/crate-ci/typos/releases/latest" | grep -Po '"tag_name": "v\K[0-9.]+')"
-wget -qO /tmp/typos.tar.gz "https://github.com/crate-ci/typos/releases/latest/download/typos-v$TYPOS_VERSION-x86_64-unknown-linux-musl.tar.gz"
-tar xf /tmp/typos.tar.gz -C "$tmp_typo" ./typos
-cd "$(git rev-parse --show-toplevel)" || exit
+# Use docker to check 
 if $write_mode; then
-   "${tmp_typo}/typos" -w
+   docker run --rm -t -v "$(pwd):/app" imunew/typos-cli  -w /app
 else
-   "${tmp_typo}/typos"
+   docker run --rm -t -v "$(pwd):/app" imunew/typos-cli /app
 fi
 spell_res=$?
 exit $spell_res
