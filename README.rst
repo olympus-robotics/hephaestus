@@ -282,7 +282,7 @@ if you are using Hephaestus build system for your project you need to backup the
 
 Linting
 =======
-We've added shell script linting using shellcheck and docker linting using hadolint. To do use this locally, add the following to your pre-commit hook file.
+We've added shell script linting using shellcheck and docker linting using hadolint. To use this locally, add the following to your pre-commit hook file.
 ```
 git_root=$(git rev-parse --show-toplevel)
 
