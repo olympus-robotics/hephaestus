@@ -73,7 +73,6 @@ private:
 
 private:
   SessionPtr session_;
-  std::unique_ptr<::zenoh::Queryable<void>> queryable_;
   std::unique_ptr<::zenoh::LivelinessToken> liveliness_token_;
 
   TopicConfig topic_config_;
@@ -83,6 +82,7 @@ private:
 
   serdes::ServiceTypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_info_service_;
+  std::unique_ptr<::zenoh::Queryable<void>> queryable_;
 };
 
 template <typename ReplyT>
