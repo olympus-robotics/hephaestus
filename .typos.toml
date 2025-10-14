@@ -33,7 +33,7 @@ extend-ignore-identifiers-re = [
 # Project-specific
 parana = "parana"
 SerDes = "SerDes"
-Matrics = "Matrix"
+recordMatrics = "recordMatrics"
 
 [default.extend-identifiers]
 "throwed" = "thrown"
