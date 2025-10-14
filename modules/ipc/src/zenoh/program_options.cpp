@@ -43,7 +43,7 @@ void appendProgramOption(cli::ProgramDescription& program_description,
       .defineOption<std::string>("session_id", "the session id", "")
       .defineOption<std::string>("zenoh_config",
                                  "path to a zenoh configuration file (either in yaml or json5 format). "
-                                 "Options set in here will get overriden by explicit command line options.",
+                                 "Options set in here will get overridden by explicit command line options.",
                                  "")
       .defineOption<std::size_t>("cache", "Cache size", 0)
       .defineOption<std::string>("mode", "Running mode: options: peer, client", "peer")

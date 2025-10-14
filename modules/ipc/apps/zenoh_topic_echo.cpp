@@ -122,7 +122,7 @@ auto main(int argc, const char* argv[]) -> int {
     desc.defineFlag("noarr", "Truncate print of long arrays");
     desc.defineOption<std::size_t>(
         "noarr-max-size",
-        fmt::format("Maximal length for an array before being trancated if --noarr is used (Default: {}).",
+        fmt::format("Maximal length for an array before being truncated if --noarr is used (Default: {}).",
                     DEFAULT_MAX_ARRAY_LENGTH),
         DEFAULT_MAX_ARRAY_LENGTH);
     const auto args = std::move(desc).parse(argc, argv);

@@ -25,7 +25,7 @@
 namespace heph::examples::types::tests {
 namespace {
 
-TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
+TEST(ZenohTests, WrongSubscriberTypeLargeIntoSmall) {
   auto mt = random::createRNG();
   const ipc::zenoh::Config config{};
   auto session = ipc::zenoh::createSession(config);
@@ -49,7 +49,7 @@ TEST(ZenohTests, WrongSubsriberTypeLargeIntoSmall) {
   EXPECT_THROW_OR_DEATH(std::ignore = publisher.publish(send_message);, std::exception, "");
 }
 
-TEST(ZenohTests, WrongSubsriberTypeSmallIntoLarge) {
+TEST(ZenohTests, WrongSubscriberTypeSmallIntoLarge) {
   auto mt = random::createRNG();
   auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
   const auto topic = ipc::TopicConfig("test_topic");

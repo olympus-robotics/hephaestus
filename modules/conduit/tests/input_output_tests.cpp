@@ -115,11 +115,11 @@ struct OutputOperation : Node<OutputOperation> {
   }
 };
 
-struct InputOperatioData {
+struct InputOperationData {
   bool called{ false };
 };
 
-struct InputOperation : Node<InputOperation, InputOperatioData> {
+struct InputOperation : Node<InputOperation, InputOperationData> {
   QueuedInput<int> input1{ this, "input" };
 
   static auto trigger(InputOperation& self) {

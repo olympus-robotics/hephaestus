@@ -105,7 +105,7 @@ TYPED_TEST(RandomTypeTests, LimitsTest) {
 }
 
 // Note: If the size of the container is not specified, the size is randomly generated. No need to test this
-// case, as it is already included in testing for randomness. Repeadedly creating an empty container would
+// case, as it is already included in testing for randomness. Repeatedly creating an empty container would
 // fail the RandomnessTest.
 TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
   auto mt = createRNG();

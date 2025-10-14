@@ -43,7 +43,7 @@ public:
   }
 
   // Record
-  void recordMatrics() {
+  void recordMatrix() {
     if (!component_name_.has_value()) {
       return;
     }
@@ -135,7 +135,7 @@ void Spinner::spin() {
         break;
       }
       spinner_telemetry.timeCallback();
-      spinner_telemetry.recordMatrics();
+      spinner_telemetry.recordMatrix();
 
       if (spin_period_.has_value()) {  // Throttle spinner to a fixed period if spin_period_ is provided
         std::unique_lock<std::mutex> lock(mutex_);

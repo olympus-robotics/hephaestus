@@ -42,7 +42,7 @@ public:
   void start();
   void stop();
 
-  // Subsribers
+  // Subscribers
   /////////////
   [[nodiscard]] auto hasSubscriber(const std::string& topic) const -> bool;
   void addSubscriber(const std::string& topic, const serdes::TypeInfo& topic_type_info,

@@ -131,7 +131,7 @@ public:
 
   /// @brief Builds the container to parse command line options.
   /// @note: The resources in this object is moved into the returned object, making this object
-  /// unvalid.
+  /// invalid.
   /// @param argc Number of arguments on the command line
   /// @param argv array of C-style strings
   /// @return Object containing command line options
@@ -139,7 +139,7 @@ public:
 
   /// @brief Builds the container to parse command line options.
   /// @note: The resources in this object is moved into the returned object, making this object
-  /// unvalid.
+  /// invalid.
   /// @param args List of element passed to the program
   /// @return Object containing command line options
   auto parse(const std::vector<std::string>& args) && -> ProgramOptions;
@@ -201,7 +201,7 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
 
   if constexpr (std::is_same_v<T, std::string>) {
     // note: since std::istringstream extracts only up to whitespace, this special case is
-    // neccessary for parsing strings containing multiple words
+    // necessary for parsing strings containing multiple words
     return it->value;
   }
 
