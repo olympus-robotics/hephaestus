@@ -8,7 +8,7 @@ ipc provides .. <one line description>
 
 Provide more details on the functionality, API usage, etc
 
-## Usefull Commands
+## Useful Commands
 
 ### Router status
 Allows to get the list of nodes connected to a router.

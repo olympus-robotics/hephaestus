@@ -154,7 +154,7 @@ TEST_F(IpcEntityManagerTest, CallServiceAsync) {
 
         EXPECT_EQ(reply, request_message);
       });
-  heph::log(heph::INFO, "[IPC Interface TEST] - Call dispached. Waiting for async call.");
+  heph::log(heph::INFO, "[IPC Interface TEST] - Call dispatched. Waiting for async call.");
 
   future.wait();
 

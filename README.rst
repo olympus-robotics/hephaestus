@@ -297,10 +297,14 @@ if result=$(git status --porcelain | grep -E '^[MATRC].*.sh'); then
 fi
 ```
 
+Spelling
+========
+Spell checking on source code is done using [typos](https://github.com/crate-ci/typos). There is a `make`` target for `spellcheck` and `spellfix`.
+
 Notes
 =====
 
-Initially this repo was supporting C++23, but to maximize compatibilty we reverted back to C++20.
+Initially this repo was supporting C++23, but to maximize compatibility we reverted back to C++20.
 
 When switching again back to C++23 it will be possible to remove ``fmt`` and ``ranges-v3``. The transition will be easy, just rename ``fmt::`` -> ``std::`` and remove ``fmt::formatter``.
 

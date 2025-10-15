@@ -117,7 +117,7 @@ auto main() -> int {
     engine.run();
 
   } catch (...) {
-    fmt::println("unexcepted exception...");
+    fmt::println("unexpected exception...");
   }
 
   return EXIT_SUCCESS;

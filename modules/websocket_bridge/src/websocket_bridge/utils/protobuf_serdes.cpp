@@ -366,7 +366,7 @@ void printBinary(const uint8_t* data, size_t length) {
     return;
   }
 
-  fmt::println("BINRARY ({} bytes)", length);
+  fmt::println("BINARY ({} bytes)", length);
 
   std::stringstream ss;
   for (size_t i = 0; i < length; ++i) {

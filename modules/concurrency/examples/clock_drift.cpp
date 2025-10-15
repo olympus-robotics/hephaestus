@@ -38,7 +38,7 @@ auto main(int argc, const char* argv[]) -> int {
     heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
 
     auto desc =
-        heph::cli::ProgramDescription("Determin clock drift over time with different spinner periods");
+        heph::cli::ProgramDescription("Determine clock drift over time with different spinner periods");
     desc.defineOption<std::string>("influxdb_host", "Hostname of the influxdb instance to log data to",
                                    "localhost:8099")
         .defineOption<std::string>("influxdb_token", "Access token for influxdb",

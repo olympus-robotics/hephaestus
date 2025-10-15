@@ -53,7 +53,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::conduit::NodeEngine engine{ {} };
 
-    fmt::println("Subcribing to {}", endpoint);
+    fmt::println("Subscribing to {}", endpoint);
 
     auto subscriber = engine.createNode<heph::conduit::RemoteOutputSubscriber<heph::types::DummyType>>(
         endpoint, std::string{ "generator" });

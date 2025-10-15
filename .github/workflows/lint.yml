@@ -18,3 +18,5 @@ jobs:
       uses: actions/checkout@v2
     - name: Run ShellCheck
       run: .github/scripts/hadolint.sh
+    - name: Spell Check Repo
+      run: .github/scripts/spellcheck.sh

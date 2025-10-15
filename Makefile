@@ -40,3 +40,10 @@ endif
 configure-attach-container:
 	mkdir -p "$(CONFIG_DEST)"
 	ln -sf $(shell pwd)/.devcontainer/nameConfigs/hephaestus-dev.json $(CONFIG_DEST)/$(HEPHAESTUS_DEV_CONTAINER_NAME).json
+
+.PHONY: spellcheck
+spellcheck:
+	.github/scripts/spellcheck.sh
+.PHONY: spellfix
+spellfix:
+	.github/scripts/spellcheck.sh -w

@@ -1,0 +1,40 @@
+[files]
+extend-exclude = [
+    "*.0",
+    "*.bsd-3-clause",
+    "*.mit",
+    "*.zlib",
+    "*.drawio",
+    "*.lock"
+]
+ignore-hidden = true
+ignore-files = true
+ignore-dot = true
+ignore-vcs = true
+ignore-global = true
+ignore-parent = true
+
+[default]
+binary = false
+check-filename = true
+check-file = true
+unicode=true
+locale = "en"
+extend-ignore-re = []
+extend-ignore-identifiers-re = [
+    "str2ba",
+    "ba2str",
+    "SerDes[a-zA-Z]*",
+    "ue",
+    "PNGs"
+]
+
+[default.extend-words]
+# Project-specific
+parana = "parana"
+SerDes = "SerDes"
+recordMatrics = "recordMatrics"
+optin = "optin"
+
+[default.extend-identifiers]
+"throwed" = "thrown"
