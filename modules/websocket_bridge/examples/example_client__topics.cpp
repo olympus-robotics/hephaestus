@@ -105,7 +105,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsClientNoTls& clie
 
 }  // namespace
 
-// NOLINTBEGIN(clang-analyzer-option.cplusplus.VirtualCall)
+// NOLINTBEGIN(clang-analyzer-optin.cplusplus.VirtualCall)
 // Note: This NOLINT is needed because it is triggered by an issue in the virtual
 // destructor of foxglove::Client, i.e. inside the dependency, not our code
 
@@ -233,4 +233,4 @@ auto main(int argc, char** argv) -> int try {
   return 1;
 }
 
-// NOLINTEND(clang-analyzer-option.cplusplus.VirtualCall)
+// NOLINTEND(clang-analyzer-optin.cplusplus.VirtualCall)
