@@ -7,6 +7,7 @@ load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
 load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
+load("@doxygen//:doxygen.bzl", "doxygen")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -49,8 +50,18 @@ sphinx_docs_library(
 )
 
 sphinx_docs_library(
+    name = "headers",
+    srcs = [
+      "//modules/conduit:include/hephaestus/conduit/basic_input.h",
+      "//modules/conduit:include/hephaestus/conduit/input.h",
+  ],
+)
+
+sphinx_docs_library(
     name = "examples",
-    srcs = ["//modules/conduit:examples/mont_blanc.cpp"],
+    srcs = [
+    "//modules/conduit:examples/periodic_spinner.cpp"
+  ],
 )
 
 sphinx_build_binary(
@@ -88,6 +99,7 @@ heph_cc_api_doc(
 )
 
 doc_deps = [
+    ":headers",
     ":examples",
     ":sources",
 ]
@@ -112,4 +124,5 @@ sphinx_docs(
     deps = [
         ":apidoc",
     ] + doc_deps,
+    tags = ["no-sandbox"],
 )

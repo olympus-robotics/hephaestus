@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#if 0
 #include "hephaestus/conduit/remote_input_publisher.h"
 
 #include <cstddef>
@@ -63,3 +64,4 @@ auto SetRemoteInputOperator::execute(std::vector<std::byte> msg, std::string* ty
 }
 
 }  // namespace heph::conduit::internal
+#endif

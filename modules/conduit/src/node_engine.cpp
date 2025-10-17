@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#if 0
 #include "hephaestus/conduit/node_engine.h"
 
 #include <algorithm>
@@ -86,3 +87,4 @@ auto NodeEngine::getDotGraph() const -> std::string {
   return dot_graph;
 }
 }  // namespace heph::conduit
+#endif
