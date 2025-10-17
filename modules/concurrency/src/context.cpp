@@ -9,6 +9,7 @@
 
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency {
 void Context::run(const std::function<void()>& on_start) {
@@ -35,6 +36,10 @@ void Context::enqueue(TaskBase* task) {
   ring_.submit(&task->dispatch_operation);
 }
 
+void Context::dequeue(TaskBase* task) {
+  tasks_.erase(task);
+}
+
 void Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) {
   if (ring_.stopRequested()) {
     task->setStopped();
@@ -52,7 +57,7 @@ void Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) {
 }
 
 void Context::dequeueTimer(TaskBase* task) {
-  tasks_.erase(task);
+  dequeue(task);
   timer_.dequeue(task);
 }
 

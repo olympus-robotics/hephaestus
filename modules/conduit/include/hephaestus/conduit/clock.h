@@ -1,5 +1,13 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-// #include "hephaestus/conduit/output.h"
+#pragma once
+
+#include "hephaestus/concurrency/context.h"
+
+namespace heph::conduit {
+
+using ClockT = heph::concurrency::ClockT;
+
+}
