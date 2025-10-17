@@ -41,7 +41,7 @@ LLVM_VERSIONS = {
 llvm.toolchain(
     name = "llvm_toolchain",
     cxx_standard = {
-        "": "c++20",
+        "": "c++23",
     },
     llvm_versions = LLVM_VERSIONS,
 )
@@ -107,7 +107,7 @@ use_repo(doxygen_extension, "doxygen")
 ############################
 
 bazel_dep(name = "tcmalloc", version = "0.0.0-20250331-43fcf6e")
-bazel_dep(name = "googletest", version = "1.15.2")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.1")
 bazel_dep(name = "abseil-cpp", version = "20250127.0")
 bazel_dep(name = "magic_enum", version = "0.9.5")
 bazel_dep(name = "fmt", version = "11.1.4")
@@ -126,6 +126,7 @@ git_override(
     commit = "df7173ddbfa57e5cb48d5f0cfb24a065cd502119",
     remote = "https://github.com/martis42/depend_on_what_you_use",
 )
+bazel_dep(name = "boost.pfr", version = "1.83.0.bcr.1")
 
 # TODO: eventually add
 # bazel_dep(name = "lz4", version = "1.9.4")

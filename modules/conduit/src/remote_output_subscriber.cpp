@@ -1,7 +1,7 @@
 //=================================================================================================
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
-
+#if 0
 #include "hephaestus/conduit/remote_output_subscriber.h"
 
 #include <cstddef>
@@ -67,3 +67,4 @@ auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std:
   co_return {};
 }
 }  // namespace heph::conduit::internal
+#endif

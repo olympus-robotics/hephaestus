@@ -5,91 +5,69 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
-#include <optional>
-#include <string>
-#include <type_traits>
+#include <string_view>
 #include <utility>
 #include <vector>
 
-#include "hephaestus/conduit/detail/awaiter.h"
-#include "hephaestus/conduit/detail/input_base.h"
-#include "hephaestus/conduit/input.h"
-#include "hephaestus/conduit/node.h"
+#include <exec/task.hpp>
+#include <hephaestus/concurrency/repeat_until.h>
+
+#include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/channel.h"
+#include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/conduit/typed_input.h"
 
 namespace heph::conduit {
-template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<>>
-class AccumulatedTransformInputBase
-  : public detail::InputBase<AccumulatedTransformInputBase<T, R, F, InputPolicy>, T, InputPolicy::DEPTH> {
-  using BaseT = detail::InputBase<AccumulatedTransformInputBase<T, R, F, InputPolicy>, T, InputPolicy::DEPTH>;
-
+template <typename T, std::size_t Capacity>
+class AccumulatedInput : public TypedInput<T> {
 public:
-  using ValueT = T;
-  using InputPolicyT = InputPolicy;
-
-  template <typename OperationT, typename DataT>
-  explicit AccumulatedTransformInputBase(Node<OperationT, DataT>* node, F f, std::string name,
-                                         R initial_value = R{})
-    : BaseT(node, std::move(name)), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
+  explicit AccumulatedInput(std::string_view name) : TypedInput<T>(name) {
   }
 
-  auto peekValue() -> std::optional<R> {
-    if (this->buffer_.size() == 0) {
-      return std::nullopt;
-    }
-    R res{ initial_value_ };
-    for (auto& element : this->buffer_.peekAll()) {
-      res = f_(std::move(element), res);
-    }
-    return res;
+  auto setValue(T t) -> concurrency::AnySender<void> final {
+    return value_channel_.setValue(std::move(t));
   }
 
-  auto getValue() -> std::optional<R> {
-    if (this->buffer_.size() == 0) {
-      return std::nullopt;
-    }
-    R res{ initial_value_ };
-    while (true) {
-      auto element = this->buffer_.pop();
-      if (!element.has_value()) {
-        break;
-      }
-      res = f_(std::move(element.value()), res);
-    }
-    return res;
+  auto value() -> std::vector<T> {
+    return buffer_.popAll();
   }
-
-  template <typename Receiver, bool Peek>
-  using Awaiter = detail::Awaiter<AccumulatedTransformInputBase, std::decay_t<Receiver>, Peek>;
 
 private:
-  F f_;
-  R initial_value_;
-};
-
-template <typename T, typename R, typename InputPolicy = InputPolicy<>>
-using AccumulatedTransformInput = AccumulatedTransformInputBase<T, R, std::function<R(T, R&)>, InputPolicy>;
-
-namespace internal {
-template <typename T>
-auto accumulator(T value, std::vector<T>& state) -> std::vector<T> {
-  state.push_back(value);
-  return state;
-}
-}  // namespace internal
-
-template <typename T, typename InputPolicy = InputPolicy<>>
-class AccumulatedInput
-  : public AccumulatedTransformInputBase<T, std::vector<T>, decltype(&internal::accumulator<T>),
-                                         InputPolicy> {
-  using BaseT =
-      AccumulatedTransformInputBase<T, std::vector<T>, decltype(&internal::accumulator<T>), InputPolicy>;
-
-public:
-  template <typename OperationT, typename DataT>
-  explicit AccumulatedInput(Node<OperationT, DataT>* node, std::string name,
-                            std::vector<T> initial_value = std::vector<T>{})
-    : BaseT(node, &internal::accumulator<T>, std::move(name), std::move(initial_value)) {
+  [[nodiscard]] auto doTrigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<void> final {
+    return [this]() -> exec::task<void> {
+      while (true) {
+        auto value = co_await value_channel_.getValue();
+        this->updateTriggerTime();
+        while (!buffer_.push(std::move(value))) {
+          buffer_.pop();
+        }
+      }
+    }();
+    // FIXME:
+    /*
+    return concurrency::repeatUntil([&]() {
+      return value_channel_.getValue() | stdexec::then([this](T value) {
+              while (!buffer_.push(std::move(value))) {
+                buffer_.pop();
+              }
+               return false;
+             });
+    });
+    */
   }
+
+  void handleCompleted() final {
+  }
+
+  void handleStopped() final {
+  }
+
+  void handleError() final {
+  }
+
+private:
+  std::string_view name_;
+  heph::concurrency::Channel<T, 1> value_channel_;
+  concurrency::internal::CircularBuffer<T, Capacity> buffer_;
 };
 }  // namespace heph::conduit

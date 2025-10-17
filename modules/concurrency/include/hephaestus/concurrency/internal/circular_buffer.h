@@ -9,7 +9,7 @@
 #include <optional>
 #include <vector>
 
-namespace heph::conduit::detail {
+namespace heph::concurrency::internal {
 template <typename T, std::size_t Capacity>
 class CircularBuffer {
 public:
@@ -38,7 +38,21 @@ public:
     return res;
   }
 
-  auto peek() -> std::optional<T> {
+  [[nodiscard]] auto popAll() -> std::vector<T> {
+    std::vector<T> res;
+    if (size_ == 0) {
+      return res;
+    }
+    res.reserve(size_);
+    for (std::size_t i = size_; i != 0; --i) {
+      res.push_back(data_[read_index_]);
+      read_index_ = (read_index_ + 1) % data_.size();
+    }
+    size_ = 0;
+    return res;
+  }
+
+  [[nodiscard]] auto peek() const -> std::optional<T> {
     if (size_ == 0) {
       return std::nullopt;
     }
@@ -46,7 +60,7 @@ public:
     return std::optional{ data_[read_index_] };
   }
 
-  auto peekAll() -> std::vector<T> {
+  [[nodiscard]] auto peekAll() const -> std::vector<T> {
     std::vector<T> res;
     if (size_ == 0) {
       return res;
@@ -60,7 +74,7 @@ public:
     return res;
   }
 
-  auto size() -> std::size_t {
+  [[nodiscard]] auto size() const -> std::size_t {
     return size_;
   }
 
@@ -84,7 +98,7 @@ public:
     return true;
   }
 
-  auto peek() -> std::optional<T> {
+  auto peek() const -> std::optional<T> {
     return data_;
   }
 
@@ -92,11 +106,11 @@ public:
     return std::exchange(data_, std::optional<T>{});
   }
 
-  auto size() -> std::size_t {
+  auto size() const -> std::size_t {
     return data_.has_value() ? 1 : 0;
   }
 
 private:
   std::optional<T> data_{};
 };
-}  // namespace heph::conduit::detail
+}  // namespace heph::concurrency::internal

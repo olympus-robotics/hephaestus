@@ -4,54 +4,50 @@
 
 #pragma once
 
-#include <string>
-#include <utility>
+#include <exec/task.hpp>
 
-#include <hephaestus/conduit/detail/node_base.h>
-#include <stdexec/execution.hpp>
-
-#include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/conduit/node.h"
-#include "hephaestus/utils/utils.h"
+#include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/conduit/output_base.h"
+#include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {
 
-class NodeEngine;
+template <typename T, std::size_t Capacity = 1>
+struct Output : public OutputBase {
+  explicit Output(std::string_view name) : OutputBase(name) {
+  }
 
-template <typename T>
-class Output {
-public:
-  using ResultT = T;
-  template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
-    if (node != nullptr) {
-      node->addOutputSpec([this, node] {
-        return detail::OutputSpecification{
-          .name = outputs_.rawName(),
-          .node_name = node->nodeName(),
-          .type = heph::utils::getTypeName<T>(),
-        };
-      });
-      if (node->enginePtr() != nullptr) {
-        node->engine().registerOutput(*this);
+  void operator()(T value) {
+    heph::panicIf(buffer_.size() != 0, "output channel not empty");
+    if (!buffer_.push(std::move(value))) {
+      heph::panic("No space left");
+    }
+  }
+
+  auto trigger() -> concurrency::AnySender<void> final {
+    return triggerImpl();
+  }
+
+  void connect(TypedInput<T>& input) {
+    inputs_.push_back(&input);
+  }
+
+private:
+  auto triggerImpl() -> exec::task<void> {
+    while (true) {
+      auto value = buffer_.pop();
+      if (!value.has_value()) {
+        break;
+      }
+      for (auto* input : inputs_) {
+        co_await input->setValue(*value);
       }
     }
   }
 
-  auto name() {
-    return outputs_.name();
-  }
-
-  auto setValue(NodeEngine& engine, T t) {
-    return stdexec::just(std::move(t)) | outputs_.propagate(engine);
-  }
-
-  template <typename Input>
-  void registerInput(Input* input) {
-    outputs_.registerInput(input);
-  }
-
 private:
-  detail::OutputConnections outputs_;
+  concurrency::internal::CircularBuffer<T, Capacity> buffer_;
+  std::vector<TypedInput<T>*> inputs_;
 };
 }  // namespace heph::conduit

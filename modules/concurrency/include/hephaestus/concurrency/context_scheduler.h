@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <hephaestus/utils/exception.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
@@ -112,8 +113,20 @@ struct TaskBase {
   TaskBase* prev{ nullptr };
 };
 
+struct StopCallback {
+  void operator()() const noexcept {
+    self->setStopped();
+  }
+  TaskBase* self;
+};
+
 template <typename Receiver, typename Context>
 struct Task : TaskBase {
+  using ReceiverEnvT = stdexec::env_of_t<Receiver>;
+  using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
+  using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
+  std::optional<StopCallbackT> stop_callback;
+
   Context* context{ nullptr };
   Receiver receiver;
 
@@ -121,27 +134,38 @@ struct Task : TaskBase {
     : context(context_input), receiver(std::move(receiver_input)) {
   }
 
+  ~Task() final {
+    stop_callback.reset();
+    context->dequeue(this);
+  }
+
   void start() noexcept final {
+    auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
+    if (stop_token.stop_requested()) {
+      stdexec::set_stopped(std::move(receiver));
+      return;
+    }
+    stop_callback.emplace(stop_token, StopCallback{ this });
     context->enqueue(this);
   }
 
   void setValue() noexcept final {
+    stop_callback.reset();
     stdexec::set_value(std::move(receiver));
   }
 
   void setStopped() noexcept final {
+    if (context->isRunning()) {
+      // heph::panicIf(!context->isCurrent(), "Stop not executed within the context scheduling loop");
+    }
+    stop_callback.reset();
+    context->dequeue(this);
     stdexec::set_stopped(std::move(receiver));
   }
 };
 
 template <typename ReceiverT, typename ContextT>
 struct TimedTask : TaskBase {
-  struct StopCallback {
-    void operator()() const noexcept {
-      self->setStopped();
-    }
-    TimedTask* self;
-  };
   using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
   using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
   using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
@@ -164,14 +188,21 @@ struct TimedTask : TaskBase {
     }
   }
 
+  ~TimedTask() final {
+    stop_callback.reset();
+    context->dequeue(this);
+  }
+
   void start() noexcept final {
     if (!timeout_started) {
+      timeout_started = true;
       auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
       stop_callback.emplace(stop_token, StopCallback{ this });
-      timeout_started = true;
       context->enqueueAt(this, start_time);
       return;
     }
+    auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
+    stop_callback.emplace(stop_token, StopCallback{ this });
     context->enqueue(this);
   }
 
@@ -181,8 +212,11 @@ struct TimedTask : TaskBase {
   }
 
   void setStopped() noexcept final {
-    context->dequeueTimer(this);
+    if (context->isRunning()) {
+      // heph::panicIf(!context->isCurrent(), "Stop not executed within the context scheduling loop");
+    }
     stop_callback.reset();
+    context->dequeueTimer(this);
     stdexec::set_stopped(std::move(receiver));
   }
 };
