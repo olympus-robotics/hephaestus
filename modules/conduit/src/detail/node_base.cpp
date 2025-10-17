@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#if 0
 #include "hephaestus/conduit/detail/node_base.h"
 
 #include <chrono>
@@ -134,3 +135,4 @@ auto NodeBase::runsOnEngine() const -> bool {
   return engine_->isCurrent();
 }
 }  // namespace heph::conduit::detail
+#endif

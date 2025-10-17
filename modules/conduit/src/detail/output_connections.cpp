@@ -3,6 +3,8 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#if 0
+
 #include "hephaestus/conduit/detail/output_connections.h"
 
 #include <string>
@@ -50,3 +52,4 @@ void OutputConnections::registerInputToEngine(std::string input_name, std::strin
 }
 
 }  // namespace heph::conduit::detail
+#endif
