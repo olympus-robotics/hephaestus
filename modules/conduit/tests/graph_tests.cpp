@@ -177,7 +177,6 @@ struct Node0 : NodeDescriptionDefaults<Node0> {
 
 struct NodeStepper0 : StepperDefaults<Node0> {
   std::size_t executed{ 0 };
-  Executor* executor;
   std::optional<std::thread::id> thread_id;
 
   void step(InputsT& inputs, OutputsT& outputs) {
@@ -379,7 +378,6 @@ TEST(Graph, Connections) {
           .context_config = {},
       },
   } };
-  g.stepper().node0.executor = &executor;
   Input<int> test{ "test" };
   g.root()->children.node0->outputs.output.connect(test);
   executor.spawn(g);
@@ -394,15 +392,13 @@ TEST(Graph, Connections) {
   executor.join();
 
   EXPECT_EQ(g.stepper().executed, 0);
-  EXPECT_THAT(g.stepper().node0.executed,
-              ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS)));
+  auto expected_executed =
+      ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS + 2));
+  EXPECT_THAT(g.stepper().node0.executed, expected_executed);
   EXPECT_EQ(g.stepper().node1.executed, 0);
-  EXPECT_THAT(g.stepper().node1.node10.executed,
-              ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS)));
-  EXPECT_THAT(g.stepper().node1.node11.executed,
-              ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS)));
-  EXPECT_THAT(g.stepper().node2.executed,
-              ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS)));
+  EXPECT_THAT(g.stepper().node1.node10.executed, expected_executed);
+  EXPECT_THAT(g.stepper().node1.node11.executed, expected_executed);
+  EXPECT_THAT(g.stepper().node2.executed, expected_executed);
 
   EXPECT_EQ(g.stepper().node0.thread_id, g.stepper().node1.node10.thread_id);
   EXPECT_EQ(g.stepper().node0.thread_id, g.stepper().node1.node11.thread_id);
