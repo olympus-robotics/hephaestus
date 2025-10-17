@@ -14,11 +14,13 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
 
+/// me
 namespace heph::concurrency {
 
 using TimerOptionsT = io_ring::TimerOptions;
 using ClockT = io_ring::TimerClock;
 
+/// Test
 struct ContextConfig {
   io_ring::IoRingConfig io_ring_config;
   TimerOptionsT timer_options;
@@ -42,6 +44,10 @@ public:
 
   void requestStop() {
     ring_.requestStop();
+  }
+
+  auto isRunning() -> bool {
+    return ring_.isRunning();
   }
 
   auto isCurrent() -> bool {
@@ -68,6 +74,8 @@ private:
   template <typename Receiver, typename Context>
   friend struct Task;
   void enqueue(TaskBase* task);
+  void dequeue(TaskBase* task);
+
   template <typename Receiver, typename Context>
   friend struct TimedTask;
 
