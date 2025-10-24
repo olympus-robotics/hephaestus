@@ -123,6 +123,14 @@ public:
   /// @return The time point at which the last trigger event occured
   [[nodiscard]] auto lastTriggerTime() const -> ClockT::time_point;
 
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string {
+    return "";
+  };
+
+  virtual auto setValue(const std::pmr::vector<std::byte>& /*buffer*/) -> concurrency::AnySender<void> {
+    return stdexec::just();
+  }
+
   virtual void handleCompleted() = 0;
   virtual void handleError();
   virtual void handleStopped();

@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstddef>
 #include <exception>
+#include <mutex>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -140,7 +142,6 @@ private:
     if (set_awaiter != nullptr) {
       set_awaiter->restart();
     }
-
     return res;
   }
 
@@ -171,20 +172,25 @@ struct SetValueSender {
     }
 
     void start() noexcept {
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
+      auto stop_token = stdexec::get_stop_token(stdexec::get_env(*receiver_));
+      stop_callback_.emplace(stop_token, StopCallback{ this });
       if (stop_token.stop_requested()) {
-        stdexec::set_stopped(std::move(receiver_));
+        auto receiver = getReceiver();
+        if (receiver.has_value()) {
+          stdexec::set_stopped(std::move(*receiver));
+          return;
+        }
       }
-      if (!self_->setValueImpl(std::move(value_), this)) {
-        stop_callback_.emplace(stop_token, StopCallback{ this });
-        return;
-      }
-      stdexec::set_value(std::move(receiver_));
+
+      restart();
     }
 
     void restart() noexcept final {
       if (self_->setValueImpl(std::move(value_), this)) {
-        stdexec::set_value(std::move(receiver_));
+        auto receiver = getReceiver();
+        if (receiver.has_value()) {
+          stdexec::set_value(std::move(*receiver));
+        }
       }
     }
 
@@ -193,13 +199,26 @@ struct SetValueSender {
         absl::MutexLock l{ &self_->mutex_ };
         self_->set_awaiters_.erase(this);
       }
-      stdexec::set_stopped(std::move(receiver_));
+      auto receiver = getReceiver();
+      if (receiver.has_value()) {
+        stdexec::set_stopped(std::move(*receiver));
+      }
+    }
+
+  private:
+    auto getReceiver() -> std::optional<Receiver> {
+      absl::MutexLock l{ &mutex_ };
+      std::optional<Receiver> res;
+      std::swap(res, receiver_);
+
+      return res;
     }
 
   private:
     Channel<T, Capacity>* self_;
     T value_;
-    Receiver receiver_;
+    absl::Mutex mutex_;
+    std::optional<Receiver> receiver_;
     std::optional<StopCallbackT> stop_callback_;
   };
 
@@ -237,38 +256,54 @@ struct GetValueSender {
     }
 
     void start() noexcept {
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
+      auto stop_token = stdexec::get_stop_token(stdexec::get_env(*receiver_));
+      stop_callback_.emplace(stop_token, StopCallback{ this });
       if (stop_token.stop_requested()) {
-        stdexec::set_stopped(std::move(receiver_));
-      }
-      auto res = self_->getValueImpl(this);
-      if (res == std::nullopt) {
-        stop_callback_.emplace(stop_token, StopCallback{ this });
+        auto receiver = getReceiver();
+        if (receiver.has_value()) {
+          stdexec::set_stopped(std::move(*receiver));
+          return;
+        }
         return;
       }
-      stdexec::set_value(std::move(receiver_), std::move(*res));
+
+      restart();
     }
 
     void restart() noexcept final {
-      auto res = self_->getValueImpl(this);
-      if (res != std::nullopt) {
-        stop_callback_.reset();
-        stdexec::set_value(std::move(receiver_), std::move(*res));
+      auto value = self_->getValueImpl(this);
+      if (value.has_value()) {
+        auto receiver = getReceiver();
+        if (receiver.has_value()) {
+          stdexec::set_value(std::move(*receiver), std::move(*value));
+        }
       }
     }
 
     void stop() noexcept final {
       {
         absl::MutexLock l{ &self_->mutex_ };
-        stop_callback_.reset();
         self_->get_awaiters_.erase(this);
       }
-      stdexec::set_stopped(std::move(receiver_));
+      auto receiver = getReceiver();
+      if (receiver.has_value()) {
+        stdexec::set_stopped(std::move(*receiver));
+      }
+    }
+
+  private:
+    auto getReceiver() -> std::optional<Receiver> {
+      absl::MutexLock l{ &mutex_ };
+      std::optional<Receiver> res;
+      std::swap(res, receiver_);
+
+      return res;
     }
 
   private:
     Channel<T, Capacity>* self_;
-    Receiver receiver_;
+    absl::Mutex mutex_;
+    std::optional<Receiver> receiver_;
     std::optional<StopCallbackT> stop_callback_;
   };
 

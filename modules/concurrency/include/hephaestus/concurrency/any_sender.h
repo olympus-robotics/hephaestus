@@ -60,7 +60,8 @@ class AnyEnv {
       if constexpr (std::is_same_v<stdexec::inplace_stop_token, StopTokenT>) {
         return stop_token;
       } else {
-        return stdexec::inplace_stop_token{};
+        static stdexec::inplace_stop_source stop_source;
+        return stop_source.get_token();
       }
     }
 

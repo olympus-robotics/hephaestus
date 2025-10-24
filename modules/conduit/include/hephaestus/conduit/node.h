@@ -9,9 +9,11 @@
 
 #include <boost/pfr.hpp>
 #include <exec/when_any.hpp>
+#include <hephaestus/utils/exception.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/internal/never_stop.h"
 #include "hephaestus/conduit/node_base.h"
@@ -77,14 +79,16 @@ public:
   }
 
   auto spawn(SchedulerT scheduler) {
-    return concurrency::repeatUntil([this, scheduler]() {
-      return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
-             stdexec::let_value([this, scheduler]() {
-               return stdexec::continues_on(stepper.step(inputs, outputs), scheduler) |
-                      stdexec::let_value([this]() { return outputTrigger(); });
-             }) |
-             stdexec::then([]() { return false; });
-    });
+    return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
+             return concurrency::repeatUntil([this, scheduler]() {
+               return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
+                      stdexec::let_value([this, scheduler]() {
+                        return stdexec::continues_on(stepper.step(inputs, outputs), scheduler) |
+                               stdexec::let_value([this, scheduler]() { return outputTrigger(); });
+                      }) |
+                      stdexec::then([]() { return false; });
+             });
+           });
   }
 
   auto inputTrigger(SchedulerT scheduler) {
