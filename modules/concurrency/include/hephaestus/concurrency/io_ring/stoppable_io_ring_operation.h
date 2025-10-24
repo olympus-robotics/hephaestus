@@ -79,7 +79,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCom
   bool stop = false;
   {
     absl::MutexLock l{ &self->mutex };
-    fmt::println(stderr, "{} StopOperation::handleCompletion {}", fmt::ptr(self), self->in_flight);
+    // fmt::println(stderr, "{} StopOperation::handleCompletion {}", fmt::ptr(self), self->in_flight);
     --self->in_flight;
     if (self->in_flight == 0) {
       stop = true;
@@ -116,7 +116,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* 
   }
   {
     absl::MutexLock l{ &mutex };
-    fmt::println(stderr, "{} prepare {}", fmt::ptr(this), in_flight);
+    // fmt::println(stderr, "{} prepare {}", fmt::ptr(this), in_flight);
     if (stop_requested) {
       io_uring_prep_nop(sqe);
       return;
@@ -128,11 +128,11 @@ inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_uring_cqe* cqe) {
   std::optional<absl::MutexLock> l{ &mutex };
-  fmt::println(stderr, "{} handleCompletion {}", fmt::ptr(this), in_flight);
+  /// fmt::println(stderr, "{} handleCompletion {}", fmt::ptr(this), in_flight);
   // stop_callback.reset();
   --in_flight;
   if (cqe->res == -ECANCELED || stop_requested) {
-    fmt::println(stderr, "{} handleCompletion stop {}", fmt::ptr(this), in_flight);
+    // fmt::println(stderr, "{} handleCompletion stop {}", fmt::ptr(this), in_flight);
     if (in_flight == 0) {
       l.reset();
       operation.handleStopped();
@@ -147,14 +147,14 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
           absl::MutexLock l1{ &mutex };
           ++in_flight;
         }
-        fmt::println(stderr, "{} handleCompletion resubmit {}", fmt::ptr(this), in_flight);
+        // fmt::println(stderr, "{} handleCompletion resubmit {}", fmt::ptr(this), in_flight);
         ring->submit(this);
         return;
       }
-      fmt::println(stderr, "{} handleCompletion done(bool) {}", fmt::ptr(this), tmp);
+      // fmt::println(stderr, "{} handleCompletion done(bool) {}", fmt::ptr(this), tmp);
       return;
     }
-    fmt::println(stderr, "{} handleCompletion done {}", fmt::ptr(this), in_flight);
+    // fmt::println(stderr, "{} handleCompletion done {}", fmt::ptr(this), in_flight);
     l.reset();
     operation.handleCompletion(cqe);
   }
@@ -164,7 +164,7 @@ template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
   {
     absl::MutexLock l{ &mutex };
-    fmt::println(stderr, "{} requestStop {}", fmt::ptr(this), in_flight);
+    // fmt::println(stderr, "{} requestStop {}", fmt::ptr(this), in_flight);
     if (in_flight == 0) {
       return;
     }
