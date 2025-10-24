@@ -24,47 +24,48 @@ void Context::run(const std::function<void()>& on_start) {
 }
 
 void Context::enqueue(TaskBase* task) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-    return;
-  }
-  if (!ring_.isRunning() || ring_.isCurrentRing()) {
+  {
+    absl::MutexLock l{ &mutex_ };
     tasks_.enqueue(task);
-    return;
   }
-  ring_.submit(&task->dispatch_operation);
+  ring_.notify();
 }
 
-void Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-    return;
-  }
-  if (!ring_.isRunning() || ring_.isCurrentRing()) {
-    if (start_time <= timer_.now()) {
-      tasks_.enqueue(task);
-      return;
-    }
+void Context::dequeue(TaskBase* task) {
+  absl::MutexLock l{ &mutex_ };
+  tasks_.erase(task);
+}
+
+auto Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) -> bool {
+  if (!ring_.isRunning() || ring_.isCurrent()) {
     timer_.startAt(task, start_time);
-    return;
+    return true;
   }
   ring_.submit(&task->dispatch_operation);
+  return false;
 }
 
 void Context::dequeueTimer(TaskBase* task) {
-  tasks_.erase(task);
+  dequeue(task);
   timer_.dequeue(task);
 }
 
 auto Context::runTasks() -> bool {
-  if (tasks_.empty()) {
-    return false;
+  TaskBase* task{ nullptr };
+  {
+    absl::MutexLock l{ &mutex_ };
+    if (tasks_.empty()) {
+      return false;
+    }
+
+    task = tasks_.dequeue();
   }
+  task->setValue();
 
-  auto* task = tasks_.dequeue();
-  runTask(task);
-
-  return !tasks_.empty();
+  {
+    absl::MutexLock l{ &mutex_ };
+    return !tasks_.empty();
+  }
 }
 
 auto Context::runTasksSimulated() -> bool {
@@ -72,21 +73,14 @@ auto Context::runTasksSimulated() -> bool {
   timer_.advanceSimulation(now - last_progress_time_);
   last_progress_time_ = now;
 
+  // FIXME: make thread safe
   timer_.tickSimulated(tasks_.empty());
 
   runTasks();
 
-  if (tasks_.empty() && timer_.empty() && stopRequested()) {
+  if (tasks_.empty() && timer_.empty() && !ring_.isRunning()) {
     return false;
   }
   return true;
-}
-
-void Context::runTask(TaskBase* task) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-  } else {
-    task->setValue();
-  }
 }
 }  // namespace heph::concurrency
