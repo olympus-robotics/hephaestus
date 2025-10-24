@@ -71,7 +71,7 @@ struct RepeatUntilStateT {
     }
   };
   SenderFactoryT sender_factory;
-  ReceiverT reciever;
+  ReceiverT receiver;
 
   stdexec::__optional<stdexec::connect_result_t<SenderT, InnerReceiverT>> state;
 
@@ -81,7 +81,7 @@ struct RepeatUntilStateT {
 
   void next(bool done) {
     if (done) {
-      stdexec::set_value(std::move(reciever));
+      stdexec::set_value(std::move(receiver));
       return;
     }
     try {
@@ -96,18 +96,18 @@ struct RepeatUntilStateT {
   }
 
   void setStopped() {
-    stdexec::set_stopped(std::move(reciever));
+    stdexec::set_stopped(std::move(receiver));
   }
 
   template <typename Error>
   void setError(Error error) noexcept {
     if constexpr (std::is_same_v<std::decay_t<Error>, std::exception_ptr>) {
-      stdexec::set_error(std::move(reciever), std::move(error));
+      stdexec::set_error(std::move(receiver), std::move(error));
     }
     if constexpr (std::is_same_v<std::decay_t<Error>, std::error_code>) {
-      stdexec::set_error(std::move(reciever), std::make_exception_ptr(std::system_error(std::move(error))));
+      stdexec::set_error(std::move(receiver), std::make_exception_ptr(std::system_error(std::move(error))));
     } else {
-      stdexec::set_error(std::move(reciever), std::make_exception_ptr(std::move(error)));
+      stdexec::set_error(std::move(receiver), std::make_exception_ptr(std::move(error)));
     }
   }
 };
