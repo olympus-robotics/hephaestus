@@ -7,6 +7,7 @@
 #include <chrono>
 #include <functional>
 
+#include <absl/synchronization/mutex.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context_scheduler.h"
@@ -32,8 +33,8 @@ public:
 
   explicit Context(const ContextConfig& config)
     : ring_{ config.io_ring_config }
-    , timer_{ ring_, config.timer_options }
-    , stop_callback_(ring_.getStopToken(), StopCallback{ this }) {
+    , timer_{ ring_, config.timer_options }  //, stop_callback_(ring_.getStopToken(), StopCallback{ this })
+  {
   }
 
   auto scheduler() -> Scheduler {
@@ -43,6 +44,7 @@ public:
   void run(const std::function<void()>& on_start = [] {});
 
   void requestStop() {
+    timer_.requestStop();
     ring_.requestStop();
   }
 
@@ -51,15 +53,7 @@ public:
   }
 
   auto isCurrent() -> bool {
-    return ring_.isCurrentRing();
-  }
-
-  auto stopRequested() -> bool {
-    return ring_.stopRequested();
-  }
-
-  auto getStopToken() -> stdexec::inplace_stop_token {
-    return ring_.getStopToken();
+    return ring_.isCurrent();
   }
 
   auto elapsed() {
@@ -79,29 +73,20 @@ private:
   template <typename Receiver, typename Context>
   friend struct TimedTask;
 
-  struct StopCallback {
-    Context* self;
-    void operator()() const noexcept {
-      self->timer_.requestStop();
-    }
-  };
-
-  void enqueueAt(TaskBase* task, ClockT::time_point start_time);
+  auto enqueueAt(TaskBase* task, ClockT::time_point start_time) -> bool;
   void dequeueTimer(TaskBase* task);
 
   auto runTimedTasks() -> bool;
   auto runTasks() -> bool;
   auto runTasksSimulated() -> bool;
 
-  void runTask(TaskBase* task);
-
 private:
   io_ring::IoRing ring_;
+  absl::Mutex mutex_;
   heph::containers::IntrusiveFifoQueue<TaskBase> tasks_;
   io_ring::Timer timer_;
   ClockT::base_clock::time_point start_time_;
   ClockT::base_clock::time_point last_progress_time_;
-  stdexec::inplace_stop_callback<StopCallback> stop_callback_;
 };
 
 }  // namespace heph::concurrency

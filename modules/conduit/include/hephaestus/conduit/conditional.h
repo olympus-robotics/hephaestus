@@ -75,7 +75,7 @@ private:
       void start() noexcept {
         auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
         if (stop_token.stop_requested()) {
-          setStopped();
+          stdexec::set_stopped(std::move(receiver_));
           return;
         }
 

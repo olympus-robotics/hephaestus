@@ -17,6 +17,7 @@
 
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/node.h"
+#include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/output_base.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
@@ -25,8 +26,7 @@
 namespace heph::conduit {
 struct GraphConfig {
   std::string prefix;
-  std::vector<heph::net::Endpoint> endpoints;
-  std::unordered_map<std::string, std::vector<heph::net::Endpoint>> partners;
+  std::vector<std::string> partners;
 };
 
 namespace internal {
@@ -66,11 +66,16 @@ public:
 
     // Connect all nodes, recurses into child nodes, also sets paths for inputs and outputs.
     internal::traverse(
-        root_, internal::NullVisitor{}, []<typename NodeDescription>(Node<NodeDescription>& node) {
-          boost::pfr::for_each_field(node->inputs, [&node](auto& input) { input.setNode(*node); });
-          boost::pfr::for_each_field(node->outputs, [&node](auto& output) { output.setNode(*node); });
+        root_, internal::NullVisitor{}, [this]<typename NodeDescription>(Node<NodeDescription>& node) {
+          boost::pfr::for_each_field(node->inputs, [&node, this](auto& input) { input.setNode(*node); });
+          boost::pfr::for_each_field(node->outputs, [&node, this](auto& output) { output.setNode(*node); });
           NodeDescription::connect(node->inputs, node->outputs, node->children);
           node->stepper.connect(node->inputs, node->outputs, node->children);
+        });
+    internal::traverse(
+        root_, internal::NullVisitor{}, [this]<typename NodeDescription>(Node<NodeDescription>& node) {
+          boost::pfr::for_each_field(node->inputs, [&node, this](auto& input) { registerInput(input); });
+          boost::pfr::for_each_field(node->outputs, [&node, this](auto& output) { registerOutput(output); });
         });
   }
 
@@ -83,22 +88,39 @@ public:
     return std::forward<Self>(self).root_;
   }
 
+  auto partnerOutputs() -> const std::vector<PartnerOutputBase*>& {
+    return partner_outputs_;
+  }
+
+  [[nodiscard]] auto inputs() const -> const std::vector<BasicInput*>& {
+    return typed_inputs_;
+  }
+
 private:
-  void registerInput(BasicInput& input) {
-    (void)input;
+  void registerInput(BasicInput& /*input*/) {
   }
   template <typename T>
   void registerInput(TypedInput<T>& input) {
-    (void)input;
+    typed_inputs_.push_back(&input);
   }
-  void registerOutput(OutputBase& input) {
-    (void)input;
+  void registerOutput(OutputBase& /*input*/) {
+  }
+  template <typename T>
+  void registerOutput(Output<T>& output) {
+    typed_outputs_.push_back(&output);
+    for (const auto& partner : config_.partners) {
+      auto partner_outputs = output.setPartner(partner);
+      partner_outputs_.insert(partner_outputs_.end(), partner_outputs.begin(), partner_outputs.end());
+    }
   }
 
 private:
   StepperT stepper_;
   Node<NodeDescriptionT> root_;
   GraphConfig config_;
+  std::vector<BasicInput*> typed_inputs_;
+  std::vector<OutputBase*> typed_outputs_;
+  std::vector<PartnerOutputBase*> partner_outputs_;
 };
 
 #if 0
