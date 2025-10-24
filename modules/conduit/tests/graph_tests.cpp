@@ -114,7 +114,6 @@ struct RepeaterPoolStep : StepperDefaults<Dummy> {
   }
 };
 
-#if 0
 TEST(Graph, RepeatedPoolStep) {
   GraphConfig config{
     .prefix = "test",
@@ -161,7 +160,6 @@ TEST(Graph, RepeatedExceptionStep) {
   EXPECT_EQ(g.stepper().executed, NUMBER_OF_REPEATS / 2);
   EXPECT_EQ(g.root()->name(), "/test/receiver");
 }
-#endif
 
 struct Node0 : NodeDescriptionDefaults<Node0> {
   static constexpr std::string_view NAME = "node0";
