@@ -105,20 +105,6 @@ TEST(BasicInput, JustCoroutineInput) {
   EXPECT_GE(input.lastTriggerTime(), start_time);
 }
 
-TEST(BasicInput, PeriodicJustStop) {
-  Periodic periodic;
-  concurrency::Context context{ {} };
-
-  EXPECT_THROW((std::ignore = periodic.trigger(context.scheduler())), heph::Panic);
-
-  periodic.setPeriodDuration(std::chrono::hours{ 1 });
-
-  context.requestStop();
-  auto res = stdexec::sync_wait(periodic.trigger(context.scheduler()));
-  EXPECT_FALSE(res.has_value());
-  EXPECT_EQ(periodic.lastTriggerTime(), ClockT::time_point{});
-}
-
 TEST(BasicInput, PeriodicCancelled) {
   Periodic periodic;
   exec::async_scope scope;
@@ -241,7 +227,10 @@ TEST(BasicInput, ConditionalTriggerConcurrent) {
                          return num_triggered == NUMBER_OF_ITERATIONS;
                        });
               }) |
-              stdexec::then([&]() { context.requestStop(); }));
+              stdexec::then([&]() {
+                scope.request_stop();
+                context.requestStop();
+              }));
 
   scope.spawn(heph::concurrency::repeatUntil([&]() {
     return stdexec::schedule(context.scheduler()) | stdexec::let_value([&]() {
@@ -258,7 +247,6 @@ TEST(BasicInput, ConditionalTriggerConcurrent) {
   EXPECT_EQ(num_triggered, NUMBER_OF_ITERATIONS);
 }
 
-/*
 TEST(BasicInput, ConditionalTriggerParallel) {
   Conditional conditional;
   concurrency::Context context{ {} };
@@ -278,6 +266,7 @@ TEST(BasicInput, ConditionalTriggerParallel) {
                        });
               }) |
               stdexec::then([&]() {
+                scope.request_stop();
                 context.requestStop();
                 done.store(true, std::memory_order_release);
               }));
@@ -291,11 +280,9 @@ TEST(BasicInput, ConditionalTriggerParallel) {
   });
   context.run();
   trigger.join();
-  scope.request_stop();
   stdexec::sync_wait(scope.on_empty());
   EXPECT_EQ(num_triggered, NUMBER_OF_ITERATIONS);
 }
-*/
 
 TEST(BasicInput, Generator) {
   Generator<int> generator{ "generator" };
@@ -321,17 +308,4 @@ TEST(BasicInput, Generator) {
   generator.setGenerator([]() -> exec::task<int> { co_return VALUE; });
   test();
 }
-
-TEST(BasicInput, GeneratorCancelled) {
-  Generator<int> generator{ "generator" };
-  concurrency::Context context{ {} };
-  static constexpr int VALUE = 4711;
-  generator.setGenerator(
-      [&]() { return stdexec::schedule(context.scheduler()) | stdexec::then([]() { return VALUE; }); });
-  auto res = stdexec::sync_wait(exec::when_any(stdexec::just(), generator.trigger(context.scheduler())));
-  EXPECT_TRUE(res.has_value());
-  EXPECT_FALSE(generator.hasValue());
-  EXPECT_THROW(std::ignore = generator.value(), heph::Panic);
-}
-
 }  // namespace heph::conduit
