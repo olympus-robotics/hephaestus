@@ -9,13 +9,15 @@
 
 namespace heph::concurrency::io_ring {
 
-class IoRingOperationBase {
-public:
+struct IoRingOperationBase {
   virtual ~IoRingOperationBase() = default;
 
   virtual void prepare(::io_uring_sqe* sqe) {
     ::io_uring_prep_nop(sqe);
   }
   virtual void handleCompletion(::io_uring_cqe* cqe) = 0;
+
+  IoRingOperationBase* next{ nullptr };
+  IoRingOperationBase* prev{ nullptr };
 };
 }  // namespace heph::concurrency::io_ring

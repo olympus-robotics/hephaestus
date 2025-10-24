@@ -47,14 +47,10 @@ TEST(IoRingTest, startStop) {
   stopper.ring = &ring;
 
   ring.submit(&stopper);
-  EXPECT_FALSE(ring.getStopToken().stop_requested());
+  EXPECT_FALSE(ring.isRunning());
 
   EXPECT_NO_THROW(ring.run());
-  EXPECT_TRUE(ring.getStopToken().stop_requested());
-
-  // Running it again should not panic, but return immediately.
-  EXPECT_NO_THROW(ring.run());
-  EXPECT_TRUE(ring.getStopToken().stop_requested());
+  EXPECT_FALSE(ring.isRunning());
 }
 
 struct DummyOperation : IoRingOperationBase {
@@ -82,9 +78,9 @@ TEST(IoRingTest, submit) {
   stopper.ring = &ring;
 
   ring.submit(&stopper);
-  EXPECT_FALSE(ring.getStopToken().stop_requested());
+  EXPECT_FALSE(ring.isRunning());
   EXPECT_NO_THROW(ring.run());
-  EXPECT_TRUE(ring.getStopToken().stop_requested());
+  EXPECT_FALSE(ring.isRunning());
 
   EXPECT_TRUE(completions == static_cast<std::size_t>(config.nentries * 3));
 }
@@ -145,8 +141,10 @@ struct StopTestOperation : IoRingOperationBase {
     ::io_uring_prep_nop(sqe);
   }
   void handleCompletion(io_uring_cqe* /*cqe*/) final {
+    stop_source->request_stop();
     ring->requestStop();
   }
+  stdexec::inplace_stop_source* stop_source{ nullptr };
   IoRing* ring{ nullptr };
 };
 
@@ -154,10 +152,12 @@ struct StopTestOperation : IoRingOperationBase {
 TEST(DISABLED_IoRingTest, stoppableOperation) {
   // 1. submit, 2. stop
   {
+    stdexec::inplace_stop_source stop_source;
     IoRing ring{ {} };
 
-    TestOperation1 test_operation1{ {}, ring, ring.getStopToken() };
+    TestOperation1 test_operation1{ {}, ring, stop_source.get_token() };
     [[maybe_unused]] StopTestOperation stop_operation;
+    stop_operation.stop_source = &stop_source;
     stop_operation.ring = &ring;
 
     ring.submit(&test_operation1);
@@ -169,10 +169,12 @@ TEST(DISABLED_IoRingTest, stoppableOperation) {
   }
   // 1. stop, 2. submit
   {
+    stdexec::inplace_stop_source stop_source;
     IoRing ring{ {} };
 
-    TestOperation1 test_operation1{ {}, ring, ring.getStopToken() };
+    TestOperation1 test_operation1{ {}, ring, stop_source.get_token() };
     [[maybe_unused]] StopTestOperation stop_operation;
+    stop_operation.stop_source = &stop_source;
     stop_operation.ring = &ring;
 
     ring.submit(&stop_operation);
@@ -190,14 +192,16 @@ TEST(DISABLED_IoRingTest, stoppableOperationConcurrent) {
   std::mutex mtx;
   std::condition_variable cv;
   IoRing* ring_ptr{ nullptr };
+  stdexec::inplace_stop_source stop_source;
   std::optional<IoRing> ring;
 
   std::vector<std::unique_ptr<TestOperation1>> ops;
   ops.reserve(static_cast<std::size_t>(config.nentries) * 3);
-  std::thread runner{ [&config, &ops, &mtx, &cv, &ring, &ring_ptr] {
+
+  std::thread runner{ [&config, &ops, &mtx, &cv, &ring, &ring_ptr, &stop_source] {
     ring.emplace(config);
     for (std::size_t i = 0; i != ops.capacity(); ++i) {
-      ops.push_back(std::make_unique<TestOperation1>(TestOperation1T{}, *ring, ring->getStopToken()));
+      ops.push_back(std::make_unique<TestOperation1>(TestOperation1T{}, *ring, stop_source.get_token()));
       EXPECT_NO_THROW(ring->submit(ops[i].get()));
     }
 
@@ -217,11 +221,11 @@ TEST(DISABLED_IoRingTest, stoppableOperationConcurrent) {
     cv.wait(l, [&ring_ptr] { return ring_ptr != nullptr; });
   }
 
+  stop_source.request_stop();
   ring_ptr->requestStop();
   runner.join();
   for (const auto& op : ops) {
     EXPECT_TRUE(op->operation.stop_called);
   }
 }
-
 }  // namespace heph::concurrency::io_ring::tests

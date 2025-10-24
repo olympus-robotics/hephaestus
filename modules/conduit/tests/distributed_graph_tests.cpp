@@ -19,154 +19,20 @@
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/input.h"
+#include "hephaestus/conduit/input_policy.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/stepper.h"
+#include "hephaestus/net/endpoint.h"
 
 namespace heph::conduit {
-
-struct JustInput : BasicInput {
-  JustInput() : BasicInput("just") {
-  }
-  auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
-    return stdexec::just();
-  }
-  void handleCompleted() final {
-  }
-};
-
-struct Dummy : NodeDescriptionDefaults<Dummy> {
-  static constexpr auto NAME = "receiver";
-  struct Inputs {
-    JustInput just;
-  };
-};
-
-struct ReceiverStep : StepperDefaults<Dummy> {
-  bool executed = false;
-  Executor* executor;
-  void step(InputsT& /*inputs*/, OutputsT& /*outputs*/) {
-    executed = true;
-    executor->requestStop();
-  }
-};
-
-TEST(Graph, SingleStep) {
-  GraphConfig config{
-    .prefix = "test",
-    .partners = {},
-  };
-  Executor executor;
-  Graph<ReceiverStep> g{ config, {} };
-  g.stepper().executor = &executor;
-
-  executor.spawn(g);
-  executor.join();
-
-  EXPECT_TRUE(g.stepper().executed);
-  EXPECT_EQ(g.root()->name(), "/test/receiver");
-}
-static constexpr std::size_t NUMBER_OF_REPEATS = 100;
-
-struct RepeaterStep : StepperDefaults<Dummy> {
-  std::size_t executed{ 0 };
-  Executor* executor;
-  void step(InputsT& /*inputs*/, OutputsT& /*outputs*/) {
-    if (executed == NUMBER_OF_REPEATS) {
-      executor->requestStop();
-      return;
-    }
-    ++executed;
-  }
-};
-
-TEST(Graph, RepeatedStep) {
-  GraphConfig config{
-    .prefix = "test",
-    .partners = {},
-  };
-  Executor executor;
-  Graph<RepeaterStep> g{ config, {} };
-  g.stepper().executor = &executor;
-
-  executor.spawn(g);
-  executor.join();
-
-  EXPECT_EQ(g.stepper().executed, NUMBER_OF_REPEATS);
-  EXPECT_EQ(g.root()->name(), "/test/receiver");
-}
-
-struct RepeaterPoolStep : StepperDefaults<Dummy> {
-  std::size_t executed{ 0 };
-  exec::static_thread_pool* pool;
-  std::thread::id thread_id;
-  Executor* executor;
-  auto step(InputsT& /*inputs*/, OutputsT& /*outputs*/) -> exec::task<void> {
-    if (executed == NUMBER_OF_REPEATS) {
-      executor->requestStop();
-      pool->request_stop();
-      co_return;
-    }
-    co_await stdexec::schedule(pool->get_scheduler());
-    EXPECT_NE(thread_id, std::this_thread::get_id());
-    ++executed;
-  }
-};
-
-#if 0
-TEST(Graph, RepeatedPoolStep) {
-  GraphConfig config{
-    .prefix = "test",
-    .partners = {},
-  };
-  Executor executor;
-  exec::static_thread_pool pool{ 2 };
-  Graph<RepeaterPoolStep> g{ config, { {}, 0, &pool, std::this_thread::get_id(), &executor } };
-
-  executor.spawn(g);
-  executor.join();
-
-  EXPECT_EQ(g.stepper().executed, NUMBER_OF_REPEATS);
-  EXPECT_EQ(g.root()->name(), "/test/receiver");
-}
-
-struct RepeaterExceptionStep : StepperDefaults<Dummy> {
-  std::size_t executed{ 0 };
-  Executor* executor;
-  void step(InputsT& /*inputs*/, OutputsT& /*outputs*/) {
-    if (executed == NUMBER_OF_REPEATS) {
-      executor->requestStop();
-      return;
-    }
-    if (executed == NUMBER_OF_REPEATS / 2) {
-      heph::panic("muuh");
-    }
-    ++executed;
-  }
-};
-
-TEST(Graph, RepeatedExceptionStep) {
-  GraphConfig config{
-    .prefix = "test",
-    .partners = {},
-  };
-  Executor executor;
-  Graph<RepeaterExceptionStep> g{ config, {} };
-  g.stepper().executor = &executor;
-
-  executor.spawn(g);
-  EXPECT_THROW(executor.join(), heph::Panic);
-
-  EXPECT_EQ(g.stepper().executed, NUMBER_OF_REPEATS / 2);
-  EXPECT_EQ(g.root()->name(), "/test/receiver");
-}
-#endif
 
 struct Node0 : NodeDescriptionDefaults<Node0> {
   static constexpr std::string_view NAME = "node0";
   struct Inputs {
     Input<int> input{ "input" };
+    Input<int> remote_input{ "remote_input" };
   };
   struct Outputs {
     Output<int> output{ "output" };
@@ -184,7 +50,9 @@ struct NodeStepper0 : StepperDefaults<Node0> {
       thread_id.emplace(std::this_thread::get_id());
     }
     auto res = inputs.input.value() + 1;
+    auto remote_res = inputs.remote_input.value() + 1;
     EXPECT_EQ(res % 4, 1);
+    EXPECT_EQ(res, remote_res);
     ++executed;
     outputs.output(res);
   }
@@ -332,6 +200,9 @@ struct Root : NodeDescriptionDefaults<Root> {
     node0->outputs.output.connect(node1->inputs.input);
     node1->outputs.output.connect(node2->inputs.input);
     node2->outputs.output.connect(node0->inputs.input);
+
+    // Connect remote
+    node2->outputs.output.connectToPartner(node0->inputs.remote_input);
   }
 };
 
@@ -349,58 +220,99 @@ struct RootStepper : StepperDefaults<Root> {
       .node2 = node2,
     };
   }
-  void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& children) {
-    stdexec::sync_wait(children.node0->inputs.input.setValue(0));
-  }
 
   void step(InputsT& /*inputs*/, OutputsT& /*outputs*/) {
     ++executed;
   }
 };
 
-TEST(Graph, Connections) {
-  GraphConfig config{
-    .prefix = "test",
-    .partners = {},
+static constexpr std::size_t NUMBER_OF_REPEATS = 100;
+
+TEST(Graph, Distributed) {
+  GraphConfig config0{
+    .prefix = "test_0",
+    .partners = { "test_1" },
   };
-  Graph<RootStepper> g{ config, {} };
+  Graph<RootStepper> g0{ config0, {} };
 
-  Executor executor{ { .runners = { {
-                           .selector = {".*root.node2.*" },
-                           .context_config = {},
-                       },
+  GraphConfig config1{
+    .prefix = "test_1",
+    .partners = { "test_0" },
+  };
+  Graph<RootStepper> g1{ config1, {} };
+
+  ExecutorConfig config{
+    .runners = { {
+      .selector = {".*root.node2.*" },
+      .context_config = {},
+    },
       {
-          .selector = ".*",
-          .context_config = {},
+        .selector = ".*",
+        .context_config = {},
       },
-  },
-                       .acceptor = {} } };
+    },
+    .acceptor = {
+      .endpoints = {heph::net::Endpoint::createIpV4("127.0.0.1")},
+      .partners = {},
+    },
+  };
+  Executor executor0{ config };
+  Executor executor1{ config };
 
-  Input<int> test{ "test" };
-  g.root()->children.node0->outputs.output.connect(test);
-  executor.spawn(g);
+  executor0.addPartner("test_1", executor1.endpoints()[0]);
+  executor1.addPartner("test_0", executor0.endpoints()[0]);
+
+  Input<int> test0{ "test0" };
+  g0.root()->children.node0->outputs.output.connect(test0);
+  Input<int> test1{ "test1" };
+  g1.root()->children.node0->outputs.output.connect(test1);
+
+  stdexec::sync_wait(g0.root()->children.node0->inputs.input.setValue(0));
+  stdexec::sync_wait(g0.root()->children.node0->inputs.remote_input.setValue(0));
+  stdexec::sync_wait(g1.root()->children.node0->inputs.input.setValue(0));
+  stdexec::sync_wait(g1.root()->children.node0->inputs.remote_input.setValue(0));
+
+  executor0.spawn(g0);
+  executor1.spawn(g1);
 
   for (std::size_t i = 0; i != NUMBER_OF_REPEATS; ++i) {
-    stdexec::sync_wait(test.trigger(SchedulerT{}));
-    EXPECT_TRUE(test.hasValue());
-    int res = test.value();
-    EXPECT_EQ(res % 4, 1);
+    stdexec::sync_wait(stdexec::when_all(test0.trigger(SchedulerT{}), test1.trigger(SchedulerT{})));
+    EXPECT_TRUE(test0.hasValue());
+    EXPECT_TRUE(test1.hasValue());
+    int res0 = test0.value();
+    EXPECT_EQ(res0 % 4, 1);
+    int res1 = test1.value();
+    EXPECT_EQ(res1 % 4, 1);
   }
-  executor.requestStop();
-  executor.join();
+  fmt::println(stderr, "done");
+  executor0.requestStop();
+  executor0.join();
+  executor1.requestStop();
+  executor1.join();
 
-  EXPECT_EQ(g.stepper().executed, 0);
   auto expected_executed =
       ::testing::AllOf(::testing::Ge(NUMBER_OF_REPEATS - 1), ::testing::Le(NUMBER_OF_REPEATS + 2));
-  EXPECT_THAT(g.stepper().node0.executed, expected_executed);
-  EXPECT_EQ(g.stepper().node1.executed, 0);
-  EXPECT_THAT(g.stepper().node1.node10.executed, expected_executed);
-  EXPECT_THAT(g.stepper().node1.node11.executed, expected_executed);
-  EXPECT_THAT(g.stepper().node2.executed, expected_executed);
+  EXPECT_EQ(g0.stepper().executed, 0);
+  EXPECT_THAT(g0.stepper().node0.executed, expected_executed);
+  EXPECT_EQ(g0.stepper().node1.executed, 0);
+  EXPECT_THAT(g0.stepper().node1.node10.executed, expected_executed);
+  EXPECT_THAT(g0.stepper().node1.node11.executed, expected_executed);
+  EXPECT_THAT(g0.stepper().node2.executed, expected_executed);
 
-  EXPECT_EQ(g.stepper().node0.thread_id, g.stepper().node1.node10.thread_id);
-  EXPECT_EQ(g.stepper().node0.thread_id, g.stepper().node1.node11.thread_id);
-  EXPECT_NE(g.stepper().node0.thread_id, g.stepper().node2.thread_id);
+  EXPECT_EQ(g0.stepper().node0.thread_id, g0.stepper().node1.node10.thread_id);
+  EXPECT_EQ(g0.stepper().node0.thread_id, g0.stepper().node1.node11.thread_id);
+  EXPECT_NE(g0.stepper().node0.thread_id, g0.stepper().node2.thread_id);
+
+  EXPECT_EQ(g1.stepper().executed, 0);
+  EXPECT_THAT(g1.stepper().node0.executed, expected_executed);
+  EXPECT_EQ(g1.stepper().node1.executed, 0);
+  EXPECT_THAT(g1.stepper().node1.node10.executed, expected_executed);
+  EXPECT_THAT(g1.stepper().node1.node11.executed, expected_executed);
+  EXPECT_THAT(g1.stepper().node2.executed, expected_executed);
+
+  EXPECT_EQ(g1.stepper().node0.thread_id, g1.stepper().node1.node10.thread_id);
+  EXPECT_EQ(g1.stepper().node0.thread_id, g1.stepper().node1.node11.thread_id);
+  EXPECT_NE(g1.stepper().node0.thread_id, g1.stepper().node2.thread_id);
 }
 
 }  // namespace heph::conduit

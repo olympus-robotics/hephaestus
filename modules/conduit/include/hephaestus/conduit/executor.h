@@ -13,6 +13,8 @@
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/conduit/acceptor.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/scheduler.h"
 
@@ -45,11 +47,31 @@ private:
 };
 }  // namespace internal
 
+struct ExecutorConfig {
+  std::vector<RunnerConfig> runners;
+  AcceptorConfig acceptor;
+};
+
 class Executor {
+  struct Env {
+    Executor* self;
+    [[nodiscard]] auto query(stdexec::get_stop_token_t /*ignore*/) const noexcept
+        -> stdexec::inplace_stop_token {
+      return self->stop_source_.get_token();
+    }
+  };
+
 public:
-  Executor() : Executor({ { .selector = ".*", .context_config = {} } }) {
+  Executor()
+    : Executor({
+          .runners = { {
+              .selector = ".*",
+              .context_config = {},
+          }, },
+          .acceptor = {},
+      }) {
   }
-  explicit Executor(const std::vector<RunnerConfig>& configs);
+  explicit Executor(const ExecutorConfig& config);
 
   ~Executor() noexcept;
 
@@ -62,13 +84,22 @@ public:
   void spawn(Graph<Stepper>& graph) {
     scope_.spawn(spawnImpl(graph.root()) | stdexec::upon_error([&](const std::exception_ptr& error) mutable {
                    exception_ = error;
-                   stop_source_.request_stop();
-                 }) |
-                 stdexec::upon_stopped([&]() { stop_source_.request_stop(); }));
+                   requestStop();
+                 }));
+    acceptor_.setInputs(graph.inputs());
+    acceptor_.spawn(graph.partnerOutputs());
   }
 
   void requestStop();
   void join();
+
+  void addPartner(std::string name, heph::net::Endpoint endpoint) {
+    acceptor_.addPartner(std::move(name), std::move(endpoint));
+  }
+
+  auto endpoints() const -> std::vector<heph::net::Endpoint> {
+    return acceptor_.endpoints();
+  }
 
 private:
   auto getScheduler(NodeBase& node) -> SchedulerT;
@@ -76,7 +107,9 @@ private:
   template <typename NodeDescription, std::size_t... Idx>
   auto spawnImpl(SchedulerT scheduler, Node<NodeDescription>& node, std::index_sequence<Idx...> /*unused*/)
       -> concurrency::AnySender<void> {
-    return stdexec::when_all(node->spawn(scheduler), spawnImpl(boost::pfr::get<Idx>(node->children))...);
+    return stdexec::continues_on(
+        stdexec::when_all(node->spawn(scheduler), spawnImpl(boost::pfr::get<Idx>(node->children))...),
+        scheduler);
   }
 
   template <typename NodeDescription>
@@ -91,6 +124,7 @@ private:
   std::exception_ptr exception_;
   stdexec::inplace_stop_source stop_source_;
   std::vector<std::unique_ptr<internal::Runner>> runners_;
+  Acceptor acceptor_;
 
   static thread_local Executor* current;
 };

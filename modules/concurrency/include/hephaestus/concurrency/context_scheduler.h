@@ -56,24 +56,6 @@ struct ContextScheduler {
   friend auto operator<=>(const ContextScheduler&, const ContextScheduler&) = default;
 };
 
-struct GetContextT : stdexec::__query<GetContextT> {
-  static constexpr auto query(stdexec::forwarding_query_t /*unused*/) noexcept -> bool {
-    return true;
-  }
-  template <typename Env>
-    requires stdexec::tag_invocable<GetContextT, const Env&>
-  auto operator()(const Env& env) const noexcept -> stdexec::tag_invoke_result_t<GetContextT, const Env&> {
-    static_assert(stdexec::nothrow_tag_invocable<GetContextT, const Env&>);
-    return stdexec::tag_invoke(GetContextT{}, env);
-  }
-
-  template <typename Tag = GetContextT>
-  auto operator()() const noexcept;
-};
-
-// NOLINTNEXTLINE(readability-identifier-naming)
-static constexpr GetContextT getContext{};
-
 struct ContextEnv {
   Context* self;
 
@@ -86,11 +68,6 @@ struct ContextEnv {
       -> ContextScheduler {
     return { self };
   }
-
-  [[nodiscard]] auto query(stdexec::get_stop_token_t /*ignore*/) const noexcept
-      -> stdexec::inplace_stop_token;
-
-  [[nodiscard]] auto query(GetContextT /*ignore*/) const noexcept -> Context&;
 };
 
 struct TaskBase;
@@ -106,27 +83,14 @@ struct TaskBase {
   virtual ~TaskBase() = default;
   virtual void start() noexcept = 0;
   virtual void setValue() noexcept = 0;
-  virtual void setStopped() noexcept = 0;
 
   TaskDispatchOperation dispatch_operation{ this };
   TaskBase* next{ nullptr };
   TaskBase* prev{ nullptr };
 };
 
-struct StopCallback {
-  void operator()() const noexcept {
-    self->setStopped();
-  }
-  TaskBase* self;
-};
-
 template <typename Receiver, typename Context>
 struct Task : TaskBase {
-  using ReceiverEnvT = stdexec::env_of_t<Receiver>;
-  using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-  using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
-  std::optional<StopCallbackT> stop_callback;
-
   Context* context{ nullptr };
   Receiver receiver;
 
@@ -134,54 +98,42 @@ struct Task : TaskBase {
     : context(context_input), receiver(std::move(receiver_input)) {
   }
 
-  ~Task() final {
-    stop_callback.reset();
-    context->dequeue(this);
+  void start() noexcept final {
+    context->enqueue(this);
   }
 
-  void start() noexcept final {
+  void setValue() noexcept final {
     auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
     if (stop_token.stop_requested()) {
       stdexec::set_stopped(std::move(receiver));
       return;
     }
-    stop_callback.emplace(stop_token, StopCallback{ this });
-    context->enqueue(this);
-  }
-
-  void setValue() noexcept final {
-    stop_callback.reset();
     stdexec::set_value(std::move(receiver));
-  }
-
-  void setStopped() noexcept final {
-    if (context->isRunning()) {
-      // heph::panicIf(!context->isCurrent(), "Stop not executed within the context scheduling loop");
-    }
-    stop_callback.reset();
-    context->dequeue(this);
-    stdexec::set_stopped(std::move(receiver));
   }
 };
 
 template <typename ReceiverT, typename ContextT>
 struct TimedTask : TaskBase {
+  struct StopCallback {
+    void operator()() const noexcept {
+      self->setStopped();
+    }
+    TimedTask* self;
+  };
   using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
   using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
   using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
 
-  ContextT* context{ nullptr };
+  Task<ReceiverT, ContextT> task;
   io_ring::TimerClock::time_point start_time;
-  ReceiverT receiver;
   std::optional<StopCallbackT> stop_callback;
   bool timeout_started{ false };
 
   template <typename Clock, typename Duration>
   TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
             ReceiverT&& receiver_input)
-    : context(context_input)
-    , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input))
-    , receiver(std::move(receiver_input)) {
+    : task(context_input, std::move(receiver_input))
+    , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input)) {
     // Avoid putting it the task in the timer when the deadline was already exceeded...
     if (start_time <= io_ring::TimerClock::now()) {
       timeout_started = true;
@@ -189,35 +141,28 @@ struct TimedTask : TaskBase {
   }
 
   ~TimedTask() final {
-    stop_callback.reset();
-    context->dequeue(this);
+    task.context->dequeueTimer(this);
   }
 
   void start() noexcept final {
     if (!timeout_started) {
       timeout_started = true;
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
+      task.context->enqueueAt(this, start_time);
+      auto stop_token = stdexec::get_stop_token(stdexec::get_env(task.receiver));
       stop_callback.emplace(stop_token, StopCallback{ this });
-      context->enqueueAt(this, start_time);
       return;
     }
-    auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
-    stop_callback.emplace(stop_token, StopCallback{ this });
-    context->enqueue(this);
+    stop_callback.reset();
+    task.start();
+  }
+
+  void setStopped() noexcept {
+    task.context->dequeueTimer(this);
+    stdexec::set_stopped(std::move(task.receiver));
   }
 
   void setValue() noexcept final {
-    stop_callback.reset();
-    stdexec::set_value(std::move(receiver));
-  }
-
-  void setStopped() noexcept final {
-    if (context->isRunning()) {
-      // heph::panicIf(!context->isCurrent(), "Stop not executed within the context scheduling loop");
-    }
-    stop_callback.reset();
-    context->dequeueTimer(this);
-    stdexec::set_stopped(std::move(receiver));
+    abort();
   }
 };
 

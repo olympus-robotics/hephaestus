@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include <hephaestus/conduit/basic_input.h>
+#include <hephaestus/serdes/serdes.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/channel.h"
@@ -14,6 +15,9 @@
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/conduit/value_storage.h"
 #include "hephaestus/conduit/value_trigger.h"
+#include "hephaestus/types_proto/bool.h"
+#include "hephaestus/types_proto/numeric_value.h"
+#include "hephaestus/types_proto/string.h"
 
 namespace heph::conduit {
 
@@ -49,6 +53,16 @@ public:
 
   void setTimeout(ClockT::duration timeout) {
     timeout_.emplace(timeout);
+  }
+
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string {
+    return serdes::getSerializedTypeInfo<T>().toJson();
+  };
+
+  auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
+    T value{};
+    serdes::deserialize(buffer, value);
+    return setValue(std::move(value));
   }
 
 private:

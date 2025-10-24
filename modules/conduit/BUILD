@@ -176,6 +176,12 @@ heph_cc_test(
     deps = [":conduit"],
 )
 
+heph_cc_test(
+    name = "distributed_graph_tests",
+    srcs = ["tests/distributed_graph_tests.cpp"],
+    deps = [":conduit"],
+)
+
 #heph_cc_test(
 #    name = "input_output_tests",
 #    srcs = ["tests/input_output_tests.cpp"],

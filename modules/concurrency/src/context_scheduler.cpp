@@ -12,15 +12,6 @@
 #include "hephaestus/concurrency/context.h"
 
 namespace heph::concurrency {
-[[nodiscard]] auto ContextEnv::query(stdexec::get_stop_token_t /*ignore*/) const noexcept
-    -> stdexec::inplace_stop_token {
-  return self->getStopToken();
-}
-
-[[nodiscard]] auto ContextEnv::query(GetContextT /*ignore*/) const noexcept -> Context& {
-  return *self;
-}
-
 void TaskDispatchOperation::handleCompletion(::io_uring_cqe* /*cqe*/) {
   self->start();
 }

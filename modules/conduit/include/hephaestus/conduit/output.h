@@ -8,6 +8,7 @@
 
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/conduit/output_base.h"
+#include "hephaestus/conduit/partner_output.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/utils/exception.h"
 
@@ -33,12 +34,27 @@ struct Output : public OutputBase {
     inputs_.push_back(&input);
   }
 
+  void connectToPartner(TypedInput<T>& input) {
+    partner_outputs_.emplace_back(input);
+  }
+
+  auto setPartner(const std::string& partner) -> std::vector<PartnerOutputBase*> {
+    std::vector<PartnerOutputBase*> res;
+    for (auto& output : partner_outputs_) {
+      res.push_back(output.setPartner(partner));
+    }
+    return res;
+  }
+
 private:
   auto triggerImpl() -> exec::task<void> {
     while (true) {
       auto value = buffer_.pop();
       if (!value.has_value()) {
         break;
+      }
+      for (auto& output : partner_outputs_) {
+        co_await output.setValue(*value);
       }
       for (auto* input : inputs_) {
         co_await input->setValue(*value);
@@ -49,5 +65,6 @@ private:
 private:
   concurrency::internal::CircularBuffer<T, Capacity> buffer_;
   std::vector<TypedInput<T>*> inputs_;
+  std::vector<PartnerOutput<T>> partner_outputs_;
 };
 }  // namespace heph::conduit
