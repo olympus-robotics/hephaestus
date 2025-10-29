@@ -5,6 +5,7 @@
 #include "hephaestus/types/uuid_v4.h"
 
 #include <cstdint>
+#include <ios>
 #include <random>
 #include <sstream>
 #include <string>
@@ -75,9 +76,9 @@ auto UuidV4::fromString(const std::string& uuid4_str) -> UuidV4 {
   // Check for any parsing errors (e.g., non-hex chars)
   // or if the dashes were not in the correct place.
   // We also check if there is any trailing data.
-  const auto valid = (ss.fail() || ss.rdbuf()->in_avail() != 0 || dash1 != '-' || dash2 != '-' ||
-                      dash3 != '-' || dash4 != '-');
-  panicIf(!valid, "Invalid UUID string format: {}", uuid4_str);
+  const auto invalid = (ss.fail() || ss.rdbuf()->in_avail() != 0 || dash1 != '-' || dash2 != '-' ||
+                        dash3 != '-' || dash4 != '-');
+  panicIf(invalid, "Invalid UUID string format: {}", uuid4_str);
 
   UuidV4 uuid;
 
