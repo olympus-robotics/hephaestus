@@ -6,11 +6,13 @@
 
 #include <cstdint>
 #include <random>
+#include <sstream>
 #include <string>
 
 #include <fmt/format.h>
 
 #include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/utils/exception.h"
 
 namespace heph::types {
 
@@ -45,6 +47,54 @@ auto UuidV4::create() -> UuidV4 {
   static auto mt = std::mt19937_64(rng());
 
   return random(mt);
+}
+
+auto UuidV4::fromString(const std::string& uuid4_str) -> UuidV4 {
+  static constexpr auto UUID4_STRING_SIZE = 36;
+  // A UUID string must be 36 characters long
+  panicIf(uuid4_str.length() != UUID4_STRING_SIZE, "Invalid UUID string length, expected {}, got {}",
+          UUID4_STRING_SIZE, uuid4_str.length());
+
+  std::stringstream ss(uuid4_str);
+  char dash1{};
+  char dash2{};
+  char dash3{};
+  char dash4{};
+
+  // These parts map to the UUID format:
+  // p1-p2-p3-p4-p5
+  uint32_t p1{};  // 8 hex chars
+  uint16_t p2{};  // 4 hex chars
+  uint16_t p3{};  // 4 hex chars
+  uint16_t p4{};  // 4 hex chars
+  uint64_t p5{};  // 12 hex chars (fits in 48 bits)
+
+  // Read all parts in hex format, consuming the dashes
+  ss >> std::hex >> p1 >> dash1 >> p2 >> dash2 >> p3 >> dash3 >> p4 >> dash4 >> p5;
+
+  // Check for any parsing errors (e.g., non-hex chars)
+  // or if the dashes were not in the correct place.
+  // We also check if there is any trailing data.
+  const auto valid = (ss.fail() || ss.rdbuf()->in_avail() != 0 || dash1 != '-' || dash2 != '-' ||
+                      dash3 != '-' || dash4 != '-');
+  panicIf(!valid, "Invalid UUID string format: {}", uuid4_str);
+
+  UuidV4 uuid;
+
+  // Assemble the 'high' part from p1, p2, and p3
+  // (uint64_t)p1 << 32 | (uint64_t)p2 << 16 | (uint64_t)p3
+  // [ p1: 32 bits ] [ p2: 16 bits ] [ p3: 16 bits ]
+  uuid.high =
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers, hicpp-signed-bitwise)
+      (static_cast<uint64_t>(p1) << 32) | (static_cast<uint64_t>(p2) << 16) | static_cast<uint64_t>(p3);
+
+  // Assemble the 'low' part from p4 and p5
+  // (uint64_t)p4 << 48 | p5
+  // [ p4: 16 bits ] [ p5: 48 bits ]
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers, hicpp-signed-bitwise)
+  uuid.low = ((static_cast<uint64_t>(p4) << 48) | p5);
+
+  return uuid;
 }
 
 auto UuidV4::format() const -> std::string {
