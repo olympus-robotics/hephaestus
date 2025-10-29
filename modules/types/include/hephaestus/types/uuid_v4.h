@@ -28,6 +28,16 @@ struct UuidV4 {
   /// @brief Creates a UUIDv4 using an internal static random number generator.
   [[nodiscard]] static auto create() -> UuidV4;
 
+  /// @brief Creates a UUIDv4 from a string representation.
+  /// A UUID string is 36 chars: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  /// * high: XXXXXXXX-XXXX-XXXX (8 bytes / 64 bits)
+  /// * low:  XXXX-XXXXXXXXXXXX (8 bytes / 64 bits)
+  ///
+  /// @param uuid4_str The UUID string (e.g., "f47ac10b-58cc-4372-a567-0e02b2c3d479").
+  /// @return A populated UuidV4 struct.
+  /// @throws panic if the string format is incorrect.
+  [[nodiscard]] static auto fromString(const std::string& uuid4_str) -> UuidV4;
+
   /// @brief Creates a UUIDv4 with all bits set to zero, 00000000-0000-0000-0000-000000000000.
   /// A Nil UUID value can be useful to communicate the absence of any other UUID value in situations that
   /// otherwise require or use a 128-bit UUID. A Nil UUID can express the concept "no such value here". Thus,

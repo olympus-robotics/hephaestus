@@ -87,6 +87,9 @@ TEST(UuidV4Test, Format) {
   EXPECT_TRUE(formatted[19] == '8' || formatted[19] == '9' || formatted[19] == 'a' ||
               formatted[19] == 'b');  // RFC 9562 variant bits are 10xx
   EXPECT_EQ(formatted[23], '-');
+
+  auto parsed_uuid = UuidV4::fromString(formatted);
+  EXPECT_EQ(parsed_uuid, uuid);
 }
 
 }  // namespace heph::types::tests
