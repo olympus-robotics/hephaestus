@@ -98,6 +98,13 @@ public:
     return true;
   }
 
+  [[nodiscard]] auto popAll() -> std::vector<T> {
+    if (data_.has_value()) {
+      return { pop().value() };
+    }
+    return {};
+  }
+
   auto peek() const -> std::optional<T> {
     return data_;
   }
@@ -106,7 +113,7 @@ public:
     return std::exchange(data_, std::optional<T>{});
   }
 
-  auto size() const -> std::size_t {
+  [[nodiscard]] auto size() const -> std::size_t {
     return data_.has_value() ? 1 : 0;
   }
 

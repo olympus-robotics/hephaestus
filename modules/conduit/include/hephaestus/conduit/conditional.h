@@ -28,7 +28,7 @@ public:
     containers::IntrusiveFifoQueue<OperationBase> waiters;
     {
       absl::MutexLock lock{ &mtx_ };
-      heph::panicIf(enabled_, "Trying to enable an already enabled conditional");
+      // heph::panicIf(enabled_, "Trying to enable an already enabled conditional");
 
       enabled_ = true;
       std::swap(waiters, waiters_);
@@ -47,7 +47,7 @@ public:
   /// \throws heph::Panic if already disabled
   void disable() {
     absl::MutexLock lock{ &mtx_ };
-    heph::panicIf(!enabled_, "Trying to disable an already disabled conditional");
+    // heph::panicIf(!enabled_, "Trying to disable an already disabled conditional");
 
     enabled_ = false;
   }
@@ -64,7 +64,7 @@ private:
   struct ConditionalWaiter {
     using sender_concept = stdexec::sender_t;
     using completion_signatures =
-        stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_stopped_t()>;
+        stdexec::completion_signatures<stdexec::set_value_t(bool), stdexec::set_stopped_t()>;
 
     template <typename Receiver>
     class Operation : public OperationBase {
@@ -98,7 +98,7 @@ private:
           }
           reset();
         }
-        stdexec::set_value(std::move(receiver_));
+        stdexec::set_value(std::move(receiver_), true);
 
         return true;
       }

@@ -74,7 +74,7 @@ auto Context::runTasksSimulated() -> bool {
   last_progress_time_ = now;
 
   // FIXME: make thread safe
-  timer_.tickSimulated(tasks_.empty());
+  timer_.tickSimulated(tasks_.empty() && !ring_.hasWork());
 
   runTasks();
 

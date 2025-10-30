@@ -58,9 +58,11 @@ struct BlockingTrigger {
   struct Type {
     static auto trigger(concurrency::AnySender<T> completion, ValueStorage<T>& value_storage,
                         SchedulerT /*scheduler*/, std::optional<ClockT::time_point> /*deadline*/)
-        -> concurrency::AnySender<void> {
-      return std::move(completion) |
-             stdexec::then([&value_storage](T&& value) -> void { value_storage.setValue(std::move(value)); });
+        -> concurrency::AnySender<bool> {
+      return std::move(completion) | stdexec::then([&value_storage](T&& value) -> bool {
+               value_storage.setValue(std::move(value));
+               return true;
+             });
     }
   };
   template <typename T>
@@ -102,11 +104,12 @@ struct DeadlineTrigger {
   struct Type {
     static auto trigger(concurrency::AnySender<T> completion, ValueStorage<T>& value_storage,
                         SchedulerT scheduler, std::optional<ClockT::time_point> deadline)
-        -> concurrency::AnySender<void> {
+        -> concurrency::AnySender<bool> {
       heph::panicIf(!deadline.has_value(), "DeadlineTrigger called without setting a timeout");
-      return exec::when_any(scheduler.scheduleAt(*deadline),
-                            std::move(completion) | stdexec::then([&value_storage](T&& value) -> void {
+      return exec::when_any(scheduler.scheduleAt(*deadline) | stdexec::then([]() { return false; }),
+                            std::move(completion) | stdexec::then([&value_storage](T&& value) -> bool {
                               value_storage.setValue(std::move(value));
+                              return true;
                             }));
     }
   };

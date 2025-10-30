@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <exception>
 #include <string_view>
 #include <type_traits>
@@ -41,7 +42,7 @@ struct TriggerReceiver {
   BasicInput* input;
   Receiver receiver;
   //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
-  void set_value() noexcept;
+  void set_value(bool completed) noexcept;
   void set_stopped() noexcept;
   void set_error(std::exception_ptr ptr) noexcept;
 
@@ -60,7 +61,7 @@ public:
   using sender_concept = stdexec::sender_t;
   using completion_signatures = InputTriggerCompletionSignatures;
 
-  InputTrigger(BasicInput* input, concurrency::AnySender<void>&& sender)
+  InputTrigger(BasicInput* input, concurrency::AnySender<bool>&& sender)
     : input_(input), sender_(std::move(sender)) {
   }
 
@@ -78,7 +79,7 @@ public:
 
 private:
   BasicInput* input_;
-  concurrency::AnySender<void> sender_;
+  concurrency::AnySender<bool> sender_;
 };
 
 // APIDOC: begin
@@ -88,7 +89,7 @@ private:
 /// @endverbatim
 class BasicInput {
 public:
-  using SenderT = concurrency::AnySender<void>;
+  using SenderT = concurrency::AnySender<bool>;
   /// Each input is named. Therefor, basic inputs can only be constructed with a name.
   ///
   /// Initializes \ref lastTriggerTime() to epoch time.
@@ -124,6 +125,7 @@ public:
   [[nodiscard]] auto lastTriggerTime() const -> ClockT::time_point;
 
   [[nodiscard]] virtual auto getTypeInfo() const -> std::string {
+    abort();
     return "";
   };
 
@@ -141,6 +143,26 @@ public:
     node_ = &node;
   }
 
+  auto enabled() const -> bool {
+    return enabled_.load(std::memory_order_acquire);
+  }
+
+  void enable() {
+    enabled_.store(true, std::memory_order_release);
+  }
+
+  void disable() {
+    enabled_.store(false, std::memory_order_release);
+  }
+
+  virtual auto getIncoming() -> std::vector<std::string> {
+    return {};
+  }
+
+  virtual auto getOutgoing() -> std::vector<std::string> {
+    return {};
+  }
+
 private:
   template <typename Receiver>
   friend struct internal::TriggerReceiver;
@@ -150,13 +172,18 @@ private:
   NodeBase* node_{ nullptr };
   std::string_view name_;
   ClockT::time_point last_trigger_time_;
+  std::atomic<bool> enabled_{ true };
 };
 // APIDOC: end
 
 namespace internal {
 template <typename Receiver>
-inline void TriggerReceiver<Receiver>::set_value() noexcept {
-  input->onCompleted();
+inline void TriggerReceiver<Receiver>::set_value(bool completed) noexcept {
+  if (completed) {
+    input->onCompleted();
+  } else {
+    input->handleStopped();
+  }
   stdexec::set_value(std::move(receiver));
 }
 template <typename Receiver>
