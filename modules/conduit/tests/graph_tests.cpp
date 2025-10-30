@@ -30,7 +30,7 @@ struct JustInput : BasicInput {
   JustInput() : BasicInput("just") {
   }
   auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
-    return stdexec::just();
+    return stdexec::just(true);
   }
   void handleCompleted() final {
   }
