@@ -16,12 +16,19 @@
 #include "hephaestus/concurrency/channel.h"
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/serdes/serdes.h"
 
 namespace heph::conduit {
 template <typename T, std::size_t Capacity>
 class AccumulatedInput : public TypedInput<T> {
 public:
   explicit AccumulatedInput(std::string_view name) : TypedInput<T>(name) {
+  }
+
+  auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
+    T value{};
+    serdes::deserialize(buffer, value);
+    return setValue(std::move(value));
   }
 
   auto setValue(T t) -> concurrency::AnySender<void> final {
@@ -32,9 +39,13 @@ public:
     return buffer_.popAll();
   }
 
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string final {
+    return serdes::getSerializedTypeInfo<T>().toJson();
+  };
+
 private:
-  [[nodiscard]] auto doTrigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<void> final {
-    return [this]() -> exec::task<void> {
+  [[nodiscard]] auto doTrigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<bool> final {
+    return [this]() -> exec::task<bool> {
       while (true) {
         auto value = co_await value_channel_.getValue();
         this->updateTriggerTime();
@@ -42,6 +53,7 @@ private:
           buffer_.pop();
         }
       }
+      co_return true;
     }();
     // FIXME:
     /*

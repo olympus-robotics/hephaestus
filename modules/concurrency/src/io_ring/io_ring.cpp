@@ -93,8 +93,7 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
 
   on_started();
   bool more_work = on_progress();
-  while (more_work || running_.load(std::memory_order_acquire) ||
-         in_flight_.load(std::memory_order_acquire) > 1) {
+  while (more_work || running_.load(std::memory_order_acquire) || hasWork()) {
     runOnce(!more_work);
     more_work = on_progress();
   }
@@ -113,6 +112,11 @@ auto IoRing::isCurrent() const -> bool {
 
 auto IoRing::isRunning() const -> bool {
   return running_.load(std::memory_order_acquire);
+}
+
+auto IoRing::hasWork() const -> bool {
+  return in_flight_.load(std::memory_order_acquire) > 1 &&
+         [this]() { return !in_flight_operations_.empty(); }();
 }
 
 void IoRing::submit(IoRingOperationBase* operation) {

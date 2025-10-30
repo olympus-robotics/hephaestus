@@ -59,8 +59,9 @@ public:
   using StepperT = Stepper;
   using NodeDescriptionT = typename StepperT::NodeDescriptionT;
 
-  explicit Graph(GraphConfig config, StepperT stepper)
-    : stepper_(std::move(stepper)), config_(std::move(config)) {
+  template <typename... Ts>
+  explicit Graph(GraphConfig config, Ts&&... ts)
+    : stepper_(std::forward<Ts>(ts)...), config_(std::move(config)) {
     // Initialize all nodes, recurses into child nodes
     root_.initialize(config_.prefix, nullptr, stepper_);
 
@@ -103,13 +104,13 @@ private:
   void registerInput(TypedInput<T>& input) {
     typed_inputs_.push_back(&input);
   }
-  void registerOutput(OutputBase& /*input*/) {
+  void registerOutput(OutputBase& /*output*/) {
   }
   template <typename T>
   void registerOutput(Output<T>& output) {
     typed_outputs_.push_back(&output);
     for (const auto& partner : config_.partners) {
-      auto partner_outputs = output.setPartner(partner);
+      auto partner_outputs = output.setPartner(config_.prefix, partner);
       partner_outputs_.insert(partner_outputs_.end(), partner_outputs.begin(), partner_outputs.end());
     }
   }

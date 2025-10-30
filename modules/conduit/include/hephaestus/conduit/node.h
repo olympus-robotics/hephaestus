@@ -62,7 +62,7 @@ public:
     const auto& children_config = stepper.childrenConfig();
     using ChildrenConfigT = std::decay_t<decltype(children_config)>;
     static_assert(boost::pfr::tuple_size_v<ChildrenT> == boost::pfr::tuple_size_v<ChildrenConfigT>);
-    internal::constructChildren(prefix, this, children, children_config,
+    internal::constructChildren(this->prefix, this, children, children_config,
                                 std::make_index_sequence<boost::pfr::tuple_size_v<ChildrenT>>{});
     // Alternative with C++26 and aggregate packs.
     // auto& [... child] = children;
@@ -82,8 +82,15 @@ public:
     return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
              return concurrency::repeatUntil([this, scheduler]() {
                return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
-                      stdexec::let_value([this, scheduler]() {
-                        return stdexec::continues_on(stepper.step(inputs, outputs), scheduler) |
+                      stdexec::let_value([this, scheduler](auto... test) {
+                        std::string module_name;
+                        if (prefix.empty()) {
+                          module_name = name();
+                        } else {
+                          module_name = name().substr(prefix.size() + 2);
+                        }
+                        return stdexec::continues_on(
+                                   stepper.step(prefix, std::move(module_name), inputs, outputs), scheduler) |
                                stdexec::let_value([this, scheduler]() { return outputTrigger(); });
                       }) |
                       stdexec::then([]() { return false; });
