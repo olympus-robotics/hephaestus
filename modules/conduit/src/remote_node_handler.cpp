@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#if 0
 #include "hephaestus/conduit/remote_node_handler.h"
 
 #include <cstdio>
@@ -162,3 +163,4 @@ auto RemoteNodeHandler::handleClient(heph::net::Socket client, RemoteNodeType ty
 }
 
 }  // namespace heph::conduit
+#endif

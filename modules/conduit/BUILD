@@ -21,6 +21,7 @@ heph_cc_library(
         "//modules/ipc",
         "//modules/net",
         "//modules/types_proto",
+    "@boost.pfr",
     ],
 )
 
@@ -29,85 +30,117 @@ heph_cc_library(
 ############
 
 heph_cc_binary(
-    name = "conduit_clock_drift",
-    srcs = ["examples/conduit_clock_drift.cpp"],
+    name = "periodic_spinner",
+    srcs = ["examples/periodic_spinner.cpp"],
     deps = [
         ":conduit",
-        "//modules/cli",
-        "//modules/telemetry/telemetry_influxdb_sink",
     ],
 )
 
-heph_cc_binary(
-    name = "mont_blanc",
-    srcs = ["examples/mont_blanc.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/format",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_binary(
+#    name = "conduit_clock_drift",
+#    srcs = ["examples/conduit_clock_drift.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/telemetry/telemetry_influxdb_sink",
+#    ],
+#)
+#
+#heph_cc_binary(
+#    name = "mont_blanc",
+#    srcs = ["examples/mont_blanc.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/format",
+#        "//modules/types_proto",
+#    ],
+#)
+#
+#heph_cc_binary(
+#    name = "conduit_graph",
+#    srcs = ["examples/conduit_graph.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/types_proto",
+#    ],
+#)
 
-heph_cc_binary(
-    name = "conduit_graph",
-    srcs = ["examples/conduit_graph.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_binary(
+#    name = "conduit_publisher",
+#    srcs = ["examples/conduit_publisher.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
 
-heph_cc_binary(
-    name = "conduit_publisher",
-    srcs = ["examples/conduit_publisher.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_binary(
+#    name = "conduit_subscriber",
+#    srcs = ["examples/conduit_subscriber.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/format",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
 
-heph_cc_binary(
-    name = "conduit_subscriber",
-    srcs = ["examples/conduit_subscriber.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/format",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_binary(
+#    name = "conduit_input_publisher",
+#    srcs = ["examples/conduit_input_publisher.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
 
-heph_cc_binary(
-    name = "conduit_input_publisher",
-    srcs = ["examples/conduit_input_publisher.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
-)
-
-heph_cc_binary(
-    name = "conduit_input_subscriber",
-    srcs = ["examples/conduit_input_subscriber.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/cli",
-        "//modules/format",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_binary(
+#    name = "conduit_input_subscriber",
+#    srcs = ["examples/conduit_input_subscriber.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/cli",
+#        "//modules/format",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
 
 #########
 # Tests #
 #########
+
+heph_cc_test(
+    name = "basic_input_tests",
+    srcs = ["tests/basic_input_tests.cpp"],
+    deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "input_tests",
+    srcs = ["tests/input_tests.cpp"],
+    deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "output_tests",
+    srcs = ["tests/output_tests.cpp"],
+    deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "stepper_tests",
+    srcs = ["tests/stepper_tests.cpp"],
+    deps = [":conduit"],
+)
 
 heph_cc_test(
     name = "node_tests",
@@ -116,30 +149,42 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "input_output_tests",
-    srcs = ["tests/input_output_tests.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/types_proto",
-    ],
+    name = "graph_tests",
+    srcs = ["tests/graph_tests.cpp"],
+    deps = [":conduit"],
 )
 
 heph_cc_test(
-    name = "zenoh_nodes_tests",
-    srcs = ["tests/zenoh_nodes_tests.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
+    name = "distributed_graph_tests",
+    srcs = ["tests/distributed_graph_tests.cpp"],
+    deps = [":conduit"],
 )
 
-heph_cc_test(
-    name = "remote_publisher_tests",
-    srcs = ["tests/remote_publisher_tests.cpp"],
-    deps = [
-        ":conduit",
-        "//modules/types",
-        "//modules/types_proto",
-    ],
-)
+#heph_cc_test(
+#    name = "input_output_tests",
+#    srcs = ["tests/input_output_tests.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/types_proto",
+#    ],
+#)
+
+#heph_cc_test(
+#    name = "zenoh_nodes_tests",
+#    srcs = ["tests/zenoh_nodes_tests.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
+
+#heph_cc_test(
+#    name = "remote_publisher_tests",
+#    srcs = ["tests/remote_publisher_tests.cpp"],
+#    deps = [
+#        ":conduit",
+#        "//modules/types",
+#        "//modules/types_proto",
+#    ],
+#)
