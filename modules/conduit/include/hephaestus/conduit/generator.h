@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <optional>
 #include <type_traits>
+#include <utility>
 
 #include <exec/task.hpp>
 #include <hephaestus/utils/exception.h>
@@ -60,12 +62,23 @@ public:
     return *data;
   }
 
+  template <typename... Ts>
+  auto valueOr(Ts&&... ts) -> std::optional<T> {
+    if (hasValue()) {
+      return value();
+    }
+    return std::optional<T>{ std::forward<Ts>(ts)... };
+  }
+
 private:
   auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
     heph::panicIf(!generator_, "{}: No generator function set", name());
     heph::panicIf(data_.has_value(), "{}: Data not consumed", name());
     data_.reset();
-    return generator_() | stdexec::then([this](T value) { data_.emplace(std::move(value)); });
+    return generator_() | stdexec::then([this](T value) {
+             data_.emplace(std::move(value));
+             return true;
+           });
   }
 
   void handleCompleted() final {
