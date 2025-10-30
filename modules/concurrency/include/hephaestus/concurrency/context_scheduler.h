@@ -28,7 +28,7 @@ struct ContextScheduleT {};
 struct ContextScheduleAtT {};
 
 struct ContextScheduler {
-  Context* self;
+  Context* self{ nullptr };
 
   [[nodiscard]] auto context() const -> Context& {
     return *self;

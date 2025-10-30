@@ -17,6 +17,8 @@
 #include "hephaestus/conduit/acceptor.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
 
 namespace heph::conduit {
 struct RunnerConfig {
@@ -83,8 +85,17 @@ public:
   template <typename Stepper>
   void spawn(Graph<Stepper>& graph) {
     scope_.spawn(spawnImpl(graph.root()) | stdexec::upon_error([&](const std::exception_ptr& error) mutable {
-                   exception_ = error;
-                   requestStop();
+                   try {
+                     std::rethrow_exception(error);
+                   } catch (std::exception& e) {
+                     heph::log(heph::FATAL, "Executor::spawn exception", "what", e.what());
+                   } catch (...) {
+                     heph::log(heph::FATAL, "Executor::spawn unknown exception");
+                   }
+                   telemetry::flushLogEntries();
+                   std::terminate();
+                   // exception_ = error;
+                   // requestStop();
                  }));
     acceptor_.setInputs(graph.inputs());
     acceptor_.spawn(graph.partnerOutputs());
@@ -99,6 +110,10 @@ public:
 
   auto endpoints() const -> std::vector<heph::net::Endpoint> {
     return acceptor_.endpoints();
+  }
+
+  auto scheduler() -> SchedulerT {
+    return runners_.front()->scheduler();
   }
 
 private:

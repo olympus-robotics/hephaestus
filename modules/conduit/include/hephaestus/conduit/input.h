@@ -4,17 +4,18 @@
 
 #pragma once
 
+#include <optional>
 #include <string_view>
 
-#include <hephaestus/conduit/basic_input.h>
-#include <hephaestus/serdes/serdes.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/channel.h"
+#include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/input_policy.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/conduit/value_storage.h"
 #include "hephaestus/conduit/value_trigger.h"
+#include "hephaestus/serdes/serdes.h"
 #include "hephaestus/types_proto/bool.h"
 #include "hephaestus/types_proto/numeric_value.h"
 #include "hephaestus/types_proto/string.h"
@@ -51,11 +52,23 @@ public:
     return value_storage_.value();
   }
 
+  template <typename... Ts>
+  auto valueOr(Ts&&... ts) -> T {
+    if (hasValue()) {
+      return value_storage_.value();
+    }
+    return T{ std::forward<Ts>(ts)... };
+  }
+
+  auto optionalValue() -> std::optional<T> {
+    return hasValue() ? std::optional{ value() } : std::nullopt;
+  }
+
   void setTimeout(ClockT::duration timeout) {
     timeout_.emplace(timeout);
   }
 
-  [[nodiscard]] virtual auto getTypeInfo() const -> std::string {
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string final {
     return serdes::getSerializedTypeInfo<T>().toJson();
   };
 

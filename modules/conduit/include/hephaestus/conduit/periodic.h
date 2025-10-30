@@ -37,9 +37,9 @@ private:
       start_time_ = now;
       iteration_ = 0;
       // TODO: missing deadline period warning...
-      return scheduler.schedule();
+      return scheduler.schedule() | stdexec::then([]() { return true; });
     }
-    return scheduler.scheduleAt(next_start_time);
+    return scheduler.scheduleAt(next_start_time) | stdexec::then([]() { return true; });
   }
 
   void handleCompleted() final {

@@ -10,7 +10,7 @@ BasicInput::BasicInput(std::string_view name) : name_(name) {
 
 auto BasicInput::name() const -> std::string {
   if (node_ != nullptr) {
-    return fmt::format("{}/{}", node_->name(), name_);
+    return fmt::format("{}/inputs/{}", node_->name(), name_);
   }
   return std::string(name_);
 }

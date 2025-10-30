@@ -41,6 +41,7 @@ public:
 
   auto isRunning() const -> bool;
   auto isCurrent() const -> bool;
+  auto hasWork() const -> bool;
 
   void notify(bool always = false) const;
 

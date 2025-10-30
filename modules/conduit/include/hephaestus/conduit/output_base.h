@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/node_base.h"
@@ -17,7 +19,7 @@ struct OutputBase {
   virtual ~OutputBase() = default;
   [[nodiscard]] auto name() const -> std::string {
     if (node_ != nullptr) {
-      return fmt::format("{}/{}", node_->name(), name_);
+      return fmt::format("{}/outputs/{}", node_->name(), name_);
     }
     return std::string(name_);
   }
@@ -25,6 +27,14 @@ struct OutputBase {
 
   void setNode(NodeBase& node) {
     node_ = &node;
+  }
+
+  virtual auto getIncoming() -> std::vector<std::string> {
+    return {};
+  }
+
+  virtual auto getOutgoing() -> std::vector<std::string> {
+    return {};
   }
 
 private:

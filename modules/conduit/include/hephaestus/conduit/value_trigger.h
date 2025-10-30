@@ -12,7 +12,7 @@
 namespace heph::conduit {
 template <typename T>
 class ValueTrigger {
-  using InputTriggerFunctionT = concurrency::AnySender<void> (*)(concurrency::AnySender<T> completion,
+  using InputTriggerFunctionT = concurrency::AnySender<bool> (*)(concurrency::AnySender<T> completion,
                                                                  ValueStorage<T>& value_storage,
                                                                  SchedulerT scheduler,
                                                                  std::optional<ClockT::time_point> deadline);
@@ -24,7 +24,7 @@ public:
   }
 
   auto operator()(concurrency::AnySender<T> completion, ValueStorage<T>& value_storage, SchedulerT scheduler,
-                  std::optional<ClockT::time_point> deadline) -> concurrency::AnySender<void> {
+                  std::optional<ClockT::time_point> deadline) -> concurrency::AnySender<bool> {
     return trigger_(std::move(completion), value_storage, scheduler, deadline);
   }
 

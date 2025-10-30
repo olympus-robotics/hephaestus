@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include <exec/task.hpp>
-
 #include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/telemetry/scope.h"
 
 namespace heph::conduit {
 template <typename Stepper, typename NodeDescription>
@@ -21,7 +20,7 @@ struct StepperVtable {
   using ChildrenT = typename NodeDescription::Children;
   using ChildrenConfigT = typename NodeDescription::ChildrenConfig;
   void (*connect)(void*, InputsT&, OutputsT&, ChildrenT&);
-  concurrency::AnySender<void> (*step)(void*, InputsT&, OutputsT&);
+  concurrency::AnySender<void> (*step)(void*, std::string, std::string, InputsT&, OutputsT&);
   ChildrenConfigT (*children_config)(const void*);
 };
 
@@ -31,14 +30,20 @@ inline constexpr auto STEPPER_VTABLE = StepperVtable<NodeDescription>{
                 NodeDescription::Children& children) -> void {
     static_cast<Stepper*>(ptr)->connect(inputs, outputs, children);
   },
-  .step = [](void* ptr, NodeDescription::Inputs& inputs,
+  .step = [](void* ptr, std::string prefix, std::string module_name, NodeDescription::Inputs& inputs,
              NodeDescription::Outputs& outputs) -> concurrency::AnySender<void> {
     auto step_fun = [ptr, &inputs, &outputs]() { return static_cast<Stepper*>(ptr)->step(inputs, outputs); };
     using ResultT = decltype(step_fun());
 
     if constexpr (std::is_same_v<void, ResultT>) {
-      return stdexec::just() | stdexec::then(std::move(step_fun));
+      return stdexec::just() |
+             stdexec::then([prefix = std::move(prefix), module_name = std::move(module_name),
+                            step_fun = std::move(step_fun)]() {
+               heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
+               step_fun();
+             });
     } else {
+      heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
       return step_fun();
     }
   },
@@ -69,9 +74,9 @@ public:
     vtable_->connect(ptr_, inputs, outputs, children);
   }
 
-  auto step(NodeDescriptionT::Inputs& inputs, NodeDescriptionT::Outputs& outputs)
-      -> concurrency::AnySender<void> {
-    return vtable_->step(ptr_, inputs, outputs);
+  auto step(std::string prefix, std::string module_name, NodeDescriptionT::Inputs& inputs,
+            NodeDescriptionT::Outputs& outputs) -> concurrency::AnySender<void> {
+    return vtable_->step(ptr_, std::move(prefix), std::move(module_name), inputs, outputs);
   }
 
   [[nodiscard]] auto childrenConfig() const -> ChildrenConfigT {

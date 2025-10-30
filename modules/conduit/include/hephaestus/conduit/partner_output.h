@@ -78,17 +78,17 @@ public:
     return output_->getValue() | stdexec::then([](const T& t) { return serdes::serialize(t); });
   }
 
-  auto setPartner(std::string partner) -> PartnerOutputBase* {
+  auto setPartner(const std::string& prefix, std::string partner) -> PartnerOutputBase* {
     partner_ = std::move(partner);
     output_ = std::make_unique<concurrency::Channel<T, 1>>();
-    resolved_name_ = resolveName();
+    resolved_name_ = resolveName(prefix);
     return this;
   }
 
 private:
-  auto resolveName() {
-    const auto prefix = fmt::format("/{}/", partner_);
-    return fmt::format("/{}/{}", partner_, name_.substr(prefix.size()));
+  auto resolveName(const std::string& prefix) {
+    // add 2 to prefix size due to the `/` before and after it.
+    return fmt::format("/{}/{}", partner_, name_.substr(prefix.size() + 2));
   }
 
 private:

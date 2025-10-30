@@ -13,7 +13,7 @@ namespace heph::conduit::internal {
 struct NeverStop {
   using sender_concept = stdexec::sender_t;
   using completion_signatures =
-      stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_stopped_t()>;
+      stdexec::completion_signatures<stdexec::set_value_t(bool), stdexec::set_stopped_t()>;
   template <typename Receiver>
   struct Operation {
     struct StopCallback {
