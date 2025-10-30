@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <optional>
 #include <utility>
 
@@ -15,10 +16,13 @@
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
+#include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/internal/never_stop.h"
 #include "hephaestus/conduit/node_base.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/stepper.h"
+#include "hephaestus/telemetry/metric_record.h"
+#include "hephaestus/telemetry/metric_sink.h"
 
 namespace heph::conduit {
 namespace internal {
@@ -81,8 +85,26 @@ public:
   auto spawn(SchedulerT scheduler) {
     return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
              return concurrency::repeatUntil([this, scheduler]() {
+               auto now = ClockT::now();
+               if (trigger_start_time != ClockT::time_point{}) {
+                 auto period_duration = now - trigger_start_time;
+                 heph::telemetry::record([name = name(), timestamp = trigger_start_time, period_duration] {
+                   return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                     .timestamp = timestamp,
+                     .values = {
+                       {
+                           "tick_duration_microsec",
+                           std::chrono::duration_cast<std::chrono::microseconds>(period_duration).count(),
+                       },
+                     },
+                   };
+                 });
+               }
+               trigger_start_time = now;
                return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
-                      stdexec::let_value([this, scheduler](auto... test) {
+                      stdexec::let_value([this, scheduler](auto... /*unused*/) {
+                        execution_start_time = ClockT::now();
                         std::string module_name;
                         if (prefix.empty()) {
                           module_name = name();
@@ -93,7 +115,23 @@ public:
                                    stepper.step(prefix, std::move(module_name), inputs, outputs), scheduler) |
                                stdexec::let_value([this, scheduler]() { return outputTrigger(); });
                       }) |
-                      stdexec::then([]() { return false; });
+                      stdexec::then([this]() {
+                        auto execute_duration = ClockT::now() - execution_start_time;
+                        heph::telemetry::record(
+                            [name = name(), timestamp = execution_start_time, execute_duration] {
+                              return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                     .timestamp = timestamp,
+                     .values = {
+                       {
+                           "execute_duration_microsec",
+                           std::chrono::duration_cast<std::chrono::microseconds>(execute_duration).count(),
+                       },
+                     },
+                   };
+                            });
+                        return false;
+                      });
              });
            });
   }
@@ -117,6 +155,9 @@ public:
   OutputsT outputs{};
   ChildrenT children{};
   TriggerT trigger{};
+
+  ClockT::time_point trigger_start_time;
+  ClockT::time_point execution_start_time;
 };
 }  // namespace internal
 
