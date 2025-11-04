@@ -77,6 +77,8 @@ Logger::Logger() : entries_{ std::nullopt } {
 }
 
 Logger::~Logger() {
+  flush();
+
   try {
     entries_.stop();
     message_process_future_.get();
