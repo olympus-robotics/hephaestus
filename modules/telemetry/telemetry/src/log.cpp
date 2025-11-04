@@ -37,6 +37,7 @@ public:
   auto operator=(Logger&&) -> Logger& = delete;
 
   static void registerSink(std::unique_ptr<ILogSink> sink) noexcept;
+  static void removeAllLogSinks() noexcept;
 
   static void log(LogEntry&& log_entry) noexcept;
   static void flush() noexcept;
@@ -77,6 +78,8 @@ Logger::Logger() : entries_{ std::nullopt } {
 }
 
 Logger::~Logger() {
+  flush();
+
   try {
     entries_.stop();
     message_process_future_.get();
@@ -99,6 +102,12 @@ void Logger::registerSink(std::unique_ptr<ILogSink> sink) noexcept {
   } catch (const std::bad_alloc& ex) {
     fmt::println(stderr, "While registering log sink, bad allocation happened: {}", ex.what());
   }
+}
+
+void Logger::removeAllLogSinks() noexcept {
+  auto& telemetry = instance();
+  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
+  telemetry.sinks_.clear();
 }
 
 void Logger::log(LogEntry&& log_entry) noexcept {
@@ -151,6 +160,10 @@ void internal::log(LogEntry&& log_entry) noexcept {
 
 void registerLogSink(std::unique_ptr<ILogSink> sink) noexcept {
   Logger::registerSink(std::move(sink));
+}
+
+void removeAllLogSinks() noexcept {
+  Logger::removeAllLogSinks();
 }
 
 void flushLogEntries() {
