@@ -20,23 +20,31 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/cli",
+    implementation_deps = [
         "//modules/concurrency",
         "//modules/containers",
-        "//modules/ipc",
-        "//modules/serdes",
-        "//modules/telemetry/telemetry",
         "//modules/types",
         "//modules/types_proto",
-        "//modules/utils",
         "@boringssl//:ssl",
-        "@fmt",
         "@reflect-cpp",
         "@ws_protocol",
         "@zenohc_builder//:zenoh-c",
         "@zenohc_builder//:zenoh-cpp",
+        "//modules/cli",
+        "//modules/utils",
     ],
+    deps=[
+        "//modules/ipc",
+        "@abseil-cpp//absl/synchronization:mutex",
+        "@abseil-cpp//absl/base:thread_annotations",
+        "@abseil-cpp//absl/log:log",
+        "@fmt",
+        "//modules/serdes",
+        "//modules/telemetry/telemetry",
+        "@protobuf"
+        "@nlohmann_json//:json",
+
+    ]
 )
 
 ############
@@ -49,6 +57,10 @@ heph_cc_binary(
     deps = [
         ":websocket_bridge",
         "@bazel_tools//tools/cpp/runfiles",
+        "//modules/cli",
+        "//modules/ipc",
+        "//modules/telemetry/telemetry",
+        "//modules/utils",
     ],
 )
 

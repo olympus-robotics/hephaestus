@@ -18,15 +18,17 @@ heph_cc_library(
         "include",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/utils",
+    implementation_deps = [
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
+        "@range-v3//:range-v3",
+    ],
+    deps=[
+        "@protobuf",
+        "//modules/utils",
         "@fmt",
         "@magic_enum",
         "@nlohmann_json//:json",
-        "@protobuf",
-        "@range-v3//:range-v3",
     ],
 )
 

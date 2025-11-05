@@ -16,18 +16,25 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/cli",
-        "//modules/concurrency",
+    implementation_deps = [
         "//modules/containers",
         "//modules/ipc/proto:types_gen_proto",
+        "@nlohmann_json//:json",
+    ],
+    deps=[
+        "@zenohc_builder//:zenoh-c",
+        "@zenohc_builder//:zenoh-cpp",
+        "//modules/cli",
+        "//modules/concurrency",
+        "//modules/random",
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/utils",
         "@fmt",
-        "@nlohmann_json//:json",
-        "@zenohc_builder//:zenoh-c",
-        "@zenohc_builder//:zenoh-cpp",
+        "@magic_enum",
+        "@abseil-cpp//absl/base:thread_annotations",
+        "@abseil-cpp//absl/synchronization:mutex",
+
     ],
 )
 

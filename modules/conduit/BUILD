@@ -10,17 +10,27 @@ heph_cc_library(
     name = "conduit",
     srcs = glob([
         "src/**/*.cpp",
+        "include/**/detail/*.h",
     ]),
     hdrs = glob([
         "include/**/*.h",
+    ], exclude = [
+        "include/**/detail/**",
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
+    implementation_deps = [
+    ],
+    deps=[
         "//modules/concurrency",
-        "//modules/ipc",
         "//modules/net",
-        "//modules/types_proto",
+        "//modules/utils",
+        "//modules/telemetry/telemetry",
+        "//modules/ipc",
+        "@stdexec",
+        "@fmt",
+        "//modules/serdes",
+        "//modules/types_proto", #TODO(@heller) do we really want that?
     ],
 )
 

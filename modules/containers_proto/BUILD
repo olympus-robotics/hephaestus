@@ -14,6 +14,7 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [

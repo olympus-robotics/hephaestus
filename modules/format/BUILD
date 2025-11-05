@@ -16,12 +16,14 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
+    implementation_deps = [
+    ],
     deps = [
         "//modules/containers_reflection",
         "//modules/utils",
+        "@reflect-cpp",
         "@fmt",
         "@magic_enum",
-        "@reflect-cpp",
     ],
 )
 

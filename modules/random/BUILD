@@ -16,9 +16,11 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/utils",
+    implementation_deps = [
         "@fmt",
+    ],
+    deps=[
+        "//modules/utils",
         "@magic_enum",
     ],
 )

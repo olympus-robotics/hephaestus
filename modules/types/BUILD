@@ -16,11 +16,14 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/random",
+    implementation_deps = [
         "@abseil-cpp//absl/hash:hash",
-        "@fmt",
         "@magic_enum",
+    ],
+    deps=[
+        "@fmt",
+        "//modules/random",
+        "//modules/utils",
     ],
 )
 

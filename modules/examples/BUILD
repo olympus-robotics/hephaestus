@@ -16,21 +16,25 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/examples/proto:examples_gen_proto",
+    implementation_deps = [
         "//modules/ipc",
         "//modules/random",
-        "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/types",
-        "//modules/utils",
         "@abseil-cpp//absl/container:raw_hash_map",
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
-        "@eigen",
-        "@fmt",
         "@protobuf",
         "@zstd",
+    ],
+    deps=[
+
+        "//modules/serdes",
+        "//modules/utils",
+        "//modules/examples/proto:examples_gen_proto",
+        "//modules/examples",
+        "@fmt",
+        "@eigen",
     ],
 )
 

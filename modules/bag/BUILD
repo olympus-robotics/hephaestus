@@ -14,15 +14,18 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "//modules/containers",
+        "//modules/random",
+        "//modules/telemetry/telemetry",
+        "@zstd",
+    ]
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/containers",
         "//modules/ipc",
-        "//modules/random",
-        "//modules/telemetry/telemetry",
+        "//modules/serdes",
         "@mcap",
-        "@zstd",
     ],
 )
 

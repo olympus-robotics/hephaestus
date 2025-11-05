@@ -19,13 +19,16 @@ heph_cc_library(
         "src",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "@abseil-cpp//absl/log:check",
+    implementation_deps = [
         "@abseil-cpp//absl/random:random",
         "@abseil-cpp//absl/time:time",
+        "@range-v3//:range-v3",
+    ],
+    deps=[
         "@fmt",
         "@magic_enum",
-        "@range-v3//:range-v3",
+        "//modules/utils",
+        "@abseil-cpp//absl/log:check",
     ],
 )
 

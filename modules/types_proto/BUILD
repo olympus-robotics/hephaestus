@@ -14,11 +14,15 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
+    implementation_deps = [
         "//modules/random",
+    ],
+    deps=[
         "//modules/serdes",
+        "//modules/utils",
         "//modules/types",
         "//modules/types_proto/proto:types_gen_proto",
+
     ],
 )
 

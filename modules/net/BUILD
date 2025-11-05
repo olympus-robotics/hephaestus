@@ -10,17 +10,24 @@ heph_cc_library(
     name = "net",
     srcs = glob([
         "src/**/*.cpp",
+        "include/**/detail/*.h",
     ]),
     hdrs = glob([
         "include/**/*.h",
+    ], exclude = [
+        "include/**/detail/**",
     ]),
+    implementation_deps = [
+        "//modules/telemetry/telemetry",
+        "//modules/utils",
+        "@bluez",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
-        "//modules/telemetry/telemetry",
-        "//modules/utils",
-        "@bluez",
+        "@liburing",
+        "@stdexec",
     ],
 )
 

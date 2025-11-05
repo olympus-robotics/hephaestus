@@ -16,13 +16,15 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/concurrency",
+    implementation_deps = [
         "//modules/random",
         "//modules/serdes",
-        "//modules/telemetry/telemetry",
         "@fmt",
         "@influxdb",
+    ],
+    deps=[
+        "//modules/concurrency",
+        "//modules/telemetry/telemetry",
     ],
 )
 

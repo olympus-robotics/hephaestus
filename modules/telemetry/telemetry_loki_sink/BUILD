@@ -16,12 +16,16 @@ heph_cc_library(
     ]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//modules/concurrency",
-        "//modules/telemetry/telemetry",
+    implementation_deps = [
         "@cpr",
         "@fmt",
         "@reflect-cpp",
+    ],
+    deps=[
+        "//modules/concurrency",
+        "//modules/telemetry/telemetry",
+        "@abseil-cpp//absl/base:thread_annotations",
+        "@abseil-cpp//absl/synchronization:mutex",
     ],
 )
 
