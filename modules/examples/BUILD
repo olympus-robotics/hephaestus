@@ -2,35 +2,46 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+load(
+    "@hephaestus//bazel:hephaestus.bzl",
+    "heph_cc_binary",
+    "heph_cc_library",
+    "heph_cc_test",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "examples",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
+    implementation_deps = [
+        "//modules/ipc",
+        "//modules/random",
+        "//modules/telemetry/telemetry",
+        "//modules/types",
+        "@abseil-cpp//absl/container:raw_hash_map",
+        "@abseil-cpp//absl/status:status",
+        "@abseil-cpp//absl/status:statusor",
+        "@protobuf",
+        "@zstd",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/examples/proto:examples_gen_proto",
-        "//modules/ipc",
-        "//modules/random",
         "//modules/serdes",
-        "//modules/telemetry/telemetry",
-        "//modules/types",
         "//modules/utils",
-        "@abseil-cpp//absl/container:raw_hash_map",
-        "@abseil-cpp//absl/status:status",
-        "@abseil-cpp//absl/status:statusor",
         "@eigen",
         "@fmt",
-        "@protobuf",
-        "@zstd",
     ],
 )
 
@@ -72,6 +83,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -83,6 +96,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -94,6 +109,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -105,6 +122,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -116,6 +135,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -127,6 +148,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -138,6 +161,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -149,6 +174,8 @@ heph_cc_binary(
     ],
     deps = [
         ":examples",
+        "//modules/cli",
+        "//modules/ipc",
     ],
 )
 
@@ -158,6 +185,8 @@ heph_cc_binary(
 
 EXAMPLES_TEST_DEPS = [
     ":examples",
+    "//modules/random",
+    "//modules/ipc",
 ]
 
 heph_cc_test(

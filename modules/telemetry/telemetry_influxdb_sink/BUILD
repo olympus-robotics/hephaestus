@@ -8,21 +8,27 @@ package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "telemetry_influxdb_sink",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
+    implementation_deps = [
+        "//modules/random",
+        "//modules/serdes",
+        "@fmt",
+        "@influxdb",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
-        "//modules/random",
-        "//modules/serdes",
         "//modules/telemetry/telemetry",
-        "@fmt",
-        "@influxdb",
     ],
 )
 
@@ -33,5 +39,8 @@ heph_cc_library(
 heph_cc_binary(
     name = "influxdb_measure_example",
     srcs = ["examples/influxdb_measure_example.cpp"],
-    deps = [":telemetry_influxdb_sink"],
+    deps = [
+        ":telemetry_influxdb_sink",
+        "//modules/random",
+    ],
 )

@@ -14,14 +14,18 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "@fmt",
+        "@reflect-cpp",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
         "//modules/telemetry/telemetry",
+        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/synchronization",
         "@cpr",
-        "@fmt",
-        "@reflect-cpp",
     ],
 )
 

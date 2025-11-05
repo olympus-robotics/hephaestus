@@ -14,14 +14,16 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "//modules/containers",
+        "//modules/random",
+        "@abseil-cpp//absl/log:absl_log",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/containers",
-        "//modules/random",
         "//modules/serdes",
         "//modules/utils",
-        "@abseil-cpp//absl/log:absl_log",
         "@fmt",
         "@magic_enum",
     ],
@@ -36,6 +38,7 @@ heph_cc_binary(
     srcs = ["examples/metric_sink_example.cpp"],
     deps = [
         ":telemetry",
+        "//modules/random",
     ],
 )
 
@@ -57,6 +60,7 @@ heph_cc_test(
     srcs = ["tests/metric_record_tests.cpp"],
     deps = [
         ":telemetry",
+        "//modules/random",
     ],
 )
 
@@ -65,6 +69,7 @@ heph_cc_test(
     srcs = ["tests/log_tests.cpp"],
     deps = [
         ":telemetry",
+        "//modules/containers",
     ],
 )
 

@@ -14,6 +14,11 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "@abseil-cpp//absl/random:random",
+        "@abseil-cpp//absl/time:time",
+        "@range-v3//:range-v3",
+    ],
     includes = [
         "include",
         "src",
@@ -21,11 +26,8 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/random:random",
-        "@abseil-cpp//absl/time:time",
         "@fmt",
         "@magic_enum",
-        "@range-v3//:range-v3",
     ],
 )
 

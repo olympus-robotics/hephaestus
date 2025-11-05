@@ -12,13 +12,16 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "//modules/random",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/random",
         "//modules/serdes",
         "//modules/types",
         "//modules/types_proto/proto:types_gen_proto",
+        "//modules/utils",
     ],
 )
 

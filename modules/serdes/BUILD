@@ -14,19 +14,21 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "@abseil-cpp//absl/status:status",
+        "@abseil-cpp//absl/status:statusor",
+        "@range-v3//:range-v3",
+    ],
     includes = [
         "include",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/utils",
-        "@abseil-cpp//absl/status:status",
-        "@abseil-cpp//absl/status:statusor",
         "@fmt",
         "@magic_enum",
         "@nlohmann_json//:json",
         "@protobuf",
-        "@range-v3//:range-v3",
     ],
 )
 

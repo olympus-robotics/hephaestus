@@ -14,14 +14,16 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
+    implementation_deps = [
+        "//modules/telemetry/telemetry",
+        "@magic_enum",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
-        "//modules/telemetry/telemetry",
         "//modules/utils",
         "@liburing",
-        "@magic_enum",
         "@stdexec",
     ],
 )

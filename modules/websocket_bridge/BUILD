@@ -18,24 +18,31 @@ heph_cc_library(
         "include/hephaestus/websocket_bridge/utils/*.h",
         "include/hephaestus/websocket_bridge/ipc/*.h",
     ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
-    deps = [
+    implementation_deps = [
         "//modules/cli",
         "//modules/concurrency",
         "//modules/containers",
-        "//modules/ipc",
-        "//modules/serdes",
-        "//modules/telemetry/telemetry",
         "//modules/types",
         "//modules/types_proto",
         "//modules/utils",
         "@boringssl//:ssl",
-        "@fmt",
         "@reflect-cpp",
-        "@ws_protocol",
         "@zenohc_builder//:zenoh-c",
         "@zenohc_builder//:zenoh-cpp",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//modules/ipc",
+        "//modules/serdes",
+        "//modules/telemetry/telemetry",
+        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/log:log",
+        "@abseil-cpp//absl/synchronization",
+        "@fmt",
+        "@nlohmann_json//:json",
+        "@protobuf",
+        "@ws_protocol",
     ],
 )
 
@@ -48,6 +55,10 @@ heph_cc_binary(
     srcs = ["apps/bridge_app.cpp"],
     deps = [
         ":websocket_bridge",
+        "//modules/cli",
+        "//modules/ipc",
+        "//modules/telemetry/telemetry",
+        "//modules/utils",
         "@bazel_tools//tools/cpp/runfiles",
     ],
 )
@@ -101,7 +112,10 @@ heph_cc_test(
         "tests/ipc_entity_manager_tests.cpp",
     ],
     tags = ["exclusive"],
-    deps = IPC_TEST_DEPS,
+    deps = IPC_TEST_DEPS + [
+        "//modules/types",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
