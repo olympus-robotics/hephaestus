@@ -64,17 +64,15 @@ void removeInvalidChar(std::string& str) {
 
 // Default config https://github.com/eclipse-zenoh/zenoh/blob/master/DEFAULT_CONFIG.json5
 auto createZenohConfig(const Config& config) -> ::zenoh::Config {
+  if (config.zenoh_config_path.has_value()) {
+    return std::move(ZenohConfig{ *config.zenoh_config_path }.zconfig);
+  }
+
   panicIf(config.qos && config.real_time, "cannot specify both QoS and Real-Time options");
   panicIf(config.protocol != Protocol::ANY && !config.router.empty(),
           "cannot specify both protocol and the router endpoint");
 
-  auto zconfig = [&] {
-    if (config.zenoh_config_path.has_value()) {
-      return ZenohConfig{ *config.zenoh_config_path };
-    }
-    return ZenohConfig{};
-  }();
-
+  auto zconfig = ZenohConfig{};
   if (config.use_binary_name_as_session_id) {
     setSessionIdFromBinary(zconfig);
   } else if (config.id.has_value()) {
