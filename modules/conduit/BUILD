@@ -12,25 +12,28 @@ heph_cc_library(
         "src/**/*.cpp",
         "include/**/detail/*.h",
     ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ], exclude = [
-        "include/**/detail/**",
-    ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+        exclude = [
+            "include/**/detail/**",
+        ],
+    ),
     implementation_deps = [
     ],
-    deps=[
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
         "//modules/concurrency",
-        "//modules/net",
-        "//modules/utils",
-        "//modules/telemetry/telemetry",
         "//modules/ipc",
-        "@stdexec",
-        "@fmt",
+        "//modules/net",
         "//modules/serdes",
-        "//modules/types_proto", #TODO(@heller) do we really want that?
+        "//modules/telemetry/telemetry",
+        "//modules/types_proto",  #TODO(@heller) do we really want that?
+        "//modules/utils",
+        "@fmt",
+        "@stdexec",
     ],
 )
 

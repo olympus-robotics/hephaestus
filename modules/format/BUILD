@@ -14,16 +14,16 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
     implementation_deps = [
     ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
     deps = [
         "//modules/containers_reflection",
         "//modules/utils",
-        "@reflect-cpp",
         "@fmt",
         "@magic_enum",
+        "@reflect-cpp",
     ],
 )
 

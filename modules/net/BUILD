@@ -2,21 +2,31 @@
 # Copyright (C) 2023-2025 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+load(
+    "@hephaestus//bazel:hephaestus.bzl",
+    "heph_cc_binary",
+    "heph_cc_library",
+    "heph_cc_test",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "net",
-    srcs = glob([
-        "src/**/*.cpp",
-        "include/**/detail/*.h",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ], exclude = [
-        "include/**/detail/**",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+            "include/**/detail/*.h",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+        exclude = [
+            "include/**/detail/**",
+        ],
+    ),
     implementation_deps = [
         "//modules/telemetry/telemetry",
         "//modules/utils",
@@ -41,6 +51,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/telemetry/telemetry",
     ],
 )
 
@@ -50,6 +61,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/telemetry/telemetry",
     ],
 )
 
@@ -59,6 +71,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/telemetry/telemetry",
     ],
 )
 

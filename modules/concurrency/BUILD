@@ -14,7 +14,7 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    implementation_deps=[
+    implementation_deps = [
         "//modules/telemetry/telemetry",
         "@magic_enum",
     ],

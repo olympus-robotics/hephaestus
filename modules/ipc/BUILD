@@ -2,39 +2,48 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+load(
+    "@hephaestus//bazel:hephaestus.bzl",
+    "heph_cc_binary",
+    "heph_cc_library",
+    "heph_cc_test",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "ipc",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
     implementation_deps = [
         "//modules/containers",
-        "//modules/ipc/proto:types_gen_proto",
         "@nlohmann_json//:json",
+        "@range-v3//:range-v3",
     ],
-    deps=[
-        "@zenohc_builder//:zenoh-c",
-        "@zenohc_builder//:zenoh-cpp",
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
         "//modules/cli",
         "//modules/concurrency",
+        "//modules/ipc/proto:types_gen_proto",
         "//modules/random",
         "//modules/serdes",
         "//modules/telemetry/telemetry",
         "//modules/utils",
+        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/synchronization",
         "@fmt",
         "@magic_enum",
-        "@abseil-cpp//absl/base:thread_annotations",
-        "@abseil-cpp//absl/synchronization:mutex",
-
+        "@zenohc_builder//:zenoh-c",
+        "@zenohc_builder//:zenoh-cpp",
     ],
 )
 

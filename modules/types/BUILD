@@ -14,16 +14,16 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
     implementation_deps = [
         "@abseil-cpp//absl/hash:hash",
         "@magic_enum",
     ],
-    deps=[
-        "@fmt",
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
         "//modules/random",
         "//modules/utils",
+        "@fmt",
     ],
 )
 

@@ -14,12 +14,12 @@ heph_cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
     implementation_deps = [
         "@fmt",
     ],
-    deps=[
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
         "//modules/utils",
         "@magic_enum",
     ],
