@@ -30,6 +30,9 @@ public:
   }
 
   auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
+    if (!this->enabled()) {
+      return stdexec::just();
+    }
     T value{};
     serdes::deserialize(buffer, value);
     return setValueImpl(std::move(value));
