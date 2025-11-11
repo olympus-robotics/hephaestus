@@ -29,7 +29,6 @@ heph_cc_library(
         "//modules/net",
         "//modules/serdes",
         "//modules/telemetry/log",
-        "//modules/types_proto",  #TODO(@heller) do we really want that?
         "//modules/utils",
         "@fmt",
         "@stdexec",
@@ -52,6 +51,7 @@ heph_cc_binary(
         "//modules/telemetry/metrics",
         "//modules/utils",
         "@fmt",
+        "//modules/types_proto",
     ],
 )
 
@@ -137,25 +137,37 @@ heph_cc_binary(
 heph_cc_test(
     name = "basic_input_tests",
     srcs = ["tests/basic_input_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "input_tests",
     srcs = ["tests/input_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "output_tests",
     srcs = ["tests/output_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "stepper_tests",
     srcs = ["tests/stepper_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
@@ -167,58 +179,42 @@ heph_cc_test(
         "//modules/telemetry/log",
         "@fmt",
         "@stdexec",
+        "//modules/types_proto",
     ],
 )
 
 heph_cc_test(
     name = "graph_tests",
     srcs = ["tests/graph_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "distributed_graph_tests",
     srcs = ["tests/distributed_graph_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "zenoh_publisher_tests",
     srcs = ["tests/zenoh_publisher_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
 
 heph_cc_test(
     name = "zenoh_subscriber_tests",
     srcs = ["tests/zenoh_subscriber_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/types_proto",
+    ],
 )
-
-#heph_cc_test(
-#    name = "input_output_tests",
-#    srcs = ["tests/input_output_tests.cpp"],
-#    deps = [
-#        ":conduit",
-#        "//modules/types_proto",
-#    ],
-#)
-
-#heph_cc_test(
-#    name = "zenoh_nodes_tests",
-#    srcs = ["tests/zenoh_nodes_tests.cpp"],
-#    deps = [
-#        ":conduit",
-#        "//modules/types",
-#        "//modules/types_proto",
-#    ],
-#)
-
-#heph_cc_test(
-#    name = "remote_publisher_tests",
-#    srcs = ["tests/remote_publisher_tests.cpp"],
-#    deps = [
-#        ":conduit",
-#        "//modules/types",
-#        "//modules/types_proto",
-#    ],
-#)

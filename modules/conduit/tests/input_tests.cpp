@@ -2,10 +2,8 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <atomic>
 #include <chrono>
 #include <cstddef>
-#include <thread>
 
 #include <exec/async_scope.hpp>
 #include <exec/task.hpp>
@@ -17,11 +15,10 @@
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/accumulated_input.h"
 #include "hephaestus/conduit/clock.h"
-#include "hephaestus/conduit/conditional.h"
 #include "hephaestus/conduit/forwarding_input.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/input_policy.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
 
 namespace heph::conduit {
 
