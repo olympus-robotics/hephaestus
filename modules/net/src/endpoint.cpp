@@ -16,6 +16,8 @@
 #include <vector>
 
 #include <arpa/inet.h>
+#include <linux/can.h>
+#include <net/if.h>
 #ifndef DISABLE_BLUETOOTH
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
@@ -84,6 +86,16 @@ auto Endpoint::createBt(const std::string& mac, std::uint16_t psm) -> Endpoint {
 }
 #endif
 
+auto Endpoint::createSocketcan(const std::string& interface) -> Endpoint {
+  SocketcanAddress can_addr = {};
+  can_addr.addr.can_family = AF_CAN;
+  std::strncpy(&can_addr.ifr.ifr_name[0], interface.c_str(), sizeof(can_addr.ifr.ifr_name) - 1);
+
+  std::vector<std::byte> address(sizeof(can_addr));
+  std::memcpy(address.data(), &can_addr, sizeof(can_addr));
+  return Endpoint{ EndpointType::SOCKETCAN, std::move(address) };
+}
+
 namespace {
 auto getPortIpV4(const std::vector<std::byte>& address) -> std::uint16_t {
   sockaddr_in addr{};
@@ -102,6 +114,11 @@ auto getPortBt(const std::vector<std::byte>& address) -> std::uint16_t {
   return btohs(addr.l2_psm);
 }
 #endif
+auto getPortSocketcan(const std::vector<std::byte>& address) -> std::uint16_t {
+  SocketcanAddress addr{};
+  std::memcpy(&addr, address.data(), sizeof(addr));
+  return static_cast<std::uint16_t>(addr.addr.can_ifindex);
+}
 }  // namespace
 
 auto Endpoint::port() const -> std::uint16_t {
@@ -113,6 +130,8 @@ auto Endpoint::port() const -> std::uint16_t {
 #ifndef DISABLE_BLUETOOTH
     case heph::net::EndpointType::BT:
       return getPortBt(address_);
+    case heph::net::EndpointType::SOCKETCAN:
+      return getPortSocketcan(address_);
 #endif
     default:
       heph::panic("Unknown family");
@@ -159,6 +178,31 @@ auto getAddressBt(const std::vector<std::byte>& address) -> std::string {
   return std::string{ buffer.data() };
 }
 #endif
+
+auto getAddressSocketcan(const std::vector<std::byte>& address) -> std::string {
+  SocketcanAddress addr{};
+  std::memcpy(&addr, address.data(), sizeof(addr));
+
+  return std::string{ addr.ifr.ifr_name };  // NOLINT(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+}
+
+// template <typename InputT, typename T>
+// [[nodiscard]] auto nativeHandleImpl(InputT& address, heph::net::EndpointType type) -> std::span<T> {
+//   switch (type) {
+// #ifndef DISABLE_BLUETOOTH
+//     case heph::net::EndpointType::BT:
+// #endif
+//     case heph::net::EndpointType::IPV4:
+//     case heph::net::EndpointType::IPV6:
+//       return std::span<T>{ address.begin(), address.end() };
+//     case heph::net::EndpointType::SOCKETCAN:
+//       return std::span<T>{ address.begin(), sizeof(sockaddr_can) };
+//     case heph::net::EndpointType::INVALID:
+//       heph::panic("Invalid endpoint type");
+//   }
+//   __builtin_unreachable();
+// }
+
 }  // namespace
 
 auto Endpoint::address() const -> std::string {
@@ -171,18 +215,22 @@ auto Endpoint::address() const -> std::string {
     case heph::net::EndpointType::BT:
       return getAddressBt(address_);
 #endif
-    default:
-      heph::panic("Unknown family");
+    case heph::net::EndpointType::SOCKETCAN:
+      return getAddressSocketcan(address_);
+    case heph::net::EndpointType::INVALID:
+      heph::panic("Invalid endpoint type");
   }
   __builtin_unreachable();
 }
 
 auto Endpoint::nativeHandle() const -> std::span<const std::byte> {
   return { address_ };
+  // return nativeHandleImpl<const std::vector<std::byte>, const std::byte>(address_, type());
 }
 
 auto Endpoint::nativeHandle() -> std::span<std::byte> {
   return { address_ };
+  // return nativeHandleImpl<std::vector<std::byte>, std::byte>(address_, type());
 }
 
 auto format_as(const Endpoint& endpoint) -> std::string {  // NOLINT(readability-identifier-naming)

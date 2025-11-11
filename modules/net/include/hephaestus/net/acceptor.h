@@ -20,6 +20,7 @@ public:
 #ifndef DISABLE_BLUETOOTH
   static auto createL2cap(concurrency::Context& context) -> Acceptor;
 #endif
+  static auto createSocketcan(concurrency::Context& context) -> Acceptor;
 
   void listen(int backlog = DEFAULT_BACKLOG) const;
   void bind(const Endpoint& endpoint) const;
