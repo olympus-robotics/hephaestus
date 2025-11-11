@@ -123,34 +123,4 @@ private:
   std::vector<OutputBase*> typed_outputs_;
   std::vector<PartnerOutputBase*> partner_outputs_;
 };
-
-#if 0
-namespace internal {}  // namespace internal
-
-template <typename Stepper>
-void run(heph::concurrency::Context& context, Graph<Stepper>& graph) {
-  exec::async_scope scope;
-
-  std::exception_ptr exception;
-
-  scope.spawn(internal::spawn(context.scheduler(), graph.root()) |
-              stdexec::upon_error([&](const std::exception_ptr& error) mutable {
-                exception = error;
-                scope.request_stop();
-                context.requestStop();
-              }) |
-              stdexec::upon_stopped([&]() {
-                scope.request_stop();
-                context.requestStop();
-              }));
-
-  context.run();
-  scope.request_stop();
-  stdexec::sync_wait(scope.on_empty());
-
-  if (exception) {
-    std::rethrow_exception(exception);
-  }
-}
-#endif
 }  // namespace heph::conduit
