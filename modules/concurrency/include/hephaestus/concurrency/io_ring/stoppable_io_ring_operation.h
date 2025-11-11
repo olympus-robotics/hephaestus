@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <cerrno>
 #include <cstddef>
 #include <optional>
@@ -147,14 +146,11 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
           absl::MutexLock l1{ &mutex };
           ++in_flight;
         }
-        // fmt::println(stderr, "{} handleCompletion resubmit {}", fmt::ptr(this), in_flight);
         ring->submit(this);
         return;
       }
-      // fmt::println(stderr, "{} handleCompletion done(bool) {}", fmt::ptr(this), tmp);
       return;
     }
-    // fmt::println(stderr, "{} handleCompletion done {}", fmt::ptr(this), in_flight);
     l.reset();
     operation.handleCompletion(cqe);
   }
@@ -163,8 +159,7 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
   {
-    absl::MutexLock l{ &mutex };
-    // fmt::println(stderr, "{} requestStop {}", fmt::ptr(this), in_flight);
+    const absl::MutexLock l{ &mutex };
     if (in_flight == 0) {
       return;
     }
