@@ -7,20 +7,13 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <string_view>
-#include <unordered_map>
 #include <utility>
 
-#include "hephaestus/serdes/json.h"
+#include "hephaestus/telemetry/detail/struct_to_flatmap.h"
 #include "hephaestus/telemetry/metric_sink.h"
 #include "hephaestus/utils/unique_function.h"
 
 namespace heph::telemetry {
-namespace internal {
-[[nodiscard]] auto jsonToValuesMap(std::string_view json)
-    -> std::unordered_map<std::string, Metric::ValueType>;
-}
-
 /// @brief Register a new metric sink.
 /// For every metric recorded, the sink will be called to consume the data.
 /// There is no limit on the number of sinks supported.
@@ -46,12 +39,11 @@ void record(std::string component, std::string tag, DataT&& data,
             ClockT::time_point timestamp = ClockT::now()) {
   record(
       [component = std::move(component), tag = std::move(tag), data = std::forward<DataT>(data), timestamp] {
-        const auto json = serdes::serializeToJSON(data);
         return Metric{
           .component = std::move(component),
           .tag = std::move(tag),
           .timestamp = timestamp,
-          .values = internal::jsonToValuesMap(json),
+          .values = detail::structToFlatMap(data),
         };
       });
 }
