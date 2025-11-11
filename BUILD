@@ -29,6 +29,7 @@ alias(
 
 refresh_compile_commands(
     name = "refresh_compile_commands",
+    exclude_external_sources = True,  # NOTE: this exclude external cpp files for efficiency, but could be useful to include them for debugging.
     targets = {
         "//modules/...": "",
     },

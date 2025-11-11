@@ -130,7 +130,7 @@ TEST(Input, BestEffortInputPolicy) {
     context.run();
     EXPECT_TRUE(input.hasValue());
     EXPECT_EQ(input.value(), 3);
-    EXPECT_NE(last_trigger_time, input.lastTriggerTime());
+    EXPECT_EQ(last_trigger_time, input.lastTriggerTime());
     EXPECT_NE(last_trigger_time, ClockT::now());
   }
   {

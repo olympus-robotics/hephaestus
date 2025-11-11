@@ -233,13 +233,13 @@ TEST(Graph, Distributed) {
     .prefix = "test_0",
     .partners = { "test_1" },
   };
-  Graph<RootStepper> g0{ config0, {} };
+  Graph<RootStepper> g0{ config0 };
 
   GraphConfig config1{
     .prefix = "test_1",
     .partners = { "test_0" },
   };
-  Graph<RootStepper> g1{ config1, {} };
+  Graph<RootStepper> g1{ config1 };
 
   ExecutorConfig config{
     .runners = { {
