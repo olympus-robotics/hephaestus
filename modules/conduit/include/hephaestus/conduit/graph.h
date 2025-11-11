@@ -80,13 +80,20 @@ public:
         });
   }
 
-  template <typename Self>
-  auto stepper(this Self&& self) -> auto& {
-    return std::forward<Self>(self).stepper_;
+  auto stepper() -> auto& {
+    return stepper_;
   }
-  template <typename Self>
-  auto root(this Self&& self) -> auto& {
-    return std::forward<Self>(self).root_;
+
+  auto stepper() const -> const auto& {
+    return stepper_;
+  }
+
+  auto root() -> auto& {
+    return root_;
+  }
+
+  auto root() const -> const auto& {
+    return root_;
   }
 
   auto partnerOutputs() -> const std::vector<PartnerOutputBase*>& {

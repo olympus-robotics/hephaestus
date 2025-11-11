@@ -171,14 +171,20 @@ public:
   using StepperT = Stepper<NodeDescription>;
   Node() = default;
 
-  template <typename Self>
-  auto operator*(this Self&& self) -> auto& {
-    return std::forward<Self>(self).handle_.value();
+  auto operator*() -> auto& {
+    return handle_.value();
   }
 
-  template <typename Self>
-  auto operator->(this Self&& self) -> auto* {
-    return &std::forward<Self>(self).handle_.value();
+  auto operator*() const -> const auto& {
+    return handle_.value();
+  }
+
+  auto operator->() -> auto* {
+    return &handle_.value();
+  }
+
+  auto operator->() const -> const auto* {
+    return &handle_.value();
   }
 
   void initialize(std::string prefix, NodeBase* parent, NodeDescription::StepperT stepper) {
