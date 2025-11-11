@@ -173,7 +173,7 @@ private:
 
 private:
   absl::Mutex mtx_;
-  bool enabled_{ false };
+  bool enabled_{ true };
 
   containers::IntrusiveFifoQueue<OperationBase> waiters_;
 };
