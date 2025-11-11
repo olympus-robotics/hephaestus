@@ -26,6 +26,8 @@ auto toValue(const T& val) -> Metric::ValueType {
     return static_cast<double>(val);
   } else if constexpr (std::is_convertible_v<T, std::string>) {
     return std::string(val);
+  } else {
+    static_assert(sizeof(T) == 0, "Unsupported type for Metric::ValueType conversion");
   }
 }
 

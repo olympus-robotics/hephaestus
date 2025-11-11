@@ -32,7 +32,7 @@ public:
 
   static void registerSink(std::unique_ptr<IMetricSink> sink);
 
-  static void record(heph::UniqueFunction<Metric()>&& metric);
+  static void record(UniqueFunction<Metric()>&& metric);
 
   static void flush();
 
@@ -46,7 +46,7 @@ private:
 private:
   absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
-  containers::BlockingQueue<heph::UniqueFunction<Metric()>> entries_;
+  containers::BlockingQueue<UniqueFunction<Metric()>> entries_;
   std::future<void> message_process_future_;
 };
 
@@ -54,7 +54,7 @@ void registerMetricSink(std::unique_ptr<IMetricSink> sink) {
   MetricRecorder::registerSink(std::move(sink));
 }
 
-void record(heph::UniqueFunction<Metric()>&& metric) {
+void record(UniqueFunction<Metric()>&& metric) {
   MetricRecorder::record(std::move(metric));
 }
 
@@ -99,7 +99,7 @@ void MetricRecorder::registerSink(std::unique_ptr<IMetricSink> sink) {
   telemetry.sinks_.push_back(std::move(sink));
 }
 
-void MetricRecorder::record(heph::UniqueFunction<Metric()>&& metric) {
+void MetricRecorder::record(UniqueFunction<Metric()>&& metric) {
   auto& telemetry = instance();
   telemetry.entries_.forcePush(std::move(metric));
 }
