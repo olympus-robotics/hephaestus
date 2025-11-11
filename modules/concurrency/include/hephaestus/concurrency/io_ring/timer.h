@@ -12,6 +12,7 @@
 #include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
+#include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
@@ -62,7 +63,7 @@ public:
   ~Timer() noexcept;
 
   auto empty() const -> bool {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock l{ &mutex_ };
     return tasks_.empty();
   }
 

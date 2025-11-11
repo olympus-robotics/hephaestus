@@ -11,7 +11,6 @@
 #include <exec/task.hpp>
 #include <exec/when_any.hpp>
 #include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/context.h"

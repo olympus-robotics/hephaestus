@@ -98,6 +98,7 @@ TEST(Stepper, InterfaceSender) {
 struct DummyStepperCoroutine : StepperDefaults<DummyNodeDescription> {
   bool step_called{ false };
 
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
   auto step(InputsT& inputs, OutputsT& outputs) -> exec::task<void> {
     step_called = true;
     EXPECT_EQ(inputs.value, 0);
