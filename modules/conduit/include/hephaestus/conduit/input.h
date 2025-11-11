@@ -38,6 +38,9 @@ public:
   }
 
   auto setValue(T t) -> SetValueSenderT final {
+    if (!this->enabled()) {
+      return stdexec::just();
+    }
     return value_channel_.setValue(std::move(t));
   }
 
@@ -70,6 +73,9 @@ public:
   };
 
   auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
+    if (!this->enabled()) {
+      return stdexec::just();
+    }
     T value{};
     serdes::deserialize(buffer, value);
     return setValue(std::move(value));

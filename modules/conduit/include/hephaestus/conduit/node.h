@@ -82,6 +82,14 @@ public:
     return res + std::string{ NodeDescription::NAME };
   }
 
+  void enable() final {
+    boost::pfr::for_each_field(inputs, [](auto& input) { input.enable(); });
+  }
+
+  void disable() final {
+    boost::pfr::for_each_field(inputs, [](auto& input) { input.disable(); });
+  }
+
   auto spawn(SchedulerT scheduler) {
     return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
              return concurrency::repeatUntil([this, scheduler]() {

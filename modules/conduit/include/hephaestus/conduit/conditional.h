@@ -26,9 +26,22 @@ public:
   /// \throws heph::Panic if already enabled
   void enable() {
     containers::IntrusiveFifoQueue<OperationBase> waiters;
+
+    // NOTE: this is a little hack to avoid recursive mutices when enabling the node.
+    static thread_local bool enabling = false;
+
+    if (enabling) {
+      return;
+    }
+
     {
       absl::MutexLock lock{ &mtx_ };
-      // heph::panicIf(enabled_, "Trying to enable an already enabled conditional");
+
+      if (!enabled_ && node() != nullptr) {
+        enabling = true;
+        node()->enable();
+        enabling = false;
+      }
 
       enabled_ = true;
       std::swap(waiters, waiters_);
@@ -46,8 +59,19 @@ public:
 
   /// \throws heph::Panic if already disabled
   void disable() {
+    // NOTE: this is a little hack to avoid recursive mutices when enabling the node.
+    static thread_local bool disabling = false;
+
+    if (disabling) {
+      return;
+    }
     absl::MutexLock lock{ &mtx_ };
-    // heph::panicIf(!enabled_, "Trying to disable an already disabled conditional");
+
+    if (enabled_ && node() != nullptr) {
+      disabling = true;
+      node()->disable();
+      disabling = false;
+    }
 
     enabled_ = false;
   }
