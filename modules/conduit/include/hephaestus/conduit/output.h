@@ -72,21 +72,14 @@ private:
         break;
       }
       for (auto& output : partner_outputs_) {
-        // fmt::println(stderr, "{} partner output {}.setValue", name(), output.name());
         co_await output.setValue(*value);
       }
       for (auto* input : inputs_) {
-        if (input->enabled()) {
-          // fmt::println(stderr, "{} input {}.setValue", name(), input->name());
-          co_await input->setValue(*value);
-        }
+        co_await input->setValue(*value);
       }
       for (auto* forwarding : forwarding_outputs_) {
         for (auto* input : forwarding->inputs_) {
-          if (input->enabled()) {
-            // fmt::println(stderr, "{} forward input {}.setValue", name(), input->name());
-            co_await input->setValue(*value);
-          }
+          co_await input->setValue(*value);
         }
       }
     }

@@ -57,11 +57,11 @@ public:
 
 private:
   auto setValueImpl(T t) -> exec::task<void> {
+    if (!this->enabled()) {
+      co_return;
+    }
     for (auto* input : inputs_) {
-      if (input->enabled()) {
-        // fmt::println(stderr, "{} forward to {}", this->name(), input->name());
-        co_await input->setValue(t);
-      }
+      co_await input->setValue(t);
     }
   }
 

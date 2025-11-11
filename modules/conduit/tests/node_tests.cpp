@@ -23,9 +23,7 @@ struct Dummy {
 };
 struct DummyNodeDescription : NodeDescriptionDefaults<DummyNodeDescription> {
   static constexpr std::string_view NAME{ "dummy" };
-  struct Inputs {
-    int value{ 0 };
-  };
+  struct Inputs {};
   struct Outputs {
     int value{ 1 };
   };

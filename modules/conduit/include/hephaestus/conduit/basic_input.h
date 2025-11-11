@@ -108,9 +108,7 @@ public:
   ///        tasks)
   /// @return A Sender representing the completion of an input signal. This sender doesn't complete with a
   ///         value, potential values need to be queried from the specific input implementations
-  [[nodiscard]] auto trigger(SchedulerT scheduler) -> InputTrigger {
-    return InputTrigger{ this, doTrigger(scheduler) };
-  }
+  [[nodiscard]] auto trigger(SchedulerT scheduler) -> InputTrigger;
 
   /// Override to provide the input trigger
   [[nodiscard]] virtual auto doTrigger(SchedulerT scheduler) -> SenderT = 0;
@@ -124,14 +122,9 @@ public:
   /// @return The time point at which the last trigger event occured
   [[nodiscard]] auto lastTriggerTime() const -> ClockT::time_point;
 
-  [[nodiscard]] virtual auto getTypeInfo() const -> std::string {
-    abort();
-    return "";
-  };
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string;
 
-  virtual auto setValue(const std::pmr::vector<std::byte>& /*buffer*/) -> concurrency::AnySender<void> {
-    return stdexec::just();
-  }
+  virtual auto setValue(const std::pmr::vector<std::byte>& /*buffer*/) -> concurrency::AnySender<void>;
 
   virtual void handleCompleted() = 0;
   virtual void handleError();
@@ -143,24 +136,19 @@ public:
     node_ = &node;
   }
 
-  auto enabled() const -> bool {
-    return enabled_.load(std::memory_order_acquire);
-  }
+  auto enabled() const -> bool;
 
-  void enable() {
-    enabled_.store(true, std::memory_order_release);
-  }
+  void enable();
 
-  void disable() {
-    enabled_.store(false, std::memory_order_release);
-  }
+  void disable();
 
-  virtual auto getIncoming() -> std::vector<std::string> {
-    return {};
-  }
+  virtual auto getIncoming() -> std::vector<std::string>;
 
-  virtual auto getOutgoing() -> std::vector<std::string> {
-    return {};
+  virtual auto getOutgoing() -> std::vector<std::string>;
+
+protected:
+  auto node() -> NodeBase* {
+    return node_;
   }
 
 private:
