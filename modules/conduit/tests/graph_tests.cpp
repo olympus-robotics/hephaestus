@@ -23,6 +23,7 @@
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/stepper.h"
+#include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
 
 namespace heph::conduit {
 

@@ -16,9 +16,6 @@
 #include "hephaestus/conduit/value_storage.h"
 #include "hephaestus/conduit/value_trigger.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/types_proto/bool.h"
-#include "hephaestus/types_proto/numeric_value.h"
-#include "hephaestus/types_proto/string.h"
 
 namespace heph::conduit {
 

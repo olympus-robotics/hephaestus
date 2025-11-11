@@ -13,18 +13,17 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/executor.h"
 #include "hephaestus/conduit/forwarding_input.h"
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/input.h"
-#include "hephaestus/conduit/input_policy.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/stepper.h"
 #include "hephaestus/net/endpoint.h"
+#include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
 
 namespace heph::conduit {
 

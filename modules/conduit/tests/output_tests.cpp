@@ -18,6 +18,7 @@
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/output.h"
+#include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
 #include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {

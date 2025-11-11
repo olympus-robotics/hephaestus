@@ -22,9 +22,6 @@
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/types_proto/bool.h"
-#include "hephaestus/types_proto/numeric_value.h"
-#include "hephaestus/types_proto/string.h"
 
 namespace heph::conduit {
 
