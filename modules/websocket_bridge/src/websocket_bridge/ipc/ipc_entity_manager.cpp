@@ -21,12 +21,12 @@
 #include <absl/log/check.h>
 #include <absl/synchronization/mutex.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ws {
 
@@ -95,9 +95,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
                                      const TopicSubscriberWithTypeCallback& subscriber_cb) {
   const absl::MutexLock lock(&mutex_sub_);
 
-  if (hasSubscriberImpl(topic)) {
-    heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic already exists!", "topic", topic);
-  }
+  panicIf(hasSubscriberImpl(topic), "Subscriber for topic '{}' already exists!", topic);
 
   auto subscriber_config =
       ipc::zenoh::SubscriberConfig{ .cache_size = std::nullopt,
@@ -122,16 +120,14 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
 void IpcEntityManager::removeSubscriber(const std::string& topic) {
   const absl::MutexLock lock(&mutex_sub_);
 
-  if (!hasSubscriberImpl(topic)) {
-    heph::log(heph::FATAL, "[IPC Interface] - Subscriber for topic does not exist!", "topic", topic);
-  }
+  panicIf(!hasSubscriberImpl(topic), "Subscriber for topic '{}' does NOT exists!", topic);
   subscribers_.erase(topic);
 }
 
 void IpcEntityManager::publisherMatchingStatusCallback(const std::string& topic,
                                                        const ipc::zenoh::MatchingStatus& status) {
-  heph::log(heph::INFO, "[IPC Interface]: The topic has changed matching status!", "topic", topic, "matching",
-            status.matching);
+  log(INFO, "[IPC Interface]: The topic has changed matching status!", "topic", topic, "matching",
+      status.matching);
 }
 
 auto IpcEntityManager::callService(uint32_t call_id, const ipc::TopicConfig& topic_config,

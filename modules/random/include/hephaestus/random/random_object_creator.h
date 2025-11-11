@@ -17,8 +17,8 @@
 
 #include <magic_enum.hpp>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/utils/concepts.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::random {
 

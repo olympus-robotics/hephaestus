@@ -21,8 +21,8 @@
 #include <unistd.h>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::net {
 
@@ -125,7 +125,8 @@ void Socket::bind(const Endpoint& endpoint) const {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       ::bind(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
-    panic("bind: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "bind failed");
   }
 }
 
@@ -135,7 +136,8 @@ void Socket::connect(const Endpoint& endpoint) const {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       ::connect(fd_, reinterpret_cast<const sockaddr*>(handle.data()), static_cast<socklen_t>(handle.size()));
   if (res == -1) {
-    panic("connect: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "connect failed");
   }
 }
 
@@ -145,7 +147,8 @@ auto Socket::localEndpoint() const -> Endpoint {
 
   int res = ::getsockname(fd_, &addr, &length);
   if (res == -1) {
-    panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "getsockname failed");
   }
 
   std::vector<std::byte> address(length);
@@ -155,7 +158,8 @@ auto Socket::localEndpoint() const -> Endpoint {
     // NOLINTNEXTLINE
     res = ::getsockname(fd_, reinterpret_cast<sockaddr*>(address.data()), &length);
     if (res == -1) {
-      panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
+      // TODO(@fbrizzi): return std::expected instead of exception
+      throw std::system_error(errno, std::system_category(), "getsockname failed");
     }
   }
 
@@ -168,7 +172,8 @@ auto Socket::remoteEndpoint() const -> Endpoint {
 
   int res = ::getpeername(fd_, &addr, &length);
   if (res == -1) {
-    panic("getpeername: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "getpeername failed");
   }
 
   std::vector<std::byte> address(length);
@@ -178,7 +183,8 @@ auto Socket::remoteEndpoint() const -> Endpoint {
     // NOLINTNEXTLINE
     res = ::getpeername(fd_, reinterpret_cast<sockaddr*>(address.data()), &length);
     if (res == -1) {
-      panic("getsockname: {}", std::error_code(errno, std::system_category()).message());
+      // TODO(@fbrizzi): return std::expected instead of exception
+      throw std::system_error(errno, std::system_category(), "getpeername failed");
     }
   }
 
@@ -194,7 +200,8 @@ void Socket::setupL2capSocket(bool set_mtu) {
     struct l2cap_options opts{};
     socklen_t optlen = sizeof(opts);
     if (getsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, &optlen) < 0) {
-      panic("unable to get l2cap options: {}", std::error_code(errno, std::system_category()).message());
+      // TODO(@fbrizzi): return std::expected instead of exception
+      throw std::system_error(errno, std::system_category(), "unable to get l2cap options");
     }
 
     opts.imtu = BT_PACKET_SIZE;
@@ -206,7 +213,8 @@ void Socket::setupL2capSocket(bool set_mtu) {
     opts.max_tx = BT_MAX_TX;
 
     if (setsockopt(fd_, SOL_L2CAP, L2CAP_OPTIONS, &opts, optlen) < 0) {
-      panic("unable to set l2cap options: {}", std::error_code(errno, std::system_category()).message());
+      // TODO(@fbrizzi): return std::expected instead of exception
+      throw std::system_error(errno, std::system_category(), "unable to set l2cap options");
     }
   }
   maximum_recv_size_ = BT_PACKET_SIZE;
@@ -215,10 +223,12 @@ void Socket::setupL2capSocket(bool set_mtu) {
   static constexpr int KB = 1024;
   int bufsize = 4 * KB * KB;
   if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize)) < 0) {
-    panic("unable to set receive buffer size: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "unable to set receive buffer size");
   }
   if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize)) < 0) {
-    panic("unable to set send buffer size: {}", std::error_code(errno, std::system_category()).message());
+    // TODO(@fbrizzi): return std::expected instead of exception
+    throw std::system_error(errno, std::system_category(), "unable to set send buffer size");
   }
 }
 #endif

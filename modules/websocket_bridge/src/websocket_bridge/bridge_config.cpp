@@ -9,7 +9,6 @@
 #include <fstream>
 #include <regex>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -19,6 +18,7 @@
 #include <rfl/yaml/read.hpp>
 #include <rfl/yaml/write.hpp>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
@@ -61,7 +61,7 @@ auto parseRegexStrings(const std::vector<std::string>& regex_string_vector) -> s
 auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WebsocketBridgeConfig {
   const std::ifstream file(yaml_file_path);
   if (!file.is_open()) {
-    throw std::runtime_error("Could not open YAML file for reading: " + yaml_file_path);
+    panic("Could not open YAML file for reading: {}", yaml_file_path);
   }
 
   std::stringstream buffer;
@@ -70,7 +70,7 @@ auto loadBridgeConfigFromYaml(const std::string& yaml_file_path) -> WebsocketBri
 
   const auto maybe_config = rfl::yaml::read<WebsocketBridgeConfig>(yaml_content);
   if (!maybe_config) {
-    throw std::runtime_error("Failed to parse YAML from: " + yaml_file_path);
+    panic("Failed to parse YAML from: {}", yaml_file_path);
   }
 
   return maybe_config.value();
@@ -81,11 +81,11 @@ void saveBridgeConfigToYaml(const WebsocketBridgeConfig& config, const std::stri
   {
     std::ofstream out(path);
     if (!out.is_open()) {
-      throw std::runtime_error("Failed to open file for writing: " + path);
+      panic("Failed to open file for writing: {}", path);
     }
     out << yaml_str;
     if (!out.good()) {
-      throw std::runtime_error("Error while writing YAML to: " + path);
+      panic("Error while writing YAML to: {}", path);
     }
   }
 }

@@ -15,8 +15,8 @@
 #include <absl/strings/ascii.h>
 #include <fmt/format.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/utils/concepts.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::cli {

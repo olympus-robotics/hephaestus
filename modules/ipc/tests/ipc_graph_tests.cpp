@@ -62,6 +62,8 @@ protected:
   const std::string TEST_SERVICE_SERVER_2 = "test_srv_s_2";
   const std::string TEST_SERVICE_CLIENT_1 = "test_srv_c_1";
   const std::string TEST_SERVICE_CLIENT_2 = "test_srv_c_2";
+
+  const error_handling::PanicAsExceptionScope panic_scope{};
   // NOLINTEND
 
   void startIpcGraph() {
@@ -686,4 +688,3 @@ TEST_F(IpcGraphTest, GetTopicListString) {
 
 }  // namespace
 }  // namespace heph::ipc::zenoh::tests
-\

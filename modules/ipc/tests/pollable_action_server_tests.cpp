@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/action_server/pollable_action_server.h"
@@ -22,7 +23,6 @@
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/utils/exception.h"
 
 using namespace ::testing;  // NOLINT(google-build-using-namespace)
 

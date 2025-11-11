@@ -28,7 +28,7 @@
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::conduit {

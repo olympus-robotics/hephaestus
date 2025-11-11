@@ -24,8 +24,8 @@
 #include <rfl/json/write.hpp>
 #include <unistd.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::telemetry {
@@ -104,6 +104,7 @@ struct PushRequest {
                                              { "pid", std::to_string(getpid()) },
                                              { "hostname", utils::getHostName() } };
 }
+
 }  // namespace
 
 LokiLogSink::LokiLogSink(const LokiLogSinkConfig& config)

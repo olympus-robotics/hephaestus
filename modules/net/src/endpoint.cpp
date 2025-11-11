@@ -24,7 +24,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::net {
 auto Endpoint::createIpV4(const std::string& ip, std::uint16_t port) -> Endpoint {

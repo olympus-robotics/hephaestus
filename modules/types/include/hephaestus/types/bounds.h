@@ -12,9 +12,9 @@
 #include <fmt/base.h>
 #include <fmt/ostream.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/utils/concepts.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::types {
 

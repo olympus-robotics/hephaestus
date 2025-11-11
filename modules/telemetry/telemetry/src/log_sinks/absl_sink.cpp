@@ -26,7 +26,6 @@ AbslLogSink::AbslLogSink(LogLevel log_level)
     case LogLevel::INFO:
     case LogLevel::WARN:
     case LogLevel::ERROR:
-    case LogLevel::FATAL:
       absl::SetGlobalVLogLevel(0);
       break;
   }
@@ -56,14 +55,6 @@ void AbslLogSink::send(const LogEntry& entry) {
     case LogLevel::ERROR:
       ABSL_LOG(ERROR).NoPrefix() << formatter_(entry);
       break;
-    case LogLevel::FATAL:
-      ABSL_LOG(FATAL).NoPrefix() << formatter_(entry);
-      if (entry.stack_trace.has_value()) {
-        ABSL_LOG(FATAL).NoPrefix() << entry.stack_trace.value();
-      }
-      break;
-    default:
-      ABSL_LOG(FATAL).NoPrefix() << "LogLevel not implemented.";
   }
 }
 }  // namespace heph::telemetry

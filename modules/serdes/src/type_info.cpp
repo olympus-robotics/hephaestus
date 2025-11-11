@@ -10,7 +10,7 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::serdes {
 // TODO(@filippobrizzi): add tests.

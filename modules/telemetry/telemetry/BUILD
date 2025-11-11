@@ -22,7 +22,11 @@ heph_cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+<<<<<<< HEAD
         "//modules/serdes",
+=======
+        "//modules/containers",
+>>>>>>> 304e701d (improve)
         "//modules/utils",
         "@fmt",
         "@magic_enum",
@@ -49,6 +53,7 @@ heph_cc_binary(
     deps = [
         ":telemetry",
         "//modules/cli",
+        "//modules/random",
     ],
 )
 
@@ -70,7 +75,7 @@ heph_cc_test(
     srcs = ["tests/log_tests.cpp"],
     deps = [
         ":telemetry",
-        "//modules/containers",
+        "//modules/random",
     ],
 )
 
@@ -79,5 +84,6 @@ heph_cc_test(
     srcs = ["tests/log_tests_no_sink.cpp"],
     deps = [
         ":telemetry",
+        "//modules/random",
     ],
 )

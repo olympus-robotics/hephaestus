@@ -5,13 +5,13 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/spinner.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::concurrency::tests {
 
@@ -45,7 +45,7 @@ struct SpinnerTest : public ::testing::Test {
   }
 
   [[nodiscard]] static auto createThrowingCallback() -> Spinner::StoppableCallback {
-    auto cb = []() { panic("This is a test exception."); };
+    auto cb = []() { throw std::runtime_error("This is a test exception."); };
     return Spinner::createNeverStoppingCallback(std::move(cb));
   }
 
@@ -90,13 +90,13 @@ TEST_F(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
 
-  EXPECT_THROW_OR_DEATH(spinner.stop().get(), Panic, "");
+  EXPECT_DEATH(spinner.stop().get(), "");
   spinner.start();
 
-  EXPECT_THROW_OR_DEATH(spinner.start(), Panic, "");
+  EXPECT_DEATH(spinner.start(), "");
   spinner.stop().get();
 
-  EXPECT_THROW_OR_DEATH(spinner.stop().get(), Panic, "");
+  EXPECT_DEATH(spinner.stop().get(), "");
 }
 
 TEST_F(SpinnerTest, SpinTest) {
@@ -168,7 +168,7 @@ TEST_F(SpinnerTest, ExceptionHandling) {
 
   spinner.start();
   spinner.wait();
-  EXPECT_THROW(spinner.stop().get(), Panic);
+  EXPECT_THROW(spinner.stop().get(), std::runtime_error);
   EXPECT_TRUE(callback_called);
 }
 

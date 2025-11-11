@@ -22,7 +22,6 @@
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::net {
 
@@ -58,7 +57,7 @@ TEST(Net, Ipv4Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint::createIpV4("."), Panic);
+  EXPECT_DEATH(Endpoint::createIpV4("."), "");
 }
 
 TEST(Net, Ipv6Endpoint) {
@@ -89,7 +88,7 @@ TEST(Net, Ipv6Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint::createIpV6(":"), Panic);
+  EXPECT_DEATH(Endpoint::createIpV6(":"), "");
 }
 
 TEST(Net, BtEndpoint) {
@@ -120,7 +119,7 @@ TEST(Net, BtEndpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_THROW(Endpoint::createBt(":"), Panic);
+  EXPECT_DEATH(Endpoint::createBt(":"), "");
 }
 
 TEST(Net, TCPOperationsSome) {

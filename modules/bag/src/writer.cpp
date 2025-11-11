@@ -18,9 +18,9 @@
 #include <mcap/types.hpp>
 #include <mcap/writer.hpp>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::bag {
 namespace {

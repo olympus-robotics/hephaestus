@@ -22,6 +22,8 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
+        "//modules/error_handling",
+        "//modules/telemetry/telemetry",
         "//modules/utils",
         "@liburing",
         "@stdexec",

@@ -3,7 +3,6 @@
 //=================================================================================================
 #include "hephaestus/telemetry/log_sink.h"
 
-#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
@@ -31,7 +30,7 @@ LogEntry::LogEntry(LogLevel level_in, MessageWithLocation&& message_in)
   , thread_id{ std::this_thread::get_id() }
   , time{ LogEntry::ClockT::now() }
   , hostname{ utils::getHostName() }
-  , module{ getModuleFromScope() }
-  , stack_trace{ std::nullopt } {
+  , module{ getModuleFromScope() } {
 }
+
 }  // namespace heph::telemetry

@@ -15,7 +15,7 @@
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/repeated_ptr_field.h>
 
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 
 //=================================================================================================
 // NOTE: In order for namespace resolution to work correctly for container serialization introduced
