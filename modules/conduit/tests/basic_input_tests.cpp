@@ -183,6 +183,7 @@ TEST(BasicInput, PeriodicSuccess) {
 
 TEST(BasicInput, ConditionalCancelled) {
   Conditional conditional;
+  conditional.disable();
   concurrency::Context context{ {} };
   exec::async_scope scope;
 
