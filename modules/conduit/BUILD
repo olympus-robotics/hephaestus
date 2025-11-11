@@ -182,6 +182,18 @@ heph_cc_test(
     deps = [":conduit"],
 )
 
+heph_cc_test(
+    name = "zenoh_publisher_tests",
+    srcs = ["tests/zenoh_publisher_tests.cpp"],
+    deps = [":conduit"],
+)
+
+heph_cc_test(
+    name = "zenoh_subscriber_tests",
+    srcs = ["tests/zenoh_subscriber_tests.cpp"],
+    deps = [":conduit"],
+)
+
 #heph_cc_test(
 #    name = "input_output_tests",
 #    srcs = ["tests/input_output_tests.cpp"],

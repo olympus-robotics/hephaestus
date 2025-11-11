@@ -70,7 +70,7 @@ TEST(Stepper, Interface) {
   stepper.connect(dummy.inputs, dummy.outputs, dummy.children);
   EXPECT_TRUE(dummy_stepper.connect_called);
 
-  stdexec::sync_wait(stepper.step(dummy.inputs, dummy.outputs));
+  stdexec::sync_wait(stepper.step("", "", dummy.inputs, dummy.outputs));
   EXPECT_TRUE(dummy_stepper.step_called);
 }
 
@@ -91,7 +91,7 @@ TEST(Stepper, InterfaceSender) {
   DummyStepperSender dummy_stepper;
   Stepper<DummyNodeDescription> stepper{ dummy_stepper };
 
-  stdexec::sync_wait(stepper.step(dummy.inputs, dummy.outputs));
+  stdexec::sync_wait(stepper.step("", "", dummy.inputs, dummy.outputs));
   EXPECT_TRUE(dummy_stepper.step_called);
 }
 
@@ -111,7 +111,7 @@ TEST(Stepper, InterfaceCoroutine) {
   DummyStepperSender dummy_stepper;
   Stepper<DummyNodeDescription> stepper{ dummy_stepper };
 
-  stdexec::sync_wait(stepper.step(dummy.inputs, dummy.outputs));
+  stdexec::sync_wait(stepper.step("", "", dummy.inputs, dummy.outputs));
   EXPECT_TRUE(dummy_stepper.step_called);
 }
 }  // namespace heph::conduit

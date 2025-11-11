@@ -168,7 +168,9 @@ inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
     if (in_flight == 0) {
       return;
     }
-    assert(!stop_operation.has_value());
+    if (stop_operation.has_value()) {
+      return;
+    }
     stop_operation.emplace();
     stop_operation->self = this;
     ++in_flight;

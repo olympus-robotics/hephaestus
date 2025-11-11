@@ -30,7 +30,7 @@ struct JustInput : BasicInput {
   JustInput() noexcept : BasicInput("just") {
   }
   auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
-    return stdexec::just();
+    return stdexec::just(true);
   }
 
   void handleCompleted() final {
@@ -54,12 +54,14 @@ TEST(BasicInput, JustInput) {
 }
 
 struct JustStoppedInput : BasicInput {
+  bool completed = false;
   JustStoppedInput() noexcept : BasicInput("just_stopped") {
   }
   auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
     return stdexec::just_stopped();
   }
   void handleCompleted() final {
+    completed = true;
   }
 };
 
@@ -73,6 +75,7 @@ TEST(BasicInput, JustStoppedInput) {
 
   auto res = stdexec::sync_wait(std::move(trigger));
   EXPECT_FALSE(res.has_value());
+  EXPECT_FALSE(input.completed);
   EXPECT_EQ(input.lastTriggerTime(), ClockT::time_point{});
 }
 
@@ -82,8 +85,8 @@ struct JustCoroutineInput : BasicInput {
   auto doTrigger(SchedulerT /*scheduler*/) -> SenderT final {
     return doTriggerImpl();
   }
-  static auto doTriggerImpl() -> exec::task<void> {
-    co_await stdexec::just();
+  static auto doTriggerImpl() -> exec::task<bool> {
+    co_return true;
   }
   void handleCompleted() final {
   }
@@ -146,6 +149,8 @@ TEST(BasicInput, PeriodicCancelled) {
                 stop);
 
     context.run();
+    scope.request_stop();
+    stdexec::sync_wait(scope.on_empty());
     EXPECT_FALSE(triggered);
     EXPECT_GE(periodic.lastTriggerTime(), start_time);
   }
@@ -280,6 +285,7 @@ TEST(BasicInput, ConditionalTriggerParallel) {
   });
   context.run();
   trigger.join();
+  scope.request_stop();
   stdexec::sync_wait(scope.on_empty());
   EXPECT_EQ(num_triggered, NUMBER_OF_ITERATIONS);
 }
