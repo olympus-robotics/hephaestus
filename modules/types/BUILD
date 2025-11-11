@@ -15,8 +15,6 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
-        "@abseil-cpp//absl/hash:hash",
-        "@magic_enum",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -45,7 +43,7 @@ heph_cc_test(
     name = "tests",
     srcs = ["tests/tests.cpp"],
     deps = TYPES_TEST_DEPS + [
-        "//modules/format",
+        "//modules/random",
         "@abseil-cpp//absl/hash:hash_testing",
     ],
 )

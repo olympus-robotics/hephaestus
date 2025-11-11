@@ -15,8 +15,7 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
-        "//modules/telemetry/telemetry",
-        "@magic_enum",
+        "//modules/telemetry",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
