@@ -41,7 +41,7 @@ LLVM_VERSIONS = {
 llvm.toolchain(
     name = "llvm_toolchain",
     cxx_standard = {
-        "": "c++23",
+        "": "c++20",
     },
     llvm_versions = LLVM_VERSIONS,
 )
