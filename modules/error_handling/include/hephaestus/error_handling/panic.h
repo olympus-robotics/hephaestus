@@ -17,7 +17,6 @@
 
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/stack_trace.h"
 #include "hephaestus/utils/string/string_utils.h"
 
 namespace heph {
