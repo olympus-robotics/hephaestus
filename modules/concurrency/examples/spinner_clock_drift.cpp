@@ -27,8 +27,6 @@ struct ClockJitter {
   std::chrono::microseconds::rep scheduler_us;
   std::chrono::microseconds::rep system_clock_us;
 };
-// NOLINTNEXTLINE(misc-include-cleaner)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
 auto main(int argc, const char* argv[]) -> int {
   try {

@@ -26,6 +26,7 @@ heph_cc_library(
         "//modules/utils",
         "@fmt",
         "@magic_enum",
+        "@reflect-cpp",
     ],
 )
 

@@ -12,7 +12,6 @@
 #include <utility>
 
 #include <fmt/base.h>
-#include <nlohmann/detail/macro_scope.hpp>
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
@@ -30,8 +29,6 @@ struct DummyMeasure {
   int64_t counter;
   std::string message;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(DummyMeasure, error, counter, message)
-
 }  // namespace
 }  // namespace telemetry_example
 
