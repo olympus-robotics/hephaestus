@@ -4,13 +4,14 @@
 
 declare_module(
   NAME telemetry
-  DEPENDS_ON_MODULES concurrency random serdes
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum absl
+  DEPENDS_ON_MODULES concurrency
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum absl reflectcpp
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
 find_package(magic_enum REQUIRED)
+find_package(reflectcpp REQUIRED)
 
 # library sources
 set(SOURCES
@@ -39,10 +40,9 @@ define_module_library(
     absl::synchronization
     fmt::fmt
     hephaestus::containers
-    hephaestus::random
-    hephaestus::serdes
     hephaestus::utils
     magic_enum::magic_enum
+    reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

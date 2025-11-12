@@ -85,10 +85,9 @@ void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, A
   auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
   auto location = std::string(utils::string::truncate(message.location.file_name(), "modules")) + ":" +
                   std::to_string(message.location.line());
-  auto stack_trace = utils::StackTrace::print();
 
   log(ERROR, "program terminated with panic", "error", std::move(formatted_message), "location",
-      std::move(location), "stack_trace", std::move(stack_trace));
+      std::move(location));
   telemetry::flushLogEntries();
 
   if (error_handling::panicAsException()) {
