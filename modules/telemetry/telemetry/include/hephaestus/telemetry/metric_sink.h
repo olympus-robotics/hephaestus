@@ -9,8 +9,9 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <unordered_map>
+#include <utility>
 #include <variant>
+#include <vector>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -29,7 +30,8 @@ struct Metric {
   ClockT::time_point timestamp;
 
   using ValueType = std::variant<int64_t, double, std::string, bool>;
-  std::unordered_map<std::string, ValueType> values;
+  using KeyValueType = std::pair<std::string, ValueType>;
+  std::vector<KeyValueType> values;
 };
 
 class IMetricSink {

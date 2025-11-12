@@ -43,7 +43,7 @@ void record(std::string component, std::string tag, DataT&& data,
           .component = std::move(component),
           .tag = std::move(tag),
           .timestamp = timestamp,
-          .values = detail::structToFlatMap(data),
+          .values = detail::structToKeyValuePairs(data),
         };
       });
 }

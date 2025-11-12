@@ -8,7 +8,6 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -91,8 +90,8 @@ TEST(StructToFlatmap, StructToFlatmap) {
   auto mt = random::createRNG();
 
   const auto dummy = Dummy::random(mt);
-  const auto map = detail::structToFlatMap(dummy);
-  const std::unordered_map<std::string, Metric::ValueType> expected_values{
+  const auto values = detail::structToKeyValuePairs(dummy);
+  const std::vector<Metric::KeyValueType> expected_values{
     { "boolean", dummy.boolean },
     { "int32", static_cast<int64_t>(dummy.int32) },
     { "int64", dummy.int64 },
@@ -104,7 +103,7 @@ TEST(StructToFlatmap, StructToFlatmap) {
     { "nested.float64", dummy.nested.float64 },
     { "nested.nested.boolean", dummy.nested.nested.boolean },
   };
-  EXPECT_EQ(map, expected_values);
+  EXPECT_EQ(values, expected_values);
 }
 
 TEST(Measure, Metric) {
@@ -148,7 +147,7 @@ TEST(Measure, Serialization) {
   EXPECT_EQ(entry.component, COMPONENT);
   EXPECT_EQ(entry.tag, TAG);
   EXPECT_GE(entry.timestamp.time_since_epoch().count(), 0);
-  const std::unordered_map<std::string, Metric::ValueType> expected_values{
+  const std::vector<Metric::KeyValueType> expected_values{
     { "boolean", dummy.boolean },
     { "int32", static_cast<int64_t>(dummy.int32) },
     { "int64", dummy.int64 },

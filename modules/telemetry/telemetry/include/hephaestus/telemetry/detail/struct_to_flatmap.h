@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
+#include <vector>
 
 #include <rfl/to_view.hpp>
 
@@ -16,6 +16,7 @@
 #include "hephaestus/utils/concepts.h"
 
 namespace heph::telemetry::detail {
+namespace impl {
 template <typename T>
 auto toValue(const T& val) -> Metric::ValueType {
   if constexpr (std::is_same_v<T, bool>) {
@@ -38,29 +39,26 @@ constexpr auto isPrimitive() -> bool {
          std::is_same_v<U, bool>;
 }
 
-// Forward declaration
 template <typename T>
-void toMapImpl(const T& data, const std::string& prefix,
-               std::unordered_map<std::string, Metric::ValueType>& result);
+void structToKeyValuePairs(const T& data, const std::string& prefix,
+                           std::vector<Metric::KeyValueType>& result);
 
-// Process a single field
 template <typename T>
-void processField(const T& field, const std::string& name,
-                  std::unordered_map<std::string, Metric::ValueType>& result) {
+void processField(const T& field, const std::string& name, std::vector<Metric::KeyValueType>& result) {
   static_assert(!VectorType<T> && !ArrayType<T> && !OptionalType<T>,
                 "Vectors, arrays and optionals are not supported in metrics");
   if constexpr (isPrimitive<T>()) {
-    result[name] = toValue(field);
+    // End of recursion
+    result.emplace_back(name, toValue(field));
   } else {
     // Recursively process nested struct
-    toMapImpl(field, name, result);
+    structToKeyValuePairs(field, name, result);
   }
 }
 
-// Main implementation using reflect-cpp
 template <typename T>
-void toMapImpl(const T& data, const std::string& prefix,
-               std::unordered_map<std::string, Metric::ValueType>& result) {
+void structToKeyValuePairs(const T& data, const std::string& prefix,
+                           std::vector<Metric::KeyValueType>& result) {
   const auto view = rfl::to_view(data);
 
   view.apply([&](const auto& field) {
@@ -70,11 +68,12 @@ void toMapImpl(const T& data, const std::string& prefix,
     processField(value, full_name, result);
   });
 }
+}  // namespace impl
 
 template <typename T>
-auto structToFlatMap(const T& data) -> std::unordered_map<std::string, Metric::ValueType> {
-  std::unordered_map<std::string, Metric::ValueType> result;
-  toMapImpl(data, "", result);
+auto structToKeyValuePairs(const T& data) -> std::vector<Metric::KeyValueType> {
+  std::vector<Metric::KeyValueType> result;
+  impl::structToKeyValuePairs(data, "", result);
   return result;
 }
 
