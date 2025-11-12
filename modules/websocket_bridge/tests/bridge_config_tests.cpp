@@ -155,16 +155,19 @@ TEST(BridgeConfigTest, LoadInvalidYaml) {
   yaml_file << yaml_content;
   yaml_file.close();
 
-  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"), std::runtime_error);
+  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"),
+               error_handling::PanicException);
 }
 
 TEST(BridgeConfigTest, SaveInvalidPath) {
   const WebsocketBridgeConfig config;
-  EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"), std::runtime_error);
+  EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"),
+               error_handling::PanicException);
 }
 
 TEST(BridgeConfigTest, LoadInvalidPath) {
-  EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
+  EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"),
+               error_handling::PanicException);
 }
 
 }  // namespace heph::ws

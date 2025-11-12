@@ -506,6 +506,7 @@ void WebsocketBridge::callback_Ws_Log(WsLogLevel level, const char* msg) {
       log(WARN, fmt::format("[WS Server] - {}", msg));
       break;
     case WsLogLevel::Error:
+      [[fallthrough]];
     case WsLogLevel::Critical:
       log(ERROR, fmt::format("[WS Server] - {}", msg));
       break;

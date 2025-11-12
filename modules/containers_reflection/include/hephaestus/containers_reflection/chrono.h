@@ -26,7 +26,7 @@ struct Reflector<std::chrono::duration<Rep, Period>> {  // NOLINT(misc-include-c
   }
 
   static auto to(const ReflType& value) -> std::chrono::duration<Rep, Period> {
-    // NOTE: in this function we throw exceptions in case of errors, as reflect-cpp expect that.
+    // NOTE: in this function we throw exceptions in case of errors, as reflect-cpp expects that.
     if (value.empty()) {
       throw std::invalid_argument("Duration string is empty.");
     }

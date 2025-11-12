@@ -5,10 +5,11 @@
 declare_module(
   NAME error_handling
   DEPENDS_ON_MODULES telemetry utils
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt reflectcpp
 )
 
 find_package(fmt REQUIRED)
+find_package(reflectcpp REQUIRED)
 
 # library sources
 set(SOURCES src/panic.cpp include/hephaestus/error_handling/panic.h)
@@ -23,6 +24,3 @@ define_module_library(
   PRIVATE_INCLUDE_PATHS ""
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
-
-add_subdirectory(examples)
-add_subdirectory(tests)

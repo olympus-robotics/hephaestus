@@ -3,8 +3,8 @@
 # =================================================================================================
 
 declare_module(
-  NAME containers_proto error_handling
-  DEPENDS_ON_MODULES containers serdes
+  NAME containers_proto
+  DEPENDS_ON_MODULES containers serdes error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS ""
 )
 

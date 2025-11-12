@@ -4,7 +4,7 @@
 
 declare_module(
   NAME telemetry
-  DEPENDS_ON_MODULES concurrency
+  DEPENDS_ON_MODULES containers
   DEPENDS_ON_EXTERNAL_PROJECTS fmt magic_enum absl reflectcpp
 )
 

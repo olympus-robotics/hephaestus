@@ -120,7 +120,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
 void IpcEntityManager::removeSubscriber(const std::string& topic) {
   const absl::MutexLock lock(&mutex_sub_);
 
-  panicIf(!hasSubscriberImpl(topic), "Subscriber for topic '{}' does NOT exists!", topic);
+  panicIf(!hasSubscriberImpl(topic), "Subscriber for topic '{}' does NOT exist!", topic);
   subscribers_.erase(topic);
 }
 
