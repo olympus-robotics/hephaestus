@@ -16,17 +16,12 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "//modules/containers",
-        "//modules/random",
         "@abseil-cpp//absl/log:absl_log",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-<<<<<<< HEAD
-        "//modules/serdes",
-=======
         "//modules/containers",
->>>>>>> 304e701d (improve)
         "//modules/utils",
         "@fmt",
         "@magic_enum",
