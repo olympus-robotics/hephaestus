@@ -85,7 +85,8 @@ void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, A
   auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
   auto location = std::string(utils::string::truncate(message.location.file_name(), "modules")) + ":" +
                   std::to_string(message.location.line());
-
+  // We want to make sure the log from panic is the last one before termination so we flush before and after
+  telemetry::flushLogEntries();
   log(ERROR, "program terminated with panic", "error", std::move(formatted_message), "location",
       std::move(location));
   telemetry::flushLogEntries();
