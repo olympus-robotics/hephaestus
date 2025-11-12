@@ -49,6 +49,3 @@ define_module_library(
   PRIVATE_INCLUDE_PATHS ""
   SYSTEM_PRIVATE_INCLUDE_PATHS ""
 )
-
-add_subdirectory(examples)
-add_subdirectory(tests)
