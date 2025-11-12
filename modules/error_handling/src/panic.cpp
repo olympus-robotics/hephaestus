@@ -4,6 +4,8 @@
 
 #include "hephaestus/error_handling/panic.h"
 
+#include <cstddef>
+
 namespace heph::error_handling {
 namespace {
 // thread_local ensures that each thread gets its own instance of module_stack.
