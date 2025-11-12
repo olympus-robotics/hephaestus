@@ -16,11 +16,11 @@
 #include <utility>
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/metric_record.h"
 #include "hephaestus/telemetry/metric_sink.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/timing/stop_watch.h"
 
 namespace heph::concurrency {
@@ -107,11 +107,9 @@ Spinner::Spinner(StoppableCallback&& stoppable_callback,
   , spin_period_(spin_period) {
 }
 
-Spinner::~Spinner() {
-  if (async_spinner_handle_.valid()) {
-    log(FATAL, "Spinner is still running. Call stop() before destroying the object.");
-    std::terminate();
-  }
+Spinner::~Spinner() {  // NOLINT(bugprone-exception-escape)
+  panicIf(async_spinner_handle_.valid(),
+          "Spinner is still running. Call stop() before destroying the object.");
 }
 
 void Spinner::start() {

@@ -4,7 +4,7 @@
 
 declare_module(
   NAME concurrency
-  DEPENDS_ON_MODULES utils containers random
+  DEPENDS_ON_MODULES utils containers random error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt Protobuf liburing stdexec
 )
 
@@ -24,6 +24,7 @@ define_module_library(
   PUBLIC_LINK_LIBS
     fmt::fmt
     hephaestus::containers
+    hephaestus::error_handling
     hephaestus::telemetry
     hephaestus::utils
     protobuf::libprotobuf

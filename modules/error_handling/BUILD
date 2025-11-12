@@ -2,12 +2,12 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library", "heph_cc_test")
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
-    name = "containers_reflection",
+    name = "error_handling",
     srcs = glob([
         "src/**/*.cpp",
     ]),
@@ -15,25 +15,24 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [],
-    includes = ["include"],
+    includes = [
+        "include",
+        "src",
+    ],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/containers",
-        "//modules/error_handling",
+        "//modules/telemetry/telemetry",
         "//modules/utils",
         "@fmt",
-        "@reflect-cpp",
     ],
 )
 
-##############
-# Tests      #
-##############
+#########
+# Tests #
+#########
 
 heph_cc_test(
-    name = "containers_reflection_tests",
-    srcs = ["tests/containers_reflection_tests.cpp"],
-    deps = [
-        ":containers_reflection",
-    ],
+    name = "panic_tests",
+    srcs = ["tests/panic_tests.cpp"],
+    deps = [":error_handling"],
 )

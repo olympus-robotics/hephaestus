@@ -19,12 +19,12 @@
 #include <mcap/reader.hpp>
 #include <mcap/types.hpp>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/raw_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::bag {
 

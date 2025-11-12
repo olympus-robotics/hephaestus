@@ -6,6 +6,7 @@
 
 #include "hephaestus/containers/bit_flag.h"
 #include "hephaestus/containers/proto/bit_flag.pb.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 
 namespace heph::serdes::protobuf {
@@ -24,7 +25,11 @@ void toProto(proto::BitFlag& proto_bit_flag, const BitFlag<EnumT>& bit_flag) {
 
 template <typename EnumT>
 void fromProto(const proto::BitFlag& proto_bit_flag, BitFlag<EnumT>& bit_flag) {
-  bit_flag = BitFlag<EnumT>{ static_cast<BitFlag<EnumT>::T>(proto_bit_flag.value()) };
+  const auto bit_flag_value =
+      BitFlag<EnumT>::fromUnderlyingValue(static_cast<BitFlag<EnumT>::T>(proto_bit_flag.value()));
+  panicIf(!bit_flag_value.has_value(),
+          "Failed to deserialize BitFlag from protobuf: underlying value contains invalid bits.");
+  bit_flag = bit_flag_value.value();
 }
 
 }  // namespace heph::containers

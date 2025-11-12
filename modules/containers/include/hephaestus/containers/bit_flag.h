@@ -7,13 +7,12 @@
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
+#include <optional>
 #include <random>
 #include <type_traits>
 
 #include <magic_enum.hpp>
 #include <magic_enum_utility.hpp>
-
-#include "hephaestus/utils/exception.h"
 
 namespace heph::containers {
 
@@ -89,15 +88,22 @@ public:
 
   /// Constructs a BitFlag with the given underlying value.
   ///
-  /// An 'Panic' is thrown if there are bits set in 'underlying_value' which do not
+  /// std::nullopt is returned if there are bits set in 'underlying_value' which do not
   /// correspond to a valid enum value.
-  constexpr explicit BitFlag(T underlying_value) : value_(underlying_value) {
+  // TODO(@fbrizzi): replace with std::expected as soon as we switch to C++23:
+  //         return std::unexpected{"Enum underlying value contains invalid bits (bits which don't correspond
+  //         to a valid enum value)."};
+  [[nodiscard]] static constexpr auto fromUnderlyingValue(T underlying_value) -> std::optional<BitFlag> {
     static_assert(internal::checkEnumValuesArePowerOf2<EnumT>(),
                   "Enum is not valid for BitFlag, its values must be power of 2.");
     // NOLINTNEXTLINE(hicpp-signed-bitwise)
-    panicIf(
-        (underlying_value & ~internal::allEnumValuesMask<EnumT>()) != 0,
-        "Enum underlying value contains invalid bits (bits which don't correspond to a valid enum value).");
+    if ((underlying_value & ~internal::allEnumValuesMask<EnumT>()) != 0) {
+      return std::nullopt;
+    }
+
+    BitFlag flag;
+    flag.value_ = underlying_value;
+    return flag;
   }
 
   [[nodiscard]] auto operator==(const BitFlag&) const -> bool = default;

@@ -4,7 +4,7 @@
 
 declare_module(
   NAME serdes
-  DEPENDS_ON_MODULES utils
+  DEPENDS_ON_MODULES utils error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS absl magic_enum Protobuf range-v3
 )
 
@@ -47,6 +47,7 @@ define_module_library(
     absl::status
     absl::statusor
     hephaestus::utils
+    hephaestus::error_handling
     magic_enum::magic_enum
     protobuf::libprotobuf
     range-v3::range-v3

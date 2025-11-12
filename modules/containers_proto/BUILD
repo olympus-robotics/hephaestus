@@ -20,6 +20,7 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/containers_proto/proto:containers_gen_proto",
+        "//modules/error_handling",
         "//modules/serdes",
     ],
 )

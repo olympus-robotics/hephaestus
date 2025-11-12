@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::ipc {
 TopicConfig::TopicConfig(std::string topic_name) : name(std::move(topic_name)) {

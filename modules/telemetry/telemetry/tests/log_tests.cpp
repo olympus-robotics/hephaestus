@@ -31,7 +31,7 @@ namespace ht = heph::telemetry;
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {
-    std::ignore = logs_.tryEmplace(fmt::format("|{} -- {}|", s, s.stack_trace.value_or("")));
+    std::ignore = logs_.tryEmplace(fmt::format("|{}|", s));
   }
 
   [[nodiscard]] auto getLog() -> std::string {

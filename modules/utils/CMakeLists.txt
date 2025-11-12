@@ -24,7 +24,6 @@ set(SOURCES
     src/timing/stop_watch.cpp
     src/timing/watchdog.cpp
     src/concepts.cpp
-    src/exception.cpp
     src/utils.cpp
     src/signal_handler.cpp
     src/stack_trace.cpp
@@ -37,7 +36,6 @@ set(SOURCES
     include/hephaestus/utils/timing/stop_watch.h
     include/hephaestus/utils/timing/watchdog.h
     include/hephaestus/utils/concepts.h
-    include/hephaestus/utils/exception.h
     include/hephaestus/utils/utils.h
     include/hephaestus/utils/signal_handler.h
     include/hephaestus/utils/stack_trace.h
@@ -46,13 +44,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME utils
-  PUBLIC_LINK_LIBS
-    absl::log
-    absl::random_random
-    absl::time
-    fmt::fmt
-    magic_enum::magic_enum
-    range-v3::range-v3
+  PUBLIC_LINK_LIBS absl::log absl::random_random absl::time fmt::fmt magic_enum::magic_enum range-v3::range-v3
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

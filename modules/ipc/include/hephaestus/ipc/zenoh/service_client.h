@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/utils/exception.h"
 #include "zenoh/api/base.hxx"
 #include "zenoh/api/channels.hxx"
 #include "zenoh/api/keyexpr.hxx"

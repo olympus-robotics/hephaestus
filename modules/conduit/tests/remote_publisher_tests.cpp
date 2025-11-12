@@ -21,6 +21,7 @@
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/conduit/remote_output_subscriber.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/telemetry/log_sink.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
@@ -312,6 +313,7 @@ TEST_P(RemoteNodeTests, InputPublisherRestart) {
 }
 
 TEST_P(RemoteNodeTests, InputSubscriberRestart) {
+  const error_handling::PanicAsExceptionScope panic_scope;
   static constexpr std::size_t NUM_ITERATIONS = 10;
   std::mutex endpoint_mtx;
   std::condition_variable endpoint_cv;

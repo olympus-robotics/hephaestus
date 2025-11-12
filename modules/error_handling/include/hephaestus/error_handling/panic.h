@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <exception>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -14,13 +15,13 @@
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 
-#ifdef DISABLE_EXCEPTIONS
-#include <absl/log/check.h>
-#endif
+#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph {
-
-namespace internal {
+namespace error_handling {
+namespace detail {
 /// @brief  Wrapper around string literals to enhance them with a location.
 ///         Note that the message is not owned by this class.
 ///         String literals are used to enable implicit conversion from string literals.
@@ -45,19 +46,32 @@ struct StringLiteralWithLocationImpl final {
 };
 
 template <typename... Ts>
-using StringLiteralWithLocation = internal::StringLiteralWithLocationImpl<Ts...>::impl;
-}  // namespace internal
+using StringLiteralWithLocation = detail::StringLiteralWithLocationImpl<Ts...>::impl;
 
-/// @brief Exception class for panic situations
-///        This should not be instantiated directly, but rather through the `panic` or `panicIf` function.
-/// @include exception_example.cpp
-class Panic : public std::runtime_error {
+}  // namespace detail
+
+/// @brief  Scope guard to enable panic as exceptions within the scope.
+/// This is useful for unit tests where we want to catch panics as exceptions.
+class PanicAsExceptionScope {
 public:
-  /// @brief Constructs a panic exception
-  /// @param message Message describing the error cause
-  /// @param location Source location where the error occurred
-  explicit Panic(std::string message, const std::source_location& location = std::source_location::current());
+  PanicAsExceptionScope();
+  ~PanicAsExceptionScope();
+
+  PanicAsExceptionScope(const PanicAsExceptionScope&) = delete;
+  auto operator=(const PanicAsExceptionScope&) -> PanicAsExceptionScope& = delete;
+  PanicAsExceptionScope(PanicAsExceptionScope&&) = delete;
+  auto operator=(PanicAsExceptionScope&&) -> PanicAsExceptionScope& = delete;
 };
+
+/// @brief  Check whether panics should be thrown as exceptions.
+[[nodiscard]] auto panicAsException() -> bool;
+
+class PanicException final : public std::runtime_error {
+public:
+  explicit PanicException(const std::string& message) : std::runtime_error(message) {
+  }
+};
+}  // namespace error_handling
 
 /// @brief  User function to panic. Internally this throws a Panic exception.
 /// > Note: If macro `DISABLE_EXCEPTIONS` is defined, this function terminates printing the message. In this
@@ -66,15 +80,20 @@ public:
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panic(internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
-  std::string formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
-#ifndef DISABLE_EXCEPTIONS
-  throw Panic{ std::move(formatted_message), message.location };
-#else
-  auto e = Panic{ std::move(formatted_message), message.location };
-  CHECK(false) << fmt::format("[ERROR {}] at {}:{}", e.what(), message.location.file_name(),
-                              message.location.line());
-#endif
+void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, Args&&... args) {
+  auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
+  auto location = std::string(utils::string::truncate(message.location.file_name(), "modules")) + ":" +
+                  std::to_string(message.location.line());
+
+  log(ERROR, "program terminated with panic", "error", std::move(formatted_message), "location",
+      std::move(location));
+  telemetry::flushLogEntries();
+
+  if (error_handling::panicAsException()) {
+    throw error_handling::PanicException(formatted_message);
+  }
+
+  std::terminate();
 }
 
 /// @brief  User function to panic on condition lazily formatting the message. The whole code should be
@@ -83,26 +102,11 @@ void panic(internal::StringLiteralWithLocation<Args...> message, Args&&... args)
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panicIf(bool condition, internal::StringLiteralWithLocation<Args...> message, Args&&... args) {
+void panicIf(bool condition, error_handling::detail::StringLiteralWithLocation<Args...> message,
+             Args&&... args) {
   if (condition) [[unlikely]] {
     panic(std::move(message), std::forward<Args>(args)...);
   }
 }
 
-/// @brief Macro to test if a statement throws an exception or causes a program death depending
-/// on whether the library is compiled with exceptions enabled.
-/// @param statement The statement to be tested.
-/// @param expected_exception The type of exception expected to be thrown.
-/// @param expected_matcher The matcher to be used in case of program death.
-/// @note If `DISABLE_EXCEPTIONS` is defined, this macro uses `EXPECT_DEATH` to check for program death.
-///       Otherwise, it uses `EXPECT_THROW` to check for the expected exception.
-#ifndef DISABLE_EXCEPTIONS
-// NOLINTBEGIN(cppcoreguidelines-macro-usage)
-#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
-  EXPECT_THROW(statement, expected_exception)
-#else
-#define EXPECT_THROW_OR_DEATH(statement, expected_exception, expected_matcher)                               \
-  EXPECT_DEATH(statement, expected_matcher)
-// NOLINTEND(cppcoreguidelines-macro-usage)
-#endif
 }  // namespace heph

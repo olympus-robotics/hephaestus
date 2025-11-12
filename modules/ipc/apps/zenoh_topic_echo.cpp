@@ -21,6 +21,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
@@ -30,7 +31,6 @@
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log.h"
 #include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/format/format.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"

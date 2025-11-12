@@ -15,10 +15,10 @@
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/remote_nodes.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/telemetry/log.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit::internal {
 auto RemoteSubscriberOperator::trigger(heph::concurrency::Context* context, std::string* type_info)

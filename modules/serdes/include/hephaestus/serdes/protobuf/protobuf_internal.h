@@ -12,10 +12,10 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::serdes::protobuf::internal {

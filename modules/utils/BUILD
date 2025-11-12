@@ -48,12 +48,6 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "exception_tests",
-    srcs = ["tests/exception_tests.cpp"],
-    deps = [":utils"],
-)
-
-heph_cc_test(
     name = "file_tests",
     srcs = ["tests/file_tests.cpp"],
     deps = [":utils"],

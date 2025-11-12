@@ -1,6 +1,14 @@
 declare_module(
   NAME examples
-  DEPENDS_ON_MODULES bag utils ipc random serdes types_proto types
+  DEPENDS_ON_MODULES
+    bag
+    utils
+    ipc
+    random
+    serdes
+    types_proto
+    types
+    error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS absl Eigen3 fmt mcap Protobuf zstd
   EXCLUDE_FROM_ALL
 )
@@ -28,6 +36,7 @@ define_module_library(
     fmt::fmt
     Eigen3::Eigen
     hephaestus::bag
+    hephaestus::error_handling
     hephaestus::action_server_types_proto
     mcap
     zstd::libzstd

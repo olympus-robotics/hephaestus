@@ -8,7 +8,6 @@
 #include <concepts>
 #include <cstdint>
 #include <functional>
-#include <optional>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -26,7 +25,7 @@
 namespace heph {
 ///@brief Forward declaration of LogLevel. Definition is in log.h, since we only want to include that when
 /// logging.
-enum LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR, FATAL };
+enum LogLevel : std::uint8_t { TRACE, DEBUG, INFO, WARN, ERROR };
 }  // namespace heph
 
 namespace heph::telemetry {
@@ -79,7 +78,7 @@ struct LogEntry {
   using FieldsT = std::vector<Field<std::string>>;
   using ClockT = std::chrono::system_clock;
 
-  LogEntry(heph::LogLevel level, MessageWithLocation&& message);
+  LogEntry(LogLevel level, MessageWithLocation&& message);
 
   /// @brief General loginfo consumer, should be used like LogEntry("my message") << Field{"field", 1234}
   ///        Converted to string with stringstream.
@@ -111,17 +110,13 @@ struct LogEntry {
     return std::move(*this);
   }
 
-  heph::LogLevel level;
+  LogLevel level;
   std::string message;
   std::source_location location;
   std::thread::id thread_id;
   ClockT::time_point time;
   std::string hostname;
   std::string module;
-
-  // Stack trace is optional, since it is only available in error and fatal log (because its expensive)
-  // TODO(@graeter): Replace with c++23 std::stack_trace when available
-  std::optional<std::string> stack_trace;
 
   FieldsT fields;
 };
