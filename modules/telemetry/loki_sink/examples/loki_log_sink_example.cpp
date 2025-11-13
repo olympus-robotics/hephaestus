@@ -8,7 +8,7 @@
 #include <thread>
 
 #include "hephaestus/telemetry/log/log.h"
-#include "hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h"
+#include "hephaestus/telemetry/loki_sink/loki_log_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 
