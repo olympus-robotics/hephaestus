@@ -4,9 +4,13 @@
 
 #pragma once
 
+#include <atomic>
+
 #include <exec/task.hpp>
+#include <hephaestus/concurrency/any_sender.h>
 
 #include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/concurrency/when_all_range.h"
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/output_base.h"
 #include "hephaestus/conduit/partner_output.h"
@@ -21,6 +25,9 @@ struct Output : public OutputBase {
   }
 
   void operator()(T value) {
+    if (!enabled_.load(std::memory_order_acquire)) {
+      return;
+    }
     if (!buffer_.push(std::move(value))) {
       heph::panic("No space left");
     }
@@ -64,8 +71,34 @@ struct Output : public OutputBase {
     return res;
   }
 
+  void disable() {
+    enabled_.store(false, std::memory_order_release);
+  }
+
 private:
-  auto triggerImpl() -> exec::task<void> {
+  auto triggerImpl() -> concurrency::AnySender<void> {
+    std::vector<concurrency::AnySender<void>> input_triggers;
+
+    while (true) {
+      auto value = buffer_.pop();
+      if (!value.has_value()) {
+        break;
+      }
+      for (auto& output : partner_outputs_) {
+        input_triggers.emplace_back(output.setValue(*value));
+      }
+      for (auto* input : inputs_) {
+        input_triggers.emplace_back(input->setValue(*value));
+      }
+      for (auto* forwarding : forwarding_outputs_) {
+        for (auto* input : forwarding->inputs_) {
+          input_triggers.emplace_back(input->setValue(*value));
+        }
+      }
+    }
+    return concurrency::whenAllRange(std::move(input_triggers));
+    /*
+    fmt::println(stderr, "trigger output {}", name());
     while (true) {
       auto value = buffer_.pop();
       if (!value.has_value()) {
@@ -83,6 +116,8 @@ private:
         }
       }
     }
+    fmt::println(stderr, "trigger output {} done\n", name());
+    */
   }
 
 private:
@@ -93,6 +128,7 @@ private:
   std::vector<TypedInput<T>*> inputs_;
   std::vector<PartnerOutput<T>> partner_outputs_;
   std::vector<ForwardingOutput<T>*> forwarding_outputs_;
+  std::atomic<bool> enabled_{ true };
 };
 
 template <typename T>
