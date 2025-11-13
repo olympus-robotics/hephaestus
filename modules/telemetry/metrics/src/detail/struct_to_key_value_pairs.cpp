@@ -2,4 +2,4 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/telemetry/metrics/detail/struct_to_flatmap.h"
+#include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"

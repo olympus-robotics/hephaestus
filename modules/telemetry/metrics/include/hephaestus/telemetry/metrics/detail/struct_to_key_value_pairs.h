@@ -21,14 +21,12 @@ template <typename T>
 auto toValue(const T& val) -> Metric::ValueType {
   if constexpr (std::is_same_v<T, bool>) {
     return val;
-  } else if constexpr (std::is_integral_v<T>) {
+  } else if constexpr (std::is_integral_v<T> || EnumType<T>) {
     return static_cast<int64_t>(val);
   } else if constexpr (std::is_floating_point_v<T>) {
     return static_cast<double>(val);
   } else if constexpr (std::is_convertible_v<T, std::string>) {
     return std::string(val);
-  } else if constexpr (EnumType<T>) {
-    return static_cast<int64_t>(val);
   } else if constexpr (ChronoTimestampType<T>) {
     return val.time_since_epoch().count();
   } else {

@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 
-#include "hephaestus/telemetry/metrics/detail/struct_to_flatmap.h"
+#include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/utils/unique_function.h"
 
