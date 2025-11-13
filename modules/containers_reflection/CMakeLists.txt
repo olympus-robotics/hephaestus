@@ -4,7 +4,7 @@
 
 declare_module(
   NAME containers_reflection
-  DEPENDS_ON_MODULES containers utils telemetry error_handling
+  DEPENDS_ON_MODULES containers utils error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt
 )
 

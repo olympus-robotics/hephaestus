@@ -4,7 +4,7 @@
 
 declare_module(
   NAME telemetry_loki_sink
-  DEPENDS_ON_MODULES concurrency telemetry
+  DEPENDS_ON_MODULES concurrency telemetry_log
   DEPENDS_ON_EXTERNAL_PROJECTS cpr fmt reflectcpp
 )
 
@@ -13,12 +13,12 @@ find_package(fmt REQUIRED)
 find_package(reflectcpp REQUIRED)
 
 # library sources
-set(SOURCES src/loki_log_sink.cpp include/hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h)
+file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 
 # library target
 define_module_library(
   NAME telemetry_loki_sink
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::concurrency hephaestus::telemetry cpr::cpr reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::concurrency hephaestus::telemetry_log cpr::cpr reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

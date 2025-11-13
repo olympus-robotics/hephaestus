@@ -10,7 +10,7 @@ declare_module(
     containers
     utils
     serdes
-    telemetry
+    telemetry_log
     random
   DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
@@ -85,7 +85,7 @@ define_module_library(
     hephaestus::format
     hephaestus::random
     hephaestus::serdes
-    hephaestus::telemetry
+    hephaestus::telemetry_log
     hephaestus::utils
     nlohmann_json::nlohmann_json
     range-v3::range-v3
