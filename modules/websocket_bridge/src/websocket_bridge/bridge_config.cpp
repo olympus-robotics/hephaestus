@@ -19,7 +19,7 @@
 #include <rfl/yaml/write.hpp>
 
 #include "hephaestus/error_handling/panic.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace rfl {

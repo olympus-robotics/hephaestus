@@ -17,7 +17,7 @@
 
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/telemetry/scope.h"
+#include "hephaestus/telemetry/log/scope.h"
 
 namespace heph::conduit {
 namespace detail {

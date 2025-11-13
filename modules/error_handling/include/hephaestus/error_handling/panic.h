@@ -15,8 +15,8 @@
 #include <fmt/chrono.h>  // NOLINT(misc-include-cleaner)
 #include <fmt/format.h>
 
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 #include "hephaestus/utils/string/string_utils.h"
 
 namespace heph {

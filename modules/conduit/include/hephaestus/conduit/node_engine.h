@@ -27,7 +27,7 @@
 #include "hephaestus/conduit/node_handle.h"
 #include "hephaestus/conduit/remote_node_handler.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::conduit {
 struct NodeEngineConfig {

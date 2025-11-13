@@ -38,7 +38,7 @@
 #include <magic_enum.hpp>
 
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ws {
 

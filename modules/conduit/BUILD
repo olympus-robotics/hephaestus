@@ -29,7 +29,7 @@ heph_cc_library(
         "//modules/ipc",
         "//modules/net",
         "//modules/serdes",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "//modules/types_proto",  #TODO(@heller) do we really want that?
         "//modules/utils",
         "@fmt",
@@ -47,7 +47,7 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
-        "//modules/telemetry/telemetry_influxdb_sink",
+        "//modules/telemetry/influxdb_sink",
     ],
 )
 

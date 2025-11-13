@@ -4,7 +4,7 @@
 
 declare_module(
   NAME error_handling
-  DEPENDS_ON_MODULES telemetry utils
+  DEPENDS_ON_MODULES telemetry_log utils
   DEPENDS_ON_EXTERNAL_PROJECTS fmt reflectcpp
 )
 
@@ -17,7 +17,7 @@ set(SOURCES src/panic.cpp include/hephaestus/error_handling/panic.h)
 # library target
 define_module_library(
   NAME error_handling
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::telemetry hephaestus::utils reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::telemetry_log hephaestus::utils reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

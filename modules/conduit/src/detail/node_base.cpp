@@ -12,10 +12,10 @@
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_sink.h"
 
 namespace heph::conduit::detail {
 
