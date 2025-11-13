@@ -2,7 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include "hephaestus/telemetry/telemetry_loki_sink/loki_log_sink.h"
+#include "hephaestus/telemetry/loki_sink/loki_log_sink.h"
 
 #include <chrono>
 #include <map>
