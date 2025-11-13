@@ -16,7 +16,7 @@
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
-#include "hephaestus/telemetry/metrics/detail/struct_to_flatmap.h"
+#include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 

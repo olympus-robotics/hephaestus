@@ -21,22 +21,24 @@ template <typename T>
 auto toValue(const T& val) -> Metric::ValueType {
   if constexpr (std::is_same_v<T, bool>) {
     return val;
-  } else if constexpr (std::is_integral_v<T>) {
+  } else if constexpr (std::is_integral_v<T> || EnumType<T>) {
     return static_cast<int64_t>(val);
   } else if constexpr (std::is_floating_point_v<T>) {
     return static_cast<double>(val);
   } else if constexpr (std::is_convertible_v<T, std::string>) {
     return std::string(val);
+  } else if constexpr (ChronoTimestampType<T>) {
+    return val.time_since_epoch().count();
   } else {
     static_assert(sizeof(T) == 0, "Unsupported type for Metric::ValueType conversion");
   }
 }
 
 template <typename T>
-constexpr auto isPrimitive() -> bool {
+constexpr auto isSupportedType() -> bool {
   using U = std::remove_cv_t<std::remove_reference_t<T>>;
   return std::is_integral_v<U> || std::is_floating_point_v<U> || std::is_same_v<U, std::string> ||
-         std::is_same_v<U, bool>;
+         std::is_same_v<U, bool> || EnumType<U> || ChronoTimestampType<U>;
 }
 
 template <typename T>
@@ -47,7 +49,7 @@ template <typename T>
 void processField(const T& field, const std::string& name, std::vector<Metric::KeyValueType>& result) {
   static_assert(!VectorType<T> && !ArrayType<T> && !OptionalType<T>,
                 "Vectors, arrays and optionals are not supported in metrics");
-  if constexpr (isPrimitive<T>()) {
+  if constexpr (isSupportedType<T>()) {
     // End of recursion
     result.emplace_back(name, toValue(field));
   } else {
