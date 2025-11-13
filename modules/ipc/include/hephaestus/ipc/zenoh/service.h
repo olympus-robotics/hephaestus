@@ -38,7 +38,7 @@
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh {
 

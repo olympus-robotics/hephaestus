@@ -21,7 +21,7 @@ heph_cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "//modules/utils",
         "@fmt",
     ],

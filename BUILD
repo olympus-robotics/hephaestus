@@ -78,7 +78,7 @@ heph_cc_api_doc(
         "//modules/net:net",
         "//modules/random:random",
         "//modules/serdes:serdes",
-        "//modules/telemetry/telemetry:telemetry",
+        "//modules/telemetry/log:telemetry",
         "//modules/types:types",
         "//modules/types_proto:types_proto",
         "//modules/utils:utils",

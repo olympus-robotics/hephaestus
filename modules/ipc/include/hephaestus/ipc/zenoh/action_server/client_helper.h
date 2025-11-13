@@ -23,7 +23,7 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh::action_server::internal {
 [[nodiscard]] auto getActionServerInternalTopicPrefix() -> std::string;

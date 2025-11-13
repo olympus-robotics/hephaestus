@@ -35,7 +35,7 @@ heph_cc_library(
     deps = [
         "//modules/ipc",
         "//modules/serdes",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "@abseil-cpp//absl/base",
         "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/synchronization",
@@ -57,7 +57,7 @@ heph_cc_binary(
         ":websocket_bridge",
         "//modules/cli",
         "//modules/ipc",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "//modules/utils",
         "@bazel_tools//tools/cpp/runfiles",
     ],

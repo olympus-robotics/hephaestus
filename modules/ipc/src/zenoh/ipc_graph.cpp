@@ -22,7 +22,7 @@
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh {
 

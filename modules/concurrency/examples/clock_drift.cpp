@@ -18,11 +18,11 @@
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry/influxdb_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/utils/signal_handler.h"
 
 struct ClockJitter {

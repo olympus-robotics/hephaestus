@@ -31,7 +31,7 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh::action_server {
 

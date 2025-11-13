@@ -17,10 +17,10 @@
 
 #include "hephaestus/concurrency/spinner_state_machine.h"
 #include "hephaestus/error_handling/panic.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/utils/timing/stop_watch.h"
 
 namespace heph::concurrency {

@@ -35,8 +35,8 @@
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/queued_input.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"     // IWYU pragma: keep
 #include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep

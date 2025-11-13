@@ -24,7 +24,7 @@
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/input.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/utils/utils.h"
 
 namespace heph::conduit {

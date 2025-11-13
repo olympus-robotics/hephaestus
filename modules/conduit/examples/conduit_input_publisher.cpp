@@ -17,8 +17,8 @@
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/signal_handler.h"

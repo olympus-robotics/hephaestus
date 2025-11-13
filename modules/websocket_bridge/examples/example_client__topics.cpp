@@ -16,7 +16,7 @@
 #include <fmt/base.h>
 #include <nlohmann/json_fwd.hpp>
 
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "hephaestus/websocket_bridge/utils/ws_client.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
