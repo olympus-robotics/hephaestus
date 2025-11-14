@@ -19,16 +19,11 @@ heph_cc_library(
         "include/hephaestus/websocket_bridge/ipc/*.h",
     ]),
     implementation_deps = [
-        "//modules/cli",
-        "//modules/concurrency",
-        "//modules/containers",
-        "//modules/types",
-        "//modules/types_proto",
-        "//modules/utils",
-        "@boringssl//:ssl",
+        "//modules/error_handling",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings:strings",
+        "@magic_enum",
         "@reflect-cpp",
-        "@zenohc_builder//:zenoh-c",
-        "@zenohc_builder//:zenoh-cpp",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -36,9 +31,9 @@ heph_cc_library(
         "//modules/ipc",
         "//modules/serdes",
         "//modules/telemetry/log",
-        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:log",
-        "@abseil-cpp//absl/synchronization",
+        "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",
         "@nlohmann_json//:json",
         "@protobuf",
@@ -85,16 +80,12 @@ heph_cc_binary(
 # Tests #
 #########
 
-IPC_TEST_DEPS = [
-    ":websocket_bridge",
-]
-
 heph_cc_test(
     name = "bridge_config_tests",
     srcs = [
         "tests/bridge_config_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [":websocket_bridge"],
 )
 
 heph_cc_test(
@@ -103,7 +94,7 @@ heph_cc_test(
         "tests/bridge_state_tests.cpp",
     ],
     tags = ["exclusive"],
-    deps = IPC_TEST_DEPS,
+    deps = [":websocket_bridge"],
 )
 
 heph_cc_test(
@@ -112,9 +103,14 @@ heph_cc_test(
         "tests/ipc_entity_manager_tests.cpp",
     ],
     tags = ["exclusive"],
-    deps = IPC_TEST_DEPS + [
+    deps = [":websocket_bridge"] + [
+        "//modules/ipc",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "@fmt",
     ],
 )
 
@@ -123,5 +119,5 @@ heph_cc_test(
     srcs = [
         "tests/protobuf_serdes_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [":websocket_bridge"],
 )
