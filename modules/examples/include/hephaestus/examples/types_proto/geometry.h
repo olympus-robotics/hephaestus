@@ -12,8 +12,8 @@
 #include <Eigen/src/Core/Matrix.h>
 #include <Eigen/src/Geometry/Quaternion.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/examples/types/proto/geometry.pb.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::examples::types {
 

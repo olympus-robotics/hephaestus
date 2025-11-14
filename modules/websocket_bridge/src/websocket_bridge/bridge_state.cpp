@@ -14,7 +14,7 @@
 #include <absl/synchronization/mutex.h>
 #include <fmt/base.h>
 
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {

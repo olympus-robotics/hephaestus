@@ -10,9 +10,9 @@
 #include <sys/socket.h>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::net {
 auto Acceptor::createTcpIpV4(concurrency::Context& context) -> Acceptor {

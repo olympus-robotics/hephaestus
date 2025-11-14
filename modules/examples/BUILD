@@ -26,7 +26,7 @@ heph_cc_library(
     implementation_deps = [
         "//modules/ipc",
         "//modules/random",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "//modules/types",
         "@abseil-cpp//absl/container:raw_hash_map",
         "@abseil-cpp//absl/status:status",

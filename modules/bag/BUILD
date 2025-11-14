@@ -26,7 +26,7 @@ heph_cc_library(
     implementation_deps = [
         "//modules/containers",
         "//modules/random",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "@zstd",
     ],
     includes = ["include"],

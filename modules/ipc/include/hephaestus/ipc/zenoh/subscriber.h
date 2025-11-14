@@ -11,12 +11,12 @@
 #include <span>
 #include <utility>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh {
 

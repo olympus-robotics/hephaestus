@@ -15,10 +15,10 @@
 #include <fmt/format.h>
 
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/topic_filter.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::ipc::zenoh {
 namespace {

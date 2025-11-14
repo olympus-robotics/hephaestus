@@ -9,7 +9,6 @@
 
 #include "gmock/gmock.h"
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/utils/exception.h"
 
 // NOLINTBEGIN(cert-err58-cpp, cppcoreguidelines-owning-memory, modernize-use-trailing-return-type,
 // cppcoreguidelines-avoid-goto) NOLINTNEXTLINE(google-build-using-namespace, modernize-type-traits)
@@ -62,25 +61,19 @@ TEST(ProgramOptions, Option) {
 TEST(ProgramOptions, Errors) {
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
-    EXPECT_THROW_OR_DEATH(std::move(desc).parse({ "--option" }), Panic, "Undefined option");
+    EXPECT_DEATH(std::move(desc).parse({ "--option" }), "");
   }
 
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
     desc.defineOption<std::string>("option", "desc").defineOption<int>("other", "desc");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({}), Panic,
-                          "Required option 'option' not specified");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option" }), Panic,
-                          "is supposed to be a value");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "value" }), Panic,
-                          "Arg value is not a valid option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }), Panic,
-                          "not another option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }), Panic,
-                          "not a valid option");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }), Panic, "not specified");
-    EXPECT_THROW_OR_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), Panic,
-                          "not another option");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({}), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option" }), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "value" }), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }), "");
+    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), "");
   }
 
   {

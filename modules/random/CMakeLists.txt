@@ -4,7 +4,7 @@
 
 declare_module(
   NAME random
-  DEPENDS_ON_MODULES utils
+  DEPENDS_ON_MODULES utils error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS ""
 )
 
@@ -19,10 +19,7 @@ set(SOURCES src/random_number_generator.cpp src/random_object_creator.cpp README
 # library target
 define_module_library(
   NAME random
-  PUBLIC_LINK_LIBS
-    fmt::fmt
-    hephaestus::utils
-    magic_enum::magic_enum
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils hephaestus::error_handling magic_enum::magic_enum
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

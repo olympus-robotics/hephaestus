@@ -24,8 +24,8 @@
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 
 namespace {
 inline constexpr unsigned PAGE_SIZE = 4096;

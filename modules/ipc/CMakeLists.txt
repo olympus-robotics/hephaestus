@@ -4,7 +4,14 @@
 
 declare_module(
   NAME ipc
-  DEPENDS_ON_MODULES cli concurrency containers utils serdes telemetry
+  DEPENDS_ON_MODULES
+    cli
+    concurrency
+    containers
+    utils
+    serdes
+    telemetry_log
+    random
   DEPENDS_ON_MODULES_FOR_TESTING random types_proto
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
 )
@@ -76,8 +83,9 @@ define_module_library(
     hephaestus::concurrency
     hephaestus::containers
     hephaestus::format
+    hephaestus::random
     hephaestus::serdes
-    hephaestus::telemetry
+    hephaestus::telemetry_log
     hephaestus::utils
     nlohmann_json::nlohmann_json
     range-v3::range-v3

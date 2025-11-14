@@ -15,10 +15,10 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/remote_nodes.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::conduit::internal {
 auto SetRemoteInputOperator::execute(std::vector<std::byte> msg, std::string* type_info) -> exec::task<bool> {

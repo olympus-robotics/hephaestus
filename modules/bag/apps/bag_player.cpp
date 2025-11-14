@@ -16,11 +16,11 @@
 
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/zenoh/program_options.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/utils/signal_handler.h"
 #include "hephaestus/utils/stack_trace.h"
 

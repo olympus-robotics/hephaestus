@@ -15,7 +15,7 @@
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::io_ring {
 

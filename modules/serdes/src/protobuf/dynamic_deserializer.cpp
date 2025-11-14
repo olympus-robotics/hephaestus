@@ -14,8 +14,8 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::serdes::protobuf {
 namespace {

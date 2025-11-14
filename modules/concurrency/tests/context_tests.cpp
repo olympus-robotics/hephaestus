@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <exception>
 #include <mutex>
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -14,7 +15,6 @@
 #include <exec/when_any.hpp>
 #include <gtest/gtest.h>
 #include <hephaestus/concurrency/io_ring/timer.h>
-#include <hephaestus/utils/exception.h>
 #include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
@@ -53,12 +53,12 @@ TEST(ContextTests, scheduleException) {
   bool called{ false };
   auto sender = stdexec::schedule(context.scheduler()) | stdexec::then([&context] {
                   context.requestStop();
-                  panic("testing");
+                  throw std::runtime_error("test exception");
                 }) |
                 stdexec::upon_error([&called](const std::exception_ptr& eptr) {
                   try {
                     std::rethrow_exception(eptr);
-                  } catch (Panic&) {  // NOLINT (bugprone-empty-catch)
+                  } catch (std::runtime_error&) {  // NOLINT (bugprone-empty-catch)
                   }
                   called = true;
                 });

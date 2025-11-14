@@ -21,8 +21,8 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -62,6 +62,8 @@ protected:
   const std::string TEST_SERVICE_SERVER_2 = "test_srv_s_2";
   const std::string TEST_SERVICE_CLIENT_1 = "test_srv_c_1";
   const std::string TEST_SERVICE_CLIENT_2 = "test_srv_c_2";
+
+  const error_handling::PanicAsExceptionScope panic_scope{};
   // NOLINTEND
 
   void startIpcGraph() {
@@ -686,4 +688,3 @@ TEST_F(IpcGraphTest, GetTopicListString) {
 
 }  // namespace
 }  // namespace heph::ipc::zenoh::tests
-\

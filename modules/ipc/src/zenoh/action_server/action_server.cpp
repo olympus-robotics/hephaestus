@@ -11,7 +11,7 @@
 #include "hephaestus/ipc/zenoh/action_server/client_helper.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/telemetry/log.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh::action_server {
 auto requestActionServerToStopExecution(Session& session, const TopicConfig& topic_config) -> bool {

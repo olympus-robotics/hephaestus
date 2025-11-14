@@ -4,7 +4,7 @@
 
 declare_module(
   NAME cli
-  DEPENDS_ON_MODULES utils
+  DEPENDS_ON_MODULES utils error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS absl fmt
 )
 
@@ -19,10 +19,7 @@ set(SOURCES src/keyboard.cpp src/program_options.cpp README.md include/hephaestu
 # library target
 define_module_library(
   NAME cli
-  PUBLIC_LINK_LIBS
-    absl::strings
-    hephaestus::utils
-    fmt::fmt
+  PUBLIC_LINK_LIBS absl::strings hephaestus::utils hephaestus::error_handling fmt::fmt
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

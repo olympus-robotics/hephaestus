@@ -6,53 +6,59 @@
 #include <fstream>
 #include <memory>
 #include <regex>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/error_handling/panic.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws {
 
-class BridgeConfigTest : public ::testing::Test {
-protected:
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
+class MyEnvironment : public ::testing::Environment {
+public:
+  ~MyEnvironment() override = default;
+
   void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::INFO));
   }
 
-  void TearDown() override {
-  }
+private:
+  error_handling::PanicAsExceptionScope panic_scope_;
 };
 
-TEST_F(BridgeConfigTest, ValidRegex) {
+// NOLINTNEXTLINE
+auto* const my_env = dynamic_cast<MyEnvironment*>(AddGlobalTestEnvironment(new MyEnvironment{}));
+
+TEST(BridgeConfigTest, ValidRegex) {
   const std::vector<std::string> regex_strings = { ".*", "^test$", "a+b*" };
   const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size());
 }
 
-TEST_F(BridgeConfigTest, InvalidRegex) {
+TEST(BridgeConfigTest, InvalidRegex) {
   const std::vector<std::string> regex_strings = { ".*", "(", "a+b*" };
   const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size() - 1);  // One invalid regex
 }
 
-TEST_F(BridgeConfigTest, RegexMatch) {
+TEST(BridgeConfigTest, RegexMatch) {
   const std::vector<std::regex> regex_list = { std::regex("^test$") };
   EXPECT_TRUE(isMatch("test", regex_list));
   EXPECT_FALSE(isMatch("not_test", regex_list));
 }
 
-TEST_F(BridgeConfigTest, StringMatch) {
+TEST(BridgeConfigTest, StringMatch) {
   const std::vector<std::string> regex_strings = { "^test$" };
   EXPECT_TRUE(isMatch("test", regex_strings));
   EXPECT_FALSE(isMatch("not_test", regex_strings));
 }
 
-TEST_F(BridgeConfigTest, WhitelistAndBlacklistA) {
+TEST(BridgeConfigTest, WhitelistAndBlacklistA) {
   WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   config.ipc_topic_blacklist = { "^exclude$" };
@@ -60,14 +66,14 @@ TEST_F(BridgeConfigTest, WhitelistAndBlacklistA) {
   EXPECT_FALSE(shouldBridgeIpcTopic("exclude", config));
 }
 
-TEST_F(BridgeConfigTest, WhitelistOnlyA) {
+TEST(BridgeConfigTest, WhitelistOnlyA) {
   WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcTopic("include", config));
   EXPECT_TRUE(shouldBridgeIpcTopic("exclude", config));
 }
 
-TEST_F(BridgeConfigTest, WhitelistAndBlacklistB) {
+TEST(BridgeConfigTest, WhitelistAndBlacklistB) {
   WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   config.ipc_service_blacklist = { "^exclude$" };
@@ -75,21 +81,21 @@ TEST_F(BridgeConfigTest, WhitelistAndBlacklistB) {
   EXPECT_FALSE(shouldBridgeIpcService("exclude", config));
 }
 
-TEST_F(BridgeConfigTest, WhitelistOnlyB) {
+TEST(BridgeConfigTest, WhitelistOnlyB) {
   WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcService("include", config));
   EXPECT_TRUE(shouldBridgeIpcService("exclude", config));
 }
 
-TEST_F(BridgeConfigTest, MatchWhitelist) {
+TEST(BridgeConfigTest, MatchWhitelist) {
   WebsocketBridgeConfig config;
   config.ws_server_config.clientTopicWhitelistPatterns = parseRegexStrings({ ".*incl.*" });
   EXPECT_TRUE(shouldBridgeWsTopic("include", config));
   EXPECT_FALSE(shouldBridgeWsTopic("exclude", config));
 }
 
-TEST_F(BridgeConfigTest, SaveDefaultAndLoad) {
+TEST(BridgeConfigTest, SaveDefaultAndLoad) {
   WebsocketBridgeConfig original_config;
   try {
     saveBridgeConfigToYaml(original_config, "/tmp/default.yaml");
@@ -140,7 +146,7 @@ TEST_F(BridgeConfigTest, SaveDefaultAndLoad) {
             config.zenoh_config.multicast_scouting_interface);
 }
 
-TEST_F(BridgeConfigTest, LoadInvalidYaml) {
+TEST(BridgeConfigTest, LoadInvalidYaml) {
   const std::string yaml_content = R"(
   invalid_yaml_content
   )";
@@ -148,16 +154,19 @@ TEST_F(BridgeConfigTest, LoadInvalidYaml) {
   yaml_file << yaml_content;
   yaml_file.close();
 
-  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"), std::runtime_error);
+  EXPECT_THROW(auto config = loadBridgeConfigFromYaml("/tmp/invalid_test_config.yaml"),
+               error_handling::PanicException);
 }
 
-TEST_F(BridgeConfigTest, SaveInvalidPath) {
+TEST(BridgeConfigTest, SaveInvalidPath) {
   const WebsocketBridgeConfig config;
-  EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"), std::runtime_error);
+  EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"),
+               error_handling::PanicException);
 }
 
-TEST_F(BridgeConfigTest, LoadInvalidPath) {
-  EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"), std::runtime_error);
+TEST(BridgeConfigTest, LoadInvalidPath) {
+  EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"),
+               error_handling::PanicException);
 }
 
 }  // namespace heph::ws

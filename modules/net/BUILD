@@ -28,7 +28,7 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
         "//modules/utils",
         "@bluez",
     ],
@@ -51,7 +51,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
     ],
 )
 
@@ -61,7 +61,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
     ],
 )
 
@@ -71,7 +71,7 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
-        "//modules/telemetry/telemetry",
+        "//modules/telemetry/log",
     ],
 )
 

@@ -20,10 +20,10 @@
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/zenoh/conversions.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 #include "hephaestus/utils/string/string_utils.h"
 #include "hephaestus/utils/utils.h"
 

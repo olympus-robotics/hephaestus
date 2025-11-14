@@ -26,14 +26,14 @@
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/queued_input.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/connect.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::conduit {
 

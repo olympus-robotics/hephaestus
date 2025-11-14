@@ -4,7 +4,7 @@
 
 declare_module(
   NAME containers_reflection
-  DEPENDS_ON_MODULES containers utils telemetry
+  DEPENDS_ON_MODULES containers utils error_handling
   DEPENDS_ON_EXTERNAL_PROJECTS reflectcpp fmt
 )
 
@@ -19,7 +19,7 @@ set(SOURCES src/bit_flag.cpp src/chrono.cpp include/hephaestus/containers_reflec
 # library target
 define_module_library(
   NAME containers_reflection
-  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils hephaestus::containers reflectcpp::reflectcpp
+  PUBLIC_LINK_LIBS fmt::fmt hephaestus::utils hephaestus::containers hephaestus::error_handling reflectcpp::reflectcpp
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

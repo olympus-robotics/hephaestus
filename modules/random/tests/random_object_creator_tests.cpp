@@ -18,7 +18,6 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/utils/concepts.h"
-#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -116,8 +115,7 @@ TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
     static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
     auto vec_size_zero = random::random<TypeParam>(mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
     EXPECT_EQ(vec_size_zero.size(), SIZE_ZERO);
-    EXPECT_THROW_OR_DEATH(auto _ = random::random<TypeParam>(mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER), Panic,
-                          "");
+    EXPECT_DEATH(auto _ = random::random<TypeParam>(mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER), "");
 
     static constexpr size_t SIZE_SEVEN = 7;
     auto vec_size_seven = random::random<TypeParam>(mt, SIZE_SEVEN);

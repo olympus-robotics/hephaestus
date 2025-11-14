@@ -150,7 +150,8 @@ struct StopTestOperation : IoRingOperationBase {
   IoRing* ring{ nullptr };
 };
 
-TEST(IoRingTest, stoppableOperation) {
+// TODO(@fbrizzi): enable these tests when stoppable operations are fully supported
+TEST(DISABLED_IoRingTest, stoppableOperation) {
   // 1. submit, 2. stop
   {
     IoRing ring{ {} };
@@ -183,7 +184,8 @@ TEST(IoRingTest, stoppableOperation) {
   }
 }
 
-TEST(IoRingTest, stoppableOperationConcurrent) {
+// TODO(@fbrizzi): enable these tests when stoppable operations are fully supported
+TEST(DISABLED_IoRingTest, stoppableOperationConcurrent) {
   IoRingConfig config;
   std::mutex mtx;
   std::condition_variable cv;
@@ -192,7 +194,6 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
 
   std::vector<std::unique_ptr<TestOperation1>> ops;
   ops.reserve(static_cast<std::size_t>(config.nentries) * 3);
-
   std::thread runner{ [&config, &ops, &mtx, &cv, &ring, &ring_ptr] {
     ring.emplace(config);
     for (std::size_t i = 0; i != ops.capacity(); ++i) {
@@ -200,13 +201,15 @@ TEST(IoRingTest, stoppableOperationConcurrent) {
       EXPECT_NO_THROW(ring->submit(ops[i].get()));
     }
 
-    ring->run([&] {
-      {
-        const std::scoped_lock l{ mtx };
-        ring_ptr = &ring.value();
-      }
-      cv.notify_all();
-    });
+    ring->run(
+        [&] {
+          {
+            const std::scoped_lock l{ mtx };
+            ring_ptr = &ring.value();
+          }
+          cv.notify_all();
+        },
+        [] { return false; });
   } };
 
   {

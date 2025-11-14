@@ -3,7 +3,6 @@
 //=================================================================================================
 
 #include <atomic>
-#include <exception>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -11,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include "helpers.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/examples/types_proto/geometry.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/examples/types_proto/pose.h"      // NOLINT(misc-include-cleaner)
@@ -20,7 +20,6 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/random/random_number_generator.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::examples::types::tests {
 namespace {
@@ -35,7 +34,7 @@ TEST(ZenohTests, WrongSubscriberTypeLargeIntoSmall) {
   auto received_message = Pose{};
 
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
-
+  const error_handling::PanicAsExceptionScope panic_scope{};
   ipc::zenoh::Publisher<FramedPose> publisher(session, topic);
   auto subscriber = ipc::zenoh::createSubscriber<Pose>(
       session, topic,
@@ -46,7 +45,12 @@ TEST(ZenohTests, WrongSubscriberTypeLargeIntoSmall) {
         stop_flag.notify_all();
       });
 
-  EXPECT_THROW_OR_DEATH(std::ignore = publisher.publish(send_message);, std::exception, "");
+  EXPECT_THROW(
+      {
+        std::ignore = publisher.publish(send_message);
+        stop_flag.wait(false);
+      },
+      error_handling::PanicException);
 }
 
 TEST(ZenohTests, WrongSubscriberTypeSmallIntoLarge) {
@@ -59,6 +63,7 @@ TEST(ZenohTests, WrongSubscriberTypeSmallIntoLarge) {
 
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
 
+  const error_handling::PanicAsExceptionScope panic_scope{};
   ipc::zenoh::Publisher<Pose> publisher(session, topic);
   auto subscriber = ipc::zenoh::createSubscriber<FramedPose>(
       session, topic,
@@ -69,7 +74,12 @@ TEST(ZenohTests, WrongSubscriberTypeSmallIntoLarge) {
         stop_flag.notify_all();
       });
 
-  EXPECT_THROW_OR_DEATH(std::ignore = publisher.publish(send_message);, std::exception, "");
+  EXPECT_THROW(
+      {
+        std::ignore = publisher.publish(send_message);
+        stop_flag.wait(false);
+      },
+      error_handling::PanicException);
 }
 
 }  // namespace

@@ -6,8 +6,8 @@
 
 #include <cstdint>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/types/proto/numeric_value.pb.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::types::proto {
 

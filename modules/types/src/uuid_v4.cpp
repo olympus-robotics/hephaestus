@@ -12,8 +12,8 @@
 
 #include <fmt/format.h>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/random/random_number_generator.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::types {
 

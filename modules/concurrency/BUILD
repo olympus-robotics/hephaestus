@@ -15,12 +15,14 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
-        "//modules/telemetry",
+        "//modules/telemetry/log:log",
+        "@magic_enum",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
+        "//modules/error_handling",
         "//modules/utils",
         "@liburing",
         "@stdexec",
@@ -45,7 +47,7 @@ heph_cc_binary(
     deps = [
         ":concurrency",
         "//modules/cli",
-        "//modules/telemetry/telemetry_influxdb_sink",
+        "//modules/telemetry/influxdb_sink",
     ],
 )
 
@@ -55,7 +57,7 @@ heph_cc_binary(
     deps = [
         ":concurrency",
         "//modules/cli",
-        "//modules/telemetry/telemetry_influxdb_sink",
+        "//modules/telemetry/influxdb_sink",
     ],
 )
 

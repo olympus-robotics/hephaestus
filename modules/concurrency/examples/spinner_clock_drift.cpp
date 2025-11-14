@@ -15,11 +15,11 @@
 
 #include "hephaestus/cli/program_options.h"
 #include "hephaestus/concurrency/spinner.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
-#include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry_influxdb_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry/influxdb_sink/influxdb_metric_sink.h"
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/utils/signal_handler.h"
 
 struct ClockJitter {
@@ -27,8 +27,6 @@ struct ClockJitter {
   std::chrono::microseconds::rep scheduler_us;
   std::chrono::microseconds::rep system_clock_us;
 };
-// NOLINTNEXTLINE(misc-include-cleaner)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(ClockJitter, scheduler_us, system_clock_us);
 
 auto main(int argc, const char* argv[]) -> int {
   try {

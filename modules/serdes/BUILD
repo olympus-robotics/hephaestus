@@ -24,6 +24,7 @@ heph_cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//modules/error_handling",
         "//modules/utils",
         "@fmt",
         "@magic_enum",

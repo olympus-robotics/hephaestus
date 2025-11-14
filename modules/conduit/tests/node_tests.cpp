@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -19,8 +20,7 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/telemetry/log_sink.h"
-#include "hephaestus/utils/exception.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::conduit::tests {
 struct ReceivingOperationData {
@@ -147,7 +147,7 @@ struct TriggerExceptionOperation : Node<TriggerExceptionOperation, ReceivingOper
     EXPECT_FALSE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().triggered = true;
-    panic("Running around with scissors is dangerous");
+    throw std::runtime_error("Running around with scissors is dangerous");
     return stdexec::just();
   }
 
@@ -162,7 +162,7 @@ TEST(NodeTests, nodeTriggerException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<TriggerExceptionOperation>();
 
-  EXPECT_THROW(engine.run(), Panic);
+  EXPECT_THROW(engine.run(), std::runtime_error);
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_FALSE(dummy->data().executed);
   EXPECT_FALSE(TriggerExceptionOperation::HAS_PERIOD);
@@ -180,7 +180,7 @@ struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, Receiving
     EXPECT_TRUE(operation.data().triggered);
     EXPECT_FALSE(operation.data().executed);
     operation.data().executed = true;
-    panic("Running around with scissors is dangerous");
+    throw std::runtime_error("Running around with scissors is dangerous");
   }
 };
 
@@ -188,7 +188,7 @@ TEST(NodeTests, nodeExecutionException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<ExecutionExceptionOperation>();
 
-  EXPECT_THROW(engine.run(), Panic);
+  EXPECT_THROW(engine.run(), std::runtime_error);
   EXPECT_TRUE(dummy->data().triggered);
   EXPECT_TRUE(dummy->data().executed);
   EXPECT_FALSE(ExecutionExceptionOperation::HAS_PERIOD);
@@ -257,7 +257,8 @@ namespace ht = heph::telemetry;
 class MockLogSink final : public ht::ILogSink {
 public:
   void send(const ht::LogEntry& s) override {
-    if (s.level == heph::WARN && s.message == PeriodicMissingDeadlineOperation::MISSED_DEADLINE_WARNING) {
+    if (s.level == heph::LogLevel::WARN &&
+        s.message == PeriodicMissingDeadlineOperation::MISSED_DEADLINE_WARNING) {
       ++num_messages;
       fmt::println(stderr, "{}", fmt::join(s.fields, ", "));
     }

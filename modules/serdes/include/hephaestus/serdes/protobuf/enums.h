@@ -11,8 +11,8 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/utils/concepts.h"
-#include "hephaestus/utils/exception.h"
 #include "hephaestus/utils/format/format.h"
 #include "hephaestus/utils/string/string_utils.h"
 

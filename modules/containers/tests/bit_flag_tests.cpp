@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/containers/bit_flag.h"
-#include "hephaestus/utils/exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -40,12 +39,14 @@ TEST(BitFlag, Default) {
 }
 
 TEST(BitField, WithUnderlyingValue) {
-  const BitFlag<TestEnum> flag{ (1u << 0u) | (1u << 2u) };
-  EXPECT_TRUE(flag.has(TestEnum::A));
-  EXPECT_FALSE(flag.has(TestEnum::B));
-  EXPECT_TRUE(flag.has(TestEnum::C));
+  const auto flag = BitFlag<TestEnum>::fromUnderlyingValue((1u << 0u) | (1u << 2u));
+  EXPECT_TRUE(flag.has_value());
+  EXPECT_TRUE(flag->has(TestEnum::A));   // NOLINT(bugprone-unchecked-optional-access)
+  EXPECT_FALSE(flag->has(TestEnum::B));  // NOLINT(bugprone-unchecked-optional-access)
+  EXPECT_TRUE(flag->has(TestEnum::C));   // NOLINT(bugprone-unchecked-optional-access)
 
-  EXPECT_THROW_OR_DEATH(BitFlag<TestEnum>{ 1u << 4u }, Panic, "contains invalid bits");
+  const auto invalid_flag = BitFlag<TestEnum>::fromUnderlyingValue(1u << 4u);
+  EXPECT_FALSE(invalid_flag.has_value());
 }
 
 TEST(BitFlag, Reset) {
