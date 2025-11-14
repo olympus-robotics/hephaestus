@@ -24,22 +24,22 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/containers",
+        "//modules/utils",
+        "@abseil-cpp//absl/strings:strings",
         "@nlohmann_json//:json",
-        "@range-v3//:range-v3",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/cli",
         "//modules/concurrency",
+        "//modules/error_handling",
         "//modules/ipc/proto:types_gen_proto",
         "//modules/random",
         "//modules/serdes",
         "//modules/telemetry/log",
-        "//modules/utils",
-        "@abseil-cpp//absl/base",
-        "@abseil-cpp//absl/synchronization",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",
         "@magic_enum",
         "@zenohc_builder//:zenoh-c",
@@ -56,6 +56,9 @@ heph_cc_binary(
     srcs = ["apps/zenoh_node_list.cpp"],
     deps = [
         ":ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -64,6 +67,10 @@ heph_cc_binary(
     srcs = ["apps/zenoh_string_service_client.cpp"],
     deps = [
         ":ipc",
+        "//modules/cli",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -72,6 +79,13 @@ heph_cc_binary(
     srcs = ["apps/zenoh_topic_echo.cpp"],
     deps = [
         ":ipc",
+        "//modules/cli",
+        "//modules/error_handling",
+        "//modules/serdes",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
+        "@nlohmann_json//:json",
     ],
 )
 
@@ -80,6 +94,10 @@ heph_cc_binary(
     srcs = ["apps/zenoh_topic_list.cpp"],
     deps = [
         ":ipc",
+        "//modules/cli",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -90,6 +108,11 @@ heph_cc_binary(
     ],
     deps = [
         ":ipc",
+        "//modules/cli",
+        "//modules/serdes",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -97,19 +120,20 @@ heph_cc_binary(
 # Tests #
 #########
 
-IPC_TEST_DEPS = [
-    ":ipc",
-    "//modules/random",
-    "//modules/types",
-    "//modules/types_proto",
-]
-
 heph_cc_test(
     name = "action_server_tests",
     srcs = [
         "tests/action_server_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/random",
+        "//modules/telemetry/log",
+        "//modules/types",
+        "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -117,7 +141,7 @@ heph_cc_test(
     srcs = [
         "tests/dynamic_subscriber_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [":ipc"],
 )
 
 heph_cc_test(
@@ -125,7 +149,14 @@ heph_cc_test(
     srcs = [
         "tests/pollable_action_server_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/error_handling",
+        "//modules/random",
+        "//modules/types",
+        "//modules/types_proto",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -133,7 +164,15 @@ heph_cc_test(
     srcs = [
         "tests/pub_sub_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/error_handling",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/types",
+        "//modules/types_proto",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -141,7 +180,15 @@ heph_cc_test(
     srcs = [
         "tests/service_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/telemetry/log",
+        "//modules/types",
+        "//modules/types_proto",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -149,7 +196,7 @@ heph_cc_test(
     srcs = [
         "tests/topic_filter_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [":ipc"],
 )
 
 heph_cc_test(
@@ -157,7 +204,12 @@ heph_cc_test(
     srcs = [
         "tests/liveliness_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/random",
+        "@fmt",
+        "@zenohc_builder//:zenoh-cpp",
+    ],
 )
 
 heph_cc_test(
@@ -165,7 +217,10 @@ heph_cc_test(
     srcs = [
         "tests/config_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "@nlohmann_json//:json",
+    ],
 )
 
 heph_cc_test(
@@ -173,7 +228,10 @@ heph_cc_test(
     srcs = [
         "tests/session_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/random",
+    ],
 )
 
 heph_cc_test(
@@ -181,7 +239,15 @@ heph_cc_test(
     srcs = [
         "tests/topic_database_tests.cpp",
     ],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/telemetry/log",
+        "//modules/types",
+        "//modules/types_proto",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -191,5 +257,11 @@ heph_cc_test(
     ],
     flaky = True,
     tags = ["exclusive"],
-    deps = IPC_TEST_DEPS,
+    deps = [
+        ":ipc",
+        "//modules/serdes",
+        "//modules/telemetry/log",
+        "//modules/types",
+        "//modules/types_proto",
+    ],
 )

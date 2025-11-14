@@ -19,7 +19,6 @@
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
-#include <range/v3/range/conversion.hpp>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/hello.hxx>
 #include <zenoh/api/scout.hxx>
@@ -58,7 +57,7 @@ public:
 
   [[nodiscard]] auto getNodesInfo() const -> std::vector<NodeInfo> {
     const absl::MutexLock lock{ &mutex_ };
-    const auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
+    const auto values = nodes_info_ | std::views::values | std::ranges::to<std::vector<NodeInfo>>();
     return values;
   }
 
