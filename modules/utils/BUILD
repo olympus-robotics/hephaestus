@@ -16,16 +16,12 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "@abseil-cpp//absl/random:random",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:strings",
         "@abseil-cpp//absl/time:time",
     ],
-    includes = [
-        "include",
-        "src",
-    ],
+    includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "@abseil-cpp//absl/log:check",
         "@fmt",
         "@magic_enum",
     ],

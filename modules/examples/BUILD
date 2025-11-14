@@ -53,8 +53,8 @@ heph_cc_binary(
     name = "mcap_reader",
     srcs = ["examples/mcap_reader.cpp"],
     deps = [
-        ":examples",
-        "//modules/bag",
+        "@fmt",
+        "@mcap",
     ],
 )
 
@@ -64,6 +64,10 @@ heph_cc_binary(
     deps = [
         ":examples",
         "//modules/bag",
+        "//modules/ipc",
+        "//modules/serdes",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -98,6 +102,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -137,6 +144,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -163,6 +173,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -176,6 +189,10 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
+        "@magic_enum",
     ],
 )
 

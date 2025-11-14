@@ -3,5 +3,3 @@
 //=================================================================================================
 
 #include "hephaestus/containers/blocking_queue.h"  // NOLINT(misc-include-cleaner)
-
-namespace heph::containers {}

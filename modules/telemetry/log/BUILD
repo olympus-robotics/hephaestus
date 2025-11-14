@@ -16,12 +16,14 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "//modules/containers",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/log:globals",
+        "@abseil-cpp//absl/synchronization:synchronization",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/utils",
         "@fmt",
         "@magic_enum",
     ],
@@ -37,7 +39,7 @@ heph_cc_binary(
     deps = [
         ":log",
         "//modules/cli",
-        "//modules/random",
+        "//modules/utils",
     ],
 )
 
@@ -51,7 +53,7 @@ heph_cc_test(
     deps = [
         ":log",
         "//modules/containers",
-        "//modules/random",
+        "@fmt",
     ],
 )
 
@@ -60,6 +62,5 @@ heph_cc_test(
     srcs = ["tests/log_tests_no_sink.cpp"],
     deps = [
         ":log",
-        "//modules/random",
     ],
 )

@@ -16,14 +16,14 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "//modules/telemetry/log",
-        "@magic_enum",
+        "//modules/telemetry/metrics",
+        "//modules/utils",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
         "//modules/error_handling",
-        "//modules/utils",
         "@liburing",
         "@stdexec",
     ],
@@ -38,6 +38,8 @@ heph_cc_binary(
     srcs = ["examples/spinner_example.cpp"],
     deps = [
         ":concurrency",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -65,43 +67,48 @@ heph_cc_binary(
 # Tests #
 #########
 
-CONCURRENCY_TEST_DEPS = [
-    ":concurrency",
-    "//modules/random",
-]
-
 heph_cc_test(
     name = "io_ring_tests",
     srcs = ["tests/io_ring/io_ring_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [
+        ":concurrency",
+        "@liburing",
+    ],
 )
 
 heph_cc_test(
     name = "context_tests",
     srcs = ["tests/context_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [
+        ":concurrency",
+        "@stdexec",
+    ],
 )
 
 heph_cc_test(
     name = "queue_consumer_tests",
     srcs = ["tests/queue_consumer_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [
+        ":concurrency",
+    ],
 )
 
 heph_cc_test(
     name = "spinner_state_machine_tests",
     srcs = ["tests/spinner_state_machine_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [":concurrency"],
 )
 
 heph_cc_test(
     name = "spinner_tests",
     srcs = ["tests/spinner_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [":concurrency"],
 )
 
 heph_cc_test(
     name = "spinners_manager_tests",
     srcs = ["tests/spinners_manager_tests.cpp"],
-    deps = CONCURRENCY_TEST_DEPS,
+    deps = [
+        ":concurrency",
+    ],
 )

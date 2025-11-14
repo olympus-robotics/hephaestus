@@ -27,7 +27,6 @@ heph_cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/utils",
         "@magic_enum",
     ],
 )
@@ -60,7 +59,6 @@ heph_cc_test(
     srcs = ["tests/bit_flag_tests.cpp"],
     deps = [
         ":containers",
-        "//modules/utils",
     ],
 )
 
