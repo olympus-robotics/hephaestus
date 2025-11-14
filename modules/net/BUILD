@@ -28,9 +28,9 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/telemetry/log",
-        "//modules/utils",
+        "//modules/error_handling",
         "@bluez",
+        "@fmt",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -79,12 +79,8 @@ heph_cc_binary(
 # Tests #
 #########
 
-NET_TEST_DEPS = [
-    ":net",
-]
-
 heph_cc_test(
     name = "net_tests",
     srcs = ["tests/net_tests.cpp"],
-    deps = NET_TEST_DEPS,
+    deps = [":net"],
 )
