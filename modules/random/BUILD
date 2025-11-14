@@ -39,5 +39,8 @@ heph_cc_test(
 heph_cc_test(
     name = "random_object_creator_tests",
     srcs = ["tests/random_object_creator_tests.cpp"],
-    deps = [":random", "//modules/utils"],
+    deps = [
+        ":random",
+        "//modules/utils",
+    ],
 )

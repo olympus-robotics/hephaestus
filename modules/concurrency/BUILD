@@ -15,7 +15,7 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
-        "//modules/telemetry/log:log",
+        "//modules/telemetry/log",
         "@magic_enum",
     ],
     includes = ["include"],

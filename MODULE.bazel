@@ -131,14 +131,12 @@ bazel_dep(name = "boringssl", version = "0.20250114.0")
 bazel_dep(name = "websocketpp", version = "0.8.2.bcr.3")
 bazel_dep(name = "zstd", version = "1.5.6")
 bazel_dep(name = "liburing", version = "2.5")
-
 bazel_dep(name = "depend_on_what_you_use", version = "0.10.0")
 git_override(
     module_name = "depend_on_what_you_use",
     commit = "e2d5a3c91d3f58225caf5d55c47df7cb6a722505",
     remote = "https://github.com/martis42/depend_on_what_you_use",
 )
-
 
 # TODO: eventually add
 # bazel_dep(name = "lz4", version = "1.9.4")
