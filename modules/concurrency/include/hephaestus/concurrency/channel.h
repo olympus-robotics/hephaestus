@@ -4,19 +4,20 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstddef>
 #include <exception>
-#include <mutex>
 #include <optional>
 #include <type_traits>
 #include <utility>
 
 #include <absl/synchronization/mutex.h>
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/concurrency/stoppable_operation_state.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
+#include "hephaestus/utils/unique_function.h"
 
 namespace heph::concurrency {
 namespace internal {
@@ -162,35 +163,20 @@ struct SetValueSender {
 
   template <typename Receiver>
   class Operation : public AwaiterBase {
-    using ReceiverEnvT = stdexec::env_of_t<Receiver>;
-    using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-    using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, internal::StopCallback>;
-
   public:
     Operation(Channel<T, Capacity>* self, T value, Receiver receiver)
-      : self_(self), value_(std::move(value)), receiver_(std::move(receiver)) {
+      : self_(self), value_(std::move(value)), operation_state_{ std::move(receiver), [this]() { stop(); } } {
     }
 
     void start() noexcept {
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(*receiver_));
-      stop_callback_.emplace(stop_token, StopCallback{ this });
-      if (stop_token.stop_requested()) {
-        auto receiver = getReceiver();
-        if (receiver.has_value()) {
-          stdexec::set_stopped(std::move(*receiver));
-          return;
-        }
-      }
-
-      restart();
+      auto start_transition = operation_state_.start();
+      setValue();
     }
 
     void restart() noexcept final {
-      if (self_->setValueImpl(std::move(value_), this)) {
-        auto receiver = getReceiver();
-        if (receiver.has_value()) {
-          stdexec::set_value(std::move(*receiver));
-        }
+      auto start_transition = operation_state_.restart();
+      if (start_transition.has_value()) {
+        setValue();
       }
     }
 
@@ -199,27 +185,19 @@ struct SetValueSender {
         absl::MutexLock l{ &self_->mutex_ };
         self_->set_awaiters_.erase(this);
       }
-      auto receiver = getReceiver();
-      if (receiver.has_value()) {
-        stdexec::set_stopped(std::move(*receiver));
-      }
     }
 
   private:
-    auto getReceiver() -> std::optional<Receiver> {
-      absl::MutexLock l{ &mutex_ };
-      std::optional<Receiver> res;
-      std::swap(res, receiver_);
-
-      return res;
+    void setValue() {
+      if (self_->setValueImpl(std::move(value_), this)) {
+        operation_state_.setValue();
+      }
     }
 
   private:
     Channel<T, Capacity>* self_;
     T value_;
-    absl::Mutex mutex_;
-    std::optional<Receiver> receiver_;
-    std::optional<StopCallbackT> stop_callback_;
+    StoppableOperationState<Receiver> operation_state_;
   };
 
   template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
@@ -247,36 +225,20 @@ struct GetValueSender {
 
   template <typename Receiver>
   class Operation : public AwaiterBase {
-    using ReceiverEnvT = stdexec::env_of_t<Receiver>;
-    using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-    using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, internal::StopCallback>;
-
   public:
-    Operation(Channel<T, Capacity>* self, Receiver receiver) : self_(self), receiver_(std::move(receiver)) {
+    Operation(Channel<T, Capacity>* self, Receiver receiver)
+      : self_(self), operation_state_{ std::move(receiver), [this]() { stop(); } } {
     }
 
     void start() noexcept {
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(*receiver_));
-      stop_callback_.emplace(stop_token, StopCallback{ this });
-      if (stop_token.stop_requested()) {
-        auto receiver = getReceiver();
-        if (receiver.has_value()) {
-          stdexec::set_stopped(std::move(*receiver));
-          return;
-        }
-        return;
-      }
-
-      restart();
+      auto start_transition = operation_state_.start();
+      getValue();
     }
 
     void restart() noexcept final {
-      auto value = self_->getValueImpl(this);
-      if (value.has_value()) {
-        auto receiver = getReceiver();
-        if (receiver.has_value()) {
-          stdexec::set_value(std::move(*receiver), std::move(*value));
-        }
+      auto start_transition = operation_state_.restart();
+      if (start_transition.has_value()) {
+        getValue();
       }
     }
 
@@ -285,26 +247,19 @@ struct GetValueSender {
         absl::MutexLock l{ &self_->mutex_ };
         self_->get_awaiters_.erase(this);
       }
-      auto receiver = getReceiver();
-      if (receiver.has_value()) {
-        stdexec::set_stopped(std::move(*receiver));
+    }
+
+  private:
+    auto getValue() {
+      auto value = self_->getValueImpl(this);
+      if (value.has_value()) {
+        operation_state_.setValue(std::move(*value));
       }
     }
 
   private:
-    auto getReceiver() -> std::optional<Receiver> {
-      absl::MutexLock l{ &mutex_ };
-      std::optional<Receiver> res;
-      std::swap(res, receiver_);
-
-      return res;
-    }
-
-  private:
     Channel<T, Capacity>* self_;
-    absl::Mutex mutex_;
-    std::optional<Receiver> receiver_;
-    std::optional<StopCallbackT> stop_callback_;
+    StoppableOperationState<Receiver, T> operation_state_;
   };
 
   template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>

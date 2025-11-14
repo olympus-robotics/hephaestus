@@ -5,10 +5,11 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 
-#include <exec/task.hpp>
-#include <hephaestus/concurrency/any_sender.h>
+#include <exec/when_any.hpp>
 
+#include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/concurrency/when_all_range.h"
 #include "hephaestus/conduit/forwarding_output.h"
@@ -33,8 +34,8 @@ struct Output : public OutputBase {
     }
   }
 
-  auto trigger() -> concurrency::AnySender<void> final {
-    return triggerImpl();
+  auto trigger(SchedulerT scheduler) -> concurrency::AnySender<void> final {
+    return triggerImpl(scheduler);
   }
 
   void connect(TypedInput<T>& input) {
@@ -76,7 +77,7 @@ struct Output : public OutputBase {
   }
 
 private:
-  auto triggerImpl() -> concurrency::AnySender<void> {
+  auto triggerImpl(SchedulerT scheduler) -> concurrency::AnySender<void> {
     std::vector<concurrency::AnySender<void>> input_triggers;
 
     while (true) {
@@ -85,39 +86,45 @@ private:
         break;
       }
       for (auto& output : partner_outputs_) {
-        input_triggers.emplace_back(output.setValue(*value));
+        input_triggers.emplace_back(exec::when_any(
+            scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                    // timeout callback
+                                                    [this, &output]() {
+                                                      fmt::println(stderr,
+                                                                   "{}: Failed to set input {} within {}",
+                                                                   this->name(), output.name(), timeout_);
+                                                      std::abort();
+                                                    }),
+            output.setValue(*value)));
       }
       for (auto* input : inputs_) {
-        input_triggers.emplace_back(input->setValue(*value));
+        input_triggers.emplace_back(exec::when_any(
+            scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                    // timeout callback
+                                                    [this, input]() {
+                                                      fmt::println(stderr,
+                                                                   "{}: Failed to set input {} within {}",
+                                                                   this->name(), input->name(), timeout_);
+                                                      std::abort();
+                                                    }),
+            input->setValue(*value)));
       }
       for (auto* forwarding : forwarding_outputs_) {
         for (auto* input : forwarding->inputs_) {
-          input_triggers.emplace_back(input->setValue(*value));
+          input_triggers.emplace_back(exec::when_any(
+              scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                      // timeout callback
+                                                      [this, input]() {
+                                                        fmt::println(stderr,
+                                                                     "{}: Failed to set input {} within {}",
+                                                                     this->name(), input->name(), timeout_);
+                                                        std::abort();
+                                                      }),
+              input->setValue(*value)));
         }
       }
     }
     return concurrency::whenAllRange(std::move(input_triggers));
-    /*
-    fmt::println(stderr, "trigger output {}", name());
-    while (true) {
-      auto value = buffer_.pop();
-      if (!value.has_value()) {
-        break;
-      }
-      for (auto& output : partner_outputs_) {
-        co_await output.setValue(*value);
-      }
-      for (auto* input : inputs_) {
-        co_await input->setValue(*value);
-      }
-      for (auto* forwarding : forwarding_outputs_) {
-        for (auto* input : forwarding->inputs_) {
-          co_await input->setValue(*value);
-        }
-      }
-    }
-    fmt::println(stderr, "trigger output {} done\n", name());
-    */
   }
 
 private:
@@ -128,6 +135,8 @@ private:
   std::vector<TypedInput<T>*> inputs_;
   std::vector<PartnerOutput<T>> partner_outputs_;
   std::vector<ForwardingOutput<T>*> forwarding_outputs_;
+  // TODO: (heller) make this configurable, together with what to do on timeout...
+  ClockT::duration timeout_{ std::chrono::seconds{ 1 } };
   std::atomic<bool> enabled_{ true };
 };
 

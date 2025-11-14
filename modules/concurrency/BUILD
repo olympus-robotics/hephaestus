@@ -95,6 +95,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "when_all_range_tests",
+    srcs = ["tests/when_all_range_tests.cpp"],
+    deps = CONCURRENCY_TEST_DEPS,
+)
+
+heph_cc_test(
     name = "channel_tests",
     srcs = ["tests/channel_tests.cpp"],
     deps = CONCURRENCY_TEST_DEPS,
