@@ -7,6 +7,7 @@
 #include <exec/task.hpp>
 
 #include "hephaestus/conduit/output_base.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
 
 namespace heph::conduit {
@@ -18,7 +19,7 @@ struct ForwardingOutput : OutputBase {
   explicit ForwardingOutput(std::string_view name) : OutputBase(name) {
   }
 
-  auto trigger() -> concurrency::AnySender<void> final {
+  auto trigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<void> final {
     return stdexec::just();
   }
 

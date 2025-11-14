@@ -43,12 +43,12 @@ auto spawnInputTriggers(Trigger trigger, SchedulerT scheduler, Inputs& inputs,
 }
 
 template <typename Outputs, std::size_t... Idx>
-auto spawnOutputTriggers(Outputs& outputs, std::index_sequence<Idx...> /*unused*/
+auto spawnOutputTriggers(Outputs& outputs, SchedulerT scheduler, std::index_sequence<Idx...> /*unused*/
 ) {
   if constexpr (sizeof...(Idx) == 0) {
     return stdexec::just();
   } else {
-    return stdexec::when_all(boost::pfr::get<Idx>(outputs).trigger()...);
+    return stdexec::when_all(boost::pfr::get<Idx>(outputs).trigger(scheduler)...);
   }
 }
 
@@ -121,7 +121,7 @@ public:
                         }
                         return stdexec::continues_on(
                                    stepper.step(prefix, std::move(module_name), inputs, outputs), scheduler) |
-                               stdexec::let_value([this, scheduler]() { return outputTrigger(); });
+                               stdexec::let_value([this, scheduler]() { return outputTrigger(scheduler); });
                       }) |
                       stdexec::then([this]() {
                         auto execute_duration = ClockT::now() - execution_start_time;
@@ -151,8 +151,8 @@ public:
            });
   }
 
-  auto outputTrigger() {
-    return internal::spawnOutputTriggers(outputs,
+  auto outputTrigger(SchedulerT scheduler) {
+    return internal::spawnOutputTriggers(outputs, scheduler,
                                          std::make_index_sequence<boost::pfr::tuple_size_v<OutputsT>>{});
   }
 

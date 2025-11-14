@@ -10,6 +10,7 @@
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/node_base.h"
+#include "hephaestus/conduit/scheduler.h"
 
 namespace heph::conduit {
 
@@ -23,7 +24,7 @@ struct OutputBase {
     }
     return std::string(name_);
   }
-  virtual auto trigger() -> concurrency::AnySender<void> = 0;
+  virtual auto trigger(SchedulerT scheduler) -> concurrency::AnySender<void> = 0;
 
   void setNode(NodeBase& node) {
     node_ = &node;

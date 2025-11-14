@@ -12,6 +12,7 @@
 #include <fmt/ranges.h>
 
 #include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/when_all_range.h"
 #include "hephaestus/conduit/internal/never_stop.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/serdes/serdes.h"
@@ -25,8 +26,6 @@ public:
 
   auto setValue(T t) -> concurrency::AnySender<void> final {
     return setValueImpl(std::move(t));
-    // FIXME:
-    // return concurrency::when_all(...);
   }
 
   auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
@@ -59,13 +58,16 @@ public:
   };
 
 private:
-  auto setValueImpl(T t) -> exec::task<void> {
+  auto setValueImpl(T t) -> concurrency::AnySender<void> {
     if (!this->enabled()) {
-      co_return;
+      return stdexec::just();
     }
+    std::vector<concurrency::AnySender<void>> input_triggers;
     for (auto* input : inputs_) {
-      co_await input->setValue(t);
+      input_triggers.emplace_back(input->setValue(t));
     }
+
+    return concurrency::whenAllRange(std::move(input_triggers));
   }
 
   [[nodiscard]] auto doTrigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<bool> final {
