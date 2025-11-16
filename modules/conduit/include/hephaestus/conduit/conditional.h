@@ -7,10 +7,10 @@
 #include <type_traits>
 
 #include <absl/synchronization/mutex.h>
-#include "hephaestus/containers/intrusive_fifo_queue.h"
 
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/containers/intrusive_fifo_queue.h"
 
 namespace heph::conduit {
 

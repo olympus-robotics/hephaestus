@@ -2,12 +2,12 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
+load("@doxygen//:doxygen.bzl", "doxygen")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("@rules_python//sphinxdocs:sphinx.bzl", "sphinx_build_binary", "sphinx_docs")
 load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
-load("@doxygen//:doxygen.bzl", "doxygen")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -53,16 +53,16 @@ sphinx_docs_library(
 sphinx_docs_library(
     name = "headers",
     srcs = [
-      "//modules/conduit:include/hephaestus/conduit/basic_input.h",
-      "//modules/conduit:include/hephaestus/conduit/input.h",
-  ],
+        "//modules/conduit:include/hephaestus/conduit/basic_input.h",
+        "//modules/conduit:include/hephaestus/conduit/input.h",
+    ],
 )
 
 sphinx_docs_library(
     name = "examples",
     srcs = [
-    "//modules/conduit:examples/periodic_spinner.cpp"
-  ],
+        "//modules/conduit:examples/periodic_spinner.cpp",
+    ],
 )
 
 sphinx_build_binary(
@@ -122,8 +122,8 @@ sphinx_docs(
         "html",
     ],
     sphinx = ":sphinx",
+    tags = ["no-sandbox"],
     deps = [
         ":apidoc",
     ] + doc_deps,
-    tags = ["no-sandbox"],
 )
