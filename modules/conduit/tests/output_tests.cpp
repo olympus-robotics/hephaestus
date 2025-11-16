@@ -19,7 +19,6 @@
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep
-#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {
 
@@ -28,12 +27,9 @@ TEST(Output, NoPropagate) {
 
   output(0);
 
-  EXPECT_THROW(output(0), heph::Panic);
-
-  stdexec::sync_wait(output.trigger());
+  stdexec::sync_wait(output.trigger({}));
 
   output(0);
-  EXPECT_THROW(output(0), heph::Panic);
 }
 TEST(Output, Propagate) {
   heph::concurrency::Context context{ {} };
@@ -45,16 +41,14 @@ TEST(Output, Propagate) {
 
   output(0);
 
-  EXPECT_THROW(output(0), heph::Panic);
-
-  stdexec::sync_wait(stdexec::when_all(output.trigger(), input.trigger(context.scheduler())));
+  stdexec::sync_wait(
+      stdexec::when_all(output.trigger(context.scheduler()), input.trigger(context.scheduler())));
   EXPECT_TRUE(input.hasValue());
   EXPECT_EQ(input.value(), 0);
 
   output(0);
-  EXPECT_THROW(output(0), heph::Panic);
   EXPECT_FALSE(input.hasValue());
-  stdexec::sync_wait(output.trigger());
+  stdexec::sync_wait(output.trigger(context.scheduler()));
   EXPECT_FALSE(input.hasValue());
   stdexec::sync_wait(input.trigger(context.scheduler()));
   EXPECT_TRUE(input.hasValue());

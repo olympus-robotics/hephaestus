@@ -5,7 +5,7 @@
 #pragma once
 
 #include "hephaestus/concurrency/any_sender.h"
-#include "hephaestus/telemetry/scope.h"
+#include "hephaestus/telemetry/log/scope.h"
 
 namespace heph::conduit {
 template <typename Stepper, typename NodeDescription>

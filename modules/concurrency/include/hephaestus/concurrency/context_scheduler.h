@@ -11,7 +11,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <hephaestus/utils/exception.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>

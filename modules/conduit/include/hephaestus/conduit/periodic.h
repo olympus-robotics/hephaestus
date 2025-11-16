@@ -6,8 +6,6 @@
 
 #include <optional>
 
-#include <hephaestus/utils/exception.h>
-
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"

@@ -16,7 +16,6 @@
 #include "hephaestus/conduit/output_base.h"
 #include "hephaestus/conduit/partner_output.h"
 #include "hephaestus/conduit/typed_input.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {
 

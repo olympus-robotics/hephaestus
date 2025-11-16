@@ -15,7 +15,7 @@
 #include "hephaestus/conduit/zenoh_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/telemetry/log_sinks/absl_sink.h"
+#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
 
@@ -40,7 +40,8 @@ TEST(ZenohPublisher, BasicTest) {
   msg.dummy_primitives_type.dummy_double = VALUE;
   output(msg);
 
-  stdexec::sync_wait(output.trigger());
+  heph::concurrency::Context context{ {} };
+  stdexec::sync_wait(output.trigger(context.scheduler()));
   done.wait(false);
 }
 }  // namespace heph::conduit

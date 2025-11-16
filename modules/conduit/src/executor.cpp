@@ -10,8 +10,6 @@
 
 #include <fmt/format.h>
 
-#include "hephaestus/utils/exception.h"
-
 namespace heph::conduit {
 
 namespace internal {
