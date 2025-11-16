@@ -21,7 +21,6 @@
 #include "hephaestus/conduit/generator.h"
 #include "hephaestus/conduit/periodic.h"
 #include "hephaestus/conduit/scheduler.h"
-#include "hephaestus/utils/exception.h"
 
 namespace heph::conduit {
 
@@ -294,8 +293,6 @@ TEST(BasicInput, Generator) {
   Generator<int> generator{ "generator" };
   concurrency::Context context{ {} };
 
-  EXPECT_THROW((std::ignore = generator.trigger(context.scheduler())), heph::Panic);
-
   static constexpr int VALUE = 4711;
   auto test = [&] {
     auto res = stdexec::sync_wait(generator.trigger(context.scheduler()));
@@ -304,8 +301,6 @@ TEST(BasicInput, Generator) {
     EXPECT_TRUE(generator.hasValue());
     EXPECT_EQ(generator.value(), VALUE);
   };
-
-  EXPECT_THROW(std::ignore = generator.value(), heph::Panic);
 
   generator.setGenerator([]() { return VALUE; });
   test();

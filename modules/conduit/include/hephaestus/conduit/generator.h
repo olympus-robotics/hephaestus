@@ -9,7 +9,6 @@
 #include <utility>
 
 #include <exec/task.hpp>
-#include <hephaestus/utils/exception.h>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/basic_input.h"

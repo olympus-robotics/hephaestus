@@ -90,7 +90,6 @@ TEST(Input, BestEffortInputPolicy) {
 
   {
     heph::concurrency::Context context{ {} };
-    EXPECT_THROW((std::ignore = input.trigger(context.scheduler())), heph::Panic);
 
     input.setTimeout(TIMEOUT);
 

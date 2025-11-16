@@ -10,19 +10,16 @@
 
 #include <boost/pfr.hpp>
 #include <exec/when_any.hpp>
-#include <hephaestus/utils/exception.h>
 #include <stdexec/execution.hpp>
 
-#include "hephaestus/concurrency/any_sender.h"
-#include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/internal/never_stop.h"
 #include "hephaestus/conduit/node_base.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/stepper.h"
-#include "hephaestus/telemetry/metric_record.h"
-#include "hephaestus/telemetry/metric_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_sink.h"
 
 namespace heph::conduit {
 namespace internal {

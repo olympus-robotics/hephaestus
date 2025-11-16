@@ -17,8 +17,7 @@
 #include "hephaestus/conduit/acceptor.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/scheduler.h"
-#include "hephaestus/telemetry/log.h"
-#include "hephaestus/telemetry/log_sink.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 struct RunnerConfig {
@@ -88,14 +87,10 @@ public:
                    try {
                      std::rethrow_exception(error);
                    } catch (std::exception& e) {
-                     heph::log(heph::FATAL, "Executor::spawn exception", "what", e.what());
+                     heph::panic("Executor::spawn exception: {}", e.what());
                    } catch (...) {
-                     heph::log(heph::FATAL, "Executor::spawn unknown exception");
+                     heph::panic("Executor::spawn unknown exception");
                    }
-                   telemetry::flushLogEntries();
-                   std::terminate();
-                   // exception_ = error;
-                   // requestStop();
                  }));
     acceptor_.setInputs(graph.inputs());
     acceptor_.spawn(graph.partnerOutputs());

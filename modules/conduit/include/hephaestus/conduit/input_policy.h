@@ -8,7 +8,6 @@
 #include <utility>
 
 #include <exec/when_any.hpp>
-#include <hephaestus/utils/exception.h>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/clock.h"
