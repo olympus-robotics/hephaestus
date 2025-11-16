@@ -30,9 +30,9 @@ heph_cc_library(
         "//modules/serdes",
         "//modules/telemetry/log",
         "//modules/utils",
+        "@boost.pfr",
         "@fmt",
         "@stdexec",
-    "@boost.pfr",
     ],
 )
 

@@ -11,8 +11,8 @@
 #include <absl/synchronization/mutex.h>
 #include <stdexec/execution.hpp>
 
-#include "hephaestus/utils/unique_function.h"
 #include "hephaestus/error_handling/panic.h"
+#include "hephaestus/utils/unique_function.h"
 
 namespace heph::concurrency {
 template <typename Receiver, typename... Values>
