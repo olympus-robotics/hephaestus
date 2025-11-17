@@ -13,7 +13,7 @@ namespace heph::concurrency::internal {
 template <typename T, std::size_t Capacity>
 class CircularBuffer {
 public:
-  auto push(T t) -> bool {
+  auto push(T&& t) -> bool {
     if (size_ == data_.size()) {
       return false;
     }
@@ -24,6 +24,11 @@ public:
     ++size_;
 
     return true;
+  }
+
+  auto push(const T& t) -> bool {
+    T tmp{ t };
+    return push(std::move(tmp));
   }
 
   auto pop() -> std::optional<T> {

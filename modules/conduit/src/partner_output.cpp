@@ -20,6 +20,7 @@
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/internal/net.h"
 #include "hephaestus/net/socket.h"
+#include "modules/telemetry/telemetry/include/hephaestus/telemetry/log_sink.h"
 
 namespace heph::conduit {
 namespace {
@@ -41,14 +42,17 @@ auto PartnerOutputBase::sendData()
   const auto& type_info = getTypeInfo();
   const auto& output_name = name();
 
+  static constexpr std::size_t MAX_ATTEMPTS = 10;
   std::size_t attempt = 0;
-  static constexpr std::chrono::seconds MAX_TIMEOUT{ 1 };
+  static constexpr std::chrono::minutes MAX_TIMEOUT{ 1 };
   static constexpr std::chrono::milliseconds TIMEOUT{ 2 };
   static constexpr double EXP = 1.5;
   while (true) {
     try {
       if (attempt == 0) {
         co_await stdexec::schedule(context_->scheduler());
+      } else if (attempt == MAX_ATTEMPTS) {
+        heph::panic("{}: max attempts reached", output_name);
       } else {
         auto timeout = std::chrono::milliseconds{ static_cast<std::size_t>(
             std::pow(attempt * TIMEOUT.count(), EXP * static_cast<double>(attempt))) };
@@ -68,11 +72,9 @@ auto PartnerOutputBase::sendData()
       co_await sendDataImpl(this, client_);
 
     } catch (std::exception& e) {
-      ++attempt;
-      fmt::println(stderr, "{}: {}. Retrying", output_name, e.what());
+      heph::log(heph::WARN, "{}: {}. Retrying", output_name, e.what());
     } catch (...) {
-      ++attempt;
-      fmt::println(stderr, "{}: Unknown error. Retrying", output_name);
+      heph::log(heph::WARN, "{}: Unknown error. Retrying", output_name);
     }
     ++attempt;
   }
