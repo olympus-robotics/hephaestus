@@ -88,7 +88,7 @@ Commands
   # Build:
   bazel build //modules/...
 
-  # You can also build a specific module or library by providing the path: 
+  # You can also build a specific module or library by providing the path:
   ``bazel build //modules/ipc/...``
   ``bazel build //modules/ipc:zenoh_topic_list``
 
@@ -97,7 +97,7 @@ Commands
 
   # Run tests
   bazel test //modules/...
-  
+
   # Format the code:
   bazel run :format       # fixes the formatting errors
   bazel run :format.check # fails on error
@@ -306,9 +306,8 @@ Notes
 
 Initially this repo was supporting C++23, but to maximize compatibility we reverted back to C++20.
 
-When switching again back to C++23 it will be possible to remove ``fmt`` and ``ranges-v3``. The transition will be easy, just rename ``fmt::`` -> ``std::`` and remove ``fmt::formatter``.
+When switching again back to C++23 it will be possible to remove ``fmt``. The transition will be easy, just rename ``fmt::`` -> ``std::`` and remove ``fmt::formatter``.
 
 TODO
 ====
 Hephaestus is under active development. The list of tasks to be carried out can be found under the `Hephaestus Masterplan <https://github.com/orgs/olympus-robotics/projects/2>`__ project.
-
