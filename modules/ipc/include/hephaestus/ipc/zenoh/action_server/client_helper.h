@@ -145,7 +145,7 @@ auto ClientHelper<RequestT, StatusT, ReplyT>::serviceCallback(const Response<Rep
 
 template <typename RequestT, typename StatusT, typename ReplyT>
 void ClientHelper<RequestT, StatusT, ReplyT>::onFailure() {
-  reply_promise_.set_value(Response<ReplyT>{ ReplyT{}, RequestStatus::INVALID });
+  reply_promise_.set_value(Response<ReplyT>{ .value = ReplyT{}, .status = RequestStatus::INVALID });
 }
 
 template <typename RequestT, typename StatusT, typename ReplyT>
