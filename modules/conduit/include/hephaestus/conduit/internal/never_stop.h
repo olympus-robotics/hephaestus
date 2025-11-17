@@ -26,11 +26,14 @@ struct NeverStop {
       }
       Operation* self;
     };
+
     using ReceiverEnvT = stdexec::env_of_t<Receiver>;
     using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
     using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
+
     Receiver receiver;
     std::optional<StopCallbackT> stop_callback;
+
     void start() & noexcept {
       stop_callback.emplace(stdexec::get_stop_token(stdexec::get_env(receiver)), StopCallback{ this });
     }

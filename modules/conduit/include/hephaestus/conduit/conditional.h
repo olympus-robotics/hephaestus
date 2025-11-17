@@ -26,7 +26,6 @@ public:
   Conditional() noexcept : BasicInput("conditional") {
   }
 
-  /// \throws heph::Panic if already enabled
   void enable() {
     containers::IntrusiveFifoQueue<OperationBase> waiters;
 
