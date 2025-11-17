@@ -4,7 +4,11 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <exception>
+#include <string>
+#include <thread>
 #include <vector>
 
 #include <absl/container/flat_hash_map.h>
@@ -34,7 +38,7 @@ public:
 
   void join();
   auto endpoints() const -> std::vector<heph::net::Endpoint>;
-  void addPartner(std::string name, heph::net::Endpoint endpoint);
+  void addPartner(const std::string& name, const heph::net::Endpoint& endpoint);
   void requestStop();
   auto acceptClient(std::size_t index) -> exec::task<void>;
   void spawn(const std::vector<PartnerOutputBase*>& outputs);

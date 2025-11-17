@@ -5,13 +5,15 @@
 #pragma once
 
 #include <optional>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
-#include <exec/task.hpp>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/basic_input.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/utils/unique_function.h"
 
 namespace heph::conduit {

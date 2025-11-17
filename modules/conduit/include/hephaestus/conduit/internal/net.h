@@ -4,6 +4,16 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <span>
+#include <string>
+
+#include <stdexec/execution.hpp>
+
+#include "hephaestus/concurrency/context.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/connect.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"

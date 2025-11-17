@@ -10,14 +10,14 @@
 #include <type_traits>
 #include <utility>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <fmt/format.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/concurrency/stoppable_operation_state.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
-#include "hephaestus/utils/unique_function.h"
 
 namespace heph::concurrency {
 namespace internal {
@@ -100,7 +100,7 @@ public:
   [[nodiscard]] auto getValue() -> GetValueSender;
 
   [[nodiscard]] auto size() const -> std::size_t {
-    absl::MutexLock l{ &mutex_ };
+    absl::MutexLock lock{ &mutex_ };
     return data_.size();
   }
 
@@ -113,7 +113,7 @@ private:
   auto setValueImpl(T&& t, internal::AwaiterBase* set_awaiter) -> bool {
     internal::AwaiterBase* get_awaiter{ nullptr };
     {
-      absl::MutexLock l{ &mutex_ };
+      absl::MutexLock lock{ &mutex_ };
       if (!data_.push(std::move(t))) {
         set_awaiters_.enqueue(set_awaiter);
         return false;
@@ -131,7 +131,7 @@ private:
     internal::AwaiterBase* set_awaiter{ nullptr };
     std::optional<T> res;
     {
-      absl::MutexLock l{ &mutex_ };
+      absl::MutexLock lock{ &mutex_ };
       res = data_.pop();
       if (!res.has_value()) {
         get_awaiters_.enqueue(get_awaiter);
@@ -148,9 +148,9 @@ private:
 
 private:
   mutable absl::Mutex mutex_;
-  internal::CircularBuffer<T, Capacity> data_;
-  internal::AwaiterQueueT set_awaiters_;
-  internal::AwaiterQueueT get_awaiters_;
+  internal::CircularBuffer<T, Capacity> data_ ABSL_GUARDED_BY(mutex_);
+  internal::AwaiterQueueT set_awaiters_ ABSL_GUARDED_BY(mutex_);
+  internal::AwaiterQueueT get_awaiters_ ABSL_GUARDED_BY(mutex_);
 };
 
 namespace internal {
@@ -182,7 +182,7 @@ struct SetValueSender {
 
     void stop() noexcept final {
       {
-        absl::MutexLock l{ &self_->mutex_ };
+        absl::MutexLock lock{ &self_->mutex_ };
         self_->set_awaiters_.erase(this);
       }
     }
@@ -244,7 +244,7 @@ struct GetValueSender {
 
     void stop() noexcept final {
       {
-        absl::MutexLock l{ &self_->mutex_ };
+        absl::MutexLock lock{ &self_->mutex_ };
         self_->get_awaiters_.erase(this);
       }
     }

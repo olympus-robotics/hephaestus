@@ -4,15 +4,34 @@
 
 #include "hephaestus/conduit/acceptor.h"
 
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
 #include <memory_resource>
 #include <ranges>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include <absl/synchronization/mutex.h>
+#include <exec/task.hpp>
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/internal/net.h"
+#include "hephaestus/conduit/partner_output.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/accept.h"
+#include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/endpoint.h"
+#include "hephaestus/net/recv.h"
 
 namespace heph::conduit {
 Acceptor::Acceptor(const AcceptorConfig& config) : partners_(config.partners) {
@@ -75,9 +94,9 @@ auto Acceptor::endpoints() const -> std::vector<heph::net::Endpoint> {
   return res;
 }
 
-void Acceptor::addPartner(std::string name, heph::net::Endpoint endpoint) {
-  absl::MutexLock l{ &mutex_ };
-  partners_.emplace(std::move(name), std::move(endpoint));
+void Acceptor::addPartner(const std::string& name, const heph::net::Endpoint& endpoint) {
+  const absl::MutexLock lock{ &mutex_ };
+  partners_.emplace(name, endpoint);
 }
 
 void Acceptor::requestStop() {
@@ -103,9 +122,8 @@ auto Acceptor::acceptClient(std::size_t index) -> exec::task<void> {
 
 void Acceptor::spawn(const std::vector<PartnerOutputBase*>& outputs) {
   for (PartnerOutputBase* output : outputs) {
-    heph::net::Endpoint endpoint;
     {
-      absl::MutexLock l{ &mutex_ };
+      const absl::MutexLock lock{ &mutex_ };
       const auto& partner = output->partner();
       auto it = partners_.find(partner);
       if (it == partners_.end()) {
@@ -119,7 +137,7 @@ void Acceptor::spawn(const std::vector<PartnerOutputBase*>& outputs) {
 }
 
 void Acceptor::setInputs(std::vector<BasicInput*> typed_inputs) {
-  absl::MutexLock l{ &mutex_ };
+  const absl::MutexLock lock{ &mutex_ };
   typed_inputs_.insert(typed_inputs_.end(), typed_inputs.begin(), typed_inputs.end());
 }
 
@@ -130,7 +148,7 @@ auto Acceptor::handleClient(net::Socket client, std::uint64_t /*type*/) -> exec:
 
     BasicInput* input{ nullptr };
     {
-      absl::MutexLock l{ &mutex_ };
+      const absl::MutexLock lock{ &mutex_ };
       auto it =
           std::ranges::find_if(typed_inputs_, [&name](BasicInput* input) { return name == input->name(); });
       if (it == typed_inputs_.end()) {

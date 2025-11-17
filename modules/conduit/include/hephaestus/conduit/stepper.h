@@ -4,6 +4,11 @@
 
 #pragma once
 
+#include <string>
+#include <utility>
+
+#include <stdexec/execution.hpp>
+
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/telemetry/log/scope.h"
 
@@ -38,12 +43,12 @@ inline constexpr auto STEPPER_VTABLE = StepperVtable<NodeDescription>{
     if constexpr (std::is_same_v<void, ResultT>) {
       return stdexec::just() |
              stdexec::then([prefix = std::move(prefix), module_name = std::move(module_name),
-                            step_fun = std::move(step_fun)]() {
-               heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
+                            step_fun = std::move(step_fun)]() mutable {
+               const heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
                step_fun();
              });
     } else {
-      heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
+      const heph::telemetry::Scope scope(std::move(prefix), std::move(module_name));
       return step_fun();
     }
   },
@@ -61,13 +66,17 @@ public:
 
   template <stepper<NodeDescriptionT> StepperT>
     requires(!std::is_same_v<StepperT, Stepper>)
+  // NOLINTNEXTLINE (google-explicit-constructor,hicpp-explicit-conversions)
   Stepper(StepperT& stepper_impl) : ptr_(&stepper_impl), vtable_(&internal::STEPPER_VTABLE<StepperT>) {
   }
 
   template <stepper<NodeDescriptionT> StepperT>
     requires(!std::is_same_v<StepperT, Stepper>)
+  // NOLINTBEGIN (cppcoreguidelines-pro-type-const-cast)
+  // NOLINTNEXTLINE (google-explicit-constructor,hicpp-explicit-conversions)
   Stepper(const StepperT& stepper_impl) : Stepper(const_cast<StepperT&>(stepper_impl)) {
   }
+  // NOLINTEND (cppcoreguidelines-pro-type-const-cast)
 
   void connect(NodeDescriptionT::Inputs& inputs, NodeDescriptionT::Outputs& outputs,
                NodeDescriptionT::Children& children) {

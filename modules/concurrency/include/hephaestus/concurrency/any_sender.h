@@ -10,9 +10,8 @@
 #include <utility>
 
 #include <exec/any_sender_of.hpp>
-#include <exec/inline_scheduler.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
+#include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
 namespace heph::concurrency {
@@ -60,7 +59,7 @@ class AnyEnv {
       if constexpr (std::is_same_v<stdexec::inplace_stop_token, StopTokenT>) {
         return stop_token;
       } else {
-        static stdexec::inplace_stop_source stop_source;
+        const static stdexec::inplace_stop_source stop_source;
         return stop_source.get_token();
       }
     }
@@ -143,6 +142,7 @@ public:
     : receiver_(std::make_unique<Impl<ReceiverT>>(std::forward<Receiver>(receiver))) {
   }
 
+  ~AnyReceiver() = default;
   AnyReceiver(AnyReceiver&& other) = default;
   auto operator=(AnyReceiver&& other) -> AnyReceiver& = default;
   AnyReceiver(const AnyReceiver& other) = delete;
@@ -204,6 +204,9 @@ public:
     : impl_(std::make_unique<Impl<std::decay_t<Sender>, Receiver>>(std::forward<Sender>(sender),
                                                                    std::move(receiver))) {
   }
+  ~AnyOperation() = default;
+  AnyOperation(AnyOperation&& other) = delete;
+  auto operator=(AnyOperation&& other) -> AnyOperation& = delete;
   AnyOperation(const AnyOperation& other) = delete;
   auto operator=(const AnyOperation& other) -> AnyOperation& = delete;
 

@@ -3,12 +3,9 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <string>
+#include <string_view>
 
-#include <exec/async_scope.hpp>
-#include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
 
 #include "hephaestus/conduit/node.h"
@@ -36,7 +33,7 @@ struct DummyNodeDescription : NodeDescriptionDefaults<DummyNodeDescription> {
 };
 
 struct DummyStepper : StepperDefaults<DummyNodeDescription> {
-  [[nodiscard]] auto childrenConfig() const -> ChildrenConfigT {
+  [[nodiscard]] static auto childrenConfig() -> ChildrenConfigT {
     return {
       .value = 0,
     };

@@ -6,12 +6,13 @@
 #include <chrono>
 #include <cstddef>
 #include <thread>
+#include <utility>
 
 #include <exec/async_scope.hpp>
 #include <exec/task.hpp>
 #include <exec/when_any.hpp>
-#include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/repeat_until.h"

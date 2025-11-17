@@ -4,10 +4,6 @@
 
 #pragma once
 
-#include <optional>
-
-#include <stdexec/execution.hpp>
-
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 

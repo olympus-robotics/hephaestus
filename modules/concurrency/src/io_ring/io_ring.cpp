@@ -7,13 +7,16 @@
 #include <cstring>
 #include <functional>
 #include <system_error>
+#include <utility>
 
+#include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
-#include <stdexec/stop_token.hpp>
 #include <sys/eventfd.h>
+#include <unistd.h>
 
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
+#include "hephaestus/containers/intrusive_fifo_queue.h"
 #include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::io_ring {
@@ -38,9 +41,8 @@ void IoRing::requestStop() {
 void IoRing::runOnce(bool block) {
   containers::IntrusiveFifoQueue<IoRingOperationBase> outstanding_operations;
   {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     std::swap(outstanding_operations, outstanding_operations_);
-    assert(outstanding_operations_.empty());
   }
 
   while (true) {
@@ -115,13 +117,15 @@ auto IoRing::isRunning() const -> bool {
 }
 
 auto IoRing::hasWork() const -> bool {
-  return in_flight_.load(std::memory_order_acquire) > 1 &&
-         [this]() { return !in_flight_operations_.empty(); }();
+  return in_flight_.load(std::memory_order_acquire) > 1 && [this]() {
+    const absl::MutexLock lock{ &mutex_ };
+    return !in_flight_operations_.empty();
+  }();
 }
 
 void IoRing::submit(IoRingOperationBase* operation) {
   {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     outstanding_operations_.enqueue(operation);
   }
   notify();

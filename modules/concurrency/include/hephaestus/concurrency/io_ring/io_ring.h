@@ -10,10 +10,10 @@
 #include <functional>
 #include <system_error>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <liburing.h>
 #include <liburing/io_uring.h>
-#include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
@@ -39,9 +39,9 @@ public:
       const std::function<void()>& on_start = [] {},
       const std::function<bool()>& on_progress = [] { return false; });
 
-  auto isRunning() const -> bool;
-  auto isCurrent() const -> bool;
-  auto hasWork() const -> bool;
+  [[nodiscard]] auto isRunning() const -> bool;
+  [[nodiscard]] auto isCurrent() const -> bool;
+  [[nodiscard]] auto hasWork() const -> bool;
 
   void notify(bool always = false) const;
 
@@ -72,9 +72,9 @@ private:
   std::atomic<bool> running_{ false };
 
   std::atomic<std::size_t> in_flight_{ 0 };
-  absl::Mutex mutex_;
-  containers::IntrusiveFifoQueue<IoRingOperationBase> outstanding_operations_;
-  containers::IntrusiveFifoQueue<IoRingOperationBase> in_flight_operations_;
+  mutable absl::Mutex mutex_;
+  containers::IntrusiveFifoQueue<IoRingOperationBase> outstanding_operations_ ABSL_GUARDED_BY(mutex_);
+  containers::IntrusiveFifoQueue<IoRingOperationBase> in_flight_operations_ ABSL_GUARDED_BY(mutex_);
   static thread_local IoRing* current_ring;
 };
 

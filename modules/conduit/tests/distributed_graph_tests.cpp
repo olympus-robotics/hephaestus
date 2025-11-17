@@ -3,15 +3,15 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <thread>
 
-#include <exec/static_thread_pool.hpp>
-#include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <fmt/base.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/executor.h"
 #include "hephaestus/conduit/forwarding_input.h"
@@ -228,19 +228,19 @@ struct RootStepper : StepperDefaults<Root> {
 static constexpr std::size_t NUMBER_OF_REPEATS = 100;
 
 TEST(Graph, Distributed) {
-  GraphConfig config0{
+  const GraphConfig config0{
     .prefix = "test_0",
     .partners = { "test_1" },
   };
   Graph<RootStepper> g0{ config0 };
 
-  GraphConfig config1{
+  const GraphConfig config1{
     .prefix = "test_1",
     .partners = { "test_0" },
   };
   Graph<RootStepper> g1{ config1 };
 
-  ExecutorConfig config{
+  const ExecutorConfig config{
     .runners = { {
       .selector = {".*root.node2.*" },
       .context_config = {},
@@ -278,9 +278,9 @@ TEST(Graph, Distributed) {
     stdexec::sync_wait(stdexec::when_all(test0.trigger(SchedulerT{}), test1.trigger(SchedulerT{})));
     EXPECT_TRUE(test0.hasValue());
     EXPECT_TRUE(test1.hasValue());
-    int res0 = test0.value();
+    const int res0 = test0.value();
     EXPECT_EQ(res0 % 4, 1);
-    int res1 = test1.value();
+    const int res1 = test1.value();
     EXPECT_EQ(res1 % 4, 1);
   }
   fmt::println(stderr, "done");

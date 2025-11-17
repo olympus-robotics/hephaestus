@@ -1,9 +1,17 @@
+//=================================================================================================
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
+//=================================================================================================
+
+#include <concepts>
+#include <utility>
 
 #include <exec/task.hpp>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 
+// NOLINTBEGIN(bugprone-unchecked-optional-access)
 namespace heph::concurrency {
 TEST(AnySender, JustVoid) {
   // Test that constructor rejects non-void senders
@@ -96,3 +104,4 @@ TEST(AnySender, Composabe) {
   EXPECT_TRUE(triggered);
 }
 }  // namespace heph::concurrency
+// NOLINTEND(bugprone-unchecked-optional-access)

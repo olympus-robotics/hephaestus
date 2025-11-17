@@ -4,6 +4,11 @@
 
 #pragma once
 
+#include <memory>
+#include <utility>
+
+#include <stdexec/execution.hpp>
+
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/session.h"

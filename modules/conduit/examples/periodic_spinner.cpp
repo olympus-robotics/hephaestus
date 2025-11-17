@@ -3,11 +3,10 @@
 //=================================================================================================
 
 #include <chrono>
-#include <thread>
 
 #include <exec/async_scope.hpp>
 #include <exec/task.hpp>
-#include <fmt/format.h>
+#include <fmt/base.h>
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/clock.h"

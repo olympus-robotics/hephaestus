@@ -4,6 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
+#include <string>
+#include <utility>
+
+#include <stdexec/execution.hpp>
+
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/internal/never_stop.h"
 #include "hephaestus/conduit/output.h"

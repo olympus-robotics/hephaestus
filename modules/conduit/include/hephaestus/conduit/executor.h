@@ -4,20 +4,27 @@
 
 #pragma once
 
+#include <cstddef>
 #include <exception>
 #include <memory>
-#include <regex>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include <exec/async_scope.hpp>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/conduit/acceptor.h"
 #include "hephaestus/conduit/graph.h"
+#include "hephaestus/conduit/node.h"
+#include "hephaestus/conduit/node_base.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/error_handling/panic.h"
+#include "hephaestus/net/endpoint.h"
 
 namespace heph::conduit {
 struct RunnerConfig {
@@ -34,7 +41,7 @@ class Runner {
 public:
   explicit Runner(stdexec::inplace_stop_token stop_token, RunnerConfig config);
 
-  auto match(const std::string& name) const -> bool;
+  [[nodiscard]] auto match(const std::string& name) const -> bool;
 
   auto scheduler() -> SchedulerT;
 
@@ -99,11 +106,11 @@ public:
   void requestStop();
   void join();
 
-  void addPartner(std::string name, heph::net::Endpoint endpoint) {
-    acceptor_.addPartner(std::move(name), std::move(endpoint));
+  void addPartner(const std::string& name, const heph::net::Endpoint& endpoint) {
+    acceptor_.addPartner(name, endpoint);
   }
 
-  auto endpoints() const -> std::vector<heph::net::Endpoint> {
+  [[nodiscard]] auto endpoints() const -> std::vector<heph::net::Endpoint> {
     return acceptor_.endpoints();
   }
 

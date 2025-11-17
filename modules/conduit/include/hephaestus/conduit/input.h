@@ -4,14 +4,20 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/channel.h"
 #include "hephaestus/conduit/basic_input.h"
+#include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/input_policy.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/conduit/value_storage.h"
 #include "hephaestus/conduit/value_trigger.h"

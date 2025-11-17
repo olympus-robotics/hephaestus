@@ -5,8 +5,12 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 #include <absl/synchronization/mutex.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
+#include <stdexec/execution.hpp>
+#include <stdexec/stop_token.hpp>
 
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/scheduler.h"
@@ -34,7 +38,7 @@ public:
     }
 
     {
-      absl::MutexLock lock{ &mtx_ };
+      const absl::MutexLock lock{ &mtx_ };
 
       if (!enabled_ && node() != nullptr) {
         enabling = true;
@@ -64,7 +68,7 @@ public:
     if (disabling) {
       return;
     }
-    absl::MutexLock lock{ &mtx_ };
+    const absl::MutexLock lock{ &mtx_ };
 
     if (enabled_ && node() != nullptr) {
       disabling = true;
@@ -114,7 +118,7 @@ private:
     private:
       auto trigger() -> bool {
         {
-          absl::MutexLock lock{ &self_->mtx_ };
+          const absl::MutexLock lock{ &self_->mtx_ };
           if (!self_->enabled_) {
             self_->waiters_.enqueue(this);
             return false;
@@ -133,7 +137,7 @@ private:
 
       void setStopped() {
         {
-          absl::MutexLock lock{ &self_->mtx_ };
+          const absl::MutexLock lock{ &self_->mtx_ };
           reset();
         }
         stdexec::set_stopped(std::move(receiver_));

@@ -44,7 +44,7 @@ public:
   template <typename ValueStoragePolicy>
     requires(!std::is_same_v<ValueStorage, std::remove_const_t<ValueStoragePolicy>>)
   explicit ValueStorage(ValueStoragePolicy impl)
-    : storage_(new ValueStorageImpl<ValueStoragePolicy>(std::move(impl))) {
+    : storage_(std::make_unique<ValueStorageImpl<ValueStoragePolicy>>(std::move(impl))) {
   }
 
   /// @return true if a value is stored, false otherwise

@@ -5,12 +5,16 @@
 #pragma once
 
 #include <atomic>
+#include <cstddef>
 #include <exception>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <hephaestus/conduit/node_base.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"

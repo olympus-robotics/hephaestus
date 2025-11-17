@@ -6,11 +6,9 @@
 #include <cstddef>
 
 #include <exec/async_scope.hpp>
-#include <exec/task.hpp>
 #include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/accumulated_input.h"

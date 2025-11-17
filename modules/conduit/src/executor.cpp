@@ -5,10 +5,17 @@
 #include "hephaestus/conduit/executor.h"
 
 #include <atomic>
+#include <exception>
+#include <memory>
 #include <regex>
+#include <string>
 #include <utility>
 
-#include <fmt/format.h>
+#include <stdexec/execution.hpp>
+
+#include "hephaestus/conduit/node_base.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 
@@ -82,6 +89,5 @@ auto Executor::getScheduler(NodeBase& node) -> SchedulerT {
     }
   }
   heph::panic("Could not match node against any runner");
-  __builtin_unreachable();
 }
 }  // namespace heph::conduit

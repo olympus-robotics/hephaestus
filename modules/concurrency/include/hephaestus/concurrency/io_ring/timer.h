@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
@@ -62,8 +63,8 @@ public:
   explicit Timer(IoRing& ring, TimerOptions options);
   ~Timer() noexcept;
 
-  auto empty() const -> bool {
-    const absl::MutexLock l{ &mutex_ };
+  [[nodiscarc]] auto empty() const -> bool {
+    const absl::MutexLock lock{ &mutex_ };
     return tasks_.empty();
   }
 
@@ -121,9 +122,9 @@ private:
   stdexec::inplace_stop_source stop_source_;
   __kernel_timespec next_timeout_{};
   mutable absl::Mutex mutex_;
-  std::optional<StoppableIoRingOperation<Operation>> timer_operation_;
-  std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_;
-  std::vector<TimerEntry> tasks_;
+  std::optional<StoppableIoRingOperation<Operation>> timer_operation_ ABSL_GUARDED_BY(mutex_);
+  std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_ ABSL_GUARDED_BY(mutex_);
+  std::vector<TimerEntry> tasks_ ABSL_GUARDED_BY(mutex_);
 
   TimerClock::time_point start_;
   TimerClock::time_point last_tick_;
