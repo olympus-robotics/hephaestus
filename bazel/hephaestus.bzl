@@ -94,6 +94,7 @@ def heph_cc_library(
     cc_library(
         name = name,
         hdrs = hdrs,
+        features = ["layering_check"],
         copts = heph_copts() + copts,
         linkopts = heph_linkopts() + linkopts,
         **kwargs
@@ -224,6 +225,7 @@ def heph_cc_binary(
         **kwargs):
     cc_binary(
         copts = heph_copts() + copts,
+        features = ["layering_check"],
         linkopts = heph_linkopts() + linkopts,
         env = {
             # Leak detection currently doesn't work due to zenoh
@@ -256,6 +258,7 @@ def heph_cc_test(
             "@googletest//:gtest",
             "@googletest//:gtest_main",
         ],
+        features = ["layering_check"],
         env = merged_env,
         tags = tags,
         size = size,

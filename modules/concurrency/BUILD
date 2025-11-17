@@ -50,6 +50,11 @@ heph_cc_binary(
         ":concurrency",
         "//modules/cli",
         "//modules/telemetry/influxdb_sink",
+        "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
+        "//modules/utils",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -60,6 +65,10 @@ heph_cc_binary(
         ":concurrency",
         "//modules/cli",
         "//modules/telemetry/influxdb_sink",
+        "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 

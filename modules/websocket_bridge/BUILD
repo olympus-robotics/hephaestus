@@ -2,22 +2,31 @@
 # Copyright (C) 2025 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library", "heph_cc_test")
+load(
+    "@hephaestus//bazel:hephaestus.bzl",
+    "heph_cc_binary",
+    "heph_cc_library",
+    "heph_cc_test",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "websocket_bridge",
-    srcs = glob([
-        "src/websocket_bridge/*.cpp",
-        "src/websocket_bridge/utils/*.cpp",
-        "src/websocket_bridge/ipc/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/hephaestus/websocket_bridge/*.h",
-        "include/hephaestus/websocket_bridge/utils/*.h",
-        "include/hephaestus/websocket_bridge/ipc/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/websocket_bridge/*.cpp",
+            "src/websocket_bridge/utils/*.cpp",
+            "src/websocket_bridge/ipc/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/hephaestus/websocket_bridge/*.h",
+            "include/hephaestus/websocket_bridge/utils/*.h",
+            "include/hephaestus/websocket_bridge/ipc/*.h",
+        ],
+    ),
     implementation_deps = [
         "//modules/error_handling",
         "@abseil-cpp//absl/log:check",
@@ -36,7 +45,8 @@ heph_cc_library(
         "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",
         "@nlohmann_json//:json",
-        "@protobuf",
+        "@protobuf//:json_util",  # json_util.h
+        "@protobuf//:protobuf_headers",  # descriptor.h
         "@ws_protocol",
     ],
 )
@@ -63,7 +73,12 @@ heph_cc_binary(
     srcs = ["examples/example_client__services.cpp"],
     deps = [
         ":websocket_bridge",
+        "//modules/telemetry/log",
+        "//modules/utils",
         "@bazel_tools//tools/cpp/runfiles",
+        "@fmt",
+        "@nlohmann_json//:json",
+        "@ws_protocol",
     ],
 )
 
@@ -72,7 +87,11 @@ heph_cc_binary(
     srcs = ["examples/example_client__topics.cpp"],
     deps = [
         ":websocket_bridge",
+        "//modules/telemetry/log",
+        "//modules/utils",
         "@bazel_tools//tools/cpp/runfiles",
+        "@fmt",
+        "@nlohmann_json//:json",
     ],
 )
 
@@ -85,7 +104,11 @@ heph_cc_test(
     srcs = [
         "tests/bridge_config_tests.cpp",
     ],
-    deps = [":websocket_bridge"],
+    deps = [
+        ":websocket_bridge",
+        "//modules/error_handling",
+        "//modules/telemetry/log",
+    ],
 )
 
 heph_cc_test(
@@ -94,7 +117,10 @@ heph_cc_test(
         "tests/bridge_state_tests.cpp",
     ],
     tags = ["exclusive"],
-    deps = [":websocket_bridge"],
+    deps = [
+        ":websocket_bridge",
+        "//modules/telemetry/log",
+    ],
 )
 
 heph_cc_test(
@@ -119,5 +145,11 @@ heph_cc_test(
     srcs = [
         "tests/protobuf_serdes_tests.cpp",
     ],
-    deps = [":websocket_bridge"],
+    deps = [
+        ":websocket_bridge",
+        "@fmt",
+        "@protobuf//:json_util",  # json_util.h
+        "@protobuf//:protobuf_headers",  # descriptor.h
+        "@ws_protocol",
+    ],
 )

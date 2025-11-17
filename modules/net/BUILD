@@ -51,7 +51,10 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/concurrency",
         "//modules/telemetry/log",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -61,7 +64,10 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/concurrency",
         "//modules/telemetry/log",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -71,7 +77,11 @@ heph_cc_binary(
     deps = [
         ":net",
         "//modules/cli",
+        "//modules/concurrency",
         "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -82,5 +92,10 @@ heph_cc_binary(
 heph_cc_test(
     name = "net_tests",
     srcs = ["tests/net_tests.cpp"],
-    deps = [":net"],
+    deps = [
+        ":net",
+        "//modules/concurrency",
+        "@fmt",
+        "@stdexec",
+    ],
 )

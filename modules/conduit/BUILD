@@ -10,22 +10,21 @@ heph_cc_library(
     name = "conduit",
     srcs = glob([
         "src/**/*.cpp",
-        "include/**/detail/*.h",
     ]),
     hdrs = glob(
         [
             "include/**/*.h",
         ],
-        exclude = [
-            "include/**/detail/**",
-        ],
     ),
     implementation_deps = [
+        "//modules/telemetry/metrics",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/concurrency",
+        "//modules/containers",
+        "//modules/error_handling",
         "//modules/ipc",
         "//modules/net",
         "//modules/serdes",
@@ -48,6 +47,10 @@ heph_cc_binary(
         ":conduit",
         "//modules/cli",
         "//modules/telemetry/influxdb_sink",
+        "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -58,7 +61,12 @@ heph_cc_binary(
         ":conduit",
         "//modules/cli",
         "//modules/format",
+        "//modules/telemetry/log",
+        "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -68,7 +76,10 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/telemetry/log",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -78,8 +89,12 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/net",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -90,8 +105,12 @@ heph_cc_binary(
         ":conduit",
         "//modules/cli",
         "//modules/format",
+        "//modules/net",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -101,8 +120,12 @@ heph_cc_binary(
     deps = [
         ":conduit",
         "//modules/cli",
+        "//modules/net",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -113,8 +136,12 @@ heph_cc_binary(
         ":conduit",
         "//modules/cli",
         "//modules/format",
+        "//modules/net",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -125,7 +152,13 @@ heph_cc_binary(
 heph_cc_test(
     name = "node_tests",
     srcs = ["tests/node_tests.cpp"],
-    deps = [":conduit"],
+    deps = [
+        ":conduit",
+        "//modules/concurrency",
+        "//modules/telemetry/log",
+        "@fmt",
+        "@stdexec",
+    ],
 )
 
 heph_cc_test(
@@ -133,7 +166,12 @@ heph_cc_test(
     srcs = ["tests/input_output_tests.cpp"],
     deps = [
         ":conduit",
+        "//modules/concurrency",
+        "//modules/telemetry/log",
+        "//modules/types",
         "//modules/types_proto",
+        "@fmt",
+        "@stdexec",
     ],
 )
 
@@ -142,6 +180,8 @@ heph_cc_test(
     srcs = ["tests/zenoh_nodes_tests.cpp"],
     deps = [
         ":conduit",
+        "//modules/ipc",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
     ],
@@ -152,7 +192,12 @@ heph_cc_test(
     srcs = ["tests/remote_publisher_tests.cpp"],
     deps = [
         ":conduit",
+        "//modules/error_handling",
+        "//modules/net",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@stdexec",
     ],
 )
