@@ -63,7 +63,7 @@ public:
   explicit Timer(IoRing& ring, TimerOptions options);
   ~Timer() noexcept;
 
-  [[nodiscarc]] auto empty() const -> bool {
+  [[nodiscard]] auto empty() const -> bool {
     const absl::MutexLock lock{ &mutex_ };
     return tasks_.empty();
   }

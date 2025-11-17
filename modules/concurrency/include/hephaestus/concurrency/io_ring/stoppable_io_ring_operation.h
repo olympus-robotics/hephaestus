@@ -111,7 +111,6 @@ inline void StoppableIoRingOperation<IoRingOperationT>::submit() {
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* sqe) {
   if (stop_token.has_value()) {
-    auto token = *stop_token;
     stop_callback.emplace(*stop_token, StopCallback{ this });
   }
   {
@@ -136,7 +135,6 @@ inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_ur
   } else {
     using CompletionReturnT = decltype(operation.handleCompletion(cqe));
     if constexpr (std::is_same_v<CompletionReturnT, bool>) {
-      auto tmp = in_flight;
       lock.reset();
       if (!operation.handleCompletion(cqe)) {
         {
