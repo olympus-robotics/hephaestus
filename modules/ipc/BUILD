@@ -26,7 +26,6 @@ heph_cc_library(
     implementation_deps = [
         "//modules/containers",
         "@nlohmann_json//:json",
-        "@range-v3//:range-v3",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],

@@ -13,12 +13,11 @@ declare_module(
     telemetry_log
     random
   DEPENDS_ON_MODULES_FOR_TESTING random types_proto
-  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json range-v3 zenohc zenohcxx
+  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt nlohmann_json zenohc zenohcxx
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
-find_package(range-v3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(zenohc REQUIRED)
 find_package(zenohcxx REQUIRED)
@@ -88,7 +87,6 @@ define_module_library(
     hephaestus::telemetry_log
     hephaestus::utils
     nlohmann_json::nlohmann_json
-    range-v3::range-v3
     zenohc::lib
     zenohcxx::zenohc
   PRIVATE_LINK_LIBS ""
