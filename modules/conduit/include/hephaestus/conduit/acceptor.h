@@ -37,7 +37,7 @@ public:
   ~Acceptor();
 
   void join();
-  auto endpoints() const -> std::vector<heph::net::Endpoint>;
+  [[nodiscard]] auto endpoints() const -> std::vector<heph::net::Endpoint>;
   void addPartner(const std::string& name, const heph::net::Endpoint& endpoint);
   void requestStop();
   auto acceptClient(std::size_t index) -> exec::task<void>;

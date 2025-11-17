@@ -51,55 +51,47 @@ inline auto strip(const std::string& name) -> std::string {
 }
 
 template <typename NodeDescription>
-auto dotGraphImpl(Visualization& vis, heph::conduit::Node<NodeDescription>& root) -> std::string {
+auto dotGraphImpl(Visualization& visualization, heph::conduit::Node<NodeDescription>& root) -> std::string {
   std::string res;
   auto pre_visit = [&](auto& node) {
-    auto id = vis.getId(node->name());
+    auto id = visualization.getId(node->name());
     res += fmt::format("subgraph cluster_{} {{\n", id);
     res += fmt::format("label = \"{}\";\n", strip(node->name()));
-    // res += "rankdir = LR;\n";
     res += fmt::format("subgraph ports{} {{\n", id);
     res += fmt::format("subgraph cluster_inputs{} {{\n", id);
     res += fmt::format("label = \"Inputs\";\n");
-    // res += "rankdir = TD;\n";
     boost::pfr::for_each_field(node->inputs, [&](auto& input) {
-      auto id = vis.getId(input.name());
-      (void)id;
+      auto id = visualization.getId(input.name());
       res += fmt::format("{} [label = \"{}\", shape = ellipse];\n", id, strip(input.name()));
       for (const auto& destination : input.getOutgoing()) {
-        vis.addEdge(input.name(), destination);
+        visualization.addEdge(input.name(), destination);
       }
       for (const auto& destination : input.getIncoming()) {
-        vis.addEdge(destination, input.name());
+        visualization.addEdge(destination, input.name());
       }
     });
     res += "}\n";
     res += fmt::format("subgraph cluster_outputs{} {{\n", id);
     res += fmt::format("label = \"Outputs\";\n");
-    // res += fmt::format("rankdir = TD;\n", node->name());
     boost::pfr::for_each_field(node->outputs, [&](auto& output) {
-      auto id = vis.getId(output.name());
-      (void)id;
+      auto id = visualization.getId(output.name());
       res += fmt::format("{} [label = \"{}\", shape = box];\n", id, strip(output.name()));
       for (const auto& destination : output.getOutgoing()) {
-        vis.addEdge(output.name(), destination);
+        visualization.addEdge(output.name(), destination);
       }
       for (const auto& destination : output.getIncoming()) {
-        vis.addEdge(destination, output.name());
+        visualization.addEdge(destination, output.name());
       }
     });
     res += "}\n";
     res += "}\n";
   };
-  auto post_visit = [&](auto& node) {
-    (void)node;
-    res += "}\n";
-  };
+  auto post_visit = [&](auto& /*node*/) { res += "}\n"; };
 
-  auto id = vis.getId(root->prefix);
+  auto id = visualization.getId(root->prefix);
   res += fmt::format("subgraph cluster_node{} {{\n", id);
   res += fmt::format("label = \"{}\";\n", root->prefix);
-  heph::conduit::internal::traverse(root, pre_visit, post_visit);
+  traverse(root, pre_visit, post_visit);
   res += "}\n";
   return res;
 }

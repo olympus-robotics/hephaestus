@@ -35,7 +35,6 @@ struct AcceptOperation {
   using StopTokenT = stdexec::stop_token_of_t<stdexec::env_of_t<Receiver>>;
 
   const Acceptor* acceptor{ nullptr };
-  // absl::Mutex mutex;
   Receiver receiver;
 
   void prepare(::io_uring_sqe* sqe) const {

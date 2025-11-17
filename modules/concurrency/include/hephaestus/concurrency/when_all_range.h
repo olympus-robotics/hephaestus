@@ -60,7 +60,7 @@ struct WhenAllRangeStateT {
     }
   }
 
-  auto getEnv() noexcept {
+  [[nodiscard]] auto getEnv() const noexcept {
     return stdexec::__env::__join(stdexec::prop{ stdexec::get_stop_token, stop_source.get_token() },
                                   stdexec::get_env(receiver));
   }
@@ -162,7 +162,7 @@ struct WhenAllRangeSender {
 }  // namespace internal
 
 template <SenderRange Range, typename RangeT = std::decay_t<Range>>
-auto whenAllRange(Range&& range) -> internal::WhenAllRangeSender<Range> {
+[[nodiscard]] auto whenAllRange(Range&& range) -> internal::WhenAllRangeSender<Range> {
   return { std::forward<Range>(range) };
 }
 }  // namespace heph::concurrency
