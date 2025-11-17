@@ -103,8 +103,8 @@ public:
 
   /// Each input needs to provide a trigger which signals its completion. This trigger can
   /// complete in the following ways:
-  ///  - Ready: The input was triggered succesfully
-  ///  - Stopped: The input trigger returned, but fullfilling the input policies was not possible
+  ///  - Ready: The input was triggered successfully
+  ///  - Stopped: The input trigger returned, but fulfilling the input policies was not possible
   ///
   /// This will call \ref doTrigger
   ///
