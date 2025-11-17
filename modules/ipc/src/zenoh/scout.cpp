@@ -58,7 +58,12 @@ public:
 
   [[nodiscard]] auto getNodesInfo() const -> std::vector<NodeInfo> {
     const absl::MutexLock lock{ &mutex_ };
-    const auto values = nodes_info_ | std::views::values | ranges::to<std::vector<NodeInfo>>();
+    std::vector<NodeInfo> values;
+    values.reserve(nodes_info_.size());
+    // NOTE (@graeterj): Change this to ranges::to when available in our toolchain.
+    for (const auto& el : nodes_info_ | std::views::values) {
+      values.push_back(el);
+    }
     return values;
   }
 
