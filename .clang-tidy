@@ -97,6 +97,16 @@ CheckOptions:
   - { key: readability-identifier-naming.LocalVariableCase, value: lower_case }
   - { key: readability-identifier-naming.EnumCase, value: CamelCase }
   - { key: readability-identifier-naming.EnumConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ConceptCase, value: CamelCase }
+  - {
+      key: readability-identifier-naming.TemplateParameterCase,
+      value: CamelCase,
+    }
+  - { key: readability-identifier-naming.TemplateParameterSuffix, value: T }
+  - {
+      key: readability-identifier-naming.TemplateParameterIgnoredRegexp,
+      value: ^T,
+    }
   - { key: readability-function-cognitive-complexity.Threshold, value: 40 }
   - {
       key: readability-function-cognitive-complexity.DescribeBasicIncrements,
