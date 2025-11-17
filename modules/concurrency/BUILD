@@ -90,6 +90,7 @@ heph_cc_test(
     srcs = ["tests/queue_consumer_tests.cpp"],
     deps = [
         ":concurrency",
+        "//modules/random",
     ],
 )
 

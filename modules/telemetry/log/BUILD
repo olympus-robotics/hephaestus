@@ -16,6 +16,7 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "//modules/containers",
+        "//modules/utils",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/log:globals",
