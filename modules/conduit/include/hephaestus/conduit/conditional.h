@@ -29,7 +29,7 @@ public:
   void enable() {
     containers::IntrusiveFifoQueue<OperationBase> waiters;
 
-    // NOTE: this is a little hack to avoid recursive mutices when enabling the node.
+    // NOTE: this is a little hack to avoid recursive mutexes when enabling the node.
     static thread_local bool enabling = false;
 
     if (enabling) {
@@ -61,7 +61,7 @@ public:
 
   /// \throws heph::Panic if already disabled
   void disable() {
-    // NOTE: this is a little hack to avoid recursive mutices when enabling the node.
+    // NOTE: this is a little hack to avoid recursive mutexes when disabling the node.
     static thread_local bool disabling = false;
 
     if (disabling) {

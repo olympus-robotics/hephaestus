@@ -243,7 +243,7 @@ concept AnySenderRequirements =
 
 /// Implementation for a type erased sender.
 ///
-/// Injects \ref AnyEnv to be able to schedule depenend tasks and react on cancellation requests
+/// Injects \ref AnyEnv to be able to schedule dependant tasks and react on cancellation requests
 ///
 /// @tparam T The value this sender completes with
 template <typename T>

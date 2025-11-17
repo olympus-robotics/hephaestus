@@ -61,7 +61,7 @@ struct SetValueSender;
 ///
 /// // Using Sender/Receiver
 /// // Producer:
-/// c.setValue(42) | stdexec::then([](){ fmt::println("Value has been succesully set!"); });
+/// c.setValue(42) | stdexec::then([](){ fmt::println("Value has been successfully set!"); });
 ///
 /// // Consumer:
 /// c.getValue() | stdexec::then([](int res){ fmt::println("Received {}!", res); });
