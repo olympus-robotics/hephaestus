@@ -183,18 +183,6 @@ add_cmake_dependency(
 )
 
 # --------------------------------------------------------------------------------------------------
-# range_v3
-set(RANGE-V3_VERSION 0.12.0)
-set(RANGE-V3_CMAKE_ARGS -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_DOCS=OFF)
-add_cmake_dependency(
-  NAME range-v3
-  VERSION ${RANGE-V3_VERSION}
-  GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
-  GIT_TAG ${RANGE-V3_VERSION}
-  CMAKE_ARGS ${RANGE-V3_CMAKE_ARGS}
-)
-
-# --------------------------------------------------------------------------------------------------
 # zstd
 set(ZSTD_VERSION "1.5.6")
 set(ZSTD_CMAKE_ARGS -DZSTD_BUILD_STATIC=ON -DZSTD_BUILD_SHARED=OFF -DZSTD_BUILD_TESTS=OFF -G Ninja)

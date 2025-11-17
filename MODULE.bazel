@@ -116,16 +116,8 @@ bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0.bcr.3")
 bazel_dep(name = "curl", version = "8.8.0.bcr.1")
 bazel_dep(name = "yaml-cpp", version = "0.8.0")
-bazel_dep(name = "range-v3", version = "0.12.0")
 
 RANGE_COMMIT = "7e6f34b1e820fb8321346888ef0558a0ec842b8e"
-
-archive_override(
-    module_name = "range-v3",
-    sha256 = "8395518e171e5873e51db9ef153a17b5bd46e69a99b64fd6c44b45b53f98d7cf",
-    strip_prefix = "range-v3-{commit}".format(commit = RANGE_COMMIT),
-    url = "https://github.com/ericniebler/range-v3/archive/{commit}.tar.gz".format(commit = RANGE_COMMIT),
-)
 
 bazel_dep(name = "boringssl", version = "0.20250114.0")
 bazel_dep(name = "websocketpp", version = "0.8.2.bcr.3")
