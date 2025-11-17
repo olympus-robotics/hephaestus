@@ -3,13 +3,11 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <utility>
 
-#include <exec/async_scope.hpp>
 #include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/stepper.h"
 
@@ -88,7 +86,7 @@ struct DummyStepperSender : StepperDefaults<DummyNodeDescription> {
 
 TEST(Stepper, InterfaceSender) {
   DummyNode dummy{};
-  DummyStepperSender dummy_stepper;
+  const DummyStepperSender dummy_stepper;
   Stepper<DummyNodeDescription> stepper{ dummy_stepper };
 
   stdexec::sync_wait(stepper.step("", "", dummy.inputs, dummy.outputs));
@@ -109,7 +107,7 @@ struct DummyStepperCoroutine : StepperDefaults<DummyNodeDescription> {
 
 TEST(Stepper, InterfaceCoroutine) {
   DummyNode dummy{};
-  DummyStepperSender dummy_stepper;
+  const DummyStepperSender dummy_stepper;
   Stepper<DummyNodeDescription> stepper{ dummy_stepper };
 
   stdexec::sync_wait(stepper.step("", "", dummy.inputs, dummy.outputs));

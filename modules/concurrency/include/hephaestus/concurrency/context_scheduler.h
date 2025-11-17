@@ -14,12 +14,12 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
-#include <stdexec/__detail/__tag_invoke.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency {
 class Context;
@@ -139,6 +139,11 @@ struct TimedTask : TaskBase {
     }
   }
 
+  TimedTask(TimedTask&& other) = delete;
+  auto operator=(TimedTask&& other) -> TimedTask& = delete;
+  TimedTask(const TimedTask& other) = delete;
+  auto operator=(const TimedTask& other) -> TimedTask& = delete;
+
   ~TimedTask() final {
     task.context->dequeueTimer(this);
   }
@@ -161,7 +166,7 @@ struct TimedTask : TaskBase {
   }
 
   void setValue() noexcept final {
-    abort();
+    heph::panic("not implemented");
   }
 };
 

@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/node_base.h"
 #include "hephaestus/conduit/scheduler.h"

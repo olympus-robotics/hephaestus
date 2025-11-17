@@ -3,12 +3,11 @@
 //=================================================================================================
 
 #include <cerrno>
+#include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <cstring>
-#include <memory>
 #include <mutex>
-#include <optional>
 #include <thread>
 #include <vector>
 
@@ -20,6 +19,7 @@
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
 namespace heph::concurrency::io_ring::tests {
 
 TEST(IoRingTest, DefaultConstruction) {
@@ -148,3 +148,4 @@ struct StopTestOperation : IoRingOperationBase {
   IoRing* ring{ nullptr };
 };
 }  // namespace heph::concurrency::io_ring::tests
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)

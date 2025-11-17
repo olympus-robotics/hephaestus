@@ -2,6 +2,10 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+#include <utility>
+#include <vector>
+
 #include <exec/static_thread_pool.hpp>
 #include <gtest/gtest.h>
 #include <stdexec/execution.hpp>

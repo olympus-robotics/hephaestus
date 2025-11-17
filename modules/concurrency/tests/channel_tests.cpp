@@ -2,12 +2,15 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
+#include <thread>
+
 #include <exec/when_any.hpp>
 #include <gtest/gtest.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/channel.h"
-
+// NOLINTBEGIN(bugprone-unchecked-optional-access)
 namespace heph::concurrency {
 TEST(Channel, SendRecv) {
   Channel<int, 1> c;
@@ -117,3 +120,4 @@ TEST(Channel, SendRecvParallel) {
 }
 
 }  // namespace heph::concurrency
+// NOLINTEND(bugprone-unchecked-optional-access)

@@ -5,15 +5,19 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
-#include <exec/task.hpp>
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/conduit/internal/never_stop.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/serdes/serdes.h"
 
@@ -31,7 +35,7 @@ public:
   }
 
   auto setValue(T t) -> concurrency::AnySender<void> final {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     this->updateTriggerTime();
     while (!buffer_.push(std::move(t))) {
       buffer_.pop();
@@ -40,7 +44,7 @@ public:
   }
 
   auto value() -> std::vector<T> {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     return buffer_.popAll();
   }
 
@@ -65,6 +69,6 @@ private:
 private:
   std::string_view name_;
   absl::Mutex mutex_;
-  concurrency::internal::CircularBuffer<T, Capacity> buffer_;
+  concurrency::internal::CircularBuffer<T, Capacity> buffer_ ABSL_GUARDED_BY(mutex_);
 };
 }  // namespace heph::conduit

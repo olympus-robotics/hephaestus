@@ -8,7 +8,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>

@@ -5,10 +5,12 @@
 #pragma once
 
 #include <exception>
+#include <optional>
 #include <tuple>
 #include <utility>
 
 #include <absl/synchronization/mutex.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/error_handling/panic.h"
@@ -35,13 +37,16 @@ struct StoppableOperationState {
 
       return *this;
     }
+    ToStartedTransition(const ToStartedTransition& other) = delete;
+    auto operator=(const ToStartedTransition& other) -> ToStartedTransition& = delete;
+
     ~ToStartedTransition() noexcept {
       if (self_ == nullptr) {
         return;
       }
       State current_state = STARTING;
       {
-        absl::MutexLock l{ &self_->mutex };
+        const absl::MutexLock l{ &self_->mutex };
         if (self_->state == STARTING) {
           self_->state = STARTED;
           return;
@@ -91,7 +96,7 @@ struct StoppableOperationState {
   [[nodiscard]] auto restart() -> std::optional<ToStartedTransition> {
     State previous_state{ STARTED };
     {
-      absl::MutexLock l{ &mutex };
+      const absl::MutexLock l{ &mutex };
       previous_state = std::exchange(state, STARTING);
     }
     switch (previous_state) {
@@ -116,7 +121,7 @@ struct StoppableOperationState {
   void stopRequested() {
     State previous_state{ STARTED };
     {
-      absl::MutexLock l{ &mutex };
+      const absl::MutexLock l{ &mutex };
       previous_state = std::exchange(state, STOPPED);
     }
     switch (previous_state) {
@@ -147,7 +152,7 @@ struct StoppableOperationState {
   void setValue(Ts&&... ts) {
     State previous_state{ STARTED };
     {
-      absl::MutexLock l{ &mutex };
+      const absl::MutexLock l{ &mutex };
       on_stop_callback.reset();
       values.emplace(std::forward<Ts>(ts)...);
       previous_state = std::exchange(state, COMPLETED);
@@ -175,12 +180,12 @@ struct StoppableOperationState {
     }
   }
 
-  void setError(std::exception_ptr exception) {
+  void setError(const std::exception_ptr& exception) {
     State previous_state{ STARTED };
     {
-      absl::MutexLock l{ &mutex };
+      const absl::MutexLock l{ &mutex };
       on_stop_callback.reset();
-      error = std::move(exception);
+      error = exception;
       previous_state = std::exchange(state, ERROR);
     }
     switch (previous_state) {

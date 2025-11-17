@@ -2,15 +2,11 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <atomic>
 #include <cstddef>
+#include <memory>
 
-#include <exec/async_scope.hpp>
-#include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/zenoh_subscriber.h"
@@ -27,7 +23,7 @@ TEST(ZenohSubscriber, BasicTest) {
   const auto topic_config = ipc::TopicConfig{ "test/input/topic" };
   auto zenoh_session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
   Input<types::DummyType> input{ "input" };
-  ZenohSubscriber<types::DummyType> subscriber(input, zenoh_session, topic_config);
+  const ZenohSubscriber<types::DummyType> subscriber(input, zenoh_session, topic_config);
 
   auto publisher = ipc::zenoh::Publisher<types::DummyType>(zenoh_session, topic_config);
   types::DummyType msg;

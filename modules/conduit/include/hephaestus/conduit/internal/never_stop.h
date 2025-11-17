@@ -5,8 +5,11 @@
 #pragma once
 
 #include <optional>
+#include <type_traits>
 
+#include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
+#include <stdexec/stop_token.hpp>
 
 namespace heph::conduit::internal {
 // Helper for inputs which should never trigger

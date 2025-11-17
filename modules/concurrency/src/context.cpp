@@ -7,6 +7,8 @@
 #include <chrono>
 #include <functional>
 
+#include <absl/synchronization/mutex.h>
+
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
 
@@ -25,14 +27,14 @@ void Context::run(const std::function<void()>& on_start) {
 
 void Context::enqueue(TaskBase* task) {
   {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     tasks_.enqueue(task);
   }
   ring_.notify();
 }
 
 void Context::dequeue(TaskBase* task) {
-  absl::MutexLock l{ &mutex_ };
+  const absl::MutexLock lock{ &mutex_ };
   tasks_.erase(task);
 }
 
@@ -53,7 +55,7 @@ void Context::dequeueTimer(TaskBase* task) {
 auto Context::runTasks() -> bool {
   TaskBase* task{ nullptr };
   {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     if (tasks_.empty()) {
       return false;
     }
@@ -63,7 +65,7 @@ auto Context::runTasks() -> bool {
   task->setValue();
 
   {
-    absl::MutexLock l{ &mutex_ };
+    const absl::MutexLock lock{ &mutex_ };
     return !tasks_.empty();
   }
 }
@@ -74,13 +76,20 @@ auto Context::runTasksSimulated() -> bool {
   last_progress_time_ = now;
 
   // FIXME: make thread safe
-  timer_.tickSimulated(tasks_.empty() && !ring_.hasWork());
+  const bool advance = [this]() {
+    const absl::MutexLock lock{ &mutex_ };
+    return tasks_.empty() && !ring_.hasWork();
+  }();
+  timer_.tickSimulated(advance);
 
   runTasks();
 
-  if (tasks_.empty() && timer_.empty() && !ring_.isRunning()) {
-    return false;
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    if (tasks_.empty() && timer_.empty() && !ring_.isRunning()) {
+      return false;
+    }
+    return true;
   }
-  return true;
 }
 }  // namespace heph::concurrency

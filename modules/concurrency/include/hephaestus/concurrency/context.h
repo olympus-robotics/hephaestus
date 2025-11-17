@@ -7,21 +7,19 @@
 #include <chrono>
 #include <functional>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
 
-/// me
 namespace heph::concurrency {
 
 using TimerOptionsT = io_ring::TimerOptions;
 using ClockT = io_ring::TimerClock;
 
-/// Test
 struct ContextConfig {
   io_ring::IoRingConfig io_ring_config;
   TimerOptionsT timer_options;
@@ -32,12 +30,10 @@ public:
   using Scheduler = ContextScheduler;
 
   explicit Context(const ContextConfig& config)
-    : ring_{ config.io_ring_config }
-    , timer_{ ring_, config.timer_options }  //, stop_callback_(ring_.getStopToken(), StopCallback{ this })
-  {
+    : ring_{ config.io_ring_config }, timer_{ ring_, config.timer_options } {
   }
 
-  auto scheduler() -> Scheduler {
+  [[nodiscard]] auto scheduler() -> Scheduler {
     return { this };
   }
 
@@ -48,19 +44,19 @@ public:
     ring_.requestStop();
   }
 
-  auto isRunning() -> bool {
+  [[nodiscard]] auto isRunning() -> bool {
     return ring_.isRunning();
   }
 
-  auto isCurrent() -> bool {
+  [[nodiscard]] auto isCurrent() -> bool {
     return ring_.isCurrent();
   }
 
-  auto elapsed() {
+  [[nodiscard]] auto elapsed() {
     return timer_.elapsed();
   }
 
-  auto ring() -> io_ring::IoRing* {
+  [[nodiscard]] auto ring() -> io_ring::IoRing* {
     return &ring_;
   }
 
@@ -83,7 +79,7 @@ private:
 private:
   io_ring::IoRing ring_;
   absl::Mutex mutex_;
-  heph::containers::IntrusiveFifoQueue<TaskBase> tasks_;
+  heph::containers::IntrusiveFifoQueue<TaskBase> tasks_ ABSL_GUARDED_BY(mutex_);
   io_ring::Timer timer_;
   ClockT::base_clock::time_point start_time_;
   ClockT::base_clock::time_point last_progress_time_;

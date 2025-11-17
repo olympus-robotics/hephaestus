@@ -5,14 +5,17 @@
 #pragma once
 
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <type_traits>
 #include <utility>
 
-#include <hephaestus/concurrency/channel.h>
+#include <stdexec/__detail/__execution_fwd.hpp>
+#include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
 namespace heph::concurrency {

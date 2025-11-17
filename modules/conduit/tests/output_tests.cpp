@@ -2,20 +2,12 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <atomic>
-#include <chrono>
 #include <cstddef>
-#include <thread>
 
-#include <exec/async_scope.hpp>
-#include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
-#include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/input.h"
 #include "hephaestus/conduit/output.h"
 #include "hephaestus/types_proto/numeric_value.h"  // IWYU pragma: keep

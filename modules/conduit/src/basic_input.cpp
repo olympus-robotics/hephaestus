@@ -4,6 +4,20 @@
 
 #include "hephaestus/conduit/basic_input.h"
 
+#include <atomic>
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include <fmt/format.h>
+#include <stdexec/execution.hpp>
+
+#include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/conduit/clock.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/error_handling/panic.h"
+
 namespace heph::conduit {
 BasicInput::BasicInput(std::string_view name) : name_(name) {
 }
@@ -48,9 +62,9 @@ auto BasicInput::setValue(const std::pmr::vector<std::byte>& /*buffer*/) -> conc
   return stdexec::just();
 }
 [[nodiscard]] auto BasicInput::getTypeInfo() const -> std::string {
-  abort();
-  return "";
-};
+  heph::panic("not implemented");
+}
+
 [[nodiscard]] auto BasicInput::trigger(SchedulerT scheduler) -> InputTrigger {
   return InputTrigger{ this, doTrigger(scheduler) };
 }

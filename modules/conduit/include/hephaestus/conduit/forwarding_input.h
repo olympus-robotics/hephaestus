@@ -4,17 +4,20 @@
 
 #pragma once
 
+#include <cstddef>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
-#include <exec/task.hpp>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/when_all_range.h"
 #include "hephaestus/conduit/internal/never_stop.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/serdes/serdes.h"
 
 namespace heph::conduit {
@@ -53,7 +56,7 @@ public:
     for (auto* input : inputs_) {
       return input->getTypeInfo();
     }
-    abort();
+    heph::panic("no inputs connected");
     return "";
   };
 

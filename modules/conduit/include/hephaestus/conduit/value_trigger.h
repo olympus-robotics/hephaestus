@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"

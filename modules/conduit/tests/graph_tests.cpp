@@ -3,15 +3,14 @@
 //=================================================================================================
 
 #include <cstddef>
+#include <optional>
 #include <thread>
 
 #include <exec/static_thread_pool.hpp>
 #include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/executor.h"
@@ -54,7 +53,7 @@ struct ReceiverStep : StepperDefaults<Dummy> {
 };
 
 TEST(Graph, SingleStep) {
-  GraphConfig config{
+  const GraphConfig config{
     .prefix = "test",
     .partners = {},
   };
@@ -83,7 +82,7 @@ struct RepeaterStep : StepperDefaults<Dummy> {
 };
 
 TEST(Graph, RepeatedStep) {
-  GraphConfig config{
+  const GraphConfig config{
     .prefix = "test",
     .partners = {},
   };
@@ -103,6 +102,7 @@ struct RepeaterPoolStep : StepperDefaults<Dummy> {
   exec::static_thread_pool* pool;
   std::thread::id thread_id;
   Executor* executor;
+  // NOLINTNEXTLINE (cppcoreguidelines-avoid-reference-coroutine-parameters)
   auto step(InputsT& /*inputs*/, OutputsT& /*outputs*/) -> exec::task<void> {
     if (executed == NUMBER_OF_REPEATS) {
       executor->requestStop();
@@ -116,7 +116,7 @@ struct RepeaterPoolStep : StepperDefaults<Dummy> {
 };
 
 TEST(Graph, RepeatedPoolStep) {
-  GraphConfig config{
+  const GraphConfig config{
     .prefix = "test",
     .partners = {},
   };
@@ -351,7 +351,7 @@ struct RootStepper : StepperDefaults<Root> {
       .node2 = node2,
     };
   }
-  void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& children) {
+  static void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& children) {
     stdexec::sync_wait(children.node0->inputs.input.setValue(0));
   }
 
@@ -361,7 +361,7 @@ struct RootStepper : StepperDefaults<Root> {
 };
 
 TEST(Graph, Connections) {
-  GraphConfig config{
+  const GraphConfig config{
     .prefix = "test",
     .partners = {},
   };
@@ -385,7 +385,7 @@ TEST(Graph, Connections) {
   for (std::size_t i = 0; i != NUMBER_OF_REPEATS; ++i) {
     stdexec::sync_wait(test.trigger(SchedulerT{}));
     EXPECT_TRUE(test.hasValue());
-    int res = test.value();
+    const int res = test.value();
     EXPECT_EQ(res % 4, 1);
   }
   executor.requestStop();

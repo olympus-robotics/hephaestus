@@ -4,14 +4,13 @@
 
 #include <atomic>
 #include <cstddef>
+#include <memory>
 
-#include <exec/async_scope.hpp>
-#include <exec/task.hpp>
-#include <exec/when_any.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <gtest/gtest.h>
+#include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/context.h"
+#include "hephaestus/conduit/output.h"
 #include "hephaestus/conduit/zenoh_publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
@@ -26,7 +25,7 @@ TEST(ZenohPublisher, BasicTest) {
   const auto topic_config = ipc::TopicConfig{ "test/output/topic" };
   auto zenoh_session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
   Output<types::DummyType> output{ "output" };
-  ZenohPublisher<types::DummyType> publisher(output, zenoh_session, topic_config);
+  const ZenohPublisher<types::DummyType> publisher(output, zenoh_session, topic_config);
 
   std::atomic_flag done = ATOMIC_FLAG_INIT;
   auto subscriber = ipc::zenoh::Subscriber<types::DummyType>(

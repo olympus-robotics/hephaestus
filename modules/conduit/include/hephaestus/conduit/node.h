@@ -5,11 +5,15 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <optional>
+#include <string>
+#include <type_traits>
 #include <utility>
 
-#include <boost/pfr.hpp>
+#include <boost/pfr.hpp>  // IWYU pragma: keep
 #include <exec/when_any.hpp>
+#include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/repeat_until.h"

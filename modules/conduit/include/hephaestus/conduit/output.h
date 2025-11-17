@@ -6,16 +6,25 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include <exec/when_any.hpp>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/concurrency/when_all_range.h"
+#include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/output_base.h"
 #include "hephaestus/conduit/partner_output.h"
+#include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 
@@ -89,10 +98,8 @@ private:
             scheduler.scheduleAfter(timeout_) | stdexec::then(
                                                     // timeout callback
                                                     [this, &output]() {
-                                                      fmt::println(stderr,
-                                                                   "{}: Failed to set input {} within {}",
-                                                                   this->name(), output.name(), timeout_);
-                                                      std::abort();
+                                                      heph::panic("{}: Failed to set input {} within {}",
+                                                                  this->name(), output.name(), timeout_);
                                                     }),
             output.setValue(*value)));
       }
@@ -101,10 +108,8 @@ private:
             scheduler.scheduleAfter(timeout_) | stdexec::then(
                                                     // timeout callback
                                                     [this, input]() {
-                                                      fmt::println(stderr,
-                                                                   "{}: Failed to set input {} within {}",
-                                                                   this->name(), input->name(), timeout_);
-                                                      std::abort();
+                                                      heph::panic("{}: Failed to set input {} within {}",
+                                                                  this->name(), input->name(), timeout_);
                                                     }),
             input->setValue(*value)));
       }
@@ -114,10 +119,8 @@ private:
               scheduler.scheduleAfter(timeout_) | stdexec::then(
                                                       // timeout callback
                                                       [this, input]() {
-                                                        fmt::println(stderr,
-                                                                     "{}: Failed to set input {} within {}",
-                                                                     this->name(), input->name(), timeout_);
-                                                        std::abort();
+                                                        heph::panic("{}: Failed to set input {} within {}",
+                                                                    this->name(), input->name(), timeout_);
                                                       }),
               input->setValue(*value)));
         }

@@ -8,11 +8,13 @@
 #include <utility>
 
 #include <exec/when_any.hpp>
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/value_storage.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 

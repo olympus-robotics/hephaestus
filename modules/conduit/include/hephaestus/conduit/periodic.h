@@ -4,11 +4,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
+
+#include <stdexec/execution.hpp>
 
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 /// `Periodic` represents an input which is triggering at a fixed periodic duration.

@@ -5,10 +5,10 @@
 #pragma once
 
 #include <cstdlib>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <boost/pfr.hpp>
 #include <fmt/format.h>
 
 #include "hephaestus/conduit/graph.h"
@@ -42,7 +42,7 @@ struct Visualization {
     edge.emplace_back(source_id, sink_id);
   }
 };
-auto strip(const std::string& name) -> std::string {
+inline auto strip(const std::string& name) -> std::string {
   auto pos = name.find_last_of('/');
   if (pos == std::string::npos) {
     return name;
