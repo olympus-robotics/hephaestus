@@ -72,7 +72,7 @@ auto PartnerOutputBase::sendData()
       fmt::println(stderr, "{}: {}. Retrying", output_name, e.what());
     } catch (...) {
       ++attempt;
-      fmt::println(stderr, "{}: Unkown error. Retrying", output_name);
+      fmt::println(stderr, "{}: Unknown error. Retrying", output_name);
     }
     ++attempt;
   }

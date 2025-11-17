@@ -224,7 +224,7 @@ struct NodeDescriptionDefaults {
   struct ChildrenConfig {};
 
   template <typename InputsT, typename OutputsT, typename ChildrenT>
-  static void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& /*chdilren*/) {
+  static void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& /*children*/) {
   }
 
   struct Inputs {};

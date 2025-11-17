@@ -52,7 +52,7 @@ public:
     return data_.has_value();
   }
 
-  /// Retreives the generated value
+  /// Retrieves the generated value
   ///
   /// @throws heph::Panic if no value has been generated within this trigger round.
   [[nodiscard]] auto value() -> T {
