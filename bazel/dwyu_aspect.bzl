@@ -1,4 +1,5 @@
 load("@depend_on_what_you_use//:defs.bzl", "dwyu_aspect_factory")
+# call with 'bazel build --aspects=//bazel:dwyu_aspect.bzl%dwyu_aspect --output_groups=dwyu //modules/...'
 
 dwyu_aspect = dwyu_aspect_factory(
     recursive = False,
