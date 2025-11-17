@@ -123,7 +123,7 @@ public:
 
   /// In order for algorithms to react on stale inputs, this function can be used.
   ///
-  /// @return The time point at which the last trigger event occured
+  /// @return The time point at which the last trigger event occurred
   [[nodiscard]] auto lastTriggerTime() const -> ClockT::time_point;
 
   [[nodiscard]] virtual auto getTypeInfo() const -> std::string;

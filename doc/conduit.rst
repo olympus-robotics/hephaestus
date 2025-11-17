@@ -76,7 +76,7 @@ All of them form a root of the execution graph and their main purpose is to prov
 Typed Inputs
 --------------
 
-In addition to Basic Inputs we need Inputs that can be used to model the flow of data through the graph. These inputs require policies that describe their semantics with respect to how data is stored between each invocation of :cpp:func:`heph::conduit::BasicInput::trigger` and how cancelation is modelled. Thes requirements stems from the fact that each step has different requirements on when the input is triggered as well as other constraints such as defining deadlines.
+In addition to Basic Inputs we need Inputs that can be used to model the flow of data through the graph. These inputs require policies that describe their semantics with respect to how data is stored between each invocation of :cpp:func:`heph::conduit::BasicInput::trigger` and how cancelation is modelled. These requirements stem from the fact that each step has different requirements on when the input is triggered as well as other constraints such as defining deadlines.
 
 This can be summarized by providing policies for :ref:`heph.conduit.concepts.inputs.typed.storage` and :ref:`heph.conduit.concepts.inputs.typed.triggers`.
 
@@ -179,7 +179,7 @@ Example execution:
 Conditional
 -----------
 
-The :cpp:class:`Condtional <heph::conduit::Conditional>` can be used to drive conditional execution. The :cpp:func:`trigger <heph::conduit::BasicInput::trigger>` function will only complete if the conditional is enabled. Otherwise it will block:
+The :cpp:class:`Conditional <heph::conduit::Conditional>` can be used to drive conditional execution. The :cpp:func:`trigger <heph::conduit::BasicInput::trigger>` function will only complete if the conditional is enabled. Otherwise it will block:
 
 - :cpp:func:`heph::conduit::Conditional::enable` will enable the conditional
 - :cpp:func:`heph::conduit::Conditional::disable` disables it.
