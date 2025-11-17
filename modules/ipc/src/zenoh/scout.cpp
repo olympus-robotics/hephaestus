@@ -19,7 +19,6 @@
 #include <magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
-#include <range/v3/range/conversion.hpp>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/hello.hxx>
 #include <zenoh/api/scout.hxx>
