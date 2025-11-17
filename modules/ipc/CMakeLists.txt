@@ -87,7 +87,6 @@ define_module_library(
     hephaestus::telemetry_log
     hephaestus::utils
     nlohmann_json::nlohmann_json
-    range-v3::range-v3
     zenohc::lib
     zenohcxx::zenohc
   PRIVATE_LINK_LIBS ""
