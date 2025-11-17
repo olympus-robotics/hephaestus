@@ -20,7 +20,7 @@
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/internal/net.h"
 #include "hephaestus/net/socket.h"
-#include "modules/telemetry/telemetry/include/hephaestus/telemetry/log_sink.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::conduit {
 namespace {
@@ -72,9 +72,9 @@ auto PartnerOutputBase::sendData()
       co_await sendDataImpl(this, client_);
 
     } catch (std::exception& e) {
-      heph::log(heph::WARN, "{}: {}. Retrying", output_name, e.what());
+      heph::log(heph::WARN, "{}: {}. Retrying", "output", output_name, "error", e.what());
     } catch (...) {
-      heph::log(heph::WARN, "{}: Unknown error. Retrying", output_name);
+      heph::log(heph::WARN, "Unknown error. Retrying", "output", output_name);
     }
     ++attempt;
   }
