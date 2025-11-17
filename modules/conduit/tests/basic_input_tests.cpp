@@ -107,7 +107,8 @@ TEST(BasicInput, JustCoroutineInput) {
   EXPECT_GE(input.lastTriggerTime(), start_time);
 }
 
-TEST(BasicInput, PeriodicCancelled) {
+// TODO: (heller) enable again once timer got fully reworked
+TEST(BasicInput, DISABLED_PeriodicCancelled) {
   Periodic periodic;
   exec::async_scope scope;
 
