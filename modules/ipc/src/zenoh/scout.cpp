@@ -59,7 +59,7 @@ public:
     const absl::MutexLock lock{ &mutex_ };
     std::vector<NodeInfo> values;
     values.reserve(nodes_info_.size());
-    // NOTE (@graeterj): Change this to ranges::to when available in our toolchain.
+    // NOTE (@graeter): Change this to std::ranges::to when c++23 is available here.
     for (const auto& el : nodes_info_ | std::views::values) {
       values.push_back(el);
     }
