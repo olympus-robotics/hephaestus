@@ -43,6 +43,7 @@ heph_cc_binary(
     srcs = ["examples/example.cpp"],
     deps = [
         ":cli",
+        "@fmt",
     ],
 )
 

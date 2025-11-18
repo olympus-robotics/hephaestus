@@ -43,8 +43,6 @@ define_module_library(
   PUBLIC_LINK_LIBS
     absl::log_internal_check_op
     absl::raw_hash_set
-    absl::status
-    absl::statusor
     hephaestus::utils
     hephaestus::error_handling
     magic_enum::magic_enum

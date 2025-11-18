@@ -15,8 +15,6 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
-        "@abseil-cpp//absl/status:status",
-        "@abseil-cpp//absl/status:statusor",
     ],
     includes = [
         "include",
@@ -25,10 +23,13 @@ heph_cc_library(
     deps = [
         "//modules/error_handling",
         "//modules/utils",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@fmt",
         "@magic_enum",
         "@nlohmann_json//:json",
-        "@protobuf",
+        "@protobuf//:json_util",  # json_util.h
+        "@protobuf//:protobuf_headers",  # descriptor.h
+        "@protobuf//:protobuf_lite",  # map.h
     ],
 )
 
@@ -53,6 +54,7 @@ heph_cc_test(
     deps = [
         ":serdes",
         ":test_gen_proto",
+        "@nlohmann_json//:json",
     ],
 )
 
@@ -66,5 +68,6 @@ heph_cc_test(
         ":serdes",
         ":test_gen_proto",
         "//modules/random",
+        "//modules/utils",
     ],
 )

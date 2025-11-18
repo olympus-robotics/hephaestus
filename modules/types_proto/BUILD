@@ -6,13 +6,18 @@ load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library", "heph_cc_test")
 
 heph_cc_library(
     name = "types_proto",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
     implementation_deps = [
+        "//modules/error_handling",
         "//modules/random",
     ],
     includes = ["include"],
@@ -34,5 +39,8 @@ heph_cc_test(
     srcs = ["tests/serialization_tests.cpp"],
     deps = [
         ":types_proto",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/types",
     ],
 )

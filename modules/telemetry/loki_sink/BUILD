@@ -8,14 +8,21 @@ package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "loki_sink",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
     implementation_deps = [
+        "//modules/error_handling",
+        "//modules/utils",
         "@fmt",
+        "@magic_enum",
         "@reflect-cpp",
     ],
     includes = ["include"],
@@ -23,7 +30,7 @@ heph_cc_library(
     deps = [
         "//modules/concurrency",
         "//modules/telemetry/log",
-        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/synchronization",
         "@cpr",
     ],
@@ -38,6 +45,7 @@ heph_cc_binary(
     srcs = ["examples/loki_log_sink_example.cpp"],
     deps = [
         ":loki_sink",
-        "//modules/cli",
+        "//modules/telemetry/log",
+        "//modules/utils",
     ],
 )

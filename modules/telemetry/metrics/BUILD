@@ -16,11 +16,13 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "//modules/containers",
+        "//modules/telemetry/log",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/synchronization",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/telemetry/log",
         "//modules/utils",
         "@fmt",
         "@reflect-cpp",
@@ -37,6 +39,7 @@ heph_cc_binary(
     deps = [
         ":metrics",
         "//modules/random",
+        "//modules/utils",
     ],
 )
 

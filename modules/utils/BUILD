@@ -16,15 +16,12 @@ heph_cc_library(
     ]),
     implementation_deps = [
         "@abseil-cpp//absl/random:random",
+        "@abseil-cpp//absl/strings:strings",
         "@abseil-cpp//absl/time:time",
     ],
-    includes = [
-        "include",
-        "src",
-    ],
+    includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        "@abseil-cpp//absl/log:check",
         "@fmt",
         "@magic_enum",
     ],
@@ -37,7 +34,10 @@ heph_cc_library(
 heph_cc_binary(
     name = "unique_function_performance",
     srcs = ["tests/unique_function_performance.cpp"],
-    deps = [":utils"],
+    deps = [
+        ":utils",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -55,7 +55,10 @@ heph_cc_test(
 heph_cc_test(
     name = "format_tests",
     srcs = ["tests/format_tests.cpp"],
-    deps = [":utils"],
+    deps = [
+        ":utils",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -85,7 +88,10 @@ heph_cc_test(
 heph_cc_test(
     name = "stack_trace_tests",
     srcs = ["tests/stack_trace_tests.cpp"],
-    deps = [":utils"],
+    deps = [
+        ":utils",
+        "@fmt",
+    ],
 )
 
 heph_cc_test(
@@ -97,5 +103,8 @@ heph_cc_test(
 heph_cc_test(
     name = "variant_tests",
     srcs = ["tests/variant_tests.cpp"],
-    deps = [":utils"],
+    deps = [
+        ":utils",
+        "@fmt",
+    ],
 )
