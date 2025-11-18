@@ -9,7 +9,7 @@ DOCKER_USER="hephaestus"
 HEPHAESTUS_DEV_CONTAINER_NAME="hephaestus-dev"
 
 docker-up:
-	PUID=$(PUID) PGID=$(PGID) DOCKER_TAG=$(DOCKER_TAG) docker compose -f docker/docker-compose.yaml up --pull $(DOCKER_PULL_POLICY) --build $(SERVICE_NAME) -d --force-recreate --remove-orphans
+	PUID=$(PUID) PGID=$(PGID) DOCKER_TAG=$(DOCKER_TAG) docker compose -f docker/docker-compose.yaml up --build -d --force-recreate --remove-orphans
 
 COMMAND ?=
 .PHONY: docker-exec
