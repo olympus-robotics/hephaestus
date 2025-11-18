@@ -24,10 +24,12 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/containers",
-        "//modules/random",
+        "//modules/error_handling",
         "//modules/telemetry/log",
-        "@zstd",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/synchronization",
+        "@magic_enum",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -47,6 +49,13 @@ heph_cc_binary(
     srcs = ["apps/bag_player.cpp"],
     deps = [
         ":bag",
+        "//modules/cli",
+        "//modules/error_handling",
+        "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
+        "@mcap",
     ],
 )
 
@@ -55,6 +64,11 @@ heph_cc_binary(
     srcs = ["apps/bag_recorder.cpp"],
     deps = [
         ":bag",
+        "//modules/cli",
+        "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -67,7 +81,13 @@ heph_cc_test(
     srcs = ["tests/tests.cpp"],
     deps = [
         ":bag",
+        "//modules/ipc",
+        "//modules/random",
+        "//modules/serdes",
+        "//modules/telemetry/log",
         "//modules/types",
         "//modules/types_proto",
+        "//modules/utils",
+        "@mcap",
     ],
 )

@@ -19,8 +19,8 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/random",
-        "//modules/serdes",
+        "//modules/telemetry/log",
+        "@abseil-cpp//absl/strings:strings",
         "@fmt",
         "@influxdb",
     ],
@@ -42,5 +42,9 @@ heph_cc_binary(
     deps = [
         ":influxdb_sink",
         "//modules/random",
+        "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
+        "//modules/utils",
+        "@fmt",
     ],
 )

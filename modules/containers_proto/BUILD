@@ -32,5 +32,9 @@ heph_cc_library(
 heph_cc_test(
     name = "bitflag_serialization_tests",
     srcs = ["tests/bitflag_serialization_tests.cpp"],
-    deps = [":containers_proto"],
+    deps = [
+        ":containers_proto",
+        "//modules/containers",
+        "//modules/serdes",
+    ],
 )

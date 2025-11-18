@@ -8,19 +8,21 @@ package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
     name = "containers_reflection",
-    srcs = glob([
-        "src/**/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/**/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/**/*.h",
+        ],
+    ),
     implementation_deps = [],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
-        "//modules/error_handling",
-        "//modules/utils",
         "@fmt",
         "@reflect-cpp",
     ],
@@ -35,5 +37,7 @@ heph_cc_test(
     srcs = ["tests/containers_reflection_tests.cpp"],
     deps = [
         ":containers_reflection",
+        "//modules/containers",
+        "@reflect-cpp",
     ],
 )

@@ -38,6 +38,7 @@ heph_cc_binary(
     ],
     deps = [
         ":format",
+        "@fmt",
     ],
 )
 
@@ -52,6 +53,8 @@ heph_cc_test(
         ":format",
         "//modules/types",
         "//modules/types_proto",
+        "@fmt",
+        "@reflect-cpp",
     ],
 )
 
@@ -60,6 +63,7 @@ heph_cc_test(
     srcs = ["tests/formatter_collisions_tests.cpp"],
     deps = [
         ":format",
+        "@fmt",
     ],
 )
 
@@ -69,5 +73,6 @@ heph_cc_test(
     deps = [
         ":format",
         "//modules/types",
+        "@fmt",
     ],
 )

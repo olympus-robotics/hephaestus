@@ -31,12 +31,12 @@ heph_cc_library(
         "@abseil-cpp//absl/container:raw_hash_map",
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
-        "@protobuf",
         "@zstd",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+        "//modules/error_handling",
         "//modules/examples/proto:examples_gen_proto",
         "//modules/serdes",
         "//modules/utils",
@@ -55,6 +55,8 @@ heph_cc_binary(
     deps = [
         ":examples",
         "//modules/bag",
+        "@fmt",
+        "@mcap",
     ],
 )
 
@@ -64,6 +66,10 @@ heph_cc_binary(
     deps = [
         ":examples",
         "//modules/bag",
+        "//modules/ipc",
+        "//modules/serdes",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -72,6 +78,9 @@ heph_cc_binary(
     srcs = ["examples/serdes_examples.cpp"],
     deps = [
         ":examples",
+        "//modules/serdes",
+        "@eigen",
+        "@fmt",
     ],
 )
 
@@ -84,7 +93,11 @@ heph_cc_binary(
     deps = [
         ":examples",
         "//modules/cli",
+        "//modules/error_handling",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -98,6 +111,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -111,6 +127,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -124,6 +143,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -137,6 +159,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -150,6 +175,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -163,6 +191,9 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
     ],
 )
 
@@ -176,6 +207,10 @@ heph_cc_binary(
         ":examples",
         "//modules/cli",
         "//modules/ipc",
+        "//modules/telemetry/log",
+        "//modules/utils",
+        "@fmt",
+        "@magic_enum",
     ],
 )
 
@@ -195,7 +230,7 @@ heph_cc_test(
         "tests/helpers.h",
         "tests/zenoh_tests.cpp",
     ],
-    deps = EXAMPLES_TEST_DEPS,
+    deps = EXAMPLES_TEST_DEPS + ["//modules/error_handling"],
 )
 
 heph_cc_test(
@@ -204,5 +239,5 @@ heph_cc_test(
         "tests/helpers.h",
         "tests/types_proto_tests.cpp",
     ],
-    deps = EXAMPLES_TEST_DEPS,
+    deps = EXAMPLES_TEST_DEPS + ["//modules/examples/proto:examples_gen_proto"],
 )
