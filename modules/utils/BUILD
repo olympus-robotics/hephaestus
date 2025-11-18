@@ -17,7 +17,6 @@ heph_cc_library(
     implementation_deps = [
         "@abseil-cpp//absl/random:random",
         "@abseil-cpp//absl/time:time",
-        "@range-v3//:range-v3",
     ],
     includes = [
         "include",

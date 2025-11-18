@@ -5,14 +5,13 @@
 declare_module(
   NAME utils
   DEPENDS_ON_MODULES "" # **Note**: This module should not depend on any other module
-  DEPENDS_ON_EXTERNAL_PROJECTS fmt absl magic_enum range-v3
+  DEPENDS_ON_EXTERNAL_PROJECTS fmt absl magic_enum
   ALWAYS_BUILD
 )
 
 find_package(absl REQUIRED)
 find_package(fmt REQUIRED)
 find_package(magic_enum REQUIRED)
-find_package(range-v3 REQUIRED)
 
 # library sources
 set(SOURCES
@@ -44,7 +43,7 @@ set(SOURCES
 # library target
 define_module_library(
   NAME utils
-  PUBLIC_LINK_LIBS absl::log absl::random_random absl::time fmt::fmt magic_enum::magic_enum range-v3::range-v3
+  PUBLIC_LINK_LIBS absl::log absl::random_random absl::time fmt::fmt magic_enum::magic_enum
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}
   PUBLIC_INCLUDE_PATHS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>

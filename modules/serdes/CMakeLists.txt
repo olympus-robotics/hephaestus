@@ -5,14 +5,13 @@
 declare_module(
   NAME serdes
   DEPENDS_ON_MODULES utils error_handling
-  DEPENDS_ON_EXTERNAL_PROJECTS absl magic_enum Protobuf range-v3
+  DEPENDS_ON_EXTERNAL_PROJECTS absl magic_enum Protobuf
 )
 
 find_package(absl REQUIRED)
 find_package(magic_enum REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(utf8_range REQUIRED)
-find_package(range-v3 REQUIRED)
 
 # library sources
 set(SOURCES
@@ -50,7 +49,6 @@ define_module_library(
     hephaestus::error_handling
     magic_enum::magic_enum
     protobuf::libprotobuf
-    range-v3::range-v3
     utf8_range::utf8_validity
   PRIVATE_LINK_LIBS ""
   SOURCES ${SOURCES}

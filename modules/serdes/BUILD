@@ -17,7 +17,6 @@ heph_cc_library(
     implementation_deps = [
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
-        "@range-v3//:range-v3",
     ],
     includes = [
         "include",
