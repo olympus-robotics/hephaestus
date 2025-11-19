@@ -19,8 +19,11 @@
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
 namespace heph::concurrency {
-struct TaskBase;
-}
+struct TimedTaskBase {
+  virtual ~TimedTaskBase() = default;
+  virtual void startTask() noexcept = 0;
+};
+}  // namespace heph::concurrency
 namespace heph::concurrency::io_ring {
 
 enum class ClockMode : std::uint8_t { WALLCLOCK, SIMULATED };
@@ -50,7 +53,7 @@ struct TimerClock {
 };
 
 struct TimerEntry {
-  TaskBase* task{ nullptr };
+  TimedTaskBase* task{ nullptr };
   TimerClock::time_point start_time;
 
   friend auto operator<=>(const TimerEntry& lhs, const TimerEntry& rhs) {
@@ -72,8 +75,8 @@ public:
 
   void tick();
 
-  void startAt(TaskBase* task, TimerClock::time_point start_time);
-  void dequeue(TaskBase* task);
+  void startAt(TimedTaskBase* task, TimerClock::time_point start_time);
+  void dequeue(TimedTaskBase* task);
 
   auto now() -> TimerClock::time_point {
     return last_tick_;
@@ -113,7 +116,7 @@ private:
   };
 
   void update(TimerClock::time_point start_time);
-  auto next(bool advance = false) -> TaskBase*;
+  auto next(bool advance = false) -> TimedTaskBase*;
 
   friend struct TimerClock;
 

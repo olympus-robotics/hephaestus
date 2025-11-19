@@ -107,15 +107,14 @@ TEST(BasicInput, JustCoroutineInput) {
   EXPECT_GE(input.lastTriggerTime(), start_time);
 }
 
-// TODO: (heller) enable again once timer got fully reworked
-TEST(BasicInput, DISABLED_PeriodicCancelled) {
+TEST(BasicInput, PeriodicCancelled) {
   Periodic periodic;
-  exec::async_scope scope;
 
   periodic.setPeriodDuration(std::chrono::hours{ 1 });
 
   auto start_time = ClockT::now();
   {
+    exec::async_scope scope;
     concurrency::Context context{ {} };
     auto stop = stdexec::then([&]() { context.requestStop(); });
     bool triggered = false;
@@ -130,10 +129,13 @@ TEST(BasicInput, DISABLED_PeriodicCancelled) {
     scope.spawn(context.scheduler().scheduleAfter(std::chrono::milliseconds{ 1 }) | stop);
 
     context.run();
+    scope.request_stop();
+    stdexec::sync_wait(scope.on_empty());
     EXPECT_FALSE(triggered);
     EXPECT_GE(periodic.lastTriggerTime(), start_time);
   }
   {
+    exec::async_scope scope;
     concurrency::Context context{ {} };
     auto stop = stdexec::then([&]() { context.requestStop(); });
     bool triggered = false;
@@ -241,7 +243,7 @@ TEST(BasicInput, ConditionalTriggerConcurrent) {
   scope.spawn(heph::concurrency::repeatUntil([&]() {
     return stdexec::schedule(context.scheduler()) | stdexec::let_value([&]() {
              conditional.enable();
-             return context.scheduler().scheduleAfter(std::chrono::microseconds{ 1 }) | stdexec::then([&]() {
+             return context.scheduler().scheduleAfter(std::chrono::microseconds{ 10 }) | stdexec::then([&]() {
                       conditional.disable();
                       return false;
                     });

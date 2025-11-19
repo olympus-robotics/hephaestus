@@ -69,8 +69,8 @@ private:
   template <typename Receiver, typename Context>
   friend struct TimedTask;
 
-  auto enqueueAt(TaskBase* task, ClockT::time_point start_time) -> bool;
-  void dequeueTimer(TaskBase* task);
+  void enqueueAt(TimedTaskBase* task, ClockT::time_point start_time);
+  void dequeueTimer(TimedTaskBase* task);
 
   auto runTimedTasks() -> bool;
   auto runTasks() -> bool;
