@@ -3,6 +3,7 @@
 // =====================================================================================
 #include "hephaestus/test_utils/environment.h"
 
+#include <memory>
 #include <random>
 
 #include <gtest/gtest.h>
@@ -34,9 +35,10 @@ private:
   const error_handling::PanicAsExceptionScope panic_scope_;
 };
 
-// NOLINTNEXTLINE
+// NOLINTBEGIN
 static auto* const test_environments =
     dynamic_cast<MyEnvironment*>(::testing::AddGlobalTestEnvironment(new MyEnvironment{}));
+// NOLINTEND
 }  // namespace
 
 auto mt() -> std::mt19937_64& {
