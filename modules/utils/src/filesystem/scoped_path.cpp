@@ -53,7 +53,7 @@ ScopedPath::operator std::filesystem::path() const {
 }
 
 ScopedPath::operator std::string() const {
-  return path_;
+  return path_.string();
 }
 
 ScopedPath::operator std::string_view() const {
