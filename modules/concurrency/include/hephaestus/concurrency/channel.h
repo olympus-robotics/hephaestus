@@ -104,6 +104,21 @@ public:
     return data_.size();
   }
 
+  void setValueOverwrite(T t) {
+    internal::AwaiterBase* get_awaiter{ nullptr };
+    {
+      absl::MutexLock lock{ &mutex_ };
+      while (!data_.push(std::move(t))) {
+        data_.pop();
+      }
+
+      get_awaiter = get_awaiters_.dequeue();
+    }
+    if (get_awaiter != nullptr) {
+      get_awaiter->restart();
+    }
+  }
+
 private:
   template <typename T_, std::size_t Capacity_>
   friend struct internal::SetValueSender;
