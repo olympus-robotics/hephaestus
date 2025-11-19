@@ -16,6 +16,7 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/accept.h"
 #include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/endpoint.h"
@@ -57,7 +58,7 @@ TEST(Net, Ipv4Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_DEATH(Endpoint::createIpV4("."), "");
+  EXPECT_THROW(Endpoint::createIpV4("."), error_handling::PanicException);
 }
 
 TEST(Net, Ipv6Endpoint) {
@@ -88,7 +89,7 @@ TEST(Net, Ipv6Endpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_DEATH(Endpoint::createIpV6(":"), "");
+  EXPECT_THROW(Endpoint::createIpV6(":"), error_handling::PanicException);
 }
 
 TEST(Net, BtEndpoint) {
@@ -119,7 +120,7 @@ TEST(Net, BtEndpoint) {
   std::memcpy(handle1.data(), handle2.data(), handle2.size());
   EXPECT_EQ(ep3, ep1);
 
-  EXPECT_DEATH(Endpoint::createBt(":"), "");
+  EXPECT_THROW(Endpoint::createBt(":"), error_handling::PanicException);
 }
 
 TEST(Net, TCPOperationsSome) {
