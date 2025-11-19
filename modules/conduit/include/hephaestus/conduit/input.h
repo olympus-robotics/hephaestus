@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -25,12 +26,17 @@
 
 namespace heph::conduit {
 
+static inline constexpr auto OVERWRITE_POLICY = std::size_t(-1);
+
 /// `Input` is representing the set of typed inputs which are the incoming edges into a node in the
 /// execution graph.
 template <typename T, std::size_t QueueDepth = 1>
 class Input : public TypedInput<T> {
   using typename TypedInput<T>::SetValueSenderT;
   using BasicInput::SenderT;
+
+  static constexpr bool OVERWRITE = QueueDepth == OVERWRITE_POLICY;
+  static constexpr auto QUEUE_DEPTH = OVERWRITE ? 1 : QueueDepth;
 
 public:
   /// @tparam Policy type
@@ -47,7 +53,12 @@ public:
     if (!this->enabled()) {
       return stdexec::just();
     }
-    return value_channel_.setValue(std::move(t));
+    if constexpr (OVERWRITE) {
+      value_channel_.setValueOverwrite(std::move(t));
+      return stdexec::just();
+    } else {
+      return value_channel_.setValue(std::move(t));
+    }
   }
 
   [[nodiscard]] auto hasValue() const -> bool {
@@ -106,7 +117,7 @@ private:
   }
 
 private:
-  heph::concurrency::Channel<T, QueueDepth> value_channel_;
+  heph::concurrency::Channel<T, QUEUE_DEPTH> value_channel_;
   ValueStorage<T> value_storage_;
   ValueTrigger<T> value_trigger_;
   std::optional<ClockT::duration> timeout_;

@@ -45,8 +45,31 @@ TEST(Input, DefaultPolicy) {
 
   stdexec::sync_wait(input.trigger(context.scheduler()));
   EXPECT_TRUE(input.hasValue());
+  stdexec::sync_wait(input.setValue(4));
   EXPECT_EQ(input.value(), 3);
   EXPECT_NE(last_trigger_time, input.lastTriggerTime());
+}
+
+TEST(Input, DefaultPolicyOverwrite) {
+  heph::concurrency::Context context{ {} };
+
+  Input<int, OVERWRITE_POLICY> input{ "input" };
+
+  EXPECT_FALSE(input.hasValue());
+
+  stdexec::sync_wait(input.setValue(1));
+  stdexec::sync_wait(input.setValue(2));
+  EXPECT_FALSE(input.hasValue());
+
+  stdexec::sync_wait(input.trigger(context.scheduler()));
+  EXPECT_TRUE(input.hasValue());
+  EXPECT_EQ(input.value(), 2);
+
+  stdexec::sync_wait(input.setValue(3));
+  stdexec::sync_wait(input.trigger(context.scheduler()));
+  EXPECT_TRUE(input.hasValue());
+  stdexec::sync_wait(input.setValue(4));
+  EXPECT_EQ(input.value(), 3);
 }
 
 TEST(Input, ResetBlockingPolicy) {
@@ -133,8 +156,7 @@ TEST(Input, BestEffortInputPolicy) {
     auto last_trigger_time = input.lastTriggerTime();
 
     scope.spawn(input.trigger(context.scheduler()) | stdexec::then([&]() { context.requestStop(); }));
-    scope.spawn(context.scheduler().scheduleAfter(TIMEOUT / 2) |
-                stdexec::let_value([&]() { return input.setValue(0); }));
+    scope.spawn(context.scheduler().schedule() | stdexec::let_value([&]() { return input.setValue(0); }));
 
     context.run();
     EXPECT_TRUE(input.hasValue());
