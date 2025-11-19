@@ -18,6 +18,7 @@ heph_cc_library(
         "//modules/error_handling",
         "//modules/random",
         "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
         "//modules/utils",
         "@googletest//:gtest",
     ],

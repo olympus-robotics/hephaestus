@@ -12,6 +12,7 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/utils/stack_trace.h"
 
 namespace heph::test_utils {
@@ -19,7 +20,10 @@ namespace {
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class MyEnvironment : public ::testing::Environment {
 public:
-  ~MyEnvironment() override = default;
+  ~MyEnvironment() override {
+    telemetry::flushMetrics();
+    telemetry::flushLogEntries();
+  };
 
   void SetUp() override {
     telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
