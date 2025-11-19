@@ -9,6 +9,7 @@
 
 #include "gmock/gmock.h"
 #include "hephaestus/cli/program_options.h"
+#include "hephaestus/error_handling/panic.h"
 
 // NOLINTBEGIN(cert-err58-cpp, cppcoreguidelines-owning-memory, modernize-use-trailing-return-type,
 // cppcoreguidelines-avoid-goto) NOLINTNEXTLINE(google-build-using-namespace, modernize-type-traits)
@@ -61,19 +62,21 @@ TEST(ProgramOptions, Option) {
 TEST(ProgramOptions, Errors) {
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
-    EXPECT_DEATH(std::move(desc).parse({ "--option" }), "");
+    EXPECT_THROW(std::move(desc).parse({ "--option" }), error_handling::PanicException);
   }
 
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
     desc.defineOption<std::string>("option", "desc").defineOption<int>("other", "desc");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({}), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option" }), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "value" }), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "--other_option" }), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "value" }), "");
-    EXPECT_DEATH(ProgramDescription{ desc }.parse({ "--option", "-o" }), "");
+    EXPECT_THROW(ProgramDescription{ desc }.parse({}), error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option" }), error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "value" }), error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "--other_option" }),
+                 error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value", "other_value" }),
+                 error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "value" }), error_handling::PanicException);
+    EXPECT_THROW(ProgramDescription{ desc }.parse({ "--option", "-o" }), error_handling::PanicException);
   }
 
   {
