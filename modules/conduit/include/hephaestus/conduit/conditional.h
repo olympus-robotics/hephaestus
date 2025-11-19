@@ -12,6 +12,7 @@
 #include <stdexec/execution.hpp>
 #include <stdexec/stop_token.hpp>
 
+#include "hephaestus/concurrency/stoppable_operation_state.h"
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/containers/intrusive_fifo_queue.h"
@@ -95,67 +96,41 @@ private:
     template <typename Receiver>
     class Operation : public OperationBase {
     public:
-      Operation(Conditional* self, Receiver receiver) : self_(self), receiver_(std::move(receiver)) {
+      Operation(Conditional* self, Receiver receiver)
+        : self_(self), operation_state_(std::move(receiver), [this]() { setStopped(); }) {
       }
 
       void start() noexcept {
-        auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver_));
-        if (stop_token.stop_requested()) {
-          stdexec::set_stopped(std::move(receiver_));
-          return;
-        }
+        auto start_transition = operation_state_.start();
 
-        if (!trigger()) {
-          stop_token_callback_.emplace(stop_token, StopCallback{ this });
-        }
+        trigger();
       }
 
       void restart() noexcept final {
+        auto start_transition = operation_state_.restart();
         trigger();
       }
 
     private:
-      auto trigger() -> bool {
+      void trigger() {
         {
           const absl::MutexLock lock{ &self_->mtx_ };
           if (!self_->enabled_) {
             self_->waiters_.enqueue(this);
-            return false;
+            return;
           }
-          reset();
         }
-        stdexec::set_value(std::move(receiver_), true);
-
-        return true;
-      }
-
-      void reset() {
-        stop_token_callback_.reset();
-        self_->waiters_.erase(this);
+        operation_state_.setValue(true);
       }
 
       void setStopped() {
-        {
-          const absl::MutexLock lock{ &self_->mtx_ };
-          reset();
-        }
-        stdexec::set_stopped(std::move(receiver_));
+        const absl::MutexLock lock{ &self_->mtx_ };
+        self_->waiters_.erase(this);
       }
 
     private:
-      struct StopCallback {
-        Operation* self;
-        void operator()() const {
-          self->setStopped();
-        }
-      };
-      using ReceiverEnvT = stdexec::env_of_t<Receiver>;
-      using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-      using StopTokenCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
-
       Conditional* self_{ nullptr };
-      Receiver receiver_;
-      std::optional<StopTokenCallbackT> stop_token_callback_;
+      concurrency::StoppableOperationState<Receiver, bool> operation_state_;
     };
 
     template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
