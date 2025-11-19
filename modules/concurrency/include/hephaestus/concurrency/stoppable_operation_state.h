@@ -95,9 +95,14 @@ struct StoppableOperationState {
 
   [[nodiscard]] auto restart() -> std::optional<ToStartedTransition> {
     State previous_state{ STARTED };
-    {
+    while (true) {
       const absl::MutexLock l{ &mutex };
+      // wait for other potentially concurrent STARTING operations
+      if (state == STARTING) {
+        continue;
+      }
       previous_state = std::exchange(state, STARTING);
+      break;
     }
     switch (previous_state) {
       case STARTED:
@@ -105,9 +110,10 @@ struct StoppableOperationState {
         // STARTED
         break;
       // restart might get called concurrently to any  other transition. Just ignore in that case
-      case STARTING:
       case STOPPED:
         return std::nullopt;
+      case STARTING:
+        heph::panic("invalid state");
       case COMPLETED:
         heph::panic("restart called concurrently with setValue");
         break;

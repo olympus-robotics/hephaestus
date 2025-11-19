@@ -116,6 +116,7 @@ private:
       absl::MutexLock lock{ &mutex_ };
       if (!data_.push(std::move(t))) {
         set_awaiters_.enqueue(set_awaiter);
+        assert(get_awaiters_.size() == 0);
         return false;
       }
 
@@ -135,6 +136,7 @@ private:
       res = data_.pop();
       if (!res.has_value()) {
         get_awaiters_.enqueue(get_awaiter);
+        assert(set_awaiters_.size() == 0);
         return std::nullopt;
       }
 
@@ -176,6 +178,7 @@ struct SetValueSender {
     void restart() noexcept final {
       auto start_transition = operation_state_.restart();
       if (start_transition.has_value()) {
+        stop();
         setValue();
       }
     }
@@ -238,6 +241,7 @@ struct GetValueSender {
     void restart() noexcept final {
       auto start_transition = operation_state_.restart();
       if (start_transition.has_value()) {
+        stop();
         getValue();
       }
     }
