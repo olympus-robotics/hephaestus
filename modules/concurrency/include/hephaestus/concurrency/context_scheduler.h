@@ -19,6 +19,7 @@
 #include "hephaestus/concurrency/basic_sender.h"
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/concurrency/stoppable_operation_state.h"
 #include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency {
@@ -69,21 +70,11 @@ struct ContextEnv {
   }
 };
 
-struct TaskBase;
-struct TaskDispatchOperation : io_ring::IoRingOperationBase {
-  explicit TaskDispatchOperation(TaskBase* task) noexcept : self(task) {
-  }
-
-  void handleCompletion(::io_uring_cqe* cqe) final;
-  TaskBase* self;
-};
-
 struct TaskBase {
   virtual ~TaskBase() = default;
   virtual void start() noexcept = 0;
   virtual void setValue() noexcept = 0;
 
-  TaskDispatchOperation dispatch_operation{ this };
   TaskBase* next{ nullptr };
   TaskBase* prev{ nullptr };
 };
@@ -112,31 +103,41 @@ struct Task : TaskBase {
 };
 
 template <typename ReceiverT, typename ContextT>
-struct TimedTask : TaskBase {
-  struct StopCallback {
-    void operator()() const noexcept {
-      self->setStopped();
+struct TimedTask : TimedTaskBase {
+  struct Receiver {
+    using receiver_concept = stdexec::receiver_t;
+
+    //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+    void set_value() noexcept {
+      self->task.start();
     }
-    TimedTask* self;
+    void set_stopped() noexcept {
+      stdexec::set_stopped(std::move(self->task.receiver));
+    }
+
+    template <typename Error>
+    void set_error(Error&& error) noexcept {
+      // stdexec::set_error(std::move(self->task.receiver), std::forward<Error>(error));
+    }
+
+    [[nodiscard]] auto get_env() const noexcept {
+      return stdexec::get_env(self->task.receiver);
+    }
+    // NOLINTEND
+
+    TimedTask* self{ nullptr };
   };
-  using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
-  using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-  using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
 
   Task<ReceiverT, ContextT> task;
   io_ring::TimerClock::time_point start_time;
-  std::optional<StopCallbackT> stop_callback;
-  bool timeout_started{ false };
+  StoppableOperationState<Receiver> operation_state;
 
   template <typename Clock, typename Duration>
   TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
             ReceiverT&& receiver_input)
     : task(context_input, std::move(receiver_input))
-    , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input)) {
-    // Avoid putting it the task in the timer when the deadline was already exceeded...
-    if (start_time <= io_ring::TimerClock::now()) {
-      timeout_started = true;
-    }
+    , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input))
+    , operation_state(Receiver{ this }, [this]() { dequeue(); }) {
   }
 
   TimedTask(TimedTask&& other) = delete;
@@ -148,25 +149,23 @@ struct TimedTask : TaskBase {
     task.context->dequeueTimer(this);
   }
 
-  void start() noexcept final {
-    if (!timeout_started) {
-      timeout_started = true;
-      task.context->enqueueAt(this, start_time);
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(task.receiver));
-      stop_callback.emplace(stop_token, StopCallback{ this });
+  void start() noexcept {
+    // Avoid putting it the task in the timer when the deadline was already exceeded...
+    if (start_time <= io_ring::TimerClock::now()) {
+      task.start();
       return;
     }
-    stop_callback.reset();
-    task.start();
+    auto start_transition = operation_state.start();
+
+    task.context->enqueueAt(this, start_time);
   }
 
-  void setStopped() noexcept {
+  void startTask() noexcept final {
+    operation_state.setValue();
+  }
+
+  void dequeue() noexcept {
     task.context->dequeueTimer(this);
-    stdexec::set_stopped(std::move(task.receiver));
-  }
-
-  void setValue() noexcept final {
-    heph::panic("not implemented");
   }
 };
 

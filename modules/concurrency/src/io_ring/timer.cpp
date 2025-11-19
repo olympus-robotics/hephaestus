@@ -156,8 +156,8 @@ Timer::~Timer() noexcept {
 }
 
 void Timer::tick() {
-  for (TaskBase* task = next(); task != nullptr; task = next()) {
-    task->start();
+  for (TimedTaskBase* task = next(); task != nullptr; task = next()) {
+    task->startTask();
   }
   std::optional<TimerClock::time_point> start_time;
   {
@@ -174,7 +174,7 @@ void Timer::tick() {
 }
 
 auto Timer::tickSimulated(bool advance) -> bool {
-  TaskBase* task{ nullptr };
+  TimedTaskBase* task{ nullptr };
   {
     const absl::MutexLock lock{ &mutex_ };
     if (tasks_.empty()) {
@@ -192,18 +192,18 @@ auto Timer::tickSimulated(bool advance) -> bool {
     }
   }
   if (task != nullptr) {
-    task->start();
+    task->startTask();
     return !empty();
   }
 
   task = next();
   if (task != nullptr) {
-    task->start();
+    task->startTask();
   }
   return !empty();
 }
 
-void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
+void Timer::startAt(TimedTaskBase* task, TimerClock::time_point start_time) {
   {
     const absl::MutexLock lock{ &mutex_ };
     tasks_.emplace_back(task, start_time);
@@ -219,7 +219,7 @@ void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
   update(start_time);
 }
 
-void Timer::dequeue(TaskBase* task) {
+void Timer::dequeue(TimedTaskBase* task) {
   const absl::MutexLock lock{ &mutex_ };
   auto it = std::ranges::find_if(tasks_, [task](const TimerEntry& entry) { return task == entry.task; });
   if (it == tasks_.end()) {
@@ -229,7 +229,7 @@ void Timer::dequeue(TaskBase* task) {
   std::ranges::make_heap(tasks_, std::greater<>{});
 }
 
-auto Timer::next(bool advance) -> TaskBase* {
+auto Timer::next(bool advance) -> TimedTaskBase* {
   const absl::MutexLock lock{ &mutex_ };
   if (!tasks_.empty()) {
     auto now = TimerClock::now();

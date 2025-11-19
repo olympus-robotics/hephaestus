@@ -38,17 +38,11 @@ void Context::dequeue(TaskBase* task) {
   tasks_.erase(task);
 }
 
-auto Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) -> bool {
-  if (!ring_.isRunning() || ring_.isCurrent()) {
-    timer_.startAt(task, start_time);
-    return true;
-  }
-  ring_.submit(&task->dispatch_operation);
-  return false;
+void Context::enqueueAt(TimedTaskBase* task, ClockT::time_point start_time) {
+  timer_.startAt(task, start_time);
 }
 
-void Context::dequeueTimer(TaskBase* task) {
-  dequeue(task);
+void Context::dequeueTimer(TimedTaskBase* task) {
   timer_.dequeue(task);
 }
 
