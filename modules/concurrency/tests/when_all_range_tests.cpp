@@ -56,7 +56,7 @@ TEST(WhenAllRange, Concurrent) {
   std::vector<AnySender<void>> senders;
   exec::static_thread_pool pool{ 4 };
 
-  std::size_t completed{ 0 };
+  std::atomic<std::size_t> completed{ 0 };
   static constexpr std::size_t NUMBER_OF_SENDERS{ 100 };
   for (std::size_t i = 0; i != NUMBER_OF_SENDERS; ++i) {
     senders.emplace_back(stdexec::schedule(pool.get_scheduler()) |
