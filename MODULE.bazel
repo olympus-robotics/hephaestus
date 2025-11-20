@@ -21,15 +21,6 @@ bazel_dep(name = "platforms", version = "1.0.0", dev_dependency = True)
 # LLVM
 bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 
-LLVM_COMMIT = "f20171ed00072d6ac11860e647ec4ec50b9be878"
-
-archive_override(
-    module_name = "toolchains_llvm",
-    sha256 = "d85f78a501d6050fa0f1fb74e1c5f971549cd6d0b9c9147857935c0346c070d0",
-    strip_prefix = "toolchains_llvm-{commit}".format(commit = LLVM_COMMIT),
-    url = "https://github.com/bazel-contrib/toolchains_llvm/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
-)
-
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 
 LLVM_VERSION = "21.1.0"
@@ -107,11 +98,11 @@ use_repo(doxygen_extension, "doxygen")
 # Third-party dependencies #
 ############################
 
-bazel_dep(name = "tcmalloc", version = "0.0.0-20250331-43fcf6e")
+bazel_dep(name = "tcmalloc", version = "0.0.0-20250927-12f2552")
 bazel_dep(name = "googletest", version = "1.15.2")
-bazel_dep(name = "abseil-cpp", version = "20250127.0")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
 bazel_dep(name = "magic_enum", version = "0.9.5")
-bazel_dep(name = "fmt", version = "11.1.4")
+bazel_dep(name = "fmt", version = "12.1.0")
 bazel_dep(name = "protobuf", version = "30.0")
 bazel_dep(name = "nlohmann_json", version = "3.11.3")
 bazel_dep(name = "eigen", version = "3.4.0.bcr.3")
