@@ -20,7 +20,7 @@ RUN wget -q -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${CM
     ./cmake.sh --skip-license --prefix=/usr/ && \
     rm cmake.sh
 
-ENV CLANG_VERSION=20
+ENV CLANG_VERSION=21
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     sed -i "s/add-apt-repository \"${REPO_NAME}\"/add-apt-repository \"${REPO_NAME}\" -y/g" llvm.sh && \
     chmod +x llvm.sh && \
@@ -34,6 +34,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VER
     --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-$CLANG_VERSION \
     --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-$CLANG_VERSION && \
     ln -s "/usr/bin/clangd-${CLANG_VERSION}" "/usr/bin/clangd"
+
 
 ARG ZENOH_VERSION=1.1.1
 RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
@@ -51,6 +52,19 @@ ENV RUSTUP_HOME=/usr/local/rustup
 RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN . "$CARGO_HOME/env" && cargo install sccache --locked && echo "export RUSTC_WRAPPER=sccache" >> "$HOME/.bashrc"
 RUN chmod o+rw -R /usr/local/cargo/
+
+ENV GCC_VERSION=15.1.0
+RUN  apt update && apt install -y --no-install-recommends build-essential gawk flex bison libgmp-dev libmpfr-dev libmpc-dev binutils perl libisl-dev libzstd-dev tar gzip bzip2 && \
+    mkdir gcc-15 && cd gcc-15 && \
+    git clone https://gcc.gnu.org/git/gcc.git --branch releases/gcc-${GCC_VERSION} --depth 1  gcc-15-source && cd gcc-15-source && \
+    ./contrib/download_prerequisites && \
+    cd ../ && mkdir gcc-15-build && cd gcc-15-build && \
+    ../gcc-15-source/configure --prefix=/opt/gcc-15 --disable-multilib --enable-languages=c,c++ && \
+    make -j6 && make install && \
+    update-alternatives --install /usr/bin/gcc gcc /opt/gcc-15/bin/gcc 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /opt/gcc-15/bin/g++ 100 && \
+    cd && rm -rf gcc-15 && rm -rf /var/lib/apt/lists/*
+
 
 RUN wget -q -O - https://pixi.sh/install.sh | PIXI_HOME=/usr/local bash
 
