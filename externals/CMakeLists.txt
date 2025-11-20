@@ -77,11 +77,11 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # Abseil C++
-set(ABSEIL_VERSION 20250127)
-set(ABSEIL_TAG ${ABSEIL_VERSION}.0)
+set(ABSEIL_VERSION 20250814)
+set(ABSEIL_TAG ${ABSEIL_VERSION}.1)
 set(ABSEIL_CMAKE_ARGS
     -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
-    -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF
 )
 add_cmake_dependency(
   NAME absl
@@ -150,7 +150,7 @@ add_cmake_dependency(
 
 # --------------------------------------------------------------------------------------------------
 # fmt
-set(FMT_VERSION 11.2.0)
+set(FMT_VERSION 12.1.0)
 set(FMT_CMAKE_ARGS -DFMT_MASTER_PROJECT=OFF)
 add_cmake_dependency(
   NAME fmt
