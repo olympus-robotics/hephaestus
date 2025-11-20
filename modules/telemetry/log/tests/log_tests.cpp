@@ -48,7 +48,7 @@ public:
   }
 
 private:
-  containers::BlockingQueue<std::string> logs_{ std::nullopt };
+  containers::BlockingQueue<std::string> logs_{ 1 };
 };
 
 class LogTestFixture : public ::testing::Test {

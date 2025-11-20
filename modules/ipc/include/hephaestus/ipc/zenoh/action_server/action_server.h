@@ -111,6 +111,7 @@ private:
   serdes::ActionServerTypeInfo type_info_;
   std::unique_ptr<Service<std::string, std::string>> type_info_service_;
 
+  static constexpr auto MAX_REQUEST_QUEUE_SIZE = 1;  // we process only one element at a time
   concurrency::MessageQueueConsumer<Request<RequestT>> request_consumer_;
   std::atomic_bool is_running_{ false };
 };
@@ -163,7 +164,8 @@ ActionServer<RequestT, StatusT, ReplyT>::ActionServer(SessionPtr session, TopicC
                  .status = serdes::getSerializedTypeInfo<StatusT>() })
   , type_info_service_(createTypeInfoService(
         session_, topic_config_, [this](const std::string&) { return this->type_info_.toJson(); }))
-  , request_consumer_([this](const Request<RequestT>& request) { return execute(request); }, std::nullopt) {
+  , request_consumer_([this](const Request<RequestT>& request) { return execute(request); },
+                      MAX_REQUEST_QUEUE_SIZE) {
   request_consumer_.start();
   heph::log(heph::DEBUG, "started Action Server", "topic", topic_config_.name);
 }
@@ -201,10 +203,10 @@ auto ActionServer<RequestT, StatusT, ReplyT>::onRequest(const Request<RequestT>&
 
   if (!request_consumer_.queue().tryPush(request)) {
     // NOTE: this should never happen as the queue is unbound.
-    heph::log(
-        heph::ERROR,
-        "failed to push the job in the queue. NOTE: this should not happen, something is wrong in the code!",
-        "topic", topic_config_.name);
+    heph::log(heph::ERROR,
+              "failed to push the job in the queue. NOTE: this should not happen as we control the number of "
+              "concurrent requests elsewhere.",
+              "topic", topic_config_.name);
     return { .status = RequestStatus::INVALID };
   }
 
