@@ -44,12 +44,11 @@ private:
   const error_handling::PanicAsExceptionScope panic_scope_;
 };
 
-inline DefaultEnvironment* default_test_environments = nullptr;  // NOLINT
+void createDefaultTestEnvironment();
+[[nodiscard]] auto defaultTestEnvironment() -> DefaultEnvironment*;
 
 }  // namespace internal
 
-[[nodiscard]] static inline auto mt() -> std::mt19937_64& {
-  return internal::default_test_environments->mt();
-}
+[[nodiscard]] auto mt() -> std::mt19937_64&;
 
 }  // namespace heph::test_utils
