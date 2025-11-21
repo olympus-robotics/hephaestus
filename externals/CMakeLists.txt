@@ -151,13 +151,11 @@ add_cmake_dependency(
 # --------------------------------------------------------------------------------------------------
 # fmt
 set(FMT_VERSION 12.1.0)
-set(FMT_CMAKE_ARGS -DFMT_MASTER_PROJECT=OFF)
 add_cmake_dependency(
   NAME fmt
   VERSION ${FMT_VERSION}
   GIT_REPOSITORY "https://github.com/fmtlib/fmt.git"
   GIT_TAG ${FMT_VERSION}
-  CMAKE_ARGS ${FMT_CMAKE_ARGS}
 )
 
 # --------------------------------------------------------------------------------------------------
