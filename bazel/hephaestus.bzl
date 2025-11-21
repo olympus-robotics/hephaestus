@@ -90,12 +90,16 @@ def heph_cc_library(
         hdrs,
         copts = [],
         linkopts = [],
+        deps = [],
+        implementation_deps = [],
         **kwargs):
     cc_library(
         name = name,
         hdrs = hdrs,
         copts = heph_copts() + copts,
         linkopts = heph_linkopts() + linkopts,
+        deps = deps,
+        implementation_deps = implementation_deps,
         **kwargs
     )
 
@@ -254,7 +258,6 @@ def heph_cc_test(
         linkopts = heph_linkopts() + linkopts,
         deps = deps + [
             "@googletest//:gtest",
-            "@googletest//:gtest_main",
             "@hephaestus//modules/test_utils",
         ],
         env = merged_env,

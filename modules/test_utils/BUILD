@@ -2,7 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library")
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_binary", "heph_cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,15 +15,15 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
         "//modules/error_handling",
         "//modules/random",
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",
         "//modules/utils",
         "@googletest//:gtest",
-    ],
-    includes = ["include"],
-    visibility = ["//visibility:public"],
-    deps = [
     ],
 )
