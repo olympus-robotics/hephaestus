@@ -20,7 +20,6 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <fmt/std.h>  // NOLINT(misc-include-cleaner)
-#include <magic_enum.hpp>
 
 namespace heph {
 ///@brief Forward declaration of LogLevel. Definition is in log.h, since we only want to include that when
@@ -144,7 +143,23 @@ struct fmt::formatter<heph::telemetry::Field<std::string>> : fmt::formatter<std:
 template <>
 struct fmt::formatter<heph::LogLevel> : fmt::formatter<std::string_view> {
   static auto format(const heph::LogLevel& level, fmt::format_context& ctx) {
-    return fmt::format_to(ctx.out(), "{}", magic_enum::enum_name(level));
+    const auto levelName = [&] {
+      switch (level) {
+        case heph::LogLevel::TRACE:
+          return "TRACE";
+        case heph::LogLevel::DEBUG:
+          return "DEBUG";
+        case heph::LogLevel::INFO:
+          return "INFO";
+        case heph::LogLevel::WARN:
+          return "WARN";
+        case heph::LogLevel::ERROR:
+          return "ERROR";
+      }
+      return "UNKNOWN";
+    }();
+
+    return fmt::format_to(ctx.out(), "{}", levelName);
   }
 };
 
