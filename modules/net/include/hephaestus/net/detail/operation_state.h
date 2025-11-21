@@ -4,10 +4,6 @@
 
 #pragma once
 
-#include <optional>
-
-#include <stdexec/execution.hpp>
-
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
@@ -16,38 +12,15 @@ namespace heph::net::detail {
 template <typename Operation>
 class OperationState {
 public:
-  struct StopCallback {
-    OperationState* self;
-    void operator()() const noexcept {
-      self->requestStop();
-    }
-  };
-
-  using EnvCallbackT = stdexec::stop_callback_for_t<typename Operation::StopTokenT, StopCallback>;
-  using RingCallbackT = stdexec::stop_callback_for_t<stdexec::inplace_stop_token, StopCallback>;
-
   OperationState(concurrency::io_ring::IoRing* io_ring, Operation&& operation)
-    : operation_(std::move(operation), *io_ring, stop_source_.get_token()) {
+    : operation_(std::move(operation), *io_ring) {
   }
 
   void submit() {
-    auto* ring = operation_.ring;
-    env_stop_.emplace(operation_.operation.getStopToken(), StopCallback{ this });
-    ring_stop_.emplace(ring->getStopToken(), StopCallback{ this });
-    ring->submit(&operation_);
+    operation_.submit(operation_.operation.getStopToken());
   }
 
 private:
-  void requestStop() {
-    env_stop_.reset();
-    ring_stop_.reset();
-    stop_source_.request_stop();
-  }
-
-private:
-  stdexec::inplace_stop_source stop_source_;
-  std::optional<EnvCallbackT> env_stop_;
-  std::optional<RingCallbackT> ring_stop_;
   concurrency::io_ring::StoppableIoRingOperation<Operation> operation_;
 };
 

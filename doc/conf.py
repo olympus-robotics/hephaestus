@@ -8,9 +8,10 @@ exclude_patterns = [
     '**/*bazel*',
     'requirements.*',
 ]
-extensions = ['sphinx.ext.autodoc', 'breathe', 'sphinxcontrib.mermaid']
+extensions = ['sphinx.ext.todo', 'sphinx.ext.autodoc', 'breathe', 'sphinxcontrib.mermaid']
 pygments_style = 'sphinx'
 
+todo_include_todos = True
 
 breathe_projects ={"heph":  os.path.abspath("doxygen/xml")}
 breathe_projects_source = {}

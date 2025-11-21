@@ -24,6 +24,7 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "@abseil-cpp//absl/synchronization:synchronization",
         "@liburing",
         "@stdexec",
     ],
@@ -92,6 +93,25 @@ heph_cc_test(
         ":concurrency",
         "@stdexec",
     ],
+)
+
+heph_cc_test(
+    name = "when_all_range_tests",
+    srcs = ["tests/when_all_range_tests.cpp"],
+    deps = [":concurrency"],
+)
+
+heph_cc_test(
+    name = "channel_tests",
+    srcs = ["tests/channel_tests.cpp"],
+    deps = [":concurrency",         "@stdexec",
+],
+)
+
+heph_cc_test(
+    name = "any_sender_tests",
+    srcs = ["tests/any_sender_tests.cpp"],
+    deps = [":concurrency"],
 )
 
 heph_cc_test(

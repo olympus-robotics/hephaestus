@@ -7,6 +7,8 @@
 #include <chrono>
 #include <functional>
 
+#include <absl/synchronization/mutex.h>
+
 #include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
 
@@ -24,47 +26,42 @@ void Context::run(const std::function<void()>& on_start) {
 }
 
 void Context::enqueue(TaskBase* task) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-    return;
-  }
-  if (!ring_.isRunning() || ring_.isCurrentRing()) {
+  {
+    const absl::MutexLock lock{ &mutex_ };
     tasks_.enqueue(task);
-    return;
   }
-  ring_.submit(&task->dispatch_operation);
+  ring_.notify();
 }
 
-void Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-    return;
-  }
-  if (!ring_.isRunning() || ring_.isCurrentRing()) {
-    if (start_time <= timer_.now()) {
-      tasks_.enqueue(task);
-      return;
-    }
-    timer_.startAt(task, start_time);
-    return;
-  }
-  ring_.submit(&task->dispatch_operation);
-}
-
-void Context::dequeueTimer(TaskBase* task) {
+void Context::dequeue(TaskBase* task) {
+  const absl::MutexLock lock{ &mutex_ };
   tasks_.erase(task);
+}
+
+void Context::enqueueAt(TimedTaskBase* task, ClockT::time_point start_time) {
+  timer_.startAt(task, start_time);
+}
+
+void Context::dequeueTimer(TimedTaskBase* task) {
   timer_.dequeue(task);
 }
 
 auto Context::runTasks() -> bool {
-  if (tasks_.empty()) {
-    return false;
+  TaskBase* task{ nullptr };
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    if (tasks_.empty()) {
+      return false;
+    }
+
+    task = tasks_.dequeue();
   }
+  task->setValue();
 
-  auto* task = tasks_.dequeue();
-  runTask(task);
-
-  return !tasks_.empty();
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    return !tasks_.empty();
+  }
 }
 
 auto Context::runTasksSimulated() -> bool {
@@ -72,21 +69,21 @@ auto Context::runTasksSimulated() -> bool {
   timer_.advanceSimulation(now - last_progress_time_);
   last_progress_time_ = now;
 
-  timer_.tickSimulated(tasks_.empty());
+  // FIXME: make thread safe
+  const bool advance = [this]() {
+    const absl::MutexLock lock{ &mutex_ };
+    return tasks_.empty() && !ring_.hasWork();
+  }();
+  timer_.tickSimulated(advance);
 
   runTasks();
 
-  if (tasks_.empty() && timer_.empty() && stopRequested()) {
-    return false;
-  }
-  return true;
-}
-
-void Context::runTask(TaskBase* task) {
-  if (ring_.stopRequested()) {
-    task->setStopped();
-  } else {
-    task->setValue();
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    if (tasks_.empty() && timer_.empty() && !ring_.isRunning()) {
+      return false;
+    }
+    return true;
   }
 }
 }  // namespace heph::concurrency

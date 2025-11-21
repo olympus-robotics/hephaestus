@@ -5,10 +5,13 @@
 #pragma once
 
 #include <cerrno>
+#include <cstddef>
 #include <optional>
 #include <system_error>
 #include <type_traits>
 
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <liburing.h>
 #include <liburing/io_uring.h>
 #include <stdexec/stop_token.hpp>
@@ -21,13 +24,6 @@ namespace heph::concurrency::io_ring {
 
 template <typename IoRingOperationT>
 struct StoppableIoRingOperation : IoRingOperationBase {
-  struct StopCallback {
-    StoppableIoRingOperation* self;
-
-    void operator()() const {
-      self->requestStop();
-    }
-  };
   struct StopOperation : IoRingOperationBase {
     void prepare(::io_uring_sqe* sqe) final;
 
@@ -36,7 +32,22 @@ struct StoppableIoRingOperation : IoRingOperationBase {
     StoppableIoRingOperation* self;
   };
 
-  StoppableIoRingOperation(IoRingOperationT op, IoRing& ring, stdexec::inplace_stop_token token);
+  struct StopCallback {
+    StoppableIoRingOperation* self;
+    void operator()() const noexcept {
+      self->requestStop();
+    }
+  };
+  using StopCallbackT = stdexec::stop_callback_for_t<stdexec::inplace_stop_token, StopCallback>;
+
+  StoppableIoRingOperation(IoRingOperationT op, IoRing& ring);
+
+  void submit(stdexec::inplace_stop_token token);
+  template <typename Token>
+  void submit(Token /*token*/) {
+    submit();
+  }
+  void submit();
 
   void prepare(::io_uring_sqe* sqe) final;
 
@@ -46,19 +57,17 @@ struct StoppableIoRingOperation : IoRingOperationBase {
 
   IoRingOperationT operation;
   IoRing* ring{ nullptr };
-  stdexec::inplace_stop_callback<StopCallback> stop_callback;
-  int in_flight{ 1 };
+  absl::Mutex mutex;
+  ABSL_GUARDED_BY(mutex) std::size_t in_flight { 1 };
+  ABSL_GUARDED_BY(mutex) bool stop_requested { false };
   std::optional<StopOperation> stop_operation;
+  std::optional<stdexec::inplace_stop_token> stop_token;
+  std::optional<StopCallbackT> stop_callback;
 };
 template <typename IoRingOperationT>
 inline StoppableIoRingOperation<IoRingOperationT>::StoppableIoRingOperation(IoRingOperationT op,
-                                                                            IoRing& io_ring,
-                                                                            stdexec::inplace_stop_token token)
-  : operation(std::move(op)), ring(&io_ring), stop_callback(token, StopCallback{ this }) {
-  if (token.stop_requested()) {
-    in_flight = 0;
-    operation.handleStopped();
-  }
+                                                                            IoRing& io_ring)
+  : operation(std::move(op)), ring(&io_ring) {
 }
 
 template <typename IoRingOperationT>
@@ -68,55 +77,95 @@ inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::prepare(:
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::StopOperation::handleCompletion(::io_uring_cqe* cqe) {
-  --self->in_flight;
-  const int res = cqe->res;
-  if (res < 0) {
-    if (res != -ENOENT && res != -EALREADY) {
-      panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
+  bool stop = false;
+  {
+    const absl::MutexLock lock{ &self->mutex };
+    --self->in_flight;
+    if (self->in_flight == 0) {
+      stop = true;
+      self->stop_callback.reset();
+    }
+    const int res = cqe->res;
+    if (res < 0) {
+      if (res != -ENOENT && res != -EALREADY) {
+        panic("StopOperation failed: {}", std::error_code(-res, std::system_category()).message());
+      }
     }
   }
-  if (self->in_flight == 0) {
+  if (stop) {
     self->operation.handleStopped();
   }
 }
 
 template <typename IoRingOperationT>
+inline void StoppableIoRingOperation<IoRingOperationT>::submit(stdexec::inplace_stop_token token) {
+  stop_token.emplace(token);
+  submit();
+}
+
+template <typename IoRingOperationT>
+inline void StoppableIoRingOperation<IoRingOperationT>::submit() {
+  ring->submit(this);
+}
+
+template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::prepare(::io_uring_sqe* sqe) {
-  if (stop_operation.has_value()) {
-    io_uring_prep_nop(sqe);
-    return;
+  if (stop_token.has_value()) {
+    stop_callback.emplace(*stop_token, StopCallback{ this });
+  }
+  {
+    const absl::MutexLock lock{ &mutex };
+    if (stop_requested) {
+      io_uring_prep_nop(sqe);
+      return;
+    }
   }
   operation.prepare(sqe);
 }
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::handleCompletion(::io_uring_cqe* cqe) {
+  std::optional<absl::MutexLock> lock{ &mutex };
   --in_flight;
-  if (cqe->res == -ECANCELED || stop_operation.has_value()) {
+  if (cqe->res == -ECANCELED || stop_requested) {
     if (in_flight == 0) {
+      lock.reset();
       operation.handleStopped();
     }
-    return;
-  }
-  using CompletionReturnT = decltype(operation.handleCompletion(cqe));
-  if constexpr (std::is_same_v<CompletionReturnT, bool>) {
-    if (!operation.handleCompletion(cqe)) {
-      ++in_flight;
-      ring->submit(this);
-    }
   } else {
+    using CompletionReturnT = decltype(operation.handleCompletion(cqe));
+    if constexpr (std::is_same_v<CompletionReturnT, bool>) {
+      lock.reset();
+      if (!operation.handleCompletion(cqe)) {
+        {
+          const absl::MutexLock lock1{ &mutex };
+          ++in_flight;
+        }
+        ring->submit(this);
+        return;
+      }
+      return;
+    }
+    lock.reset();
     operation.handleCompletion(cqe);
   }
 }
 
 template <typename IoRingOperationT>
 inline void StoppableIoRingOperation<IoRingOperationT>::requestStop() {
-  if (in_flight == 0) {
-    return;
+  {
+    const absl::MutexLock lock{ &mutex };
+    if (in_flight == 0) {
+      return;
+    }
+    if (stop_operation.has_value()) {
+      return;
+    }
+    stop_operation.emplace();
+    stop_operation->self = this;
+    ++in_flight;
+    stop_requested = true;
   }
-  stop_operation.emplace();
-  stop_operation->self = this;
-  ++in_flight;
   ring->submit(&stop_operation.value());
 }
 

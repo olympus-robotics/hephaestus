@@ -80,7 +80,7 @@ public:
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
 template <typename... Args>
-void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, Args&&... args) {
+[[noreturn]] void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, Args&&... args) {
   auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
   auto location = std::string(utils::string::truncate(message.location.file_name(), "modules")) + ":" +
                   std::to_string(message.location.line());
