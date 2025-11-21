@@ -143,7 +143,7 @@ struct fmt::formatter<heph::telemetry::Field<std::string>> : fmt::formatter<std:
 template <>
 struct fmt::formatter<heph::LogLevel> : fmt::formatter<std::string_view> {
   static auto format(const heph::LogLevel& level, fmt::format_context& ctx) {
-    const auto levelName = [&] {
+    const auto* const levelName = [&] {
       switch (level) {
         case heph::LogLevel::TRACE:
           return "TRACE";
