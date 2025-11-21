@@ -5,14 +5,12 @@
 #include "hephaestus/telemetry/log/log.h"
 
 #include <atomic>
-#include <chrono>
 #include <cstddef>
 #include <exception>
 #include <future>
 #include <memory>
 #include <new>  // std::bad_alloc
 #include <optional>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -56,12 +54,13 @@ private:
   absl::Mutex sink_mutex_;
   // This is used as registry for the log sinks
   std::vector<std::unique_ptr<ILogSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
+  static constexpr auto MAX_LOG_QUEUE_SIZE = 100;
   heph::containers::BlockingQueue<LogEntry> entries_;
   std::future<void> message_process_future_;
   std::atomic<std::size_t> entries_in_flight_{ 0 };
 };
 
-Logger::Logger() : entries_{ std::nullopt } {
+Logger::Logger() : entries_{ MAX_LOG_QUEUE_SIZE } {
   message_process_future_ = std::async(std::launch::async, [this]() {
     while (true) {
       auto message = entries_.waitAndPop();
@@ -112,8 +111,13 @@ void Logger::removeAllLogSinks() noexcept {
 void Logger::log(LogEntry&& log_entry) noexcept {
   auto& telemetry = instance();
   try {
-    ++telemetry.entries_in_flight_;
-    telemetry.entries_.forcePush(std::move(log_entry));
+    const auto dropped = telemetry.entries_.forcePush(std::move(log_entry));
+    if (dropped.has_value()) {
+      fmt::println(stderr,
+                   "[DANGER] Log entry dropped as queue is full. This shouldn't happen! Consider extending "
+                   "the queue or improving sink processes. Log message is:\n\t{}",
+                   *dropped);
+    }
   } catch (const std::bad_alloc& ex) {
     fmt::println(stderr, "While pushing log entry, bad allocation happened: {}", ex.what());
   }
@@ -121,9 +125,7 @@ void Logger::log(LogEntry&& log_entry) noexcept {
 
 void Logger::flush() noexcept {
   auto& telemetry = instance();
-  while (telemetry.entries_in_flight_.load() > 0) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
+  telemetry.entries_.waitForEmpty();
 }
 
 void Logger::processEntry(const LogEntry& entry) noexcept {
