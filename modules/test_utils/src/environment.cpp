@@ -3,27 +3,21 @@
 // =====================================================================================
 #include "hephaestus/test_utils/environment.h"
 
-#include <memory>
-#include <random>
-
-#include <gtest/gtest.h>
-
-#include "hephaestus/error_handling/panic.h"
-#include "hephaestus/random/random_number_generator.h"
-#include "hephaestus/telemetry/log/log.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
-#include "hephaestus/telemetry/metrics/metric_record.h"
-#include "hephaestus/utils/stack_trace.h"
-
 namespace heph::test_utils {
+namespace internal {
 namespace {
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-class MyEnvironment : public ::testing::Environment {
+class DefaultEnvironment : public ::testing::Environment {
 public:
-  ~MyEnvironment() override {
+  DefaultEnvironment() = default;
+  DefaultEnvironment(const DefaultEnvironment&) = delete;
+  DefaultEnvironment(DefaultEnvironment&&) = delete;
+  auto operator=(const DefaultEnvironment&) -> DefaultEnvironment& = delete;
+  auto operator=(DefaultEnvironment&&) -> DefaultEnvironment& = delete;
+
+  ~DefaultEnvironment() override {
     telemetry::flushMetrics();
     telemetry::flushLogEntries();
-  };
+  }
 
   void SetUp() override {
     telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
@@ -39,14 +33,17 @@ private:
   const error_handling::PanicAsExceptionScope panic_scope_;
 };
 
-// NOLINTBEGIN
-static auto* const test_environments =
-    dynamic_cast<MyEnvironment*>(::testing::AddGlobalTestEnvironment(new MyEnvironment{}));
-// NOLINTEND
+DefaultEnvironment* default_test_environments = nullptr;  // NOLINT
 }  // namespace
 
-auto mt() -> std::mt19937_64& {
-  return test_environments->mt();
+void createDefaultTestEnvironment() {
+  default_test_environments = dynamic_cast<heph::test_utils::internal::DefaultEnvironment*>(
+      ::testing::AddGlobalTestEnvironment(new heph::test_utils::internal::DefaultEnvironment{}));  // NOLINT
 }
 
+}  // namespace internal
+
+auto mt() -> std::mt19937_64& {
+  return internal::default_test_environments->mt();
+}
 }  // namespace heph::test_utils
