@@ -66,12 +66,12 @@ add_cmake_dependency(
 )
 
 set(ZENOHCXX_VERSION ${ZENOH_VERSION})
-set(ZENOHCXX_CMAKE_ARGS -DZ_FEATURE_UNSTABLE_API=1, -DZENOH_WITH_UNSTABLE_API=1, -DZENOHCXX_ZENOHC=1,
+set(ZENOHCXX_CMAKE_ARGS -DZ_FEATURE_UNSTABLE_API=1 -DZENOH_WITH_UNSTABLE_API=1 -DZENOHCXX_ZENOHC=1
                         -DZENOHCXX_EXAMPLES_PROTOBUF=OFF
 )
 add_cmake_dependency(
   NAME zenohcxx
-  DEPENDS ${ZENOHCXX_DEPENDS} URL URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
+  DEPENDS ${ZENOHCXX_DEPENDS} URL https://github.com/eclipse-zenoh/zenoh-cpp/archive/${ZENOHCXX_VERSION}.zip
   CMAKE_ARGS ${ZENOHCXX_CMAKE_ARGS}
 )
 
@@ -79,8 +79,9 @@ add_cmake_dependency(
 # Abseil C++
 set(ABSEIL_VERSION 20250127)
 set(ABSEIL_TAG ${ABSEIL_VERSION}.0)
-set(ABSEIL_CMAKE_ARGS -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
-                      -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+set(ABSEIL_CMAKE_ARGS
+    -DABSL_BUILD_TESTING=OFF -DABSL_ENABLE_INSTALL=ON -DABSL_PROPAGATE_CXX_STD=ON
+    -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 )
 add_cmake_dependency(
   NAME absl
@@ -95,7 +96,7 @@ add_cmake_dependency(
 set(PROTOBUF_TAG v30.0)
 set(PROTOBUF_VERSION 6.30.0)
 set(PROTOBUF_CMAKE_ARGS -Dprotobuf_BUILD_EXAMPLES=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package
-                        -Dprotobuf_BUILD_CONFORMANCE=OFF
+                        -Dprotobuf_BUILD_CONFORMANCE=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 )
 add_cmake_dependency(
   NAME Protobuf
@@ -256,7 +257,7 @@ add_cmake_dependency(
           https://github.com/olympus-robotics/ws-protocol/archive/refs/tags/${WS_PROTOCOL_TAG}.zip
   GIT_TAG ${WS_PROTOCOL_TAG}
   SOURCE_SUBDIR cpp/foxglove-websocket
-  CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -G Ninja
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -G Ninja -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )
 
 # --------------------------------------------------------------------------------------------------
