@@ -88,9 +88,9 @@ auto dotGraphImpl(Visualization& visualization, heph::conduit::Node<NodeDescript
   };
   auto post_visit = [&](auto& /*node*/) { res += "}\n"; };
 
-  auto id = visualization.getId(root->prefix);
+  auto id = visualization.getId(root->prefix());
   res += fmt::format("subgraph cluster_node{} {{\n", id);
-  res += fmt::format("label = \"{}\";\n", root->prefix);
+  res += fmt::format("label = \"{}\";\n", root->prefix());
   traverse(root, pre_visit, post_visit);
   res += "}\n";
   return res;

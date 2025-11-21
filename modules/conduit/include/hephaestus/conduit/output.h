@@ -138,7 +138,7 @@ private:
   std::vector<PartnerOutput<T>> partner_outputs_;
   std::vector<ForwardingOutput<T>*> forwarding_outputs_;
   // TODO: (heller) make this configurable, together with what to do on timeout...
-  static constexpr auto DEFAULT_TIMEOUT = std::chrono::minutes{ 1 };
+  static constexpr auto DEFAULT_TIMEOUT = std::chrono::seconds{ 30 };
   ClockT::duration timeout_{ DEFAULT_TIMEOUT };
   std::atomic<bool> enabled_{ true };
 };

@@ -63,24 +63,16 @@ public:
   using StepperT = Stepper<NodeDescription>;
 
   explicit NodeImpl(std::string prefix, NodeBase* parent, StepperT stepper)
-    : prefix(std::move(prefix)), parent(parent), stepper(stepper) {
+    : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(stepper) {
     const auto& children_config = stepper.childrenConfig();
     using ChildrenConfigT = std::decay_t<decltype(children_config)>;
     static_assert(boost::pfr::tuple_size_v<ChildrenT> == boost::pfr::tuple_size_v<ChildrenConfigT>);
-    internal::constructChildren(this->prefix, this, children, children_config,
+    internal::constructChildren(this->prefix(), this, children, children_config,
                                 std::make_index_sequence<boost::pfr::tuple_size_v<ChildrenT>>{});
     // Alternative with C++26 and aggregate packs.
     // auto& [... child] = children;
     // const auto& [... child_stepper] = stepper.nodeConfig().stepper;
     //(child.emplace(this, child_stepper), ...);
-  }
-
-  [[nodiscard]] auto name() const -> std::string final {
-    std::string res = fmt::format("/{}/", prefix);
-    if (parent != nullptr) {
-      res = fmt::format("{}/", parent->name());
-    }
-    return res + std::string{ NodeDescription::NAME };
   }
 
   void enable() final {
@@ -97,9 +89,9 @@ public:
                auto now = ClockT::now();
                if (trigger_start_time != ClockT::time_point{}) {
                  auto period_duration = now - trigger_start_time;
-                 heph::telemetry::record([name = name(), timestamp = trigger_start_time, period_duration] {
+                 heph::telemetry::record([this, timestamp = trigger_start_time, period_duration] {
                    return heph::telemetry::Metric {
-                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                     .component = fmt::format("conduit{}", this->name()), .tag = "node_timings",
                      .timestamp = timestamp,
                      .values = {
                        {
@@ -114,22 +106,16 @@ public:
                return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
                       stdexec::let_value([this, scheduler](auto... /*unused*/) {
                         execution_start_time = ClockT::now();
-                        std::string module_name;
-                        if (prefix.empty()) {
-                          module_name = name();
-                        } else {
-                          module_name = name().substr(prefix.size() + 2);
-                        }
                         return stdexec::continues_on(
-                                   stepper.step(prefix, std::move(module_name), inputs, outputs), scheduler) |
+                                   stepper.step(this->prefix(), this->moduleName(), inputs, outputs),
+                                   scheduler) |
                                stdexec::let_value([this, scheduler]() { return outputTrigger(scheduler); });
                       }) |
                       stdexec::then([this]() {
                         auto execute_duration = ClockT::now() - execution_start_time;
-                        heph::telemetry::record(
-                            [name = name(), timestamp = execution_start_time, execute_duration] {
-                              return heph::telemetry::Metric {
-                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                        heph::telemetry::record([this, timestamp = execution_start_time, execute_duration] {
+                          return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", this->name()), .tag = "node_timings",
                      .timestamp = timestamp,
                      .values = {
                        {
@@ -138,7 +124,7 @@ public:
                        },
                      },
                    };
-                            });
+                        });
                         return false;
                       });
              });
@@ -156,9 +142,6 @@ public:
     return internal::spawnOutputTriggers(outputs, scheduler,
                                          std::make_index_sequence<boost::pfr::tuple_size_v<OutputsT>>{});
   }
-
-  std::string prefix;
-  NodeBase* parent{ nullptr };
   StepperT stepper;
   InputsT inputs{};
   OutputsT outputs{};
