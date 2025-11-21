@@ -17,36 +17,7 @@
 
 namespace heph::test_utils {
 namespace internal {
-class DefaultEnvironment : public ::testing::Environment {
-public:
-  DefaultEnvironment() = default;
-  DefaultEnvironment(const DefaultEnvironment&) = delete;
-  DefaultEnvironment(DefaultEnvironment&&) = delete;
-  auto operator=(const DefaultEnvironment&) -> DefaultEnvironment& = delete;
-  auto operator=(DefaultEnvironment&&) -> DefaultEnvironment& = delete;
-
-  ~DefaultEnvironment() override {
-    telemetry::flushMetrics();
-    telemetry::flushLogEntries();
-  }
-
-  void SetUp() override {
-    telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
-  }
-
-  [[nodiscard]] auto mt() -> std::mt19937_64& {
-    return mt_;
-  }
-
-private:
-  const utils::StackTrace trace_;
-  std::mt19937_64 mt_{ heph::random::createRNG() };
-  const error_handling::PanicAsExceptionScope panic_scope_;
-};
-
 void createDefaultTestEnvironment();
-[[nodiscard]] auto defaultTestEnvironment() -> DefaultEnvironment*;
-
 }  // namespace internal
 
 [[nodiscard]] auto mt() -> std::mt19937_64&;
