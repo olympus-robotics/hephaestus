@@ -1,6 +1,7 @@
 // =====================================================================================
 // |   This file is part of the FORKIFY project by FILICS GmbH. All rights reserved.   |
 // =====================================================================================
+#pragma once
 
 #include <memory>
 #include <random>
@@ -27,7 +28,7 @@ public:
   ~DefaultEnvironment() override {
     telemetry::flushMetrics();
     telemetry::flushLogEntries();
-  };
+  }
 
   void SetUp() override {
     telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
@@ -43,10 +44,12 @@ private:
   const error_handling::PanicAsExceptionScope panic_scope_;
 };
 
-static const DefaultEnvironment* default_test_environments = nullptr;  // NOLINT
+inline DefaultEnvironment* default_test_environments = nullptr;  // NOLINT
 
 }  // namespace internal
 
-[[nodiscard]] auto mt() -> std::mt19937_64&;
+[[nodiscard]] static inline auto mt() -> std::mt19937_64& {
+  return internal::default_test_environments->mt();
+}
 
 }  // namespace heph::test_utils
