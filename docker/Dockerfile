@@ -53,18 +53,14 @@ RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer
 RUN . "$CARGO_HOME/env" && cargo install sccache --locked && echo "export RUSTC_WRAPPER=sccache" >> "$HOME/.bashrc"
 RUN chmod o+rw -R /usr/local/cargo/
 
-ENV GCC_VERSION=15.1.0
-RUN  apt update && apt install -y --no-install-recommends build-essential gawk flex bison libgmp-dev libmpfr-dev libmpc-dev binutils perl libisl-dev libzstd-dev tar gzip bzip2 && \
-    mkdir gcc-15 && cd gcc-15 && \
-    git clone https://gcc.gnu.org/git/gcc.git --branch releases/gcc-${GCC_VERSION} --depth 1  gcc-15-source && cd gcc-15-source && \
-    ./contrib/download_prerequisites && \
-    cd ../ && mkdir gcc-15-build && cd gcc-15-build && \
-    ../gcc-15-source/configure --prefix=/opt/gcc-15 --disable-multilib --enable-languages=c,c++ && \
-    make -j6 && make install && \
-    update-alternatives --install /usr/bin/gcc gcc /opt/gcc-15/bin/gcc 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /opt/gcc-15/bin/g++ 100 && \
-    cd && rm -rf gcc-15 && rm -rf /var/lib/apt/lists/*
-
+ENV GCC_VERSION=13
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends gcc-${GCC_VERSION} g++-${GCC_VERSION} && \
+    rm -rf /var/lib/apt/lists/* && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} ${GCC_VERSION} \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_VERSION}
 
 RUN wget -q -O - https://pixi.sh/install.sh | PIXI_HOME=/usr/local bash
 
