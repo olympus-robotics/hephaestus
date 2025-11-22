@@ -85,17 +85,31 @@ heph_cc_extract_headers = rule(
     implementation = _cc_header_impl,
 )
 
+def heph_resolve_features(features):
+    # activate layering_check if clang-tidy is enabled
+    if "no_layering_check" in features:
+        return features
+    else:
+        return features + select({
+            "//bazel:enable_layering_check_cfg": [
+                "layering_check",
+            ],
+            "//conditions:default": [],
+        })
+
 def heph_cc_library(
         name,
         hdrs,
         copts = [],
         linkopts = [],
+        features = [],
         **kwargs):
     cc_library(
         name = name,
         hdrs = hdrs,
         copts = heph_copts() + copts,
         linkopts = heph_linkopts() + linkopts,
+        features = heph_resolve_features(features),
         **kwargs
     )
 

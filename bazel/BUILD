@@ -1,6 +1,12 @@
 # =================================================================================================
-# Copyright (C) 2023-2024 HEPHAESTUS Contributors
+# Copyright (C) 2023-2025 HEPHAESTUS Contributors
 # =================================================================================================
+config_setting(
+    name = "enable_layering_check_cfg",
+    flag_values = {
+        "//:enable_layering_check": "true",
+    },
+)
 
 config_setting(
     name = "clang_compiler",

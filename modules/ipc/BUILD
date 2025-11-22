@@ -37,7 +37,6 @@ heph_cc_library(
         "//modules/ipc/proto:types_gen_proto",
         "//modules/random",
         "//modules/serdes",
-        "//modules/telemetry/log",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",

@@ -2,6 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
@@ -112,4 +113,10 @@ sphinx_docs(
     deps = [
         ":apidoc",
     ] + doc_deps,
+)
+
+bool_flag(
+    name = "enable_layering_check",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
 )
