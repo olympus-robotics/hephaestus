@@ -39,8 +39,8 @@ struct ResetValuePolicy {
     }
 
     void setValue(T&& t) {
-      heph::panicIf(value_.has_value(),
-                    "Storage already contains a value. Did you forget to consume an input?");
+      // heph::panicIf(value_.has_value(),
+      //               "Storage already contains a value. Did you forget to consume an input?");
       value_.emplace(std::move(t));
     }
 

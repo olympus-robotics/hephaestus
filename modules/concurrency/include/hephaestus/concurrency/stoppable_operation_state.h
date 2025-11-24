@@ -157,9 +157,9 @@ struct StoppableOperationState {
   template <typename... Ts>
   void setValue(Ts&&... ts) {
     State previous_state{ STARTED };
+    on_stop_callback.reset();
     {
       const absl::MutexLock l{ &mutex };
-      on_stop_callback.reset();
       values.emplace(std::forward<Ts>(ts)...);
       previous_state = std::exchange(state, COMPLETED);
     }

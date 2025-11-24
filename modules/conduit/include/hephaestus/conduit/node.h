@@ -89,9 +89,10 @@ public:
                auto now = ClockT::now();
                if (trigger_start_time != ClockT::time_point{}) {
                  auto period_duration = now - trigger_start_time;
-                 heph::telemetry::record([this, timestamp = trigger_start_time, period_duration] {
-                   return heph::telemetry::Metric {
-                     .component = fmt::format("conduit{}", this->name()), .tag = "node_timings",
+                 heph::telemetry::record(
+                     [timestamp = trigger_start_time, period_duration, name = this->name()] {
+                       return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
                      .timestamp = timestamp,
                      .values = {
                        {
@@ -100,7 +101,7 @@ public:
                        },
                      },
                    };
-                 });
+                     });
                }
                trigger_start_time = now;
                return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
@@ -113,9 +114,10 @@ public:
                       }) |
                       stdexec::then([this]() {
                         auto execute_duration = ClockT::now() - execution_start_time;
-                        heph::telemetry::record([this, timestamp = execution_start_time, execute_duration] {
-                          return heph::telemetry::Metric {
-                     .component = fmt::format("conduit{}", this->name()), .tag = "node_timings",
+                        heph::telemetry::record(
+                            [timestamp = execution_start_time, execute_duration, name = this->name()] {
+                              return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
                      .timestamp = timestamp,
                      .values = {
                        {
@@ -124,7 +126,7 @@ public:
                        },
                      },
                    };
-                        });
+                            });
                         return false;
                       });
              });
