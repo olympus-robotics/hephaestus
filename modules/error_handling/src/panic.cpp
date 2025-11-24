@@ -5,6 +5,10 @@
 #include "hephaestus/error_handling/panic.h"
 
 #include <cstddef>
+#include <exception>
+
+#include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/utils/string/string_utils.h"
 
 namespace heph::error_handling {
 namespace {
@@ -24,6 +28,20 @@ PanicAsExceptionScope::~PanicAsExceptionScope() {
 
 auto panicAsException() -> bool {
   return panic_as_exception_counter > 0;
+}
+
+void panicImpl(const std::source_location& location, const std::string& formatted_message) {
+  auto location_str = std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
+                      std::to_string(location.line());
+
+  log(ERROR, "program terminated with panic", "error", formatted_message, "location", location_str);
+  telemetry::flushLogEntries();
+
+  if (error_handling::panicAsException()) {
+    throw error_handling::PanicException(formatted_message);
+  }
+
+  std::terminate();
 }
 
 }  // namespace heph::error_handling
