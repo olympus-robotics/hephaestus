@@ -27,3 +27,7 @@ void fromProto(const proto::Pose& proto_pose, Pose& pose);
 void toProto(proto::FramedPose& proto_pose, const FramedPose& pose);
 void fromProto(const proto::FramedPose& proto_pose, FramedPose& pose);
 }  // namespace heph::examples::types
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::examples::types::Pose);
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::examples::types::FramedPose);

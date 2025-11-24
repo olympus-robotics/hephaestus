@@ -21,3 +21,6 @@ void toProto(proto::UuidV4& proto_uuid, const UuidV4& uuid);
 void fromProto(const proto::UuidV4& proto_uuid, UuidV4& uuid);
 
 }  // namespace heph::types
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::types::UuidV4);

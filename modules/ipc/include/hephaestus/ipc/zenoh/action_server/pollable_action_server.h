@@ -133,7 +133,7 @@ PollableActionServer<RequestT, StatusT, ReplyT>::PollableActionServer(SessionPtr
             }
 
             if (status_.has_value()) {
-              status_publisher.publish(*status_);
+              (void) status_publisher.publish(*status_); // TODO: nodiscard ignored!
               status_.reset();
             }
           }

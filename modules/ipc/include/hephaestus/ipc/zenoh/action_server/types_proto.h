@@ -76,3 +76,6 @@ void fromProto(const proto::Response& proto_response, Response<ReplyT>& response
 }
 
 }  // namespace heph::ipc::zenoh::action_server
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::ipc::zenoh::action_server::RequestResponse);

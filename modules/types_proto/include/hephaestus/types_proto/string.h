@@ -21,3 +21,6 @@ void toProto(String& proto_value, std::string value);
 void fromProto(const String& proto_value, std::string& value);
 
 }  // namespace heph::types::proto
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(std::string);

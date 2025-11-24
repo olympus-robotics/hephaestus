@@ -3,3 +3,8 @@
 //=================================================================================================
 
 #include "hephaestus/containers/bit_flag.h"
+
+namespace heph::serdes::protobuf {
+
+
+}  // namespace heph::serdes::protobuf

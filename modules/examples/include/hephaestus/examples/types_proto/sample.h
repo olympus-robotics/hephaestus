@@ -28,3 +28,7 @@ void toProto(proto::SampleReply& proto_sample, const SampleReply& sample);
 void fromProto(const proto::SampleReply& proto_sample, SampleReply& sample);
 
 }  // namespace heph::examples::types
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::examples::types::SampleRequest);
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::examples::types::SampleReply);

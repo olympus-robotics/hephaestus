@@ -7,6 +7,8 @@
 #include "hephaestus/serdes/protobuf/concepts.h"
 #include "hephaestus/types/proto/numeric_value.pb.h"
 #include "hephaestus/utils/concepts.h"
+#include "hephaestus/error_handling/panic.h"
+#include <cstdint>
 
 namespace heph::serdes::protobuf {
 template <NumericType T>
@@ -17,11 +19,101 @@ struct ProtoAssociation<T> {
 
 namespace heph::types::proto {
 
-/// \brief Convert a numeric value to a protobuf message. These functions are specialized for each numeric
-/// type. The main usage is to allow for serialization of templated numeric types.
-template <NumericType T>
-void toProto(NumericValue& proto_value, T value);
-template <NumericType T>
-void fromProto(const NumericValue& proto_value, T& value);
+// Protobuf supports no smaller types than int32_t.
+inline void toProto(NumericValue& proto_value, int8_t value) {
+  proto_value.set_int32_value(value);
+}
+
+// Protobuf supports no smaller types than int32_t.
+inline void toProto(NumericValue& proto_value, int16_t value) {
+  proto_value.set_int32_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, int32_t value) {
+  proto_value.set_int32_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, int64_t value) {
+  proto_value.set_int64_value(value);
+}
+
+// Protobuf supports no smaller types than uint32_t.
+inline void toProto(NumericValue& proto_value, uint8_t value) {
+  proto_value.set_uint32_value(value);
+}
+
+// Protobuf supports no smaller types than uint32_t.
+inline void toProto(NumericValue& proto_value, uint16_t value) {
+  proto_value.set_uint32_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, uint32_t value) {
+  proto_value.set_uint32_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, uint64_t value) {
+  proto_value.set_uint64_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, float value) {
+  proto_value.set_float_value(value);
+}
+
+inline void toProto(NumericValue& proto_value, double value) {
+  proto_value.set_double_value(value);
+}
+
+// Protobuf supports no smaller types than int32_t.
+inline void fromProto(const NumericValue& proto_value, int8_t& value) {
+  panicIf(!proto_value.has_int32_value(), "Expected int32 value");
+  value = static_cast<int8_t>(proto_value.int32_value());
+}
+
+// Protobuf supports no smaller types than int32_t.
+inline void fromProto(const NumericValue& proto_value, int16_t& value) {
+  panicIf(!proto_value.has_int32_value(), "Expected int32 value");
+  value = static_cast<int16_t>(proto_value.int32_value());
+}
+inline void fromProto(const NumericValue& proto_value, int32_t& value) {
+  panicIf(!proto_value.has_int32_value(), "Expected int32 value");
+  value = proto_value.int32_value();
+}
+
+inline void fromProto(const NumericValue& proto_value, int64_t& value) {
+  panicIf(!proto_value.has_int64_value(), "Expected int64 value");
+  value = proto_value.int64_value();
+}
+
+// Protobuf supports no smaller types than uint32_t.
+inline void fromProto(const NumericValue& proto_value, uint8_t& value) {
+  panicIf(!proto_value.has_uint32_value(), "Expected uint32 value");
+  value = static_cast<uint8_t>(proto_value.uint32_value());
+}
+
+// Protobuf supports no smaller types than uint32_t.
+inline void fromProto(const NumericValue& proto_value, uint16_t& value) {
+  panicIf(!proto_value.has_uint32_value(), "Expected uint32 value");
+  value = static_cast<uint16_t>(proto_value.uint32_value());
+}
+
+inline void fromProto(const NumericValue& proto_value, uint32_t& value) {
+  panicIf(!proto_value.has_uint32_value(), "Expected uint32 value");
+  value = proto_value.uint32_value();
+}
+
+inline void fromProto(const NumericValue& proto_value, uint64_t& value) {
+  panicIf(!proto_value.has_uint64_value(), "Expected uint64 value");
+  value = proto_value.uint64_value();
+}
+
+inline void fromProto(const NumericValue& proto_value, float& value) {
+  panicIf(!proto_value.has_float_value(), "Expected float value");
+  value = proto_value.float_value();
+}
+
+inline void fromProto(const NumericValue& proto_value, double& value) {
+  panicIf(!proto_value.has_double_value(), "Expected double value");
+  value = proto_value.double_value();
+}
 
 }  // namespace heph::types::proto

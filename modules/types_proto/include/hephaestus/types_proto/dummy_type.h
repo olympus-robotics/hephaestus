@@ -29,3 +29,8 @@ void fromProto(const proto::DummyPrimitivesType& proto_dummy_primitives_type,
 void toProto(proto::DummyType& proto_dummy_type, const DummyType& dummy_type);
 void fromProto(const proto::DummyType& proto_dummy_type, DummyType& dummy_type);
 }  // namespace heph::types
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::types::DummyType);
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(heph::types::DummyPrimitivesType);

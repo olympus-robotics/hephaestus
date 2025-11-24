@@ -1,8 +1,7 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-
-#include "hephaestus/serdes/protobuf/protobuf.h"  // NOLINT(misc-include-cleaner)
+#pragma once
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/json_util.h>
@@ -10,6 +9,7 @@
 #include "hephaestus/error_handling/panic.h"
 #include "hephaestus/serdes/protobuf/buffers.h"
 #include "hephaestus/serdes/protobuf/concepts.h"
+#include "hephaestus/serdes/protobuf/protobuf.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/serdes/protobuf/protobuf_internal.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/utils/utils.h"
@@ -86,3 +86,12 @@ auto getTypeInfo() -> TypeInfo {
 }
 
 }  // namespace heph::serdes::protobuf
+
+#define HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(T)                                                          \
+  template std::vector<std::byte> heph::serdes::protobuf::serialize<T>(T const&);                            \
+  template std::string heph::serdes::protobuf::serializeToJSON<T>(T const&);                                 \
+  template std::string heph::serdes::protobuf::serializeToText<T>(T const&);                                 \
+  template void heph::serdes::protobuf::deserialize<T>(std::span<const std::byte>, T&);                      \
+  template void heph::serdes::protobuf::deserializeFromJSON<T>(std::string_view, T&);                        \
+  template void heph::serdes::protobuf::deserializeFromText<T>(std::string_view, T&);                        \
+  template heph::serdes::TypeInfo heph::serdes::protobuf::getTypeInfo<T>()

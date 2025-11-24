@@ -20,3 +20,7 @@ void toProto(Bool& proto_value, bool value);
 void fromProto(const Bool& proto_value, bool& value);
 
 }  // namespace heph::types::proto
+
+#include "hephaestus/serdes/protobuf/protobuf.inl"
+
+HEPHAESTUS_INSTANTIATE_PROTO_SERIALIZERS(bool);
