@@ -258,7 +258,7 @@ def heph_cc_test(
             "@hephaestus//modules/test_utils",
         ],
         env = merged_env,
-        tags = tags,
+        tags = tags + ["no-dwyu"],
         size = size,
         **kwargs
     )
