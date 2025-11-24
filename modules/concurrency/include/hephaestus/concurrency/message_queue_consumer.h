@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <functional>
 #include <future>
-#include <optional>
 
 #include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/containers/blocking_queue.h"
@@ -20,7 +19,7 @@ template <typename T>
 class MessageQueueConsumer {
 public:
   using Callback = std::function<void(T&&)>;
-  [[nodiscard]] MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size);
+  [[nodiscard]] MessageQueueConsumer(Callback&& callback, std::size_t max_queue_size);
   ~MessageQueueConsumer() = default;
   MessageQueueConsumer(const MessageQueueConsumer&) = delete;
   MessageQueueConsumer(MessageQueueConsumer&&) = delete;
@@ -49,7 +48,7 @@ private:
 };
 
 template <typename T>
-MessageQueueConsumer<T>::MessageQueueConsumer(Callback&& callback, std::optional<std::size_t> max_queue_size)
+MessageQueueConsumer<T>::MessageQueueConsumer(Callback&& callback, std::size_t max_queue_size)
   : callback_(std::move(callback))
   , message_queue_(max_queue_size)
   , spinner_(Spinner::createNeverStoppingCallback(std::move([this] { consume(); }))) {

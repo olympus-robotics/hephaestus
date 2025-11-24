@@ -46,6 +46,7 @@ private:
 private:
   absl::Mutex sink_mutex_;
   std::vector<std::unique_ptr<IMetricSink>> sinks_ ABSL_GUARDED_BY(sink_mutex_);
+  static constexpr auto MAX_METRIC_QUEUE_SIZE = 100;
   containers::BlockingQueue<UniqueFunction<Metric()>> entries_;
   std::future<void> message_process_future_;
 };
@@ -66,7 +67,7 @@ void flushMetrics() {
   MetricRecorder::flush();
 }
 
-MetricRecorder::MetricRecorder() : entries_{ std::nullopt } {
+MetricRecorder::MetricRecorder() : entries_{ MAX_METRIC_QUEUE_SIZE } {
   message_process_future_ = std::async(std::launch::async, [this]() {
     while (true) {
       auto message = entries_.waitAndPop();
