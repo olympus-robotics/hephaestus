@@ -24,6 +24,7 @@ bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
 
 LLVM_VERSION = "21.1.0"
+
 LLVM_VERSIONS = {
     "": LLVM_VERSION,
     "linux-aarch64": LLVM_VERSION,
