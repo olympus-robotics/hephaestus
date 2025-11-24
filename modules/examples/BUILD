@@ -24,14 +24,6 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/ipc",
-        "//modules/random",
-        "//modules/telemetry/log",
-        "//modules/types",
-        "@abseil-cpp//absl/container:raw_hash_map",
-        "@abseil-cpp//absl/status:status",
-        "@abseil-cpp//absl/status:statusor",
-        "@zstd",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -39,7 +31,6 @@ heph_cc_library(
         "//modules/error_handling",
         "//modules/examples/proto:examples_gen_proto",
         "//modules/serdes",
-        "//modules/utils",
         "@eigen",
         "@fmt",
     ],
@@ -53,8 +44,6 @@ heph_cc_binary(
     name = "mcap_reader",
     srcs = ["examples/mcap_reader.cpp"],
     deps = [
-        ":examples",
-        "//modules/bag",
         "@fmt",
         "@mcap",
     ],
@@ -172,7 +161,6 @@ heph_cc_binary(
         "examples/zenoh_string_service_server.cpp",
     ],
     deps = [
-        ":examples",
         "//modules/cli",
         "//modules/ipc",
         "//modules/telemetry/log",
@@ -218,19 +206,18 @@ heph_cc_binary(
 # Tests #
 #########
 
-EXAMPLES_TEST_DEPS = [
-    ":examples",
-    "//modules/random",
-    "//modules/ipc",
-]
-
 heph_cc_test(
     name = "zenoh_tests",
     srcs = [
         "tests/helpers.h",
         "tests/zenoh_tests.cpp",
     ],
-    deps = EXAMPLES_TEST_DEPS + ["//modules/error_handling"],
+    deps = [
+        ":examples",
+        "//modules/error_handling",
+        "//modules/ipc",
+        "//modules/random",
+    ],
 )
 
 heph_cc_test(
@@ -239,5 +226,9 @@ heph_cc_test(
         "tests/helpers.h",
         "tests/types_proto_tests.cpp",
     ],
-    deps = EXAMPLES_TEST_DEPS + ["//modules/examples/proto:examples_gen_proto"],
+    deps = [
+        ":examples",
+        "//modules/examples/proto:examples_gen_proto",
+        "//modules/random",
+    ],
 )

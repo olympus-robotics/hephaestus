@@ -255,7 +255,6 @@ def heph_cc_test(
         deps = deps + [
             "@googletest//:gtest",
             "@googletest//:gtest_main",
-            "@hephaestus//modules/test_utils",
         ],
         env = merged_env,
         tags = tags,
