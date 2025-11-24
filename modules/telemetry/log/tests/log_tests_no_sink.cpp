@@ -10,6 +10,7 @@
 #include "hephaestus/telemetry/log/log.h"
 
 TEST(LogTest, NoSinksRegisteredPrintsWarning) {
+  heph::telemetry::removeAllLogSinks();
   testing::internal::CaptureStderr();
   // Restore original stderr
   heph::log(heph::INFO, "test");

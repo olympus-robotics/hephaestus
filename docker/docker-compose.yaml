@@ -3,11 +3,7 @@ services:
   hephaestus-base:
     build:
       dockerfile: Dockerfile
-      pull: true
       context: .
-      tags:
-        - hephaestus-base:${DOCKER_TAG}
-        - ghcr.io/olympus-robotics/hephaestus:${DOCKER_TAG}
       args:
         BASE_IMAGE: ubuntu:22.04
     command: 'echo "build is completed"'
@@ -16,13 +12,9 @@ services:
     restart: unless-stopped
     build:
       dockerfile: Dockerfile.dev
-      pull: false
       context: .
-      args:
-        BASE_IMAGE: hephaestus-base:${DOCKER_TAG}
-    depends_on:
-      hephaestus-base:
-        condition: service_completed_successfully
+      additional_contexts:
+        base_image: "service:hephaestus-base"
     command: tail -F /dev/null
     ports: []
     cap_add:

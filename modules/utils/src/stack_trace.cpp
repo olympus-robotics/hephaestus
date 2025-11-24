@@ -15,9 +15,15 @@
 #include <sstream>
 
 #include <cxxabi.h>
+
+#ifndef __WIN32__
 #include <execinfo.h>
+#endif
 
 namespace heph::utils {
+
+#ifndef __WIN32__
+
 // NOLINTBEGIN(misc-include-cleaner) // Lots of false positives
 class StackTrace::Impl {
 public:
@@ -136,6 +142,20 @@ void StackTrace::Impl::abort(int signum, siginfo_t* signal_info, void* unused) {
   StackTrace::Impl::print(std::cerr);
   exit(signum);
 }
+
+#else
+
+#warning "StackTrace is not implemented on Windows"
+
+class StackTrace::Impl {
+public:
+  Impl() = default;
+
+  static void print(std::ostream&) {
+  }
+};
+
+#endif
 
 // ----------------------------------------------------------------------------------------------------------
 
