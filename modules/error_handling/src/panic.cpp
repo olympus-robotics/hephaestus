@@ -6,6 +6,8 @@
 
 #include <cstddef>
 #include <exception>
+#include <source_location>
+#include <string>
 
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/utils/string/string_utils.h"
