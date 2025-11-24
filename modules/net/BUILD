@@ -95,6 +95,7 @@ heph_cc_test(
     deps = [
         ":net",
         "//modules/concurrency",
+        "//modules/error_handling",
         "@fmt",
         "@stdexec",
     ],
