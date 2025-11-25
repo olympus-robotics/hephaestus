@@ -20,6 +20,7 @@
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -28,37 +29,27 @@ namespace {
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-class MyEnvironment : public Environment {
-public:
-  ~MyEnvironment() override = default;
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
-  }
-};
-// NOLINTNEXTLINE
-const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
+struct ZenohTests : heph::test_utils::HephTest {};
 
-TEST(ZenohTests, TopicDatabase) {
-  auto mt = random::createRNG();
-
+TEST_F(ZenohTests, TopicDatabase) {
   auto session = createSession(createLocalConfig());
 
   const auto publisher_topic =
-      TopicConfig(fmt::format("test_publisher/{}", random::random<std::string>(mt, 10, false, true)));
+      TopicConfig(fmt::format("test_publisher/{}", random::random<std::string>(mt(), 10, false, true)));
   auto publisher = Publisher<types::DummyType>{ session, publisher_topic };
 
   const auto subscriber_topic =
-      TopicConfig(fmt::format("test_subscriber/{}", random::random<std::string>(mt, 10, false, true)));
+      TopicConfig(fmt::format("test_subscriber/{}", random::random<std::string>(mt(), 10, false, true)));
   auto subscriber =
       Subscriber<types::DummyType>{ session, subscriber_topic, [](const auto&, const auto&) {} };
 
   const auto service_topic =
-      TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
+      TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
   auto service = Service<types::DummyType, types::DummyPrimitivesType>(
       session, service_topic, [](const auto&) { return types::DummyPrimitivesType{}; });
 
   const auto service_string_topic =
-      TopicConfig(fmt::format("test_service_string/{}", random::random<std::string>(mt, 10, false, true)));
+      TopicConfig(fmt::format("test_service_string/{}", random::random<std::string>(mt(), 10, false, true)));
   auto service_string = Service<std::string, std::string>(session, service_string_topic,
                                                           [](const auto& request) { return request; });
 

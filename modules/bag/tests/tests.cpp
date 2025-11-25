@@ -24,6 +24,7 @@
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/utils/filesystem/scoped_path.h"
@@ -31,16 +32,6 @@
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
-
-class MyEnvironment : public Environment {
-public:
-  ~MyEnvironment() override = default;
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
-  }
-};
-// NOLINTNEXTLINE
-const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
 
 namespace heph::bag::tests {
 namespace {
@@ -96,8 +87,10 @@ constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
   return { std::move(scoped_path), std::move(dummy_types), std::move(dummy_primitive_type) };
 }
 
+struct Bag : heph::test_utils::HephTest {};
+
 // TODO: figure out how to isolate the network to make sure that only the two topics here are visible.
-TEST(Bag, PlayAndRecord) {
+TEST_F(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
   auto [bag_path, dummy_types, companies] = createBag();
   {
