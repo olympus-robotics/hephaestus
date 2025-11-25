@@ -23,15 +23,16 @@ heph_cc_library(
             "include/**/*.h",
         ],
     ),
-    implementation_deps = [],
+    implementation_deps = [
+        "//modules/telemetry/log",
+        "//modules/utils",
+    ],
     includes = [
         "include",
         "src",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//modules/telemetry/log",
-        "//modules/utils",
         "@fmt",
     ],
 )
