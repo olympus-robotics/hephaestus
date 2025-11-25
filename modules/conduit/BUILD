@@ -33,8 +33,8 @@ heph_cc_library(
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/synchronization:synchronization",
-        "@reflect-cpp",
         "@fmt",
+        "@reflect-cpp",
         "@stdexec",
     ],
 )
