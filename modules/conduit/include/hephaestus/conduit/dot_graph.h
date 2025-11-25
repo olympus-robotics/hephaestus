@@ -64,11 +64,11 @@ auto dotGraphImpl(Visualization& visualization, heph::conduit::Node<NodeDescript
     auto inputs = rfl::to_view(node->inputs);
     inputs.apply([&](const auto& input) {
       auto id = visualization.getId(input.value()->name());
-      res += fmt::format("{} [label = \"{}\", shape = ellipse];\n", id, strip(input.name()));
+      res += fmt::format("{} [label = \"{}\", shape = ellipse];\n", id, strip(input.value()->name()));
       for (const auto& destination : input.value()->getOutgoing()) {
         visualization.addEdge(input.value()->name(), destination);
       }
-      for (const auto& destination : input.vaue()->getIncoming()) {
+      for (const auto& destination : input.value()->getIncoming()) {
         visualization.addEdge(destination, input.value()->name());
       }
     });
@@ -76,8 +76,8 @@ auto dotGraphImpl(Visualization& visualization, heph::conduit::Node<NodeDescript
     res += fmt::format("subgraph cluster_outputs{} {{\n", id);
     res += fmt::format("label = \"Outputs\";\n");
 
-    auto outputs = rfl::to_view(node->inputs);
-    rfl::apply([&](const auto& output) {
+    auto outputs = rfl::to_view(node->outputs);
+    outputs.apply([&](const auto& output) {
       auto id = visualization.getId(output.value()->name());
       res += fmt::format("{} [label = \"{}\", shape = box];\n", id, strip(output.value()->name()));
       for (const auto& destination : output.value()->getOutgoing()) {
