@@ -277,4 +277,30 @@ TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
   EXPECT_LE(context.elapsed(), delay_time * 2);
 }
 
+TEST(ContextTests, timeout) {
+  Context context{ {} };
+  exec::async_scope scope;
+  static constexpr std::chrono::seconds TIMEOUT{ 10 };
+
+  auto now = ClockT::now();
+
+  bool timeout0_triggered = false;
+  bool timeout1_triggered = false;
+  scope.spawn(exec::when_any(context.scheduler().scheduleAfter(TIMEOUT) |
+                                 stdexec::then([&]() { timeout0_triggered = true; }),
+                             context.scheduler().scheduleAfter(std::chrono::milliseconds(1)) |
+                                 stdexec::then([&]() { timeout1_triggered = true; })) |
+              stdexec::then([&]() { context.requestStop(); })
+
+  );
+
+  context.run();
+  auto end = ClockT::now();
+  scope.request_stop();
+  stdexec::sync_wait(scope.on_empty());
+  EXPECT_FALSE(timeout0_triggered);
+  EXPECT_TRUE(timeout1_triggered);
+  EXPECT_LT(end - now, TIMEOUT);
+}
+
 }  // namespace heph::concurrency::tests

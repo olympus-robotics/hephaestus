@@ -188,9 +188,9 @@ struct StoppableOperationState {
 
   void setError(const std::exception_ptr& exception) {
     State previous_state{ STARTED };
+    on_stop_callback.reset();
     {
       const absl::MutexLock l{ &mutex };
-      on_stop_callback.reset();
       error = exception;
       previous_state = std::exchange(state, ERROR);
     }
