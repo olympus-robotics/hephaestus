@@ -32,6 +32,8 @@ auto panicAsException() -> bool {
   return panic_as_exception_counter > 0;
 }
 
+namespace detail {
+
 void panicImpl(const std::source_location& location, const std::string& formatted_message) {
   auto location_str = std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
                       std::to_string(location.line());
@@ -45,5 +47,7 @@ void panicImpl(const std::source_location& location, const std::string& formatte
 
   std::terminate();
 }
+
+}  // namespace detail
 
 }  // namespace heph::error_handling

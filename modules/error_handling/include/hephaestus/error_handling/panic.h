@@ -43,6 +43,8 @@ struct StringLiteralWithLocationImpl final {
 template <typename... Ts>
 using StringLiteralWithLocation = detail::StringLiteralWithLocationImpl<Ts...>::impl;
 
+void panicImpl(const std::source_location& location, const std::string& formatted_message);
+
 }  // namespace detail
 
 /// @brief  Scope guard to enable panic as exceptions within the scope.
@@ -67,8 +69,6 @@ public:
   }
 };
 
-void panicImpl(const std::source_location& location, const std::string& formatted_message);
-
 }  // namespace error_handling
 
 /// @brief  User function to panic. Internally this throws a Panic exception.
@@ -80,7 +80,7 @@ void panicImpl(const std::source_location& location, const std::string& formatte
 template <typename... Args>
 void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, Args&&... args) {
   auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
-  error_handling::panicImpl(message.location, formatted_message);
+  error_handling::detail::panicImpl(message.location, formatted_message);
 }
 
 /// @brief  User function to panic on condition lazily formatting the message. The whole code should be
