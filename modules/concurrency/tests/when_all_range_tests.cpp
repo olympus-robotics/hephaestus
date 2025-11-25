@@ -2,6 +2,7 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
 #include <cstddef>
 #include <utility>
 #include <vector>

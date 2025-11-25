@@ -17,7 +17,6 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
-        "//modules/telemetry/metrics",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -31,6 +30,9 @@ heph_cc_library(
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",
         "//modules/utils",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/synchronization:synchronization",
         "@boost.pfr",
         "@fmt",
         "@stdexec",
@@ -46,12 +48,10 @@ heph_cc_binary(
     srcs = ["examples/periodic_spinner.cpp"],
     deps = [
         ":conduit",
-        "//modules/cli",
-        "//modules/telemetry/influxdb_sink",
-        "//modules/telemetry/log",
+        "//modules/concurrency",
         "//modules/utils",
         "@fmt",
-        "//modules/types_proto",
+        "@stdexec",
     ],
 )
 
@@ -81,7 +81,6 @@ heph_cc_binary(
 #        "@fmt",
 #    ],
 #)
-
 
 #heph_cc_binary(
 #    name = "conduit_subscriber",
@@ -177,9 +176,9 @@ heph_cc_test(
         ":conduit",
         "//modules/concurrency",
         "//modules/telemetry/log",
+        "//modules/types_proto",
         "@fmt",
         "@stdexec",
-        "//modules/types_proto",
     ],
 )
 

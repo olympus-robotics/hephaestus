@@ -10,7 +10,6 @@
 #include <absl/synchronization/mutex.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
-#include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/stoppable_operation_state.h"
 #include "hephaestus/conduit/basic_input.h"

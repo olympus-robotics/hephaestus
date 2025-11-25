@@ -7,6 +7,7 @@
 #include <atomic>
 #include <cstddef>
 #include <exception>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -23,7 +24,7 @@
 
 namespace heph::conduit {
 
-static inline constexpr auto OVERWRITE_POLICY = std::size_t(-1);
+static inline constexpr auto OVERWRITE_POLICY = std::numeric_limits<std::size_t>::max();
 
 /// A trigger can return with either ready (value), with an exception or stopped.
 using InputTriggerCompletionSignatures =

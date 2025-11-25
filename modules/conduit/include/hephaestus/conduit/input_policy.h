@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include <utility>
 
@@ -15,7 +16,6 @@
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/value_storage.h"
-#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 
@@ -40,8 +40,6 @@ struct ResetValuePolicy {
     }
 
     void setValue(T&& t) {
-      // heph::panicIf(value_.has_value(),
-      //               "Storage already contains a value. Did you forget to consume an input?");
       value_.emplace(std::move(t));
     }
 

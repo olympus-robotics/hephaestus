@@ -6,21 +6,17 @@
 
 #include <chrono>
 #include <exception>
-#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
-#include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
-#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/concurrency/stoppable_operation_state.h"
-#include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency {
 class Context;

@@ -240,10 +240,12 @@ TEST(BasicInput, ConditionalTriggerConcurrent) {
                 context.requestStop();
               }));
 
+  static constexpr std::chrono::microseconds TRIGGER_PERIOD_DURATION{ 10 };
+
   scope.spawn(heph::concurrency::repeatUntil([&]() {
     return stdexec::schedule(context.scheduler()) | stdexec::let_value([&]() {
              conditional.enable();
-             return context.scheduler().scheduleAfter(std::chrono::microseconds{ 10 }) | stdexec::then([&]() {
+             return context.scheduler().scheduleAfter(TRIGGER_PERIOD_DURATION) | stdexec::then([&]() {
                       conditional.disable();
                       return false;
                     });

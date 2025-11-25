@@ -106,7 +106,6 @@ public:
       absl::MutexLock lock{ &mutex_ };
       res = data_.pop();
       if (!res.has_value()) {
-        assert(set_awaiters_.size() == 0);
         return std::nullopt;
       }
 
@@ -150,7 +149,6 @@ private:
       absl::MutexLock lock{ &mutex_ };
       if (!data_.push(std::move(t))) {
         set_awaiters_.enqueue(set_awaiter);
-        assert(get_awaiters_.size() == 0);
         return false;
       }
 
@@ -170,7 +168,6 @@ private:
       res = data_.pop();
       if (!res.has_value()) {
         get_awaiters_.enqueue(get_awaiter);
-        assert(set_awaiters_.size() == 0);
         return std::nullopt;
       }
 

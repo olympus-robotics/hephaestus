@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <optional>
 
+#include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/channel.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"

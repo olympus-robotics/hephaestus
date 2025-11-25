@@ -14,13 +14,13 @@
 #include <vector>
 
 #include <exec/task.hpp>
-#include <fmt/base.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/repeat_until.h"
 #include "hephaestus/conduit/internal/net.h"
+#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/socket.h"
-#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::conduit {
 namespace {
@@ -34,9 +34,7 @@ auto sendDataImpl(PartnerOutputBase* output, std::shared_ptr<heph::net::Socket> 
 }
 }  // namespace
 
-auto PartnerOutputBase::sendData()
-    //-> concurrency::AnySender<void> {
-    -> exec::task<void> {
+auto PartnerOutputBase::sendData() -> exec::task<void> {
   std::uint64_t type{ 0 };
 
   const auto& type_info = getTypeInfo();
@@ -65,14 +63,14 @@ auto PartnerOutputBase::sendData()
           internal::createNetEntity<heph::net::Socket>(*context_, endpoint_));
       auto response = co_await internal::connect(*client_, endpoint_, type_info, type, output_name);
       if (response != "SUCCESS") {
-        fmt::println(stderr, "{}: {}", output_name, response);
+        heph::log(heph::ERROR, "{}: {}", output_name, response);
         ++attempt;
         continue;
       }
       co_await sendDataImpl(this, client_);
 
     } catch (std::exception& e) {
-      heph::log(heph::WARN, "{}: {}. Retrying", "output", output_name, "error", e.what());
+      heph::log(heph::WARN, "Retrying.", "output", output_name, "error", e.what());
     } catch (...) {
       heph::log(heph::WARN, "Unknown error. Retrying", "output", output_name);
     }

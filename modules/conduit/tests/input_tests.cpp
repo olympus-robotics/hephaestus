@@ -12,6 +12,7 @@
 
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/accumulated_input.h"
+#include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/forwarding_input.h"
 #include "hephaestus/conduit/input.h"

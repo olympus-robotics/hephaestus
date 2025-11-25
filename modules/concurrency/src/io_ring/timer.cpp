@@ -18,7 +18,6 @@
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/context_scheduler.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 #include "hephaestus/error_handling/panic.h"
 

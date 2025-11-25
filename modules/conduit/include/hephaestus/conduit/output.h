@@ -12,12 +12,10 @@
 #include <utility>
 #include <vector>
 
-#include <exec/when_any.hpp>
-#include <stdexec/execution.hpp>
-
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/internal/circular_buffer.h"
 #include "hephaestus/concurrency/when_all_range.h"
+#include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/forwarding_output.h"
 #include "hephaestus/conduit/output_base.h"
@@ -90,6 +88,9 @@ struct Output : public OutputBase {
 private:
   auto triggerImpl(SchedulerT scheduler) -> concurrency::AnySender<void> {
     std::vector<concurrency::AnySender<void>> input_triggers;
+
+    // Renable deadlock detection!
+    (void)scheduler;
 
     while (true) {
       auto value = buffer_.pop();

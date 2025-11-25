@@ -17,13 +17,14 @@ heph_cc_library(
     implementation_deps = [
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",
-        "//modules/utils",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "//modules/utils",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/synchronization:synchronization",
         "@liburing",
         "@stdexec",
@@ -104,8 +105,10 @@ heph_cc_test(
 heph_cc_test(
     name = "channel_tests",
     srcs = ["tests/channel_tests.cpp"],
-    deps = [":concurrency",         "@stdexec",
-],
+    deps = [
+        ":concurrency",
+        "@stdexec",
+    ],
 )
 
 heph_cc_test(

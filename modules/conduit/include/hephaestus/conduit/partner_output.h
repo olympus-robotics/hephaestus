@@ -17,6 +17,7 @@
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/channel.h"
 #include "hephaestus/concurrency/context.h"
+#include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/typed_input.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
@@ -26,9 +27,7 @@ namespace heph::conduit {
 
 struct PartnerOutputBase {
   virtual ~PartnerOutputBase() = default;
-  auto sendData()
-      //-> concurrency::AnySender<void>;
-      -> exec::task<void>;
+  auto sendData() -> exec::task<void>;
 
   [[nodiscard]] virtual auto partner() const -> const std::string& = 0;
   [[nodiscard]] virtual auto name() const -> const std::string& = 0;
