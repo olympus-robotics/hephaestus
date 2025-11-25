@@ -28,7 +28,7 @@ genrule(
 
             # collect the outputs
             for out in $(OUTS); do
-              cp $$(realpath --relative-to=$(BINDIR) $$out) $$out
+              mv $$(realpath --relative-to=$(BINDIR) $$out) $$out
             done
           """,
     toolchains = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
