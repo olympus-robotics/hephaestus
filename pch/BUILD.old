@@ -1,0 +1,17 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Export the PCH header
+exports_files(["include/pch.hpp"])
+
+cc_library(
+    name = "pch",
+    hdrs = ["include/pch.hpp"],
+    includes = ["include"],
+    # Add dependencies that are used inside pch.hpp
+    deps = [
+        # Add other deps here if they are included in pch.hpp
+    ],
+    visibility = ["//visibility:public"],
+)
