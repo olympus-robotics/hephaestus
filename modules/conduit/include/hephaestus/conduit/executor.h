@@ -125,8 +125,6 @@ private:
 
   template <typename NodeDescription>
   auto spawnImpl(Node<NodeDescription>& node) -> concurrency::AnySender<void> {
-    using ChildrenT = NodeDescription::Children;
-
     std::vector<concurrency::AnySender<void>> spawner;
 
     auto view = rfl::to_view(node->children);

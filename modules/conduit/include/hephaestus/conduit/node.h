@@ -58,7 +58,6 @@ public:
   explicit NodeImpl(std::string prefix, NodeBase* parent, StepperT stepper)
     : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(stepper) {
     const auto& children_config = stepper.childrenConfig();
-    using ChildrenConfigT = std::decay_t<decltype(children_config)>;
     auto childrens_view = rfl::to_view(children);
     using ChildrensViewT = std::decay_t<decltype(childrens_view)>;
     if constexpr (!std::is_same_v<rfl::NamedTuple<>, ChildrensViewT>) {
