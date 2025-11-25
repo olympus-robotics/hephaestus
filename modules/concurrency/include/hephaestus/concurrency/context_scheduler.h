@@ -103,7 +103,7 @@ struct TimedTask : TimedTaskBase {
   struct Receiver {
     using receiver_concept = stdexec::receiver_t;
 
-    //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+    // NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
     void set_value() noexcept {
       self->task.start();
     }
@@ -112,8 +112,7 @@ struct TimedTask : TimedTaskBase {
     }
 
     template <typename Error>
-    void set_error(Error&& error) noexcept {
-      // stdexec::set_error(std::move(self->task.receiver), std::forward<Error>(error));
+    void set_error(Error&& /*error*/) noexcept {
     }
 
     [[nodiscard]] auto get_env() const noexcept {
