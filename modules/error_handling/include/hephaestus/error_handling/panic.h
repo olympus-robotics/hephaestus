@@ -43,7 +43,7 @@ struct StringLiteralWithLocationImpl final {
 template <typename... Ts>
 using StringLiteralWithLocation = detail::StringLiteralWithLocationImpl<Ts...>::impl;
 
-void panicImpl(const std::source_location& location, const std::string& formatted_message);
+[[noreturn]] void panicImpl(const std::source_location& location, const std::string& formatted_message);
 
 }  // namespace detail
 

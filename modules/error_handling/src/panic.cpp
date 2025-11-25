@@ -34,7 +34,7 @@ auto panicAsException() -> bool {
 
 namespace detail {
 
-void panicImpl(const std::source_location& location, const std::string& formatted_message) {
+[[noreturn]] void panicImpl(const std::source_location& location, const std::string& formatted_message) {
   auto location_str = std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
                       std::to_string(location.line());
 
