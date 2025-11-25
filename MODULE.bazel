@@ -127,8 +127,6 @@ git_override(
     remote = "https://github.com/martis42/depend_on_what_you_use",
 )
 
-bazel_dep(name = "boost.pfr", version = "1.83.0.bcr.1")
-
 # TODO: eventually add
 # bazel_dep(name = "lz4", version = "1.9.4")
 

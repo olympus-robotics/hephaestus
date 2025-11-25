@@ -11,9 +11,10 @@
 #include <type_traits>
 #include <utility>
 
-#include <boost/pfr.hpp>  // IWYU pragma: keep
 #include <exec/when_any.hpp>
 #include <fmt/format.h>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/to_view.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/repeat_until.h"
@@ -30,27 +31,19 @@ namespace internal {
 template <typename Node, typename Children, typename Config, std::size_t... Idx>
 void constructChildren(const std::string& prefix, Node* node, Children& children, const Config& config,
                        std::index_sequence<Idx...> /*unused*/) {
-  (boost::pfr::get<Idx>(children).initialize(prefix, node, boost::pfr::get<Idx>(config)), ...);
+  (rfl::get<Idx>(children)->initialize(prefix, node, *rfl::get<Idx>(config)), ...);
 }
 
 template <typename Trigger, typename Inputs, std::size_t... Idx>
 auto spawnInputTriggers(Trigger trigger, SchedulerT scheduler, Inputs& inputs,
                         std::index_sequence<Idx...> /*unused*/) {
-  if constexpr (sizeof...(Idx) == 0) {
-    return NeverStop{};
-  } else {
-    return trigger(boost::pfr::get<Idx>(inputs).trigger(scheduler)...);
-  }
+  return trigger(rfl::get<Idx>(inputs)->trigger(scheduler)...);
 }
 
 template <typename Outputs, std::size_t... Idx>
 auto spawnOutputTriggers(Outputs& outputs, SchedulerT scheduler, std::index_sequence<Idx...> /*unused*/
 ) {
-  if constexpr (sizeof...(Idx) == 0) {
-    return stdexec::just();
-  } else {
-    return stdexec::when_all(boost::pfr::get<Idx>(outputs).trigger(scheduler)...);
-  }
+  return stdexec::when_all(rfl::get<Idx>(outputs)->trigger(scheduler)...);
 }
 
 template <typename NodeDescription>
@@ -66,21 +59,28 @@ public:
     : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(stepper) {
     const auto& children_config = stepper.childrenConfig();
     using ChildrenConfigT = std::decay_t<decltype(children_config)>;
-    static_assert(boost::pfr::tuple_size_v<ChildrenT> == boost::pfr::tuple_size_v<ChildrenConfigT>);
-    internal::constructChildren(this->prefix(), this, children, children_config,
-                                std::make_index_sequence<boost::pfr::tuple_size_v<ChildrenT>>{});
-    // Alternative with C++26 and aggregate packs.
-    // auto& [... child] = children;
-    // const auto& [... child_stepper] = stepper.nodeConfig().stepper;
-    //(child.emplace(this, child_stepper), ...);
+    auto childrens_view = rfl::to_view(children);
+    using ChildrensViewT = std::decay_t<decltype(childrens_view)>;
+    if constexpr (!std::is_same_v<rfl::NamedTuple<>, ChildrensViewT>) {
+      auto children_config_view = rfl::to_view(children_config);
+      internal::constructChildren(
+          this->prefix(), this, childrens_view.values(), children_config_view.values(),
+          std::make_index_sequence<rfl::tuple_size_v<typename ChildrensViewT::Values>>{});
+      // Alternative with C++26 and aggregate packs.
+      // auto& [... child] = children;
+      // const auto& [... child_stepper] = stepper.nodeConfig().stepper;
+      //(child.emplace(this, child_stepper), ...);
+    }
   }
 
   void enable() final {
-    boost::pfr::for_each_field(inputs, [](auto& input) { input.enable(); });
+    auto inputs_view = rfl::to_view(inputs);
+    inputs_view.apply([](const auto& input) { input.value()->enable(); });
   }
 
   void disable() final {
-    boost::pfr::for_each_field(inputs, [](auto& input) { input.disable(); });
+    auto inputs_view = rfl::to_view(inputs);
+    inputs_view.apply([](const auto& input) { input.value()->disable(); });
   }
 
   auto spawn(SchedulerT scheduler) {
@@ -135,14 +135,29 @@ public:
 
   auto inputTrigger(SchedulerT scheduler) {
     return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
-             return internal::spawnInputTriggers(
-                 trigger, scheduler, inputs, std::make_index_sequence<boost::pfr::tuple_size_v<InputsT>>{});
+             auto inputs_view = rfl::to_view(inputs);
+             using InputsViewT = std::decay_t<decltype(inputs_view)>;
+             if constexpr (!std::is_same_v<rfl::NamedTuple<>, InputsViewT>) {
+               return internal::spawnInputTriggers(
+                   trigger, scheduler, inputs_view.values(),
+                   std::make_index_sequence<rfl::tuple_size_v<typename InputsViewT::Values>>{});
+
+             } else {
+               return NeverStop{};
+             }
            });
   }
 
   auto outputTrigger(SchedulerT scheduler) {
-    return internal::spawnOutputTriggers(outputs, scheduler,
-                                         std::make_index_sequence<boost::pfr::tuple_size_v<OutputsT>>{});
+    auto outputs_view = rfl::to_view(outputs);
+    using OutputsViewT = std::decay_t<decltype(outputs_view)>;
+    if constexpr (!std::is_same_v<rfl::NamedTuple<>, OutputsViewT>) {
+      return internal::spawnOutputTriggers(
+          outputs_view.values(), scheduler,
+          std::make_index_sequence<rfl::tuple_size_v<typename OutputsViewT::Values>>{});
+    } else {
+      return stdexec::just();
+    }
   }
   StepperT stepper;
   InputsT inputs{};

@@ -13,11 +13,13 @@
 #include <vector>
 
 #include <exec/async_scope.hpp>
+#include <rfl/to_view.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
 #include "hephaestus/concurrency/context.h"
 #include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/concurrency/when_all_range.h"
 #include "hephaestus/conduit/acceptor.h"
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/node.h"
@@ -121,19 +123,20 @@ public:
 private:
   auto getScheduler(NodeBase& node) -> SchedulerT;
 
-  template <typename NodeDescription, std::size_t... Idx>
-  auto spawnImpl(SchedulerT scheduler, Node<NodeDescription>& node, std::index_sequence<Idx...> /*unused*/)
-      -> concurrency::AnySender<void> {
-    return stdexec::continues_on(
-        stdexec::when_all(node->spawn(scheduler), spawnImpl(boost::pfr::get<Idx>(node->children))...),
-        scheduler);
-  }
-
   template <typename NodeDescription>
   auto spawnImpl(Node<NodeDescription>& node) -> concurrency::AnySender<void> {
     using ChildrenT = NodeDescription::Children;
-    return spawnImpl(getScheduler(*node), node,
-                     std::make_index_sequence<boost::pfr::tuple_size_v<ChildrenT>>{});
+
+    std::vector<concurrency::AnySender<void>> spawner;
+
+    auto view = rfl::to_view(node->children);
+    spawner.reserve(1 + view.size());
+
+    auto scheduler = getScheduler(*node);
+    spawner.emplace_back(node->spawn(scheduler));
+    view.apply([&](const auto& children) { spawner.emplace_back(spawnImpl(*children.value())); });
+
+    return concurrency::whenAllRange(std::move(spawner));
   }
 
 private:

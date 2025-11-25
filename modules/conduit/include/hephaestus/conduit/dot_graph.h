@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <rfl/to_view.hpp>
 
 #include "hephaestus/conduit/graph.h"
 #include "hephaestus/conduit/node.h"
@@ -60,27 +61,30 @@ auto dotGraphImpl(Visualization& visualization, heph::conduit::Node<NodeDescript
     res += fmt::format("subgraph ports{} {{\n", id);
     res += fmt::format("subgraph cluster_inputs{} {{\n", id);
     res += fmt::format("label = \"Inputs\";\n");
-    boost::pfr::for_each_field(node->inputs, [&](auto& input) {
-      auto id = visualization.getId(input.name());
+    auto inputs = rfl::to_view(node->inputs);
+    inputs.apply([&](const auto& input) {
+      auto id = visualization.getId(input.value()->name());
       res += fmt::format("{} [label = \"{}\", shape = ellipse];\n", id, strip(input.name()));
-      for (const auto& destination : input.getOutgoing()) {
-        visualization.addEdge(input.name(), destination);
+      for (const auto& destination : input.value()->getOutgoing()) {
+        visualization.addEdge(input.value()->name(), destination);
       }
-      for (const auto& destination : input.getIncoming()) {
-        visualization.addEdge(destination, input.name());
+      for (const auto& destination : input.vaue()->getIncoming()) {
+        visualization.addEdge(destination, input.value()->name());
       }
     });
     res += "}\n";
     res += fmt::format("subgraph cluster_outputs{} {{\n", id);
     res += fmt::format("label = \"Outputs\";\n");
-    boost::pfr::for_each_field(node->outputs, [&](auto& output) {
-      auto id = visualization.getId(output.name());
-      res += fmt::format("{} [label = \"{}\", shape = box];\n", id, strip(output.name()));
-      for (const auto& destination : output.getOutgoing()) {
-        visualization.addEdge(output.name(), destination);
+
+    auto outputs = rfl::to_view(node->inputs);
+    rfl::apply([&](const auto& output) {
+      auto id = visualization.getId(output.value()->name());
+      res += fmt::format("{} [label = \"{}\", shape = box];\n", id, strip(output.value()->name()));
+      for (const auto& destination : output.value()->getOutgoing()) {
+        visualization.addEdge(output.value()->name(), destination);
       }
-      for (const auto& destination : output.getIncoming()) {
-        visualization.addEdge(destination, output.name());
+      for (const auto& destination : output.value()->getIncoming()) {
+        visualization.addEdge(destination, output.value()->name());
       }
     });
     res += "}\n";

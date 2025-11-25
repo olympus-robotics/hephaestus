@@ -11,6 +11,7 @@
 #include <thread>
 #include <vector>
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 #include <exec/async_scope.hpp>
@@ -45,16 +46,16 @@ public:
   void setInputs(std::vector<BasicInput*> typed_inputs);
 
 private:
-  auto handleClient(net::Socket client, std::uint64_t type) -> exec::task<void>;
+  [[nodiscard]] auto handleClient(net::Socket client, std::uint64_t type) -> exec::task<void>;
 
 private:
-  absl::Mutex mutex_;
   exec::async_scope scope_;
   heph::concurrency::Context context_{ {} };
   std::vector<heph::net::Acceptor> acceptors_;
   std::exception_ptr exception_;
-  std::vector<BasicInput*> typed_inputs_;
-  absl::flat_hash_map<std::string, heph::net::Endpoint> partners_;
+  absl::Mutex mutex_;
+  std::vector<BasicInput*> typed_inputs_ ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<std::string, heph::net::Endpoint> partners_ ABSL_GUARDED_BY(mutex_);
   std::thread thread_;
 };
 }  // namespace heph::conduit

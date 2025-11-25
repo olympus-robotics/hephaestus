@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include <rfl/to_view.hpp>
+
 #include "hephaestus/conduit/basic_input.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/output.h"
@@ -33,8 +35,8 @@ template <typename NodeDescription, typename PreVisitor, typename PostVisitor = 
 void traverse(Node<NodeDescription>& node, PreVisitor pre_visitor, PostVisitor post_visitor = {}) {
   pre_visitor(node);
 
-  boost::pfr::for_each_field(node->children,
-                             [&](auto& child) { traverse(child, pre_visitor, post_visitor); });
+  auto view = rfl::to_view(node->children);
+  view.apply([&](const auto& child) { traverse(*child.value(), pre_visitor, post_visitor); });
 
   // Alternative with C++26 and aggregate packs.
   // auto& [... children] = node->children;
@@ -59,18 +61,22 @@ public:
     root_.initialize(config_.prefix, nullptr, stepper_);
 
     // Connect all nodes, recurses into child nodes, also sets paths for inputs and outputs.
-    internal::traverse(
-        root_, internal::NullVisitor{}, [this]<typename NodeDescription>(Node<NodeDescription>& node) {
-          boost::pfr::for_each_field(node->inputs, [&node, this](auto& input) { input.setNode(*node); });
-          boost::pfr::for_each_field(node->outputs, [&node, this](auto& output) { output.setNode(*node); });
-          NodeDescription::connect(node->inputs, node->outputs, node->children);
-          node->stepper.connect(node->inputs, node->outputs, node->children);
-        });
-    internal::traverse(
-        root_, internal::NullVisitor{}, [this]<typename NodeDescription>(Node<NodeDescription>& node) {
-          boost::pfr::for_each_field(node->inputs, [&node, this](auto& input) { registerInput(input); });
-          boost::pfr::for_each_field(node->outputs, [&node, this](auto& output) { registerOutput(output); });
-        });
+    internal::traverse(root_, internal::NullVisitor{},
+                       [this]<typename NodeDescription>(Node<NodeDescription>& node) {
+                         auto inputs = rfl::to_view(node->inputs);
+                         inputs.apply([&](const auto& input) { input.value()->setNode(*node); });
+                         auto outputs = rfl::to_view(node->outputs);
+                         outputs.apply([&](const auto& output) { output.value()->setNode(*node); });
+                         NodeDescription::connect(node->inputs, node->outputs, node->children);
+                         node->stepper.connect(node->inputs, node->outputs, node->children);
+                       });
+    internal::traverse(root_, internal::NullVisitor{},
+                       [this]<typename NodeDescription>(Node<NodeDescription>& node) {
+                         auto inputs = rfl::to_view(node->inputs);
+                         inputs.apply([&](const auto& input) { registerInput(*input.value()); });
+                         auto outputs = rfl::to_view(node->outputs);
+                         outputs.apply([&](const auto& output) { registerOutput(*output.value()); });
+                       });
   }
 
   auto stepper() -> auto& {
