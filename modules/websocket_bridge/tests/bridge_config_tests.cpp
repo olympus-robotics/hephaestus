@@ -11,54 +11,41 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/error_handling/panic.h"
+#include "hephaestus/error_handling/panic_exception.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 
 namespace heph::ws {
 
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
-class MyEnvironment : public ::testing::Environment {
-public:
-  ~MyEnvironment() override = default;
+struct BridgeConfigTest : heph::test_utils::HephTest {};
 
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::INFO));
-  }
-
-private:
-  error_handling::PanicAsExceptionScope panic_scope_;
-};
-
-// NOLINTNEXTLINE
-auto* const my_env = dynamic_cast<MyEnvironment*>(AddGlobalTestEnvironment(new MyEnvironment{}));
-
-TEST(BridgeConfigTest, ValidRegex) {
+TEST_F(BridgeConfigTest, ValidRegex) {
   const std::vector<std::string> regex_strings = { ".*", "^test$", "a+b*" };
   const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size());
 }
 
-TEST(BridgeConfigTest, InvalidRegex) {
+TEST_F(BridgeConfigTest, InvalidRegex) {
   const std::vector<std::string> regex_strings = { ".*", "(", "a+b*" };
   const auto regexes = parseRegexStrings(regex_strings);
   EXPECT_EQ(regexes.size(), regex_strings.size() - 1);  // One invalid regex
 }
 
-TEST(BridgeConfigTest, RegexMatch) {
+TEST_F(BridgeConfigTest, RegexMatch) {
   const std::vector<std::regex> regex_list = { std::regex("^test$") };
   EXPECT_TRUE(isMatch("test", regex_list));
   EXPECT_FALSE(isMatch("not_test", regex_list));
 }
 
-TEST(BridgeConfigTest, StringMatch) {
+TEST_F(BridgeConfigTest, StringMatch) {
   const std::vector<std::string> regex_strings = { "^test$" };
   EXPECT_TRUE(isMatch("test", regex_strings));
   EXPECT_FALSE(isMatch("not_test", regex_strings));
 }
 
-TEST(BridgeConfigTest, WhitelistAndBlacklistA) {
+TEST_F(BridgeConfigTest, WhitelistAndBlacklistA) {
   WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   config.ipc_topic_blacklist = { "^exclude$" };
@@ -66,14 +53,14 @@ TEST(BridgeConfigTest, WhitelistAndBlacklistA) {
   EXPECT_FALSE(shouldBridgeIpcTopic("exclude", config));
 }
 
-TEST(BridgeConfigTest, WhitelistOnlyA) {
+TEST_F(BridgeConfigTest, WhitelistOnlyA) {
   WebsocketBridgeConfig config;
   config.ipc_topic_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcTopic("include", config));
   EXPECT_TRUE(shouldBridgeIpcTopic("exclude", config));
 }
 
-TEST(BridgeConfigTest, WhitelistAndBlacklistB) {
+TEST_F(BridgeConfigTest, WhitelistAndBlacklistB) {
   WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   config.ipc_service_blacklist = { "^exclude$" };
@@ -81,21 +68,21 @@ TEST(BridgeConfigTest, WhitelistAndBlacklistB) {
   EXPECT_FALSE(shouldBridgeIpcService("exclude", config));
 }
 
-TEST(BridgeConfigTest, WhitelistOnlyB) {
+TEST_F(BridgeConfigTest, WhitelistOnlyB) {
   WebsocketBridgeConfig config;
   config.ipc_service_whitelist = { ".*" };
   EXPECT_TRUE(shouldBridgeIpcService("include", config));
   EXPECT_TRUE(shouldBridgeIpcService("exclude", config));
 }
 
-TEST(BridgeConfigTest, MatchWhitelist) {
+TEST_F(BridgeConfigTest, MatchWhitelist) {
   WebsocketBridgeConfig config;
   config.ws_server_config.clientTopicWhitelistPatterns = parseRegexStrings({ ".*incl.*" });
   EXPECT_TRUE(shouldBridgeWsTopic("include", config));
   EXPECT_FALSE(shouldBridgeWsTopic("exclude", config));
 }
 
-TEST(BridgeConfigTest, SaveDefaultAndLoad) {
+TEST_F(BridgeConfigTest, SaveDefaultAndLoad) {
   WebsocketBridgeConfig original_config;
   try {
     saveBridgeConfigToYaml(original_config, "/tmp/default.yaml");
@@ -146,7 +133,7 @@ TEST(BridgeConfigTest, SaveDefaultAndLoad) {
             config.zenoh_config.multicast_scouting_interface);
 }
 
-TEST(BridgeConfigTest, LoadInvalidYaml) {
+TEST_F(BridgeConfigTest, LoadInvalidYaml) {
   const std::string yaml_content = R"(
   invalid_yaml_content
   )";
@@ -158,13 +145,13 @@ TEST(BridgeConfigTest, LoadInvalidYaml) {
                error_handling::PanicException);
 }
 
-TEST(BridgeConfigTest, SaveInvalidPath) {
+TEST_F(BridgeConfigTest, SaveInvalidPath) {
   const WebsocketBridgeConfig config;
   EXPECT_THROW(saveBridgeConfigToYaml(config, "/invalid_path/saved_config.yaml"),
                error_handling::PanicException);
 }
 
-TEST(BridgeConfigTest, LoadInvalidPath) {
+TEST_F(BridgeConfigTest, LoadInvalidPath) {
   EXPECT_THROW(const auto config = loadBridgeConfigFromYaml("/invalid_path/config.yaml"),
                error_handling::PanicException);
 }

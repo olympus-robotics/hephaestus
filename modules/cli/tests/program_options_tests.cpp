@@ -9,7 +9,8 @@
 
 #include "gmock/gmock.h"
 #include "hephaestus/cli/program_options.h"
-#include "hephaestus/error_handling/panic.h"
+#include "hephaestus/error_handling/panic_exception.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 // NOLINTBEGIN(cert-err58-cpp, cppcoreguidelines-owning-memory, modernize-use-trailing-return-type,
 // cppcoreguidelines-avoid-goto) NOLINTNEXTLINE(google-build-using-namespace, modernize-type-traits)
@@ -17,14 +18,16 @@ using namespace ::testing;
 
 namespace heph::cli::tests {
 
-TEST(ProgramOptions, Empty) {
+struct ProgramOptions : heph::test_utils::HephTest {};
+
+TEST_F(ProgramOptions, Empty) {
   auto desc = ProgramDescription("A dummy service that does nothing");
   auto options = std::move(desc).parse({});
 
   EXPECT_TRUE(options.hasOption("help"));
 }
 
-TEST(ProgramOptions, Option) {
+TEST_F(ProgramOptions, Option) {
   static constexpr float NUMBER = 1.1f;
   auto desc = ProgramDescription("A dummy service that does nothing");
   desc.defineOption<std::string>("option", "desc")
@@ -59,7 +62,7 @@ TEST(ProgramOptions, Option) {
   }
 }
 
-TEST(ProgramOptions, Errors) {
+TEST_F(ProgramOptions, Errors) {
   {
     auto desc = ProgramDescription("A dummy service that does nothing");
     EXPECT_THROW(std::move(desc).parse({ "--option" }), error_handling::PanicException);

@@ -4,13 +4,14 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/test_utils/environment.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::test_utils::tests {
-TEST(TestUtils, Environment) {
+
+TEST_F(HephTest, Environment) {
   std::ignore = mt();
 }
 

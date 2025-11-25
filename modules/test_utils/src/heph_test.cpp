@@ -1,25 +1,24 @@
 // =====================================================================================
 // |   This file is part of the FORKIFY project by FILICS GmbH. All rights reserved.   |
 // =====================================================================================
-#pragma once
+#include "hephaestus/test_utils/heph_test.h"
 
-#include <memory>
-#include <random>
-
-#include <gtest/gtest.h>
-
-#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
-#include "hephaestus/utils/stack_trace.h"
 
 namespace heph::test_utils {
-namespace internal {
-void createDefaultTestEnvironment();
-}  // namespace internal
 
-[[nodiscard]] auto mt() -> std::mt19937_64&;
+HephTest::HephTest() : mt_{ heph::random::createRNG() } {
+  telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
+}
+
+HephTest::~HephTest() {
+  telemetry::flushMetrics();
+  telemetry::flushLogEntries();
+
+  telemetry::removeAllLogSinks();
+}
 
 }  // namespace heph::test_utils

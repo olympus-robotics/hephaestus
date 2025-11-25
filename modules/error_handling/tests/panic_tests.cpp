@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/error_handling/panic.h"
+#include "hephaestus/error_handling/panic_as_exception_scope.h"
+#include "hephaestus/error_handling/panic_exception.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -17,5 +19,6 @@ TEST(Panic, Exception) {
   const error_handling::PanicAsExceptionScope panic_scope;
   EXPECT_THROW(panic("This is a panic with value {}", TEST_FORMAT_VALUE), PanicException);
 }
+
 }  // namespace
 }  // namespace heph::error_handling::tests

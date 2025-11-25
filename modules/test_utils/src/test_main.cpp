@@ -4,15 +4,9 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/test_utils/environment.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 auto main(int argc, char** argv) -> int {
   ::testing::InitGoogleTest(&argc, argv);
-
-  // heph::test_utils::internal::default_test_environments =
-  //     dynamic_cast<heph::test_utils::internal::DefaultEnvironment*>(::testing::AddGlobalTestEnvironment(
-  //         new heph::test_utils::internal::DefaultEnvironment{}));  // NOLINT
-  heph::test_utils::internal::createDefaultTestEnvironment();
-
   return RUN_ALL_TESTS();
 }

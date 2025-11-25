@@ -4,35 +4,16 @@
 
 #include "hephaestus/error_handling/panic.h"
 
-#include <cstddef>
 #include <exception>
 #include <source_location>
 #include <string>
 
+#include "hephaestus/error_handling/panic_as_exception_scope.h"
+#include "hephaestus/error_handling/panic_exception.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/utils/string/string_utils.h"
 
-namespace heph::error_handling {
-namespace {
-// thread_local ensures that each thread gets its own instance of module_stack.
-// This is crucial for correctness in multi-threaded applications.
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-thread_local size_t panic_as_exception_counter = 0;
-}  // namespace
-
-PanicAsExceptionScope::PanicAsExceptionScope() {
-  ++panic_as_exception_counter;
-}
-
-PanicAsExceptionScope::~PanicAsExceptionScope() {
-  --panic_as_exception_counter;
-}
-
-auto panicAsException() -> bool {
-  return panic_as_exception_counter > 0;
-}
-
-namespace detail {
+namespace heph::error_handling::detail {
 
 void panicImpl(const std::source_location& location, const std::string& formatted_message) {
   auto location_str = std::string(utils::string::truncate(location.file_name(), "modules")) + ":" +
@@ -41,13 +22,11 @@ void panicImpl(const std::source_location& location, const std::string& formatte
   log(ERROR, "program terminated with panic", "error", formatted_message, "location", location_str);
   telemetry::flushLogEntries();
 
-  if (error_handling::panicAsException()) {
-    throw error_handling::PanicException(formatted_message);
+  if (panicAsException()) {
+    throw PanicException(formatted_message);
   }
 
   std::terminate();
 }
 
-}  // namespace detail
-
-}  // namespace heph::error_handling
+}  // namespace heph::error_handling::detail

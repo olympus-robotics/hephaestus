@@ -12,11 +12,12 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/spinner.h"
-#include "hephaestus/error_handling/panic.h"
+#include "hephaestus/error_handling/panic_exception.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 namespace heph::concurrency::tests {
 
-struct SpinnerTest : public ::testing::Test {
+struct SpinnerTest : public heph::test_utils::HephTest {
   [[nodiscard]] static auto createTrivialCallback() -> Spinner::StoppableCallback {
     auto cb = []() {};
     return Spinner::createNeverStoppingCallback(std::move(cb));
