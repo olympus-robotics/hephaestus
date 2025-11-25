@@ -261,7 +261,7 @@ class AnySender {
     Sender sender;
     template <typename SenderT>
       requires(std::is_same_v<std::decay_t<SenderT>, Sender>)
-    explicit Impl(SenderT&& sender) : sender(std::forward<SenderT>(sender)) {
+    explicit Impl(SenderT&& outer_sender) : sender(std::forward<SenderT>(outer_sender)) {
     }
 
     auto doConnect(AnyReceiver<T> receiver) -> AnyOperation final {
