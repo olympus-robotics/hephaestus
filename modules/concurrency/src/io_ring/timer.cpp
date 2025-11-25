@@ -100,7 +100,7 @@ void Timer::update(TimerClock::time_point start_time) {
 }
 
 void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) const {
-  absl::MutexLock l{ &timer->mutex_ };
+  const absl::MutexLock lock{ &timer->mutex_ };
   // NOLINTNEXTLINE(misc-include-cleaner, bugprone-unchecked-optional-access)
   auto* ptr{ &timer->timer_operation_.value() };
   std::uint64_t data{};
