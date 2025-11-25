@@ -24,7 +24,7 @@ class ValueStorage {
   };
   template <typename ValueStorageImplT>
   struct ValueStorageImpl : ValueStorageBase {
-    explicit ValueStorageImpl(ValueStorageImplT impl) : impl(std::move(impl)) {
+    explicit ValueStorageImpl(ValueStorageImplT outer_impl) : impl(std::move(outer_impl)) {
     }
     [[nodiscard]] auto hasValue() const -> bool final {
       return impl.hasValue();

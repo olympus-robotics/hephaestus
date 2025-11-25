@@ -55,8 +55,8 @@ public:
   using TriggerT = typename NodeDescription::Trigger;
   using StepperT = Stepper<NodeDescription>;
 
-  explicit NodeImpl(std::string prefix, NodeBase* parent, StepperT stepper)
-    : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(stepper) {
+  explicit NodeImpl(std::string prefix, NodeBase* parent, StepperT outer_stepper)
+    : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(outer_stepper) {
     const auto& children_config = stepper.childrenConfig();
     auto childrens_view = rfl::to_view(children);
     using ChildrensViewT = std::decay_t<decltype(childrens_view)>;

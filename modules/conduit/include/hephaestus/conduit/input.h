@@ -30,7 +30,6 @@ namespace heph::conduit {
 template <typename T, std::size_t QueueDepth = 1>
 class Input : public TypedInput<T> {
   using typename TypedInput<T>::SetValueSenderT;
-  using BasicInput::SenderT;
 
   static constexpr bool OVERWRITE = QueueDepth == OVERWRITE_POLICY;
   static constexpr auto QUEUE_DEPTH = OVERWRITE ? 1 : QueueDepth;
@@ -96,7 +95,7 @@ public:
   }
 
 private:
-  auto doTrigger(SchedulerT scheduler) -> SenderT final {
+  auto doTrigger(SchedulerT scheduler) -> BasicInput::SenderT final {
     std::optional<ClockT::time_point> deadline;
     if (timeout_.has_value()) {
       deadline = ClockT::now() + *timeout_;
