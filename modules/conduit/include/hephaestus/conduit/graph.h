@@ -105,8 +105,8 @@ private:
   }
   void registerOutput(OutputBase& /*output*/) {
   }
-  template <typename T>
-  void registerOutput(Output<T>& output) {
+  template <typename T, std::size_t Capacity>
+  void registerOutput(Output<T, Capacity>& output) {
     typed_outputs_.push_back(&output);
     for (const auto& partner : config_.partners) {
       auto partner_outputs = output.setPartner(config_.prefix, partner);

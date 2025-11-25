@@ -26,8 +26,6 @@
 
 namespace heph::conduit {
 
-static inline constexpr auto OVERWRITE_POLICY = std::size_t(-1);
-
 /// `Input` is representing the set of typed inputs which are the incoming edges into a node in the
 /// execution graph.
 template <typename T, std::size_t QueueDepth = 1>

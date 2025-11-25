@@ -23,6 +23,8 @@
 
 namespace heph::conduit {
 
+static inline constexpr auto OVERWRITE_POLICY = std::size_t(-1);
+
 /// A trigger can return with either ready (value), with an exception or stopped.
 using InputTriggerCompletionSignatures =
     stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_error_t(std::exception_ptr),

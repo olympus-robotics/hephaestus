@@ -46,8 +46,11 @@ private:
   concurrency::Context* context_;
   net::Endpoint endpoint_;
 };
-template <typename T>
+template <typename T, std::size_t Capacity>
 class PartnerOutput : public PartnerOutputBase {
+  static constexpr bool OVERWRITE = Capacity == OVERWRITE_POLICY;
+  static constexpr auto QUEUE_DEPTH = OVERWRITE ? 1 : Capacity;
+
 public:
   explicit PartnerOutput(TypedInput<T>& input_base)
     : name_(input_base.name()), type_info_(serdes::getSerializedTypeInfo<T>().toJson()) {
@@ -92,7 +95,7 @@ private:
   std::string resolved_name_;
   std::string type_info_;
   std::string partner_;
-  std::shared_ptr<concurrency::Channel<T, 1>> output_;
+  std::shared_ptr<concurrency::Channel<T, QUEUE_DEPTH>> output_;
 };
 
 }  // namespace heph::conduit

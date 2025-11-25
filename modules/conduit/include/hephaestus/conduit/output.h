@@ -30,6 +30,9 @@ namespace heph::conduit {
 
 template <typename T, std::size_t Capacity>
 struct Output : public OutputBase {
+  static constexpr bool OVERWRITE = Capacity == OVERWRITE_POLICY;
+  static constexpr auto QUEUE_DEPTH = OVERWRITE ? 1 : Capacity;
+
   explicit Output(std::string_view name) : OutputBase(name) {
   }
 
@@ -94,35 +97,35 @@ private:
         break;
       }
       for (auto& output : partner_outputs_) {
-        input_triggers.emplace_back(exec::when_any(
-            scheduler.scheduleAfter(timeout_) | stdexec::then(
-                                                    // timeout callback
-                                                    [this, &output]() {
-                                                      heph::panic("{}: Failed to set input {} within {}",
-                                                                  this->name(), output.name(), timeout_);
-                                                    }),
-            output.setValue(*value)));
+        input_triggers.emplace_back(                           /*exec::when_any(
+                                       scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                               // timeout callback
+                                                                               [this, &output]() {
+                                                                                 heph::panic("{}: Failed to set input {} within {}",
+                                                                                             this->name(), output.name(), timeout_);
+                                                                               }),*/
+                                    output.setValue(*value));  //);
       }
       for (auto* input : inputs_) {
-        input_triggers.emplace_back(exec::when_any(
-            scheduler.scheduleAfter(timeout_) | stdexec::then(
-                                                    // timeout callback
-                                                    [this, input]() {
-                                                      heph::panic("{}: Failed to set input {} within {}",
-                                                                  this->name(), input->name(), timeout_);
-                                                    }),
-            input->setValue(*value)));
+        input_triggers.emplace_back(                           /*exec::when_any(
+                                       scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                               // timeout callback
+                                                                               [this, input]() {
+                                                                                 heph::panic("{}: Failed to set input {} within {}",
+                                                                                             this->name(), input->name(), timeout_);
+                                                                               }),*/
+                                    input->setValue(*value));  //);
       }
       for (auto* forwarding : forwarding_outputs_) {
         for (auto* input : forwarding->inputs_) {
-          input_triggers.emplace_back(exec::when_any(
-              scheduler.scheduleAfter(timeout_) | stdexec::then(
-                                                      // timeout callback
-                                                      [this, input]() {
-                                                        heph::panic("{}: Failed to set input {} within {}",
-                                                                    this->name(), input->name(), timeout_);
-                                                      }),
-              input->setValue(*value)));
+          input_triggers.emplace_back(                           /*exec::when_any(
+                                         scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                                 // timeout callback
+                                                                                 [this, input]() {
+                                                                                   heph::panic("{}: Failed to set input {} within {}",
+                                                                                               this->name(), input->name(), timeout_);
+                                                                                 }),*/
+                                      input->setValue(*value));  //);
         }
       }
     }
@@ -133,12 +136,12 @@ private:
   template <typename U>
   friend struct ForwardingOutput;
 
-  concurrency::internal::CircularBuffer<T, Capacity> buffer_;
+  concurrency::internal::CircularBuffer<T, QUEUE_DEPTH> buffer_;
   std::vector<TypedInput<T>*> inputs_;
-  std::vector<PartnerOutput<T>> partner_outputs_;
+  std::vector<PartnerOutput<T, Capacity>> partner_outputs_;
   std::vector<ForwardingOutput<T>*> forwarding_outputs_;
   // TODO: (heller) make this configurable, together with what to do on timeout...
-  static constexpr auto DEFAULT_TIMEOUT = std::chrono::seconds{ 30 };
+  static constexpr auto DEFAULT_TIMEOUT = std::chrono::seconds{ 10 };
   ClockT::duration timeout_{ DEFAULT_TIMEOUT };
   std::atomic<bool> enabled_{ true };
 };
