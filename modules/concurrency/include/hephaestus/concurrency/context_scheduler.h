@@ -140,7 +140,7 @@ struct TimedTask : TimedTaskBase {
   TimedTask(const TimedTask& other) = delete;
   auto operator=(const TimedTask& other) -> TimedTask& = delete;
 
-  ~TimedTask() final {
+  ~TimedTask() override {
     task.context->dequeueTimer(this);
   }
 
