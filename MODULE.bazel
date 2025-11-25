@@ -119,7 +119,7 @@ bazel_dep(name = "yaml-cpp", version = "0.8.0")
 bazel_dep(name = "boringssl", version = "0.20250114.0")
 bazel_dep(name = "websocketpp", version = "0.8.2.bcr.3")
 bazel_dep(name = "zstd", version = "1.5.6")
-bazel_dep(name = "liburing", version = "2.5")
+
 bazel_dep(name = "depend_on_what_you_use", version = "0.10.0")
 git_override(
     module_name = "depend_on_what_you_use",
@@ -132,4 +132,4 @@ git_override(
 
 # For details on why we do this: https://bazel.build/external/migration
 external_dependencies = use_extension("@hephaestus//bazel:extensions.bzl", "external_dependencies")
-use_repo(external_dependencies, "bluez", "cpr", "influxdb", "mcap", "reflect-cpp", "stdexec", "ws_protocol", "zenohc_builder")
+use_repo(external_dependencies, "bluez", "cpr", "influxdb", "mcap", "reflect-cpp", "stdexec", "ws_protocol", "zenohc_builder", "liburing")
