@@ -37,7 +37,7 @@ struct RepeatUntilT {
   }
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr RepeatUntilT repeatUntil{};
 
 namespace internal {
@@ -48,7 +48,7 @@ struct RepeatUntilStateT {
     RepeatUntilStateT* self;
     using receiver_concept = stdexec::receiver_t;
 
-    // NOLINTNEXTLINE (readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
     void set_value(bool done) const noexcept {
       if (done) {
         stdexec::set_value(std::move(self->receiver));
@@ -57,13 +57,13 @@ struct RepeatUntilStateT {
       self->start();
     }
 
-    // NOLINTNEXTLINE (readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
     void set_stopped() const noexcept {
       stdexec::set_stopped(std::move(self->receiver));
     }
 
     template <typename Error>
-    // NOLINTNEXTLINE (readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
     void set_error(Error error) const noexcept {
       if constexpr (std::is_same_v<std::decay_t<Error>, std::exception_ptr>) {
         stdexec::set_error(std::move(self->receiver), std::move(error));
@@ -76,7 +76,7 @@ struct RepeatUntilStateT {
       }
     }
 
-    // NOLINTNEXTLINE (readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
     auto get_env() const noexcept {
       return stdexec::get_env(self->receiver);
     }

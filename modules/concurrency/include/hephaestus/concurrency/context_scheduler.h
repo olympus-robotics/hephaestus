@@ -70,7 +70,7 @@ struct GetContextT : stdexec::__query<GetContextT> {
   auto operator()() const noexcept;
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 static constexpr GetContextT getContext{};
 
 struct ContextEnv {
