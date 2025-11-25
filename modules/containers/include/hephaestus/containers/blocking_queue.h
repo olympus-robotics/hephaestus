@@ -25,9 +25,8 @@ template <class T>
 class BlockingQueue {
 public:
   /// Create a queue
-  /// \param max_size Max number of concurrent element in the queue. If not specified, a queue with
-  /// infinite length is created.
-  explicit BlockingQueue(std::optional<std::size_t> max_size) : max_size_(max_size) {
+  /// \param max_size Max number of concurrent element in the queue.
+  explicit BlockingQueue(std::size_t max_size) : max_size_(max_size) {
   }
 
   /// Attempt to enqueue the data if there is space in the queue.
@@ -41,7 +40,7 @@ public:
         return false;
       }
 
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
+      if (queue_.size() == max_size_) {
         return false;
       }
 
@@ -68,7 +67,7 @@ public:
                                            // stopped.
       }
 
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
+      if (queue_.size() == max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
@@ -94,8 +93,7 @@ public:
       }
 
       ++waiting_writers_;
-      writer_signal_.wait(lock,
-                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
+      writer_signal_.wait(lock, [this]() { return queue_.size() < max_size_ || stop_; });
       if (stop_) {
         --waiting_writers_;
         return;
@@ -122,7 +120,7 @@ public:
         return false;
       }
 
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
+      if (queue_.size() == max_size_) {
         return false;
       }
 
@@ -148,7 +146,7 @@ public:
       }
 
       const std::unique_lock<std::mutex> lock(mutex_);
-      if (max_size_.has_value() && queue_.size() == *max_size_) {
+      if (queue_.size() == max_size_) {
         element_dropped.emplace(std::move(queue_.front()));
         queue_.pop_front();
       }
@@ -175,8 +173,7 @@ public:
       }
 
       ++waiting_writers_;
-      writer_signal_.wait(lock,
-                          [this]() { return !max_size_.has_value() || queue_.size() < *max_size_ || stop_; });
+      writer_signal_.wait(lock, [this]() { return queue_.size() < max_size_ || stop_; });
       if (stop_) {
         --waiting_writers_;
         return;
@@ -225,11 +222,10 @@ public:
 
     ++waiting_readers_;
     reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
+    --waiting_readers_;
     if (stop_) {
-      --waiting_readers_;
       return {};
     }
-    --waiting_readers_;
 
     std::deque<T> res;
     std::swap(res, queue_);
@@ -297,9 +293,19 @@ public:
     return queue_.empty();
   }
 
+  /// Wait until the queue is empty.
+  [[nodiscard]]
+  auto waitForEmpty() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (queue_.empty() || stop_) {
+      return;
+    }
+    reader_signal_.wait(lock, [this]() { return !queue_.empty() || stop_; });
+  }
+
 private:
   std::deque<T> queue_{};
-  std::optional<std::size_t> max_size_;
+  std::size_t max_size_;
   std::condition_variable reader_signal_;
   std::condition_variable writer_signal_;
   mutable std::mutex mutex_;

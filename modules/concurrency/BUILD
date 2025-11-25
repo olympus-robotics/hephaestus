@@ -112,7 +112,10 @@ heph_cc_test(
 heph_cc_test(
     name = "spinner_tests",
     srcs = ["tests/spinner_tests.cpp"],
-    deps = [":concurrency"],
+    deps = [
+        ":concurrency",
+        "//modules/error_handling",
+    ],
 )
 
 heph_cc_test(

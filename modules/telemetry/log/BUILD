@@ -26,7 +26,6 @@ heph_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "@fmt",
-        "@magic_enum",
     ],
 )
 

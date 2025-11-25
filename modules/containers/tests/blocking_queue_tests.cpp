@@ -2,7 +2,9 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <cstddef>
 #include <future>
+#include <limits>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -139,8 +141,8 @@ TEST(BlockingQueue, WaitEmplace) {
   }
 }
 
-TEST(BlockingQueue, InfiniteQueue) {
-  BlockingQueue<double> block_queue{ {} };
+TEST(BlockingQueue, LargeQueue) {
+  BlockingQueue<double> block_queue{ std::numeric_limits<size_t>::max() };
 
   static constexpr double A_NUMBER = 42;
   auto element_dropped = block_queue.forceEmplace(A_NUMBER);
@@ -168,10 +170,18 @@ TEST(BlockingQueue, InfiniteQueue) {
 }
 
 TEST(BlockingQueue, Restart) {
-  BlockingQueue<double> block_queue{ {} };
+  BlockingQueue<double> block_queue{ 2 };
   block_queue.waitAndPush(0.);
   block_queue.restart();
   EXPECT_THAT(block_queue, IsEmpty());
+}
+
+TEST(BlockingQueue, WaitForEmpty) {
+  BlockingQueue<double> block_queue{ 2 };
+  block_queue.waitAndPush(0.);
+  auto wait_future = std::async(std::launch::async, [&block_queue]() { block_queue.waitForEmpty(); });
+  std::ignore = block_queue.waitAndPopAll();
+  wait_future.get();
 }
 
 }  // namespace heph::containers::tests

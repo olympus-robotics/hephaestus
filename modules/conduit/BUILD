@@ -59,7 +59,6 @@ heph_cc_binary(
     srcs = ["examples/mont_blanc.cpp"],
     deps = [
         ":conduit",
-        "//modules/cli",
         "//modules/format",
         "//modules/telemetry/log",
         "//modules/types",
@@ -75,7 +74,6 @@ heph_cc_binary(
     srcs = ["examples/conduit_graph.cpp"],
     deps = [
         ":conduit",
-        "//modules/cli",
         "//modules/telemetry/log",
         "//modules/types_proto",
         "//modules/utils",
