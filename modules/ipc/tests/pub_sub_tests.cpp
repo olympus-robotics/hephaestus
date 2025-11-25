@@ -22,7 +22,7 @@
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
-using namespace ::testing;  // NOLINT (google-build-using-namespace)
+using namespace ::testing;  // NOLINT(google-build-using-namespace)
 
 namespace heph::ipc::zenoh::tests {
 

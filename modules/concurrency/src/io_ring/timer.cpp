@@ -90,7 +90,7 @@ void Timer::update(TimerClock::time_point start_time) {
 }
 
 void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) const {
-  // NOLINTNEXTLINE (misc-include-cleaner)
+  // NOLINTNEXTLINE(misc-include-cleaner, bugprone-unchecked-optional-access)
   auto* ptr{ &timer->timer_operation_.value() };
   std::uint64_t data{};
   static_assert(sizeof(data) == sizeof(void*));

@@ -28,7 +28,7 @@ struct ConnectT {
   }
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr ConnectT<void> connect{};
 
 namespace internal {

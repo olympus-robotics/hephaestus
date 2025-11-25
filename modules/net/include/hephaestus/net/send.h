@@ -29,9 +29,9 @@ struct SendT {
   }
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr SendT<false> send{};
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr SendT<true> sendAll{};
 
 namespace internal {
