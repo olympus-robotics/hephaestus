@@ -18,7 +18,6 @@ heph_cc_library(
     ),
     implementation_deps = [
         "//modules/error_handling",
-        "//modules/random",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],

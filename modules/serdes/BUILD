@@ -23,7 +23,6 @@ heph_cc_library(
     deps = [
         "//modules/error_handling",
         "//modules/utils",
-        "@abseil-cpp//absl/container:flat_hash_map",
         "@fmt",
         "@magic_enum",
         "@nlohmann_json//:json",

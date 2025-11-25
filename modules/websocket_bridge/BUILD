@@ -32,6 +32,7 @@ heph_cc_library(
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:strings",
         "@magic_enum",
+        "@protobuf//:json_util",  # json_util.h
         "@reflect-cpp",
     ],
     includes = ["include"],
@@ -45,7 +46,6 @@ heph_cc_library(
         "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",
         "@nlohmann_json//:json",
-        "@protobuf//:json_util",  # json_util.h
         "@protobuf//:protobuf_headers",  # descriptor.h
         "@ws_protocol",
     ],
@@ -64,7 +64,6 @@ heph_cc_binary(
         "//modules/ipc",
         "//modules/telemetry/log",
         "//modules/utils",
-        "@bazel_tools//tools/cpp/runfiles",
     ],
 )
 
@@ -75,7 +74,6 @@ heph_cc_binary(
         ":websocket_bridge",
         "//modules/telemetry/log",
         "//modules/utils",
-        "@bazel_tools//tools/cpp/runfiles",
         "@fmt",
         "@nlohmann_json//:json",
         "@ws_protocol",
@@ -89,7 +87,6 @@ heph_cc_binary(
         ":websocket_bridge",
         "//modules/telemetry/log",
         "//modules/utils",
-        "@bazel_tools//tools/cpp/runfiles",
         "@fmt",
         "@nlohmann_json//:json",
     ],
