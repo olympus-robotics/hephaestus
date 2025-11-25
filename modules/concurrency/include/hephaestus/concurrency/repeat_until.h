@@ -126,8 +126,11 @@ struct SenderExpressionImpl<RepeatUntilT> : DefaultSenderExpressionImpl {
     auto [_, sender_factory] = std::forward<Sender>(sender);
     using SenderFactoryT = std::decay_t<stdexec::__data_of<Sender>>;
     using ReceivertT = std::decay_t<Receiver>;
-    return internal::RepeatUntilStateT<SenderFactoryT, ReceivertT>{ std::move(sender_factory),
-                                                                    std::move(receiver) };
+    return internal::RepeatUntilStateT<SenderFactoryT, ReceivertT>{
+      .sender_factory = std::move(sender_factory),
+      .receiver = std::move(receiver),
+      .state = {},
+    };
   };
   static constexpr auto START = []<typename Receiver>(auto& self, Receiver&& /*receiver*/) { self.start(); };
 };
