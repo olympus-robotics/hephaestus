@@ -2,17 +2,12 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
-load(
-    "@hephaestus//bazel:hephaestus.bzl",
-    "heph_cc_binary",
-    "heph_cc_library",
-    "heph_cc_test",
-)
+load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
 heph_cc_library(
-    name = "error_handling",
+    name = "test_utils",
     srcs = glob(
         [
             "src/**/*.cpp",
@@ -24,25 +19,14 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
+        "//modules/error_handling",
+        "//modules/random",
         "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
         "//modules/utils",
+        "@googletest//:gtest",
     ],
-    includes = [
-        "include",
-        "src",
-    ],
+    includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [
-        "@fmt",
-    ],
-)
-
-#########
-# Tests #
-#########
-
-heph_cc_test(
-    name = "panic_tests",
-    srcs = ["tests/panic_tests.cpp"],
-    deps = [":error_handling"],
+    deps = [],
 )

@@ -13,10 +13,6 @@ namespace heph::error_handling::tests {
 namespace {
 constexpr int TEST_FORMAT_VALUE = 42;
 
-TEST(Panic, Panic) {
-  EXPECT_DEATH(panic("This is a panic with value {}", TEST_FORMAT_VALUE), "");
-}
-
 TEST(Panic, Exception) {
   const error_handling::PanicAsExceptionScope panic_scope;
   EXPECT_THROW(panic("This is a panic with value {}", TEST_FORMAT_VALUE), PanicException);

@@ -1,7 +1,5 @@
-ARG BASE_IMAGE
-
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE}
+FROM base_image
 
 # Here we can install developer tools if needed
 RUN apt-get update && \

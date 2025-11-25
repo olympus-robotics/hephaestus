@@ -56,5 +56,6 @@ heph_cc_test(
     srcs = ["tests/program_options_tests.cpp"],
     deps = [
         ":cli",
+        "//modules/error_handling",
     ],
 )

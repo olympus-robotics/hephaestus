@@ -18,6 +18,8 @@ build:dwyu --features=layering_check
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
 build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
+build:clang-tidy --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
+build:clang-tidy --output_groups=dwyu
 build:clang-tidy --keep_going
 
 build:sanitizer --strip=never

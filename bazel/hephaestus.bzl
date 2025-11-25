@@ -255,9 +255,10 @@ def heph_cc_test(
         deps = deps + [
             "@googletest//:gtest",
             "@googletest//:gtest_main",
+            "@hephaestus//modules/test_utils",
         ],
         env = merged_env,
-        tags = tags,
+        tags = tags + ["no-dwyu"],  # TODO (@graeter,@vittorioromeo) once test_utils are cleared out revisit
         size = size,
         **kwargs
     )

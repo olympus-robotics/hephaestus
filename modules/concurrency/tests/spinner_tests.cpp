@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/spinner.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::tests {
 
@@ -90,13 +91,13 @@ TEST_F(SpinnerTest, StartStopTest) {
   auto cb = createTrivialCallback();
   Spinner spinner{ std::move(cb) };
 
-  EXPECT_DEATH(spinner.stop().get(), "");
+  EXPECT_THROW(spinner.stop().get(), error_handling::PanicException);
   spinner.start();
 
-  EXPECT_DEATH(spinner.start(), "");
+  EXPECT_THROW(spinner.start(), error_handling::PanicException);
   spinner.stop().get();
 
-  EXPECT_DEATH(spinner.stop().get(), "");
+  EXPECT_THROW(spinner.stop().get(), error_handling::PanicException);
 }
 
 TEST_F(SpinnerTest, SpinTest) {

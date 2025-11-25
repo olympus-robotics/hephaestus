@@ -89,7 +89,7 @@ auto getThisExecutableFullPath() -> std::filesystem::path {
   char path[PATH_MAX + 1] = { '\0' };  // NOLINT(cppcoreguidelines-avoid-c-arrays)
   const auto path_length = readlink("/proc/self/exe", path, PATH_MAX);
   return ((path_length > 0) ? std::filesystem::path{ path } : (""));
-#elif
+#else
   return {};
 #endif
   // NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
