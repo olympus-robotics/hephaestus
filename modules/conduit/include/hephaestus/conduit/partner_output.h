@@ -79,7 +79,7 @@ public:
 
   auto setPartner(const std::string& prefix, std::string partner) -> PartnerOutputBase* {
     partner_ = std::move(partner);
-    output_ = std::make_unique<concurrency::Channel<T, 1>>();
+    output_ = std::make_unique<concurrency::Channel<T, QUEUE_DEPTH>>();
     resolved_name_ = resolveName(prefix);
     return this;
   }
