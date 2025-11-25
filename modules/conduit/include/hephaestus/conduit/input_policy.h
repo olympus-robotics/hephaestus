@@ -11,6 +11,7 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/channel.h"
 #include "hephaestus/conduit/clock.h"
 #include "hephaestus/conduit/scheduler.h"
 #include "hephaestus/conduit/value_storage.h"
@@ -55,19 +56,19 @@ struct ResetValuePolicy {
 };
 
 struct BlockingTrigger {
-  template <typename T>
+  template <typename T, std::size_t Capacity>
   struct Type {
-    static auto trigger(concurrency::AnySender<T> completion, ValueStorage<T>& value_storage,
+    static auto trigger(concurrency::Channel<T, Capacity>& value_channel, ValueStorage<T>& value_storage,
                         SchedulerT /*scheduler*/, std::optional<ClockT::time_point> /*deadline*/)
         -> concurrency::AnySender<bool> {
-      return std::move(completion) | stdexec::then([&value_storage](T&& value) -> bool {
+      return value_channel.getValue() | stdexec::then([&value_storage](T&& value) -> bool {
                value_storage.setValue(std::move(value));
                return true;
              });
     }
   };
-  template <typename T>
-  auto bind() -> Type<T> {
+  template <typename T, std::size_t Capacity>
+  auto bind() -> Type<T, Capacity> {
     return {};
   }
 };
@@ -101,24 +102,33 @@ struct KeepLastValuePolicy {
 };
 
 struct DeadlineTrigger {
-  template <typename T>
+  template <typename T, std::size_t Capacity>
   struct Type {
-    static auto trigger(concurrency::AnySender<T> completion, ValueStorage<T>& value_storage,
+    static auto trigger(concurrency::Channel<T, Capacity>& value_channel, ValueStorage<T>& value_storage,
                         SchedulerT scheduler, std::optional<ClockT::time_point> deadline)
         -> concurrency::AnySender<bool> {
-      heph::panicIf(!deadline.has_value(), "DeadlineTrigger called without setting a timeout");
+      if (!deadline.has_value()) {
+        auto value = value_channel.tryGetValue();
+        if (value.has_value()) {
+          value_storage.setValue(std::move(*value));
+          return stdexec::just(true);
+        }
+        return stdexec::just(false);
+      }
+
       return exec::when_any(scheduler.scheduleAt(*deadline) | stdexec::then([]() { return false; }),
-                            std::move(completion) | stdexec::then([&value_storage](T&& value) -> bool {
+                            value_channel.getValue() | stdexec::then([&value_storage](T&& value) -> bool {
                               value_storage.setValue(std::move(value));
                               return true;
                             }));
     }
   };
-  template <typename T>
-  auto bind() -> Type<T> {
+  template <typename T, std::size_t Capacity>
+  auto bind() -> Type<T, Capacity> {
     return {};
   }
 };
+
 using BestEffortInputPolicy = InputPolicy<KeepLastValuePolicy, DeadlineTrigger>;
 
 }  // namespace heph::conduit

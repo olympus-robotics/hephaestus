@@ -99,6 +99,25 @@ public:
   /// value received from the channel.
   [[nodiscard]] auto getValue() -> GetValueSender;
 
+  [[nodiscard]] auto tryGetValue() -> std::optional<T> {
+    internal::AwaiterBase* set_awaiter{ nullptr };
+    std::optional<T> res;
+    {
+      absl::MutexLock lock{ &mutex_ };
+      res = data_.pop();
+      if (!res.has_value()) {
+        assert(set_awaiters_.size() == 0);
+        return std::nullopt;
+      }
+
+      set_awaiter = set_awaiters_.dequeue();
+    }
+    if (set_awaiter != nullptr) {
+      set_awaiter->restart();
+    }
+    return res;
+  }
+
   [[nodiscard]] auto size() const -> std::size_t {
     absl::MutexLock lock{ &mutex_ };
     return data_.size();

@@ -106,7 +106,6 @@ struct RepeaterPoolStep : StepperDefaults<Dummy> {
   auto step(InputsT& /*inputs*/, OutputsT& /*outputs*/) -> exec::task<void> {
     if (executed == NUMBER_OF_REPEATS) {
       executor->requestStop();
-      pool->request_stop();
       co_return;
     }
     co_await stdexec::schedule(pool->get_scheduler());

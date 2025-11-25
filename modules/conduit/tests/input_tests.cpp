@@ -112,8 +112,8 @@ TEST(Input, BestEffortInputPolicy) {
   {
     heph::concurrency::Context context{ {} };
 
-    input.setTimeout(TIMEOUT);
-
+    EXPECT_FALSE(input.hasValue());
+    input.trigger(context.scheduler()) | stdexec::then([&]() { context.requestStop(); });
     EXPECT_FALSE(input.hasValue());
 
     stdexec::sync_wait(input.setValue(1));
@@ -135,11 +135,21 @@ TEST(Input, BestEffortInputPolicy) {
     EXPECT_EQ(input.value(), 1);
 
     stdexec::sync_wait(input.trigger(context.scheduler()));
+
     EXPECT_TRUE(input.hasValue());
     EXPECT_EQ(input.value(), 3);
     EXPECT_NE(last_trigger_time, input.lastTriggerTime());
 
     last_trigger_time = input.lastTriggerTime();
+
+    input.trigger(context.scheduler()) | stdexec::then([&]() { context.requestStop(); });
+
+    EXPECT_TRUE(input.hasValue());
+    EXPECT_EQ(input.value(), 3);
+    EXPECT_EQ(last_trigger_time, input.lastTriggerTime());
+    EXPECT_NE(last_trigger_time, ClockT::now());
+
+    input.setTimeout(TIMEOUT);
 
     exec::async_scope scope;
     scope.spawn(input.trigger(context.scheduler()) | stdexec::then([&]() { context.requestStop(); }));
@@ -153,6 +163,7 @@ TEST(Input, BestEffortInputPolicy) {
   {
     heph::concurrency::Context context{ {} };
     exec::async_scope scope;
+
     auto last_trigger_time = input.lastTriggerTime();
 
     scope.spawn(input.trigger(context.scheduler()) | stdexec::then([&]() { context.requestStop(); }));

@@ -46,7 +46,7 @@ public:
   explicit Input(std::string_view name, InputPolicy<ValueStoragePolicy, TriggerPolicy> policy = {})
     : TypedInput<T>(name)
     , value_storage_(policy.storage_policy.template bind<T>())
-    , value_trigger_(policy.trigger_policy.template bind<T>()) {
+    , value_trigger_(policy.trigger_policy.template bind<T, QUEUE_DEPTH>()) {
   }
 
   auto setValue(T t) -> SetValueSenderT final {
@@ -104,7 +104,7 @@ private:
     if (timeout_.has_value()) {
       deadline = ClockT::now() + *timeout_;
     }
-    return value_trigger_(value_channel_.getValue(), value_storage_, scheduler, deadline);
+    return value_trigger_(value_channel_, value_storage_, scheduler, deadline);
   }
 
   void handleCompleted() final {
@@ -119,7 +119,7 @@ private:
 private:
   heph::concurrency::Channel<T, QUEUE_DEPTH> value_channel_;
   ValueStorage<T> value_storage_;
-  ValueTrigger<T> value_trigger_;
+  ValueTrigger<T, QUEUE_DEPTH> value_trigger_;
   std::optional<ClockT::duration> timeout_;
 };
 
