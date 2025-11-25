@@ -58,7 +58,7 @@ TEST(ContextTests, scheduleException) {
                 stdexec::upon_error([&called](const std::exception_ptr& eptr) {
                   try {
                     std::rethrow_exception(eptr);
-                  } catch (std::runtime_error&) {  // NOLINT (bugprone-empty-catch)
+                  } catch (std::runtime_error&) {  // NOLINT(bugprone-empty-catch)
                   }
                   called = true;
                 });
