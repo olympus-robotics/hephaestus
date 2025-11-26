@@ -19,7 +19,6 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/test_utils/heph_test.h"
 
 namespace heph::examples::types::tests {

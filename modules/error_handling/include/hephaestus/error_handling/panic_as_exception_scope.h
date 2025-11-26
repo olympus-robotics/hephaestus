@@ -19,9 +19,9 @@ public:
 
   auto operator=(const PanicAsExceptionScope&) -> PanicAsExceptionScope& = delete;
   auto operator=(PanicAsExceptionScope&&) -> PanicAsExceptionScope& = delete;
-};
 
-/// @brief  Check whether panics should be thrown as exceptions.
-[[nodiscard]] auto panicAsException() -> bool;
+  /// @brief  Check whether panics should be thrown as exceptions.
+  [[nodiscard]] static auto isEnabled() -> bool;
+};
 
 }  // namespace heph::error_handling

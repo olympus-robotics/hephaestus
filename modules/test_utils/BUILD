@@ -19,14 +19,14 @@ heph_cc_library(
         ],
     ),
     implementation_deps = [
+        "//modules/random",
+        "//modules/telemetry/log",
+        "//modules/telemetry/metrics",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         "//modules/error_handling",
-        "//modules/random",
-        "//modules/telemetry/log",
-        "//modules/telemetry/metrics",
         "//modules/utils",
         "@googletest//:gtest",
     ],

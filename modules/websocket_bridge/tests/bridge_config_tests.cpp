@@ -4,7 +4,6 @@
 
 #include <exception>
 #include <fstream>
-#include <memory>
 #include <regex>
 #include <string>
 #include <vector>
@@ -12,8 +11,6 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/error_handling/panic_exception.h"
-#include "hephaestus/telemetry/log/log.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/websocket_bridge/bridge_config.h"
 

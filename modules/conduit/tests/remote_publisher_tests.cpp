@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <cstdlib>
 #include <exception>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <string_view>
@@ -21,14 +20,10 @@
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/conduit/remote_output_subscriber.h"
-#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/telemetry/log/log_sink.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
-#include "hephaestus/utils/stack_trace.h"
 #include "modules/types/include/hephaestus/types/dummy_type.h"
 
 namespace heph::conduit::tests {

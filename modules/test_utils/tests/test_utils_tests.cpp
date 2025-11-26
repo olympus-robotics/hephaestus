@@ -12,7 +12,7 @@ using namespace ::testing;
 namespace heph::test_utils::tests {
 
 TEST_F(HephTest, MtAccess) {
-  std::ignore = mt();
+  (void)mt();
 }
 
 }  // namespace heph::test_utils::tests

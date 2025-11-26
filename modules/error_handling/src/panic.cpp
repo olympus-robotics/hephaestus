@@ -22,7 +22,7 @@ void panicImpl(const std::source_location& location, const std::string& formatte
   log(ERROR, "program terminated with panic", "error", formatted_message, "location", location_str);
   telemetry::flushLogEntries();
 
-  if (panicAsException()) {
+  if (PanicAsExceptionScope::isEnabled()) {
     throw PanicException(formatted_message);
   }
 

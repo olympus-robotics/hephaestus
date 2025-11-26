@@ -6,8 +6,6 @@
 
 #include <cstddef>
 
-#include "hephaestus/error_handling/panic_exception.h"
-
 namespace heph::error_handling {
 
 namespace {
@@ -25,7 +23,7 @@ PanicAsExceptionScope::~PanicAsExceptionScope() {
   --panic_as_exception_counter;
 }
 
-auto panicAsException() -> bool {
+auto PanicAsExceptionScope::isEnabled() -> bool {
   return panic_as_exception_counter > 0;
 }
 

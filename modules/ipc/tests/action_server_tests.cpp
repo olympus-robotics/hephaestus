@@ -18,13 +18,10 @@
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/utils/stack_trace.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -42,6 +39,12 @@ public:
   ~ActionServerTest() override {
     server_session_.reset();
   }
+
+  ActionServerTest(const ActionServerTest&) = delete;
+  ActionServerTest(ActionServerTest&&) = delete;
+
+  auto operator=(const ActionServerTest&) -> ActionServerTest& = delete;
+  auto operator=(ActionServerTest&&) -> ActionServerTest& = delete;
 
   [[nodiscard]] auto getSession() -> SessionPtr& {
     return server_session_;

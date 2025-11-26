@@ -3,6 +3,8 @@
 // =====================================================================================
 #include "hephaestus/test_utils/heph_test.h"
 
+#include <memory>
+
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
