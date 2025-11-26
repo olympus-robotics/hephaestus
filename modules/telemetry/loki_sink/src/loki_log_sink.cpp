@@ -47,7 +47,7 @@ struct PushRequest {
 
 [[nodiscard]] auto createServiceNameFromBinaryName() -> std::string {
   auto binary_name = utils::getBinaryPath();
-  panicIf(!binary_name.has_value(), "cannot get binary name");
+  HEPH_PANIC_IF(!binary_name.has_value(), "cannot get binary name");
   return binary_name->filename();  // NOLINT(bugprone-unchecked-optional-access);
 }
 

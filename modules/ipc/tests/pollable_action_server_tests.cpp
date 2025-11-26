@@ -52,7 +52,7 @@ TEST_F(PollableActionServerTest, CompleteAction) {
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
         session, topic_config, expected_request, [](const auto&) {}, REQUEST_TIMEOUT);
-    panicIf(!reply_future.valid(), "callActionServer failed.");
+    HEPH_PANIC_IF(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
@@ -98,7 +98,7 @@ TEST_F(PollableActionServerTest, StopExecution) {
 
     auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
         session, topic_config, expected_request, [](const auto&) {}, REQUEST_TIMEOUT);
-    panicIf(!reply_future.valid(), "callActionServer failed.");
+    HEPH_PANIC_IF(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
@@ -156,7 +156,7 @@ TEST_F(PollableActionServerTest, CompleteActionWithStatusUpdates) {
           last_received_status.store(status);
         },
         REQUEST_TIMEOUT);
-    panicIf(!reply_future.valid(), "callActionServer failed.");
+    HEPH_PANIC_IF(!reply_future.valid(), "callActionServer failed.");
 
     while (true) {
       if (reply_future.wait_for(ZERO_DURATION) != std::future_status::timeout) {
@@ -200,7 +200,7 @@ TEST_F(PollableActionServerTest, StopActionServer) {
 
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       session, topic_config, types::DummyType::random(mt), [](const auto&) {}, REQUEST_TIMEOUT);
-  panicIf(!reply_future.valid(), "callActionServer failed.");
+  HEPH_PANIC_IF(!reply_future.valid(), "callActionServer failed.");
 
   while (!action_server.pollRequest().has_value()) {
     if (reply_future.wait_for(std::chrono::milliseconds{ 0 }) != std::future_status::timeout) {

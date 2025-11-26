@@ -193,11 +193,12 @@ template <StringStreamable T>
 inline auto ProgramOptions::getOption(const std::string& option) const -> T {
   const auto it = std::find_if(options_.begin(), options_.end(),
                                [&option](const auto& opt) { return option == opt.key; });
-  panicIf(it == options_.end(), "Undefined option '{}'", option);
+  HEPH_PANIC_IF(it == options_.end(), "Undefined option '{}'", option);
 
   const auto my_type = utils::getTypeName<T>();
-  panicIf(it->value_type != my_type, "Tried to parse option '{}' as type {} but it's specified as type {}",
-          option, my_type, it->value_type);
+  HEPH_PANIC_IF(it->value_type != my_type,
+                "Tried to parse option '{}' as type {} but it's specified as type {}", option, my_type,
+                it->value_type);
 
   if constexpr (std::is_same_v<T, std::string>) {
     // note: since std::istringstream extracts only up to whitespace, this special case is
@@ -211,8 +212,8 @@ inline auto ProgramOptions::getOption(const std::string& option) const -> T {
 
   T value;
   std::istringstream stream(it->value);
-  panicIf(not(stream >> std::boolalpha >> value), "Unable to parse value '{}' as type {} for option '{}'",
-          it->value, my_type, option);
+  HEPH_PANIC_IF(not(stream >> std::boolalpha >> value),
+                "Unable to parse value '{}' as type {} for option '{}'", it->value, my_type, option);
 
   return value;
 }

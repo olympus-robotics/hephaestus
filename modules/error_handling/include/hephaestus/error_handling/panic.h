@@ -58,17 +58,22 @@ void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, A
   error_handling::detail::panicImpl(message.location, formatted_message);
 }
 
-/// @brief  User function to panic on condition lazily formatting the message. The whole code should be
+/// @brief  Macro to panic on condition lazily formatting the message. The whole code should be
 /// considered noexcept. Will use CHECK if DISABLE_EXCEPTIONS = ON
 /// @param condition Condition whether to panic
 /// @param message A message describing the error and what caused it
-/// @param location Location in the source where the error was triggered at
-template <typename... Args>
-void panicIf(bool condition, error_handling::detail::StringLiteralWithLocation<Args...> message,
-             Args&&... args) {
-  if (condition) [[unlikely]] {
-    panic(std::move(message), std::forward<Args>(args)...);
-  }
-}
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define HEPH_PANIC_IF(condition, message, ...)                                                               \
+  do {                                                                                                       \
+    if (condition) [[unlikely]] {                                                                            \
+      constexpr auto SRC_LOCATION = ::std::source_location::current();                                       \
+                                                                                                             \
+      [&]<typename... Args>(Args&&... args) {                                                                \
+        ::heph::panic(                                                                                       \
+            ::heph::error_handling::detail::StringLiteralWithLocation<Args...>(message, SRC_LOCATION),       \
+            ::std::forward<Args>(args)...);                                                                  \
+      }(__VA_ARGS__);                                                                                        \
+    }                                                                                                        \
+  } while (false)
 
 }  // namespace heph
