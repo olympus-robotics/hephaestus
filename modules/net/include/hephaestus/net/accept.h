@@ -26,7 +26,7 @@ struct AcceptT {
   }
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr AcceptT<void> accept{};
 
 namespace internal {

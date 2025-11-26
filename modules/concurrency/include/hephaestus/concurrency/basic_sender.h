@@ -14,7 +14,7 @@ namespace heph::concurrency {
 struct Ignore {
   Ignore() noexcept = default;
   template <typename... T>
-  Ignore(T&&... /*ignore*/) noexcept {  // NOLINT (google-explicit-constructor,hicpp-explicit-conversions)
+  Ignore(T&&... /*ignore*/) noexcept {  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
   }
 };
 
@@ -51,7 +51,7 @@ template <typename TagT>
 struct __sexpr_impl<::heph::concurrency::Tag<TagT>> {
   using Impl = ::heph::concurrency::SenderExpressionImpl<TagT>;
   static_assert(requires() { Impl::GET_COMPLETION_SIGNATURES; });
-  //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+  //  NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
   static constexpr auto get_completion_signatures = Impl::GET_COMPLETION_SIGNATURES;
   static constexpr auto get_attrs = Impl::GET_ATTRS;
   static constexpr auto get_env = Impl::GET_ENV;
@@ -59,7 +59,7 @@ struct __sexpr_impl<::heph::concurrency::Tag<TagT>> {
   static constexpr auto connect = Impl::CONNECT;
   static constexpr auto start = Impl::START;
   static constexpr auto complete = Impl::COMPLETE;
-  // NOLINTEND
+  // NOLINTEND(readability-identifier-naming)
 };
 
 }  // namespace stdexec

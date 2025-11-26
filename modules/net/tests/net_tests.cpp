@@ -139,7 +139,7 @@ TEST_F(Net, TCPOperationsSome) {
   static constexpr std::size_t MSG_SIZE = 4ull * 1024 * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
 
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
     auto client = co_await accept(acceptor);
     auto buffer = std::as_writable_bytes(std::span{ recv_buffer });
@@ -160,7 +160,7 @@ TEST_F(Net, TCPOperationsSome) {
   std::vector<char> send_buffer(MSG_SIZE);
   std::iota(send_buffer.begin(), send_buffer.end(), 0);
 
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = std::as_bytes(std::span{ send_buffer });
 
@@ -191,7 +191,7 @@ TEST_F(Net, TCPOperationsAll) {
   static constexpr std::size_t MSG_SIZE = 4ull * 1024 * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
 
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
     auto client = co_await accept(acceptor);
     auto buffer = std::as_writable_bytes(std::span{ recv_buffer });
@@ -208,7 +208,7 @@ TEST_F(Net, TCPOperationsAll) {
 
   std::vector<char> send_buffer(MSG_SIZE);
   std::iota(send_buffer.begin(), send_buffer.end(), 0);
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = std::as_bytes(std::span{ send_buffer });
 
@@ -235,7 +235,7 @@ TEST_F(Net, UDPOperations) {
   static constexpr std::size_t MSG_SIZE = 16ull * 1024;
   std::vector<char> recv_buffer(MSG_SIZE);
 
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto server_sender = [&]() -> exec::task<void> {
     auto buffer =
         co_await (recv(server, std::as_writable_bytes(std::span{ recv_buffer })) |
@@ -251,7 +251,7 @@ TEST_F(Net, UDPOperations) {
   std::vector<char> send_buffer(MSG_SIZE);
   std::iota(send_buffer.begin(), send_buffer.end(), 0);
 
-  // NOLINTNEXTLINE (cppcoreguidelines-avoid-capturing-lambda-coroutines)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = co_await send(client, std::as_bytes(std::span{ send_buffer }));
     EXPECT_EQ(buffer.size(), send_buffer.size());

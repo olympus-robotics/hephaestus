@@ -29,9 +29,9 @@ struct RecvT {
   }
 };
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr RecvT<false> recv{};
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline constexpr RecvT<true> recvAll{};
 
 namespace internal {
