@@ -13,13 +13,12 @@ build:opt --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
 build:fastbuild --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
 build:dbg --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
 
-build:dwyu --features=layering_check
+build:dwyu --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
+build:dwyu --output_groups=dwyu
 
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
 build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
-build:clang-tidy --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
-build:clang-tidy --output_groups=dwyu
 build:clang-tidy --keep_going
 
 build:sanitizer --strip=never
@@ -28,6 +27,8 @@ build:sanitizer --copt -fsanitize=address,undefined
 build:sanitizer --copt -fno-sanitize=vptr
 build:sanitizer --copt -DADDRESS_SANITIZER
 build:sanitizer --copt -fno-omit-frame-pointer
+build:sanitizer --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
+build:sanitizer --output_groups=dwyu
 build:sanitizer --linkopt -fsanitize=address,undefined
 build:sanitizer --linkopt -Wl,--allow-shlib-undefined
 
