@@ -18,8 +18,8 @@
 #include "hephaestus/ipc/zenoh/action_server/pollable_action_server.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"     // NOLINT(misc-include-cleaner)
 #include "hephaestus/types_proto/numeric_value.h"  // NOLINT(misc-include-cleaner)
@@ -32,9 +32,9 @@ static constexpr auto REQUEST_TIMEOUT = std::chrono::seconds{ 1 };
 static constexpr auto ZERO_DURATION = std::chrono::milliseconds{ 0 };
 static constexpr auto TOPIC_ID_LENGTH = 30;
 
-TEST(PollableActionServerTest, CompleteAction) {
-  auto mt = random::createRNG();
+struct PollableActionServerTest : heph::test_utils::HephTest {};
 
+TEST_F(PollableActionServerTest, CompleteAction) {
   const auto session = createSession(createLocalConfig());
   const ipc::TopicConfig topic_config(
       fmt::format("test/polling_action_server_{}/complete_action_test",
@@ -80,9 +80,7 @@ TEST(PollableActionServerTest, CompleteAction) {
   }
 }
 
-TEST(PollableActionServerTest, StopExecution) {
-  auto mt = random::createRNG();
-
+TEST_F(PollableActionServerTest, StopExecution) {
   const auto session = createSession(createLocalConfig());
   const ipc::TopicConfig topic_config(
       fmt::format("test/polling_action_server_{}/stop_execution_action_test",
@@ -134,9 +132,7 @@ TEST(PollableActionServerTest, StopExecution) {
   }
 }
 
-TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
-  auto mt = random::createRNG();
-
+TEST_F(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   const auto session = createSession(createLocalConfig());
   const ipc::TopicConfig topic_config(
       fmt::format("test/polling_action_server_{}/complete_action_with_status_updates_test",
@@ -194,9 +190,7 @@ TEST(PollableActionServerTest, CompleteActionWithStatusUpdates) {
   }
 }
 
-TEST(PollableActionServerTest, StopActionServer) {
-  auto mt = random::createRNG();
-
+TEST_F(PollableActionServerTest, StopActionServer) {
   const auto session = createSession(createLocalConfig());
   const ipc::TopicConfig topic_config(
       fmt::format("test/polling_action_server_{}/stop_action_server_test",

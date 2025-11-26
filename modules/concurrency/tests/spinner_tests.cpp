@@ -52,7 +52,6 @@ struct SpinnerTest : public heph::test_utils::HephTest {
   }
 
   static constexpr std::size_t MAX_ITERATION_COUNT = 10;
-  static constexpr auto SPIN_PERIOD = std::chrono::duration<double>{ std::chrono::milliseconds{ 1 } };
 };
 
 TEST_F(SpinnerTest, ComputeNextSpinTimestamp) {
@@ -134,6 +133,7 @@ TEST_F(SpinnerTest, Stop) {
 }
 
 TEST_F(SpinnerTest, SpinWithPeriod) {
+  static constexpr auto SPIN_PERIOD = std::chrono::duration<double>{ std::chrono::milliseconds{ 1 } };
   static constexpr auto WAIT_FOR = std::chrono::milliseconds{ 10 };
 
   size_t callback_called_counter = 0;
@@ -151,6 +151,8 @@ TEST_F(SpinnerTest, SpinWithPeriod) {
 }
 
 TEST_F(SpinnerTest, SpinStopsOnStop) {
+  static constexpr auto SPIN_PERIOD = std::chrono::duration<double>{ std::chrono::milliseconds{ 1 } };
+
   size_t callback_called_counter = 0;
   auto cb = createSelfStoppingCallback(callback_called_counter);
   Spinner spinner(std::move(cb), SPIN_PERIOD);
@@ -163,6 +165,8 @@ TEST_F(SpinnerTest, SpinStopsOnStop) {
 }
 
 TEST_F(SpinnerTest, ExceptionHandling) {
+  static constexpr auto SPIN_PERIOD = std::chrono::duration<double>{ std::chrono::milliseconds{ 1 } };
+
   auto cb = createThrowingCallback();
   Spinner spinner(std::move(cb), SPIN_PERIOD);
   bool callback_called = false;

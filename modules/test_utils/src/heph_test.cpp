@@ -12,7 +12,7 @@
 
 namespace heph::test_utils {
 
-HephTest::HephTest() : mt_{ heph::random::createRNG() } {
+HephTest::HephTest() : mt{ heph::random::createRNG() } {
   telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(INFO));
 }
 

@@ -26,7 +26,7 @@ using namespace ::testing;  // NOLINT(google-build-using-namespace)
 namespace heph::ipc::zenoh::tests {
 
 namespace {
-void checkMessageExchange(auto& mt, bool subscriber_dedicated_callback_thread) {
+void checkMessageExchange(std::mt19937_64& mt, bool subscriber_dedicated_callback_thread) {
   auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
@@ -60,15 +60,15 @@ void checkMessageExchange(auto& mt, bool subscriber_dedicated_callback_thread) {
 struct PublisherSubscriber : heph::test_utils::HephTest {};
 
 TEST_F(PublisherSubscriber, MessageExchange) {
-  checkMessageExchange(this->mt(), false);
-  checkMessageExchange(this->mt(), true);
+  checkMessageExchange(this->mt, false);
+  checkMessageExchange(this->mt, true);
 }
 
 TEST_F(PublisherSubscriber, MismatchType) {
   const Config config{};
   auto session = createSession(createLocalConfig());
   const auto topic =
-      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
   Publisher<types::DummyType> publisher(session, topic);
 
@@ -86,7 +86,7 @@ TEST_F(PublisherSubscriber, MismatchType) {
 
   EXPECT_THROW(
       {
-        std::ignore = publisher.publish(types::DummyType::random(mt()));
+        std::ignore = publisher.publish(types::DummyType::random(mt));
         stop_flag.wait(false);
       },
       std::runtime_error);
@@ -95,7 +95,7 @@ TEST_F(PublisherSubscriber, MismatchType) {
 TEST_F(PublisherSubscriber, PublisherTypeInfo) {
   auto session = createSession(createLocalConfig());
   const auto topic =
-      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
   const Publisher<types::DummyType> publisher(session, topic);
 
@@ -111,7 +111,7 @@ TEST_F(PublisherSubscriber, PublisherTypeInfo) {
 TEST_F(PublisherSubscriber, SubscriberTypeInfo) {
   auto session = createSession(createLocalConfig());
   const auto topic =
-      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
 
   const Subscriber<types::DummyType> subscriber(session, topic, [](const auto&, const auto&) {});
 

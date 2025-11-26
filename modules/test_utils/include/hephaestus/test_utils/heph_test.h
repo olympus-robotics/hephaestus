@@ -24,13 +24,11 @@ public:
 
   ~HephTest() override;
 
-  [[nodiscard]] auto mt() -> std::mt19937_64& {
-    return mt_;
-  }
+  std::mt19937_64 mt;  // NOLINT(misc-non-private-member-variables-in-classes,
+                       // cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
   const utils::StackTrace trace_;
-  std::mt19937_64 mt_;
   const error_handling::PanicAsExceptionScope panic_scope_;
 };
 

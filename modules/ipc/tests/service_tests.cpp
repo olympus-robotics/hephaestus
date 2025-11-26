@@ -30,10 +30,10 @@ using namespace ::testing;
 struct ZenohTests : heph::test_utils::HephTest {};
 
 TEST_F(ZenohTests, ServiceCallExchange) {
-  const auto request_message = types::DummyType::random(mt());
+  const auto request_message = types::DummyType::random(mt);
 
   const auto service_topic =
-      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
   auto session = createSession(createLocalConfig());
 
@@ -50,10 +50,10 @@ TEST_F(ZenohTests, ServiceCallExchange) {
 }
 
 TEST_F(ZenohTests, ServiceClientCallExchange) {
-  const auto request_message = types::DummyType::random(mt());
+  const auto request_message = types::DummyType::random(mt);
 
   const auto service_topic =
-      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
   auto session = createSession(createLocalConfig());
 
@@ -70,10 +70,10 @@ TEST_F(ZenohTests, ServiceClientCallExchange) {
 }
 
 TEST_F(ZenohTests, ServiceCallRawExchange) {
-  const auto request_message = types::DummyType::random(mt());
+  const auto request_message = types::DummyType::random(mt);
 
   const auto service_topic =
-      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
   auto session = createSession(createLocalConfig());
 
@@ -95,7 +95,7 @@ TEST_F(ZenohTests, ServiceCallRawExchange) {
 
 TEST_F(ZenohTests, TypesMismatch) {
   const auto service_topic =
-      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
   auto session = createSession(createLocalConfig());
 
@@ -107,7 +107,7 @@ TEST_F(ZenohTests, TypesMismatch) {
   // Invalid request
   {
     const auto replies = callService<types::DummyPrimitivesType, types::DummyType>(
-        *session, service_topic, types::DummyPrimitivesType::random(mt()), std::chrono::milliseconds(10));
+        *session, service_topic, types::DummyPrimitivesType::random(mt), std::chrono::milliseconds(10));
     EXPECT_THAT(replies, IsEmpty());
     EXPECT_EQ(failed_requests, 1);
   }
@@ -115,17 +115,17 @@ TEST_F(ZenohTests, TypesMismatch) {
   // Invalid reply
   {
     const auto replies = callService<types::DummyType, types::DummyPrimitivesType>(
-        *session, service_topic, types::DummyType::random(mt()), std::chrono::milliseconds(10));
+        *session, service_topic, types::DummyType::random(mt), std::chrono::milliseconds(10));
     EXPECT_THAT(replies, IsEmpty());
     EXPECT_EQ(failed_requests, 2);
   }
 }
 
 TEST_F(ZenohTests, ServiceTypeInfo) {
-  const auto request_message = types::DummyType::random(mt());
+  const auto request_message = types::DummyType::random(mt);
 
   const auto service_topic =
-      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt(), 10, false, true)));
+      ipc::TopicConfig(fmt::format("test_service/{}", random::random<std::string>(mt, 10, false, true)));
 
   auto session = createSession(createLocalConfig());
 

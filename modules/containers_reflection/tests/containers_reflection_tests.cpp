@@ -24,11 +24,11 @@ namespace heph::containers::tests {
 
 TEST(Reflection, BitFlag) {
   enum class Enum : uint8_t { A = 1u << 3u, B = 1u << 5u };
-  struct Test {
+  struct TestStruct {
     BitFlag<Enum> flag{ Enum::B };
   };
   {
-    const Test test;
+    const TestStruct test;
     const auto view = rfl::to_view(test);
     EXPECT_EQ(view.size(), 1);
 

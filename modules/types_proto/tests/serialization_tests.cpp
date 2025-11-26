@@ -9,6 +9,7 @@
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/uuid_v4.h"
@@ -27,12 +28,14 @@ using IntegerBoundsT = Bounds<int32_t>;
 using FloatingPointBoundsT = Bounds<float>;
 
 template <class T>
-class SerializationTests : public ::testing::Test {};
+class SerializationTests : public heph::test_utils::HephTest {};
+
 using SerializationImplementations =
     ::testing::Types<IntegerBoundsT, FloatingPointBoundsT, DummyType, UuidV4, bool,  //
                      int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t, float,
                      double  // NumericValue types
                      >;
+
 TYPED_TEST_SUITE(SerializationTests, SerializationImplementations);
 
 TYPED_TEST(SerializationTests, TestEmptySerialization) {
@@ -46,8 +49,7 @@ TYPED_TEST(SerializationTests, TestEmptySerialization) {
 }
 
 TYPED_TEST(SerializationTests, TestSerialization) {
-  auto mt = random::createRNG();
-  const auto value = random::random<TypeParam>(mt);
+  const auto value = random::random<TypeParam>(this->mt);
   auto buff = serdes::serialize(value);
 
   {
@@ -69,7 +71,7 @@ TYPED_TEST(SerializationTests, TestSerialization) {
 
   {
     // Deserialize into a non-empty object
-    auto value_des = random::random<TypeParam>(mt);
+    auto value_des = random::random<TypeParam>(this->mt);
     heph::serdes::deserialize(buff, value_des);
     EXPECT_EQ(value, value_des);
   }

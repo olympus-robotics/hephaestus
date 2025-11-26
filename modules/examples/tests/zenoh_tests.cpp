@@ -31,7 +31,7 @@ TEST_F(ZenohTests, WrongSubscriberTypeLargeIntoSmall) {
   auto session = ipc::zenoh::createSession(config);
   const auto topic = ipc::TopicConfig("test_topic");
 
-  const auto send_message = randomFramedPose(mt());
+  const auto send_message = randomFramedPose(mt);
   auto received_message = Pose{};
 
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
@@ -57,7 +57,7 @@ TEST_F(ZenohTests, WrongSubscriberTypeSmallIntoLarge) {
   auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
   const auto topic = ipc::TopicConfig("test_topic");
 
-  const auto send_message = randomPose(mt());
+  const auto send_message = randomPose(mt);
   auto received_message = FramedPose{};
 
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;

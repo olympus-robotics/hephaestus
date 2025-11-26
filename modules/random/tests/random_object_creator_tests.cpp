@@ -91,7 +91,7 @@ TYPED_TEST(RandomTypeTests, DeterminismTest) {
 
 TYPED_TEST(RandomTypeTests, RandomnessTest) {
   auto gen_fn = [](std::mt19937_64& gen) -> TypeParam { return random::random<TypeParam>(gen); };
-  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen_fn, this->mt()));
+  EXPECT_FALSE(compareRandomEqualMultipleTimes<TypeParam>(gen_fn, this->mt));
 }
 
 TYPED_TEST(RandomTypeTests, LimitsTest) {
@@ -99,7 +99,7 @@ TYPED_TEST(RandomTypeTests, LimitsTest) {
     constexpr auto LIM_MIN = std::is_signed_v<TypeParam> ? -42 : 0;
     constexpr auto LIM_MAX = 42;
     auto limits = random::Limits<TypeParam>{ .min = LIM_MIN, .max = LIM_MAX };
-    auto val = random::random<TypeParam>(this->mt(), limits);
+    auto val = random::random<TypeParam>(this->mt, limits);
     EXPECT_GE(val, limits.min);
     EXPECT_LE(val, limits.max);
   }
@@ -114,16 +114,16 @@ TYPED_TEST(RandomTypeTests, ContainerSizeTest) {
     static constexpr std::size_t SIZE_ZERO = 0;
     static constexpr bool ALLOW_EMPTY_CONTAINER = true;
     static constexpr bool DISALLOW_EMPTY_CONTAINER = false;
-    auto vec_size_zero = random::random<TypeParam>(this->mt(), SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
+    auto vec_size_zero = random::random<TypeParam>(this->mt, SIZE_ZERO, ALLOW_EMPTY_CONTAINER);
     EXPECT_EQ(vec_size_zero.size(), SIZE_ZERO);
-    EXPECT_THROW(auto _ = random::random<TypeParam>(this->mt(), SIZE_ZERO, DISALLOW_EMPTY_CONTAINER),
+    EXPECT_THROW(auto _ = random::random<TypeParam>(this->mt, SIZE_ZERO, DISALLOW_EMPTY_CONTAINER),
                  error_handling::PanicException);
 
     static constexpr size_t SIZE_SEVEN = 7;
-    auto vec_size_seven = random::random<TypeParam>(this->mt(), SIZE_SEVEN);
+    auto vec_size_seven = random::random<TypeParam>(this->mt, SIZE_SEVEN);
     EXPECT_EQ(vec_size_seven.size(), SIZE_SEVEN);
 
-    auto random_vec_non_empty = random::random<TypeParam>(this->mt(), {}, DISALLOW_EMPTY_CONTAINER);
+    auto random_vec_non_empty = random::random<TypeParam>(this->mt, {}, DISALLOW_EMPTY_CONTAINER);
     EXPECT_TRUE(vec_size_seven.size() > 0);
   }
 }

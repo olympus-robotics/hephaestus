@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/random/random_number_generator.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/bounds.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types/uuid_v4.h"
@@ -37,17 +38,16 @@ TYPED_TEST(TypeTests, RandomUnequalTest) {
 // Test types which support hashing
 //=================================================================================================
 template <class T>
-class HashingTest : public ::testing::Test {};
+class HashingTest : public heph::test_utils::HephTest {};
+
 using HashingImplementations = ::testing::Types<UuidV4>;
 
 TYPED_TEST_SUITE(HashingTest, HashingImplementations);
 
 TYPED_TEST(HashingTest, TestHash) {
-  auto mt = random::createRNG();
-
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
       TypeParam(),
-      TypeParam::random(mt),
+      TypeParam::random(this->mt),
   }));
 }
 

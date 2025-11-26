@@ -14,17 +14,20 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::telemetry::tests {
 namespace {
+
+struct StructToFlatmapTest : heph::test_utils::HephTest {};
+struct MeasureTest : heph::test_utils::HephTest {};
 
 class MockMetricSink final : public IMetricSink {
 public:
@@ -86,9 +89,7 @@ struct Dummy {
 };
 }  // namespace
 
-TEST(StructToFlatmap, StructToFlatmap) {
-  auto mt = random::createRNG();
-
+TEST_F(StructToFlatmapTest, StructToFlatmap) {
   const auto dummy = Dummy::random(mt);
   const auto values = detail::structToKeyValuePairs(dummy);
   const std::vector<Metric::KeyValueType> expected_values{
@@ -106,9 +107,7 @@ TEST(StructToFlatmap, StructToFlatmap) {
   EXPECT_EQ(values, expected_values);
 }
 
-TEST(Measure, Metric) {
-  auto mt = random::createRNG();
-
+TEST_F(MeasureTest, Metric) {
   auto mock_sink = std::make_unique<MockMetricSink>();
   const auto* mock_sink_ptr = mock_sink.get();
   registerMetricSink(std::move(mock_sink));
@@ -126,11 +125,9 @@ TEST(Measure, Metric) {
   EXPECT_EQ(entry, measure_entries.front());
 }
 
-TEST(Measure, Serialization) {
+TEST_F(MeasureTest, Serialization) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
-
-  auto mt = random::createRNG();
 
   auto mock_sink = std::make_unique<MockMetricSink>();
   const auto* mock_sink_ptr = mock_sink.get();

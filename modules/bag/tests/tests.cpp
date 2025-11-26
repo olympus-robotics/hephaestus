@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstddef>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -20,7 +21,6 @@
 #include "hephaestus/bag/zenoh_player.h"
 #include "hephaestus/bag/zenoh_recorder.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
@@ -41,8 +41,9 @@ constexpr auto SENDER_ID = "bag_tester";
 constexpr auto DUMMY_TYPE_TOPIC = "bag_test/dummy_type";
 constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
 
-[[nodiscard]] auto createBag() -> std::tuple<utils::filesystem::ScopedPath, std::vector<types::DummyType>,
-                                             std::vector<types::DummyPrimitivesType>> {
+[[nodiscard]] auto createBag(std::mt19937_64& mt)
+    -> std::tuple<utils::filesystem::ScopedPath, std::vector<types::DummyType>,
+                  std::vector<types::DummyPrimitivesType>> {
   auto scoped_path = utils::filesystem::ScopedPath::createFile();
   auto mcap_writer = createMcapWriter({ .output_file = scoped_path });
 
@@ -53,8 +54,6 @@ constexpr auto DUMMY_PRIMITIVE_TYPE_TOPIC = "bag_test/dummy_primitive_type";
   auto dummy_primitive_type_type_info = serdes::getSerializedTypeInfo<types::DummyPrimitivesType>();
   mcap_writer->registerSchema(dummy_primitive_type_type_info);
   mcap_writer->registerChannel(DUMMY_PRIMITIVE_TYPE_TOPIC, dummy_primitive_type_type_info);
-
-  auto mt = random::createRNG();
 
   const auto start_time = std::chrono::nanoseconds{ 0 };
   std::vector<types::DummyType> dummy_types(DUMMY_TYPE_MSG_COUNT);
@@ -90,7 +89,7 @@ struct Bag : heph::test_utils::HephTest {};
 // TODO: figure out how to isolate the network to make sure that only the two topics here are visible.
 TEST_F(Bag, PlayAndRecord) {
   auto output_bag = utils::filesystem::ScopedPath::createFile();
-  auto [bag_path, dummy_types, companies] = createBag();
+  auto [bag_path, dummy_types, companies] = createBag(mt);
   {
     auto session = ipc::zenoh::createSession(ipc::zenoh::createLocalConfig());
 
