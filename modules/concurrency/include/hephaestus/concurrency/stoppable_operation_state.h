@@ -88,6 +88,10 @@ struct StoppableOperationState {
   using StopTokenT = stdexec::stop_token_of_t<EnvT>;
   using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopCallback>;
 
+  StoppableOperationState(Receiver outer_receiver, heph::UniqueFunction<void()> on_stop_callback)
+    : receiver(std::move(outer_receiver)), on_stop(std::move(on_stop_callback)) {
+  }
+
   [[nodiscard]] auto start() -> ToStartedTransition {
     on_stop_callback.emplace(stdexec::get_stop_token(stdexec::get_env(receiver)), OnStopCallback{ this });
     return ToStartedTransition(this);

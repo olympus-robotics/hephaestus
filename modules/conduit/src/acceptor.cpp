@@ -149,13 +149,14 @@ auto Acceptor::handleClient(net::Socket client, std::uint64_t /*type*/) -> exec:
     BasicInput* input{ nullptr };
     {
       const absl::MutexLock lock{ &mutex_ };
-      auto it =
-          std::ranges::find_if(typed_inputs_, [&name](BasicInput* input) { return name == input->name(); });
+      auto it = std::ranges::find_if(
+          typed_inputs_, [&name](BasicInput* basic_input) { return name == basic_input->name(); });
       if (it == typed_inputs_.end()) {
-        result = fmt::format(
-            "ERROR: Could not find input {}. Available: [{}]", name,
-            fmt::join(typed_inputs_ | std::views::transform([](auto* input) { return input->name(); }),
-                      ", "));
+        result = fmt::format("ERROR: Could not find input {}. Available: [{}]", name,
+                             fmt::join(typed_inputs_ | std::views::transform([](auto* basic_input) {
+                                         return basic_input->name();
+                                       }),
+                                       ", "));
       } else {
         input = *it;
       }
