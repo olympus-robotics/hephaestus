@@ -19,11 +19,10 @@ using namespace ::testing;
 
 namespace heph::error_handling::tests {
 namespace {
-constexpr int TEST_FORMAT_VALUE = 42;
 
 TEST(Panic, Exception) {
   const error_handling::PanicAsExceptionScope panic_scope;
-  EXPECT_THROW(panic("This is a panic with value {}", TEST_FORMAT_VALUE), PanicException);
+  EXPECT_THROW(panic("This is a panic with value {}", 42), PanicException);
 }
 
 TEST(PanicIf, NoSideEffectWhenConditionFalse) {
@@ -47,7 +46,15 @@ TEST(PanicIf, SideEffectWhenConditionTrue) {
 
 struct StringLogSink : public telemetry::ILogSink {
   void send(const telemetry::LogEntry& entry) override {
-    last_log_message = fmt::format("{}", entry);
+    std::string location_field;
+
+    for (const auto& field : entry.fields) {
+      if (field.key == "location") {
+        location_field = field.value;
+      }
+    }
+
+    last_log_message = fmt::format("{} {}", location_field, entry.message);
   }
 
   std::string last_log_message;
@@ -64,17 +71,14 @@ TEST(PanicIf, Output) {
   heph::telemetry::flushLogEntries();
   EXPECT_EQ(string_log_sink_ptr->last_log_message, "");
 
-  /*
   try {
     HEPH_PANIC_IF(true, "{}", 42);
   } catch (...) {  // NOLINT(bugprone-empty-catch)
   }
-  */
-
-  log(ERROR, "ciaooo");
 
   heph::telemetry::flushLogEntries();
-  EXPECT_EQ(string_log_sink_ptr->last_log_message, "foobar");
+  EXPECT_EQ(string_log_sink_ptr->last_log_message,
+            "\"modules/error_handling/tests/panic_tests.cpp:75\" program terminated with panic");
 
   telemetry::removeAllLogSinks();
 }
