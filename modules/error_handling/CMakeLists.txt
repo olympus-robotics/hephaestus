@@ -12,7 +12,14 @@ find_package(fmt REQUIRED)
 find_package(reflectcpp REQUIRED)
 
 # library sources
-set(SOURCES src/panic.cpp include/hephaestus/error_handling/panic.h)
+set(SOURCES
+  src/panic_as_exception_scope.cpp
+  src/panic_exception.cpp
+  src/panic.cpp
+  include/hephaestus/error_handling/panic_as_exception_scope.h
+  include/hephaestus/error_handling/panic_exception.h
+  include/hephaestus/error_handling/panic.h
+)
 
 # library target
 define_module_library(
