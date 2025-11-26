@@ -19,7 +19,7 @@ Objective
 
 The primary goal of this project is to provide a lean robotics platform to provide a modular and testable framework for robotics development.
 
-The problem domain can be summarized with building a pipeline through which data can flow asynchronously. This includes abstractions to define, create and working these graphs.
+The problem domain can be summarized with building a pipeline through which data can flow asynchronously. This includes abstractions to define, create, and working with these graphs.
 
 .. _heph.conduit.concepts:
 
