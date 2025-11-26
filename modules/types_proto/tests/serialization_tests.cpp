@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/test_utils/heph_test.h"
