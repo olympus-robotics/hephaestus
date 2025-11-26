@@ -13,7 +13,8 @@ build:opt --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
 build:fastbuild --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
 build:dbg --copt -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
 
-build:dwyu --features=layering_check
+build:dwyu --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
+build:dwyu --output_groups=dwyu
 
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
