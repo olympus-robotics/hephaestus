@@ -78,3 +78,11 @@ def foreign_cc_repositories():
         sha256 = "eaa70128e6705a24da19d7024ec8c81c689e8619021a7e84e3a9057c71876005",
         build_file = "//bazel/foreign_cc:bluez.BUILD",
     )
+
+    LIBURING_VERSION = "f4e42a515cd78c8c9cac2be14222834be5f8df2b"
+    http_archive(
+        name = "liburing",
+        urls = ["https://github.com/axboe/liburing/archive/{version}.zip".format(version = LIBURING_VERSION)],
+        strip_prefix = "liburing-" + LIBURING_VERSION,
+        build_file = "//bazel/foreign_cc:liburing.BUILD",
+    )
