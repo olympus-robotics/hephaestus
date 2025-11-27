@@ -101,6 +101,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "when_all_range_tests",
+    srcs = ["tests/when_all_range_tests.cpp"],
+    deps = [":concurrency"],
+)
+
+heph_cc_test(
     name = "queue_consumer_tests",
     srcs = ["tests/queue_consumer_tests.cpp"],
     deps = [
