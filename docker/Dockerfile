@@ -20,7 +20,7 @@ RUN wget -q -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${CM
     ./cmake.sh --skip-license --prefix=/usr/ && \
     rm cmake.sh
 
-ENV CLANG_VERSION=20
+ENV CLANG_VERSION=21
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     sed -i "s/add-apt-repository \"${REPO_NAME}\"/add-apt-repository \"${REPO_NAME}\" -y/g" llvm.sh && \
     chmod +x llvm.sh && \
@@ -34,6 +34,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-$CLANG_VER
     --slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-$CLANG_VERSION \
     --slave /usr/bin/clang-format clang-format /usr/bin/clang-format-$CLANG_VERSION && \
     ln -s "/usr/bin/clangd-${CLANG_VERSION}" "/usr/bin/clangd"
+
 
 ARG ZENOH_VERSION=1.1.1
 RUN echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | tee /etc/apt/sources.list.d/zenoh.list >/dev/null && \
@@ -51,6 +52,15 @@ ENV RUSTUP_HOME=/usr/local/rustup
 RUN wget -q -O rust_installer.sh https://sh.rustup.rs && chmod +x rust_installer.sh && ./rust_installer.sh -y
 RUN . "$CARGO_HOME/env" && cargo install sccache --locked && echo "export RUSTC_WRAPPER=sccache" >> "$HOME/.bashrc"
 RUN chmod o+rw -R /usr/local/cargo/
+
+ENV GCC_VERSION=13
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends gcc-${GCC_VERSION} g++-${GCC_VERSION} && \
+    rm -rf /var/lib/apt/lists/* && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} ${GCC_VERSION} \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_VERSION}
 
 RUN wget -q -O - https://pixi.sh/install.sh | PIXI_HOME=/usr/local bash
 
