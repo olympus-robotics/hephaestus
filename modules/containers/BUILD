@@ -67,3 +67,9 @@ heph_cc_test(
     srcs = ["tests/intrusive_fifo_queue_tests.cpp"],
     deps = [":containers"],
 )
+
+heph_cc_test(
+    name = "fixed_circular_buffer_tests",
+    srcs = ["tests/fixed_circular_buffer_tests.cpp"],
+    deps = [":containers"],
+)
