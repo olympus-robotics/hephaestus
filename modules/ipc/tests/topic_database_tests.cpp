@@ -15,11 +15,9 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/telemetry/log/log.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -28,19 +26,9 @@ namespace {
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
-class MyEnvironment : public Environment {
-public:
-  ~MyEnvironment() override = default;
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
-  }
-};
-// NOLINTNEXTLINE
-const auto* const my_env = AddGlobalTestEnvironment(new MyEnvironment{});
+struct ZenohTests : heph::test_utils::HephTest {};
 
-TEST(ZenohTests, TopicDatabase) {
-  auto mt = random::createRNG();
-
+TEST_F(ZenohTests, TopicDatabase) {
   auto session = createSession(createLocalConfig());
 
   const auto publisher_topic =

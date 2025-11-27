@@ -16,17 +16,20 @@
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/context.h"
-#include "hephaestus/error_handling/panic.h"
+#include "hephaestus/error_handling/panic_exception.h"
 #include "hephaestus/net/accept.h"
 #include "hephaestus/net/acceptor.h"
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 namespace heph::net {
 
-TEST(Net, Ipv4Endpoint) {
+struct Net : heph::test_utils::HephTest {};
+
+TEST_F(Net, Ipv4Endpoint) {
   const Endpoint ep0;
   auto ep1(Endpoint::createIpV4());
   const auto ep2(Endpoint::createIpV4());
@@ -61,7 +64,7 @@ TEST(Net, Ipv4Endpoint) {
   EXPECT_THROW(Endpoint::createIpV4("."), error_handling::PanicException);
 }
 
-TEST(Net, Ipv6Endpoint) {
+TEST_F(Net, Ipv6Endpoint) {
   const Endpoint ep0;
   auto ep1(Endpoint::createIpV6());
   const auto ep2(Endpoint::createIpV6());
@@ -92,7 +95,7 @@ TEST(Net, Ipv6Endpoint) {
   EXPECT_THROW(Endpoint::createIpV6(":"), error_handling::PanicException);
 }
 
-TEST(Net, BtEndpoint) {
+TEST_F(Net, BtEndpoint) {
   const Endpoint ep0;
   auto ep1(Endpoint::createBt());
   const auto ep2(Endpoint::createBt());
@@ -123,7 +126,7 @@ TEST(Net, BtEndpoint) {
   EXPECT_THROW(Endpoint::createBt(":"), error_handling::PanicException);
 }
 
-TEST(Net, TCPOperationsSome) {
+TEST_F(Net, TCPOperationsSome) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
   const auto acceptor = Acceptor::createTcpIpV4(context);
@@ -175,7 +178,7 @@ TEST(Net, TCPOperationsSome) {
   EXPECT_EQ(recv_buffer, send_buffer);
 }
 
-TEST(Net, TCPOperationsAll) {
+TEST_F(Net, TCPOperationsAll) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
   const auto acceptor = Acceptor::createTcpIpV4(context);
@@ -220,7 +223,7 @@ TEST(Net, TCPOperationsAll) {
   EXPECT_EQ(recv_buffer, send_buffer);
 }
 
-TEST(Net, UDPOperations) {
+TEST_F(Net, UDPOperations) {
   exec::async_scope scope;
   heph::concurrency::Context context{ {} };
   const auto server{ Socket::createUdpIpV4(context) };

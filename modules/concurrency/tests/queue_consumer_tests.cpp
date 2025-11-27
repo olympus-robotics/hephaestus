@@ -11,26 +11,28 @@
 #include <gtest/gtest.h>
 
 #include "hephaestus/concurrency/message_queue_consumer.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::concurrency::tests {
 
+struct MessageQueueConsumerTest : heph::test_utils::HephTest {};
+
 struct Message {
   [[nodiscard]] auto operator==(const Message&) const -> bool = default;
   int value;
 };
 
-TEST(MessageQueueConsumer, Fail) {
+TEST_F(MessageQueueConsumerTest, Fail) {
 #ifndef DISABLE_EXCEPTION
   EXPECT_NO_THROW(std::ignore = MessageQueueConsumer<Message>([](const Message&) {}, 0););
 #endif
 }
 
-TEST(MessageQueueConsumer, ProcessMessages) {
+TEST_F(MessageQueueConsumerTest, ProcessMessages) {
   static constexpr std::size_t MESSAGE_COUNT = 2;
   std::atomic_flag flag = ATOMIC_FLAG_INIT;
   std::vector<Message> processed_messages;
@@ -44,9 +46,8 @@ TEST(MessageQueueConsumer, ProcessMessages) {
                                          },
                                           MESSAGE_COUNT };
   consumer.start();
-  auto mt = random::createRNG();
   std::vector<Message> messages(MESSAGE_COUNT);
-  std::ranges::for_each(messages, [&mt](Message& message) { message.value = random::random<int>(mt); });
+  std::ranges::for_each(messages, [&](Message& message) { message.value = random::random<int>(mt); });
   for (const auto& message : messages) {
     consumer.queue().forcePush(message);
   }

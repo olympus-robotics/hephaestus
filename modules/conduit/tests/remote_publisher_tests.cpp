@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <cstdlib>
 #include <exception>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <string_view>
@@ -21,31 +20,13 @@
 #include "hephaestus/conduit/queued_input.h"
 #include "hephaestus/conduit/remote_input_publisher.h"
 #include "hephaestus/conduit/remote_output_subscriber.h"
-#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/net/endpoint.h"
-#include "hephaestus/telemetry/log/log_sink.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
-#include "hephaestus/utils/stack_trace.h"
 #include "modules/types/include/hephaestus/types/dummy_type.h"
 
 namespace heph::conduit::tests {
-
-class MyEnvironment final : public testing::Environment {
-public:
-  ~MyEnvironment() override = default;
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
-  }
-  void TearDown() override {
-  }
-
-private:
-  heph::utils::StackTrace stack_trace_;
-};
-// NOLINTNEXTLINE
-const auto* const my_env = dynamic_cast<MyEnvironment*>(AddGlobalTestEnvironment(new MyEnvironment{}));
 
 struct Generator : heph::conduit::Node<Generator> {
   static constexpr std::string_view NAME = "generator";
@@ -83,11 +64,13 @@ struct ReceivingOperation : Node<ReceivingOperation<T>, ReceivingOperationData> 
     return dummy;
   }
 };
+
 struct RemoteNodeTestParams {
   bool reliable;
 };
 
-class RemoteNodeTests : public ::testing::TestWithParam<RemoteNodeTestParams> {};
+class RemoteNodeTests : public heph::test_utils::HephTest,
+                        public ::testing::WithParamInterface<RemoteNodeTestParams> {};
 
 TEST_P(RemoteNodeTests, nodeBasic) {
   NodeEngineConfig config1;
@@ -313,7 +296,6 @@ TEST_P(RemoteNodeTests, InputPublisherRestart) {
 }
 
 TEST_P(RemoteNodeTests, InputSubscriberRestart) {
-  const error_handling::PanicAsExceptionScope panic_scope;
   static constexpr std::size_t NUM_ITERATIONS = 10;
   std::mutex endpoint_mtx;
   std::condition_variable endpoint_cv;

@@ -21,14 +21,16 @@
 #include "hephaestus/ipc/zenoh/conversions.h"
 #include "hephaestus/ipc/zenoh/liveliness.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
+#include "hephaestus/test_utils/heph_test.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::ipc::zenoh::tests {
 namespace {
+
+struct Liveliness : heph::test_utils::HephTest {};
 
 [[nodiscard]] auto generateRandomTopicName(std::mt19937_64& mt) -> std::string {
   static constexpr auto MAX_TOPIC_PARTS_COUNT = 5;
@@ -49,8 +51,7 @@ namespace {
   return session->zenoh_session.get_zid();
 }
 
-TEST(Liveliness, TokenGeneration) {
-  auto mt = random::createRNG();
+TEST_F(Liveliness, TokenGeneration) {
   auto topic = generateRandomTopicName(mt);
   auto session_id = generateSessionId(std::nullopt);
   auto actor_type = random::random<EndpointType>(mt);
@@ -66,9 +67,8 @@ TEST(Liveliness, TokenGeneration) {
   EXPECT_EQ(*endpoint_info, expected_endpoint_info);  // NOLINT(bugprone-unchecked-optional-access)
 }
 
-TEST(Liveliness, TokenGenerationCustomSessionId) {
+TEST_F(Liveliness, TokenGenerationCustomSessionId) {
   static constexpr auto MAX_ID_LENGTH = 10;
-  auto mt = random::createRNG();
   auto topic = generateRandomTopicName(mt);
   auto session_id = generateSessionId(random::random<std::string>(mt, MAX_ID_LENGTH, false, true));
   auto actor_type = random::random<EndpointType>(mt);

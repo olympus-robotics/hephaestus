@@ -2,10 +2,9 @@
 // |   This file is part of the FORKIFY project by FILICS GmbH. All rights reserved.   |
 // =====================================================================================
 
-#include <random>
+#include <gtest/gtest.h>
 
-namespace heph::test_utils {
-
-[[nodiscard]] auto mt() -> std::mt19937_64&;
-
-}  // namespace heph::test_utils
+auto main(int argc, char** argv) -> int {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

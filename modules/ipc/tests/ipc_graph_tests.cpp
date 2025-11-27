@@ -21,8 +21,7 @@
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log/log.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -32,7 +31,7 @@ using namespace ::testing;
 namespace heph::ipc::zenoh::tests {
 namespace {
 
-class IpcGraphTest : public ::testing::Test {
+class IpcGraphTest : public heph::test_utils::HephTest {
 protected:
   // NOLINTBEGIN
   IpcGraphConfig config;
@@ -62,8 +61,6 @@ protected:
   const std::string TEST_SERVICE_SERVER_2 = "test_srv_s_2";
   const std::string TEST_SERVICE_CLIENT_1 = "test_srv_c_1";
   const std::string TEST_SERVICE_CLIENT_2 = "test_srv_c_2";
-
-  const error_handling::PanicAsExceptionScope panic_scope{};
   // NOLINTEND
 
   void startIpcGraph() {
@@ -136,10 +133,6 @@ protected:
   static void sleepLongEnoughToSync() {
     const constexpr int SLEEP_DURATION_MS = 20;
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION_MS));
-  }
-
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
   }
 
   void TearDown() override {

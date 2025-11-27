@@ -10,10 +10,10 @@
 
 #include <gtest/gtest.h>
 
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "test_proto_conversion.h"
 
@@ -23,7 +23,11 @@ using namespace ::testing;
 namespace heph::serdes::tests {
 namespace {
 
-TEST(TypeInfo, Generate) {
+struct TypeInfoTest : heph::test_utils::HephTest {};
+struct ServiceTypeInfoTest : heph::test_utils::HephTest {};
+struct ActionServerTypeInfoTest : heph::test_utils::HephTest {};
+
+TEST_F(TypeInfoTest, Generate) {
   auto type_info = getSerializedTypeInfo<User>();
   EXPECT_EQ(type_info.name, "heph.serdes.tests.proto.User");
   EXPECT_EQ(type_info.original_type, "heph::serdes::tests::User");
@@ -40,9 +44,8 @@ TEST(TypeInfo, Generate) {
   };
 }
 
-TEST(TypeInfo, ToFromJson) {
+TEST_F(TypeInfoTest, ToFromJson) {
   const utils::StackTrace trace;
-  auto mt = random::createRNG();
 
   const auto type_info = randomTypeInfo(mt);
 
@@ -52,9 +55,8 @@ TEST(TypeInfo, ToFromJson) {
   EXPECT_EQ(type_info, new_type_info);
 }
 
-TEST(ServiceTypeInfo, ToFromJson) {
+TEST_F(ServiceTypeInfoTest, ToFromJson) {
   const utils::StackTrace trace;
-  auto mt = random::createRNG();
 
   const auto service_type_info = ServiceTypeInfo{
     .request = randomTypeInfo(mt),
@@ -67,9 +69,7 @@ TEST(ServiceTypeInfo, ToFromJson) {
   EXPECT_EQ(service_type_info, new_service_type_info);
 }
 
-TEST(ActionServerTypeInfo, ToFromJson) {
-  auto mt = random::createRNG();
-
+TEST_F(ActionServerTypeInfoTest, ToFromJson) {
   const auto action_server_type_info = ActionServerTypeInfo{
     .request = randomTypeInfo(mt),
     .reply = randomTypeInfo(mt),

@@ -18,12 +18,10 @@
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
-#include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
-#include "hephaestus/utils/stack_trace.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
@@ -33,40 +31,38 @@ namespace {
 
 constexpr auto SERVICE_CALL_TIMEOUT = std::chrono::milliseconds{ 10 };
 
-class MyEnvironment final : public Environment {
+class ActionServerTest : public heph::test_utils::HephTest {
 public:
-  ~MyEnvironment() override = default;
-
-  void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
-
-    server_session_ = createSession(createLocalConfig());
+  ActionServerTest() : server_session_(createSession(createLocalConfig())) {
   }
 
-  void TearDown() override {
+  ~ActionServerTest() override {
     server_session_.reset();
   }
 
-  [[nodiscard]] auto getSession() const -> SessionPtr {
+  ActionServerTest(const ActionServerTest&) = delete;
+  ActionServerTest(ActionServerTest&&) = delete;
+
+  auto operator=(const ActionServerTest&) -> ActionServerTest& = delete;
+  auto operator=(ActionServerTest&&) -> ActionServerTest& = delete;
+
+  [[nodiscard]] auto getSession() -> SessionPtr& {
     return server_session_;
   }
 
 private:
-  heph::utils::StackTrace stack_trace_;
   SessionPtr server_session_;
 };
 
-// NOLINTNEXTLINE
-const auto* const my_env = dynamic_cast<MyEnvironment*>(AddGlobalTestEnvironment(new MyEnvironment{}));
-
 using DummyActionServer = ActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>;
+
 struct ActionServerData {
   TopicConfig topic_config;
   SessionPtr session;
   std::unique_ptr<DummyActionServer> action_server;
 };
 
-[[nodiscard]] auto createDummyActionServer(std::mt19937_64& mt,
+[[nodiscard]] auto createDummyActionServer(std::mt19937_64& mt, SessionPtr& session,
                                            DummyActionServer::TriggerCallback&& trigger_cb,
                                            DummyActionServer::ExecuteCallback&& execute_cb)
     -> ActionServerData {
@@ -76,18 +72,16 @@ struct ActionServerData {
 
   return {
     .topic_config = service_topic,
-    .session = my_env->getSession(),
+    .session = session,
     .action_server =
         std::make_unique<ActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>>(
-            my_env->getSession(), service_topic, std::move(trigger_cb), std::move(execute_cb)),
+            session, service_topic, std::move(trigger_cb), std::move(execute_cb)),
   };
 }
 
-TEST(ActionServer, RejectedCall) {
-  auto mt = random::createRNG();
-
+TEST_F(ActionServerTest, RejectedCall) {
   auto action_server_data = createDummyActionServer(
-      mt, [](const types::DummyType&) { return TriggerStatus::REJECTED; },
+      mt, getSession(), [](const types::DummyType&) { return TriggerStatus::REJECTED; },
       [&](const types::DummyType& request, Publisher<types::DummyPrimitivesType>&, std::atomic_bool&) {
         return request;
       });
@@ -100,12 +94,10 @@ TEST(ActionServer, RejectedCall) {
   EXPECT_EQ(reply_future.get().status, RequestStatus::REJECTED_USER);
 }
 
-TEST(ActionServer, ActionServerSuccessfulCall) {
-  auto mt = random::createRNG();
-
+TEST_F(ActionServerTest, ActionServerSuccessfulCall) {
   auto status = types::DummyPrimitivesType::random(mt);
   auto action_server_data = createDummyActionServer(
-      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      mt, getSession(), [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
       [&status](const types::DummyType& request, Publisher<types::DummyPrimitivesType>& status_publisher,
                 std::atomic_bool&) {
         auto success = status_publisher.publish(status);
@@ -120,10 +112,10 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
   static constexpr auto REPLY_SERVICE_DEFAULT_TIMEOUT = std::chrono::milliseconds{ 10000 };
   auto reply_future = callActionServer<types::DummyType, types::DummyPrimitivesType, types::DummyType>(
       action_server_data.session, action_server_data.topic_config, request,
-      [&status_mtx, &received_status, &received_status_flag](const types::DummyPrimitivesType& status) {
+      [&status_mtx, &received_status, &received_status_flag](const types::DummyPrimitivesType& dummy_status) {
         {
           const std::scoped_lock lock{ status_mtx };
-          received_status = status;
+          received_status = dummy_status;
         }
         received_status_flag.test_and_set();
         received_status_flag.notify_all();
@@ -150,12 +142,10 @@ TEST(ActionServer, ActionServerSuccessfulCall) {
             action_server_data.session.use_count());
 }
 
-TEST(ActionServer, ActionServerStopRequest) {
-  auto mt = random::createRNG();
-
+TEST_F(ActionServerTest, ActionServerStopRequest) {
   std::atomic_flag requested_started = ATOMIC_FLAG_INIT;
   auto action_server_data = createDummyActionServer(
-      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      mt, getSession(), [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
       [&requested_started](const types::DummyType& request,
                            [[maybe_unused]] Publisher<types::DummyPrimitivesType>& status_publisher,
                            std::atomic_bool& stop_requested) {
@@ -201,13 +191,11 @@ TEST(ActionServer, ActionServerStopRequest) {
   heph::log(heph::DEBUG, "ActionServerStopRequest test done");
 }
 
-TEST(ActionServer, ActionServerRejectedAlreadyRunning) {
-  auto mt = random::createRNG();
-
+TEST_F(ActionServerTest, ActionServerRejectedAlreadyRunning) {
   std::atomic_flag requested_started = ATOMIC_FLAG_INIT;
   std::atomic_flag stop = ATOMIC_FLAG_INIT;
   auto action_server_data = createDummyActionServer(
-      mt, [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
+      mt, getSession(), [](const types::DummyType&) { return TriggerStatus::SUCCESSFUL; },
       [&requested_started, &stop](const types::DummyType& request, Publisher<types::DummyPrimitivesType>&,
                                   std::atomic_bool&) {
         requested_started.test_and_set();

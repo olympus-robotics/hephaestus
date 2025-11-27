@@ -1,5 +1,6 @@
 #include <atomic>
 #include <memory>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -8,17 +9,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "hephaestus/error_handling/panic.h"
 #include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 
@@ -27,9 +27,7 @@ using namespace ::testing;  // NOLINT(google-build-using-namespace)
 namespace heph::ipc::zenoh::tests {
 
 namespace {
-void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
-  auto mt = random::createRNG();
-
+void checkMessageExchange(std::mt19937_64& mt, bool subscriber_dedicated_callback_thread) {
   auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
@@ -60,13 +58,14 @@ void checkMessageExchange(bool subscriber_dedicated_callback_thread) {
   EXPECT_EQ(send_message, received_message);
 }
 
-TEST(PublisherSubscriber, MessageExchange) {
-  checkMessageExchange(false);
-  checkMessageExchange(true);
+struct PublisherSubscriber : heph::test_utils::HephTest {};
+
+TEST_F(PublisherSubscriber, MessageExchange) {
+  checkMessageExchange(this->mt, false);
+  checkMessageExchange(this->mt, true);
 }
 
-TEST(PublisherSubscriber, MismatchType) {
-  auto mt = random::createRNG();
+TEST_F(PublisherSubscriber, MismatchType) {
   const Config config{};
   auto session = createSession(createLocalConfig());
   const auto topic =
@@ -74,7 +73,6 @@ TEST(PublisherSubscriber, MismatchType) {
 
   Publisher<types::DummyType> publisher(session, topic);
 
-  const error_handling::PanicAsExceptionScope panic_scope;
   std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
   auto subscriber = createSubscriber<types::DummyPrimitivesType>(
       session, topic,
@@ -95,8 +93,7 @@ TEST(PublisherSubscriber, MismatchType) {
       std::runtime_error);
 }
 
-TEST(PublisherSubscriber, PublisherTypeInfo) {
-  auto mt = random::createRNG();
+TEST_F(PublisherSubscriber, PublisherTypeInfo) {
   auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));
@@ -112,8 +109,7 @@ TEST(PublisherSubscriber, PublisherTypeInfo) {
   EXPECT_EQ(type_info, serdes::getSerializedTypeInfo<types::DummyType>());
 }
 
-TEST(PublisherSubscriber, SubscriberTypeInfo) {
-  auto mt = random::createRNG();
+TEST_F(PublisherSubscriber, SubscriberTypeInfo) {
   auto session = createSession(createLocalConfig());
   const auto topic =
       ipc::TopicConfig(fmt::format("test_topic/{}", random::random<std::string>(mt, 10, false, true)));

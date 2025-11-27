@@ -676,7 +676,7 @@ macro(define_module_test)
     ${TARGET_NAME}
     PUBLIC ${TARGET_ARG_PUBLIC_LINK_LIBS}
     PRIVATE ${MODULE_${MODULE_NAME}_LIB_TARGETS} # link to libraries from the enclosing module
-            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
+            ${TARGET_ARG_PRIVATE_LINK_LIBS} GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main hephaestus::test_utils
   )
 
   add_dependencies(${TESTS_BUILD_TARGET} ${TARGET_NAME}) # Set this to be built on `make tests`

@@ -18,18 +18,18 @@
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/serdes/serdes.h"
 #include "hephaestus/serdes/type_info.h"
 #include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
+#include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
 #include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
 #include "hephaestus/websocket_bridge/ipc/ipc_entity_manager.h"
 
 namespace heph::ws::tests {
 
-class IpcEntityManagerTest : public testing::Test {
+class IpcEntityManagerTest : public heph::test_utils::HephTest {
 protected:
   // NOLINTBEGIN
   std::shared_ptr<heph::ipc::zenoh::Session> session_;
@@ -108,7 +108,6 @@ TEST_F(IpcEntityManagerTest, CallService) {
   const std::string topic = "test_service";
   const ipc::TopicConfig topic_config{ topic };
 
-  auto mt = random::createRNG();
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 
@@ -132,7 +131,6 @@ TEST_F(IpcEntityManagerTest, CallServiceAsync) {
   std::string topic = "test_service";
   const ipc::TopicConfig topic_config{ topic };
 
-  auto mt = random::createRNG();
   const auto request_message = types::DummyType::random(mt);
   auto request_buffer = serdes::serialize(request_message);
 

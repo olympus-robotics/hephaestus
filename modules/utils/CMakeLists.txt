@@ -20,6 +20,7 @@ set(SOURCES
     src/format/format.cpp
     src/string/string_literal.cpp
     src/string/string_utils.cpp
+    src/timing/rate_limiter.cpp
     src/timing/stop_watch.cpp
     src/timing/watchdog.cpp
     src/concepts.cpp

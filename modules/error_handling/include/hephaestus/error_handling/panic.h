@@ -6,7 +6,6 @@
 #pragma once
 
 #include <source_location>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -15,8 +14,8 @@
 #include <fmt/format.h>
 
 namespace heph {
-namespace error_handling {
-namespace detail {
+
+namespace error_handling::detail {
 /// @brief  Wrapper around string literals to enhance them with a location.
 ///         Note that the message is not owned by this class.
 ///         String literals are used to enable implicit conversion from string literals.
@@ -45,31 +44,7 @@ using StringLiteralWithLocation = detail::StringLiteralWithLocationImpl<Ts...>::
 
 void panicImpl(const std::source_location& location, const std::string& formatted_message);
 
-}  // namespace detail
-
-/// @brief  Scope guard to enable panic as exceptions within the scope.
-/// This is useful for unit tests where we want to catch panics as exceptions.
-class PanicAsExceptionScope {
-public:
-  PanicAsExceptionScope();
-  ~PanicAsExceptionScope();
-
-  PanicAsExceptionScope(const PanicAsExceptionScope&) = delete;
-  auto operator=(const PanicAsExceptionScope&) -> PanicAsExceptionScope& = delete;
-  PanicAsExceptionScope(PanicAsExceptionScope&&) = delete;
-  auto operator=(PanicAsExceptionScope&&) -> PanicAsExceptionScope& = delete;
-};
-
-/// @brief  Check whether panics should be thrown as exceptions.
-[[nodiscard]] auto panicAsException() -> bool;
-
-class PanicException final : public std::runtime_error {
-public:
-  explicit PanicException(const std::string& message) : std::runtime_error(message) {
-  }
-};
-
-}  // namespace error_handling
+}  // namespace error_handling::detail
 
 /// @brief  User function to panic. Internally this throws a Panic exception.
 /// > Note: If macro `DISABLE_EXCEPTIONS` is defined, this function terminates printing the message. In this
