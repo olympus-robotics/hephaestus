@@ -42,7 +42,7 @@ auto main(int argc, const char* argv[]) -> int {
 
     heph::log(heph::DEBUG, "reading bag", "file", input_file.string());
 
-    heph::panicIf(!std::filesystem::exists(input_file), "input bag file {} doesn't exist",
+    HEPH_PANIC_IF(!std::filesystem::exists(input_file), "input bag file {} doesn't exist",
                   input_file.string());
     auto bag_reader = std::make_unique<mcap::McapReader>();
     const auto status = bag_reader->open(input_file.string());

@@ -193,8 +193,8 @@ namespace internal {
 [[nodiscard]] inline auto getSize(std::mt19937_64& mt, std::optional<size_t> fixed_size, bool allow_empty)
     -> size_t {
   if (fixed_size.has_value()) {
-    panicIf(allow_empty == false && fixed_size.value() == 0,
-            "fixed_size must be non-zero if allow_empty == true");
+    HEPH_PANIC_IF(allow_empty == false && fixed_size.value() == 0,
+                  "fixed_size must be non-zero if allow_empty == true");
     return fixed_size.value();
   }
 

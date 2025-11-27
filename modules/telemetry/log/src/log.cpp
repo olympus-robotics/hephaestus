@@ -11,6 +11,7 @@
 #include <memory>
 #include <new>  // std::bad_alloc
 #include <optional>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -23,6 +24,7 @@
 
 namespace heph::telemetry {
 namespace {
+
 class Logger final {
 public:
   explicit Logger();
@@ -30,25 +32,23 @@ public:
 
   Logger(const Logger&) = delete;
   Logger(Logger&&) = delete;
+
   auto operator=(const Logger&) -> Logger& = delete;
   auto operator=(Logger&&) -> Logger& = delete;
 
-  static void registerSink(std::unique_ptr<ILogSink> sink) noexcept;
-  static void removeAllLogSinks() noexcept;
+  void registerSink(std::unique_ptr<ILogSink>&& sink) noexcept;
+  void removeAllLogSinks() noexcept;
 
-  static void log(LogEntry&& log_entry) noexcept;
-  static void flush() noexcept;
+  void log(LogEntry&& log_entry) noexcept;
+  void flush() noexcept;
 
 private:
-  [[nodiscard]] static auto instance() noexcept -> Logger&;
+  void runThread();
 
   /// @brief Do the actual logging. Take in LogEntry and send it to all sinks
   /// @param LogEntry, class that takes in the structured logs and formats them.
   /// @return void
   void processEntry(const LogEntry& entry) noexcept;
-
-  /// @brief Empty the queue so that remaining messages get processed
-  void emptyQueue() noexcept;
 
 private:
   absl::Mutex sink_mutex_;
@@ -60,19 +60,34 @@ private:
   std::atomic<std::size_t> entries_in_flight_{ 0 };
 };
 
-Logger::Logger() : entries_{ MAX_LOG_QUEUE_SIZE } {
-  message_process_future_ = std::async(std::launch::async, [this]() {
-    while (true) {
-      auto message = entries_.waitAndPop();
-      if (!message.has_value()) {
-        break;
-      }
+void Logger::runThread() {
+  while (true) {
+    auto message = entries_.waitAndPop();
 
-      processEntry(message.value());
-      --entries_in_flight_;
+    if (!message.has_value()) {
+      break;
     }
-    emptyQueue();
-  });
+
+    processEntry(message.value());
+    entries_in_flight_.fetch_sub(1, std::memory_order::release);
+  }
+
+  // Drain queue before exiting
+  while (!entries_.empty()) {
+    auto message = entries_.tryPop();
+
+    if (!message.has_value()) {
+      return;
+    }
+
+    processEntry(message.value());
+    entries_in_flight_.fetch_sub(1, std::memory_order::release);
+  }
+}
+
+Logger::Logger()
+  : entries_{ MAX_LOG_QUEUE_SIZE }
+  , message_process_future_{ std::async(std::launch::async, [this] { runThread(); }) } {
 }
 
 Logger::~Logger() {
@@ -86,85 +101,84 @@ Logger::~Logger() {
   }
 }
 
-auto Logger::instance() noexcept -> Logger& {
-  static Logger telemetry;
-  return telemetry;
-}
+void Logger::registerSink(std::unique_ptr<ILogSink>&& sink) noexcept {
+  const absl::MutexLock lock{ &sink_mutex_ };
 
-void Logger::registerSink(std::unique_ptr<ILogSink> sink) noexcept {
-  // Add the custom log sink
-  auto& telemetry = instance();
-  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
   try {
-    telemetry.sinks_.emplace_back(std::move(sink));
+    sinks_.emplace_back(std::move(sink));
   } catch (const std::bad_alloc& ex) {
     fmt::println(stderr, "While registering log sink, bad allocation happened: {}", ex.what());
   }
 }
 
 void Logger::removeAllLogSinks() noexcept {
-  auto& telemetry = instance();
-  const absl::MutexLock lock{ &telemetry.sink_mutex_ };
-  telemetry.sinks_.clear();
+  const absl::MutexLock lock{ &sink_mutex_ };
+  sinks_.clear();
 }
 
 void Logger::log(LogEntry&& log_entry) noexcept {
-  auto& telemetry = instance();
+  entries_in_flight_.fetch_add(1, std::memory_order::acquire);
+
   try {
-    const auto dropped = telemetry.entries_.forcePush(std::move(log_entry));
+    const auto dropped = entries_.forcePush(std::move(log_entry));
+
     if (dropped.has_value()) {
+      entries_in_flight_.fetch_sub(1, std::memory_order::relaxed);
+
       fmt::println(stderr,
                    "[DANGER] Log entry dropped as queue is full. This shouldn't happen! Consider extending "
                    "the queue or improving sink processes. Log message is:\n\t{}",
                    *dropped);
     }
   } catch (const std::bad_alloc& ex) {
+    entries_in_flight_.fetch_sub(1, std::memory_order::relaxed);
     fmt::println(stderr, "While pushing log entry, bad allocation happened: {}", ex.what());
   }
 }
 
 void Logger::flush() noexcept {
-  auto& telemetry = instance();
-  telemetry.entries_.waitForEmpty();
+  entries_.waitForEmpty();
+
+  while (entries_in_flight_.load(std::memory_order::acquire) > 0) {
+    std::this_thread::yield();
+  }
 }
 
 void Logger::processEntry(const LogEntry& entry) noexcept {
   const absl::MutexLock lock{ &sink_mutex_ };
+
   if (sinks_.empty()) {
     fmt::println(stderr, "########################################################\n"
                          "REGISTER A LOG SINK TO SEE THE MESSAGES\n"
                          "########################################################\n");
   }
+
   for (auto& sink : sinks_) {
     sink->send(entry);
   }
 }
 
-void Logger::emptyQueue() noexcept {
-  while (!entries_.empty()) {
-    auto message = entries_.tryPop();
-    if (!message.has_value()) {
-      return;
-    }
-
-    processEntry(message.value());
-  }
+[[nodiscard]] auto getLoggerInstance() noexcept -> Logger& {
+  static Logger logger;
+  return logger;
 }
+
 }  // namespace
 
 void internal::log(LogEntry&& log_entry) noexcept {
-  Logger::log(std::move(log_entry));
+  getLoggerInstance().log(std::move(log_entry));
 }
 
 void registerLogSink(std::unique_ptr<ILogSink> sink) noexcept {
-  Logger::registerSink(std::move(sink));
+  getLoggerInstance().registerSink(std::move(sink));
 }
 
 void removeAllLogSinks() noexcept {
-  Logger::removeAllLogSinks();
+  getLoggerInstance().removeAllLogSinks();
 }
 
 void flushLogEntries() {
-  Logger::flush();
+  getLoggerInstance().flush();
 }
+
 }  // namespace heph::telemetry

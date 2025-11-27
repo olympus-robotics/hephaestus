@@ -44,5 +44,8 @@ heph_cc_library(
 heph_cc_test(
     name = "panic_tests",
     srcs = ["tests/panic_tests.cpp"],
-    deps = [":error_handling"],
+    deps = [
+        ":error_handling",
+        "//modules/telemetry/log",
+    ],
 )

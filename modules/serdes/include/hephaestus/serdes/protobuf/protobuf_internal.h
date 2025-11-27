@@ -39,7 +39,7 @@ void fromProtobuf(DeserializerBuffer& buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto res = buffer.deserialize(proto);
-  panicIf(!res, "Failed to parse {} from incoming buffer", utils::getTypeName<T>());
+  HEPH_PANIC_IF(!res, "Failed to parse {} from incoming buffer", utils::getTypeName<T>());
 
   fromProto(proto, data);
 }

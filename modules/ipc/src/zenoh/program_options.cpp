@@ -26,9 +26,9 @@ constexpr auto ZENOH_CONFIG_FILE_ENV_VAR = "ZENOH_CONFIG_PATH";
 constexpr auto TOPICS_LIST_SPLIT_CHAR = ',';
 
 [[nodiscard]] auto splitTopicsList(const std::string& topics_list) -> std::vector<std::string> {
-  panicIf(topics_list.empty(), "Empty topics list");
+  HEPH_PANIC_IF(topics_list.empty(), "Empty topics list");
   std::vector<std::string> topics = absl::StrSplit(topics_list, TOPICS_LIST_SPLIT_CHAR);
-  panicIf(topics.empty(), "Invalid topics list: {}", topics_list);
+  HEPH_PANIC_IF(topics.empty(), "Invalid topics list: {}", topics_list);
   return topics;
 }
 }  // namespace

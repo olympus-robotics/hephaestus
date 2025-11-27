@@ -66,7 +66,7 @@ template <class T>
   options.add_whitespace = true;
   options.always_print_fields_with_no_presence = true;
   auto status = google::protobuf::util::MessageToJsonString(proto, &json_string, options);
-  panicIf(!status.ok(), "failed to convert proto message to JSON with error: {}", status.message());
+  HEPH_PANIC_IF(!status.ok(), "failed to convert proto message to JSON with error: {}", status.message());
 
   return json_string;
 }
@@ -79,7 +79,7 @@ template <class T>
 
   std::string txt_string;
   const auto success = google::protobuf::TextFormat::PrintToString(proto, &txt_string);
-  panicIf(!success, "failed to serialize message to text");
+  HEPH_PANIC_IF(!success, "failed to serialize message to text");
 
   return txt_string;
 }
@@ -95,7 +95,7 @@ void deserializeFromJSON(std::string_view buffer, T& data) {
   using Proto = ProtoAssociation<T>::Type;
   Proto proto;
   auto status = google::protobuf::util::JsonStringToMessage(buffer, &proto);
-  panicIf(!status.ok(), "failed to load proto message from JSON with error: {}", status.message());
+  HEPH_PANIC_IF(!status.ok(), "failed to load proto message from JSON with error: {}", status.message());
 
   fromProto(proto, data);
 }
@@ -106,7 +106,7 @@ void deserializeFromText(std::string_view buffer, T& data) {
   Proto proto;
 
   const auto success = google::protobuf::TextFormat::ParseFromString(buffer, &proto);
-  panicIf(!success, "failed to deserialize message from text");
+  HEPH_PANIC_IF(!success, "failed to deserialize message from text");
 
   fromProto(proto, data);
 }

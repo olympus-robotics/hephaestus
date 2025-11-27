@@ -59,8 +59,8 @@ RawPublisher::RawPublisher(SessionPtr session, TopicConfig topic_config, serdes:
             generateLivelinessTokenKeyexpr(topic_config_.name, session_->zenoh_session.get_zid(),
                                            EndpointType::PUBLISHER),
             ::zenoh::Session::LivelinessDeclarationOptions::create_default(), &result));
-    panicIf(result != Z_OK, "[Publisher {}] failed to create liveliness token, result {}", topic_config_.name,
-            result);
+    HEPH_PANIC_IF(result != Z_OK, "[Publisher {}] failed to create liveliness token, result {}",
+                  topic_config_.name, result);
   }
 
   if (match_cb_) {

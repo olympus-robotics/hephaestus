@@ -95,7 +95,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
                                      const TopicSubscriberWithTypeCallback& subscriber_cb) {
   const absl::MutexLock lock(&mutex_sub_);
 
-  panicIf(hasSubscriberImpl(topic), "Subscriber for topic '{}' already exists!", topic);
+  HEPH_PANIC_IF(hasSubscriberImpl(topic), "Subscriber for topic '{}' already exists!", topic);
 
   auto subscriber_config =
       ipc::zenoh::SubscriberConfig{ .cache_size = std::nullopt,
@@ -120,7 +120,7 @@ void IpcEntityManager::addSubscriber(const std::string& topic, const serdes::Typ
 void IpcEntityManager::removeSubscriber(const std::string& topic) {
   const absl::MutexLock lock(&mutex_sub_);
 
-  panicIf(!hasSubscriberImpl(topic), "Subscriber for topic '{}' does NOT exist!", topic);
+  HEPH_PANIC_IF(!hasSubscriberImpl(topic), "Subscriber for topic '{}' does NOT exist!", topic);
   subscribers_.erase(topic);
 }
 
@@ -211,7 +211,8 @@ auto IpcEntityManager::hasPublisher(const std::string& topic) const -> bool {
 void IpcEntityManager::addPublisher(const std::string& topic, const serdes::TypeInfo& topic_type_info) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  panicIf(publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' already exists!", topic);
+  HEPH_PANIC_IF(publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' already exists!",
+                topic);
 
   auto publisher_config = ipc::zenoh::PublisherConfig{ .cache_size = std::nullopt,
                                                        .create_liveliness_token = true,
@@ -229,8 +230,8 @@ void IpcEntityManager::addPublisher(const std::string& topic, const serdes::Type
 void IpcEntityManager::removePublisher(const std::string& topic) {
   const absl::MutexLock lock(&mutex_pub_);
 
-  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
-          topic);
+  HEPH_PANIC_IF(!publishers_.contains(topic),
+                "[IPC Interface] - Publisher for topic '{}' does NOT already exists!", topic);
 
   publishers_.erase(topic);
 }
@@ -238,8 +239,8 @@ void IpcEntityManager::removePublisher(const std::string& topic) {
 auto IpcEntityManager::publishMessage(const std::string& topic, std::span<const std::byte> data) -> bool {
   const absl::MutexLock lock(&mutex_pub_);
 
-  panicIf(!publishers_.contains(topic), "[IPC Interface] - Publisher for topic '{}' does NOT already exists!",
-          topic);
+  HEPH_PANIC_IF(!publishers_.contains(topic),
+                "[IPC Interface] - Publisher for topic '{}' does NOT already exists!", topic);
 
   return publishers_[topic]->publish(data);
 }

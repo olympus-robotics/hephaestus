@@ -61,7 +61,7 @@ auto main(int argc, const char* argv[]) -> int {
 
       fmt::println("Publishing Data ('{} : {})", topic_config.name, pose);
       auto res = publisher.publish(pose);
-      heph::panicIf(!res, "failed to publish message");
+      HEPH_PANIC_IF(!res, "failed to publish message");
 
       std::this_thread::sleep_for(LOOP_WAIT);
     }

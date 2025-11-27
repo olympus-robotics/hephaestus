@@ -16,33 +16,41 @@
 namespace heph {
 
 namespace error_handling::detail {
+
 /// @brief  Wrapper around string literals to enhance them with a location.
 ///         Note that the message is not owned by this class.
 ///         String literals are used to enable implicit conversion from string literals.
 ///         The standard guarantees that string literals exist for the entirety of the
 ///         program lifetime, making it safe to use as `StringLiteralWithLocation("my message")`.
 template <typename... Ts>
-struct StringLiteralWithLocationImpl final {
+struct StringLiteralWithLocation final {
   /// @brief Constructor taking a string literal and optional source location
   /// @param s The string literal message
   /// @param l The source location (defaults to current location)
   template <typename S>
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval StringLiteralWithLocationImpl(const S& s,
-                                          const std::source_location& l = std::source_location::current())
+  consteval StringLiteralWithLocation(const S& s,
+                                      const std::source_location& l = std::source_location::current())
     : value(s), location(l) {
+    ;
   }
 
   fmt::format_string<Ts...> value;  ///< The message string literal
   std::source_location location;    ///< Source code location information
-
-  using impl = StringLiteralWithLocationImpl;
 };
 
-template <typename... Ts>
-using StringLiteralWithLocation = detail::StringLiteralWithLocationImpl<Ts...>::impl;
+template <typename T>
+struct NonDeduced {
+  using type = T;
+};
 
 void panicImpl(const std::source_location& location, const std::string& formatted_message);
+
+template <typename... Args>
+void panic(typename NonDeduced<StringLiteralWithLocation<Args...>>::type message, Args&&... args) {
+  auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
+  panicImpl(message.location, formatted_message);
+}
 
 }  // namespace error_handling::detail
 
@@ -52,23 +60,24 @@ void panicImpl(const std::source_location& location, const std::string& formatte
 ///
 /// @param message A message describing the error and what caused it
 /// @param location Location in the source where the error was triggered at
-template <typename... Args>
-void panic(error_handling::detail::StringLiteralWithLocation<Args...> message, Args&&... args) {
-  auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
-  error_handling::detail::panicImpl(message.location, formatted_message);
-}
+using error_handling::detail::panic;
 
-/// @brief  User function to panic on condition lazily formatting the message. The whole code should be
+/// @brief  Macro to panic on condition lazily formatting the message. The whole code should be
 /// considered noexcept. Will use CHECK if DISABLE_EXCEPTIONS = ON
 /// @param condition Condition whether to panic
 /// @param message A message describing the error and what caused it
-/// @param location Location in the source where the error was triggered at
-template <typename... Args>
-void panicIf(bool condition, error_handling::detail::StringLiteralWithLocation<Args...> message,
-             Args&&... args) {
-  if (condition) [[unlikely]] {
-    panic(std::move(message), std::forward<Args>(args)...);
-  }
-}
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define HEPH_PANIC_IF(condition, message, ...)                                                               \
+  do {                                                                                                       \
+    if (condition) [[unlikely]] {                                                                            \
+      constexpr auto SRC_LOCATION = ::std::source_location::current();                                       \
+                                                                                                             \
+      [&]<typename... Args>(Args&&... args) {                                                                \
+        ::heph::panic(                                                                                       \
+            ::heph::error_handling::detail::StringLiteralWithLocation<Args...>(message, SRC_LOCATION),       \
+            ::std::forward<Args>(args)...);                                                                  \
+      }(__VA_ARGS__);                                                                                        \
+    }                                                                                                        \
+  } while (false)
 
 }  // namespace heph

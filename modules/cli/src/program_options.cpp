@@ -44,14 +44,15 @@ ProgramDescription::ProgramDescription(std::string brief) : brief_(std::move(bri
 
 void ProgramDescription::checkOptionAlreadyExists(const std::string& key, char k) const {
   const auto it = std::ranges::find_if(options_, [&key](const auto& opt) { return key == opt.key; });
-  panicIf(it != options_.end(), "Attempted redefinition of option '{}'", key);
+  HEPH_PANIC_IF(it != options_.end(), "Attempted redefinition of option '{}'", key);
 
   if (k == '\0') {
     return;
   }
 
   const auto short_it = std::ranges::find_if(options_, [k](const auto& opt) { return k == opt.short_key; });
-  panicIf(short_it != options_.end(), "Attempted redefinition of short key '{}' for option '{}'", k, key);
+  HEPH_PANIC_IF(short_it != options_.end(), "Attempted redefinition of short key '{}' for option '{}'", k,
+                key);
 }
 
 auto ProgramDescription::defineFlag(const std::string& key, char short_key, const std::string& description)
@@ -91,10 +92,10 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
     }
 
     ++arg_it;
-    panicIf(arg_it == args.end(), "After option --{} there is supposed to be a value", option.key);
+    HEPH_PANIC_IF(arg_it == args.end(), "After option --{} there is supposed to be a value", option.key);
     const auto is_option = arg_it->starts_with('-') && arg_it->size() > 1 && std::isdigit((*arg_it)[1]) == 0;
-    panicIf(is_option, "Option --{} is supposed to be followed by a value, not another option {}", option.key,
-            *arg_it);
+    HEPH_PANIC_IF(is_option, "Option --{} is supposed to be followed by a value, not another option {}",
+                  option.key, *arg_it);
 
     option.value = *arg_it;
     option.is_specified = true;
@@ -102,7 +103,8 @@ auto ProgramDescription::parse(const std::vector<std::string>& args) && -> Progr
 
   // check all required arguments are specified
   for (const auto& entry : options_) {
-    panicIf(entry.is_required and not entry.is_specified, "Required option '{}' not specified", entry.key);
+    HEPH_PANIC_IF(entry.is_required and not entry.is_specified, "Required option '{}' not specified",
+                  entry.key);
   }
 
   return ProgramOptions(std::move(options_));
@@ -113,12 +115,12 @@ auto ProgramDescription::getOptionFromArg(const std::string& arg) -> ProgramOpti
     const auto key = arg.substr(2);
     const auto it = std::ranges::find_if(options_, [&key](const auto& opt) { return key == opt.key; });
 
-    panicIf(it == options_.end(), "Undefined option '{}'", key);
+    HEPH_PANIC_IF(it == options_.end(), "Undefined option '{}'", key);
     return *it;
   }
 
   if (arg.starts_with("-")) {
-    panicIf(arg.size() != 2, "Undefined option '{}'", arg.substr(1));
+    HEPH_PANIC_IF(arg.size() != 2, "Undefined option '{}'", arg.substr(1));
     const auto short_key = arg[1];
     const auto it =
         std::ranges::find_if(options_, [short_key](const auto& opt) { return short_key == opt.short_key; });
