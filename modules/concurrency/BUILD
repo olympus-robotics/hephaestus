@@ -95,6 +95,12 @@ heph_cc_test(
 )
 
 heph_cc_test(
+    name = "any_sender_tests",
+    srcs = ["tests/any_sender_tests.cpp"],
+    deps = [":concurrency"],
+)
+
+heph_cc_test(
     name = "queue_consumer_tests",
     srcs = ["tests/queue_consumer_tests.cpp"],
     deps = [
