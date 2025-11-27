@@ -15,17 +15,11 @@
 #include <stdexec/execution.hpp>
 
 namespace heph::concurrency {
-#ifdef DOXYGEN
-/// Type-erased scheduler to be used as a stdexec::scheduler
-struct AnyScheduler {};
-#else
 namespace internal {
 using AnySchedulerCompletions =
     stdexec::completion_signatures<stdexec::set_error_t(std::exception_ptr), stdexec::set_stopped_t()>;
-}
-using AnyScheduler = exec::any_receiver_ref<internal::AnySchedulerCompletions>::any_sender<>::any_scheduler<>;
+using AnyScheduler = exec::any_receiver_ref<AnySchedulerCompletions>::any_sender<>::any_scheduler<>;
 static_assert(stdexec::scheduler<AnyScheduler>);
-#endif
 
 /// Type erasing implementation for a stdexec environment forwarding a \ref AnyScheduler for
 /// `stdexec::get_scheduler` and `stdexec::get_delegation_scheduler` as well as forwarding
@@ -97,7 +91,6 @@ private:
   std::unique_ptr<Base> impl_;
 };
 
-#ifndef DOXYGEN
 template <typename T>
 class AnyReceiver {
   using TypeT = std::conditional_t<std::is_same_v<T, void>, decltype(std::ignore), T>;
@@ -219,7 +212,29 @@ public:
 private:
   std::unique_ptr<Base> impl_;
 };
-#endif
+
+template <typename T>
+struct AnySenderBase {
+  virtual ~AnySenderBase() = default;
+
+  virtual auto doConnect(internal::AnyReceiver<T> receiver) -> internal::AnyOperation = 0;
+};
+
+template <typename T, typename Sender>
+struct AnySenderImpl : AnySenderBase<T> {
+  static_assert(!std::is_const_v<Sender>);
+  static_assert(!std::is_reference_v<Sender>);
+  Sender sender;
+  template <typename SenderT>
+    requires(std::is_same_v<std::decay_t<SenderT>, Sender>)
+  explicit AnySenderImpl(SenderT&& outer_sender) : sender(std::forward<SenderT>(outer_sender)) {
+  }
+
+  auto doConnect(internal::AnyReceiver<T> receiver) -> internal::AnyOperation final {
+    return internal::AnyOperation{ std::move(sender), std::move(receiver) };
+  }
+};
+}  // namespace internal
 
 template <typename T>
 class AnySender;
@@ -239,39 +254,15 @@ using SelectValueCompletionT = typename SelectValueCompletion<T>::TypeT;
 template <typename Sender, typename T>
 concept AnySenderRequirements =
     !std::is_same_v<std::decay_t<Sender>, AnySender<T>> &&
-    (stdexec::sender_of<Sender, SelectValueCompletionT<T>, concurrency::AnyEnv> ||
-     stdexec::sender_of<Sender, stdexec::set_stopped_t(), concurrency::AnyEnv> ||
-     stdexec::sender_of<Sender, stdexec::set_error_t(std::exception_ptr), concurrency::AnyEnv>);
+    (stdexec::sender_of<Sender, SelectValueCompletionT<T>, internal::AnyEnv> ||
+     stdexec::sender_of<Sender, stdexec::set_stopped_t(), internal::AnyEnv> ||
+     stdexec::sender_of<Sender, stdexec::set_error_t(std::exception_ptr), internal::AnyEnv>);
 
 /// Implementation for a type erased sender.
-///
-/// Injects \ref AnyEnv to be able to schedule dependant tasks and react on cancellation requests
 ///
 /// @tparam T The value this sender completes with
 template <typename T>
 class AnySender {
-#ifndef DOXYGEN
-  struct Base {
-    virtual ~Base() = default;
-
-    virtual auto doConnect(AnyReceiver<T> receiver) -> AnyOperation = 0;
-  };
-  template <typename Sender>
-  struct Impl : Base {
-    static_assert(!std::is_const_v<Sender>);
-    static_assert(!std::is_reference_v<Sender>);
-    Sender sender;
-    template <typename SenderT>
-      requires(std::is_same_v<std::decay_t<SenderT>, Sender>)
-    explicit Impl(SenderT&& outer_sender) : sender(std::forward<SenderT>(outer_sender)) {
-    }
-
-    auto doConnect(AnyReceiver<T> receiver) -> AnyOperation final {
-      return AnyOperation{ std::move(sender), std::move(receiver) };
-    }
-  };
-#endif
-
 public:
   using sender_concept = stdexec::sender_t;
   using completion_signatures =
@@ -280,7 +271,7 @@ public:
 
   template <AnySenderRequirements<T> Sender, typename SenderT = std::decay_t<Sender>>
   AnySender(Sender&& sender)  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-    : impl_(std::make_unique<Impl<SenderT>>(std::forward<Sender>(sender))) {
+    : impl_(std::make_unique<internal::AnySenderImpl<T, SenderT>>(std::forward<Sender>(sender))) {
   }
 
   ~AnySender() = default;
@@ -291,10 +282,10 @@ public:
 
   template <stdexec::receiver_of<completion_signatures> Receiver>
   auto connect(Receiver&& receiver) {
-    return impl_->doConnect(AnyReceiver<T>{ std::forward<Receiver>(receiver) });
+    return impl_->doConnect(internal::AnyReceiver<T>{ std::forward<Receiver>(receiver) });
   }
 
 private:
-  std::unique_ptr<Base> impl_;
+  std::unique_ptr<internal::AnySenderBase<T>> impl_;
 };
 }  // namespace heph::concurrency
