@@ -75,14 +75,12 @@ TEST(AnySender, JustValue) {
 
   // Test compatibility with coroutines
   {
-    ;
     auto coroutine = []() -> exec::task<int> { co_return co_await AnySender<int>{ stdexec::just(1) }; };
     auto res = stdexec::sync_wait(coroutine());
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(std::get<0>(*res), 1);
   }
   {
-    ;
     auto coroutine = []() -> exec::task<int> {
       co_return co_await AnySender<int>{ stdexec::just_stopped() };
     };
