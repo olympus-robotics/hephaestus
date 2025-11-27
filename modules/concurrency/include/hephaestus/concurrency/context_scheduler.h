@@ -6,20 +6,17 @@
 
 #include <chrono>
 #include <exception>
-#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
-#include <liburing/io_uring.h>
 #include <stdexec/__detail/__execution_fwd.hpp>
-#include <stdexec/__detail/__tag_invoke.hpp>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/basic_sender.h"
-#include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
 #include "hephaestus/concurrency/io_ring/timer.h"
+#include "hephaestus/concurrency/stoppable_operation_state.h"
 
 namespace heph::concurrency {
 class Context;
@@ -27,7 +24,7 @@ struct ContextScheduleT {};
 struct ContextScheduleAtT {};
 
 struct ContextScheduler {
-  Context* self;
+  Context* self{ nullptr };
 
   [[nodiscard]] auto context() const -> Context& {
     return *self;
@@ -55,24 +52,6 @@ struct ContextScheduler {
   friend auto operator<=>(const ContextScheduler&, const ContextScheduler&) = default;
 };
 
-struct GetContextT : stdexec::__query<GetContextT> {
-  static constexpr auto query(stdexec::forwarding_query_t /*unused*/) noexcept -> bool {
-    return true;
-  }
-  template <typename Env>
-    requires stdexec::tag_invocable<GetContextT, const Env&>
-  auto operator()(const Env& env) const noexcept -> stdexec::tag_invoke_result_t<GetContextT, const Env&> {
-    static_assert(stdexec::nothrow_tag_invocable<GetContextT, const Env&>);
-    return stdexec::tag_invoke(GetContextT{}, env);
-  }
-
-  template <typename Tag = GetContextT>
-  auto operator()() const noexcept;
-};
-
-// NOLINTNEXTLINE(readability-identifier-naming)
-static constexpr GetContextT getContext{};
-
 struct ContextEnv {
   Context* self;
 
@@ -85,29 +64,13 @@ struct ContextEnv {
       -> ContextScheduler {
     return { self };
   }
-
-  [[nodiscard]] auto query(stdexec::get_stop_token_t /*ignore*/) const noexcept
-      -> stdexec::inplace_stop_token;
-
-  [[nodiscard]] auto query(GetContextT /*ignore*/) const noexcept -> Context&;
-};
-
-struct TaskBase;
-struct TaskDispatchOperation : io_ring::IoRingOperationBase {
-  explicit TaskDispatchOperation(TaskBase* task) noexcept : self(task) {
-  }
-
-  void handleCompletion(::io_uring_cqe* cqe) final;
-  TaskBase* self;
 };
 
 struct TaskBase {
   virtual ~TaskBase() = default;
   virtual void start() noexcept = 0;
   virtual void setValue() noexcept = 0;
-  virtual void setStopped() noexcept = 0;
 
-  TaskDispatchOperation dispatch_operation{ this };
   TaskBase* next{ nullptr };
   TaskBase* prev{ nullptr };
 };
@@ -126,64 +89,78 @@ struct Task : TaskBase {
   }
 
   void setValue() noexcept final {
+    auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
+    if (stop_token.stop_requested()) {
+      stdexec::set_stopped(std::move(receiver));
+      return;
+    }
     stdexec::set_value(std::move(receiver));
-  }
-
-  void setStopped() noexcept final {
-    stdexec::set_stopped(std::move(receiver));
   }
 };
 
 template <typename ReceiverT, typename ContextT>
-struct TimedTask : TaskBase {
-  struct StopCallback {
-    void operator()() const noexcept {
-      self->setStopped();
-    }
-    TimedTask* self;
-  };
-  using ReceiverEnvT = stdexec::env_of_t<ReceiverT>;
-  using StopTokenT = stdexec::stop_token_of_t<ReceiverEnvT>;
-  using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, StopCallback>;
+struct TimedTask : TimedTaskBase {
+  struct Receiver {
+    using receiver_concept = stdexec::receiver_t;
 
-  ContextT* context{ nullptr };
+    // NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
+    void set_value() noexcept {
+      self->task.start();
+    }
+    void set_stopped() noexcept {
+      stdexec::set_stopped(std::move(self->task.receiver));
+    }
+
+    template <typename Error>
+    void set_error(Error&& /*error*/) noexcept {
+    }
+
+    [[nodiscard]] auto get_env() const noexcept {
+      return stdexec::get_env(self->task.receiver);
+    }
+    // NOLINTEND(readability-identifier-naming)
+
+    TimedTask* self{ nullptr };
+  };
+
+  Task<ReceiverT, ContextT> task;
   io_ring::TimerClock::time_point start_time;
-  ReceiverT receiver;
-  std::optional<StopCallbackT> stop_callback;
-  bool timeout_started{ false };
+  StoppableOperationState<Receiver> operation_state;
 
   template <typename Clock, typename Duration>
   TimedTask(Context* context_input, std::chrono::time_point<Clock, Duration> start_time_input,
             ReceiverT&& receiver_input)
-    : context(context_input)
+    : task(context_input, std::move(receiver_input))
     , start_time(std::chrono::time_point_cast<io_ring::TimerClock::duration>(start_time_input))
-    , receiver(std::move(receiver_input)) {
+    , operation_state(Receiver{ this }, [this]() { dequeue(); }) {
+  }
+
+  TimedTask(TimedTask&& other) = delete;
+  auto operator=(TimedTask&& other) -> TimedTask& = delete;
+  TimedTask(const TimedTask& other) = delete;
+  auto operator=(const TimedTask& other) -> TimedTask& = delete;
+
+  ~TimedTask() override {
+    task.context->dequeueTimer(this);
+  }
+
+  void start() noexcept {
     // Avoid putting it the task in the timer when the deadline was already exceeded...
     if (start_time <= io_ring::TimerClock::now()) {
-      timeout_started = true;
-    }
-  }
-
-  void start() noexcept final {
-    if (!timeout_started) {
-      auto stop_token = stdexec::get_stop_token(stdexec::get_env(receiver));
-      stop_callback.emplace(stop_token, StopCallback{ this });
-      timeout_started = true;
-      context->enqueueAt(this, start_time);
+      task.start();
       return;
     }
-    context->enqueue(this);
+    auto start_transition = operation_state.start();
+
+    task.context->enqueueAt(this, start_time);
   }
 
-  void setValue() noexcept final {
-    stop_callback.reset();
-    stdexec::set_value(std::move(receiver));
+  void startTask() noexcept final {
+    operation_state.setValue();
   }
 
-  void setStopped() noexcept final {
-    context->dequeueTimer(this);
-    stop_callback.reset();
-    stdexec::set_stopped(std::move(receiver));
+  void dequeue() noexcept {
+    task.context->dequeueTimer(this);
   }
 };
 

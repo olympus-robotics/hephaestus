@@ -4,54 +4,152 @@
 
 #pragma once
 
+#include <atomic>
+#include <chrono>
+#include <cstddef>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
-#include <hephaestus/conduit/detail/node_base.h>
-#include <stdexec/execution.hpp>
-
-#include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/conduit/node.h"
-#include "hephaestus/utils/utils.h"
+#include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/concurrency/when_all_range.h"
+#include "hephaestus/conduit/basic_input.h"
+#include "hephaestus/conduit/clock.h"
+#include "hephaestus/conduit/forwarding_output.h"
+#include "hephaestus/conduit/output_base.h"
+#include "hephaestus/conduit/partner_output.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/error_handling/panic.h"
 
 namespace heph::conduit {
 
-class NodeEngine;
+template <typename T, std::size_t Capacity>
+struct Output : public OutputBase {
+  static constexpr bool OVERWRITE = Capacity == OVERWRITE_POLICY;
+  static constexpr auto QUEUE_DEPTH = OVERWRITE ? 1 : Capacity;
 
-template <typename T>
-class Output {
-public:
-  using ResultT = T;
-  template <typename OperationT, typename DataT>
-  explicit Output(Node<OperationT, DataT>* node, std::string name) : outputs_(node, std::move(name)) {
-    if (node != nullptr) {
-      node->addOutputSpec([this, node] {
-        return detail::OutputSpecification{
-          .name = outputs_.rawName(),
-          .node_name = node->nodeName(),
-          .type = heph::utils::getTypeName<T>(),
-        };
-      });
-      if (node->enginePtr() != nullptr) {
-        node->engine().registerOutput(*this);
-      }
+  explicit Output(std::string_view name) : OutputBase(name) {
+  }
+
+  void operator()(T value) {
+    if (!enabled_.load(std::memory_order_acquire)) {
+      return;
+    }
+    if (!buffer_.push(std::move(value))) {
+      heph::panic("No space left");
     }
   }
 
-  auto name() {
-    return outputs_.name();
+  auto trigger(SchedulerT scheduler) -> concurrency::AnySender<void> final {
+    return triggerImpl(scheduler);
   }
 
-  auto setValue(NodeEngine& engine, T t) {
-    return stdexec::just(std::move(t)) | outputs_.propagate(engine);
+  void connect(TypedInput<T>& input) {
+    inputs_.push_back(&input);
   }
 
-  template <typename Input>
-  void registerInput(Input* input) {
-    outputs_.registerInput(input);
+  void connectToPartner(TypedInput<T>& input) {
+    partner_outputs_.emplace_back(input);
+  }
+
+  auto setPartner(const std::string& prefix, const std::string& partner) -> std::vector<PartnerOutputBase*> {
+    std::vector<PartnerOutputBase*> res;
+    for (auto& output : partner_outputs_) {
+      res.push_back(output.setPartner(prefix, partner));
+    }
+    return res;
+  }
+
+  auto getOutgoing() -> std::vector<std::string> final {
+    std::vector<std::string> res;
+    for (auto& output : partner_outputs_) {
+      res.push_back(output.name());
+    }
+    for (auto* input : inputs_) {
+      res.push_back(input->name());
+    }
+    for (auto* output : forwarding_outputs_) {
+      res.push_back(output->name());
+    }
+    return res;
+  }
+  auto getIncoming() -> std::vector<std::string> final {
+    std::vector<std::string> res;
+    return res;
+  }
+
+  void disable() {
+    enabled_.store(false, std::memory_order_release);
   }
 
 private:
-  detail::OutputConnections outputs_;
+  auto triggerImpl(SchedulerT scheduler) -> concurrency::AnySender<void> {
+    std::vector<concurrency::AnySender<void>> input_triggers;
+
+    // Renable deadlock detection!
+    (void)scheduler;
+
+    while (true) {
+      auto value = buffer_.pop();
+      if (!value.has_value()) {
+        break;
+      }
+      for (auto& output : partner_outputs_) {
+        input_triggers.emplace_back(                           /*exec::when_any(
+                                       scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                               // timeout callback
+                                                                               [this, &output]() {
+                                                                                 heph::panic("{}: Failed to set input {} within {}",
+                                                                                             this->name(), output.name(), timeout_);
+                                                                               }),*/
+                                    output.setValue(*value));  //);
+      }
+      for (auto* input : inputs_) {
+        input_triggers.emplace_back(                           /*exec::when_any(
+                                       scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                               // timeout callback
+                                                                               [this, input]() {
+                                                                                 heph::panic("{}: Failed to set input {} within {}",
+                                                                                             this->name(), input->name(), timeout_);
+                                                                               }),*/
+                                    input->setValue(*value));  //);
+      }
+      for (auto* forwarding : forwarding_outputs_) {
+        for (auto* input : forwarding->inputs_) {
+          input_triggers.emplace_back(                           /*exec::when_any(
+                                         scheduler.scheduleAfter(timeout_) | stdexec::then(
+                                                                                 // timeout callback
+                                                                                 [this, input]() {
+                                                                                   heph::panic("{}: Failed to set input {} within {}",
+                                                                                               this->name(), input->name(), timeout_);
+                                                                                 }),*/
+                                      input->setValue(*value));  //);
+        }
+      }
+    }
+    return concurrency::whenAllRange(std::move(input_triggers));
+  }
+
+private:
+  template <typename U>
+  friend struct ForwardingOutput;
+
+  concurrency::internal::CircularBuffer<T, QUEUE_DEPTH> buffer_;
+  std::vector<TypedInput<T>*> inputs_;
+  std::vector<PartnerOutput<T, Capacity>> partner_outputs_;
+  std::vector<ForwardingOutput<T>*> forwarding_outputs_;
+  // TODO: (heller) make this configurable, together with what to do on timeout...
+  static constexpr auto DEFAULT_TIMEOUT = std::chrono::seconds{ 10 };
+  ClockT::duration timeout_{ DEFAULT_TIMEOUT };
+  std::atomic<bool> enabled_{ true };
 };
+
+template <typename T>
+template <std::size_t Capacity>
+void ForwardingOutput<T>::forward(Output<T, Capacity>& output) {
+  output.forwarding_outputs_.push_back(this);
+}
 }  // namespace heph::conduit

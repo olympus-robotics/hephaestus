@@ -5,6 +5,7 @@
 #pragma once
 
 #include <exception>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -50,30 +51,18 @@ struct RepeatUntilStateT {
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     void set_value(bool done) const noexcept {
-      if (done) {
-        stdexec::set_value(std::move(self->receiver));
-        return;
-      }
-      self->start();
+      self->next(done);
     }
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     void set_stopped() const noexcept {
-      stdexec::set_stopped(std::move(self->receiver));
+      self->setStopped();
     }
 
     template <typename Error>
     // NOLINTNEXTLINE(readability-identifier-naming)
     void set_error(Error error) const noexcept {
-      if constexpr (std::is_same_v<std::decay_t<Error>, std::exception_ptr>) {
-        stdexec::set_error(std::move(self->receiver), std::move(error));
-      } else {
-        try {
-          throw error;
-        } catch (...) {
-          stdexec::set_error(std::move(self->receiver), std::current_exception());
-        }
-      }
+      self->setError(std::move(error));
     }
 
     // NOLINTNEXTLINE(readability-identifier-naming)
@@ -83,9 +72,18 @@ struct RepeatUntilStateT {
   };
   SenderFactoryT sender_factory;
   ReceiverT receiver;
+
   stdexec::__optional<stdexec::connect_result_t<SenderT, InnerReceiverT>> state;
 
   void start() {
+    next(false);
+  }
+
+  void next(bool done) {
+    if (done) {
+      stdexec::set_value(std::move(receiver));
+      return;
+    }
     try {
       state.emplace(stdexec::__emplace_from{
           [this]() { return stdexec::connect(sender_factory(), InnerReceiverT{ this }); } });
@@ -95,6 +93,22 @@ struct RepeatUntilStateT {
       return;
     }
     stdexec::start(*state);
+  }
+
+  void setStopped() {
+    stdexec::set_stopped(std::move(receiver));
+  }
+
+  template <typename Error>
+  void setError(Error error) noexcept {
+    if constexpr (std::is_same_v<std::decay_t<Error>, std::exception_ptr>) {
+      stdexec::set_error(std::move(receiver), std::move(error));
+    }
+    if constexpr (std::is_same_v<std::decay_t<Error>, std::error_code>) {
+      stdexec::set_error(std::move(receiver), std::make_exception_ptr(std::system_error(std::move(error))));
+    } else {
+      stdexec::set_error(std::move(receiver), std::make_exception_ptr(std::move(error)));
+    }
   }
 };
 
@@ -108,12 +122,15 @@ struct SenderExpressionImpl<RepeatUntilT> : DefaultSenderExpressionImpl {
                                           stdexec::set_stopped_t()>{};
   };
   static constexpr auto GET_STATE = []<typename Sender, typename Receiver>(Sender&& sender,
-                                                                           Receiver&& receiver) noexcept {
+                                                                           Receiver receiver) noexcept {
     auto [_, sender_factory] = std::forward<Sender>(sender);
     using SenderFactoryT = std::decay_t<stdexec::__data_of<Sender>>;
     using ReceivertT = std::decay_t<Receiver>;
-    return internal::RepeatUntilStateT<SenderFactoryT, ReceivertT>{ std::move(sender_factory),
-                                                                    std::forward<Receiver>(receiver) };
+    return internal::RepeatUntilStateT<SenderFactoryT, ReceivertT>{
+      .sender_factory = std::move(sender_factory),
+      .receiver = std::move(receiver),
+      .state = {},
+    };
   };
   static constexpr auto START = []<typename Receiver>(auto& self, Receiver&& /*receiver*/) { self.start(); };
 };

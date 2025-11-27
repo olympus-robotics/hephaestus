@@ -9,15 +9,21 @@
 #include <optional>
 #include <vector>
 
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
+#include <stdexec/stop_token.hpp>
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 
 namespace heph::concurrency {
-struct TaskBase;
-}
+struct TimedTaskBase {
+  virtual ~TimedTaskBase() = default;
+  virtual void startTask() noexcept = 0;
+};
+}  // namespace heph::concurrency
 namespace heph::concurrency::io_ring {
 
 enum class ClockMode : std::uint8_t { WALLCLOCK, SIMULATED };
@@ -42,11 +48,12 @@ struct TimerClock {
 
   static auto now() -> time_point;
 
+  static absl::Mutex timer_mutex;
   static Timer* timer;
 };
 
 struct TimerEntry {
-  TaskBase* task{ nullptr };
+  TimedTaskBase* task{ nullptr };
   TimerClock::time_point start_time;
 
   friend auto operator<=>(const TimerEntry& lhs, const TimerEntry& rhs) {
@@ -59,16 +66,14 @@ public:
   explicit Timer(IoRing& ring, TimerOptions options);
   ~Timer() noexcept;
 
-  auto empty() const -> bool {
-    return tasks_.empty();
-  }
+  [[nodiscard]] auto empty() const -> bool;
 
   void requestStop();
 
   void tick();
 
-  void startAt(TaskBase* task, TimerClock::time_point start_time);
-  void dequeue(TaskBase* task);
+  void startAt(TimedTaskBase* task, TimerClock::time_point start_time);
+  void dequeue(TimedTaskBase* task);
 
   auto now() -> TimerClock::time_point {
     return last_tick_;
@@ -108,16 +113,17 @@ private:
   };
 
   void update(TimerClock::time_point start_time);
-  auto next(bool advance = false) -> TaskBase*;
+  auto next(bool advance = false) -> TimedTaskBase*;
 
   friend struct TimerClock;
 
 private:
   IoRing* ring_;
   __kernel_timespec next_timeout_{};
-  std::optional<StoppableIoRingOperation<Operation>> timer_operation_;
-  std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_;
-  std::vector<TimerEntry> tasks_;
+  mutable absl::Mutex mutex_;
+  std::optional<StoppableIoRingOperation<Operation>> timer_operation_ ABSL_GUARDED_BY(mutex_);
+  std::optional<StoppableIoRingOperation<UpdateOperation>> update_timer_operation_ ABSL_GUARDED_BY(mutex_);
+  std::vector<TimerEntry> tasks_ ABSL_GUARDED_BY(mutex_);
 
   TimerClock::time_point start_;
   TimerClock::time_point last_tick_;

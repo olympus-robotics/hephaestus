@@ -2,6 +2,7 @@
 # Copyright (C) 2023-2024 HEPHAESTUS Contributors
 # =================================================================================================
 
+load("@doxygen//:doxygen.bzl", "doxygen")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@hephaestus//bazel:hephaestus.bzl", "heph_cc_api_doc")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
@@ -28,6 +29,7 @@ alias(
 
 refresh_compile_commands(
     name = "refresh_compile_commands",
+    exclude_external_sources = True,  # NOTE: this exclude external cpp files for efficiency, but could be useful to include them for debugging.
     targets = {
         "//modules/...": "",
     },
@@ -49,8 +51,18 @@ sphinx_docs_library(
 )
 
 sphinx_docs_library(
+    name = "headers",
+    srcs = [
+        "//modules/conduit:include/hephaestus/conduit/basic_input.h",
+        "//modules/conduit:include/hephaestus/conduit/input.h",
+    ],
+)
+
+sphinx_docs_library(
     name = "examples",
-    srcs = ["//modules/conduit:examples/mont_blanc.cpp"],
+    srcs = [
+        "//modules/conduit:examples/periodic_spinner.cpp",
+    ],
 )
 
 sphinx_build_binary(
@@ -88,6 +100,7 @@ heph_cc_api_doc(
 )
 
 doc_deps = [
+    ":headers",
     ":examples",
     ":sources",
 ]
@@ -109,6 +122,7 @@ sphinx_docs(
         "html",
     ],
     sphinx = ":sphinx",
+    tags = ["no-sandbox"],
     deps = [
         ":apidoc",
     ] + doc_deps,

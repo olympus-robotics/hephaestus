@@ -5,91 +5,70 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
-#include <optional>
 #include <string>
-#include <type_traits>
+#include <string_view>
 #include <utility>
 #include <vector>
 
-#include "hephaestus/conduit/detail/awaiter.h"
-#include "hephaestus/conduit/detail/input_base.h"
-#include "hephaestus/conduit/input.h"
-#include "hephaestus/conduit/node.h"
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
+#include <stdexec/execution.hpp>
+
+#include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/internal/circular_buffer.h"
+#include "hephaestus/conduit/internal/never_stop.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/conduit/typed_input.h"
+#include "hephaestus/serdes/serdes.h"
 
 namespace heph::conduit {
-template <typename T, typename R, typename F, typename InputPolicy = InputPolicy<>>
-class AccumulatedTransformInputBase
-  : public detail::InputBase<AccumulatedTransformInputBase<T, R, F, InputPolicy>, T, InputPolicy::DEPTH> {
-  using BaseT = detail::InputBase<AccumulatedTransformInputBase<T, R, F, InputPolicy>, T, InputPolicy::DEPTH>;
-
+template <typename T, std::size_t Capacity>
+class AccumulatedInput : public TypedInput<T> {
 public:
-  using ValueT = T;
-  using InputPolicyT = InputPolicy;
-
-  template <typename OperationT, typename DataT>
-  explicit AccumulatedTransformInputBase(Node<OperationT, DataT>* node, F f, std::string name,
-                                         R initial_value = R{})
-    : BaseT(node, std::move(name)), f_{ std::move(f) }, initial_value_(std::move(initial_value)) {
+  explicit AccumulatedInput(std::string_view name) : TypedInput<T>(name) {
   }
 
-  auto peekValue() -> std::optional<R> {
-    if (this->buffer_.size() == 0) {
-      return std::nullopt;
-    }
-    R res{ initial_value_ };
-    for (auto& element : this->buffer_.peekAll()) {
-      res = f_(std::move(element), res);
-    }
-    return res;
+  auto setValue(const std::pmr::vector<std::byte>& buffer) -> concurrency::AnySender<void> final {
+    T value{};
+    serdes::deserialize(buffer, value);
+    return setValue(std::move(value));
   }
 
-  auto getValue() -> std::optional<R> {
-    if (this->buffer_.size() == 0) {
-      return std::nullopt;
+  auto setValue(T t) -> concurrency::AnySender<void> final {
+    const absl::MutexLock lock{ &mutex_ };
+    this->updateTriggerTime();
+    while (!buffer_.push(std::move(t))) {
+      buffer_.pop();
     }
-    R res{ initial_value_ };
-    while (true) {
-      auto element = this->buffer_.pop();
-      if (!element.has_value()) {
-        break;
-      }
-      res = f_(std::move(element.value()), res);
-    }
-    return res;
+    return stdexec::just();
   }
 
-  template <typename Receiver, bool Peek>
-  using Awaiter = detail::Awaiter<AccumulatedTransformInputBase, std::decay_t<Receiver>, Peek>;
+  auto value() -> std::vector<T> {
+    const absl::MutexLock lock{ &mutex_ };
+    return buffer_.popAll();
+  }
+
+  [[nodiscard]] virtual auto getTypeInfo() const -> std::string final {
+    return serdes::getSerializedTypeInfo<T>().toJson();
+  };
 
 private:
-  F f_;
-  R initial_value_;
-};
-
-template <typename T, typename R, typename InputPolicy = InputPolicy<>>
-using AccumulatedTransformInput = AccumulatedTransformInputBase<T, R, std::function<R(T, R&)>, InputPolicy>;
-
-namespace internal {
-template <typename T>
-auto accumulator(T value, std::vector<T>& state) -> std::vector<T> {
-  state.push_back(value);
-  return state;
-}
-}  // namespace internal
-
-template <typename T, typename InputPolicy = InputPolicy<>>
-class AccumulatedInput
-  : public AccumulatedTransformInputBase<T, std::vector<T>, decltype(&internal::accumulator<T>),
-                                         InputPolicy> {
-  using BaseT =
-      AccumulatedTransformInputBase<T, std::vector<T>, decltype(&internal::accumulator<T>), InputPolicy>;
-
-public:
-  template <typename OperationT, typename DataT>
-  explicit AccumulatedInput(Node<OperationT, DataT>* node, std::string name,
-                            std::vector<T> initial_value = std::vector<T>{})
-    : BaseT(node, &internal::accumulator<T>, std::move(name), std::move(initial_value)) {
+  [[nodiscard]] auto doTrigger(SchedulerT /*scheduler*/) -> concurrency::AnySender<bool> final {
+    return internal::NeverStop{};
   }
+
+  void handleCompleted() final {
+  }
+
+  void handleStopped() final {
+  }
+
+  void handleError() final {
+  }
+
+private:
+  std::string_view name_;
+  absl::Mutex mutex_;
+  concurrency::internal::CircularBuffer<T, Capacity> buffer_ ABSL_GUARDED_BY(mutex_);
 };
 }  // namespace heph::conduit

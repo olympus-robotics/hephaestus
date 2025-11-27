@@ -11,18 +11,23 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <system_error>
 
+#include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
 
-#include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/concurrency/io_ring/stoppable_io_ring_operation.h"
 #include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::io_ring {
+// NOLINTNEXTLINE(cert-err58-cpp)
+absl::Mutex TimerClock::timer_mutex{};
 Timer* TimerClock::timer{ nullptr };
 
 auto TimerClock::now() -> time_point {
+  const absl::MutexLock lock{ &TimerClock::timer_mutex };
   if (TimerClock::timer == nullptr) {
     auto now = TimerClock::base_clock::now();
     return time_point{ std::chrono::duration_cast<duration>(now - TimerClock::base_clock::time_point{}) };
@@ -40,56 +45,60 @@ void Timer::Operation::handleCompletion(::io_uring_cqe* cqe) const {
   if (cqe->res < 0 && cqe->res != -ETIME) {
     panic("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message());
   }
-  timer->timer_operation_.reset();
+  {
+    const absl::MutexLock lock{ &timer->mutex_ };
+    timer->timer_operation_.reset();
+  }
 
   timer->tick();
 }
 
 void Timer::Operation::handleStopped() const {
-  while (!timer->tasks_.empty()) {
-    auto entry = timer->tasks_.front();
-
-    std::ranges::pop_heap(timer->tasks_, std::greater<>{});
-    timer->tasks_.pop_back();
-
-    entry.task->setStopped();
-  }
 }
 
 void Timer::UpdateOperation::handleStopped() {
 }
 
 void Timer::requestStop() {
-  if (timer_operation_.has_value()) {
-    timer_operation_->requestStop();
-  }
-  if (update_timer_operation_.has_value()) {
-    update_timer_operation_->requestStop();
-  }
+  {
+    const absl::MutexLock lock{ &mutex_ };
+
+    if (timer_operation_.has_value()) {
+      timer_operation_->requestStop();
+    }
+    if (update_timer_operation_.has_value()) {
+      update_timer_operation_->requestStop();
+    }
+  };
 }
 
 void Timer::update(TimerClock::time_point start_time) {
-  auto since_epoch = start_time.time_since_epoch();
+  StoppableIoRingOperation<UpdateOperation>* update_timer_operation{ nullptr };
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    auto since_epoch = start_time.time_since_epoch();
 
-  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
-  auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(since_epoch - seconds);
-  next_timeout_.tv_sec = seconds.count();
-  next_timeout_.tv_nsec = nanoseconds.count();
-  if (!timer_operation_.has_value()) {
-    timer_operation_.emplace(Operation{ this }, *ring_, ring_->getStopToken());
-    ring_->submit(&timer_operation_.value());
-    return;
-  }
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
+    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(since_epoch - seconds);
+    next_timeout_.tv_sec = seconds.count();
+    next_timeout_.tv_nsec = nanoseconds.count();
+    if (!timer_operation_.has_value()) {
+      timer_operation_.emplace(Operation{ this }, *ring_);
+      ring_->submit(&timer_operation_.value());
+      return;
+    }
 
-  if (update_timer_operation_.has_value()) {
-    return;
+    if (update_timer_operation_.has_value()) {
+      return;
+    }
+    update_timer_operation_.emplace(UpdateOperation{ .timer = this, .next_timeout = next_timeout_ }, *ring_);
+    update_timer_operation = &update_timer_operation_.value();
   }
-  update_timer_operation_.emplace(UpdateOperation{ .timer = this, .next_timeout = next_timeout_ }, *ring_,
-                                  ring_->getStopToken());
-  ring_->submit(&update_timer_operation_.value());
+  ring_->submit(update_timer_operation);
 }
 
 void Timer::UpdateOperation::prepare(::io_uring_sqe* sqe) const {
+  const absl::MutexLock lock{ &timer->mutex_ };
   // NOLINTNEXTLINE(misc-include-cleaner, bugprone-unchecked-optional-access)
   auto* ptr{ &timer->timer_operation_.value() };
   std::uint64_t data{};
@@ -106,15 +115,24 @@ void Timer::UpdateOperation::handleCompletion(::io_uring_cqe* cqe) const {
     }
     panic("timer failed: {}", std::error_code(-cqe->res, std::system_category()).message());
   }
-  if (timer->next_timeout_.tv_sec != next_timeout.tv_sec ||
-      timer->next_timeout_.tv_nsec != next_timeout.tv_nsec) {
-    auto next = std::chrono::duration_cast<TimerClock::duration>(
-        std::chrono::seconds(timer->next_timeout_.tv_sec) +
-        std::chrono::nanoseconds(timer->next_timeout_.tv_nsec));
-    timer->update(TimerClock::time_point{} + next);
-    return;
+
+  bool update{ false };
+  TimerClock::duration next;
+  {
+    const absl::MutexLock lock{ &timer->mutex_ };
+    if (timer->next_timeout_.tv_sec != next_timeout.tv_sec ||
+        timer->next_timeout_.tv_nsec != next_timeout.tv_nsec) {
+      next = std::chrono::duration_cast<TimerClock::duration>(
+          std::chrono::seconds(timer->next_timeout_.tv_sec) +
+          std::chrono::nanoseconds(timer->next_timeout_.tv_nsec));
+      update = true;
+    } else {
+      timer->update_timer_operation_.reset();
+    }
   }
-  timer->update_timer_operation_.reset();
+  if (update) {
+    timer->update(TimerClock::time_point{} + next);
+  }
 }
 
 Timer::Timer(IoRing& ring, TimerOptions options)
@@ -124,62 +142,87 @@ Timer::Timer(IoRing& ring, TimerOptions options)
   , last_tick_(start_)
   , clock_mode_(options.clock_mode) {
   if (clock_mode_ == ClockMode::SIMULATED) {
+    const absl::MutexLock lock{ &TimerClock::timer_mutex };
     TimerClock::timer = this;
   }
 }
 
 Timer::~Timer() noexcept {
+  const absl::MutexLock lock{ &TimerClock::timer_mutex };
   TimerClock::timer = nullptr;
 }
 
+auto Timer::empty() const -> bool {
+  const absl::MutexLock lock{ &mutex_ };
+  return tasks_.empty();
+}
+
 void Timer::tick() {
-  for (TaskBase* task = next(); task != nullptr; task = next()) {
-    task->start();
+  for (TimedTaskBase* task = next(); task != nullptr; task = next()) {
+    task->startTask();
   }
-  last_tick_ = TimerClock::now();
-  if (!tasks_.empty()) {
-    const auto& top = tasks_.front();
-    update(top.start_time);
+  std::optional<TimerClock::time_point> start_time;
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    last_tick_ = TimerClock::now();
+    if (!tasks_.empty()) {
+      const auto& top = tasks_.front();
+      start_time.emplace(top.start_time);
+    }
+  }
+  if (start_time.has_value()) {
+    update(*start_time);
   }
 }
 
 auto Timer::tickSimulated(bool advance) -> bool {
-  if (tasks_.empty()) {
-    return false;
-  }
-
-  if (advance) {
-    auto top = tasks_.front();
-    std::ranges::pop_heap(tasks_, std::greater<>{});
-    tasks_.pop_back();
-    if (top.start_time > last_tick_) {
-      advanceSimulation(top.start_time - last_tick_);
+  TimedTaskBase* task{ nullptr };
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    if (tasks_.empty()) {
+      return false;
     }
-    top.task->start();
-    return !tasks_.empty();
+
+    if (advance) {
+      auto top = tasks_.front();
+      std::ranges::pop_heap(tasks_, std::greater<>{});
+      tasks_.pop_back();
+      if (top.start_time > last_tick_) {
+        advanceSimulation(top.start_time - last_tick_);
+      }
+      task = top.task;
+    }
+  }
+  if (task != nullptr) {
+    task->startTask();
+    return !empty();
   }
 
-  TaskBase* task = next();
+  task = next();
   if (task != nullptr) {
-    task->start();
+    task->startTask();
   }
-  return !tasks_.empty();
+  return !empty();
 }
 
-void Timer::startAt(TaskBase* task, TimerClock::time_point start_time) {
-  tasks_.emplace_back(task, start_time);
-  std::ranges::push_heap(tasks_, std::greater<>{});
+void Timer::startAt(TimedTaskBase* task, TimerClock::time_point start_time) {
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    tasks_.emplace_back(task, start_time);
+    std::ranges::push_heap(tasks_, std::greater<>{});
 
-  const auto& top = tasks_.front();
+    const auto& top = tasks_.front();
 
-  if (top.task != task || clock_mode_ == ClockMode::SIMULATED) {
-    return;
+    if (top.task != task || clock_mode_ == ClockMode::SIMULATED) {
+      return;
+    }
   }
 
   update(start_time);
 }
 
-void Timer::dequeue(TaskBase* task) {
+void Timer::dequeue(TimedTaskBase* task) {
+  const absl::MutexLock lock{ &mutex_ };
   auto it = std::ranges::find_if(tasks_, [task](const TimerEntry& entry) { return task == entry.task; });
   if (it == tasks_.end()) {
     return;
@@ -188,7 +231,8 @@ void Timer::dequeue(TaskBase* task) {
   std::ranges::make_heap(tasks_, std::greater<>{});
 }
 
-auto Timer::next(bool advance) -> TaskBase* {
+auto Timer::next(bool advance) -> TimedTaskBase* {
+  const absl::MutexLock lock{ &mutex_ };
   if (!tasks_.empty()) {
     auto now = TimerClock::now();
     const auto& top = tasks_.front();

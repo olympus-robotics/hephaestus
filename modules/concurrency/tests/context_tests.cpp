@@ -41,8 +41,6 @@ TEST(ContextTests, SchedulerBasics) {
 
   EXPECT_TRUE(stdexec::sender<decltype(sender)>);
   EXPECT_TRUE((stdexec::sender_in<decltype(sender), stdexec::__sync_wait::__env>));
-
-  EXPECT_EQ(&getContext(stdexec::get_env(context.scheduler().schedule())), &context);
 }
 
 TEST(ContextTests, scheduleException) {
@@ -89,7 +87,6 @@ TEST(ContextTests, scheduleConcurrent) {
   }
 
   std::size_t completions{ 0 };
-  const exec::async_scope scope;
   static constexpr std::size_t NUM_TASKS = 10000;
   auto submit_thread_id = std::this_thread::get_id();
   for (std::size_t i = 0; i != NUM_TASKS; ++i) {
@@ -103,6 +100,45 @@ TEST(ContextTests, scheduleConcurrent) {
   runner.join();
   EXPECT_EQ(completions, NUM_TASKS);
 }
+
+TEST(ContextTests, scheduleConcurrentScope) {
+  std::mutex mtx;
+  std::condition_variable cv;
+  Context* context_ptr{ nullptr };
+
+  std::thread runner{ [&context_ptr, &mtx, &cv] {
+    Context context{ {} };
+    context.run([&] {
+      {
+        const std::scoped_lock l{ mtx };
+        context_ptr = &context;
+      }
+      cv.notify_all();
+    });
+  } };
+  {
+    std::unique_lock l{ mtx };
+    cv.wait(l, [&context_ptr] { return context_ptr != nullptr; });
+  }
+
+  std::size_t completions{ 0 };
+  exec::async_scope scope;
+  static constexpr std::size_t NUM_TASKS = 10000;
+  auto submit_thread_id = std::this_thread::get_id();
+  for (std::size_t i = 0; i != NUM_TASKS; ++i) {
+    scope.spawn(stdexec::schedule(context_ptr->scheduler()) | stdexec::then([&] {
+                  ++completions;
+                  EXPECT_NE(std::this_thread::get_id(), submit_thread_id);
+                }));
+  }
+
+  scope.request_stop();
+  context_ptr->requestStop();
+  runner.join();
+  EXPECT_GE(completions, 1);
+  EXPECT_LE(completions, NUM_TASKS);
+}
+
 TEST(ContextTests, scheduleAfter) {
   Context context{ {} };
   exec::async_scope scope;
@@ -147,13 +183,15 @@ TEST(ContextTests, scheduleAfterStopWaiting) {
     scope.spawn(sender);
   }
   {
-    auto sender = context.scheduler().scheduleAfter(DELAY_TIME) | stdexec::then([&called, &context] {
+    auto sender = context.scheduler().scheduleAfter(DELAY_TIME) | stdexec::then([&called, &context, &scope] {
                     ++called;
+                    scope.request_stop();
                     context.requestStop();
                   });
     scope.spawn(sender);
   }
   context.run();
+  stdexec::sync_wait(scope.on_empty());
   auto end = std::chrono::steady_clock::now();
   auto duration = end - begin;
   if (duration < DELAY_TIME * 2) {
@@ -168,7 +206,7 @@ TEST(ContextTests, scheduleAfterStopWaitingAny) {
   static constexpr auto DELAY_TIME = std::chrono::minutes(5);
 
   auto begin = std::chrono::steady_clock::now();
-  scope.spawn(exec::when_any(context.scheduler().scheduleAfter(DELAY_TIME), stdexec::just()) |
+  scope.spawn(exec::when_any(context.scheduler().scheduleAfter(DELAY_TIME), context.scheduler().schedule()) |
               stdexec::then([&] { context.requestStop(); }));
 
   context.run();
@@ -188,8 +226,9 @@ TEST(ContextTests, scheduleAfterSimulated) {
   auto begin = std::chrono::system_clock::now();
   {
     auto sender = context.scheduler().scheduleAfter(DELAY_TIME * 2) |
-                  stdexec::then([&context, &called, &call_sequence] {
+                  stdexec::then([&context, &called, &call_sequence, &scope] {
                     ++called;
+                    scope.request_stop();
                     context.requestStop();
                     call_sequence.push_back(1);
                   });
@@ -221,8 +260,9 @@ TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
     scope.spawn(sender);
   }
   {
-    auto sender = context.scheduler().scheduleAfter(delay_time) | stdexec::then([&called, &context] {
+    auto sender = context.scheduler().scheduleAfter(delay_time) | stdexec::then([&called, &context, &scope] {
                     ++called;
+                    scope.request_stop();
                     context.requestStop();
                   });
     scope.spawn(sender);
@@ -235,6 +275,32 @@ TEST(ContextTests, scheduleAfterStopWaitingSimulated) {
   EXPECT_LE(end - begin, delay_time);
   EXPECT_GE(context.elapsed(), delay_time);
   EXPECT_LE(context.elapsed(), delay_time * 2);
+}
+
+TEST(ContextTests, timeout) {
+  Context context{ {} };
+  exec::async_scope scope;
+  static constexpr std::chrono::seconds TIMEOUT{ 10 };
+
+  auto now = ClockT::now();
+
+  bool timeout0_triggered = false;
+  bool timeout1_triggered = false;
+  scope.spawn(exec::when_any(context.scheduler().scheduleAfter(TIMEOUT) |
+                                 stdexec::then([&]() { timeout0_triggered = true; }),
+                             context.scheduler().scheduleAfter(std::chrono::milliseconds(1)) |
+                                 stdexec::then([&]() { timeout1_triggered = true; })) |
+              stdexec::then([&]() { context.requestStop(); })
+
+  );
+
+  context.run();
+  auto end = ClockT::now();
+  scope.request_stop();
+  stdexec::sync_wait(scope.on_empty());
+  EXPECT_FALSE(timeout0_triggered);
+  EXPECT_TRUE(timeout1_triggered);
+  EXPECT_LT(end - now, TIMEOUT);
 }
 
 }  // namespace heph::concurrency::tests

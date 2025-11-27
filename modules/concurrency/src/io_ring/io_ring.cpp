@@ -7,113 +7,56 @@
 #include <cstring>
 #include <functional>
 #include <system_error>
+#include <utility>
 
+#include <absl/synchronization/mutex.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
 #include <liburing/io_uring.h>
-#include <stdexec/stop_token.hpp>
+#include <sys/eventfd.h>
+#include <unistd.h>
 
 #include "hephaestus/concurrency/io_ring/io_ring_operation_base.h"
+#include "hephaestus/containers/intrusive_fifo_queue.h"
 #include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::io_ring {
 thread_local IoRing* IoRing::current_ring = nullptr;
 
-struct DispatchOperation : IoRingOperationBase {
-  static auto ring() -> IoRing& {
-    static thread_local IoRing r{ { .nentries = IoRingConfig::DEFAULT_ENTRY_COUNT, .flags = 0 } };
-    return r;
-  }
-
-  void prepare(::io_uring_sqe* sqe) final {
-    auto* ptr{ this };
-    std::uint64_t data{};
-    static_assert(sizeof(data) == sizeof(void*));
-    std::memcpy(&data, static_cast<void*>(&ptr), sizeof(data));
-    ::io_uring_prep_msg_ring(sqe, destination->ring_.ring_fd, 0, data, 0);
-  }
-
-  void handleCompletion(io_uring_cqe* cqe) final {
-    if (destination->isCurrentRing()) {
-      // Resubmit operation to the ring.
-      // Some operations don't need an extra prepare and simply act as a trigger
-      // so we can omit the submit phase entirely
-      destination->submit(operation);
-      submit_done.store(true, std::memory_order_release);
-      submit_done.notify_all();
-      return;
-    }
-    if (cqe->res < 0) {
-      panic("dispatch failed: {}", std::error_code(-cqe->res, std::system_category()).message());
-    }
-
-    dispatch_done.store(true, std::memory_order_release);
-  }
-
-  void run() {
-    destination->in_flight_.fetch_add(1, std::memory_order_release);
-    ring().submit(this);
-    while (!dispatch_done.load(std::memory_order_acquire)) {
-      ring().runOnce();
-    }
-
-    while (!submit_done.load(std::memory_order_acquire)) {
-      submit_done.wait(false, std::memory_order_acquire);
-    }
-  }
-
-  IoRing* destination{ nullptr };
-  IoRingOperationBase* operation{ nullptr };
-  std::atomic<bool> dispatch_done{ false };
-  std::atomic<bool> submit_done{ false };
-};
-
-IoRing::IoRing(const IoRingConfig& config) : config_(config) {
+IoRing::IoRing(const IoRingConfig& config) : notify_fd_(::eventfd(0, 0)), config_(config) {
   const int res = ::io_uring_queue_init(config_.nentries, &ring_, config_.flags);
 
   if (res < 0) {
     panic("::io_uring_queue_init failed: {}", std::error_code(-res, std::system_category()).message());
   }
-}
+  notify_operation_.self = this;
 
-struct StopOperation : IoRingOperationBase {
-  void handleCompletion(::io_uring_cqe* /*cqe*/) final {
-    self->requestStop();
-    done.store(true, std::memory_order_release);
-    done.notify_all();
-  }
-
-  void wait() {
-    while (!done.load(std::memory_order_acquire)) {
-      done.wait(false, std::memory_order_acquire);
-    }
-  }
-
-  IoRing* self{ nullptr };
-  std::atomic<bool> done{ false };
-};
-
-auto IoRing::stopRequested() -> bool {
-  return stop_source_.stop_requested();
+  submit(&notify_operation_);
 }
 
 void IoRing::requestStop() {
-  if (!isCurrentRing() && isRunning()) {
-    StopOperation stop_operation;
-    stop_operation.self = this;
-    DispatchOperation dispatch;
-    dispatch.destination = this;
-    dispatch.operation = &stop_operation;
-    dispatch.run();
-    stop_operation.wait();
-    return;
-  }
-  stop_source_.request_stop();
-}
-auto IoRing::getStopToken() -> stdexec::inplace_stop_token {
-  return stop_source_.get_token();
+  running_.store(false, std::memory_order_release);
+  notify(true);
 }
 
 void IoRing::runOnce(bool block) {
+  containers::IntrusiveFifoQueue<IoRingOperationBase> outstanding_operations;
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    std::swap(outstanding_operations, outstanding_operations_);
+  }
+
+  while (true) {
+    auto* operation = outstanding_operations.dequeue();
+    if (operation == nullptr) {
+      break;
+    }
+    auto* sqe = getSqe();
+
+    operation->prepare(sqe);
+
+    ::io_uring_sqe_set_data(sqe, operation);
+  }
+
   int res{ 0 };
   if (block) {
     res = ::io_uring_submit_and_wait(&ring_, 1);
@@ -140,22 +83,24 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
   }
 
   int res = 0;
-
   res = ::io_uring_register_ring_fd(&ring_);
 
   if (res < 0) {
     panic("::io_uring_register_ring_fd failed: {}", std::error_code(-res, std::system_category()).message());
   }
+
   current_ring = this;
-  running_.store(true, std::memory_order_release);
+  bool running = false;
+  running_.compare_exchange_strong(running, true, std::memory_order_acq_rel);
+
   on_started();
   bool more_work = on_progress();
-  while (more_work || !stop_source_.stop_requested() || in_flight_.load(std::memory_order_acquire) > 0) {
+  while (more_work || running_.load(std::memory_order_acquire) || hasWork()) {
     runOnce(!more_work);
     more_work = on_progress();
   }
-  res = ::io_uring_unregister_ring_fd(&ring_);
 
+  res = ::io_uring_unregister_ring_fd(&ring_);
   if (res < 0) {
     panic("::io_uring_unregister_ring_fd failed: {}",
           std::error_code(-res, std::system_category()).message());
@@ -163,33 +108,40 @@ void IoRing::run(const std::function<void()>& on_started, const std::function<bo
   current_ring = nullptr;
 }
 
-auto IoRing::isCurrentRing() -> bool {
+auto IoRing::isCurrent() const -> bool {
   return current_ring == this;
 }
 
-auto IoRing::isRunning() -> bool {
+auto IoRing::isRunning() const -> bool {
   return running_.load(std::memory_order_acquire);
 }
 
+auto IoRing::hasWork() const -> bool {
+  return in_flight_.load(std::memory_order_acquire) > 1 && [this]() {
+    const absl::MutexLock lock{ &mutex_ };
+    return !in_flight_operations_.empty();
+  }();
+}
+
 void IoRing::submit(IoRingOperationBase* operation) {
-  // We need to dispatch to our ring if we are calling this function from outside
-  // the event loop
-  if (!isCurrentRing() && isRunning()) {
-    DispatchOperation dispatch;
-    dispatch.destination = this;
-    dispatch.operation = operation;
-    dispatch.run();
-    return;
+  {
+    const absl::MutexLock lock{ &mutex_ };
+    outstanding_operations_.enqueue(operation);
   }
-  auto* sqe = getSqe();
+  notify();
+}
 
-  operation->prepare(sqe);
-
-  ::io_uring_sqe_set_data(sqe, operation);
+void IoRing::notify(bool always) const {
+  if (always || (!isCurrent() && isRunning())) {
+    std::uint64_t dummy{ 1 };
+    auto res = ::write(notify_fd_, &dummy, sizeof(dummy));
+    heph::panicIf(res != sizeof(dummy), "IoRing::notify: {}",
+                  std::error_code{ errno, std::system_category() }.message());
+  }
 }
 
 auto IoRing::getSqe() -> ::io_uring_sqe* {
-  while (!stop_source_.stop_requested() || in_flight_.load(std::memory_order_acquire) > 0) {
+  while (true) {
     if (::io_uring_sqe* sqe = ::io_uring_get_sqe(&ring_); sqe != nullptr) {
       in_flight_.fetch_add(1, std::memory_order_release);
       return sqe;

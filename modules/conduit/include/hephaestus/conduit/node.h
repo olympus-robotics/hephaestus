@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (C) 2023-2024 HEPHAESTUS Contributors
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
 #pragma once
@@ -8,189 +8,228 @@
 #include <cstddef>
 #include <optional>
 #include <string>
-#include <variant>
+#include <type_traits>
+#include <utility>
 
+#include <exec/when_any.hpp>
 #include <fmt/format.h>
-#include <stdexec/__detail/__senders_core.hpp>
-#include <stdexec/__detail/__sync_wait.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/to_view.hpp>
 #include <stdexec/execution.hpp>
 
-#include "hephaestus/conduit/detail/node_base.h"
-#include "hephaestus/conduit/detail/output_connections.h"
-#include "hephaestus/telemetry/log/scope.h"
+#include "hephaestus/concurrency/repeat_until.h"
+#include "hephaestus/conduit/clock.h"
+#include "hephaestus/conduit/internal/never_stop.h"
+#include "hephaestus/conduit/node_base.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/conduit/stepper.h"
+#include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_sink.h"
 
 namespace heph::conduit {
-namespace detail {
-struct Unused {};
-template <typename InputT, typename T, std::size_t Depth>
-class InputBase;
-}  // namespace detail
+namespace internal {
+template <typename Node, typename Children, typename Config, std::size_t... Idx>
+void constructChildren(const std::string& prefix, Node* node, Children& children, const Config& config,
+                       std::index_sequence<Idx...> /*unused*/) {
+  (rfl::get<Idx>(children)->initialize(prefix, node, *rfl::get<Idx>(config)), ...);
+}
 
-class NodeEngine;
+template <typename Trigger, typename Inputs, std::size_t... Idx>
+auto spawnInputTriggers(Trigger trigger, SchedulerT scheduler, Inputs& inputs,
+                        std::index_sequence<Idx...> /*unused*/) {
+  return trigger(rfl::get<Idx>(inputs)->trigger(scheduler)...);
+}
 
-template <typename OperationT, typename OperationDataT = detail::Unused>
-class Node : public detail::NodeBase {
-  static constexpr bool HAS_PERIOD_CONSTANT = requires(OperationT&) { OperationT::PERIOD; };
-  static constexpr bool HAS_PERIOD_NULLARY = requires(OperationT&) { OperationT::period(); };
-  static constexpr bool HAS_PERIOD_ARG = requires(OperationT& op) { OperationT::period(op); };
-  static constexpr bool HAS_NAME_CONSTANT = requires(OperationT&) { OperationT::NAME; };
-  static constexpr bool HAS_NAME_NULLARY = requires(OperationT&) { OperationT::name(); };
-  static constexpr bool HAS_NAME_ARG = requires(OperationT& op) { OperationT::name(op); };
-  static constexpr bool HAS_TRIGGER_NULLARY = requires(OperationT&) { OperationT::trigger(); };
-  static constexpr bool HAS_TRIGGER_ARG = requires(OperationT& op) { OperationT::trigger(op); };
-  static constexpr bool HAS_TRIGGER_ARG_PTR = requires(OperationT& op) { OperationT::trigger(&op); };
+template <typename Outputs, std::size_t... Idx>
+auto spawnOutputTriggers(Outputs& outputs, SchedulerT scheduler, std::index_sequence<Idx...> /*unused*/
+) {
+  return stdexec::when_all(rfl::get<Idx>(outputs)->trigger(scheduler)...);
+}
 
-  template <typename... Ts>
-  static constexpr bool HAS_EXECUTE_NULLARY =
-      requires(OperationT&, Ts&&... ts) { OperationT::execute(std::forward<Ts>(ts)...); };
-  template <typename... Ts>
-  static constexpr bool HAS_EXECUTE_ARG =
-      requires(OperationT& op, Ts&&... ts) { OperationT::execute(op, std::forward<Ts>(ts)...); };
-  template <typename... Ts>
-  static constexpr bool HAS_EXECUTE_ARG_PTR =
-      requires(OperationT& op, Ts&&... ts) { OperationT::execute(&op, std::forward<Ts>(ts)...); };
-
+template <typename NodeDescription>
+struct NodeImpl : public NodeBase {
 public:
-  static constexpr bool HAS_PERIOD = HAS_PERIOD_CONSTANT || HAS_PERIOD_NULLARY || HAS_PERIOD_ARG;
-  static constexpr bool HAS_NAME = HAS_NAME_CONSTANT || HAS_NAME_NULLARY || HAS_NAME_ARG;
+  using InputsT = typename NodeDescription::Inputs;
+  using OutputsT = typename NodeDescription::Outputs;
+  using ChildrenT = typename NodeDescription::Children;
+  using TriggerT = typename NodeDescription::Trigger;
+  using StepperT = Stepper<NodeDescription>;
 
-  auto data() const -> const OperationDataT& {
-    return data_.value();
+  explicit NodeImpl(std::string prefix, NodeBase* parent, StepperT outer_stepper)
+    : NodeBase(std::move(prefix), NodeDescription::NAME, parent), stepper(outer_stepper) {
+    const auto& children_config = stepper.childrenConfig();
+    auto childrens_view = rfl::to_view(children);
+    using ChildrensViewT = std::decay_t<decltype(childrens_view)>;
+    if constexpr (!std::is_same_v<rfl::NamedTuple<>, ChildrensViewT>) {
+      auto children_config_view = rfl::to_view(children_config);
+      internal::constructChildren(
+          this->prefix(), this, childrens_view.values(), children_config_view.values(),
+          std::make_index_sequence<rfl::tuple_size_v<typename ChildrensViewT::Values>>{});
+      // Alternative with C++26 and aggregate packs.
+      // auto& [... child] = children;
+      // const auto& [... child_stepper] = stepper.nodeConfig().stepper;
+      //(child.emplace(this, child_stepper), ...);
+    }
   }
 
-  auto data() -> OperationDataT& {
-    return data_.value();
+  void enable() final {
+    auto inputs_view = rfl::to_view(inputs);
+    inputs_view.apply([](const auto& input) { input.value()->enable(); });
   }
 
-  using detail::NodeBase::nodeName;
-
-  [[nodiscard]] auto nodePeriod() -> std::chrono::nanoseconds final;
-
-  void removeOutputConnection(void* node) final {
-    implicit_output_->removeConnection(node);
+  void disable() final {
+    auto inputs_view = rfl::to_view(inputs);
+    inputs_view.apply([](const auto& input) { input.value()->disable(); });
   }
 
-private:
-  [[nodiscard]] auto nodeName(const std::string& prefix) const -> std::string final;
-
-  auto invokeOperation() {
-    return [this]<typename... Ts>(Ts&&... ts) {
-      detail::ExecutionStopWatch stop_watch{ this };
-      static_assert(HAS_EXECUTE_ARG_PTR<Ts...> || HAS_EXECUTE_ARG<Ts...> || HAS_EXECUTE_NULLARY<Ts...>,
-                    "No valid execute function available");
-      const telemetry::Scope scope{ enginePrefix(), nodeName("") };
-      if constexpr (HAS_EXECUTE_ARG<Ts...>) {
-        return OperationT::execute(operation(), std::forward<Ts>(ts)...);
-      } else if constexpr (HAS_EXECUTE_ARG_PTR<Ts...>) {
-        return OperationT::execute(&operation(), std::forward<Ts>(ts)...);
-      } else {
-        return OperationT::execute(std::forward<Ts>(ts)...);
-      }
-    };
-  }
-
-  auto operationTrigger() {
-    auto period_trigger = [&](detail::NodeBase::ClockT::time_point start_at) {
-      if constexpr (HAS_PERIOD) {
-        return heph::conduit::scheduler(engine()).scheduleAt(start_at);
-      } else {
-        return stdexec::just();
-      }
-    };
-    auto node_trigger = [&] {
-      if constexpr (HAS_TRIGGER_NULLARY) {
-        return OperationT::trigger();
-      } else if constexpr (HAS_TRIGGER_ARG) {
-        return OperationT::trigger(operation());
-      } else if constexpr (HAS_TRIGGER_ARG_PTR) {
-        return OperationT::trigger(&operation());
-      } else {
-        static_assert(HAS_PERIOD,
-                      "An Operation needs to have at least either a trigger or a period function");
-        return stdexec::just();
-      }
-    };
-    return stdexec::just() | stdexec::let_value([this, period_trigger, node_trigger] {
-             auto start_at = operationStart(HAS_PERIOD);
-             return stdexec::when_all(period_trigger(start_at), node_trigger());
+  auto spawn(SchedulerT scheduler) {
+    return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
+             return concurrency::repeatUntil([this, scheduler]() {
+               auto now = ClockT::now();
+               if (trigger_start_time != ClockT::time_point{}) {
+                 auto period_duration = now - trigger_start_time;
+                 heph::telemetry::record(
+                     [timestamp = trigger_start_time, period_duration, name = this->name()] {
+                       return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                     .timestamp = timestamp,
+                     .values = {
+                       {
+                           "tick_duration_microsec",
+                           std::chrono::duration_cast<std::chrono::microseconds>(period_duration).count(),
+                       },
+                     },
+                   };
+                     });
+               }
+               trigger_start_time = now;
+               return stdexec::continues_on(inputTrigger(scheduler), scheduler) |
+                      stdexec::let_value([this, scheduler](auto... /*unused*/) {
+                        execution_start_time = ClockT::now();
+                        return stdexec::continues_on(
+                                   stepper.step(this->prefix(), this->moduleName(), inputs, outputs),
+                                   scheduler) |
+                               stdexec::let_value([this, scheduler]() { return outputTrigger(scheduler); });
+                      }) |
+                      stdexec::then([this]() {
+                        auto execute_duration = ClockT::now() - execution_start_time;
+                        heph::telemetry::record(
+                            [timestamp = execution_start_time, execute_duration, name = this->name()] {
+                              return heph::telemetry::Metric {
+                     .component = fmt::format("conduit{}", name), .tag = "node_timings",
+                     .timestamp = timestamp,
+                     .values = {
+                       {
+                           "execute_duration_microsec",
+                           std::chrono::duration_cast<std::chrono::microseconds>(execute_duration).count(),
+                       },
+                     },
+                   };
+                            });
+                        return false;
+                      });
+             });
            });
   }
 
-  auto executeSender() {
-    auto invoke_operation = invokeOperation();
+  auto inputTrigger(SchedulerT scheduler) {
+    return stdexec::schedule(scheduler) | stdexec::let_value([this, scheduler]() {
+             auto inputs_view = rfl::to_view(inputs);
+             using InputsViewT = std::decay_t<decltype(inputs_view)>;
+             if constexpr (!std::is_same_v<rfl::NamedTuple<>, InputsViewT>) {
+               return internal::spawnInputTriggers(
+                   trigger, scheduler, inputs_view.values(),
+                   std::make_index_sequence<rfl::tuple_size_v<typename InputsViewT::Values>>{});
 
-    auto trigger = stdexec::continues_on(operationTrigger(), heph::conduit::scheduler(engine()));
-    using TriggerT = decltype(trigger);
-    using TriggerValuesVariantT = stdexec::__sync_wait::__sync_wait_with_variant_result_t<TriggerT>;
-    // static_assert(std::variant_size_v<TriggerValuesVariantT> == 1);
-    using TriggerValuesT = std::variant_alternative_t<0, TriggerValuesVariantT>;
-    using ResultT = decltype(std::apply(invoke_operation, std::declval<TriggerValuesT>()));
-    return std::move(trigger) | [&invoke_operation] {
-      if constexpr (stdexec::sender<ResultT>) {
-        return stdexec::let_value(invoke_operation);
-      } else {
-        return stdexec::then(invoke_operation);
-      }
-    }();
+             } else {
+               return NeverStop{};
+             }
+           });
   }
 
-  auto triggerExecute() {
-    return executeSender() | implicit_output_->propagate(engine()) |
-           stdexec::then([this] { operationEnd(); });
+  auto outputTrigger(SchedulerT scheduler) {
+    auto outputs_view = rfl::to_view(outputs);
+    using OutputsViewT = std::decay_t<decltype(outputs_view)>;
+    if constexpr (!std::is_same_v<rfl::NamedTuple<>, OutputsViewT>) {
+      return internal::spawnOutputTriggers(
+          outputs_view.values(), scheduler,
+          std::make_index_sequence<rfl::tuple_size_v<typename OutputsViewT::Values>>{});
+    } else {
+      return stdexec::just();
+    }
+  }
+  StepperT stepper;
+  InputsT inputs{};
+  OutputsT outputs{};
+  ChildrenT children{};
+  TriggerT trigger{};
+
+  ClockT::time_point trigger_start_time;
+  ClockT::time_point execution_start_time;
+};
+}  // namespace internal
+
+template <typename NodeDescription>
+class Node {
+public:
+  using InputsT = typename NodeDescription::Inputs;
+  using OutputsT = typename NodeDescription::Outputs;
+  using ChildrenT = typename NodeDescription::Children;
+  using TriggerT = typename NodeDescription::Trigger;
+  using StepperT = Stepper<NodeDescription>;
+  Node() = default;
+
+  auto operator*() -> auto& {
+    return handle_.value();
   }
 
-  template <typename Input>
-  void registerInput(Input* input) {
-    implicit_output_->registerInput(input);
+  auto operator*() const -> const auto& {
+    return handle_.value();
   }
 
-  auto operation() -> OperationT& {
-    return static_cast<OperationT&>(*this);
+  auto operator->() -> auto* {
+    return &handle_.value();
   }
 
-  auto operation() const -> const OperationT& {
-    return static_cast<const OperationT&>(*this);
+  auto operator->() const -> const auto* {
+    return &handle_.value();
+  }
+
+  void initialize(std::string prefix, NodeBase* parent, NodeDescription::StepperT stepper) {
+    handle_.emplace(std::move(prefix), parent, stepper);
   }
 
 private:
-  friend class NodeEngine;
-  friend class RemoteNodeHandler;
-
-  template <typename InputT, typename T, std::size_t Depth>
-  friend class detail::InputBase;
-
-  std::optional<detail::OutputConnections> implicit_output_;
-  std::optional<OperationDataT> data_;
+  std::optional<internal::NodeImpl<NodeDescription>> handle_;
 };
 
-template <typename OperationT, typename OperationDataT>
-inline auto Node<OperationT, OperationDataT>::nodePeriod() -> std::chrono::nanoseconds {
-  if constexpr (HAS_PERIOD_NULLARY) {
-    return OperationT::period();
-  } else if constexpr (HAS_PERIOD_ARG) {
-    return OperationT::period(operation());
-  } else if constexpr (HAS_PERIOD_CONSTANT) {
-    return OperationT::PERIOD;
-  } else {
-    return {};
+struct WhenAll {
+  template <typename... Ts>
+  auto operator()(Ts&&... ts) const {
+    return stdexec::when_all(std::forward<Ts>(ts)...);
   }
-}
+};
 
-template <typename OperationT, typename OperationDataT>
-inline auto Node<OperationT, OperationDataT>::nodeName(const std::string& prefix) const -> std::string {
-  std::string name_prefix;
-  if (!prefix.empty()) {
-    name_prefix = fmt::format("/{}/", prefix);
+struct WhenAny {
+  template <typename... Ts>
+  auto operator()(Ts&&... ts) const {
+    return exec::when_any(std::forward<Ts>(ts)...);
   }
-  if constexpr (HAS_NAME_ARG) {
-    return fmt::format("{}{}", name_prefix, OperationT::name(operation()));
-  } else if constexpr (HAS_NAME_NULLARY) {
-    return fmt::format("{}{}", name_prefix, OperationT::name());
-  } else if constexpr (HAS_NAME_CONSTANT) {
-    return fmt::format("{}{}", name_prefix, OperationT::NAME);
-  } else {
-    return fmt::format("{}{}", name_prefix, typeid(OperationT).name());
+};
+
+template <typename NodeDescription>
+struct NodeDescriptionDefaults {
+  using StepperT = Stepper<NodeDescription>;
+  struct ChildrenConfig {};
+
+  template <typename InputsT, typename OutputsT, typename ChildrenT>
+  static void connect(InputsT& /*inputs*/, OutputsT& /*outputs*/, ChildrenT& /*children*/) {
   }
-}
+
+  struct Inputs {};
+  struct Outputs {};
+  struct Children {};
+  using Trigger = WhenAll;
+};
 
 }  // namespace heph::conduit

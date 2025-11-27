@@ -156,7 +156,7 @@ def _heph_generate_api_overview(ctx):
 .. _api_overview:
 
 =============
-API Reference
+C++ API Reference
 =============
 
 .. toctree::

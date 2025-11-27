@@ -1,0 +1,132 @@
+//=================================================================================================
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
+//=================================================================================================
+
+#pragma once
+
+#include <cstddef>
+#include <optional>
+#include <utility>
+
+#include <exec/when_any.hpp>
+#include <stdexec/execution.hpp>
+
+#include "hephaestus/concurrency/any_sender.h"
+#include "hephaestus/concurrency/channel.h"
+#include "hephaestus/conduit/clock.h"
+#include "hephaestus/conduit/scheduler.h"
+#include "hephaestus/conduit/value_storage.h"
+
+namespace heph::conduit {
+
+template <typename ValueStoragePolicy, typename TriggerPolicy>
+struct InputPolicy {
+  ValueStoragePolicy storage_policy;
+  TriggerPolicy trigger_policy;
+};
+
+struct ResetValuePolicy {
+  template <typename T>
+  class Type {
+  public:
+    [[nodiscard]] auto hasValue() const -> bool {
+      return value_.has_value();
+    }
+
+    [[nodiscard]] auto value() -> T {
+      std::optional<T> res = std::nullopt;
+      std::swap(res, value_);
+      return res.value();
+    }
+
+    void setValue(T&& t) {
+      value_.emplace(std::move(t));
+    }
+
+  private:
+    std::optional<T> value_;
+  };
+
+  template <typename T>
+  [[nodiscard]] auto bind() const -> Type<T> {
+    return {};
+  }
+};
+
+struct BlockingTrigger {
+  template <typename T, std::size_t Capacity>
+  struct Type {
+    static auto trigger(concurrency::Channel<T, Capacity>& value_channel, ValueStorage<T>& value_storage,
+                        SchedulerT /*scheduler*/, std::optional<ClockT::time_point> /*deadline*/)
+        -> concurrency::AnySender<bool> {
+      return value_channel.getValue() | stdexec::then([&value_storage](T&& value) -> bool {
+               value_storage.setValue(std::move(value));
+               return true;
+             });
+    }
+  };
+  template <typename T, std::size_t Capacity>
+  auto bind() -> Type<T, Capacity> {
+    return {};
+  }
+};
+
+using BlockingInputPolicy = InputPolicy<ResetValuePolicy, BlockingTrigger>;
+
+struct KeepLastValuePolicy {
+  template <typename T>
+  class Type {
+  public:
+    [[nodiscard]] auto hasValue() const -> bool {
+      return value_.has_value();
+    }
+
+    [[nodiscard]] auto value() -> T {
+      return value_.value();
+    }
+
+    void setValue(T&& t) {
+      value_.emplace(std::move(t));
+    }
+
+  private:
+    std::optional<T> value_;
+  };
+
+  template <typename T>
+  [[nodiscard]] auto bind() const -> Type<T> {
+    return {};
+  }
+};
+
+struct DeadlineTrigger {
+  template <typename T, std::size_t Capacity>
+  struct Type {
+    static auto trigger(concurrency::Channel<T, Capacity>& value_channel, ValueStorage<T>& value_storage,
+                        SchedulerT scheduler, std::optional<ClockT::time_point> deadline)
+        -> concurrency::AnySender<bool> {
+      if (!deadline.has_value()) {
+        auto value = value_channel.tryGetValue();
+        if (value.has_value()) {
+          value_storage.setValue(std::move(*value));
+          return stdexec::just(true);
+        }
+        return stdexec::just(false);
+      }
+
+      return exec::when_any(scheduler.scheduleAt(*deadline) | stdexec::then([]() { return false; }),
+                            value_channel.getValue() | stdexec::then([&value_storage](T&& value) -> bool {
+                              value_storage.setValue(std::move(value));
+                              return true;
+                            }));
+    }
+  };
+  template <typename T, std::size_t Capacity>
+  auto bind() -> Type<T, Capacity> {
+    return {};
+  }
+};
+
+using BestEffortInputPolicy = InputPolicy<KeepLastValuePolicy, DeadlineTrigger>;
+
+}  // namespace heph::conduit
