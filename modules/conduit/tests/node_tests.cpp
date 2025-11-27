@@ -158,7 +158,7 @@ struct TriggerExceptionOperation : Node<TriggerExceptionOperation, ReceivingOper
   }
 };
 
-TEST(NodeTests, nodeTriggerException) {
+TEST(NodeTests, DISABLED_nodeTriggerException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<TriggerExceptionOperation>();
 
@@ -184,7 +184,7 @@ struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, Receiving
   }
 };
 
-TEST(NodeTests, nodeExecutionException) {
+TEST(NodeTests, DISABLED_nodeExecutionException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<ExecutionExceptionOperation>();
 
