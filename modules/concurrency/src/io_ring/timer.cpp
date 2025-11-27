@@ -60,8 +60,6 @@ void Timer::UpdateOperation::handleStopped() {
 }
 
 void Timer::requestStop() {
-  stop_source_.request_stop();
-
   {
     const absl::MutexLock lock{ &mutex_ };
 
@@ -152,6 +150,11 @@ Timer::Timer(IoRing& ring, TimerOptions options)
 Timer::~Timer() noexcept {
   const absl::MutexLock lock{ &TimerClock::timer_mutex };
   TimerClock::timer = nullptr;
+}
+
+auto Timer::empty() const -> bool {
+  const absl::MutexLock lock{ &mutex_ };
+  return tasks_.empty();
 }
 
 void Timer::tick() {

@@ -48,7 +48,7 @@ struct WhenAllRangeStateT {
   void complete() noexcept {
     on_stop.reset();
 
-    switch (state.load(std::memory_order_relaxed)) {
+    switch (state.load(std::memory_order_acquire)) {
       case STARTED:
         stdexec::set_value(std::move(receiver));
         break;
@@ -77,7 +77,7 @@ template <typename OuterReceiver>
 struct InnerReceiver {
   using receiver_concept = stdexec::receiver_t;
 
-  //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+  // NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
   template <typename... Ts>
   void set_value(Ts&&... ts) noexcept {
     static_assert(sizeof...(ts) == 0, "Only void senders supported at the moment");
@@ -88,13 +88,13 @@ struct InnerReceiver {
     // Transition to the "stopped" state if and only if we're in the
     // "started" state. (If this fails, it's because we're in an
     // error state, which trumps cancellation.)
-    if (state->state.compare_exchange_strong(expected, STOPPED)) {
+    if (state->state.compare_exchange_strong(expected, STOPPED, std::memory_order_acq_rel)) {
       state->stop_source.request_stop();
     }
     state->arrive();
   }
   void set_error(std::exception_ptr ptr) noexcept {
-    switch (state->state.exchange(ERROR)) {
+    switch (state->state.exchange(ERROR, std::memory_order_acq_rel)) {
       case STARTED:
         state->stop_source.request_stop();
         [[fallthrough]];
@@ -111,7 +111,7 @@ struct InnerReceiver {
   [[nodiscard]] auto get_env() const noexcept {
     return state->getEnv();
   }
-  // NOLINTEND
+  // NOLINTEND(readability-identifier-naming)
   WhenAllRangeStateT<OuterReceiver>* state;
 };
 
@@ -128,7 +128,7 @@ struct Operation {
       stdexec::set_value(std::move(state.receiver));
       return;
     }
-    state.count.store(size, std::memory_order_relaxed);
+    state.count.store(size, std::memory_order_release);
     state.on_stop.emplace(stdexec::get_stop_token(stdexec::get_env(state.receiver)),
                           WhenAllStopCallback{ &state.stop_source });
     operations.reserve(size);

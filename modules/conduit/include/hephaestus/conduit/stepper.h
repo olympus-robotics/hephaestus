@@ -66,17 +66,17 @@ public:
 
   template <stepper<NodeDescriptionT> StepperT>
     requires(!std::is_same_v<StepperT, Stepper>)
-  // NOLINTNEXTLINE (google-explicit-constructor,hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   Stepper(StepperT& stepper_impl) : ptr_(&stepper_impl), vtable_(&internal::STEPPER_VTABLE<StepperT>) {
   }
 
   template <stepper<NodeDescriptionT> StepperT>
     requires(!std::is_same_v<StepperT, Stepper>)
-  // NOLINTBEGIN (cppcoreguidelines-pro-type-const-cast)
-  // NOLINTNEXTLINE (google-explicit-constructor,hicpp-explicit-conversions)
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   Stepper(const StepperT& stepper_impl) : Stepper(const_cast<StepperT&>(stepper_impl)) {
   }
-  // NOLINTEND (cppcoreguidelines-pro-type-const-cast)
+  // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
 
   void connect(NodeDescriptionT::Inputs& inputs, NodeDescriptionT::Outputs& outputs,
                NodeDescriptionT::Children& children) {

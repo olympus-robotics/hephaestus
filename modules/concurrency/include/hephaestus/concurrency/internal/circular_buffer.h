@@ -13,22 +13,18 @@ namespace heph::concurrency::internal {
 template <typename T, std::size_t Capacity>
 class CircularBuffer {
 public:
-  auto push(T&& t) -> bool {
+  template <typename U>
+  auto push(U&& t) -> bool {
     if (size_ == data_.size()) {
       return false;
     }
 
-    data_[write_index_] = std::move(t);
+    data_[write_index_] = std::forward<U>(t);
     write_index_ = (write_index_ + 1) % data_.size();
 
     ++size_;
 
     return true;
-  }
-
-  auto push(const T& t) -> bool {
-    T tmp{ t };
-    return push(std::move(tmp));
   }
 
   auto pop() -> std::optional<T> {
@@ -93,12 +89,13 @@ private:
 template <typename T>
 class CircularBuffer<T, 1> {
 public:
-  auto push(T t) -> bool {
+  template <typename U>
+  auto push(U&& t) -> bool {
     if (data_.has_value()) {
       return false;
     }
 
-    data_.emplace(std::move(t));
+    data_.emplace(std::forward<U>(t));
 
     return true;
   }

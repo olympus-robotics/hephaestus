@@ -103,7 +103,7 @@ struct TimedTask : TimedTaskBase {
   struct Receiver {
     using receiver_concept = stdexec::receiver_t;
 
-    // NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+    // NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
     void set_value() noexcept {
       self->task.start();
     }
@@ -118,7 +118,7 @@ struct TimedTask : TimedTaskBase {
     [[nodiscard]] auto get_env() const noexcept {
       return stdexec::get_env(self->task.receiver);
     }
-    // NOLINTEND
+    // NOLINTEND(readability-identifier-naming)
 
     TimedTask* self{ nullptr };
   };

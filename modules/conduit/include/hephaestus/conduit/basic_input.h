@@ -48,7 +48,7 @@ struct TriggerReceiver {
   using receiver_concept = stdexec::receiver_t;
   BasicInput* input;
   Receiver receiver;
-  //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+  // NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
   void set_value(bool completed) noexcept;
   void set_stopped() noexcept;
   void set_error(std::exception_ptr ptr) noexcept;
@@ -56,7 +56,7 @@ struct TriggerReceiver {
   [[nodiscard]] auto get_env() const noexcept {
     return stdexec::get_env(receiver);
   }
-  // NOLINTEND
+  // NOLINTEND(readability-identifier-naming)
 };
 }  // namespace internal
 

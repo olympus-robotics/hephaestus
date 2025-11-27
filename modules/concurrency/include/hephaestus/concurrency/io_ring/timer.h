@@ -66,10 +66,7 @@ public:
   explicit Timer(IoRing& ring, TimerOptions options);
   ~Timer() noexcept;
 
-  [[nodiscard]] auto empty() const -> bool {
-    const absl::MutexLock lock{ &mutex_ };
-    return tasks_.empty();
-  }
+  [[nodiscard]] auto empty() const -> bool;
 
   void requestStop();
 
@@ -122,7 +119,6 @@ private:
 
 private:
   IoRing* ring_;
-  stdexec::inplace_stop_source stop_source_;
   __kernel_timespec next_timeout_{};
   mutable absl::Mutex mutex_;
   std::optional<StoppableIoRingOperation<Operation>> timer_operation_ ABSL_GUARDED_BY(mutex_);

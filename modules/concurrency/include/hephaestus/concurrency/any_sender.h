@@ -148,7 +148,7 @@ public:
   AnyReceiver(const AnyReceiver& other) = delete;
   auto operator=(const AnyReceiver& other) -> AnyReceiver& = delete;
 
-  //  NOLINTBEGIN (readability-identifier-naming) - wrapping stdexec interface
+  // NOLINTBEGIN(readability-identifier-naming) - wrapping stdexec interface
   template <typename... Ts>
   void set_value(Ts&&... ts) noexcept {
     if constexpr (std::is_same_v<T, void>) {
@@ -169,7 +169,7 @@ public:
   [[nodiscard]] auto get_env() const noexcept -> AnyEnv {
     return { receiver_->getEnv() };
   }
-  // NOLINTEND
+  // NOLINTEND(readability-identifier-naming)
 
 private:
   std::unique_ptr<Base> receiver_;

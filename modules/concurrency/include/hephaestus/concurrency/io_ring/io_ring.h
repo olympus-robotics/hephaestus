@@ -51,6 +51,8 @@ private:
 
   struct NotifyOperation : IoRingOperationBase {
     IoRing* self;
+    // We need a place where to store the result of the read operation. As we use the event fd only
+    // for signaling, we don't care about the actual result.
     std::uint64_t dummy{ 0 };
 
     void prepare(::io_uring_sqe* sqe) final {
