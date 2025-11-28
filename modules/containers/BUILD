@@ -44,6 +44,16 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "queue_benchmarks",
+    srcs = ["examples/queue_benchmarks.cpp"],
+    deps = [
+        ":containers",
+        "@fmt",
+        "@google_benchmark//:benchmark_main",
+    ],
+)
+
 #########
 # Tests #
 #########
