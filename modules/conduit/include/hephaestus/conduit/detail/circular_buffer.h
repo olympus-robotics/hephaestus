@@ -66,6 +66,9 @@ public:
 
 private:
   std::array<T, Capacity> data_{};
+  std::size_t read_index_{ 0 };
+  std::size_t write_index_{ 0 };
+  std::size_t size_{ 0 };
 };
 
 template <typename T>
