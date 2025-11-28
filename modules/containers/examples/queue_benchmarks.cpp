@@ -13,7 +13,7 @@
 #include "hephaestus/containers/fixed_circular_buffer.h"
 
 namespace {
-inline constexpr std::size_t PAYLOAD_SIZE = 8;
+inline constexpr std::size_t PAYLOAD_SIZE = 1024;
 using PayloadT = std::array<std::size_t, PAYLOAD_SIZE>;
 void blockingQueueSingleThread(benchmark::State& state) {
   heph::containers::BlockingQueue<PayloadT> queue(1);
@@ -23,10 +23,10 @@ void blockingQueueSingleThread(benchmark::State& state) {
     auto payload = queue.tryPop();
     benchmark::DoNotOptimize(payload);
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK(blockingQueueSingleThread);
+BENCHMARK(blockingQueueSingleThread)->UseRealTime();
 
 void fixedCircularBufferSingleThread(benchmark::State& state) {
   heph::containers::FixedCircularBuffer<PayloadT, 1> queue;
@@ -36,10 +36,10 @@ void fixedCircularBufferSingleThread(benchmark::State& state) {
     auto payload = queue.pop();
     benchmark::DoNotOptimize(payload);
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK(fixedCircularBufferSingleThread);
+BENCHMARK(fixedCircularBufferSingleThread)->UseRealTime();
 
 void fixedCircularBufferSpscSingleThread(benchmark::State& state) {
   heph::containers::FixedCircularBuffer<PayloadT, 1, heph::containers::FixedCircularBufferMode::SPSC> queue;
@@ -49,10 +49,10 @@ void fixedCircularBufferSpscSingleThread(benchmark::State& state) {
     auto payload = queue.pop();
     benchmark::DoNotOptimize(payload);
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK(fixedCircularBufferSpscSingleThread);
+BENCHMARK(fixedCircularBufferSpscSingleThread)->UseRealTime();
 
 struct MultiThread : benchmark::Fixture {
   void SetUp(::benchmark::State& /*state*/) override {
@@ -85,10 +85,10 @@ BENCHMARK_DEFINE_F(MultiThread, blockingQueue)(benchmark::State& state) {
       }
     }
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK_REGISTER_F(MultiThread, blockingQueue)->Threads(2);
+BENCHMARK_REGISTER_F(MultiThread, blockingQueue)->Threads(2)->UseRealTime();
 
 BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferMutex)(benchmark::State& state) {
   if (state.thread_index() == 0) {
@@ -112,10 +112,10 @@ BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferMutex)(benchmark::State& stat
       }
     }
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK_REGISTER_F(MultiThread, fixedCircularBufferMutex)->Threads(2);
+BENCHMARK_REGISTER_F(MultiThread, fixedCircularBufferMutex)->Threads(2)->UseRealTime();
 
 BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferSpsc)(benchmark::State& state) {
   if (state.thread_index() == 0) {
@@ -135,10 +135,10 @@ BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferSpsc)(benchmark::State& state
       }
     }
   }
-  state.SetBytesProcessed(static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) *
-                                                    PAYLOAD_SIZE * sizeof(PayloadT)));
+  state.SetBytesProcessed(
+      static_cast<std::int64_t>(static_cast<std::size_t>(state.iterations()) * sizeof(PayloadT)));
 }
-BENCHMARK_REGISTER_F(MultiThread, fixedCircularBufferSpsc)->Threads(2);
+BENCHMARK_REGISTER_F(MultiThread, fixedCircularBufferSpsc)->Threads(2)->UseRealTime();
 }  // namespace
 
 BENCHMARK_MAIN();
