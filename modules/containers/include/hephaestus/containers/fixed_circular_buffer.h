@@ -93,7 +93,13 @@ public:
   }
 
   [[nodiscard]] auto size() const -> std::size_t {
-    return write_index_.load(std::memory_order_acquire) - read_index_.load(std::memory_order_acquire);
+    auto write_index = write_index_.load(std::memory_order_acquire);
+    auto read_index = read_index_.load(std::memory_order_acquire);
+
+    if (write_index >= read_index) {
+      return write_index - read_index;
+    }
+    return Capacity - read_index + write_index;
   }
 
   template <typename T, typename U>
