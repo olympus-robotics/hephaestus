@@ -49,7 +49,6 @@ heph_cc_binary(
     srcs = ["examples/queue_benchmarks.cpp"],
     deps = [
         ":containers",
-        "@fmt",
         "@google_benchmark//:benchmark_main",
     ],
 )
