@@ -9,6 +9,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <new>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -133,10 +134,13 @@ public:
   }
 
 private:
-  std::size_t cached_read_index_{ 0 };
-  std::size_t cached_write_index_{ 0 };
-  std::atomic<std::size_t> read_index_{ 0 };
-  std::atomic<std::size_t> write_index_{ 0 };
+  // Align atomics to a cache line to avoid false sharing. The cache variables are used
+  // to reduce cache coherency traffic.
+  static constexpr auto CACHE_LINE_SIZE = std::hardware_destructive_interference_size;
+  alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> write_index_{ 0 };
+  alignas(CACHE_LINE_SIZE) std::size_t cached_read_index_{ 0 };
+  alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> read_index_{ 0 };
+  alignas(CACHE_LINE_SIZE) std::size_t cached_write_index_{ 0 };
 };
 
 }  // namespace internal
