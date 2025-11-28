@@ -153,7 +153,7 @@ enum class FixedCircularBufferMode : std::uint8_t {
 /// Implementation of a fixed capacity circular buffer
 ///
 /// \tparam T the value type of the elements
-/// \tparam Capacity Maximum capacity. Should be a power of two for efficency reasons.
+/// \tparam Capacity Maximum capacity. Should be a power of two for efficiency reasons.
 /// \tparam Mode can be used to switch from UNSYNCHRONIZED (default, NOT thread safe) to
 ///         a single producer and single consumer (SBSC)
 ///
