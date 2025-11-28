@@ -108,6 +108,7 @@ use_repo(doxygen_extension, "doxygen")
 
 bazel_dep(name = "tcmalloc", version = "0.0.0-20250331-43fcf6e")
 bazel_dep(name = "googletest", version = "1.15.2")
+bazel_dep(name = "google_benchmark", version = "1.9.4")
 bazel_dep(name = "abseil-cpp", version = "20250127.0")
 bazel_dep(name = "magic_enum", version = "0.9.5")
 bazel_dep(name = "fmt", version = "11.1.4")

@@ -44,6 +44,15 @@ heph_cc_binary(
     ],
 )
 
+heph_cc_binary(
+    name = "queue_benchmarks",
+    srcs = ["examples/queue_benchmarks.cpp"],
+    deps = [
+        ":containers",
+        "@google_benchmark//:benchmark_main",
+    ],
+)
+
 #########
 # Tests #
 #########
@@ -65,5 +74,11 @@ heph_cc_test(
 heph_cc_test(
     name = "intrusive_fifo_queue_tests",
     srcs = ["tests/intrusive_fifo_queue_tests.cpp"],
+    deps = [":containers"],
+)
+
+heph_cc_test(
+    name = "fixed_circular_buffer_tests",
+    srcs = ["tests/fixed_circular_buffer_tests.cpp"],
     deps = [":containers"],
 )
