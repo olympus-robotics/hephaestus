@@ -239,6 +239,7 @@ inline auto FixedCircularBuffer<T, Capacity, Mode>::push(U&& u) -> bool {
 template <typename T, std::size_t Capacity, FixedCircularBufferMode Mode>
 template <std::convertible_to<T> U>
 inline auto FixedCircularBuffer<T, Capacity, Mode>::pushForce(U&& u) -> void {
+  static_assert(Mode != FixedCircularBufferMode::SPSC, "force push is not supported for SPSC");
   while (!push(std::forward<U>(u))) {
     [[maybe_unused]] auto popped_element = pop();
     assert(popped_element.has_value());

@@ -69,10 +69,18 @@ TEST(FixedCircularQueue, Push) {
     res = queue.pop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 1);
+    EXPECT_EQ(queue.size(), 1);
 
+    EXPECT_TRUE(queue.push(4));
+    EXPECT_EQ(queue.size(), 2);
     res = queue.pop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 3);
+    EXPECT_EQ(queue.size(), 1);
+
+    res = queue.pop();
+    EXPECT_TRUE(res.has_value());
+    EXPECT_EQ(*res, 4);
 
     res = queue.pop();
     EXPECT_FALSE(res.has_value());
@@ -96,13 +104,16 @@ TEST(FixedCircularQueue, PushSpsc) {
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 1);
 
-    queue.pushForce(2);
-
     std::optional<int> res;
 
     res = queue.pop();
     EXPECT_TRUE(res.has_value());
-    EXPECT_EQ(*res, 2);
+    EXPECT_EQ(*res, 0);
+
+    EXPECT_TRUE(queue.push(1));
+    res = queue.pop();
+    EXPECT_TRUE(res.has_value());
+    EXPECT_EQ(*res, 1);
 
     res = queue.pop();
     EXPECT_FALSE(res.has_value());
@@ -128,17 +139,24 @@ TEST(FixedCircularQueue, PushSpsc) {
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 2);
 
-    queue.pushForce(3);
-
     std::optional<int> res;
 
     res = queue.pop();
     EXPECT_TRUE(res.has_value());
-    EXPECT_EQ(*res, 1);
+    EXPECT_EQ(*res, 0);
+    EXPECT_EQ(queue.size(), 1);
 
     res = queue.pop();
     EXPECT_TRUE(res.has_value());
-    EXPECT_EQ(*res, 3);
+    EXPECT_EQ(*res, 1);
+    EXPECT_EQ(queue.size(), 0);
+
+    EXPECT_TRUE(queue.push(2));
+    EXPECT_EQ(queue.size(), 1);
+    res = queue.pop();
+    EXPECT_TRUE(res.has_value());
+    EXPECT_EQ(*res, 2);
+    EXPECT_EQ(queue.size(), 0);
 
     res = queue.pop();
     EXPECT_FALSE(res.has_value());
