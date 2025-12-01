@@ -16,7 +16,8 @@ namespace heph::containers {
 /// \tparam T the value type of the elements
 /// \tparam Capacity Maximum capacity. Should be a power of two for efficiency reasons.
 ///
-/// \note This class is not thread safe. If you need to push/pop from differeent threads, protect it with a lock!
+/// \note This class is not thread safe. If you need to push/pop from differeent threads, protect it with a
+/// lock!
 template <typename T, std::size_t Capacity>
 class FixedCircularBuffer {
 public:
@@ -81,17 +82,17 @@ inline auto FixedCircularBuffer<T, Capacity>::operator=(FixedCircularBuffer&& ot
 
 template <typename T, std::size_t Capacity>
 inline auto FixedCircularBuffer<T, Capacity>::empty() const -> bool {
-  return indices_.empty();
+  return size_ == 0;
 }
 
 template <typename T, std::size_t Capacity>
 inline auto FixedCircularBuffer<T, Capacity>::full() const -> bool {
-  return indices_.full();
+  return size_ == Capacity;
 }
 
 template <typename T, std::size_t Capacity>
 inline auto FixedCircularBuffer<T, Capacity>::size() const -> std::size_t {
-  return indices_.size();
+  return size_;
 }
 
 template <typename T, std::size_t Capacity>
