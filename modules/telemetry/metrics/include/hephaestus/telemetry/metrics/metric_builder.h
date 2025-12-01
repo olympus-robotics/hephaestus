@@ -10,6 +10,8 @@
 #include <string_view>
 #include <utility>
 
+#include <fmt/format.h>
+
 #include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/utils/timing/scoped_timer.h"
@@ -24,13 +26,13 @@ namespace heph::telemetry {
 ///   MetricBuilder builder("component", "tag", ClockT::now());
 ///   builder.addValue("key", "value_key", 42);
 ///   {
-///     auto timer = builder.measureScopeExecutionTime<>("key");
+///     auto timer = builder.measureScopeExecutionTime("key");
 ///     // code to measure
 ///   }
 /// }
 /// ```
 /// The above code create the following metrics entry:
-/// * "key1.value_key" : 42
+/// * "key.value_key" : 42
 /// * "key.elapsed_s" : <elapsed time in seconds>
 class MetricBuilder {
 public:
@@ -51,16 +53,16 @@ public:
     record(std::move(metric_));
   }
 
-  MetricBuilder(const MetricBuilder&) = default;
+  MetricBuilder(const MetricBuilder&) = delete;
   MetricBuilder(MetricBuilder&&) = delete;
-  auto operator=(const MetricBuilder&) -> MetricBuilder& = default;
+  auto operator=(const MetricBuilder&) -> MetricBuilder& = delete;
   auto operator=(MetricBuilder&&) -> MetricBuilder& = delete;
 
   [[nodiscard]] auto measureScopeExecutionTime(std::string_view key, NowFunctionPtr now_fn = &ClockT::now)
       -> utils::timing::ScopedTimer {
-    auto callback = [this, key](ClockT::duration duration) {
-      metric_.values.emplace_back(fmt::format("{}.elapsed_s", key),
-                                  std::chrono::duration_cast<SecondsT>(duration).count());
+    auto key_str = fmt::format("{}.elapsed_s", key);
+    auto callback = [this, key_str = std::move(key_str)](ClockT::duration duration) {
+      metric_.values.emplace_back(key_str, std::chrono::duration_cast<SecondsT>(duration).count());
     };
     return utils::timing::ScopedTimer(std::move(callback), now_fn);
   }

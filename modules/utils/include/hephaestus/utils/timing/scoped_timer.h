@@ -26,9 +26,9 @@ public:
     callback_(end_timestamp - start_timestamp_);
   }
 
-  ScopedTimer(const ScopedTimer&) = default;
+  ScopedTimer(const ScopedTimer&) = delete;
   ScopedTimer(ScopedTimer&&) = delete;
-  auto operator=(const ScopedTimer&) -> ScopedTimer& = default;
+  auto operator=(const ScopedTimer&) -> ScopedTimer& = delete;
   auto operator=(ScopedTimer&&) -> ScopedTimer& = delete;
 
 private:
