@@ -86,12 +86,6 @@ heph_cc_test(
 )
 
 heph_cc_test(
-    name = "scoped_timer_tests",
-    srcs = ["tests/scoped_timer_tests.cpp"],
-    deps = [":utils"],
-)
-
-heph_cc_test(
     name = "stack_trace_tests",
     srcs = ["tests/stack_trace_tests.cpp"],
     deps = [
