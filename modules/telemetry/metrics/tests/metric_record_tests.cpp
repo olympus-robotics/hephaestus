@@ -119,6 +119,16 @@ TEST_F(StructToFlatmapTest, StructToFlatmap) {
   EXPECT_EQ(values, expected_values);
 }
 
+TEST_F(MetricTest, AddKeyValue) {
+  static constexpr auto VALUE = int64_t{ 42 };
+  Metric metric;
+  addKeyValue(metric, "key1", VALUE);
+  EXPECT_THAT(metric.values, SizeIs(1));
+  const auto& [key, value] = metric.values.front();
+  EXPECT_EQ(key, "key1");
+  EXPECT_EQ(std::get<int64_t>(value), VALUE);
+}
+
 TEST_F(MetricTest, Metric) {
   const auto entry =
       Metric{ .component = random::random<std::string>(mt),
