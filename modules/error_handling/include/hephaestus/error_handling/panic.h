@@ -16,7 +16,6 @@
 namespace heph {
 
 namespace error_handling::detail {
-
 /// @brief  Wrapper around string literals to enhance them with a location.
 ///         Note that the message is not owned by this class.
 ///         String literals are used to enable implicit conversion from string literals.
