@@ -32,10 +32,11 @@ namespace heph::telemetry {
 /// The above code create the following metrics entry:
 /// * "key1.value_key" : 42
 /// * "key.elapsed_s" : <elapsed time in seconds>
-template <typename ClockT = std::chrono::steady_clock>
 class MetricBuilder {
 public:
   using SecondsT = std::chrono::duration<double>;
+  using ClockT = std::chrono::steady_clock;
+  using NowFunctionPtr = std::chrono::steady_clock::time_point (*)();
 
   MetricBuilder(std::string component, std::string tag, std::chrono::system_clock::time_point timestamp)
     : metric_{
@@ -55,12 +56,13 @@ public:
   auto operator=(const MetricBuilder&) -> MetricBuilder& = default;
   auto operator=(MetricBuilder&&) -> MetricBuilder& = delete;
 
-  [[nodiscard]] auto measureScopeExecutionTime(std::string_view key) -> utils::timing::ScopedTimer {
+  [[nodiscard]] auto measureScopeExecutionTime(std::string_view key, NowFunctionPtr now_fn = &ClockT::now)
+      -> utils::timing::ScopedTimer {
     auto callback = [this, key](ClockT::duration duration) {
       metric_.values.emplace_back(fmt::format("{}.elapsed_s", key),
                                   std::chrono::duration_cast<SecondsT>(duration).count());
     };
-    return utils::timing::ScopedTimer(std::move(callback), &ClockT::now);
+    return utils::timing::ScopedTimer(std::move(callback), now_fn);
   }
 
   template <typename T>

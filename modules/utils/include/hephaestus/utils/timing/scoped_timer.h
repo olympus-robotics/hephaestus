@@ -14,8 +14,8 @@ namespace heph::utils::timing {
 class ScopedTimer {
 public:
   using ClockT = std::chrono::steady_clock;
+  using NowFunctionPtr = ClockT::time_point (*)();
   using Callback = std::function<void(ClockT::duration)>;
-  using NowFunctionPtr = std::chrono::steady_clock::time_point (*)();
 
   explicit ScopedTimer(Callback&& callback, NowFunctionPtr now_fn = &ClockT::now)
     : callback_(std::move(callback)), start_timestamp_(now_fn()), now_fn_(now_fn) {
@@ -30,9 +30,6 @@ public:
   ScopedTimer(ScopedTimer&&) = delete;
   auto operator=(const ScopedTimer&) -> ScopedTimer& = default;
   auto operator=(ScopedTimer&&) -> ScopedTimer& = delete;
-
-private:
-  void loop();
 
 private:
   Callback callback_{ nullptr };

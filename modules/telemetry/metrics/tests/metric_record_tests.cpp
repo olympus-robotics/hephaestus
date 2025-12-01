@@ -169,10 +169,10 @@ TEST_F(MetricTest, MetricBuilder) {
   static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
   const auto now = ClockT::now();
   {
-    MetricBuilder<utils::timing::MockClock> builder(COMPONENT, TAG, now);
+    MetricBuilder builder(COMPONENT, TAG, now);
     builder.addValue("key1", "value_key", int64_t{ 0 });
     {
-      auto timer = builder.measureScopeExecutionTime("key1");
+      auto timer = builder.measureScopeExecutionTime("key1", utils::timing::MockClock::now);
       utils::timing::MockClock::advance(PERIOD);
     }
   }
@@ -182,10 +182,10 @@ TEST_F(MetricTest, MetricBuilder) {
   static constexpr auto OTHER_PERIOD = std::chrono::milliseconds{ 2 };
   const auto other_now = ClockT::now();
   {
-    MetricBuilder<utils::timing::MockClock> builder(COMPONENT, OTHER_TAG, other_now);
+    MetricBuilder builder(COMPONENT, OTHER_TAG, other_now);
     builder.addValue("key2", "value_key2", int64_t{ 1 });
     {
-      auto timer = builder.measureScopeExecutionTime("key2");
+      auto timer = builder.measureScopeExecutionTime("key2", utils::timing::MockClock::now);
       utils::timing::MockClock::advance(OTHER_PERIOD);
     }
   }
