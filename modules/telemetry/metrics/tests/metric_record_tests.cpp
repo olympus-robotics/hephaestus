@@ -16,18 +16,17 @@
 
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
+#include "hephaestus/telemetry/metrics/metric_builder.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
+#include "hephaestus/utils/timing/mock_clock.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::telemetry::tests {
 namespace {
-
-struct StructToFlatmapTest : heph::test_utils::HephTest {};
-struct MeasureTest : heph::test_utils::HephTest {};
 
 class MockMetricSink final : public IMetricSink {
 public:
@@ -41,8 +40,9 @@ public:
     return measure_entries_;
   }
 
-  void wait() const {
+  void wait() {
     flag_.wait(false);
+    flag_.clear();
   }
 
 private:
@@ -87,6 +87,18 @@ struct Dummy {
   std::string string;
   NestedObject nested;
 };
+
+struct StructToFlatmapTest : heph::test_utils::HephTest {};
+struct MetricTest : heph::test_utils::HephTest {
+  MetricTest() {
+    auto mock_sink = std::make_unique<MockMetricSink>();
+    mock_sink_ptr = mock_sink.get();
+    registerMetricSink(std::move(mock_sink));
+  }
+
+  MockMetricSink* mock_sink_ptr{};
+};
+
 }  // namespace
 
 TEST_F(StructToFlatmapTest, StructToFlatmap) {
@@ -107,11 +119,7 @@ TEST_F(StructToFlatmapTest, StructToFlatmap) {
   EXPECT_EQ(values, expected_values);
 }
 
-TEST_F(MeasureTest, Metric) {
-  auto mock_sink = std::make_unique<MockMetricSink>();
-  const auto* mock_sink_ptr = mock_sink.get();
-  registerMetricSink(std::move(mock_sink));
-
+TEST_F(MetricTest, Metric) {
   const auto entry =
       Metric{ .component = random::random<std::string>(mt),
               .tag = random::random<std::string>(mt),
@@ -125,13 +133,9 @@ TEST_F(MeasureTest, Metric) {
   EXPECT_EQ(entry, measure_entries.front());
 }
 
-TEST_F(MeasureTest, Serialization) {
+TEST_F(MetricTest, Serialization) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
-
-  auto mock_sink = std::make_unique<MockMetricSink>();
-  const auto* mock_sink_ptr = mock_sink.get();
-  registerMetricSink(std::move(mock_sink));
 
   auto dummy = Dummy::random(mt);
   record(COMPONENT, TAG, dummy);
@@ -157,5 +161,58 @@ TEST_F(MeasureTest, Serialization) {
     { "nested.nested.boolean", dummy.nested.nested.boolean },
   };
   EXPECT_EQ(entry.values, expected_values);
+}
+
+TEST_F(MetricTest, MetricBuilder) {
+  static constexpr auto COMPONENT = "component";
+  static constexpr auto TAG = "tag";
+  static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
+  const auto now = ClockT::now();
+  {
+    MetricBuilder builder(COMPONENT, TAG, now);
+    builder.addValue("key1", "value_key", int64_t{ 0 });
+    {
+      auto timer = builder.measureScopeExecutionTime<utils::timing::MockClock>("key1");
+      utils::timing::MockClock::advance(PERIOD);
+    }
+  }
+  mock_sink_ptr->wait();
+
+  static constexpr auto OTHER_TAG = "other_tag";
+  static constexpr auto OTHER_PERIOD = std::chrono::milliseconds{ 2 };
+  const auto other_now = ClockT::now();
+  {
+    MetricBuilder builder(COMPONENT, OTHER_TAG, other_now);
+    builder.addValue("key2", "value_key2", int64_t{ 1 });
+    {
+      auto timer = builder.measureScopeExecutionTime<utils::timing::MockClock>("key2");
+      utils::timing::MockClock::advance(OTHER_PERIOD);
+    }
+  }
+  mock_sink_ptr->wait();
+
+  const auto& measure_entries = mock_sink_ptr->getMeasureEntries();
+  EXPECT_THAT(measure_entries, SizeIs(2));
+
+  const auto expected_metrics = std::vector<Metric>{{
+                                      .component = COMPONENT,
+                                      .tag = TAG,
+                                      .timestamp = now,
+                                      .values = {
+                                        { "key1.value_key", int64_t{0} },
+                                        { "key1.elapsed_s", 0.001},
+                                      },
+                                  },
+                                  {
+                                      .component = COMPONENT,
+                                      .tag = OTHER_TAG,
+                                      .timestamp = other_now,
+                                      .values = {
+                                        { "key2.value_key2", int64_t{1} },
+                                        { "key2.elapsed_s", 0.002},
+                                      },
+                                  } };
+
+  EXPECT_EQ(measure_entries, expected_metrics);
 }
 }  // namespace heph::telemetry::tests
