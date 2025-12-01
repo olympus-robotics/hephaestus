@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -78,7 +79,7 @@ TEST(PanicIf, Output) {
 
   heph::telemetry::flushLogEntries();
   EXPECT_EQ(string_log_sink_ptr->last_log_message,
-            "\"modules/error_handling/tests/panic_tests.cpp:75\" program terminated with panic");
+            "\"modules/error_handling/tests/panic_tests.cpp:76\" program terminated with panic");
 
   telemetry::removeAllLogSinks();
 }

@@ -71,10 +71,10 @@ using error_handling::detail::panic;
     if (condition) [[unlikely]] {                                                                            \
       constexpr auto SRC_LOCATION = ::std::source_location::current();                                       \
                                                                                                              \
-      [&]<typename... Args>(Args&&... args) {                                                                \
+      [&]<typename... PanicArgs>(PanicArgs&&... panic_args) {                                                \
         ::heph::panic(                                                                                       \
-            ::heph::error_handling::detail::StringLiteralWithLocation<Args...>(message, SRC_LOCATION),       \
-            ::std::forward<Args>(args)...);                                                                  \
+            ::heph::error_handling::detail::StringLiteralWithLocation<PanicArgs...>(message, SRC_LOCATION),  \
+            ::std::forward<PanicArgs>(panic_args)...);                                                       \
       }(__VA_ARGS__);                                                                                        \
     }                                                                                                        \
   } while (false)
