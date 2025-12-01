@@ -115,7 +115,3 @@ CheckOptions:
       key: misc-include-cleaner.IgnoreHeaders,
       value: "log.h|log_sink.h|.*/types_proto/.*|.*/format/generic_formatter.h",
     }
-  - {
-      key: bugprone-assert-side-effect.AssertMacros,
-      value: assert,HEPH_PANIC_IF
-    }
