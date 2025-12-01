@@ -16,8 +16,8 @@
 
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
-#include "hephaestus/telemetry/metrics/metric_builder.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_scope.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/utils/timing/mock_clock.h"
@@ -163,56 +163,80 @@ TEST_F(MetricTest, Serialization) {
   EXPECT_EQ(entry.values, expected_values);
 }
 
-TEST_F(MetricTest, MetricBuilder) {
+TEST_F(MetricTest, ScopedDurationRecorder) {
+  static constexpr auto COMPONENT = "component";
+  static constexpr auto TAG = "tag";
+  static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
+  const auto now = ClockT::now();
+  Metric metric{
+    .component = COMPONENT,
+    .tag = TAG,
+    .timestamp = now,
+    .values = {},
+  };
+  {
+    ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
+    utils::timing::MockClock::advance(PERIOD);
+  }
+  {
+    ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key2");
+    utils::timing::MockClock::advance(2 * PERIOD);
+  }
+
+  const auto expected_values = std::vector<Metric::KeyValueType>{
+    { "key1.elapsed_s", 0.001 },
+    { "key2.elapsed_s", 0.002 },
+  };
+  EXPECT_EQ(metric.values, expected_values);
+}
+
+TEST_F(MetricTest, ScopedMetric) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
   static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
   const auto now = ClockT::now();
   {
-    MetricBuilder builder(COMPONENT, TAG, now);
-    builder.addValue("key1", "value_key", int64_t{ 0 });
+    ScopedMetric metric{ {
+        .component = COMPONENT,
+        .tag = TAG,
+        .timestamp = now,
+        .values = {},
+    } };
+  }
+  mock_sink_ptr->wait();
+  {
+    ScopedMetric metric{ {
+        .component = COMPONENT,
+        .tag = TAG,
+        .timestamp = now,
+        .values = {},
+    } };
+
+    addKeyValue(metric, "key1.value_key", int64_t{ 2 });
     {
-      auto timer = builder.measureScopeExecutionTime("key1", utils::timing::MockClock::now);
+      ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
       utils::timing::MockClock::advance(PERIOD);
     }
   }
+
   mock_sink_ptr->wait();
-
-  static constexpr auto OTHER_TAG = "other_tag";
-  static constexpr auto OTHER_PERIOD = std::chrono::milliseconds{ 2 };
-  const auto other_now = ClockT::now();
-  {
-    MetricBuilder builder(COMPONENT, OTHER_TAG, other_now);
-    builder.addValue("key2", "value_key2", int64_t{ 1 });
-    {
-      auto timer = builder.measureScopeExecutionTime("key2", utils::timing::MockClock::now);
-      utils::timing::MockClock::advance(OTHER_PERIOD);
-    }
-  }
-  mock_sink_ptr->wait();
-
-  const auto& measure_entries = mock_sink_ptr->getMeasureEntries();
-  EXPECT_THAT(measure_entries, SizeIs(2));
-
   const auto expected_metrics = std::vector<Metric>{{
-                                      .component = COMPONENT,
-                                      .tag = TAG,
-                                      .timestamp = now,
-                                      .values = {
-                                        { "key1.value_key", int64_t{0} },
-                                        { "key1.elapsed_s", 0.001},
-                                      },
-                                  },
-                                  {
-                                      .component = COMPONENT,
-                                      .tag = OTHER_TAG,
-                                      .timestamp = other_now,
-                                      .values = {
-                                        { "key2.value_key2", int64_t{1} },
-                                        { "key2.elapsed_s", 0.002},
-                                      },
-                                  } };
+      .component = COMPONENT,
+      .tag = TAG,
+      .timestamp = now,
+      .values = {},
+    },
+    {
+      .component = COMPONENT,
+      .tag = TAG,
+      .timestamp = now,
+      .values = {
+        { "key1.value_key", int64_t{2} },
+        { "key1.elapsed_s", 0.001},
+      },
+    } };
 
-  EXPECT_EQ(measure_entries, expected_metrics);
+  EXPECT_EQ(mock_sink_ptr->getMeasureEntries(), expected_metrics);
 }
+
 }  // namespace heph::telemetry::tests
