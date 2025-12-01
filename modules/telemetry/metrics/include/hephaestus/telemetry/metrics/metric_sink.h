@@ -34,6 +34,11 @@ struct Metric {
   std::vector<KeyValueType> values;
 };
 
+template <typename T>
+void addKeyValue(Metric& metric, std::string key, T value) {
+  metric.values.emplace_back(std::move(key), std::move(value));
+}
+
 class IMetricSink {
 public:
   virtual ~IMetricSink() = default;
