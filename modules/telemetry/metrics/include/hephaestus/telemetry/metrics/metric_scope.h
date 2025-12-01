@@ -26,7 +26,7 @@ namespace heph::telemetry {
 ///     .component = "component",
 ///     .tag = "tag",
 ///     .timestamp = now,
-///     .values = {};
+///     .values = {},
 ///   };
 ///   {
 ///     auto _ = ScopedDurationRecorder{metric, "key"};
@@ -35,7 +35,7 @@ namespace heph::telemetry {
 ///   addKeyValue(metric, "key.value_key", 42);
 /// }
 /// ```
-/// The above code create the following metrics entry:
+/// The above code creates the following metrics entry:
 /// * "key.value_key" : 42
 /// * "key.elapsed_s" : <elapsed time in seconds>
 template <typename ClockT = std::chrono::steady_clock>
@@ -77,7 +77,7 @@ private:
 ///   auto* metric = publisher.metric();
 ///   addKeyValue(*metric, "key.value", 42);
 ///   {
-///     ScopedDurationRecorder recorder{*metric, "key"}
+///     ScopedDurationRecorder recorder{*metric, "key"};
 ///   }
 /// }
 /// ```
