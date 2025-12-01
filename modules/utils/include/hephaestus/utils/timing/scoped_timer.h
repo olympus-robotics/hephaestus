@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <functional>
+#include <utility>
 
 namespace heph::utils::timing {
 
@@ -21,7 +22,7 @@ public:
     : callback_(std::move(callback)), start_timestamp_(now_fn()), now_fn_(now_fn) {
   }
 
-  ~ScopedTimer() {
+  ~ScopedTimer() {  // NOLINT(bugprone-exception-escape)
     const auto end_timestamp = now_fn_();
     callback_(end_timestamp - start_timestamp_);
   }

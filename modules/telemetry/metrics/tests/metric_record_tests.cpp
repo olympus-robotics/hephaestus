@@ -88,8 +88,8 @@ struct Dummy {
   NestedObject nested;
 };
 
-struct StructToFlatmapTest : heph::test_utils::HephTest {};
-struct MetricTest : heph::test_utils::HephTest {
+struct StructToFlatmapTest : test_utils::HephTest {};
+struct MetricTest : test_utils::HephTest {
   MetricTest() {
     auto mock_sink = std::make_unique<MockMetricSink>();
     mock_sink_ptr = mock_sink.get();
