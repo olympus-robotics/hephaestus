@@ -43,10 +43,11 @@ struct NonDeduced {
   using type = T;
 };
 
-void panicImpl(const std::source_location& location, const std::string& formatted_message);
+[[noreturn]] void panicImpl(const std::source_location& location, const std::string& formatted_message);
 
 template <typename... Args>
-void panic(typename NonDeduced<StringLiteralWithLocation<Args...>>::type message, Args&&... args) {
+[[noreturn]] void panic(typename NonDeduced<StringLiteralWithLocation<Args...>>::type message,
+                        Args&&... args) {
   auto formatted_message = fmt::format(message.value, std::forward<Args>(args)...);
   panicImpl(message.location, formatted_message);
 }
@@ -71,7 +72,7 @@ using error_handling::detail::panic;
     if (condition) [[unlikely]] {                                                                            \
       constexpr auto SRC_LOCATION = ::std::source_location::current();                                       \
                                                                                                              \
-      [&]<typename... PanicArgs>(PanicArgs&&... panic_args) {                                                \
+      [&]<typename... PanicArgs>(PanicArgs&&... panic_args) __attribute__((__noreturn__)) {                  \
         ::heph::panic(                                                                                       \
             ::heph::error_handling::detail::StringLiteralWithLocation<PanicArgs...>(message, SRC_LOCATION),  \
             ::std::forward<PanicArgs>(panic_args)...);                                                       \
