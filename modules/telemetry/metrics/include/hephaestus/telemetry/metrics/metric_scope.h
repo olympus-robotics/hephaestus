@@ -64,18 +64,16 @@ private:
   std::string key_;
 };
 
-/// @brief Helper class to publish a Metric upon destruction of the scope.
+/// @brief ScopedMetric is an extension for Metric that publish itself upon destruction.
 /// Example usage:
 /// ```cpp
 /// {
-///   ScopedMetricPublisher publisher{
-///     Metric{
-///       .component = "component",
-///       .tag = "tag",
-///       .timestamp = now,
-///       .values = {};
-///     }
-///   };
+///   ScopedMetric publisher{{
+///     .component = "component",
+///     .tag = "tag",
+///     .timestamp = now,
+///     .values = {};
+///   }};
 ///   auto* metric = publisher.metric();
 ///   addKeyValue(*metric, "key.value", 42);
 ///   {

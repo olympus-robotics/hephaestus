@@ -175,11 +175,11 @@ TEST_F(MetricTest, ScopedDurationRecorder) {
     .values = {},
   };
   {
-    ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
+    const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
     utils::timing::MockClock::advance(PERIOD);
   }
   {
-    ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key2");
+    const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key2");
     utils::timing::MockClock::advance(2 * PERIOD);
   }
 
@@ -196,7 +196,7 @@ TEST_F(MetricTest, ScopedMetric) {
   static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
   const auto now = ClockT::now();
   {
-    ScopedMetric metric{ {
+    const ScopedMetric metric{ {
         .component = COMPONENT,
         .tag = TAG,
         .timestamp = now,
@@ -214,7 +214,7 @@ TEST_F(MetricTest, ScopedMetric) {
 
     addKeyValue(metric, "key1.value_key", int64_t{ 2 });
     {
-      ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
+      const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
       utils::timing::MockClock::advance(PERIOD);
     }
   }
