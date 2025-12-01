@@ -32,8 +32,8 @@ void fixedCircularBufferSingleThread(benchmark::State& state) {
   heph::containers::FixedCircularBuffer<PayloadT, 1> queue;
 
   for ([[maybe_unused]] auto _ : state) {
-    (void)queue.push(PayloadT{});
-    auto payload = queue.pop();
+    (void)queue.tryPush(PayloadT{});
+    auto payload = queue.tryPop();
     benchmark::DoNotOptimize(payload);
   }
   state.SetBytesProcessed(
@@ -80,7 +80,7 @@ BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferMutex)(benchmark::State& stat
     for ([[maybe_unused]] auto _ : state) {
       while (true) {
         const std::unique_lock lock{ mutex };
-        if (fixed_buffer.push(PayloadT{})) {
+        if (fixed_buffer.tryPush(PayloadT{})) {
           break;
         }
       }
@@ -90,7 +90,7 @@ BENCHMARK_DEFINE_F(MultiThread, fixedCircularBufferMutex)(benchmark::State& stat
     for ([[maybe_unused]] auto _ : state) {
       while (true) {
         const std::unique_lock lock{ mutex };
-        auto payload = fixed_buffer.pop();
+        auto payload = fixed_buffer.tryPop();
         if (payload.has_value()) {
           break;
         }

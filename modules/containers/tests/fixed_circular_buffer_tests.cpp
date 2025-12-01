@@ -11,6 +11,28 @@
 
 namespace heph::containers::tests {
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
+
+struct NonCopyable {
+  NonCopyable() = default;
+  ~NonCopyable() = default;
+  explicit NonCopyable(int dummy) : value(dummy) {
+  }
+  NonCopyable(const NonCopyable& other) = delete;
+  auto operator=(const NonCopyable& other) -> NonCopyable& = delete;
+  NonCopyable(NonCopyable&& other) = default;
+  auto operator=(NonCopyable&& other) -> NonCopyable& = default;
+  int value;
+};
+TEST(FixedCircularQueue, NonCopyable) {
+  static constexpr int TEST_VALUE = 4711;
+  static constexpr std::size_t QUEUE_SIZE = 16;
+  FixedCircularBuffer<NonCopyable, QUEUE_SIZE> queue;
+  EXPECT_TRUE(queue.tryPush(NonCopyable{ TEST_VALUE }));
+  auto res = queue.tryPop();
+  EXPECT_TRUE(res.has_value());
+  EXPECT_EQ(res->value, TEST_VALUE);
+}
+
 TEST(FixedCircularQueue, Push) {
   {
     static constexpr std::size_t QUEUE_SIZE = 1;
@@ -20,24 +42,24 @@ TEST(FixedCircularQueue, Push) {
     EXPECT_FALSE(queue.full());
     EXPECT_EQ(queue.size(), 0);
 
-    EXPECT_TRUE(queue.push(0));
+    EXPECT_TRUE(queue.tryPush(0));
     EXPECT_FALSE(queue.empty());
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 1);
-    EXPECT_FALSE(queue.push(1));
+    EXPECT_FALSE(queue.tryPush(1));
     EXPECT_FALSE(queue.empty());
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 1);
 
-    queue.pushForce(2);
+    queue.forcePush(2);
 
     std::optional<int> res;
 
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 2);
 
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_FALSE(res.has_value());
   }
   {
@@ -48,40 +70,40 @@ TEST(FixedCircularQueue, Push) {
     EXPECT_FALSE(queue.full());
     EXPECT_EQ(queue.size(), 0);
 
-    EXPECT_TRUE(queue.push(0));
+    EXPECT_TRUE(queue.tryPush(0));
     EXPECT_FALSE(queue.empty());
     EXPECT_FALSE(queue.full());
     EXPECT_EQ(queue.size(), 1);
-    EXPECT_TRUE(queue.push(1));
+    EXPECT_TRUE(queue.tryPush(1));
     EXPECT_FALSE(queue.empty());
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 2);
-    EXPECT_FALSE(queue.push(2));
+    EXPECT_FALSE(queue.tryPush(2));
     EXPECT_FALSE(queue.empty());
     EXPECT_TRUE(queue.full());
     EXPECT_EQ(queue.size(), 2);
 
-    queue.pushForce(3);
+    queue.forcePush(3);
 
     std::optional<int> res;
 
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 1);
     EXPECT_EQ(queue.size(), 1);
 
-    EXPECT_TRUE(queue.push(4));
+    EXPECT_TRUE(queue.tryPush(4));
     EXPECT_EQ(queue.size(), 2);
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 3);
     EXPECT_EQ(queue.size(), 1);
 
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(*res, 4);
 
-    res = queue.pop();
+    res = queue.tryPop();
     EXPECT_FALSE(res.has_value());
   }
 }
