@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <string_view>
 #include <utility>
 
@@ -31,7 +32,7 @@ namespace heph::telemetry {
 ///     auto _ = ScopedDurationRecorder{metric, "key"};
 ///     // code to measure
 ///   }
-///   addKeyValue(metric, "key.value_key", 42);
+///   metric.addKeyValue("key.value_key", 42);
 /// }
 /// ```
 /// The above code creates the following metrics entry:

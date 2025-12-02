@@ -122,7 +122,7 @@ TEST_F(StructToFlatmapTest, StructToFlatmap) {
 TEST_F(MetricTest, AddKeyValue) {
   static constexpr auto VALUE = int64_t{ 42 };
   Metric metric;
-  addKeyValue(metric, "key1", VALUE);
+  metric.addKeyValue("key1", VALUE);
   EXPECT_THAT(metric.values, SizeIs(1));
   const auto& [key, value] = metric.values.front();
   EXPECT_EQ(key, "key1");
@@ -222,7 +222,7 @@ TEST_F(MetricTest, ScopedMetric) {
         .values = {},
     } };
 
-    addKeyValue(metric, "key1.value_key", int64_t{ 2 });
+    metric.addKeyValue("key1.value_key", int64_t{ 2 });
     {
       const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
       utils::timing::MockClock::advance(PERIOD);
