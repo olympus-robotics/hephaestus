@@ -52,8 +52,8 @@ private:
 McapWriter::McapWriter(McapWriterParams params) : params_(std::move(params)) {
   auto options = params_.mcap_writer_options;
   const auto status = writer_.open(params_.output_file.string(), options);
-  panicIf(!status.ok(), "failed to create Mcap writer for file {}, with error: {}",
-          params_.output_file.string(), status.message);
+  HEPH_PANIC_IF(!status.ok(), "failed to create Mcap writer for file {}, with error: {}",
+                params_.output_file.string(), status.message);
 }
 
 void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
@@ -69,7 +69,7 @@ void McapWriter::registerSchema(const serdes::TypeInfo& type_info) {
 }
 
 void McapWriter::writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::span<const std::byte> data) {
-  panicIf(!channel_db_.contains(metadata.topic), "no channel registered for topic {}", metadata.topic);
+  HEPH_PANIC_IF(!channel_db_.contains(metadata.topic), "no channel registered for topic {}", metadata.topic);
 
   auto channel_id = channel_db_[metadata.topic].id;
 
@@ -82,11 +82,11 @@ void McapWriter::writeRecord(const ipc::zenoh::MessageMetadata& metadata, std::s
   msg.dataSize = data.size();
 
   const auto write_res = writer_.write(msg);
-  panicIf(!write_res.ok(), "failed to write msg from topic {} to bag", metadata.topic);
+  HEPH_PANIC_IF(!write_res.ok(), "failed to write msg from topic {} to bag", metadata.topic);
 }
 
 void McapWriter::registerChannel(const std::string& topic, const serdes::TypeInfo& type_info) {
-  panicIf(!schema_db_.contains(type_info.name), "no schema registered for type {}", type_info.name);
+  HEPH_PANIC_IF(!schema_db_.contains(type_info.name), "no schema registered for type {}", type_info.name);
 
   const auto& schema = schema_db_[type_info.name];
   mcap::Channel channel(topic, schema.encoding, schema.id);

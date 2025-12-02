@@ -69,7 +69,7 @@ ZenohPlayer::Impl::Impl(ZenohPlayerParams params)
 
 auto ZenohPlayer::Impl::start() -> std::future<void> {
   const auto status = bag_reader_->readSummary(mcap::ReadSummaryMethod::AllowFallbackScan);
-  panicIf(!status.ok(), "Failed to read bag summary: {}", status.message);
+  HEPH_PANIC_IF(!status.ok(), "Failed to read bag summary: {}", status.message);
 
   const auto channels = bag_reader_->channels();
   channel_count_ = channels.size();
@@ -86,7 +86,7 @@ auto ZenohPlayer::Impl::start() -> std::future<void> {
 }
 
 auto ZenohPlayer::Impl::stop() -> std::future<void> {
-  panicIf(terminate_, "player is already stopped, cannot stop again");
+  HEPH_PANIC_IF(terminate_, "player is already stopped, cannot stop again");
   terminate_ = true;
   play_cv_.notify_all();
 
@@ -98,8 +98,8 @@ void ZenohPlayer::Impl::wait() const {
 }
 
 void ZenohPlayer::Impl::createPublisher(const mcap::Channel& channel) {
-  panicIf(publishers_.contains(channel.topic),
-          "failed to create publisher for topic: {}; topic already exist", channel.topic);
+  HEPH_PANIC_IF(publishers_.contains(channel.topic),
+                "failed to create publisher for topic: {}; topic already exist", channel.topic);
 
   const auto& schema = bag_reader_->schema(channel.schemaId);
   auto type_info = serdes::TypeInfo{

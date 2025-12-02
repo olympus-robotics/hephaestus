@@ -211,7 +211,7 @@ void EndpointDiscovery::createLivelinessSubscriber() {
   liveliness_subscriber_ =
       std::make_unique<::zenoh::Subscriber<void>>(session_->zenoh_session.liveliness_declare_subscriber(
           keyexpr, std::move(liveliness_callback), ::zenoh::closures::none, { .history = true }, &result));
-  panicIf(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber");
+  HEPH_PANIC_IF(result != Z_OK, "[Liveliness Subscriber '**'] failed to create liveliness subscriber");
 }
 
 }  // namespace heph::ipc::zenoh

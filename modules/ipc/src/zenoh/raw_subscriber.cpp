@@ -103,8 +103,8 @@ RawSubscriber::RawSubscriber(SessionPtr session, TopicConfig topic_config, DataC
       session_->zenoh_session.ext().declare_advanced_subscriber(
           keyexpr, [this](const ::zenoh::Sample& sample) { this->callback(sample); }, []() {},
           std::move(sub_options), &result));
-  panicIf(result != Z_OK, "[Subscriber {}] failed to create zenoh subscriber, err {}", topic_config_.name,
-          result);
+  HEPH_PANIC_IF(result != Z_OK, "[Subscriber {}] failed to create zenoh subscriber, err {}",
+                topic_config_.name, result);
 
   if (config.create_liveliness_token) {
     liveliness_token_ =

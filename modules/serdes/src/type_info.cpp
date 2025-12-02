@@ -29,7 +29,7 @@ auto TypeInfo::fromJson(const std::string& info) -> TypeInfo {
   auto data = nlohmann::json::parse(info);
   auto serialization_str = data["serialization"].get<std::string>();
   auto serialization = magic_enum::enum_cast<TypeInfo::Serialization>(serialization_str);
-  panicIf(!serialization.has_value(), "failed to convert {} to Serialization enum", serialization_str);
+  HEPH_PANIC_IF(!serialization.has_value(), "failed to convert {} to Serialization enum", serialization_str);
   return { .name = data["name"],
            .schema = data["schema"],
            .serialization = serialization.value(),  // NOLINT(bugprone-unchecked-optional-access)

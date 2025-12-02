@@ -53,8 +53,8 @@ auto UuidV4::create() -> UuidV4 {
 auto UuidV4::fromString(const std::string& uuid4_str) -> UuidV4 {
   static constexpr auto UUID4_STRING_SIZE = 36;
   // A UUID string must be 36 characters long
-  panicIf(uuid4_str.length() != UUID4_STRING_SIZE, "Invalid UUID string length, expected {}, got {}",
-          UUID4_STRING_SIZE, uuid4_str.length());
+  HEPH_PANIC_IF(uuid4_str.length() != UUID4_STRING_SIZE, "Invalid UUID string length, expected {}, got {}",
+                UUID4_STRING_SIZE, uuid4_str.length());
 
   std::stringstream ss(uuid4_str);
   char dash1{};
@@ -78,7 +78,7 @@ auto UuidV4::fromString(const std::string& uuid4_str) -> UuidV4 {
   // We also check if there is any trailing data.
   const auto invalid = (ss.fail() || ss.rdbuf()->in_avail() != 0 || dash1 != '-' || dash2 != '-' ||
                         dash3 != '-' || dash4 != '-');
-  panicIf(invalid, "Invalid UUID string format: {}", uuid4_str);
+  HEPH_PANIC_IF(invalid, "Invalid UUID string format: {}", uuid4_str);
 
   UuidV4 uuid;
 

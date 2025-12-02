@@ -108,12 +108,12 @@ Spinner::Spinner(StoppableCallback&& stoppable_callback,
 }
 
 Spinner::~Spinner() {  // NOLINT(bugprone-exception-escape)
-  panicIf(async_spinner_handle_.valid(),
-          "Spinner is still running. Call stop() before destroying the object.");
+  HEPH_PANIC_IF(async_spinner_handle_.valid(),
+                "Spinner is still running. Call stop() before destroying the object.");
 }
 
 void Spinner::start() {
-  panicIf(async_spinner_handle_.valid(), "Spinner is already started.");
+  HEPH_PANIC_IF(async_spinner_handle_.valid(), "Spinner is already started.");
 
   stop_requested_.store(false);
   spinner_completed_.clear();
@@ -158,7 +158,7 @@ void Spinner::terminate() {
 }
 
 auto Spinner::stop() -> std::future<void> {
-  panicIf(!async_spinner_handle_.valid(), "Spinner not yet started, cannot stop.");
+  HEPH_PANIC_IF(!async_spinner_handle_.valid(), "Spinner not yet started, cannot stop.");
   stop_requested_.store(true);
   condition_.notify_all();
 

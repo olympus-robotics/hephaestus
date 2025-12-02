@@ -23,14 +23,14 @@ void loadSchema(const heph::serdes::TypeInfo& type_info,
                 google::protobuf::SimpleDescriptorDatabase& proto_db) {
   google::protobuf::FileDescriptorSet fd_set;
   auto res = fd_set.ParseFromArray(type_info.schema.data(), static_cast<int>(type_info.schema.size()));
-  panicIf(!res, "failed to parse schema for type: {}", type_info.name);
+  HEPH_PANIC_IF(!res, "failed to parse schema for type: {}", type_info.name);
 
   google::protobuf::FileDescriptorProto unused;
   for (int i = 0; i < fd_set.file_size(); ++i) {
     const auto& file = fd_set.file(i);
     if (!proto_db.FindFileByName(file.name(), &unused)) {
       res = proto_db.Add(file);
-      panicIf(!res, "failed to add definition to proto DB: {}", file.name());
+      HEPH_PANIC_IF(!res, "failed to add definition to proto DB: {}", file.name());
     }
   }
 }
@@ -54,7 +54,8 @@ auto DynamicDeserializer::toJson(const std::string& type, std::span<const std::b
   options.add_whitespace = true;
   options.unquote_int64_if_possible = true;
   const auto status = google::protobuf::util::MessageToJsonString(*message, &msg_json, options);
-  panicIf(!status.ok(), "failed to convert proto message of type {} to json: {}", type, status.message());
+  HEPH_PANIC_IF(!status.ok(), "failed to convert proto message of type {} to json: {}", type,
+                status.message());
 
   return msg_json;
 }
@@ -65,7 +66,7 @@ auto DynamicDeserializer::toText(const std::string& type, std::span<const std::b
   auto printer = google::protobuf::TextFormat::Printer();
   printer.SetUseShortRepeatedPrimitives(true);
   const auto success = printer.PrintToString(*message, &msg_text);
-  panicIf(!success, "failed to convert proto message of type {} to text", type);
+  HEPH_PANIC_IF(!success, "failed to convert proto message of type {} to text", type);
 
   return msg_text;
 }
@@ -73,11 +74,12 @@ auto DynamicDeserializer::toText(const std::string& type, std::span<const std::b
 auto DynamicDeserializer::getMessage(const std::string& type, std::span<const std::byte> data)
     -> google::protobuf::Message* {
   const auto* descriptor = proto_pool_.FindMessageTypeByName(type);
-  panicIf(descriptor == nullptr, "schema for type {} was not registered, cannot deserialize data", type);
+  HEPH_PANIC_IF(descriptor == nullptr, "schema for type {} was not registered, cannot deserialize data",
+                type);
 
   auto* message = proto_factory_.GetPrototype(descriptor)->New();
   const auto res = message->ParseFromArray(data.data(), static_cast<int>(data.size()));
-  panicIf(!res, "failed to parse message of type {}", type);
+  HEPH_PANIC_IF(!res, "failed to parse message of type {}", type);
 
   return message;
 }

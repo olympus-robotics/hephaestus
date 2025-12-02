@@ -27,8 +27,8 @@ template <typename EnumT>
 void fromProto(const proto::BitFlag& proto_bit_flag, BitFlag<EnumT>& bit_flag) {
   const auto bit_flag_value =
       BitFlag<EnumT>::fromUnderlyingValue(static_cast<BitFlag<EnumT>::T>(proto_bit_flag.value()));
-  panicIf(!bit_flag_value.has_value(),
-          "Failed to deserialize BitFlag from protobuf: underlying value contains invalid bits.");
+  HEPH_PANIC_IF(!bit_flag_value.has_value(),
+                "Failed to deserialize BitFlag from protobuf: underlying value contains invalid bits.");
   bit_flag = bit_flag_value.value();
 }
 
