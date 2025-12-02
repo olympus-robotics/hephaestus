@@ -5,15 +5,12 @@
 #pragma once
 
 #include <cstddef>
-#include <exception>
 #include <mutex>
 #include <optional>
-#include <thread>
 #include <type_traits>
 #include <utility>
 
 #include <absl/base/thread_annotations.h>
-#include <absl/synchronization/mutex.h>
 #include <boost/circular_buffer.hpp>
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
@@ -40,6 +37,13 @@ template <typename T, std::size_t Capacity>
 struct SetValueSender;
 }  // namespace internal
 
+template <typename T>
+concept ChannelValueType = requires(T t) {
+  requires std::is_nothrow_destructible_v<T>;
+  requires std::is_nothrow_move_assignable_v<T>;
+  requires std::is_nothrow_move_constructible_v<T>;
+};
+
 /// Asynchronous communication channel
 ///
 /// The member functions \ref getValue and \ref setValue return senders.
@@ -47,6 +51,8 @@ struct SetValueSender;
 ///
 /// @tparam T The type of the values to store
 /// @tparam Capacity Maximum number of elements the Channel can store
+///
+/// Exception Safety: cannot throw, ensured by type constraints.
 ///
 /// Example:
 /// @code
@@ -76,7 +82,7 @@ struct SetValueSender;
 /// assert(res == 42);
 ///
 /// @endcode
-template <typename T, std::size_t Capacity>
+template <ChannelValueType T, std::size_t Capacity>
 class Channel {
   using GetValueSender = internal::GetValueSender<T, Capacity>;
   using SetValueSender = internal::SetValueSender<T, Capacity>;
@@ -86,13 +92,14 @@ public:
   /// at least one item stored in the channel.
   ///
   /// @param t The value to send via the channel
-  [[nodiscard]] auto setValue(T t) -> SetValueSender;
+  template <ChannelValueType U>
+  [[nodiscard]] auto setValue(U&& value) noexcept -> SetValueSender;
   /// Push a value into the channel. The returned sender will complete if there is space to store an
   /// element. Otherwise blocks until at least one item was consumed. Then returned sender completes with the
   /// value received from the channel.
-  [[nodiscard]] auto getValue() -> GetValueSender;
+  [[nodiscard]] auto getValue() noexcept -> GetValueSender;
 
-  [[nodiscard]] auto tryGetValue() -> std::optional<T> {
+  [[nodiscard]] auto tryGetValue() noexcept -> std::optional<T> {
     internal::AwaiterBase* set_awaiter{ nullptr };
     std::optional<T> res;
     {
@@ -100,6 +107,7 @@ public:
       if (data_.empty()) {
         return res;
       }
+
       res.emplace(std::move(data_.front()));
       data_.pop_front();
 
@@ -111,7 +119,7 @@ public:
     return res;
   }
 
-  void setValueOverwrite(T t) {
+  void setValueOverwrite(T&& t) noexcept {
     internal::AwaiterBase* get_awaiter{ nullptr };
     {
       std::scoped_lock lock{ mutex_ };
@@ -134,7 +142,8 @@ private:
   friend struct internal::GetValueSender;
 
   template <typename OnSuccess, typename OnFail>
-  void setValueImpl(T&& t, internal::AwaiterBase* set_awaiter, OnSuccess on_success, OnFail on_fail) {
+  void setValueImpl(T&& t, internal::AwaiterBase* set_awaiter, OnSuccess on_success,
+                    OnFail on_fail) noexcept {
     internal::AwaiterBase* get_awaiter{ nullptr };
     {
       std::scoped_lock lock{ mutex_ };
@@ -154,7 +163,7 @@ private:
   }
 
   template <typename OnSuccess, typename OnFail>
-  void getValueImpl(internal::AwaiterBase* get_awaiter, OnSuccess on_success, OnFail on_fail) {
+  void getValueImpl(internal::AwaiterBase* get_awaiter, OnSuccess on_success, OnFail on_fail) noexcept {
     internal::AwaiterBase* set_awaiter{ nullptr };
     {
       std::scoped_lock lock{ mutex_ };
@@ -174,6 +183,15 @@ private:
   }
 
 private:
+  // NOTE: The recursive lock is currently required to ensure proper lifetime in the presence
+  // of stop requests being signaled concurrently from a different thread. If either setting
+  // or getting value fails, we have to construct the stop callback under the lock to ensure
+  // proper ordering between threads. On the occasion that a stop request was already signaled,
+  // the callback will be invoked immediately. Stopping however requires the same lock to be
+  // acquired.
+  // If the lock would be released right before constructing the callback, we could get a race
+  // between construction and destruction as the stop callback is constructed, while another
+  // thread could complete the same sender with a completion signal.
   mutable std::recursive_mutex mutex_;
   boost::circular_buffer<T> data_{ Capacity };
   internal::AwaiterQueueT set_awaiters_ ABSL_GUARDED_BY(mutex_);
@@ -185,8 +203,7 @@ template <typename T, std::size_t Capacity>
 struct SetValueSender {
   using sender_concept = stdexec::sender_t;
   using completion_signatures =
-      stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_stopped_t(),
-                                     stdexec::set_error_t(std::exception_ptr)>;
+      stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_stopped_t()>;
 
   template <typename Receiver>
   class Operation : public AwaiterBase {
@@ -211,8 +228,9 @@ struct SetValueSender {
     using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopRequested>;
 
   public:
-    Operation(Channel<T, Capacity>* self, T value, Receiver receiver)
-      : self_(self), value_(std::move(value)), receiver_{ std::move(receiver) } {
+    template <ChannelValueType U>
+    Operation(Channel<T, Capacity>* self, U&& value, Receiver receiver)
+      : self_(self), value_(std::forward<U>(value)), receiver_{ std::move(receiver) } {
     }
 
     void start() noexcept {
@@ -246,7 +264,7 @@ struct SetValueSender {
   };
 
   template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
-  auto connect(Receiver&& receiver) && {
+  auto connect(Receiver&& receiver) && noexcept(std::is_nothrow_move_constructible_v<ReceiverT>) {
     return Operation<ReceiverT>(self, std::move(value), std::forward<Receiver>(receiver));
   }
 
@@ -255,9 +273,10 @@ struct SetValueSender {
 };
 }  // namespace internal
 
-template <typename T, std::size_t Capacity>
-auto Channel<T, Capacity>::setValue(T t) -> internal::SetValueSender<T, Capacity> {
-  return internal::SetValueSender<T, Capacity>{ this, std::move(t) };
+template <ChannelValueType T, std::size_t Capacity>
+template <ChannelValueType U>
+auto Channel<T, Capacity>::setValue(U&& value) noexcept -> internal::SetValueSender<T, Capacity> {
+  return internal::SetValueSender<T, Capacity>{ this, std::forward<U>(value) };
 }
 
 namespace internal {
@@ -265,8 +284,7 @@ template <typename T, std::size_t Capacity>
 struct GetValueSender {
   using sender_concept = stdexec::sender_t;
   using completion_signatures =
-      stdexec::completion_signatures<stdexec::set_value_t(T), stdexec::set_stopped_t(),
-                                     stdexec::set_error_t(std::exception_ptr)>;
+      stdexec::completion_signatures<stdexec::set_value_t(T), stdexec::set_stopped_t()>;
 
   template <typename Receiver>
   class Operation : public AwaiterBase {
@@ -324,7 +342,7 @@ struct GetValueSender {
   };
 
   template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
-  auto connect(Receiver&& receiver) && {
+  auto connect(Receiver&& receiver) && noexcept(std::is_nothrow_move_constructible_v<ReceiverT>) {
     return Operation<ReceiverT>(self, std::forward<Receiver>(receiver));
   }
 
@@ -332,8 +350,8 @@ struct GetValueSender {
 };
 }  // namespace internal
 
-template <typename T, std::size_t Capacity>
-auto Channel<T, Capacity>::getValue() -> internal::GetValueSender<T, Capacity> {
+template <ChannelValueType T, std::size_t Capacity>
+auto Channel<T, Capacity>::getValue() noexcept -> internal::GetValueSender<T, Capacity> {
   return internal::GetValueSender<T, Capacity>{ this };
 }
 

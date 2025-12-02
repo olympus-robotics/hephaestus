@@ -100,7 +100,6 @@ heph_cc_test(
 )
 
 heph_cc_test(
-<<<<<<< HEAD
     name = "any_sender_tests",
     srcs = ["tests/any_sender_tests.cpp"],
     deps = [":concurrency"],
@@ -112,17 +111,6 @@ heph_cc_test(
     deps = [":concurrency"],
 )
 
-heph_cc_test(
-=======
-<<<<<<< HEAD
-=======
-    name = "stoppable_operation_state_tests",
-    srcs = ["tests/stoppable_operation_state_tests.cpp"],
-    deps = [
-        ":concurrency",
-        "@stdexec",
-    ],
-)
 
 heph_cc_test(
     name = "channel_tests",
@@ -134,8 +122,6 @@ heph_cc_test(
 )
 
 heph_cc_test(
->>>>>>> 8d68b93 (Feature: Adding Channel)
->>>>>>> a93269e (Feature: Adding Channel)
     name = "queue_consumer_tests",
     srcs = ["tests/queue_consumer_tests.cpp"],
     deps = [

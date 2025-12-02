@@ -2,10 +2,10 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <chrono>
 #include <cstddef>
 #include <thread>
 
+#include <absl/synchronization/mutex.h>
 #include <exec/async_scope.hpp>
 #include <exec/when_any.hpp>
 #include <gtest/gtest.h>
