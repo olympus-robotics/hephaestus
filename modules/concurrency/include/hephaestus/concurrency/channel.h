@@ -119,14 +119,15 @@ public:
     return res;
   }
 
-  void setValueOverwrite(T&& t) noexcept {
+  template <ChannelValueType U>
+  void setValueOverwrite(U&& value) noexcept {
     internal::AwaiterBase* get_awaiter{ nullptr };
     {
       std::scoped_lock lock{ mutex_ };
       if (data_.full()) {
         data_.pop_front();
       }
-      data_.push_back(std::move(t));
+      data_.push_back(std::forward<U>(value));
 
       get_awaiter = get_awaiters_.dequeue();
     }
