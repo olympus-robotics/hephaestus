@@ -43,13 +43,15 @@ class ScopedDurationRecorder {
 public:
   using SecondsT = std::chrono::duration<double>;
   ScopedDurationRecorder(Metric& metric, std::string_view key)
-    : metric_(&metric), start_timestamp_(ClockT::now()), key_(fmt::format("{}.elapsed_s", key)) {
+    : metric_(metric)
+    , start_timestamp_(ClockT::now())
+    , value_ref_(metric_.values.emplace_back(fmt::format("{}.elapsed_s", key), int64_t{ 0 })) {
   }
 
   ~ScopedDurationRecorder() {
     const auto end_timestamp = ClockT::now();
     const auto duration = end_timestamp - start_timestamp_;
-    metric_->values.emplace_back(key_, std::chrono::duration_cast<SecondsT>(duration).count());
+    value_ref_.second = SecondsT{ duration }.count();
   }
 
   ScopedDurationRecorder(const ScopedDurationRecorder&) = delete;
@@ -58,10 +60,9 @@ public:
   auto operator=(ScopedDurationRecorder&&) -> ScopedDurationRecorder& = delete;
 
 private:
-  Metric* metric_;
+  Metric& metric_;
   ClockT::time_point start_timestamp_;
-
-  std::string key_;
+  Metric::KeyValueType& value_ref_;
 };
 
 /// @brief ScopedMetric is an extension for Metric that publish itself upon destruction.
@@ -85,7 +86,6 @@ private:
 /// * "key.value" : 42
 /// * "key.elapsed_s" : <elapsed time in seconds>
 struct ScopedMetric : public Metric {
-  using Metric::Metric;
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   ScopedMetric(Metric&& metric) : Metric(std::move(metric)) {
   }
