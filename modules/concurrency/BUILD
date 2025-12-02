@@ -24,6 +24,10 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "//modules/utils",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/synchronization:synchronization",
+        "@boost.circular_buffer",
         "@boost.container",
         "@liburing",
         "@stdexec",
@@ -96,6 +100,7 @@ heph_cc_test(
 )
 
 heph_cc_test(
+<<<<<<< HEAD
     name = "any_sender_tests",
     srcs = ["tests/any_sender_tests.cpp"],
     deps = [":concurrency"],
@@ -108,6 +113,29 @@ heph_cc_test(
 )
 
 heph_cc_test(
+=======
+<<<<<<< HEAD
+=======
+    name = "stoppable_operation_state_tests",
+    srcs = ["tests/stoppable_operation_state_tests.cpp"],
+    deps = [
+        ":concurrency",
+        "@stdexec",
+    ],
+)
+
+heph_cc_test(
+    name = "channel_tests",
+    srcs = ["tests/channel_tests.cpp"],
+    deps = [
+        ":concurrency",
+        "@stdexec",
+    ],
+)
+
+heph_cc_test(
+>>>>>>> 8d68b93 (Feature: Adding Channel)
+>>>>>>> a93269e (Feature: Adding Channel)
     name = "queue_consumer_tests",
     srcs = ["tests/queue_consumer_tests.cpp"],
     deps = [
