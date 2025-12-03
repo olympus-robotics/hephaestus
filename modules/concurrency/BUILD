@@ -24,6 +24,7 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "@boost.container",
         "@liburing",
         "@stdexec",
     ],

@@ -8,17 +8,21 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
-#include <memory>
 #include <optional>
 #include <ranges>
 #include <type_traits>
 #include <utility>
 
+#include <boost/container/static_vector.hpp>
 #include <stdexec/__detail/__execution_fwd.hpp>
+#include <stdexec/__detail/__meta.hpp>
 #include <stdexec/__detail/__senders_core.hpp>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/error_handling/panic.h"
+
 namespace heph::concurrency {
+
 template <typename Range>
 concept SenderRange = std::ranges::range<Range> && stdexec::sender<std::ranges::range_value_t<Range>>;
 
@@ -31,7 +35,7 @@ struct WhenAllStopCallback {
   }
 };
 
-enum WhenAllRangeState : std::uint8_t { STARTED, ERROR, STOPPED };
+enum class WhenAllRangeState : std::uint8_t { STARTED, ERROR, STOPPED };
 
 template <typename Receiver>
 struct WhenAllRangeStateT {
@@ -40,7 +44,7 @@ struct WhenAllRangeStateT {
   using StopCallbackT = stdexec::stop_callback_for_t<StopToken, WhenAllStopCallback>;
 
   void arrive() noexcept {
-    if (1 == count.fetch_sub(1, std::memory_order_release)) {
+    if (1 == count.fetch_sub(1, std::memory_order_acq_rel)) {
       complete();
     }
   }
@@ -49,13 +53,13 @@ struct WhenAllRangeStateT {
     on_stop.reset();
 
     switch (state.load(std::memory_order_acquire)) {
-      case STARTED:
+      case WhenAllRangeState::STARTED:
         stdexec::set_value(std::move(receiver));
         break;
-      case ERROR:
+      case WhenAllRangeState::ERROR:
         stdexec::set_error(std::move(receiver), std::move(error));
         break;
-      case STOPPED:
+      case WhenAllRangeState::STOPPED:
         stdexec::set_stopped(std::move(receiver));
     }
   }
@@ -68,7 +72,7 @@ struct WhenAllRangeStateT {
   Receiver receiver;
   std::atomic<std::size_t> count{ 0 };
   stdexec::inplace_stop_source stop_source;
-  std::atomic<WhenAllRangeState> state{ STARTED };
+  std::atomic<WhenAllRangeState> state{ WhenAllRangeState::STARTED };
   std::exception_ptr error;
   std::optional<StopCallbackT> on_stop;
 };
@@ -85,27 +89,30 @@ struct InnerReceiver {
   }
 
   void set_stopped() noexcept {
-    WhenAllRangeState expected = STARTED;
+    WhenAllRangeState expected = WhenAllRangeState::STARTED;
     // Transition to the "stopped" state if and only if we're in the
     // "started" state. (If this fails, it's because we're in an
     // error state, which trumps cancellation.)
-    if (state->state.compare_exchange_strong(expected, STOPPED, std::memory_order_acq_rel)) {
+    if (state->state.compare_exchange_strong(expected, WhenAllRangeState::STOPPED,
+                                             std::memory_order_acq_rel)) {
       state->stop_source.request_stop();
     }
     state->arrive();
   }
 
   void set_error(std::exception_ptr ptr) noexcept {
-    switch (state->state.exchange(ERROR, std::memory_order_release)) {
-      case STARTED:
+    switch (state->state.exchange(WhenAllRangeState::ERROR, std::memory_order_acq_rel)) {
+      case WhenAllRangeState::STARTED:
         state->stop_source.request_stop();
         [[fallthrough]];
-      case STOPPED:
+      case WhenAllRangeState::STOPPED:
         // We are the first child to complete with an error, so we must save the error. (Any
         // subsequent errors are ignored.)
         state->error = std::move(ptr);
         break;
-      case ERROR:;  // We're already in the "error" state. Ignore the error.
+      case WhenAllRangeState::ERROR:
+          // We're already in the "error" state. Ignore the error.
+          ;
     }
     state->arrive();
   }
@@ -117,7 +124,7 @@ struct InnerReceiver {
   WhenAllRangeStateT<OuterReceiver>* state;
 };
 
-template <typename Range, typename Receiver>
+template <std::size_t N, typename Range, typename Receiver>
 struct Operation {
   using SenderT = std::ranges::range_value_t<Range>;
   using OuterReceiverEnv = stdexec::env_of_t<Receiver>;
@@ -125,29 +132,25 @@ struct Operation {
   using InnerOperationT = stdexec::connect_result_t<SenderT, InnerReceiverT>;
 
   void start() noexcept {
-    auto size = std::ranges::size(range);
-    if (size == 0) {
-      stdexec::set_value(std::move(state.receiver));
-      return;
-    }
-    state.count.store(size, std::memory_order_release);
+    state.count.store(N, std::memory_order_release);
     state.on_stop.emplace(stdexec::get_stop_token(stdexec::get_env(state.receiver)),
                           WhenAllStopCallback{ &state.stop_source });
-    operations.reserve(size);
     for (auto& sender : range) {
-      operations.emplace_back(
-          new InnerOperationT{ stdexec::connect(std::move(sender), InnerReceiverT{ &state }) });
-      stdexec::start(*operations.back());
+      // NOTE: This might throw an exception (for example std::bad_alloc), as start is noexcept,
+      // we are opting to have the program abort since this any exception thrown here is likely
+      // a fatal bug.
+      operations.emplace_back(stdexec::__emplace_from{
+          [&]() { return stdexec::connect(std::move(sender), InnerReceiverT{ &state }); } });
+      stdexec::start(operations.back());
     }
   }
 
   WhenAllRangeStateT<Receiver> state;
   Range range;
-  // TODO: (heller) optimize memory allocations and indirections here...
-  std::vector<std::unique_ptr<InnerOperationT>> operations;
+  boost::container::static_vector<InnerOperationT, N> operations;
 };
 
-template <typename Range>
+template <std::size_t N, typename Range>
 struct WhenAllRangeSender {
   using sender_concept = stdexec::sender_t;
   using completion_signatures =
@@ -155,7 +158,7 @@ struct WhenAllRangeSender {
                                      stdexec::set_error_t(std::exception_ptr)>;
 
   template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
-  auto connect(Receiver&& receiver) && -> Operation<Range, ReceiverT> {
+  auto connect(Receiver&& receiver) && -> Operation<N, Range, ReceiverT> {
     return { { std::forward<Receiver>(receiver) }, std::move(range) };
   }
 
@@ -163,13 +166,18 @@ struct WhenAllRangeSender {
 };
 }  // namespace internal
 
-/// Wait on a range of senders
+/// Wait on a range of senders with a fixed size.
 ///
+/// \tparam N Number of elements in the range
 /// \param range the range of senders to wait on. Takes ownership of the range
 ///
 /// \note Currently only senders completing with void are supported
-template <SenderRange Range, typename RangeT = std::decay_t<Range>>
+///
+/// This function operates on a fixed size range. The
+template <std::size_t N, SenderRange Range, typename RangeT = std::decay_t<Range>>
+  requires(N > 0)
 [[nodiscard]] auto whenAllRange(Range&& range) {
-  return internal::WhenAllRangeSender<Range>{ std::forward<Range>(range) };
+  HEPH_PANIC_IF(N != std::ranges::size(range), "Size mismatch");
+  return internal::WhenAllRangeSender<N, RangeT>{ std::forward<Range>(range) };
 }
 }  // namespace heph::concurrency

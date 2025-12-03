@@ -17,11 +17,7 @@
 #include "hephaestus/concurrency/when_all_range.h"
 
 namespace heph::concurrency {
-TEST(WhenAllRange, Empty) {
-  std::vector<AnySender<void>> senders;
 
-  stdexec::sync_wait(whenAllRange(std::move(senders)));
-}
 TEST(WhenAllRange, Basic) {
   std::vector<AnySender<void>> senders;
 
@@ -31,7 +27,7 @@ TEST(WhenAllRange, Basic) {
     senders.emplace_back(stdexec::just() | stdexec::then([&completed]() { ++completed; }));
   }
 
-  auto res = stdexec::sync_wait(whenAllRange(std::move(senders)));
+  auto res = stdexec::sync_wait(whenAllRange<NUMBER_OF_SENDERS>(std::move(senders)));
 
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(completed, NUMBER_OF_SENDERS);
@@ -50,7 +46,7 @@ TEST(WhenAllRange, Stop) {
     }
   }
 
-  auto res = stdexec::sync_wait(whenAllRange(std::move(senders)));
+  auto res = stdexec::sync_wait(whenAllRange<NUMBER_OF_SENDERS>(std::move(senders)));
   EXPECT_FALSE(res.has_value());
 
   EXPECT_EQ(completed, NUMBER_OF_SENDERS - 1);
@@ -67,7 +63,7 @@ TEST(WhenAllRange, Concurrent) {
                          stdexec::then([&completed]() { ++completed; }));
   }
 
-  auto res = stdexec::sync_wait(whenAllRange(std::move(senders)));
+  auto res = stdexec::sync_wait(whenAllRange<NUMBER_OF_SENDERS>(std::move(senders)));
 
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(completed, NUMBER_OF_SENDERS);
@@ -90,7 +86,7 @@ TEST(WhenAllRange, ConcurrentStop) {
     }
   }
 
-  auto res = stdexec::sync_wait(whenAllRange(std::move(senders)));
+  auto res = stdexec::sync_wait(whenAllRange<NUMBER_OF_SENDERS>(std::move(senders)));
 
   EXPECT_FALSE(res.has_value());
 }
@@ -113,6 +109,6 @@ TEST(WhenAllRange, ConcurrentError) {
     }
   }
 
-  EXPECT_THROW(stdexec::sync_wait(whenAllRange(std::move(senders))), std::runtime_error);
+  EXPECT_THROW(stdexec::sync_wait(whenAllRange<NUMBER_OF_SENDERS>(std::move(senders))), std::runtime_error);
 }
 }  // namespace heph::concurrency
