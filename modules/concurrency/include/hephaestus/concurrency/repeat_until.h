@@ -32,7 +32,7 @@ auto repeatUntil(SenderFactoryT&& factory) {
   return stdexec::just() |
          stdexec::let_value([factory = std::forward<SenderFactoryT>(factory)]() mutable {
            // 2. Call the factory and normalize errors *inside* the loop
-           return factory();  // | stdexec::let_error(internal::ErrorNormalizer{});
+           return factory();
          })
          // 3. Repeat until the sender returns 'true'
          | exec::repeat_effect_until();
