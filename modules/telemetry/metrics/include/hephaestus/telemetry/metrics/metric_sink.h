@@ -22,6 +22,10 @@ using ClockT = std::chrono::system_clock;
 struct Metric {
   [[nodiscard]] auto operator==(const Metric&) const -> bool = default;
   [[nodiscard]] auto toString() const -> std::string;
+  template <typename T>
+  void addKeyValue(std::string key, T value) {
+    values.emplace_back(std::move(key), std::move(value));
+  }
 
   std::string component;  ///< The component that is logging the metric_record, e.g. SLAM, Navigation,
                           ///< etc.

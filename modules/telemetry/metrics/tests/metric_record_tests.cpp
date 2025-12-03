@@ -17,17 +17,16 @@
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/metrics/detail/struct_to_key_value_pairs.h"
 #include "hephaestus/telemetry/metrics/metric_record.h"
+#include "hephaestus/telemetry/metrics/metric_scope.h"
 #include "hephaestus/telemetry/metrics/metric_sink.h"
 #include "hephaestus/test_utils/heph_test.h"
+#include "hephaestus/utils/timing/mock_clock.h"
 
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::testing;
 
 namespace heph::telemetry::tests {
 namespace {
-
-struct StructToFlatmapTest : heph::test_utils::HephTest {};
-struct MeasureTest : heph::test_utils::HephTest {};
 
 class MockMetricSink final : public IMetricSink {
 public:
@@ -41,8 +40,9 @@ public:
     return measure_entries_;
   }
 
-  void wait() const {
+  void wait() {
     flag_.wait(false);
+    flag_.clear();
   }
 
 private:
@@ -87,6 +87,18 @@ struct Dummy {
   std::string string;
   NestedObject nested;
 };
+
+struct StructToFlatmapTest : test_utils::HephTest {};
+struct MetricTest : test_utils::HephTest {
+  MetricTest() {
+    auto mock_sink = std::make_unique<MockMetricSink>();
+    mock_sink_ptr = mock_sink.get();
+    registerMetricSink(std::move(mock_sink));
+  }
+
+  MockMetricSink* mock_sink_ptr{};
+};
+
 }  // namespace
 
 TEST_F(StructToFlatmapTest, StructToFlatmap) {
@@ -107,11 +119,17 @@ TEST_F(StructToFlatmapTest, StructToFlatmap) {
   EXPECT_EQ(values, expected_values);
 }
 
-TEST_F(MeasureTest, Metric) {
-  auto mock_sink = std::make_unique<MockMetricSink>();
-  const auto* mock_sink_ptr = mock_sink.get();
-  registerMetricSink(std::move(mock_sink));
+TEST_F(MetricTest, AddKeyValue) {
+  static constexpr auto VALUE = int64_t{ 42 };
+  Metric metric;
+  metric.addKeyValue("key1", VALUE);
+  EXPECT_THAT(metric.values, SizeIs(1));
+  const auto& [key, value] = metric.values.front();
+  EXPECT_EQ(key, "key1");
+  EXPECT_EQ(std::get<int64_t>(value), VALUE);
+}
 
+TEST_F(MetricTest, Metric) {
   const auto entry =
       Metric{ .component = random::random<std::string>(mt),
               .tag = random::random<std::string>(mt),
@@ -125,13 +143,9 @@ TEST_F(MeasureTest, Metric) {
   EXPECT_EQ(entry, measure_entries.front());
 }
 
-TEST_F(MeasureTest, Serialization) {
+TEST_F(MetricTest, Serialization) {
   static constexpr auto COMPONENT = "component";
   static constexpr auto TAG = "tag";
-
-  auto mock_sink = std::make_unique<MockMetricSink>();
-  const auto* mock_sink_ptr = mock_sink.get();
-  registerMetricSink(std::move(mock_sink));
 
   auto dummy = Dummy::random(mt);
   record(COMPONENT, TAG, dummy);
@@ -158,4 +172,81 @@ TEST_F(MeasureTest, Serialization) {
   };
   EXPECT_EQ(entry.values, expected_values);
 }
+
+TEST_F(MetricTest, ScopedDurationRecorder) {
+  static constexpr auto COMPONENT = "component";
+  static constexpr auto TAG = "tag";
+  static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
+  const auto now = ClockT::now();
+  Metric metric{
+    .component = COMPONENT,
+    .tag = TAG,
+    .timestamp = now,
+    .values = {},
+  };
+  {
+    const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
+    utils::timing::MockClock::advance(PERIOD);
+  }
+  {
+    const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key2");
+    utils::timing::MockClock::advance(2 * PERIOD);
+  }
+
+  const auto expected_values = std::vector<Metric::KeyValueType>{
+    { "key1.elapsed_s", 0.001 },
+    { "key2.elapsed_s", 0.002 },
+  };
+  EXPECT_EQ(metric.values, expected_values);
+}
+
+TEST_F(MetricTest, ScopedMetric) {
+  static constexpr auto COMPONENT = "component";
+  static constexpr auto TAG = "tag";
+  static constexpr auto PERIOD = std::chrono::milliseconds{ 1 };
+  const auto now = ClockT::now();
+  {
+    const ScopedMetric metric{ {
+        .component = COMPONENT,
+        .tag = TAG,
+        .timestamp = now,
+        .values = {},
+    } };
+  }
+  mock_sink_ptr->wait();
+  {
+    ScopedMetric metric{ {
+        .component = COMPONENT,
+        .tag = TAG,
+        .timestamp = now,
+        .values = {},
+    } };
+
+    metric.addKeyValue("key1.value_key", int64_t{ 2 });
+    {
+      const ScopedDurationRecorder<utils::timing::MockClock> scope(metric, "key1");
+      utils::timing::MockClock::advance(PERIOD);
+    }
+  }
+
+  mock_sink_ptr->wait();
+  const auto expected_metrics = std::vector<Metric>{{
+      .component = COMPONENT,
+      .tag = TAG,
+      .timestamp = now,
+      .values = {},
+    },
+    {
+      .component = COMPONENT,
+      .tag = TAG,
+      .timestamp = now,
+      .values = {
+        { "key1.value_key", int64_t{2} },
+        { "key1.elapsed_s", 0.001},
+      },
+    } };
+
+  EXPECT_EQ(mock_sink_ptr->getMeasureEntries(), expected_metrics);
+}
+
 }  // namespace heph::telemetry::tests
