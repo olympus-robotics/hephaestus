@@ -158,8 +158,7 @@ struct TriggerExceptionOperation : Node<TriggerExceptionOperation, ReceivingOper
   }
 };
 
-// TODO: (@heller) fix once conduit2 landed. Reason for failure unclear
-TEST(NodeTests, DISABLED_nodeTriggerException) {
+TEST(NodeTests, nodeTriggerException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<TriggerExceptionOperation>();
 
@@ -185,8 +184,7 @@ struct ExecutionExceptionOperation : Node<ExecutionExceptionOperation, Receiving
   }
 };
 
-// TODO: (@heller) fix once conduit2 landed. Reason for failure unclear
-TEST(NodeTests, DISABLED_nodeExecutionException) {
+TEST(NodeTests, nodeExecutionException) {
   NodeEngine engine{ {} };
   auto dummy = engine.createNode<ExecutionExceptionOperation>();
 
