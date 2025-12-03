@@ -22,7 +22,7 @@
 namespace heph::conduit::tests {
 
 TEST(ZenohNodeTests, nodeBasic) {
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
   static constexpr auto VALUE = 42.;
   NodeEngine engine{ {} };
 

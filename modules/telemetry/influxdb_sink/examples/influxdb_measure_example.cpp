@@ -36,7 +36,7 @@ auto main(int argc, const char* argv[]) -> int {
   (void)argc;
   (void)argv;
   const heph::utils::StackTrace stack;
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   try {
     static constexpr auto PERIOD = std::chrono::duration<double>(1.0);

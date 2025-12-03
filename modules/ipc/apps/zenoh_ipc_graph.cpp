@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
-#include <memory>
 #include <thread>
 #include <utility>
 
@@ -31,7 +30,7 @@ constexpr auto DEFAULT_DURATION = std::chrono::seconds{ 10 };
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>(heph::DEBUG);
 
   try {
     auto desc = heph::cli::ProgramDescription("IPC Graph monitoring example");

@@ -3,7 +3,7 @@
 // =====================================================================================
 #include "hephaestus/test_utils/heph_test.h"
 
-#include <memory>
+#include <cassert>
 
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/telemetry/log/log.h"
@@ -12,15 +12,17 @@
 
 namespace heph::test_utils {
 
-HephTest::HephTest() : mt{ heph::random::createRNG() } {
-  telemetry::registerLogSink(std::make_unique<telemetry::AbslLogSink>(DEBUG));
+HephTest::HephTest()
+  : mt{ heph::random::createRNG() }
+  , sink_ref_{ telemetry::makeAndRegisterLogSink<telemetry::AbslLogSink>(DEBUG) } {
 }
 
 HephTest::~HephTest() {
   telemetry::flushMetrics();
   telemetry::flushLogEntries();
 
-  telemetry::removeAllLogSinks();
+  [[maybe_unused]] const bool sink_removal_successful = telemetry::removeLogSink(sink_ref_);
+  assert(sink_removal_successful);
 }
 
 }  // namespace heph::test_utils

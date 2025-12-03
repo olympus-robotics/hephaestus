@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-#include <memory>
 #include <tuple>
 
 #include <fmt/base.h>
@@ -23,7 +22,7 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     fmt::println("Scouting..");
 

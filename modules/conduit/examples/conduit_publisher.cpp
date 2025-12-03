@@ -4,7 +4,6 @@
 #include <chrono>
 #include <cstdint>
 #include <exception>
-#include <memory>
 #include <random>
 #include <string_view>
 #include <utility>
@@ -36,7 +35,7 @@ struct Generator : heph::conduit::Node<Generator> {
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     auto desc = heph::cli::ProgramDescription("Conduit Publisher");
     desc.defineOption<std::string>("address", "Address to bind to", "127.0.0.1");

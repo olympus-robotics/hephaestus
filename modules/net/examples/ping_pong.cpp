@@ -5,7 +5,6 @@
 #include <array>
 #include <chrono>
 #include <exception>
-#include <memory>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -68,7 +67,7 @@ auto ping(unsigned i, heph::concurrency::ContextScheduler scheduler, heph::net::
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   try {
     auto desc = heph::cli::ProgramDescription("Ping Pong example");

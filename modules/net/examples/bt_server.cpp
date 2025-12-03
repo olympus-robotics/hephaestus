@@ -6,7 +6,6 @@
 #include <chrono>
 #include <cstddef>
 #include <exception>
-#include <memory>
 #include <span>
 #include <utility>
 #include <vector>
@@ -72,7 +71,7 @@ auto server(heph::net::Acceptor acceptor) -> exec::task<void> {
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   try {
     auto desc = heph::cli::ProgramDescription("BT server");

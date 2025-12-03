@@ -1,7 +1,6 @@
 //=================================================================================================
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -26,7 +25,7 @@ auto main(int argc, const char* argv[]) -> int {
   if (args.getOption<bool>("trace")) {
     log_level = heph::TRACE;
   }
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(log_level));
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>(log_level);
 
   heph::log(heph::WARN, "testing absl log sink"s);
 

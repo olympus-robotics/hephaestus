@@ -3,7 +3,6 @@
 
 #include <cstdlib>
 #include <exception>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -21,7 +20,7 @@
 
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   try {
     auto desc = heph::cli::ProgramDescription("Record a bag from zenoh topics");

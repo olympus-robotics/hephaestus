@@ -10,6 +10,10 @@
 #include "hephaestus/error_handling/panic_as_exception_scope.h"
 #include "hephaestus/utils/stack_trace.h"
 
+namespace heph::telemetry {
+class AbslLogSink;
+}
+
 namespace heph::test_utils {
 
 class HephTest : public ::testing::Test {
@@ -30,6 +34,7 @@ public:
 private:
   const utils::StackTrace trace_;
   const error_handling::PanicAsExceptionScope panic_scope_;
+  telemetry::AbslLogSink& sink_ref_;
 };
 
 }  // namespace heph::test_utils

@@ -2,9 +2,7 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <memory>
 #include <string>
-#include <utility>
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -64,13 +62,10 @@ struct StringLogSink : public telemetry::ILogSink {
 TEST(PanicIf, Output) {
   const error_handling::PanicAsExceptionScope panic_scope;
 
-  auto string_log_sink = std::make_unique<StringLogSink>();
-  auto* const string_log_sink_ptr = string_log_sink.get();
-
-  telemetry::registerLogSink(std::move(string_log_sink));
+  auto& string_log_sink = telemetry::makeAndRegisterLogSink<StringLogSink>();
 
   heph::telemetry::flushLogEntries();
-  EXPECT_EQ(string_log_sink_ptr->last_log_message, "");
+  EXPECT_EQ(string_log_sink.last_log_message, "");
 
   try {
     HEPH_PANIC_IF(true, "{}", 42);
@@ -78,10 +73,10 @@ TEST(PanicIf, Output) {
   }
 
   heph::telemetry::flushLogEntries();
-  EXPECT_EQ(string_log_sink_ptr->last_log_message,
-            "\"modules/error_handling/tests/panic_tests.cpp:76\" program terminated with panic");
+  EXPECT_EQ(string_log_sink.last_log_message,
+            "\"modules/error_handling/tests/panic_tests.cpp:71\" program terminated with panic");
 
-  telemetry::removeAllLogSinks();
+  EXPECT_TRUE(telemetry::removeLogSink(string_log_sink));
 }
 
 }  // namespace

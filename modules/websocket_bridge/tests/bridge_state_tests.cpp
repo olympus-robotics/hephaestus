@@ -19,7 +19,7 @@ namespace heph::ws::tests {
 class WebsocketBridgeStateTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     client_handle1_shared_ptr = std::make_shared<int>(1);
     client_handle2_shared_ptr = std::make_shared<int>(2);
