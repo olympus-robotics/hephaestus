@@ -20,6 +20,13 @@ void AwaiterBase::start() noexcept {
 void AwaiterBase::retry() noexcept {
   // retry might be called concurrently to start. Wait until starting completed.
   waitForStarting();
+
+  // Account for potentially concurrent stop signals arriving...
+  if (isStopped()) {
+    setStopped();
+    return;
+  }
+
   retryImpl();
 }
 
@@ -56,6 +63,10 @@ void AwaiterBase::waitForStarting() const {
   while (state_.load(std::memory_order_acquire) == QueueAwaiterState::STARTING) {
     state_.wait(QueueAwaiterState::STARTING, std::memory_order_acquire);
   }
+}
+
+auto AwaiterBase::isStopped() const -> bool {
+  return state_.load(std::memory_order_acquire) == QueueAwaiterState::STOPPED;
 }
 
 void AwaiterBase::OnStopRequested::operator()() const noexcept {

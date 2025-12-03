@@ -46,6 +46,7 @@ protected:
   void stopRequested();
   void finalizeStart();
   void waitForStarting() const;
+  auto isStopped() const -> bool;
 
   struct OnStopRequested {
     void operator()() const noexcept;
@@ -231,6 +232,14 @@ struct GetValueSender {
       if (value.has_value()) {
         stop_callback_.reset();
         stdexec::set_value(std::move(receiver_), std::move(*value));
+      } else {
+        // Account for potentially concurrent stop signals arriving which we might have missed
+        if (stdexec::get_stop_token(stdexec::get_env(receiver_)).stop_requested()) {
+          // If we failed, we got enqueued. We need to revert this to ensure proper lifetime
+          if (channel_->get_awaiters_.erase(this)) {
+            setStopped();
+          }
+        }
       }
     }
 
@@ -321,10 +330,18 @@ struct SetValueSender {
     }
 
     void retryImpl() noexcept final {
-      auto set_value = channel_->setValueImpl(std::move(value_), this);
-      if (set_value) {
+      auto success = channel_->setValueImpl(std::move(value_), this);
+      if (success) {
         stop_callback_.reset();
         stdexec::set_value(std::move(receiver_));
+      } else {
+        // Account for potentially concurrent stop signals arriving which we might have missed
+        if (stdexec::get_stop_token(stdexec::get_env(receiver_)).stop_requested()) {
+          // If we failed, we got enqueued. We need to revert this to ensure proper lifetime
+          if (channel_->set_awaiters_.erase(this)) {
+            setStopped();
+          }
+        }
       }
     }
 

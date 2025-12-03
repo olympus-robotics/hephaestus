@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <set>
 #include <thread>
+#include <vector>
 
 #include <absl/synchronization/mutex.h>
 #include <exec/async_scope.hpp>
@@ -44,6 +45,27 @@ TEST(Channel, SendCancel) {
                                                               })));
 
   EXPECT_TRUE(res);
+}
+
+TEST(Channel, SendMoveSemantics) {
+  Channel<std::vector<int>, 1> channel;
+
+  // set once to make channel block later on
+  stdexec::sync_wait(channel.setValue(std::vector{ 0 }));
+
+  exec::async_scope scope;
+
+  // Asynchronously schedule a sender... this should be suspended because the channel is full...
+  scope.spawn(channel.setValue(std::vector{ 0, 1, 2 }));
+
+  // Get first result ...
+  auto [res0] = *stdexec::sync_wait(channel.getValue());
+  // .. and the second one. the setter should have been retried
+  auto [res1] = *stdexec::sync_wait(channel.getValue());
+
+  EXPECT_EQ(res0, (std::vector{ 0 }));
+  // This test would fail if we have a problem with use after move
+  EXPECT_EQ(res1, (std::vector{ 0, 1, 2 }));
 }
 
 TEST(Channel, GetCancel) {
