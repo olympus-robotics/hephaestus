@@ -53,10 +53,9 @@ class AnyEnv {
       if constexpr (std::is_same_v<stdexec::inplace_stop_token, StopTokenT>) {
         return stop_token;
       } else {
-        // NOTE: This is a stop-gap measure to allow to always return a stop token even though it
-        // might never fire.
-        const static stdexec::inplace_stop_source stop_source;
-        return stop_source.get_token();
+        // Return a default constructed stop token. It has no source attached to so it will never
+        // send a stop signal.
+        return stdexec::inplace_stop_token{};
       }
     }
 
@@ -217,7 +216,7 @@ template <typename T>
 struct AnySenderBase {
   virtual ~AnySenderBase() = default;
 
-  virtual auto doConnect(internal::AnyReceiver<T> receiver) -> internal::AnyOperation = 0;
+  virtual auto doConnect(internal::AnyReceiver<T> receiver) && -> internal::AnyOperation = 0;
 };
 
 template <typename T, typename Sender>
@@ -230,7 +229,7 @@ struct AnySenderImpl : AnySenderBase<T> {
   explicit AnySenderImpl(SenderT&& outer_sender) : sender(std::forward<SenderT>(outer_sender)) {
   }
 
-  auto doConnect(internal::AnyReceiver<T> receiver) -> internal::AnyOperation final {
+  auto doConnect(internal::AnyReceiver<T> receiver) && -> internal::AnyOperation final {
     return internal::AnyOperation{ std::move(sender), std::move(receiver) };
   }
 };
@@ -281,7 +280,7 @@ public:
   auto operator=(const AnySender& other) -> AnySender& = delete;
 
   template <stdexec::receiver_of<completion_signatures> Receiver>
-  auto connect(Receiver&& receiver) {
+  auto connect(Receiver&& receiver) && {
     return impl_->doConnect(internal::AnyReceiver<T>{ std::forward<Receiver>(receiver) });
   }
 
