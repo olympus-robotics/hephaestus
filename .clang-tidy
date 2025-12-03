@@ -69,6 +69,7 @@ ExtraArgs:
   - -Wno-unused-command-line-argument
 
 CheckOptions:
+  - { key: modernize-use-trailing-return-type.TransformLambdas, value: none }
   - {
       key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor,
       value: 1,
