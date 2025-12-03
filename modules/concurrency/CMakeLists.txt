@@ -5,10 +5,11 @@
 declare_module(
   NAME concurrency
   DEPENDS_ON_MODULES utils containers random error_handling telemetry_metrics
-  DEPENDS_ON_EXTERNAL_PROJECTS absl fmt Protobuf liburing stdexec
+  DEPENDS_ON_EXTERNAL_PROJECTS absl Boost fmt Protobuf liburing stdexec
 )
 
 find_package(absl REQUIRED)
+find_package(Boost REQUIRED CONFIG)
 find_package(fmt REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(PkgConfig REQUIRED)
@@ -22,6 +23,7 @@ file(GLOB_RECURSE SOURCES src/*.cpp src/*.h include/*.h)
 define_module_library(
   NAME concurrency
   PUBLIC_LINK_LIBS
+    absl::synchronization
     fmt::fmt
     hephaestus::containers
     hephaestus::error_handling

@@ -24,7 +24,6 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
-        "//modules/utils",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/synchronization:synchronization",
         "@boost.circular_buffer",
