@@ -3,7 +3,6 @@
 //=================================================================================================
 #include <cstddef>
 #include <exception>
-#include <memory>
 #include <string>
 #include <thread>
 
@@ -22,7 +21,7 @@ auto main(int /*unused*/, const char* /*unused*/[]) -> int {
 
     heph::telemetry::LokiLogSinkConfig config;
     config.domain = "forkify";
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::LokiLogSink>(config));
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::LokiLogSink>(config);
 
     heph::log(heph::WARN, "testing loki log sink"s);
 

@@ -4,7 +4,6 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <memory>
 #include <string>
 #include <string_view>
 
@@ -103,7 +102,7 @@ struct ConsumerNode : Node<ConsumerNode> {
 
 auto main() -> int {
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
     heph::conduit::NodeEngine engine{ {} };
 
     auto producer = engine.createNode<heph::conduit::ProducerNode>();

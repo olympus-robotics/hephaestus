@@ -5,11 +5,9 @@
 #include <atomic>
 #include <chrono>
 #include <cstdlib>
-#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <thread>
-#include <utility>
 
 #include <exec/task.hpp>
 #include <fmt/base.h>
@@ -269,18 +267,18 @@ public:
 
 TEST(NodeTests, nodePeriodicMissingDeadline) {
   NodeEngine engine{ {} };
-  auto mock_sink = std::make_unique<MockLogSink>();
-  MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
 
+  auto& mock_sink = heph::telemetry::makeAndRegisterLogSink<MockLogSink>();
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
   EXPECT_EQ(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), 1);
+  EXPECT_GE(mock_sink.num_messages.load(), 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
+
+  EXPECT_TRUE(heph::telemetry::removeLogSink(mock_sink));
 }
 
 TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
@@ -290,18 +288,18 @@ TEST(NodeTests, nodePeriodicMissingDeadlineSimulated) {
       .prefix = "",
       .endpoints = {} }
   };
-  auto mock_sink = std::make_unique<MockLogSink>();
-  MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
 
+  auto& mock_sink = heph::telemetry::makeAndRegisterLogSink<MockLogSink>();
   auto dummy = engine.createNode<PeriodicMissingDeadlineOperation>();
 
   engine.run();
   EXPECT_LE(dummy->data().executed - 1,
             PeriodicMissingDeadlineOperation::RUNTIME / (PeriodicMissingDeadlineOperation::PERIOD * 2));
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), 1);
+  EXPECT_GE(mock_sink.num_messages.load(), 1);
   EXPECT_TRUE(PeriodicMissingDeadlineOperation::HAS_PERIOD);
+
+  EXPECT_TRUE(heph::telemetry::removeLogSink(mock_sink));
 }
 
 struct CoroutineOperation : Node<CoroutineOperation> {

@@ -5,7 +5,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include <optional>
 #include <random>
 #include <string>
@@ -454,7 +453,7 @@ struct Georgetown : heph::conduit::Node<Georgetown> {
 
 auto main() -> int {
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
     heph::conduit::NodeEngine engine{ {} };
 
     auto cordoba = engine.createNode<mont_blanc::Cordoba>();

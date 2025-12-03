@@ -10,6 +10,7 @@
 #include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::telemetry::internal {
+
 void log(LogEntry&& log_entry) noexcept;
 
 #if (__GNUC__ >= 14) || defined(__clang__)
@@ -91,13 +92,26 @@ void logIf(LogLevel level, bool condition, telemetry::MessageWithLocation&& msg)
 }
 
 namespace telemetry {
+
 ///@brief Register a sink for logging.
-void registerLogSink(std::unique_ptr<telemetry::ILogSink> sink) noexcept;
+auto registerLogSink(std::unique_ptr<telemetry::ILogSink> sink) noexcept -> telemetry::ILogSink&;
+
+///@brief Create and register a sink for logging.
+template <typename TSink, typename... Args>
+auto makeAndRegisterLogSink(Args&&... args) noexcept -> TSink& {
+  return static_cast<TSink&>(registerLogSink(std::make_unique<TSink>(std::forward<Args>(args)...)));
+}
+
+///@brief Remove a registered log sink. Returns `true` on removal success, `false` otherwise.
+[[nodiscard]] auto removeLogSink(telemetry::ILogSink& sink) noexcept -> bool;
+
 ///@brief Remove all registered log sinks.
 void removeAllLogSinks() noexcept;
+
 ///@brief Flush all log entries to the sink. Block until flush is completed.
 /// > NOTE: if messages keep coming, this could block forever.
 void flushLogEntries();
+
 }  // namespace telemetry
 
 }  // namespace heph

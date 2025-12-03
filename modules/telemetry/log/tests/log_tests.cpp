@@ -4,7 +4,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -51,18 +50,21 @@ private:
   containers::BlockingQueue<std::string> logs_{ 1 };
 };
 
-class LogTestFixture : public ::testing::Test {
-protected:
-  static void SetUpTestSuite() {
-    auto mock_sink = std::make_unique<MockLogSink>();
-    sink_ptr = mock_sink.get();
-    heph::telemetry::registerLogSink(std::move(mock_sink));
+struct LogTestFixture : ::testing::Test {
+  LogTestFixture() : sink_ref{ heph::telemetry::makeAndRegisterLogSink<MockLogSink>() } {
   }
 
-  static MockLogSink* sink_ptr;
-};
+  ~LogTestFixture() override {
+    EXPECT_TRUE(telemetry::removeLogSink(sink_ref));
+  }
 
-MockLogSink* LogTestFixture::sink_ptr{ nullptr };
+  LogTestFixture(const LogTestFixture&) = delete;
+  LogTestFixture(LogTestFixture&&) = delete;
+  auto operator=(const LogTestFixture&) -> LogTestFixture& = delete;
+  auto operator=(LogTestFixture&&) -> LogTestFixture& = delete;
+
+  MockLogSink& sink_ref;
+};
 
 TEST_F(LogTestFixture, LogEntry) {
   const std::string a = "test a great message";
@@ -117,7 +119,7 @@ TEST_F(LogTestFixture, sink) {
   const int num = 123;
 
   heph::log(heph::INFO, "test another great message", "num", num);
-  const auto log = sink_ptr->getLog();
+  const auto log = sink_ref.getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
@@ -130,7 +132,7 @@ TEST_F(LogTestFixture, log) {
 
   heph::log(heph::INFO, "test another great message");
 
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"test another great message\"") != std::string::npos);
+  EXPECT_TRUE(sink_ref.getLog().find("message=\"test another great message\"") != std::string::npos);
 }
 
 TEST_F(LogTestFixture, logString) {
@@ -138,7 +140,7 @@ TEST_F(LogTestFixture, logString) {
 
   heph::log(heph::INFO, "as string"s);
 
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"as string\"") != std::string::npos);
+  EXPECT_TRUE(sink_ref.getLog().find("message=\"as string\"") != std::string::npos);
 }
 
 TEST_F(LogTestFixture, logLibFmt) {
@@ -146,7 +148,7 @@ TEST_F(LogTestFixture, logLibFmt) {
 
   heph::log(heph::INFO, fmt::format("this {} is formatted", num));
 
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ref.getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 
 // TODO(mfehr): Currently not supported by the libc++ version we have.
@@ -155,7 +157,7 @@ TEST_F(LogTestFixture, logStdFmt) {
   const int num = 456;
   heph::log(heph::INFO, std::format("this {} is formatted", num));
 
-  EXPECT_TRUE(sink_ptr->getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
+  EXPECT_TRUE(sink_ref.getLog().find("message=\"this 456 is formatted\"") != std::string::npos);
 }
 #endif
 
@@ -166,7 +168,7 @@ TEST_F(LogTestFixture, logWithFields) {
 
   heph::log(heph::INFO, "test another great message", "num", num, "test", "lala");
 
-  const auto log = sink_ptr->getLog();
+  const auto log = sink_ref.getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
@@ -187,7 +189,7 @@ TEST_F(LogTestFixture, logIfWithFields) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   heph::logIf(heph::INFO, num == 123, "test another great message", "num", num, "test", "lala");
 
-  const auto log = sink_ptr->getLog();
+  const auto log = sink_ref.getLog();
   {
     std::stringstream ss;
     ss << "num=" << num;
@@ -201,26 +203,26 @@ TEST_F(LogTestFixture, logIfWithFields) {
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   heph::logIf(heph::INFO, num == 124, "test another great message", "num", num, "test", "lala");
-  EXPECT_TRUE(sink_ptr->empty());
+  EXPECT_TRUE(sink_ref.empty());
 }
 
 TEST_F(LogTestFixture, LogWithScope) {
   using namespace std::literals::string_literals;
 
   heph::log(heph::INFO, "a message in global scope");
-  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=global"));
+  EXPECT_THAT(sink_ref.getLog(), testing::HasSubstr("module=global"));
 
   const Scope scope1("robot1", "module1");
   heph::log(heph::INFO, "a message in module1 scope");
-  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=/robot1/module1"));
+  EXPECT_THAT(sink_ref.getLog(), testing::HasSubstr("module=/robot1/module1"));
 
   {
     const Scope scope2("robot1", "module2");
     heph::log(heph::INFO, "a message in module1/module2 scope");
-    EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=/robot1/module2"));
+    EXPECT_THAT(sink_ref.getLog(), testing::HasSubstr("module=/robot1/module2"));
   }
 
   heph::log(heph::INFO, "another message in module1 scope");
-  EXPECT_THAT(sink_ptr->getLog(), testing::HasSubstr("module=/robot1/module1"));
+  EXPECT_THAT(sink_ref.getLog(), testing::HasSubstr("module=/robot1/module1"));
 }
 }  // namespace heph::telemetry::tests

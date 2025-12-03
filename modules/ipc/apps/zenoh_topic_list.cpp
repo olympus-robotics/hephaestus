@@ -93,7 +93,7 @@ void getLiveListOfZenohEndpoints(heph::ipc::zenoh::SessionPtr session, heph::ipc
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     auto desc = heph::cli::ProgramDescription("List all the publishers of a topic.");
     heph::ipc::zenoh::appendProgramOption(desc);

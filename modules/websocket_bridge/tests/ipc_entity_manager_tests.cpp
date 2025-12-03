@@ -39,7 +39,7 @@ protected:
   // NOLINTEND
 
   void SetUp() override {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     config_.id = "ws_bridge";
     config_.multicast_scouting_enabled = true;

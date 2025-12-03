@@ -74,7 +74,7 @@ execute(const heph::examples::types::SampleRequest& request,
 auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>(heph::DEBUG));
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>(heph::DEBUG);
 
   try {
     auto desc = heph::cli::ProgramDescription("Action server example");

@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <exception>
 #include <map>
-#include <memory>
 #include <random>
 #include <string>
 #include <thread>
@@ -111,7 +110,7 @@ void handleBinaryMessage(const uint8_t* data, size_t length, WsClientNoTls& clie
 
 auto main(int argc, char** argv) -> int try {
   const heph::utils::StackTrace stack_trace;
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   if (argc < 2) {
     fmt::println("Usage: {} <url> (e.g. ws://localhost:8765)", argv[0]);  // NOLINT

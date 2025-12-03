@@ -4,6 +4,7 @@
 
 #include "hephaestus/telemetry/log/log.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <exception>
@@ -36,8 +37,9 @@ public:
   auto operator=(const Logger&) -> Logger& = delete;
   auto operator=(Logger&&) -> Logger& = delete;
 
-  void registerSink(std::unique_ptr<ILogSink>&& sink) noexcept;
-  void removeAllLogSinks() noexcept;
+  auto registerSink(std::unique_ptr<ILogSink>&& sink) noexcept -> ILogSink&;
+  [[nodiscard]] auto removeSink(ILogSink& sink) noexcept -> bool;
+  void removeAllSinks() noexcept;
 
   void log(LogEntry&& log_entry) noexcept;
   void flush() noexcept;
@@ -101,17 +103,33 @@ Logger::~Logger() {
   }
 }
 
-void Logger::registerSink(std::unique_ptr<ILogSink>&& sink) noexcept {
+auto Logger::registerSink(std::unique_ptr<ILogSink>&& sink) noexcept -> ILogSink& {
   const absl::MutexLock lock{ &sink_mutex_ };
+  auto& result = *sink;
 
   try {
     sinks_.emplace_back(std::move(sink));
   } catch (const std::bad_alloc& ex) {
     fmt::println(stderr, "While registering log sink, bad allocation happened: {}", ex.what());
   }
+
+  return result;
 }
 
-void Logger::removeAllLogSinks() noexcept {
+auto Logger::removeSink(ILogSink& sink) noexcept -> bool {
+  const absl::MutexLock lock{ &sink_mutex_ };
+
+  auto it = std::ranges::find_if(sinks_, [&](const auto& uptr) { return uptr.get() == &sink; });
+
+  if (it == sinks_.end()) {
+    return false;
+  }
+
+  sinks_.erase(it);
+  return true;
+}
+
+void Logger::removeAllSinks() noexcept {
   const absl::MutexLock lock{ &sink_mutex_ };
   sinks_.clear();
 }
@@ -169,12 +187,16 @@ void internal::log(LogEntry&& log_entry) noexcept {
   getLoggerInstance().log(std::move(log_entry));
 }
 
-void registerLogSink(std::unique_ptr<ILogSink> sink) noexcept {
-  getLoggerInstance().registerSink(std::move(sink));
+auto registerLogSink(std::unique_ptr<ILogSink> sink) noexcept -> ILogSink& {
+  return getLoggerInstance().registerSink(std::move(sink));
+}
+
+auto removeLogSink(ILogSink& sink) noexcept -> bool {
+  return getLoggerInstance().removeSink(sink);
 }
 
 void removeAllLogSinks() noexcept {
-  getLoggerInstance().removeAllLogSinks();
+  getLoggerInstance().removeAllSinks();
 }
 
 void flushLogEntries() {

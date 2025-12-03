@@ -114,7 +114,7 @@ auto main(int argc, const char* argv[]) -> int {
   const heph::utils::StackTrace stack_trace;
 
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     auto desc = heph::cli::ProgramDescription("Echo the data from a topic to the console.");
     heph::ipc::zenoh::appendProgramOption(desc);

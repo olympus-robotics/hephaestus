@@ -6,7 +6,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <random>
@@ -175,9 +174,7 @@ public:
 static constexpr auto TIMEOUT = std::chrono::milliseconds(10);
 
 TEST(InputOutput, QueuedInputOutputDelay) {
-  auto mock_sink = std::make_unique<MockLogSink>();
-  MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
+  auto& mock_sink = heph::telemetry::makeAndRegisterLogSink<MockLogSink>();
 
   NodeEngine engine{ {} };
   exec::async_scope scope;
@@ -199,13 +196,13 @@ TEST(InputOutput, QueuedInputOutputDelay) {
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(*res, "Hello World Again!");
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages, 1);
+  EXPECT_GE(mock_sink.num_messages, 1);
+
+  EXPECT_TRUE(heph::telemetry::removeLogSink(mock_sink));
 }
 
 TEST(InputOutput, QueuedInputOutputDelaySimulated) {
-  auto mock_sink = std::make_unique<MockLogSink>();
-  MockLogSink* sink_ptr = mock_sink.get();
-  heph::telemetry::registerLogSink(std::move(mock_sink));
+  auto& mock_sink = heph::telemetry::makeAndRegisterLogSink<MockLogSink>();
 
   NodeEngine engine{
     { .context_config = { .io_ring_config = {},
@@ -233,7 +230,9 @@ TEST(InputOutput, QueuedInputOutputDelaySimulated) {
   EXPECT_TRUE(res.has_value());
   EXPECT_EQ(*res, "Hello World Again!");
   heph::telemetry::flushLogEntries();
-  EXPECT_GE(sink_ptr->num_messages.load(), 1);
+  EXPECT_GE(mock_sink.num_messages.load(), 1);
+
+  EXPECT_TRUE(heph::telemetry::removeLogSink(mock_sink));
 }
 
 TEST(InputOutput, handleStopped) {

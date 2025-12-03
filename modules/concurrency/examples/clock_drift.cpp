@@ -33,7 +33,7 @@ struct ClockJitter {
 
 auto main(int argc, const char* argv[]) -> int {
   try {
-    heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+    heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
     auto desc =
         heph::cli::ProgramDescription("Determine clock drift over time with different spinner periods");

@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
-#include <memory>
 #include <span>
 #include <utility>
 #include <vector>
@@ -65,7 +64,7 @@ auto ping(heph::concurrency::ContextScheduler scheduler, heph::net::Endpoint end
 }  // namespace
 
 auto main(int argc, const char* argv[]) -> int {
-  heph::telemetry::registerLogSink(std::make_unique<heph::telemetry::AbslLogSink>());
+  heph::telemetry::makeAndRegisterLogSink<heph::telemetry::AbslLogSink>();
 
   try {
     auto desc = heph::cli::ProgramDescription("BT client");
