@@ -4,14 +4,16 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstddef>
-#include <mutex>
+#include <cstdint>
 #include <optional>
 #include <type_traits>
 #include <utility>
 
 #include <absl/base/thread_annotations.h>
-#include <boost/circular_buffer.hpp>
+#include <absl/synchronization/mutex.h>
+#include <boost/circular_buffer.hpp>  // IWYU pragma: keep
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 
@@ -19,17 +21,58 @@
 
 namespace heph::concurrency {
 namespace internal {
+enum class QueueAwaiterState : std::uint8_t {
+  STARTING,
+  ENQUEUED,
+  STOPPED,
+};
+static_assert(std::atomic<QueueAwaiterState>::is_always_lock_free);
+
+class AwaiterQueue;
+
 struct AwaiterBase {
   virtual ~AwaiterBase() = default;
-  virtual void retry() noexcept = 0;
+  void start() noexcept;
+  void retry() noexcept;
+
+  // This function is overriden by the implementation.
+  // The return value determines if `set_value` was already called (true)
+  // or if an enqueue happened (false).
+  virtual auto startImpl() noexcept -> bool = 0;
+  virtual void retryImpl() noexcept = 0;
+  virtual void setStopped() noexcept = 0;
+
+protected:
+  void stopRequested();
+  void finalizeStart();
+  void waitForStarting() const;
+
+  struct OnStopRequested {
+    void operator()() const noexcept;
+    AwaiterQueue* queue;
+    AwaiterBase* self;
+  };
 
 private:
   friend struct heph::containers::IntrusiveFifoQueueAccess;
   [[maybe_unused]] AwaiterBase* next_{ nullptr };
   [[maybe_unused]] AwaiterBase* prev_{ nullptr };
+  std::atomic<QueueAwaiterState> state_{ QueueAwaiterState::STARTING };
 };
 
-using AwaiterQueueT = containers::IntrusiveFifoQueue<AwaiterBase>;
+class AwaiterQueue {
+public:
+  void enqueue(AwaiterBase* awaiter);
+
+  auto erase(AwaiterBase* awaiter) -> bool;
+
+  void retryNext();
+
+private:
+  using QueueT = containers::IntrusiveFifoQueue<AwaiterBase>;
+  absl::Mutex mutex_;
+  QueueT queue_ ABSL_GUARDED_BY(mutex_);
+};
 
 template <typename T, std::size_t Capacity>
 struct GetValueSender;
@@ -88,53 +131,29 @@ class Channel {
   using SetValueSender = internal::SetValueSender<T, Capacity>;
 
 public:
-  /// Retrieve a value stored in the channel. The returned sender will complete as soon as there is
-  /// at least one item stored in the channel.
-  ///
-  /// @param t The value to send via the channel
-  template <ChannelValueType U>
-  [[nodiscard]] auto setValue(U&& value) noexcept -> SetValueSender;
   /// Push a value into the channel. The returned sender will complete if there is space to store an
   /// element. Otherwise blocks until at least one item was consumed. Then returned sender completes with the
   /// value received from the channel.
+  ///
+  /// @param value The value to send via the channel
+  template <ChannelValueType U>
+  [[nodiscard]] auto setValue(U&& value) noexcept -> SetValueSender;
+
+  /// Push a value into the channel
+  ///
+  /// Similar to \ref setValue but removes the oldest element if not enough space is available.
+  template <ChannelValueType U>
+  void setValueOverwrite(U&& value) noexcept;
+
+  /// Retrieve a value stored in the channel. The returned sender will complete as soon as there is
+  /// at least one item stored in the channel.
   [[nodiscard]] auto getValue() noexcept -> GetValueSender;
 
-  [[nodiscard]] auto tryGetValue() noexcept -> std::optional<T> {
-    internal::AwaiterBase* set_awaiter{ nullptr };
-    std::optional<T> res;
-    {
-      std::scoped_lock lock{ mutex_ };
-      if (data_.empty()) {
-        return res;
-      }
-
-      res.emplace(std::move(data_.front()));
-      data_.pop_front();
-
-      set_awaiter = set_awaiters_.dequeue();
-    }
-    if (set_awaiter != nullptr) {
-      set_awaiter->retry();
-    }
-    return res;
-  }
-
-  template <ChannelValueType U>
-  void setValueOverwrite(U&& value) noexcept {
-    internal::AwaiterBase* get_awaiter{ nullptr };
-    {
-      std::scoped_lock lock{ mutex_ };
-      if (data_.full()) {
-        data_.pop_front();
-      }
-      data_.push_back(std::forward<U>(value));
-
-      get_awaiter = get_awaiters_.dequeue();
-    }
-    if (get_awaiter != nullptr) {
-      get_awaiter->retry();
-    }
-  }
+  /// Retrieve a value stored in the channel.
+  ///
+  /// Similar to \ref getValue but returns an optional which contains a value
+  /// if there was an item at the time when this function was called.
+  [[nodiscard]] auto tryGetValue() noexcept -> std::optional<T>;
 
 private:
   template <typename T_, std::size_t Capacity_>
@@ -142,62 +161,133 @@ private:
   template <typename T_, std::size_t Capacity_>
   friend struct internal::GetValueSender;
 
-  template <typename OnSuccess, typename OnFail>
-  void setValueImpl(T&& t, internal::AwaiterBase* set_awaiter, OnSuccess on_success,
-                    OnFail on_fail) noexcept {
-    internal::AwaiterBase* get_awaiter{ nullptr };
-    {
-      std::scoped_lock lock{ mutex_ };
-      if (data_.full()) {
-        set_awaiters_.enqueue(set_awaiter);
-        on_fail();
-        return;
-      }
-      data_.push_back(std::move(t));
-
-      get_awaiter = get_awaiters_.dequeue();
-      on_success();
-    }
-    if (get_awaiter != nullptr) {
-      get_awaiter->retry();
-    }
-  }
-
-  template <typename OnSuccess, typename OnFail>
-  void getValueImpl(internal::AwaiterBase* get_awaiter, OnSuccess on_success, OnFail on_fail) noexcept {
-    internal::AwaiterBase* set_awaiter{ nullptr };
-    {
-      std::scoped_lock lock{ mutex_ };
-      if (data_.empty()) {
-        get_awaiters_.enqueue(get_awaiter);
-        on_fail();
-        return;
-      }
-      on_success(std::move(data_.front()));
-      data_.pop_front();
-
-      set_awaiter = set_awaiters_.dequeue();
-    }
-    if (set_awaiter != nullptr) {
-      set_awaiter->retry();
-    }
-  }
+  template <ChannelValueType U>
+  auto setValueImpl(U&& value, internal::AwaiterBase* set_awaiter) noexcept -> bool;
+  auto getValueImpl(internal::AwaiterBase* get_awaiter) noexcept -> std::optional<T>;
 
 private:
-  // NOTE: The recursive lock is currently required to ensure proper lifetime in the presence
-  // of stop requests being signaled concurrently from a different thread. If either setting
-  // or getting value fails, we have to construct the stop callback under the lock to ensure
-  // proper ordering between threads. On the occasion that a stop request was already signaled,
-  // the callback will be invoked immediately. Stopping however requires the same lock to be
-  // acquired.
-  // If the lock would be released right before constructing the callback, we could get a race
-  // between construction and destruction as the stop callback is constructed, while another
-  // thread could complete the same sender with a completion signal.
-  mutable std::recursive_mutex mutex_;
-  boost::circular_buffer<T> data_{ Capacity };
-  internal::AwaiterQueueT set_awaiters_ ABSL_GUARDED_BY(mutex_);
-  internal::AwaiterQueueT get_awaiters_ ABSL_GUARDED_BY(mutex_);
+  absl::Mutex data_mutex_;
+  // the include structure of boost::circular_buffer doesn't work correctly with IWYU
+  // NOLINTNEXTLINE(misc-include-cleaner) -
+  boost::circular_buffer<T> data_ ABSL_GUARDED_BY(data_mutex_){ Capacity };
+  internal::AwaiterQueue set_awaiters_;
+  internal::AwaiterQueue get_awaiters_;
 };
+
+template <ChannelValueType T, std::size_t Capacity>
+inline auto Channel<T, Capacity>::tryGetValue() noexcept -> std::optional<T> {
+  return getValueImpl(nullptr);
+}
+
+template <ChannelValueType T, std::size_t Capacity>
+inline auto Channel<T, Capacity>::getValueImpl(internal::AwaiterBase* get_awaiter) noexcept
+    -> std::optional<T> {
+  std::optional<T> res;
+  {
+    absl::MutexLock lock{ &data_mutex_ };
+    if (data_.empty()) {
+      get_awaiters_.enqueue(get_awaiter);
+      return res;
+    }
+    res.emplace(std::move(data_.front()));
+    data_.pop_front();
+  }
+  set_awaiters_.retryNext();
+  return res;
+}
+
+namespace internal {
+template <typename T, std::size_t Capacity>
+struct GetValueSender {
+  using sender_concept = stdexec::sender_t;
+  using completion_signatures =
+      stdexec::completion_signatures<stdexec::set_value_t(T), stdexec::set_stopped_t()>;
+
+  template <typename Receiver>
+  class Operation : public AwaiterBase {
+    using OnStopRequested = AwaiterBase::OnStopRequested;
+    using EnvT = stdexec::env_of_t<Receiver>;
+    using StopTokenT = stdexec::stop_token_of_t<EnvT>;
+    using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopRequested>;
+
+  public:
+    Operation(Channel<T, Capacity>* self, Receiver receiver)
+      : channel_(self), receiver_{ std::move(receiver) } {
+    }
+
+    auto startImpl() noexcept -> bool final {
+      auto value = channel_->getValueImpl(this);
+      if (value.has_value()) {
+        stdexec::set_value(std::move(receiver_), std::move(*value));
+        return true;
+      }
+      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
+                             OnStopRequested{ &channel_->get_awaiters_, this });
+      return false;
+    }
+
+    void retryImpl() noexcept final {
+      auto value = channel_->getValueImpl(this);
+      if (value.has_value()) {
+        stop_callback_.reset();
+        stdexec::set_value(std::move(receiver_), std::move(*value));
+      }
+    }
+
+  private:
+    void setStopped() noexcept final {
+      stdexec::set_stopped(std::move(receiver_));
+    }
+
+  private:
+    std::atomic<QueueAwaiterState> state_{ QueueAwaiterState::STARTING };
+    Channel<T, Capacity>* channel_;
+    Receiver receiver_;
+    std::optional<StopCallbackT> stop_callback_;
+  };
+
+  template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
+  auto connect(Receiver&& receiver) && noexcept(std::is_nothrow_move_constructible_v<ReceiverT>) {
+    return Operation<ReceiverT>(self, std::forward<Receiver>(receiver));
+  }
+
+  Channel<T, Capacity>* self;
+};
+}  // namespace internal
+
+template <ChannelValueType T, std::size_t Capacity>
+auto Channel<T, Capacity>::getValue() noexcept -> internal::GetValueSender<T, Capacity> {
+  return internal::GetValueSender<T, Capacity>{ this };
+}
+
+template <ChannelValueType T, std::size_t Capacity>
+template <ChannelValueType U>
+inline void Channel<T, Capacity>::setValueOverwrite(U&& value) noexcept {
+  {
+    absl::MutexLock lock{ &data_mutex_ };
+    if (data_.full()) {
+      data_.pop_front();
+    }
+    data_.push_back(std::forward<U>(value));
+  }
+  get_awaiters_.retryNext();
+}
+
+template <ChannelValueType T, std::size_t Capacity>
+template <ChannelValueType U>
+inline auto Channel<T, Capacity>::setValueImpl(U&& value, internal::AwaiterBase* set_awaiter) noexcept
+    -> bool {
+  {
+    absl::MutexLock lock{ &data_mutex_ };
+    if (data_.full()) {
+      set_awaiters_.enqueue(set_awaiter);
+      return false;
+    }
+    data_.push_back(std::forward<U>(value));
+  }
+  get_awaiters_.retryNext();
+  return true;
+}
 
 namespace internal {
 template <typename T, std::size_t Capacity>
@@ -208,22 +298,7 @@ struct SetValueSender {
 
   template <typename Receiver>
   class Operation : public AwaiterBase {
-    struct OnStopRequested {
-      void operator()() const noexcept {
-        bool call_stop = [this]() {
-          std::scoped_lock lock{ channel->mutex_ };
-          if (channel->set_awaiters_.erase(self)) {
-            return true;
-          }
-          return false;
-        }();
-        if (call_stop) {
-          stdexec::set_stopped(std::move(self->receiver_));
-        }
-      }
-      Channel<T, Capacity>* channel;
-      Operation* self;
-    };
+    using OnStopRequested = AwaiterBase::OnStopRequested;
     using EnvT = stdexec::env_of_t<Receiver>;
     using StopTokenT = stdexec::stop_token_of_t<EnvT>;
     using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopRequested>;
@@ -231,26 +306,22 @@ struct SetValueSender {
   public:
     template <ChannelValueType U>
     Operation(Channel<T, Capacity>* self, U&& value, Receiver receiver)
-      : self_(self), value_(std::forward<U>(value)), receiver_{ std::move(receiver) } {
+      : channel_(self), value_(std::forward<U>(value)), receiver_{ std::move(receiver) } {
     }
 
-    void start() noexcept {
-      bool set_value = false;
-      self_->setValueImpl(
-          std::move(value_), this, [this, &set_value]() { set_value = true; },
-          [this]() {
-            stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
-                                   OnStopRequested{ self_, this });
-          });
+    auto startImpl() noexcept -> bool final {
+      auto set_value = channel_->setValueImpl(std::move(value_), this);
       if (set_value) {
         stdexec::set_value(std::move(receiver_));
+        return true;
       }
+      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
+                             OnStopRequested{ &channel_->set_awaiters_, this });
+      return false;
     }
 
-    void retry() noexcept final {
-      bool set_value = false;
-      self_->setValueImpl(
-          std::move(value_), this, [this, &set_value]() mutable { set_value = true; }, [this]() {});
+    void retryImpl() noexcept final {
+      auto set_value = channel_->setValueImpl(std::move(value_), this);
       if (set_value) {
         stop_callback_.reset();
         stdexec::set_value(std::move(receiver_));
@@ -258,7 +329,12 @@ struct SetValueSender {
     }
 
   private:
-    Channel<T, Capacity>* self_;
+    void setStopped() noexcept final {
+      stdexec::set_stopped(std::move(receiver_));
+    }
+
+  private:
+    Channel<T, Capacity>* channel_;
     T value_;
     Receiver receiver_;
     std::optional<StopCallbackT> stop_callback_;
@@ -279,81 +355,4 @@ template <ChannelValueType U>
 auto Channel<T, Capacity>::setValue(U&& value) noexcept -> internal::SetValueSender<T, Capacity> {
   return internal::SetValueSender<T, Capacity>{ this, std::forward<U>(value) };
 }
-
-namespace internal {
-template <typename T, std::size_t Capacity>
-struct GetValueSender {
-  using sender_concept = stdexec::sender_t;
-  using completion_signatures =
-      stdexec::completion_signatures<stdexec::set_value_t(T), stdexec::set_stopped_t()>;
-
-  template <typename Receiver>
-  class Operation : public AwaiterBase {
-    struct OnStopRequested {
-      void operator()() const noexcept {
-        bool call_stop = [this]() {
-          std::scoped_lock lock{ channel->mutex_ };
-          if (channel->get_awaiters_.erase(self)) {
-            return true;
-          }
-          return false;
-        }();
-        if (call_stop) {
-          stdexec::set_stopped(std::move(self->receiver_));
-        }
-      }
-      Channel<T, Capacity>* channel;
-      Operation* self;
-    };
-    using EnvT = stdexec::env_of_t<Receiver>;
-    using StopTokenT = stdexec::stop_token_of_t<EnvT>;
-    using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopRequested>;
-
-  public:
-    Operation(Channel<T, Capacity>* self, Receiver receiver) : self_(self), receiver_{ std::move(receiver) } {
-    }
-
-    void start() noexcept {
-      std::optional<T> value;
-      self_->getValueImpl(
-          this, [this, &value](T&& t) { value.emplace(std::move(t)); },
-          [this]() {
-            stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
-                                   OnStopRequested{ self_, this });
-          });
-      if (value.has_value()) {
-        stdexec::set_value(std::move(receiver_), std::move(*value));
-        return;
-      }
-    }
-
-    void retry() noexcept final {
-      std::optional<T> value;
-      self_->getValueImpl(this, [this, &value](T&& t) mutable { value.emplace(std::move(t)); }, [this]() {});
-      if (value.has_value()) {
-        stop_callback_.reset();
-        stdexec::set_value(std::move(receiver_), std::move(*value));
-      }
-    }
-
-  private:
-    Channel<T, Capacity>* self_;
-    Receiver receiver_;
-    std::optional<StopCallbackT> stop_callback_;
-  };
-
-  template <typename Receiver, typename ReceiverT = std::decay_t<Receiver>>
-  auto connect(Receiver&& receiver) && noexcept(std::is_nothrow_move_constructible_v<ReceiverT>) {
-    return Operation<ReceiverT>(self, std::forward<Receiver>(receiver));
-  }
-
-  Channel<T, Capacity>* self;
-};
-}  // namespace internal
-
-template <ChannelValueType T, std::size_t Capacity>
-auto Channel<T, Capacity>::getValue() noexcept -> internal::GetValueSender<T, Capacity> {
-  return internal::GetValueSender<T, Capacity>{ this };
-}
-
 }  // namespace heph::concurrency

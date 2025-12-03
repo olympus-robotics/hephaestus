@@ -2,7 +2,10 @@
 // Copyright (C) 2023-2025 HEPHAESTUS Contributors
 //=================================================================================================
 
+#include <atomic>
+#include <chrono>
 #include <cstddef>
+#include <set>
 #include <thread>
 
 #include <absl/synchronization/mutex.h>
@@ -119,6 +122,7 @@ TEST(Channel, SendRecvParallelScope) {
     }
     stdexec::sync_wait(scope.on_empty());
   } };
+
   std::thread consumer{ [&]() {
     exec::async_scope scope;
     absl::Mutex mutex;
@@ -126,13 +130,12 @@ TEST(Channel, SendRecvParallelScope) {
     for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
       scope.spawn(channel.getValue() | stdexec::then([&received_values, &mutex](int value) {
                     // The continuation might run on the produce thread...
-                    absl::MutexLock lock{ &mutex };
+                    const absl::MutexLock lock{ &mutex };
                     auto [_, inserted] = received_values.insert(value);
                     EXPECT_TRUE(inserted);
                   }));
     }
     stdexec::sync_wait(scope.on_empty());
-    EXPECT_EQ(received_values.size(), NUMBER_OF_ITERATIONS);
   } };
 
   producer.join();
@@ -153,22 +156,26 @@ TEST(Channel, SendRecvParallelScopeStop) {
     scope.request_stop();
     stdexec::sync_wait(scope.on_empty());
   } };
+
   std::thread consumer{ [&]() {
     exec::async_scope scope;
     absl::Mutex mutex;
     std::set<int> received_values;
+    std::atomic<std::size_t> stopped_count;
     for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
       scope.spawn(channel.getValue() | stdexec::then([&received_values, &mutex](int value) {
                     // The continuation might run on the produce thread...
-                    absl::MutexLock lock{ &mutex };
+                    const absl::MutexLock lock{ &mutex };
                     auto [_, inserted] = received_values.insert(value);
                     EXPECT_TRUE(inserted);
-                  }));
+                  }) |
+                  stdexec::upon_stopped([&stopped_count]() { ++stopped_count; }));
     }
     // Just give a little leeway to have some executed...
     std::this_thread::sleep_for(std::chrono::microseconds(1));
     scope.request_stop();
     stdexec::sync_wait(scope.on_empty());
+    EXPECT_EQ(received_values.size() + stopped_count.load(), NUMBER_OF_ITERATIONS);
   } };
 
   producer.join();
