@@ -281,7 +281,7 @@ public:
 
   template <stdexec::receiver_of<completion_signatures> Receiver>
   auto connect(Receiver&& receiver) && {
-    return impl_->doConnect(internal::AnyReceiver<T>{ std::forward<Receiver>(receiver) });
+    return std::move(*impl_).doConnect(internal::AnyReceiver<T>{ std::forward<Receiver>(receiver) });
   }
 
 private:
