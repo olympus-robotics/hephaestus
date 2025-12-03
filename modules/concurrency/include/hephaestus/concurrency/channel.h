@@ -35,7 +35,7 @@ struct AwaiterBase {
   void start() noexcept;
   void retry() noexcept;
 
-  // This function is overriden by the implementation.
+  // This function is overridden by the implementation.
   // The return value determines if `set_value` was already called (true)
   // or if an enqueue happened (false).
   virtual auto startImpl() noexcept -> bool = 0;
