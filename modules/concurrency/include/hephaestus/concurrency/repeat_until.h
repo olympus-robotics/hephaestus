@@ -12,6 +12,7 @@
 
 namespace heph::concurrency {
 namespace internal {
+
 template <typename SenderFactoryT>
 concept SenderFactory = requires(SenderFactoryT sender_factory) {
   { sender_factory() } -> stdexec::sender;
