@@ -46,39 +46,37 @@ ContinuationIndentWidth: 4
 SpaceAfterCStyleCast: false
 SortIncludes: true
 QualifierAlignment: Left
-IncludeBlocks:   Regroup
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<.*(\.h|\.hpp|\.hxx)>$'
-    Priority:        1
-    SortPriority:    3
-    CaseSensitive:   false
-  - Regex:           '^<.*/.*>$'
-    Priority:        2
-    SortPriority:    2
-    CaseSensitive:   false
-  - Regex:           '^<.*>$'
-    Priority:        3
-    SortPriority:    1
-    CaseSensitive:   false
-  - Regex:           '.*'
-    Priority:        4
-    SortPriority:    4
-    CaseSensitive:   false
+  - Regex: '^<.*(\.h|\.hpp|\.hxx)>$'
+    Priority: 1
+    SortPriority: 3
+    CaseSensitive: false
+  - Regex: "^<.*/.*>$"
+    Priority: 2
+    SortPriority: 2
+    CaseSensitive: false
+  - Regex: "^<.*>$"
+    Priority: 3
+    SortPriority: 1
+    CaseSensitive: false
+  - Regex: ".*"
+    Priority: 4
+    SortPriority: 4
+    CaseSensitive: false
 
 # Configure each individual brace in BraceWrapping
 BreakBeforeBraces: Custom
 
 # Control of individual brace wrapping cases
-BraceWrapping: {
-    AfterClass: 'false'
-    AfterControlStatement: 'false'
-    AfterEnum : 'false'
-    AfterFunction : 'false'
-    AfterNamespace : 'false'
-    AfterStruct : 'false'
-    AfterUnion : 'false'
-    BeforeCatch : 'false'
-    BeforeElse : 'false'
-    IndentBraces : 'false'
-}
-...
+BraceWrapping:
+  AfterClass: "false"
+  AfterControlStatement: "false"
+  AfterEnum: "false"
+  AfterFunction: "false"
+  AfterNamespace: "false"
+  AfterStruct: "false"
+  AfterUnion: "false"
+  BeforeCatch: "false"
+  BeforeElse: "false"
+  IndentBraces: "false"

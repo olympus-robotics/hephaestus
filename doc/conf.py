@@ -1,22 +1,22 @@
 import os
 
-project = 'Hephaestus'
-author = 'Hephaestus Contributors'
-copyright = f'2025, Hephaestus Contributors'
-release = '0.0.1'
+project = "Hephaestus"
+author = "Hephaestus Contributors"
+copyright = f"2025, Hephaestus Contributors"
+release = "0.0.1"
 exclude_patterns = [
-    '**/*bazel*',
-    'requirements.*',
+    "**/*bazel*",
+    "requirements.*",
 ]
-extensions = ['sphinx.ext.autodoc', 'breathe', 'sphinxcontrib.mermaid']
-pygments_style = 'sphinx'
+extensions = ["sphinx.ext.autodoc", "breathe", "sphinxcontrib.mermaid"]
+pygments_style = "sphinx"
 
 
-breathe_projects ={"heph":  os.path.abspath("doxygen/xml")}
+breathe_projects = {"heph": os.path.abspath("doxygen/xml")}
 breathe_projects_source = {}
 breathe_default_project = "heph"
 
-html_theme = 'sphinx_book_theme'
+html_theme = "sphinx_book_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -25,5 +25,5 @@ html_theme_options = {
     "home_page_in_toc": True,
     "repository_url": "https://github.com/olympus-robotics/hephaestus",
     "use_repository_button": True,
-    "use_issues_button": True
+    "use_issues_button": True,
 }

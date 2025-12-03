@@ -26,6 +26,7 @@
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/recv.h"
 #include "hephaestus/net/socket.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::conduit {
 
