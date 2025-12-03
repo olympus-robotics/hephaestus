@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <thread>
 #include <type_traits>
 #include <utility>
 
@@ -45,8 +46,8 @@ struct AwaiterBase {
 protected:
   void stopRequested();
   void finalizeStart();
-  void waitForStarting() const;
-  auto isStopped() const -> bool;
+  [[nodiscard]] auto waitForStarting() const -> bool;
+  [[nodiscard]] auto isStopped() const -> bool;
 
   struct OnStopRequested {
     void operator()() const noexcept;
@@ -97,6 +98,9 @@ concept ChannelValueType = requires(T t) {
 /// @tparam Capacity Maximum number of elements the Channel can store
 ///
 /// Exception Safety: cannot throw, ensured by type constraints.
+///
+/// \note There is a potential starvation issue when having many producers/consumers
+/// The recommended use is in a Single Producer Single Consumer (SPSC) scenario.
 ///
 /// Example:
 /// @code
@@ -187,7 +191,9 @@ inline auto Channel<T, Capacity>::getValueImpl(internal::AwaiterBase* get_awaite
   {
     absl::MutexLock lock{ &data_mutex_ };
     if (data_.empty()) {
-      get_awaiters_.enqueue(get_awaiter);
+      if (get_awaiter != nullptr) {
+        get_awaiters_.enqueue(get_awaiter);
+      }
       return res;
     }
     res.emplace(std::move(data_.front()));
@@ -232,14 +238,6 @@ struct GetValueSender {
       if (value.has_value()) {
         stop_callback_.reset();
         stdexec::set_value(std::move(receiver_), std::move(*value));
-      } else {
-        // Account for potentially concurrent stop signals arriving which we might have missed
-        if (stdexec::get_stop_token(stdexec::get_env(receiver_)).stop_requested()) {
-          // If we failed, we got enqueued. We need to revert this to ensure proper lifetime
-          if (channel_->get_awaiters_.erase(this)) {
-            setStopped();
-          }
-        }
       }
     }
 
@@ -334,14 +332,6 @@ struct SetValueSender {
       if (success) {
         stop_callback_.reset();
         stdexec::set_value(std::move(receiver_));
-      } else {
-        // Account for potentially concurrent stop signals arriving which we might have missed
-        if (stdexec::get_stop_token(stdexec::get_env(receiver_)).stop_requested()) {
-          // If we failed, we got enqueued. We need to revert this to ensure proper lifetime
-          if (channel_->set_awaiters_.erase(this)) {
-            setStopped();
-          }
-        }
       }
     }
 

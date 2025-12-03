@@ -5,6 +5,7 @@
 #include "hephaestus/concurrency/channel.h"
 
 #include <atomic>
+#include <thread>
 
 #include <absl/synchronization/mutex.h>
 
@@ -19,10 +20,8 @@ void AwaiterBase::start() noexcept {
 
 void AwaiterBase::retry() noexcept {
   // retry might be called concurrently to start. Wait until starting completed.
-  waitForStarting();
-
-  // Account for potentially concurrent stop signals arriving...
-  if (isStopped()) {
+  // Account for potentially concurrent stop signals arriving
+  if (!waitForStarting()) {
     setStopped();
     return;
   }
@@ -53,20 +52,19 @@ void AwaiterBase::finalizeStart() {
   auto state = state_.exchange(QueueAwaiterState::ENQUEUED, std::memory_order_acq_rel);
   if (state == QueueAwaiterState::STOPPED) {
     setStopped();
-    return;
-  }
-  // If we weren't stopped, notify potential waiters...
-  state_.notify_all();
-}
-
-void AwaiterBase::waitForStarting() const {
-  while (state_.load(std::memory_order_acquire) == QueueAwaiterState::STARTING) {
-    state_.wait(QueueAwaiterState::STARTING, std::memory_order_acquire);
   }
 }
 
-auto AwaiterBase::isStopped() const -> bool {
-  return state_.load(std::memory_order_acquire) == QueueAwaiterState::STOPPED;
+auto AwaiterBase::waitForStarting() const -> bool {
+  // Wait for state to transition to started (or stopped...)
+  while (true) {
+    auto state = state_.load(std::memory_order_acquire);
+    if (state != QueueAwaiterState::STARTING) {
+      return state == QueueAwaiterState::ENQUEUED;
+    }
+    std::this_thread::yield();
+  }
+  return true;
 }
 
 void AwaiterBase::OnStopRequested::operator()() const noexcept {
