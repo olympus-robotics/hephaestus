@@ -52,6 +52,8 @@ def heph_gcc_copts():
         "-Wlogical-op",
         "-Wuseless-cast",
         "-fdiagnostics-color=always",
+        "-fPIC",
+        "-Wshadow",
     ]
 
 def heph_copts():

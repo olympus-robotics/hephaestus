@@ -1,5 +1,8 @@
 startup --output_user_root=~/.cache/bazel/output/
 
+build --extra_toolchains=@llvm_toolchain//:all
+build:gcc --extra_toolchains="@gcc_toolchain_x86_64//:cc_toolchain"
+
 build --disk_cache=~/.cache/bazel/cache
 build --repository_cache=~/.cache/bazel/repos/
 
