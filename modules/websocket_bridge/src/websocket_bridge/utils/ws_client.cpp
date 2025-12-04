@@ -23,6 +23,7 @@
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/message.h>
 
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 

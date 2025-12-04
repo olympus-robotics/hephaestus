@@ -23,7 +23,6 @@
 #include <utility>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <absl/strings/ascii.h>
 #include <fmt/base.h>
 #include <foxglove/websocket/base64.hpp>

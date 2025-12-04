@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <fmt/core.h>
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml/read.hpp>
