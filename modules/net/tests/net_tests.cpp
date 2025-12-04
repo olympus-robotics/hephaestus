@@ -158,7 +158,7 @@ TEST_F(Net, TCPOperationsSome) {
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
-  std::iota(send_buffer.begin(), send_buffer.end(), 0);
+  std::iota(send_buffer.begin(), send_buffer.end(), 0);  // NOLINT(modernize-use-ranges)
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
@@ -207,7 +207,7 @@ TEST_F(Net, TCPOperationsAll) {
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
-  std::iota(send_buffer.begin(), send_buffer.end(), 0);
+  std::iota(send_buffer.begin(), send_buffer.end(), 0);  // NOLINT(modernize-use-ranges)
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {
     auto buffer = std::as_bytes(std::span{ send_buffer });
@@ -249,7 +249,7 @@ TEST_F(Net, UDPOperations) {
   client.connect(endpoint);
 
   std::vector<char> send_buffer(MSG_SIZE);
-  std::iota(send_buffer.begin(), send_buffer.end(), 0);
+  std::iota(send_buffer.begin(), send_buffer.end(), 0);  // NOLINT(modernize-use-ranges)
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
   auto client_sender = [&]() -> exec::task<void> {

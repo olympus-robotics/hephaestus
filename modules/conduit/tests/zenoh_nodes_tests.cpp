@@ -14,6 +14,7 @@
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/log_sink.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"

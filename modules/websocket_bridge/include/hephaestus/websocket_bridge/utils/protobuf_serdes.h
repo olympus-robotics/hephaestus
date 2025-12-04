@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <fmt/core.h>
 #include <foxglove/websocket/common.hpp>
 #include <google/protobuf/descriptor.h>
@@ -25,7 +24,6 @@
 #include <google/protobuf/message.h>
 
 #include "hephaestus/serdes/type_info.h"
-#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ws {
 
