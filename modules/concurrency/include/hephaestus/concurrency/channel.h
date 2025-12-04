@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <thread>
 #include <type_traits>
 #include <utility>
 
@@ -40,13 +39,15 @@ struct AwaiterBase {
   // The return value determines if `set_value` was already called (true)
   // or if an enqueue happened (false).
   virtual auto startImpl() noexcept -> bool = 0;
-  virtual void retryImpl() noexcept = 0;
+  virtual auto retryImpl() noexcept -> bool = 0;
   virtual void setStopped() noexcept = 0;
+  virtual void emplaceStopCallback() noexcept = 0;
+  virtual void resetStopCallback() noexcept = 0;
 
 protected:
   void stopRequested();
   void finalizeStart();
-  [[nodiscard]] auto waitForStarting() const -> bool;
+  [[nodiscard]] auto waitForEnqueued() const -> bool;
   [[nodiscard]] auto isStopped() const -> bool;
 
   struct OnStopRequested {
@@ -82,11 +83,11 @@ template <typename T, std::size_t Capacity>
 struct SetValueSender;
 }  // namespace internal
 
-template <typename T>
-concept ChannelValueType = requires(T t) {
+template <typename T, typename U = T>
+concept ChannelValueType = requires(T&& t, U&& u) {
   requires std::is_nothrow_destructible_v<T>;
-  requires std::is_nothrow_move_assignable_v<T>;
-  requires std::is_nothrow_move_constructible_v<T>;
+  requires std::is_nothrow_destructible_v<U>;
+  requires std::is_nothrow_constructible_v<U, T>;
 };
 
 /// Asynchronous communication channel
@@ -141,13 +142,13 @@ public:
   /// value received from the channel.
   ///
   /// @param value The value to send via the channel
-  template <ChannelValueType U>
+  template <ChannelValueType<T> U>
   [[nodiscard]] auto setValue(U&& value) noexcept -> SetValueSender;
 
   /// Push a value into the channel
   ///
   /// Similar to \ref setValue but removes the oldest element if not enough space is available.
-  template <ChannelValueType U>
+  template <ChannelValueType<T> U>
   void setValueOverwrite(U&& value) noexcept;
 
   /// Retrieve a value stored in the channel. The returned sender will complete as soon as there is
@@ -166,14 +167,14 @@ private:
   template <typename T_, std::size_t Capacity_>
   friend struct internal::GetValueSender;
 
-  template <ChannelValueType U>
+  template <ChannelValueType<T> U>
   auto setValueImpl(U&& value, internal::AwaiterBase* set_awaiter) noexcept -> bool;
   auto getValueImpl(internal::AwaiterBase* get_awaiter) noexcept -> std::optional<T>;
 
 private:
   absl::Mutex data_mutex_;
   // the include structure of boost::circular_buffer doesn't work correctly with IWYU
-  // NOLINTNEXTLINE(misc-include-cleaner) -
+  // NOLINTNEXTLINE(misc-include-cleaner)
   boost::circular_buffer<T> data_ ABSL_GUARDED_BY(data_mutex_){ Capacity };
   internal::AwaiterQueue set_awaiters_;
   internal::AwaiterQueue get_awaiters_;
@@ -228,22 +229,30 @@ struct GetValueSender {
         stdexec::set_value(std::move(receiver_), std::move(*value));
         return true;
       }
-      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
-                             OnStopRequested{ &channel_->get_awaiters_, this });
       return false;
     }
 
-    void retryImpl() noexcept final {
+    auto retryImpl() noexcept -> bool final {
       auto value = channel_->getValueImpl(this);
       if (value.has_value()) {
-        stop_callback_.reset();
         stdexec::set_value(std::move(receiver_), std::move(*value));
+        return true;
       }
+      return false;
     }
 
   private:
     void setStopped() noexcept final {
       stdexec::set_stopped(std::move(receiver_));
+    }
+
+    void emplaceStopCallback() noexcept final {
+      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
+                             OnStopRequested{ &channel_->get_awaiters_, this });
+    }
+
+    void resetStopCallback() noexcept final {
+      stop_callback_.reset();
     }
 
   private:
@@ -268,7 +277,7 @@ auto Channel<T, Capacity>::getValue() noexcept -> internal::GetValueSender<T, Ca
 }
 
 template <ChannelValueType T, std::size_t Capacity>
-template <ChannelValueType U>
+template <ChannelValueType<T> U>
 inline void Channel<T, Capacity>::setValueOverwrite(U&& value) noexcept {
   {
     absl::MutexLock lock{ &data_mutex_ };
@@ -281,7 +290,7 @@ inline void Channel<T, Capacity>::setValueOverwrite(U&& value) noexcept {
 }
 
 template <ChannelValueType T, std::size_t Capacity>
-template <ChannelValueType U>
+template <ChannelValueType<T> U>
 inline auto Channel<T, Capacity>::setValueImpl(U&& value, internal::AwaiterBase* set_awaiter) noexcept
     -> bool {
   {
@@ -311,7 +320,7 @@ struct SetValueSender {
     using StopCallbackT = stdexec::stop_callback_for_t<StopTokenT, OnStopRequested>;
 
   public:
-    template <ChannelValueType U>
+    template <ChannelValueType<T> U>
     Operation(Channel<T, Capacity>* self, U&& value, Receiver receiver)
       : channel_(self), value_(std::forward<U>(value)), receiver_{ std::move(receiver) } {
     }
@@ -322,22 +331,30 @@ struct SetValueSender {
         stdexec::set_value(std::move(receiver_));
         return true;
       }
-      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
-                             OnStopRequested{ &channel_->set_awaiters_, this });
       return false;
     }
 
-    void retryImpl() noexcept final {
+    auto retryImpl() noexcept -> bool final {
       auto success = channel_->setValueImpl(std::move(value_), this);
       if (success) {
-        stop_callback_.reset();
         stdexec::set_value(std::move(receiver_));
+        return true;
       }
+      return false;
     }
 
   private:
     void setStopped() noexcept final {
       stdexec::set_stopped(std::move(receiver_));
+    }
+
+    void emplaceStopCallback() noexcept final {
+      stop_callback_.emplace(stdexec::get_stop_token(stdexec::get_env(receiver_)),
+                             OnStopRequested{ &channel_->set_awaiters_, this });
+    }
+
+    void resetStopCallback() noexcept final {
+      stop_callback_.reset();
     }
 
   private:
@@ -358,7 +375,7 @@ struct SetValueSender {
 }  // namespace internal
 
 template <ChannelValueType T, std::size_t Capacity>
-template <ChannelValueType U>
+template <ChannelValueType<T> U>
 auto Channel<T, Capacity>::setValue(U&& value) noexcept -> internal::SetValueSender<T, Capacity> {
   return internal::SetValueSender<T, Capacity>{ this, std::forward<U>(value) };
 }

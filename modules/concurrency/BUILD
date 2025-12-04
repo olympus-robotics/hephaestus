@@ -15,6 +15,7 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
+        "//modules/format",
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",
         "//modules/utils",

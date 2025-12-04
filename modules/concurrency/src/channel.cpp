@@ -10,10 +10,12 @@
 #include <absl/synchronization/mutex.h>
 
 #include "hephaestus/error_handling/panic.h"
+#include "hephaestus/format/generic_formatter.h"
 
 namespace heph::concurrency::internal {
 void AwaiterBase::start() noexcept {
   if (!startImpl()) {
+    emplaceStopCallback();
     finalizeStart();
   }
 }
@@ -21,12 +23,24 @@ void AwaiterBase::start() noexcept {
 void AwaiterBase::retry() noexcept {
   // retry might be called concurrently to start. Wait until starting completed.
   // Account for potentially concurrent stop signals arriving
-  if (!waitForStarting()) {
-    setStopped();
+  if (!waitForEnqueued()) {
     return;
   }
+  resetStopCallback();
 
-  retryImpl();
+  // reset the state to STARTING to make sure that concurrently running stop operations
+  // will not attempt to use the (tiny) window between re-enqueuing and resetting the
+  // stop callback!
+  auto state = state_.exchange(QueueAwaiterState::STARTING, std::memory_order_acq_rel);
+  HEPH_PANIC_IF(state != QueueAwaiterState::ENQUEUED, "Invalid State. Got {}, expected {}", state,
+                QueueAwaiterState::ENQUEUED);
+
+  if (!retryImpl()) {
+    // If we didn't succeed, reinstantiate the stop callback to ensure we are
+    // not missing any...
+    emplaceStopCallback();
+    finalizeStart();
+  }
 }
 
 void AwaiterBase::stopRequested() {
@@ -55,7 +69,7 @@ void AwaiterBase::finalizeStart() {
   }
 }
 
-auto AwaiterBase::waitForStarting() const -> bool {
+auto AwaiterBase::waitForEnqueued() const -> bool {
   // Wait for state to transition to started (or stopped...)
   while (true) {
     auto state = state_.load(std::memory_order_acquire);

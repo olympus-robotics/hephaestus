@@ -11,11 +11,13 @@
 
 #include <absl/synchronization/mutex.h>
 #include <exec/async_scope.hpp>
+#include <exec/static_thread_pool.hpp>
 #include <exec/when_any.hpp>
 #include <gtest/gtest.h>
 #include <stdexec/execution.hpp>
 
 #include "hephaestus/concurrency/channel.h"
+
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 namespace heph::concurrency {
 TEST(Channel, SendRecv) {
@@ -168,40 +170,37 @@ TEST(Channel, SendRecvParallelScopeStop) {
   Channel<std::size_t, 4> channel;
   static constexpr std::size_t NUMBER_OF_ITERATIONS = 10000;
 
-  std::thread producer{ [&]() {
-    exec::async_scope scope;
-    for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
-      scope.spawn(channel.setValue(i));
-    }
-    // Just give a little leeway to have some executed...
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
-    scope.request_stop();
-    stdexec::sync_wait(scope.on_empty());
-  } };
+  exec::async_scope scope;
+  absl::Mutex mutex;
+  std::set<int> received_values;
+  std::atomic<std::size_t> stopped_count;
 
-  std::thread consumer{ [&]() {
-    exec::async_scope scope;
-    absl::Mutex mutex;
-    std::set<int> received_values;
-    std::atomic<std::size_t> stopped_count;
-    for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
-      scope.spawn(channel.getValue() | stdexec::then([&received_values, &mutex](int value) {
-                    // The continuation might run on the produce thread...
-                    const absl::MutexLock lock{ &mutex };
-                    auto [_, inserted] = received_values.insert(value);
-                    EXPECT_TRUE(inserted);
-                  }) |
-                  stdexec::upon_stopped([&stopped_count]() { ++stopped_count; }));
-    }
-    // Just give a little leeway to have some executed...
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
-    scope.request_stop();
-    stdexec::sync_wait(scope.on_empty());
-    EXPECT_EQ(received_values.size() + stopped_count.load(), NUMBER_OF_ITERATIONS);
-  } };
+  exec::static_thread_pool pool0(1);
+  exec::static_thread_pool pool1(1);
 
-  producer.join();
-  consumer.join();
+  for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
+    scope.spawn(stdexec::schedule(pool0.get_scheduler()) |
+                stdexec::let_value([&, i]() { return channel.setValue(i); }));
+  }
+
+  for (std::size_t i = 0; i != NUMBER_OF_ITERATIONS; ++i) {
+    scope.spawn(stdexec::schedule(pool1.get_scheduler()) | stdexec::let_value([&]() {
+                  return channel.getValue() | stdexec::then([&received_values, &mutex](int value) {
+                           // The continuation might run on the produce thread...
+                           const absl::MutexLock lock{ &mutex };
+                           auto [_, inserted] = received_values.insert(value);
+                           EXPECT_TRUE(inserted);
+                         });
+                }) |
+                stdexec::upon_stopped([&stopped_count]() { ++stopped_count; }));
+  }
+
+  // Just give a little leeway to have some executed...
+  std::this_thread::sleep_for(std::chrono::microseconds(1));
+  scope.request_stop();
+  stdexec::sync_wait(scope.on_empty());
+
+  EXPECT_EQ(received_values.size() + stopped_count.load(), NUMBER_OF_ITERATIONS);
 }
 
 }  // namespace heph::concurrency
