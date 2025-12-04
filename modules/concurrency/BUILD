@@ -24,6 +24,7 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "@boost.container",
         "@liburing",
         "@stdexec",
     ],
@@ -97,6 +98,12 @@ heph_cc_test(
 heph_cc_test(
     name = "any_sender_tests",
     srcs = ["tests/any_sender_tests.cpp"],
+    deps = [":concurrency"],
+)
+
+heph_cc_test(
+    name = "when_all_range_tests",
+    srcs = ["tests/when_all_range_tests.cpp"],
     deps = [":concurrency"],
 )
 
