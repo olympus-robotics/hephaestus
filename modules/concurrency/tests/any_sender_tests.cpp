@@ -13,6 +13,7 @@
 
 // NOLINTBEGIN(bugprone-unchecked-optional-access)
 namespace heph::concurrency {
+
 TEST(AnySender, JustVoid) {
   // Test that constructor rejects non-void senders
   static_assert(std::constructible_from<AnySender<void>, decltype(stdexec::just())>);
@@ -53,6 +54,7 @@ TEST(AnySender, JustVoid) {
     EXPECT_TRUE(res.has_value());
   }
 }
+
 TEST(AnySender, JustValue) {
   // Test that constructor rejects non-void senders
   static_assert(!std::constructible_from<AnySender<int>, decltype(stdexec::just())>);
@@ -96,7 +98,8 @@ TEST(AnySender, JustValue) {
     EXPECT_EQ(std::get<0>(*res), 1);
   }
 }
-TEST(AnySender, Composabe) {
+
+TEST(AnySender, Composable) {
   bool triggered = false;
   stdexec::sync_wait(AnySender<void>{ stdexec::just() } | stdexec::then([&]() { triggered = true; }));
   EXPECT_TRUE(triggered);

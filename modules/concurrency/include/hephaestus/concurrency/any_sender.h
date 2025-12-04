@@ -16,8 +16,10 @@
 
 namespace heph::concurrency {
 namespace internal {
+
 using AnySchedulerCompletions =
     stdexec::completion_signatures<stdexec::set_error_t(std::exception_ptr), stdexec::set_stopped_t()>;
+
 using AnyScheduler = exec::any_receiver_ref<AnySchedulerCompletions>::any_sender<>::any_scheduler<>;
 static_assert(stdexec::scheduler<AnyScheduler>);
 
