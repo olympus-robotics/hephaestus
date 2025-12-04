@@ -95,28 +95,28 @@ public:
     return tmp;
   }
 
-  [[nodiscard]] auto erase(T* t) -> bool {
+  auto erase(T* t) {
     if (empty() || t == nullptr) {
-      return false;
+      return;
     }
     // Delete from front?
     if (t == head_) {
       dequeue();
-      return true;
+      return;
     }
 
     auto* prev = IntrusiveFifoQueueAccess::prev(t);
     auto* next = IntrusiveFifoQueueAccess::next(t);
 
     if (prev == nullptr || next == nullptr) {
-      return false;
+      return;
     }
 
     if (IntrusiveFifoQueueAccess::next(prev) != t) {
-      return false;
+      return;
     }
     if (IntrusiveFifoQueueAccess::prev(next) != t) {
-      return false;
+      return;
     }
 
     // Check if last node...
@@ -133,7 +133,6 @@ public:
     --size_;
     IntrusiveFifoQueueAccess::next(t) = nullptr;
     IntrusiveFifoQueueAccess::prev(t) = nullptr;
-    return true;
   }
 
 private:

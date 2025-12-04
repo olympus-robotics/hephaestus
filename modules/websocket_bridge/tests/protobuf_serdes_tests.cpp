@@ -9,6 +9,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
 
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
