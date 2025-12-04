@@ -52,7 +52,7 @@ void Context::enqueueAt(TaskBase* task, ClockT::time_point start_time) {
 }
 
 void Context::dequeueTimer(TaskBase* task) {
-  tasks_.erase(task);
+  (void)tasks_.erase(task);
   timer_.dequeue(task);
 }
 

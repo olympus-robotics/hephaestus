@@ -38,8 +38,8 @@ struct AwaiterBase {
   // This function is overridden by the implementation.
   // The return value determines if `set_value` was already called (true)
   // or if an enqueue happened (false).
-  virtual auto startImpl() noexcept -> bool = 0;
-  virtual auto retryImpl() noexcept -> bool = 0;
+  [[nodiscard]] virtual auto startImpl() noexcept -> bool = 0;
+  [[nodiscard]] virtual auto retryImpl() noexcept -> bool = 0;
   virtual void setStopped() noexcept = 0;
   virtual void emplaceStopCallback() noexcept = 0;
   virtual void resetStopCallback() noexcept = 0;
@@ -67,7 +67,7 @@ class AwaiterQueue {
 public:
   void enqueue(AwaiterBase* awaiter);
 
-  auto erase(AwaiterBase* awaiter) -> bool;
+  [[nodiscard]] auto erase(AwaiterBase* awaiter) -> bool;
 
   void retryNext();
 
@@ -223,7 +223,7 @@ struct GetValueSender {
       : channel_(self), receiver_{ std::move(receiver) } {
     }
 
-    auto startImpl() noexcept -> bool final {
+    [[nodiscard]] auto startImpl() noexcept -> bool final {
       auto value = channel_->getValueImpl(this);
       if (value.has_value()) {
         stdexec::set_value(std::move(receiver_), std::move(*value));
@@ -232,7 +232,7 @@ struct GetValueSender {
       return false;
     }
 
-    auto retryImpl() noexcept -> bool final {
+    [[nodiscard]] auto retryImpl() noexcept -> bool final {
       auto value = channel_->getValueImpl(this);
       if (value.has_value()) {
         stdexec::set_value(std::move(receiver_), std::move(*value));
@@ -325,7 +325,7 @@ struct SetValueSender {
       : channel_(self), value_(std::forward<U>(value)), receiver_{ std::move(receiver) } {
     }
 
-    auto startImpl() noexcept -> bool final {
+    [[nodiscard]] auto startImpl() noexcept -> bool final {
       auto set_value = channel_->setValueImpl(std::move(value_), this);
       if (set_value) {
         stdexec::set_value(std::move(receiver_));
@@ -334,7 +334,7 @@ struct SetValueSender {
       return false;
     }
 
-    auto retryImpl() noexcept -> bool final {
+    [[nodiscard]] auto retryImpl() noexcept -> bool final {
       auto success = channel_->setValueImpl(std::move(value_), this);
       if (success) {
         stdexec::set_value(std::move(receiver_));

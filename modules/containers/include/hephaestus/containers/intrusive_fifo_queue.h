@@ -95,7 +95,7 @@ public:
     return tmp;
   }
 
-  auto erase(T* t) -> bool {
+  [[nodiscard]] auto erase(T* t) -> bool {
     if (empty() || t == nullptr) {
       return false;
     }
