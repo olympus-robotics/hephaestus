@@ -3,7 +3,7 @@
 //=================================================================================================
 
 #pragma once
-
+// IWYU pragma: always_keep
 #include "hephaestus/ipc/zenoh/action_server/proto/types.pb.h"
 #include "hephaestus/ipc/zenoh/action_server/types.h"
 #include "hephaestus/serdes/protobuf/concepts.h"

@@ -13,6 +13,7 @@
 
 #include <fmt/base.h>
 
+#include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/random/random_number_generator.h"
 #include "hephaestus/random/random_object_creator.h"
 #include "hephaestus/telemetry/influxdb_sink/influxdb_metric_sink.h"

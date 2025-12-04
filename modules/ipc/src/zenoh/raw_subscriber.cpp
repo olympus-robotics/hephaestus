@@ -4,6 +4,7 @@
 
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 
+#include <chrono>
 #include <cstddef>
 #include <exception>
 #include <memory>

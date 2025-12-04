@@ -11,6 +11,7 @@
 #include <string>
 
 #ifndef __WIN32__
+#include <asm-generic/param.h>
 #include <linux/limits.h>
 #endif
 

@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 #include <stdexec/execution.hpp>
 
+#include "hephaestus/concurrency/context.h"
 #include "hephaestus/conduit/detail/node_base.h"
 #include "hephaestus/conduit/remote_node_handler.h"
 #include "hephaestus/net/endpoint.h"

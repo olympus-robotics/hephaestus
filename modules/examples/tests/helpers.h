@@ -3,6 +3,7 @@
 #include <numbers>
 #include <optional>
 #include <random>
+#include <string>
 
 #include "hephaestus/examples/types/pose.h"
 #include "hephaestus/random/random_object_creator.h"
@@ -16,9 +17,11 @@ inline auto randomPose(std::mt19937_64& mt) -> Pose {
   DistT t_distribution(RANDOM_TRANSLATION_RANGE);
   DistT r_distribution(-std::numbers::pi, std::numbers::pi);
 
+  // NOLINTNEXTLINE
   return { .orientation = Eigen::Quaterniond{ r_distribution(mt), r_distribution(mt), r_distribution(mt),
                                               r_distribution(mt) }
                               .normalized(),
+           // NOLINTNEXTLINE
            .position = Eigen::Vector3d{ t_distribution(mt), t_distribution(mt), t_distribution(mt) } };
 }
 

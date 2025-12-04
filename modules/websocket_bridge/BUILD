@@ -29,6 +29,7 @@ heph_cc_library(
     ),
     implementation_deps = [
         "//modules/error_handling",
+        "//modules/telemetry/log",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:strings",
         "@magic_enum",
@@ -40,7 +41,6 @@ heph_cc_library(
     deps = [
         "//modules/ipc",
         "//modules/serdes",
-        "//modules/telemetry/log",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/synchronization:synchronization",

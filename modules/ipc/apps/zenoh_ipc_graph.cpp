@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
+#include <memory>
+#include <string>
 #include <thread>
 #include <utility>
 

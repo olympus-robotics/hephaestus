@@ -47,6 +47,9 @@ struct DummyJSONSerializable {
   int dummy = 0;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
+
 [[nodiscard]] auto toJSON(const DummyJSONSerializable& data) -> std::string {
   return std::to_string(data.dummy);
 }
@@ -54,6 +57,8 @@ struct DummyJSONSerializable {
 void fromJSON(std::string_view json, DummyJSONSerializable& data) {
   data.dummy = std::stoi(json.data());  // NOLINT(bugprone-suspicious-stringview-data-usage)
 }
+
+#pragma GCC diagnostic pop
 
 struct DummyNlohmannJSONSerializable {
   auto operator==(const DummyNlohmannJSONSerializable&) const -> bool = default;
@@ -102,6 +107,9 @@ TEST(Protobuf, DeserializerBuffers) {
   EXPECT_TRUE(res);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 void toProto(MockProtoMessage& proto, const Data& data) {
   EXPECT_CALL(proto, ByteSizeLong).Times(1).WillOnce(Return(data.a));
 }
@@ -110,6 +118,8 @@ void fromProto(const MockProtoMessage& proto, Data& data) {
   (void)proto;
   data.a = NUMBER * 2;
 }
+
+#pragma GCC diagnostic pop
 
 TEST(Serialization, Protobuf) {
   Data data{};

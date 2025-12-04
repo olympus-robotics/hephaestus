@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdio>  // NOLINT(misc-include-cleaner)
 #include <cstdlib>
 #include <sstream>
 #include <string>

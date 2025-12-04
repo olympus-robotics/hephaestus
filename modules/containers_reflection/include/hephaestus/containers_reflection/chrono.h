@@ -13,6 +13,7 @@
 
 #include <fmt/format.h>
 #include <rfl.hpp>  // NOLINT(misc-include-cleaner)
+#include <rfl/internal/has_reflector.hpp>
 
 namespace rfl {
 

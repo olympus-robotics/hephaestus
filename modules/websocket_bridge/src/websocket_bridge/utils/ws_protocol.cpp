@@ -19,6 +19,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "hephaestus/ipc/zenoh/service.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/protobuf_serdes.h"
 
 namespace heph::ws {

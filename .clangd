@@ -1,0 +1,17 @@
+Diagnostics:
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
+  Includes:
+    IgnoreHeader:
+      - .*/types_proto/.*
+      - .*/containers_reflection/.*
+      - .*/containers_proto/.*
+      - log_sink\.h
+      - .*/format/.*
+      - .*/rfl.hpp
+      - .*/rfl/.*
+      - bits/chrono.h
+      - .*Eigen/.*
+      - bits/.*
+      - signal.h
+      - string.h

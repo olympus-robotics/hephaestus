@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <exception>
 #include <random>
+#include <string>
 #include <string_view>
 #include <utility>
 

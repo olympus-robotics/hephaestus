@@ -11,6 +11,7 @@ load("@rules_python//sphinxdocs:sphinx_docs_library.bzl", "sphinx_docs_library")
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
+    ".clangd",
     ".clang-tidy",
     "buf.yaml",
     ".clang-format",
@@ -34,14 +35,17 @@ refresh_compile_commands(
 )
 
 ############################
-# Documentation generation
+# Python
 ############################
-
 compile_pip_requirements(
     name = "python_requirements",
     src = "requirements.in",
     requirements_txt = "requirements_lock.txt",
 )
+
+############################
+# Documentation generation
+############################
 
 sphinx_docs_library(
     name = "sources",

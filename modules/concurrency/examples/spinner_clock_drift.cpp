@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <exception>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -42,9 +43,9 @@ auto main(int argc, const char* argv[]) -> int {
                                    "hephaestus");
     const auto args = std::move(desc).parse(argc, argv);
 
-    using namespace std::chrono_literals;
-    // NOLINTNEXTLINE(misc-include-cleaner)
-    static constexpr std::array PERIOD{ 1ms, 10ms, 100ms, 200ms, 500ms };
+    static constexpr auto MS = std::chrono::milliseconds(1);
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+    static constexpr std::array PERIOD{ 1 * MS, 10 * MS, 20 * MS, 25 * MS, 30 * MS, 40 * MS, 100 * MS };
 
     static constexpr auto TELEMETRY_PERIOD = std::chrono::duration<double>(1.0);
 

@@ -6,25 +6,33 @@
 # File: clang_tidy/clang_tidy.bzl
 # Commit 393c5faf015202ee7db5853c324c857f13ef40f7
 
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 def _run_tidy(
         ctx,
         wrapper,
-        exe,
+        use_clangd,
+        clang_tidy_exe,
+        clangd_tidy_exe,
+        clangd_exe,
         additional_deps,
         config,
+        clangd_config,
         flags,
         infile,
         discriminator,
         additional_files,
         additional_inputs):
+    if not clang_tidy_exe.files_to_run.executable or not clangd_tidy_exe.files_to_run.executable or not clangd_exe.files_to_run.executable:
+        fail("clang-tidy executables are not specified")
+
     cc_toolchain = find_cpp_toolchain(ctx)
     direct_inputs = (
-        [infile, config] +
+        [infile, config, clangd_config] +
         additional_deps.files.to_list() +
-        ([exe.files_to_run.executable] if exe.files_to_run.executable else [])
+        ([clang_tidy_exe.files_to_run.executable, clangd_tidy_exe.files_to_run.executable, clangd_exe.files_to_run.executable])
     )
     for additional_input in additional_inputs:
         direct_inputs.extend(additional_input.files.to_list())
@@ -41,17 +49,20 @@ def _run_tidy(
         "bazel_clang_tidy_" + infile.path + "." + discriminator + ".clang-tidy.yaml",
     )
 
-    # this is consumed by the wrapper script
-    if len(exe.files.to_list()) == 0:
-        args.add("clang-tidy")
+    if use_clangd:
+        args.add(clangd_tidy_exe.files_to_run.executable)
     else:
-        args.add(exe.files_to_run.executable)
+        args.add(clang_tidy_exe.files_to_run.executable)
 
     args.add(outfile.path)  # this is consumed by the wrapper script
-
     args.add(config.path)
+    args.add(clangd_config.path)
 
-    args.add("--export-fixes", outfile.path)
+    if use_clangd:
+        args.add("--clangd-executable", clangd_exe.files_to_run.executable.path)
+        args.add("--verbose")
+    else:
+        args.add("--export-fixes", outfile.path)
 
     # args.add("--enable-check-profile") # NOTE: enable this to get profile information on each check timings.
 
@@ -61,6 +72,10 @@ def _run_tidy(
     # start args passed to the compiler
     args.add("--")
 
+    message = "Running {} on {}".format(
+        use_clangd and "clangd-tidy" or "clang-tidy",
+        infile.short_path,
+    )
     ctx.actions.run(
         inputs = inputs,
         outputs = [outfile],
@@ -68,7 +83,13 @@ def _run_tidy(
         arguments = [args] + flags,
         mnemonic = "ClangTidy",
         use_default_shell_env = True,
-        progress_message = "Run clang-tidy on {}".format(infile.short_path),
+        progress_message = message,
+        tools = [
+            wrapper,
+            clang_tidy_exe.files_to_run.executable,
+            clangd_tidy_exe.files_to_run.executable,
+            clangd_exe.files_to_run.executable,
+        ],
     )
     return outfile
 
@@ -216,9 +237,13 @@ def _clang_tidy_aspect_impl(target, ctx):
             return []
 
     wrapper = ctx.attr._clang_tidy_wrapper.files_to_run
-    exe = ctx.attr._clang_tidy_executable
     additional_deps = ctx.attr._clang_tidy_additional_deps
     config = ctx.attr._clang_tidy_config.files.to_list()[0]
+    clangd_config = ctx.attr._clangd_config.files.to_list()[0]
+    clang_tidy_exe = ctx.attr._clang_tidy_executable
+    clangd_tidy_exe = ctx.attr._clangd_tidy_executable
+    clangd_exe = ctx.attr._clangd_executable
+    use_clangd = ctx.attr._use_clangd[BuildSettingInfo].value == "True"
 
     deps = [target] + getattr(ctx.rule.attr, "implementation_deps", [])
     rule_flags, additional_files = deps_flags(ctx, deps)
@@ -240,9 +265,13 @@ def _clang_tidy_aspect_impl(target, ctx):
         _run_tidy(
             ctx,
             wrapper,
-            exe,
+            use_clangd,
+            clang_tidy_exe,
+            clangd_tidy_exe,
+            clangd_exe,
             additional_deps,
             config,
+            clangd_config,
             c_flags if is_c_translation_unit(src, ctx.rule.attr.tags) else cxx_flags,
             src,
             target.label.name,
@@ -281,9 +310,28 @@ clang_tidy_aspect = aspect(
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
         "_clang_tidy_wrapper": attr.label(default = Label(":clang_tidy_wrapper")),
-        "_clang_tidy_executable": attr.label(default = Label(":clang_tidy_bin")),
         "_clang_tidy_additional_deps": attr.label(default = Label(":clang_tidy_additional_deps")),
         "_clang_tidy_config": attr.label(default = Label(":clang_tidy_config")),
+        "_clangd_config": attr.label(default = Label(":clangd_config")),
+        "_clang_tidy_executable": attr.label(
+            executable = True,
+            cfg = "exec",
+            allow_files = True,
+            default = Label(":clang_tidy_bin"),
+        ),
+        "_clangd_tidy_executable": attr.label(
+            executable = True,
+            cfg = "exec",
+            allow_files = True,
+            default = Label(":clangd_tidy_bin"),
+        ),
+        "_clangd_executable": attr.label(
+            executable = True,
+            cfg = "exec",
+            allow_files = True,
+            default = Label(":clangd_bin"),
+        ),
+        "_use_clangd": attr.label(default = Label(":use_clangd")),
     },
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )

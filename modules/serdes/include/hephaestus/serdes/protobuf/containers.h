@@ -4,9 +4,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <ranges>  // NOLINT(misc-include-cleaner)
+#include <ranges>  // IWYU pragma: keep
 #include <type_traits>
 #include <unordered_map>
 #include <vector>

@@ -17,6 +17,7 @@
 #include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/context_scheduler.h"
+#include "hephaestus/concurrency/io_ring/io_ring.h"
 #include "hephaestus/error_handling/panic.h"
 
 namespace heph::concurrency::io_ring {
