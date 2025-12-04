@@ -163,9 +163,9 @@ private:
   }
   void dequeueWaiter(detail::AwaiterBase* awaiter) {
     if (awaiter->isPeeker()) {
-      peekers_.erase(awaiter);
+      (void)peekers_.erase(awaiter);
     } else {
-      awaiters_.erase(awaiter);
+      (void)awaiters_.erase(awaiter);
     }
   }
 
