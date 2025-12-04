@@ -19,6 +19,7 @@
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/telemetry/log/log.h"
+#include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::conduit::tests {
 struct ReceivingOperationData {

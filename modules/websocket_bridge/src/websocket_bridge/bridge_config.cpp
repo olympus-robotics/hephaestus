@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include <fmt/core.h>
 #include <rfl/internal/has_reflector.hpp>
 #include <rfl/yaml/read.hpp>
 #include <rfl/yaml/write.hpp>
