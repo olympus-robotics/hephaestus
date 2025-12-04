@@ -9,14 +9,14 @@ if(BUILD_TESTING)
     DEPENDS_ON_EXTERNAL_PROJECTS gtest
   )
 
-# library sources
+  # library sources
   set(SOURCES
     src/heph_test.cpp
     src/test_main.cpp
     include/hephaestus/test_utils/heph_test.h
   )
 
-# library target
+  # library target
   define_module_library(
     NAME test_utils
     PUBLIC_LINK_LIBS hephaestus::error_handling hephaestus::utils GTest::gtest
