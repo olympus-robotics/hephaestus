@@ -15,6 +15,7 @@ heph_cc_library(
         "include/**/*.h",
     ]),
     implementation_deps = [
+        "//modules/format",
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",
         "//modules/utils",
@@ -24,6 +25,9 @@ heph_cc_library(
     deps = [
         "//modules/containers",
         "//modules/error_handling",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/synchronization:synchronization",
+        "@boost.circular_buffer",
         "@boost.container",
         "@liburing",
         "@stdexec",
@@ -105,6 +109,15 @@ heph_cc_test(
     name = "when_all_range_tests",
     srcs = ["tests/when_all_range_tests.cpp"],
     deps = [":concurrency"],
+)
+
+heph_cc_test(
+    name = "channel_tests",
+    srcs = ["tests/channel_tests.cpp"],
+    deps = [
+        ":concurrency",
+        "@stdexec",
+    ],
 )
 
 heph_cc_test(

@@ -902,7 +902,7 @@ function(find_module_declarations _result)
   set(multi_opts "")
 
   # This is the regex string we search for in the files to find a module declaration
-  set(_declaration_search_regex "^declare_module\\(")
+  set(_declaration_search_regex "^[ ]*declare_module\\(")
 
   include(CMakeParseArguments)
   cmake_parse_arguments(_ARG "${flags}" "${single_opts}" "${multi_opts}" ${ARGN})
