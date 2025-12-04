@@ -44,6 +44,7 @@ SpaceAfterControlStatementKeyword: true
 SpaceBeforeAssignmentOperators: true
 ContinuationIndentWidth: 4
 SpaceAfterCStyleCast: false
+SeparateDefinitionBlocks: Always
 SortIncludes: true
 QualifierAlignment: Left
 IncludeBlocks: Regroup
