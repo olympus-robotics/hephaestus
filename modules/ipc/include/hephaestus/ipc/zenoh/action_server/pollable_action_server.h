@@ -18,6 +18,7 @@
 #include "hephaestus/ipc/zenoh/action_server/action_server.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc::zenoh::action_server {
 

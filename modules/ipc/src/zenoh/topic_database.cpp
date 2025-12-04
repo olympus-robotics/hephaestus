@@ -18,6 +18,7 @@
 #include "hephaestus/ipc/zenoh/service.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::ipc {
 class ZenohTopicDatabase final : public ITopicDatabase {

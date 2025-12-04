@@ -201,7 +201,8 @@ def _clang_tidy_aspect_impl(target, ctx):
         return []
 
     # Ignore external targets
-    if target.label.workspace_root.startswith("external"):
+    # print("Analyzing target with workspace: {}, {}".format(target.label.name, target.label.workspace_root))
+    if target.label.workspace_root.startswith("external") and not target.label.workspace_root == "external/hephaestus+":
         return []
 
     # Targets with specific tags will not be formatted
@@ -251,14 +252,32 @@ def _clang_tidy_aspect_impl(target, ctx):
         for src in srcs
     ]
 
+    # Attributes to inspect for dependencies that might have the aspect applied
+    # Note: 'deps' is the main one, 'implementation_deps' is for cc_library
+    attr_names = ["deps", "implementation_deps"]
+    transitive_reports = []
+    for attr_name in attr_names:
+        if hasattr(ctx.rule.attr, attr_name):
+            dependencies = getattr(ctx.rule.attr, attr_name)
+            if dependencies:
+                for dep in dependencies:
+                    # Check if the dependency has the OutputGroupInfo we created
+                    if OutputGroupInfo in dep and hasattr(dep[OutputGroupInfo], "report"):
+                        transitive_reports.append(dep[OutputGroupInfo].report)
+
     return [
-        OutputGroupInfo(report = depset(direct = outputs)),
+        OutputGroupInfo(
+            report = depset(
+                direct = outputs,
+                transitive = transitive_reports,  # Merge dependency reports here
+            ),
+        ),
     ]
 
 clang_tidy_aspect = aspect(
     implementation = _clang_tidy_aspect_impl,
     fragments = ["cpp"],
-    attr_aspects = ["implementation_deps"],
+    attr_aspects = ["deps", "implementation_deps"],
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
         "_clang_tidy_wrapper": attr.label(default = Label(":clang_tidy_wrapper")),

@@ -23,6 +23,7 @@ try:
 except ImportError:
     redis = None
 
+
 # ------------------------------------------------------------------------------
 class ClangTidyCacheOpts(object):
     # --------------------------------------------------------------------------
@@ -33,17 +34,17 @@ class ClangTidyCacheOpts(object):
         self._cache_dir = ""
         self._compile_commands_db = None
 
-        self._strip_list = os.getenv("CTCACHE_STRIP", "").split(':')
+        self._strip_list = os.getenv("CTCACHE_STRIP", "").split(":")
 
         # splits arguments starting with - on the first =
-        args = [arg.split('=', 1) if arg.startswith('-p') else [arg] for arg in args]
+        args = [arg.split("=", 1) if arg.startswith("-p") else [arg] for arg in args]
         args = [arg for sub in args for arg in sub]
 
         if args.count("--") == 1:
             # Invoked with compiler args on the actual command line
             i = args.index("--")
             self._clang_tidy_args = args[:i]
-            self._compiler_args = args[i+1:]
+            self._compiler_args = args[i + 1 :]
         elif args.count("-p") == 1:
             # Invoked with compiler args in a compile commands json db
             i = args.index("-p")
@@ -70,10 +71,10 @@ class ClangTidyCacheOpts(object):
         if self._compiler_args:
             self._compiler_args.insert(1, "-D__clang_analyzer__=1")
             for i in range(1, len(self._compiler_args)):
-                if self._compiler_args[i-1] in ["-o", "--output"]:
+                if self._compiler_args[i - 1] in ["-o", "--output"]:
                     self._compiler_args[i] = "-"
-                if self._compiler_args[i-1] in ["-c"]:
-                    self._compiler_args[i-1] = "-E"
+                if self._compiler_args[i - 1] in ["-c"]:
+                    self._compiler_args[i - 1] = "-E"
 
     # --------------------------------------------------------------------------
     def _load_compile_command_db(self, filename):
@@ -166,7 +167,7 @@ class ClangTidyCacheOpts(object):
                 if os.path.exists(w):
                     w = os.path.realpath(w)
                 for item in self._strip_list:
-                    w = w.replace(item, '')
+                    w = w.replace(item, "")
                 w.strip()
                 if w:
                     r += w.encode("utf8")
@@ -182,7 +183,7 @@ class ClangTidyCacheOpts(object):
 
     # --------------------------------------------------------------------------
     def s3_bucket_folder(self):
-        return os.getenv("CTCACHE_S3_FOLDER", 'clang-tidy-cache')
+        return os.getenv("CTCACHE_S3_FOLDER", "clang-tidy-cache")
 
     # --------------------------------------------------------------------------
     def s3_no_credentials(self):
@@ -273,10 +274,12 @@ class ClangTidyCacheHash(object):
     def hexdigest(self):
         return self._hash.hexdigest()
 
+
 # ------------------------------------------------------------------------------
 class ClangTidyServerCache(object):
     def __init__(self, log, opts):
         import requests
+
         self._requests = requests
         self._log = log
         self._opts = opts
@@ -291,8 +294,11 @@ class ClangTidyServerCache(object):
                 elif query.json() == False:
                     return False
                 else:
-                    self._log.error("is_cached: Can't connect to server {0}, error {1}".format(
-                        self._opts.rest_host(), query.status_code))
+                    self._log.error(
+                        "is_cached: Can't connect to server {0}, error {1}".format(
+                            self._opts.rest_host(), query.status_code
+                        )
+                    )
         except:
             pass
         return False
@@ -304,8 +310,11 @@ class ClangTidyServerCache(object):
             if query.status_code == 200:
                 return
             else:
-                self._log.error("store_in_cache: Can't store data in server {0}, error {1}".format(
-                    self._opts.rest_host(), query.status_code))
+                self._log.error(
+                    "store_in_cache: Can't store data in server {0}, error {1}".format(
+                        self._opts.rest_host(), query.status_code
+                    )
+                )
         except:
             pass
 
@@ -316,8 +325,11 @@ class ClangTidyServerCache(object):
             if query.status_code == 200:
                 return query.json()
             else:
-                self._log.error("query_stats: Can't connect to server {0}, error {1}".format(
-                    self._opts.rest_host(), query.status_code))
+                self._log.error(
+                    "query_stats: Can't connect to server {0}, error {1}".format(
+                        self._opts.rest_host(), query.status_code
+                    )
+                )
         except:
             pass
         return {}
@@ -328,7 +340,7 @@ class ClangTidyServerCache(object):
             "proto": self._opts.rest_proto(),
             "host": self._opts.rest_host(),
             "port": self._opts.rest_port(),
-            "digest": digest
+            "digest": digest,
         }
 
     # --------------------------------------------------------------------------
@@ -337,7 +349,7 @@ class ClangTidyServerCache(object):
             "proto": self._opts.rest_proto(),
             "host": self._opts.rest_host(),
             "port": self._opts.rest_port(),
-            "digest": digest
+            "digest": digest,
         }
 
     # --------------------------------------------------------------------------
@@ -345,8 +357,9 @@ class ClangTidyServerCache(object):
         return "%(proto)s://%(host)s:%(port)d/stats" % {
             "proto": self._opts.rest_proto(),
             "host": self._opts.rest_host(),
-            "port": self._opts.rest_port()
+            "port": self._opts.rest_port(),
         }
+
 
 # ------------------------------------------------------------------------------
 class ClangTidyLocalCache(object):
@@ -434,6 +447,7 @@ class ClangTidyRedisCache(object):
         n_digest = self._get_key_from_digest(digest)
         self._cli.set(n_digest, data)
 
+
 # ------------------------------------------------------------------------------
 class ClangTidyS3Cache(object):
     # --------------------------------------------------------------------------
@@ -459,11 +473,10 @@ class ClangTidyS3Cache(object):
             path = self._make_path(digest)
             self._client.get_object(Bucket=self._bucket, Key=path)
         except self._ClientError as e:
-            if e.response['Error']['Code'] == "NoSuchKey":
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 return False
             else:
-                self._log.error(
-                    "Error calling S3:get_object {}".format(str(e)))
+                self._log.error("Error calling S3:get_object {}".format(str(e)))
                 raise
 
         return True
@@ -481,11 +494,8 @@ class ClangTidyS3Cache(object):
 
     # --------------------------------------------------------------------------
     def _make_path(self, digest):
-        return os.path.join(
-            self._bucket_folder,
-            digest[:2],
-            digest[2:]
-        )
+        return os.path.join(self._bucket_folder, digest[:2], digest[2:])
+
 
 # ------------------------------------------------------------------------------
 class ClangTidyCache(object):
@@ -494,12 +504,13 @@ class ClangTidyCache(object):
         self._log = log
         self._opts = opts
         self._local_cache = ClangTidyLocalCache(log, opts)
-        self._redis_cache = ClangTidyRedisCache(
-            log, opts) if opts.has_redis_host() and redis else None
-        self._server_cache = ClangTidyServerCache(
-            log, opts) if opts.has_host() else None
-        self._s3_cache = ClangTidyS3Cache(
-            log, opts) if opts.has_s3() else None
+        self._redis_cache = (
+            ClangTidyRedisCache(log, opts) if opts.has_redis_host() and redis else None
+        )
+        self._server_cache = (
+            ClangTidyServerCache(log, opts) if opts.has_host() else None
+        )
+        self._s3_cache = ClangTidyS3Cache(log, opts) if opts.has_s3() else None
 
     # --------------------------------------------------------------------------
     def is_cached(self, digest):
@@ -559,6 +570,7 @@ class ClangTidyCache(object):
 # ------------------------------------------------------------------------------
 source_file_change_re = re.compile(r'#\s+\d+\s+"([^"]+)".*')
 
+
 def source_file_changed(cpp_line):
     found = source_file_change_re.match(cpp_line)
     if found:
@@ -566,13 +578,15 @@ def source_file_changed(cpp_line):
         if os.path.isfile(found_path):
             return os.path.realpath(os.path.dirname(found_path))
 
+
 # ------------------------------------------------------------------------------
 def find_ct_config(search_path):
     while search_path and search_path != "/":
         search_path = os.path.dirname(search_path)
-        ct_config = os.path.join(search_path, '.clang-tidy')
+        ct_config = os.path.join(search_path, ".clang-tidy")
         if os.path.isfile(ct_config):
             return ct_config
+
 
 # ------------------------------------------------------------------------------
 def hash_inputs(opts):
@@ -586,11 +600,7 @@ def hash_inputs(opts):
 
     result = ClangTidyCacheHash(opts)
 
-    proc = subprocess.Popen(
-        co_args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    proc = subprocess.Popen(co_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
     if stderr:
         return None
@@ -637,6 +647,7 @@ def hash_inputs(opts):
 
     return result.hexdigest()
 
+
 # ------------------------------------------------------------------------------
 def print_stats(log, opts):
     def _format_bytes(s):
@@ -664,31 +675,35 @@ def print_stats(log, opts):
     entries = [
         ("Server host", lambda o, s: o.rest_host()),
         ("Server port", lambda o, s: "%d" % o.rest_port()),
-        ("Long-term hit rate", lambda o, s: "%.1f %%" %
-         (s["total_hit_rate"] * 100.0)),
+        ("Long-term hit rate", lambda o, s: "%.1f %%" % (s["total_hit_rate"] * 100.0)),
         ("Hit rate", lambda o, s: "%.1f %%" % (s["hit_rate"] * 100.0)),
         ("Hit count", lambda o, s: "%d" % s["hit_count"]),
         ("Miss count", lambda o, s: "%d" % s["miss_count"]),
         ("Miss rate", lambda o, s: "%.1f %%" % (s["miss_rate"] * 100.0)),
-        ("Max hash age", lambda o, s: "%d days" %
-         max(int(k) for k in s["age_days_histogram"])),
-        ("Max hash hits", lambda o, s: "%d" % max(int(k)
-         for k in s["hit_count_histogram"])),
+        (
+            "Max hash age",
+            lambda o, s: "%d days" % max(int(k) for k in s["age_days_histogram"]),
+        ),
+        (
+            "Max hash hits",
+            lambda o, s: "%d" % max(int(k) for k in s["hit_count_histogram"]),
+        ),
         ("Cache size", lambda o, s: _format_bytes(s["saved_size_bytes"])),
         ("Cached hashes", lambda o, s: "%d" % s["cached_count"]),
         ("Cleaned hashes", lambda o, s: "%d" % s["cleaned_count"]),
         ("Cleaned ago", lambda o, s: _format_time(s["cleaned_seconds_ago"])),
         ("Saved ago", lambda o, s: _format_time(s["saved_seconds_ago"])),
-        ("Uptime", lambda o, s: _format_time(s["uptime_seconds"]))
+        ("Uptime", lambda o, s: _format_time(s["uptime_seconds"])),
     ]
 
     max_len = max(len(e[0]) for e in entries)
     for label, fmtfunc in entries:
-        padding = " " * (max_len-len(label))
+        padding = " " * (max_len - len(label))
         try:
-            print(label+":", padding, fmtfunc(opts, stats))
+            print(label + ":", padding, fmtfunc(opts, stats))
         except:
-            print(label+":", padding, "N/A")
+            print(label + ":", padding, "N/A")
+
 
 # ------------------------------------------------------------------------------
 def run_clang_tidy_cached(log, opts):
@@ -709,9 +724,7 @@ def run_clang_tidy_cached(log, opts):
         log.error(str(error))
 
     proc = subprocess.Popen(
-        opts.original_args(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        opts.original_args(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = proc.communicate()
     sys.stdout.write(stdout.decode("utf8"))
@@ -735,6 +748,7 @@ def run_clang_tidy_cached(log, opts):
 
     return proc.returncode
 
+
 # ------------------------------------------------------------------------------
 def main():
     log = logging.getLogger(os.path.basename(__file__))
@@ -747,6 +761,7 @@ def main():
             print(opts.cache_dir)
         elif opts.should_remove_dir():
             import shutil
+
             try:
                 shutil.rmtree(opts.cache_dir)
             except FileNotFoundError:

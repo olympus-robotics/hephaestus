@@ -33,6 +33,7 @@
 #include "hephaestus/net/send.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/serdes/serdes.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/log_sink.h"
 
 namespace heph::conduit {
