@@ -23,7 +23,7 @@
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/net/socket.h"
 #include "hephaestus/serdes/serdes.h"
-#include "hephaestus/types_proto/bool.h"  // IWYU pragma: keep
+#include "hephaestus/types_proto/bool.h"
 
 namespace heph::conduit {
 namespace internal {

@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <exception>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 

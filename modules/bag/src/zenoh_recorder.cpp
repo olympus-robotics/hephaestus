@@ -20,6 +20,7 @@
 #include "hephaestus/ipc/zenoh/dynamic_subscriber.h"
 #include "hephaestus/ipc/zenoh/raw_subscriber.h"
 #include "hephaestus/serdes/type_info.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::bag {
 

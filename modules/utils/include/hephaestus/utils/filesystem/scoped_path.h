@@ -1,5 +1,11 @@
+//=================================================================================================
+// Copyright (C) 2023-2025 HEPHAESTUS Contributors
+//=================================================================================================
+
 #pragma once
 #include <filesystem>
+#include <string>
+#include <string_view>
 
 namespace heph::utils::filesystem {
 

@@ -6,6 +6,7 @@
 
 #include <cstdio>
 
+#include <bits/types/struct_timeval.h>
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>

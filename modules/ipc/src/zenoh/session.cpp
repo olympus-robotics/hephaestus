@@ -17,6 +17,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <unistd.h>
+#include <zenoh.h>
 #include <zenoh/api/config.hxx>
 #include <zenoh/api/session.hxx>
 

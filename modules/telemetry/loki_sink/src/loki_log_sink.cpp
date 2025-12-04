@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <absl/synchronization/mutex.h>
+#include <cpr/body.h>
 #include <cpr/cprtypes.h>
 #include <cpr/session.h>
 #include <cpr/status_codes.h>
@@ -24,6 +25,7 @@
 #include <rfl/json/write.hpp>
 #include <unistd.h>
 
+#include "hephaestus/concurrency/spinner.h"
 #include "hephaestus/error_handling/panic.h"
 #include "hephaestus/telemetry/log/log_sink.h"
 #include "hephaestus/utils/utils.h"

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <stdexec/__detail/__execution_fwd.hpp>
 #include <stdexec/execution.hpp>
 

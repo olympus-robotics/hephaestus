@@ -2,7 +2,6 @@
 // Copyright (C) 2023-2024 HEPHAESTUS Contributors
 //=================================================================================================
 
-#include <cstdio>  // NOLINT(misc-include-cleaner)
 #include <cstdlib>
 #include <exception>
 #include <filesystem>

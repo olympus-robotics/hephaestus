@@ -59,6 +59,27 @@ buf = use_extension("@rules_buf//buf:extensions.bzl", "buf")
 buf.toolchains(version = "v1.34.0")
 use_repo(buf, "rules_buf_toolchains")
 
+# Python
+bazel_dep(name = "rules_python", version = "1.2.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
+
+PYTHON_VERSION = "3.12"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = False,
+    ignore_root_user_error = True,
+    python_version = PYTHON_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi-heph",
+    python_version = PYTHON_VERSION,
+    requirements_lock = "//:requirements_lock.txt",
+)
+use_repo(pip, "pypi-heph")
+
 ############################
 # Tools                    #
 ############################
@@ -79,17 +100,6 @@ archive_override(
 ############################
 # Documentation tools
 ############################
-
-bazel_dep(name = "rules_python", version = "1.2.0")
-
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-pip.parse(
-    hub_name = "pypi-heph",
-    python_version = "3.11",
-    requirements_lock = "//:requirements_lock.txt",
-)
-use_repo(pip, "pypi-heph")
-
 bazel_dep(name = "rules_doxygen", version = "2.5.0")
 
 doxygen_extension = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")

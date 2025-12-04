@@ -13,7 +13,11 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <string_view>
 
+#include <bits/signum-generic.h>
+#include <bits/types/siginfo_t.h>
 #include <cxxabi.h>
 
 #ifndef __WIN32__

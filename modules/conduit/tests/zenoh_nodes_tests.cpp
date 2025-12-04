@@ -11,13 +11,14 @@
 
 #include "hephaestus/conduit/node_engine.h"
 #include "hephaestus/conduit/zenoh_nodes.h"
+#include "hephaestus/ipc/topic.h"
 #include "hephaestus/ipc/zenoh/publisher.h"
 #include "hephaestus/ipc/zenoh/session.h"
 #include "hephaestus/ipc/zenoh/subscriber.h"
-#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/types/dummy_type.h"
-#include "hephaestus/types_proto/dummy_type.h"  // NOLINT(misc-include-cleaner)
+#include "hephaestus/types_proto/dummy_type.h"
 
 namespace heph::conduit::tests {
 

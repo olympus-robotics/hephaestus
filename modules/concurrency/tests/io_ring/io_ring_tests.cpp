@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 #include <liburing.h>  // NOLINT(misc-include-cleaner)
+#include <liburing/compat.h>
 #include <liburing/io_uring.h>
 
 #include "hephaestus/concurrency/io_ring/io_ring.h"

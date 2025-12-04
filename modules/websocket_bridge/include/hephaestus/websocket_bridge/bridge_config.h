@@ -10,13 +10,11 @@
 #include <string>
 #include <vector>
 
-#include <absl/log/log.h>
 #include <fmt/core.h>
 #include <foxglove/websocket/common.hpp>
 #include <foxglove/websocket/server_interface.hpp>
 
 #include "hephaestus/ipc/zenoh/session.h"
-#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/websocket_bridge/utils/ws_protocol.h"
 
 namespace heph::ws {

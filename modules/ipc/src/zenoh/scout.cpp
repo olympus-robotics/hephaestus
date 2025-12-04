@@ -5,6 +5,7 @@
 #include "hephaestus/ipc/zenoh/scout.h"
 
 #include <algorithm>
+#include <chrono>
 #include <ranges>
 #include <string>
 #include <string_view>

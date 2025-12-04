@@ -8,6 +8,7 @@
 #include <exception>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -23,7 +24,7 @@
 #include "hephaestus/net/endpoint.h"
 #include "hephaestus/test_utils/heph_test.h"
 #include "hephaestus/types/dummy_type.h"
-#include "hephaestus/types_proto/dummy_type.h"  // IWYU pragma: keep
+#include "hephaestus/types_proto/dummy_type.h"
 #include "modules/types/include/hephaestus/types/dummy_type.h"
 
 namespace heph::conduit::tests {

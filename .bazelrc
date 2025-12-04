@@ -18,8 +18,11 @@ build:dwyu --output_groups=dwyu
 
 build:clang-tidy --output_groups=report,fixes
 build:clang-tidy --aspects //bazel/clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:clang-tidy --//bazel/clang_tidy:use_clangd=False
 build:clang-tidy --action_env=CLANG_TIDY_FLAGS="-fix -fix-errors"
 build:clang-tidy --keep_going
+build:clangd-tidy --config=clang-tidy
+build:clangd-tidy --//bazel/clang_tidy:use_clangd=True
 
 build:sanitizer --strip=never
 build:sanitizer --copt -fsanitize=address,undefined
@@ -27,10 +30,9 @@ build:sanitizer --copt -fsanitize=address,undefined
 build:sanitizer --copt -fno-sanitize=vptr
 build:sanitizer --copt -DADDRESS_SANITIZER
 build:sanitizer --copt -fno-omit-frame-pointer
-build:sanitizer --aspects=//bazel/foreign_cc:dwyu_aspect.bzl%dwyu_aspect
-build:sanitizer --output_groups=dwyu
 build:sanitizer --linkopt -fsanitize=address,undefined
 build:sanitizer --linkopt -Wl,--allow-shlib-undefined
+build:sanitizer --config=dwyu
 
 build:remote-cache --bes_results_url=https://olympus-robotics.buildbuddy.io/invocation/
 build:remote-cache --bes_backend=grpcs://olympus-robotics.buildbuddy.io

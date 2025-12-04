@@ -13,8 +13,10 @@
 #include <vector>
 
 #include <fmt/base.h>
+#include <foxglove/websocket/serialization.hpp>
 #include <nlohmann/json_fwd.hpp>
 
+#include "hephaestus/telemetry/log/log.h"
 #include "hephaestus/telemetry/log/sinks/absl_sink.h"
 #include "hephaestus/utils/stack_trace.h"
 #include "hephaestus/websocket_bridge/utils/ws_client.h"

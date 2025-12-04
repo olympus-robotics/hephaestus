@@ -19,82 +19,89 @@ using namespace ::testing;
 namespace heph::examples::types::tests {
 // NOLINTBEGIN(misc-include-cleaner) // Unfortunately Eigen doesn't work well with this check
 TEST(Geometry, StaticMatrix) {
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::Matrix4d matrix4d = Eigen::Matrix4d::Random();
   proto::MatrixXd proto_matrix;
   toProto(proto_matrix, matrix4d);
 
-  Eigen::Matrix4d matrix4d_des;
+  Eigen::Matrix4d matrix4d_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_matrix, matrix4d_des);
 
   EXPECT_EQ(matrix4d, matrix4d_des);
 }
 
 TEST(Geometry, DynamicMatrix1d) {
-  static constexpr Eigen::Index MAX_SIZE = 1000;
+  static constexpr Eigen::Index MAX_SIZE = 1000;  // NOLINT(misc-include-cleaner,missing-includes)
   std::mt19937_64 mt{ std::random_device{}() };
   std::uniform_int_distribution<Eigen::Index> size_dist{ 1, MAX_SIZE };
   const auto size = size_dist(mt);
 
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::Matrix<float, 2, -1> matrixf = Eigen::Matrix<float, 2, -1>::Random(2, size);
   EXPECT_EQ(matrixf.cols(), size);
 
   proto::MatrixXf proto_matrix;
   toProto(proto_matrix, matrixf);
 
-  Eigen::Matrix<float, 2, -1> matrixf_des;
+  Eigen::Matrix<float, 2, -1> matrixf_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_matrix, matrixf_des);
   EXPECT_EQ(matrixf, matrixf_des);
 }
 
 TEST(Geometry, DynamicMatrix2d) {
-  static constexpr Eigen::Index MAX_SIZE = 1000;
+  static constexpr Eigen::Index MAX_SIZE = 1000;  // NOLINT(misc-include-cleaner,missing-includes)
   std::mt19937_64 mt{ std::random_device{}() };
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   std::uniform_int_distribution<Eigen::Index> size_dist{ 1, MAX_SIZE };
   const auto rows = size_dist(mt);
   const auto cols = size_dist(mt);
 
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::Matrix<float, -1, -1> matrixf = Eigen::Matrix<float, -1, -1>::Random(rows, cols);
 
   proto::MatrixXf proto_matrix;
   toProto(proto_matrix, matrixf);
 
-  Eigen::Matrix<float, -1, -1> matrixf_des;
+  Eigen::Matrix<float, -1, -1> matrixf_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_matrix, matrixf_des);
   EXPECT_EQ(matrixf, matrixf_des);
 }
 
 TEST(Geometry, DynamicVector) {
-  static constexpr Eigen::Index MAX_SIZE = 1000;
+  static constexpr Eigen::Index MAX_SIZE = 1000;  // NOLINT(misc-include-cleaner,missing-includes)
   std::mt19937_64 mt{ std::random_device{}() };
   std::uniform_int_distribution<Eigen::Index> size_dist{ 1, MAX_SIZE };
   const auto size = size_dist(mt);
 
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::VectorXf vector = Eigen::VectorX<float>::Random(size);
 
   proto::VectorXf proto_vector;
   toProto(proto_vector, vector);
 
-  Eigen::VectorXf vector_des;
+  Eigen::VectorXf vector_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_vector, vector_des);
   EXPECT_EQ(vector, vector_des);
 }
 
 TEST(Geometry, StaticVector2) {
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::Vector2f vector = Eigen::Vector2f::Random();
   proto::Vector2f proto_vector;
   toProto(proto_vector, vector);
 
-  Eigen::Vector2f vector_des;
+  Eigen::Vector2f vector_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_vector, vector_des);
   EXPECT_EQ(vector, vector_des);
 }
 
 TEST(Geometry, StaticVector3) {
+  // NOLINTNEXTLINE(misc-include-cleaner,missing-includes)
   const Eigen::Vector3d vector = Eigen::Vector3d::Random();
   proto::Vector3d proto_vector;
   toProto(proto_vector, vector);
 
-  Eigen::Vector3d vector_des;
+  Eigen::Vector3d vector_des;  // NOLINT(misc-include-cleaner,missing-includes)
   fromProto(proto_vector, vector_des);
   EXPECT_EQ(vector, vector_des);
 }

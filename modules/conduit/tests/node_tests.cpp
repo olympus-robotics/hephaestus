@@ -18,7 +18,7 @@
 #include "hephaestus/concurrency/io_ring/timer.h"
 #include "hephaestus/conduit/node.h"
 #include "hephaestus/conduit/node_engine.h"
-#include "hephaestus/telemetry/log/log_sink.h"
+#include "hephaestus/telemetry/log/log.h"
 
 namespace heph::conduit::tests {
 struct ReceivingOperationData {
