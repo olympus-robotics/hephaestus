@@ -111,7 +111,6 @@ heph_cc_test(
     deps = [":concurrency"],
 )
 
-
 heph_cc_test(
     name = "channel_tests",
     srcs = ["tests/channel_tests.cpp"],
