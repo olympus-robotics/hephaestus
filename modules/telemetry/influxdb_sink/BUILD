@@ -41,6 +41,7 @@ heph_cc_binary(
     srcs = ["examples/influxdb_measure_example.cpp"],
     deps = [
         ":influxdb_sink",
+        "//modules/concurrency",
         "//modules/random",
         "//modules/telemetry/log",
         "//modules/telemetry/metrics",

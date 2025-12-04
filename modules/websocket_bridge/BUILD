@@ -42,7 +42,6 @@ heph_cc_library(
         "//modules/ipc",
         "//modules/serdes",
         "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/log:log",
         "@abseil-cpp//absl/synchronization:synchronization",
         "@fmt",
         "@nlohmann_json//:json",
@@ -89,6 +88,7 @@ heph_cc_binary(
         "//modules/utils",
         "@fmt",
         "@nlohmann_json//:json",
+        "@ws_protocol",
     ],
 )
 

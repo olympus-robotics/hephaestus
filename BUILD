@@ -15,6 +15,7 @@ exports_files([
     ".clang-tidy",
     "buf.yaml",
     ".clang-format",
+    "dwyu_ignore_includes.json",
 ])
 
 alias(
