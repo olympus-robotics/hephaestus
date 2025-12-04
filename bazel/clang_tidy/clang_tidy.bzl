@@ -61,6 +61,7 @@ def _run_tidy(
     if use_clangd:
         args.add("--clangd-executable", clangd_exe.files_to_run.executable.path)
         # args.add("--verbose") # NOTE: uncomment to see clangd command
+
     else:
         args.add("--export-fixes", outfile.path)
 
