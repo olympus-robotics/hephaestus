@@ -83,30 +83,6 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build -- all examples
 
-  build-gcc:
-    needs: docker_build_and_publish
-    # TODO: use the docker image published at the step over
-    runs-on: ubuntu-latest
-    permissions: read-all
-    container:
-      image: ghcr.io/olympus-robotics/x86_64/hephaestus-dev:latest
-      credentials:
-        username: ${{ github.actor}}
-        password: ${{secrets.GITHUB_TOKEN}}
-    steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Install Rust
-        run: |
-          export PATH=/usr/local/cargo/bin:$PATH
-          echo $(rustup toolchain install stable)
-          echo $(rustup default stable)
-          echo $(rustup show)
-      - name: Configure CMake
-        run: export PATH=/usr/local/cargo/bin:$PATH && cmake -B ${{github.workspace}}/build --preset gcc
-      - name: Build
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build -- all examples
-
   format:
     runs-on: ubuntu-latest
     permissions: read-all
@@ -147,4 +123,12 @@ jobs:
     with:
       config: "sanitizer"
       compilation-mode: "opt"
+    secrets: inherit
+
+  bazel-gcc:
+    permissions: read-all
+    uses: ./.github/workflows/build-bazel.yml
+    with:
+      config: "gcc"
+      compilation-mode: "fastbuild"
     secrets: inherit
