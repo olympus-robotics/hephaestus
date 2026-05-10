@@ -53,7 +53,7 @@ Project Status
 
    Many features are currently under development. Please check the issue tracker or project boards for current status.
 
-When should you use this over ROS? Click [here](doc/comparison_to_ros.md)!
+When should you use this over ROS? Click `here <doc/comparison_to_ros.md>`_!
 
 Scope Limitations
 =================
@@ -138,7 +138,7 @@ The following sections contains all the information needed to use Hephaestus wit
 Compilation
 -----------
 
-Hephaestus uses CMake to build, the build infrastructure is copied and adapted from [grape](https://github.com/cvilas/grape).
+Hephaestus uses CMake to build, the build infrastructure is copied and adapted from `grape <https://github.com/cvilas/grape>`_.
 
 To build it:
 
@@ -283,23 +283,24 @@ if you are using Hephaestus build system for your project you need to backup the
 Linting
 =======
 We've added shell script linting using shellcheck and docker linting using hadolint. To use this locally, add the following to your pre-commit hook file.
-```
-git_root=$(git rev-parse --show-toplevel)
 
-if result=$(git status --porcelain | grep -E '^[MATRC]. docker/'); then
-    echo "Running Hadolint"
-    ".github/scripts/hadolint.sh"
-fi
+.. code-block:: bash
 
-if result=$(git status --porcelain | grep -E '^[MATRC].*.sh'); then
-    echo "Running Shellcheck"
-    "$git_root/.github/scripts/shellcheck.sh"
-fi
-```
+  git_root=$(git rev-parse --show-toplevel)
+
+  if result=$(git status --porcelain | grep -E '^[MATRC]. docker/'); then
+      echo "Running Hadolint"
+      ".github/scripts/hadolint.sh"
+  fi
+
+  if result=$(git status --porcelain | grep -E '^[MATRC].*.sh'); then
+      echo "Running Shellcheck"
+      "$git_root/.github/scripts/shellcheck.sh"
+  fi
 
 Spelling
 ========
-Spell checking on source code is done using [typos](https://github.com/crate-ci/typos). There is a `make`` target for `spellcheck` and `spellfix`.
+Spell checking on source code is done using `typos <https://github.com/crate-ci/typos>`_. There is a `make`` target for `spellcheck` and `spellfix`.
 
 Notes
 =====
