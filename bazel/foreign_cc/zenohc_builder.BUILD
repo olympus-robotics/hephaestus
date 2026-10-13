@@ -4,7 +4,6 @@
 
 cc_library(
     name = "zenoh-c",
-    # @platforms is only a dev dependency here, hence the bazel_tools condition
     srcs = select({
         "@bazel_tools//src/conditions:linux_aarch64": ["lib/aarch64/libzenohc.a"],
         "//conditions:default": ["lib/libzenohc.a"],
