@@ -6,12 +6,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def foreign_cc_repositories():
     ZENOH_VERSION = "1.2.1"
+    ZENOHC_BUILDER_TAG = ZENOH_VERSION + "-1"  # same zenoh, adds the aarch64 lib
     http_archive(
         name = "zenohc_builder",
         build_file = ":foreign_cc/zenohc_builder.BUILD",
-        urls = ["https://github.com/olympus-robotics/zenohc_builder/archive/refs/tags/{version}.zip".format(version = ZENOH_VERSION)],
-        strip_prefix = "zenohc_builder-{version}".format(version = ZENOH_VERSION),
-        sha256 = "b6015958b7924f721b76f688a6ae4b8c55548192d43de4be3ab0a15af0e3b46f",
+        urls = ["https://github.com/olympus-robotics/zenohc_builder/archive/refs/tags/{tag}.zip".format(tag = ZENOHC_BUILDER_TAG)],
+        strip_prefix = "zenohc_builder-{tag}".format(tag = ZENOHC_BUILDER_TAG),
+        sha256 = "ec0381ddb8b0974341dd2f842ec553fb0b1f1a2c1d5ea73627dd8e2fb95b62c6",
     )
 
     MCAP_VERSION = "bebea860f68b278d6cccdb70e0ed299d2656af96"
